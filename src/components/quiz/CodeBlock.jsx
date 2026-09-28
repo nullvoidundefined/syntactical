@@ -3,20 +3,10 @@
 // distinct colors instead of flat white text. Shared by the question cards
 // and the Query drawer so both use the same tokenizing and theme rules.
 
-import Prism from 'prismjs';
-import 'prismjs/components/prism-python.js';
-import 'prismjs/components/prism-sql.js';
-import 'prismjs/components/prism-javascript.js';
-
-const PRISM_GRAMMAR = {
-  python: 'python',
-  postgres: 'sql',
-  javascript: 'javascript',
-};
+import { highlightQuestionCode } from './highlightQuestionCode.js';
 
 export function CodeBlock({ code, language, className = '' }) {
-  const grammarName = PRISM_GRAMMAR[language] ?? 'python';
-  const highlightedHtml = Prism.highlight(code, Prism.languages[grammarName], grammarName);
+  const { grammarName, html: highlightedHtml } = highlightQuestionCode(code, language);
 
   return (
     <pre className={`rounded-md bg-obsidian border border-line px-4 py-3 overflow-x-auto ${className}`}>

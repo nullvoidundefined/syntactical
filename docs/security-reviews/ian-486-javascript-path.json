@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "id": 1,
+      "severity": "MEDIUM",
+      "control": "Output encoding in CodeBlock",
+      "evidence": "src/components/quiz/CodeBlock.jsx:19-25"
+    }
+  ]
+}
