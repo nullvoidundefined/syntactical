@@ -1,6 +1,6 @@
 # Session Handoff: Explain button, question bank expansion (stopped early on quota)
 
-## 1. Last commit
+## Last commit
 `cebf426` on `main`: explain/continue button, medium banks to 100, lexicon.md. Local only; push blocked in-session by R-109, needs a manual `git push` from a real terminal.
 
 ## Production state
@@ -20,7 +20,7 @@ Explain button next to Continue on wrong answers, both `medium` question banks e
 - `DifficultyStep.jsx` still renders as a vertical stack (now 2 tiles, still fine visually).
 - 6 background subagents were dispatched to expand/create all 6 banks to 100; only the 2 `medium` ones appear to have finished and written output before the session stopped. The other 4 (python/hard, postgres/hard, python/easy, postgres/easy) may still be running in the background. Check for orphaned background tasks next session before re-dispatching.
 
-## 3. Pending (from before this stop)
+## Pending
 - `docs/original-prompt.md` still needs an entry logging every change since the user's standing "update the prompt with every change" instruction: explain/continue button, easy-tier attempt plus revert, DifficultyStep vertical stack, lexicon.md, medium banks to 100. Not done. Do this first next session, it is overdue across multiple turns.
 - Expand `python/hard.js` and `postgres/hard.js` to 100 questions each, same schema and rigor bar as the medium files, no topic overlap with their sibling medium file.
 - Decide whether to build `easy.js` for both languages (100 questions each) and re-add the `easy` entry to `DIFFICULTIES`, or drop the Easy tier idea entirely.
