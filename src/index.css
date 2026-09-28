@@ -13,6 +13,9 @@
   --color-muted: #7c828c;
   --color-signal: #39e88f;
   --color-danger: #ff5470;
+  --color-amber: #e0a458;
+  --color-violet: #b98ee8;
+  --color-cyan: #5fb8e0;
 
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -31,4 +34,49 @@
     background-color: var(--color-signal);
     color: var(--color-obsidian);
   }
+}
+
+/* Prism token colors for CodeBlock: a subdued terminal palette that keeps
+   keywords, class names, functions/members, and literals visually distinct
+   instead of the flat single-color code text this app started with. */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.token.keyword {
+  color: var(--color-signal);
+}
+
+.token.builtin,
+.token.constant {
+  color: var(--color-signal);
+  opacity: 0.75;
+}
+
+.token.string,
+.token.char,
+.token.number,
+.token.boolean {
+  color: var(--color-amber);
+}
+
+.token.function {
+  color: var(--color-cyan);
+}
+
+.token.class-name {
+  color: var(--color-violet);
+}
+
+.token.property {
+  color: var(--color-cyan);
+}
+
+.token.operator,
+.token.punctuation {
+  color: var(--color-muted);
 }

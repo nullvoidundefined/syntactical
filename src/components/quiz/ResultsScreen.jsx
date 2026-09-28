@@ -24,10 +24,10 @@ export function ResultsScreen({ language, difficulty, correctCount, totalQuestio
         <button
           type="button"
           onClick={onRetry}
-          className="font-mono text-sm tracking-wide uppercase border border-signal/60 text-signal rounded px-5 py-2.5
-                     hover:bg-signal/10 transition-colors"
+          className="font-mono text-sm tracking-wide uppercase bg-signal text-obsidian rounded px-5 py-2.5
+                     hover:bg-signal/90 transition-colors"
         >
-          Retry <span className="hidden sm:inline text-signal/60">(Enter)</span>
+          Retry <span className="hidden sm:inline text-obsidian/60">(Enter)</span>
         </button>
         <button
           type="button"

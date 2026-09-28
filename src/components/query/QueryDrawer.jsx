@@ -2,7 +2,9 @@
 // current card's example. Purely presentational: open state and the
 // query content itself live in the parent.
 
-export function QueryDrawer({ isOpen, query, onClose }) {
+import { CodeBlock } from '../quiz/CodeBlock.jsx';
+
+export function QueryDrawer({ isOpen, query, language, onClose }) {
   return (
     <>
       <div
@@ -33,11 +35,7 @@ export function QueryDrawer({ isOpen, query, onClose }) {
 
             <h2 className="font-mono text-lg text-ink mb-4">{query.title}</h2>
 
-            {query.syntax && (
-              <pre className="rounded-md bg-obsidian border border-line px-4 py-3 overflow-x-auto mb-4">
-                <code className="font-mono text-sm text-signal whitespace-pre">{query.syntax}</code>
-              </pre>
-            )}
+            {query.syntax && <CodeBlock code={query.syntax} language={language} className="mb-4" />}
 
             <p className="text-sm text-ink/90 leading-relaxed whitespace-pre-line">
               {query.explanation}

@@ -92,6 +92,7 @@ function QuizRound({ language, difficulty, recordAnswer, recordCompletion, onExi
             {question.type === 'mc' ? (
               <MultipleChoiceCard
                 question={question}
+                language={language}
                 submittedAnswer={engine.submittedAnswer}
                 isAnswered={engine.isAnswered}
                 onSelect={handleSelectChoice}
@@ -99,6 +100,7 @@ function QuizRound({ language, difficulty, recordAnswer, recordCompletion, onExi
             ) : (
               <BooleanCard
                 question={question}
+                language={language}
                 submittedAnswer={engine.submittedAnswer}
                 isAnswered={engine.isAnswered}
                 onSelect={handleSelectBool}
@@ -121,10 +123,10 @@ function QuizRound({ language, difficulty, recordAnswer, recordCompletion, onExi
               <button
                 type="button"
                 onClick={handleAdvance}
-                className="w-full font-mono text-sm tracking-widest uppercase text-signal border border-signal/50
-                           rounded-md py-3 hover:bg-signal/10 transition-colors"
+                className="w-full font-mono text-sm tracking-widest uppercase text-obsidian bg-signal
+                           rounded-md py-3 hover:bg-signal/90 transition-colors"
               >
-                Continue <span className="hidden sm:inline text-signal/60">(Enter)</span>
+                Continue <span className="hidden sm:inline text-obsidian/60">(Enter)</span>
               </button>
             </div>
           )}
@@ -133,7 +135,7 @@ function QuizRound({ language, difficulty, recordAnswer, recordCompletion, onExi
 
       <KeyboardHintBar questionType={question.type} isAnswered={engine.isAnswered} />
 
-      <QueryDrawer isOpen={isQueryOpen} query={question.query} onClose={() => setIsQueryOpen(false)} />
+      <QueryDrawer isOpen={isQueryOpen} query={question.query} language={language} onClose={() => setIsQueryOpen(false)} />
     </div>
   );
 }

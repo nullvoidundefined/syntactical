@@ -1,18 +1,16 @@
 // Renders a multiple-choice question: prompt, optional code snippet, and
 // four labeled choices that color themselves once an answer is submitted.
 
+import { CodeBlock } from './CodeBlock.jsx';
+
 const CHOICE_LABELS = ['A', 'B', 'C', 'D'];
 
-export function MultipleChoiceCard({ question, submittedAnswer, isAnswered, onSelect }) {
+export function MultipleChoiceCard({ question, language, submittedAnswer, isAnswered, onSelect }) {
   return (
     <div>
       <p className="text-lg text-ink leading-relaxed">{question.prompt}</p>
 
-      {question.code && (
-        <pre className="mt-4 rounded-md bg-obsidian border border-line px-4 py-3 overflow-x-auto">
-          <code className="font-mono text-sm text-ink whitespace-pre">{question.code}</code>
-        </pre>
-      )}
+      {question.code && <CodeBlock code={question.code} language={language} className="mt-4" />}
 
       <div className="mt-6 grid gap-2">
         {question.choices.map((choice, index) => {
