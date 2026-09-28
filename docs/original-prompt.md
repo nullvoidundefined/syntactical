@@ -31,3 +31,9 @@ This retargeted every question bank away from generic programming/SQL trivia tow
 And yeah, I probably should have said this from the very beginning, but this should be a mobile-first application.
 
 This triggered a full responsive pass across every component: unprefixed Tailwind classes target mobile by default, with `sm:` and larger breakpoints used only to add or restore desktop affordances (keyboard-hint text, secondary labels, side-by-side button rows) rather than the other way around.
+
+## Refinement: stable card height
+
+Cards should have a min-height so that they so the cards don't jitter in size as theor content changes
+
+Question cards keep a reserved body height (`min-h-[22rem]` on mobile, `min-h-[32rem]` from `sm` up) so advancing from a short True/False card to a tall multiple-choice card with a code block does not jump the Continue row or the keyboard hint bar. Taller questions still grow past that floor.
