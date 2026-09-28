@@ -281,15 +281,15 @@ export const javascriptHard = [
   {
     id: 'js-hard-17',
     type: 'mc',
-    prompt: 'What does `f()` do?',
-    code: 'const x = 1;\nconst f = new Function("return x;");\nf();',
+    prompt: 'What does `outer()` do?',
+    code: 'function outer() {\n  const x = 1;\n  const f = new Function("return x;");\n  return f();\n}\nouter();',
     choices: ['returns 1', 'returns undefined', 'throws a ReferenceError', 'returns null'],
     answerIndex: 2,
     query: {
       title: 'new Function does not close over locals',
-      syntax: 'const x = 1;\nnew Function("return x;")(); // ReferenceError',
+      syntax: 'function outer() {\n  const x = 1;\n  return new Function("return x;")();\n}\nouter(); // ReferenceError',
       explanation:
-        'A function created by `new Function` is compiled as top-level code in the global scope. It does not close over the `const x` in the scope that created it, so `return x` throws a ReferenceError. It does not return `1` or `undefined`.',
+        'A function created by `new Function` is compiled as top-level code in the global scope. It does not close over `const x` inside `outer`, so `return x` throws a ReferenceError. It does not return `1` or `undefined`. A bare top-level `const x` in a classic script is a different case: that binding is global, and `new Function` can see it.',
       tags: ['new-function', 'scope'],
     },
   },
