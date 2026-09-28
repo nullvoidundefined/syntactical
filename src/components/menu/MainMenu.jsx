@@ -2,7 +2,7 @@
 // wires keyboard shortcuts for each step, and surfaces cumulative stats.
 
 import { useState } from 'react';
-import { LANGUAGES, DIFFICULTIES } from '../../constants/appConfig.js';
+import { LANGUAGES, getDifficultiesForLanguage } from '../../constants/appConfig.js';
 import { useKeyboardNav } from '../../hooks/useKeyboardNav.js';
 import { StatsPanel } from '../stats/StatsPanel.jsx';
 import { LanguageStep } from './LanguageStep.jsx';
@@ -18,7 +18,7 @@ export function MainMenu({ stats, onLaunch }) {
   }
 
   function selectDifficultyByIndex(index) {
-    const chosen = DIFFICULTIES[index];
+    const chosen = getDifficultiesForLanguage(language)[index];
     if (chosen) onLaunch({ language, difficulty: chosen.id });
   }
 

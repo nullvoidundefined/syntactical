@@ -6,10 +6,12 @@
 import Prism from 'prismjs';
 import 'prismjs/components/prism-python.js';
 import 'prismjs/components/prism-sql.js';
+import 'prismjs/components/prism-javascript.js';
 
 const PRISM_GRAMMAR = {
   python: 'python',
   postgres: 'sql',
+  javascript: 'javascript',
 };
 
 export function CodeBlock({ code, language, className = '' }) {
