@@ -1,17 +1,21 @@
 // Aggregates every per-language, per-difficulty question bank behind a
 // single lookup so callers never import a data file directly.
 
+import { pythonEasy } from './python/easy.js';
 import { pythonMedium } from './python/medium.js';
 import { pythonHard } from './python/hard.js';
+import { postgresEasy } from './postgres/easy.js';
 import { postgresMedium } from './postgres/medium.js';
 import { postgresHard } from './postgres/hard.js';
 
 const QUESTION_BANKS = {
   python: {
+    easy: pythonEasy,
     medium: pythonMedium,
     hard: pythonHard,
   },
   postgres: {
+    easy: postgresEasy,
     medium: postgresMedium,
     hard: postgresHard,
   },

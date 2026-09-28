@@ -22,6 +22,11 @@ export const LANGUAGES = [
 
 export const DIFFICULTIES = [
   {
+    id: 'easy',
+    label: 'Easy',
+    description: 'Foundational syntax and idioms, still language-specific.',
+  },
+  {
     id: 'medium',
     label: 'Medium',
     description: 'Core syntax and everyday behavior.',
