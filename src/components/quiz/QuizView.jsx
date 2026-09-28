@@ -2,7 +2,11 @@
 // input, the Query drawer, and stats persistence, and switches between
 // the active card and the results screen once the round is complete.
 // QuizView itself only owns the "retry" remount key; QuizRound owns the
-// actual in-progress round state.
+// actual in-progress round state. Retry works by remounting QuizRound
+// under a fresh key rather than manually resetting every piece of round
+// state (score, current index, submitted answer), so a new state field
+// added to the engine is reset for free instead of needing its own
+// explicit reset call here.
 
 import { useEffect, useState } from 'react';
 import { useKeyboardNav } from '../../hooks/useKeyboardNav.js';
@@ -103,14 +107,26 @@ function QuizRound({ language, difficulty, recordAnswer, recordCompletion, onExi
           </Card>
 
           {engine.isAnswered && (
-            <button
-              type="button"
-              onClick={handleAdvance}
-              className="mt-4 w-full font-mono text-sm tracking-widest uppercase text-signal border border-signal/50
-                         rounded-md py-3 hover:bg-signal/10 transition-colors"
-            >
-              Next <span className="hidden sm:inline text-signal/60">(Enter)</span>
-            </button>
+            <div className="mt-4 flex flex-col sm:flex-row gap-3">
+              {!engine.wasCorrect && (
+                <button
+                  type="button"
+                  onClick={() => setIsQueryOpen(true)}
+                  className="w-full font-mono text-sm tracking-widest uppercase text-muted border border-line
+                             rounded-md py-3 hover:border-signal/60 hover:text-signal transition-colors"
+                >
+                  Explain <span className="hidden sm:inline text-line">(Q)</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleAdvance}
+                className="w-full font-mono text-sm tracking-widest uppercase text-signal border border-signal/50
+                           rounded-md py-3 hover:bg-signal/10 transition-colors"
+              >
+                Continue <span className="hidden sm:inline text-signal/60">(Enter)</span>
+              </button>
+            </div>
           )}
         </div>
       </div>

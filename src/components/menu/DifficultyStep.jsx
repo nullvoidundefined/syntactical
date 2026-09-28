@@ -1,5 +1,9 @@
 // Step 2 of the launch wizard: choose a difficulty tier for the already
-// selected language track.
+// selected language track. Kept as its own component, separate from
+// LanguageStep, because it depends on the language chosen in step 1
+// (shown in its header) and its options render as a single vertical
+// stack rather than LanguageStep's grid, deliberately differentiating
+// the two steps as the language grid grows to cover many more tracks.
 
 import { DIFFICULTIES, LANGUAGES } from '../../constants/appConfig.js';
 import { SelectionCard } from './SelectionCard.jsx';
@@ -21,7 +25,7 @@ export function DifficultyStep({ language, onSelectDifficulty, onBack }) {
           &larr; back <span className="hidden sm:inline">(esc)</span>
         </button>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3">
         {DIFFICULTIES.map((difficulty, index) => (
           <SelectionCard
             key={difficulty.id}

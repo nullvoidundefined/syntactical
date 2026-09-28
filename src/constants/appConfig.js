@@ -1,5 +1,9 @@
 // Static configuration: language tracks, difficulty tiers, and the
 // keyboard-binding map shown in the UI and consumed by useKeyboardNav.
+// Centralized here so every menu step, quiz engine, and keyboard handler
+// reads one source of truth instead of hardcoding the language/difficulty
+// lists or key bindings in more than one place as new languages and
+// difficulty tiers are added.
 
 export const LANGUAGES = [
   {
