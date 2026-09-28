@@ -1,6 +1,6 @@
 # syntactical
 
-High-velocity flashcard and lightning-round quiz drills for developers, built as a Vite + React + Tailwind CSS single-page app. Pick a language track (Python or Postgres), pick a difficulty (Medium or Hard), and run the deck entirely from the keyboard.
+High-velocity flashcard and lightning-round quiz drills for developers, built as a Vite + React + Tailwind CSS single-page app. Pick a language track (Python, Postgres, or JavaScript), pick a difficulty (Easy, Medium, or Hard), and run the deck entirely from the keyboard. JavaScript offers Easy, Medium, and Hard.
 
 ## Stack
 
@@ -24,8 +24,9 @@ syntactical/
 │   │   └── appConfig.js           # languages, difficulties, key bindings
 │   ├── data/
 │   │   ├── index.js                # getQuestionBank(language, difficulty)
-│   │   ├── python/{medium,hard}.js
-│   │   └── postgres/{medium,hard}.js
+│   │   ├── python/{easy,medium,hard}.js
+│   │   ├── postgres/{easy,medium,hard}.js
+│   │   └── javascript/{easy,medium,hard}.js
 │   ├── clients/
 │   │   └── localStorageClient.js  # thin localStorage read/write wrapper
 │   ├── services/

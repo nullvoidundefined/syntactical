@@ -5,7 +5,7 @@
 // stack rather than LanguageStep's grid, deliberately differentiating
 // the two steps as the language grid grows to cover many more tracks.
 
-import { DIFFICULTIES, LANGUAGES } from '../../constants/appConfig.js';
+import { LANGUAGES, getDifficultiesForLanguage } from '../../constants/appConfig.js';
 import { SelectionCard } from './SelectionCard.jsx';
 
 export function DifficultyStep({ language, onSelectDifficulty, onBack }) {
@@ -26,7 +26,7 @@ export function DifficultyStep({ language, onSelectDifficulty, onBack }) {
         </button>
       </div>
       <div className="grid gap-3">
-        {DIFFICULTIES.map((difficulty, index) => (
+        {getDifficultiesForLanguage(language).map((difficulty, index) => (
           <SelectionCard
             key={difficulty.id}
             keyHint={index + 1}

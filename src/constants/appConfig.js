@@ -11,12 +11,21 @@ export const LANGUAGES = [
     label: 'Python',
     glyph: 'PY',
     tagline: 'Runtime semantics, stdlib, and the sharp edges.',
+    difficulties: ['easy', 'medium', 'hard'],
   },
   {
     id: 'postgres',
     label: 'Postgres',
     glyph: 'PG',
     tagline: 'Query planning, concurrency, and storage internals.',
+    difficulties: ['easy', 'medium', 'hard'],
+  },
+  {
+    id: 'javascript',
+    label: 'JavaScript',
+    glyph: 'JS',
+    tagline: 'Coercion, scope, and the runtime behavior that surprises.',
+    difficulties: ['easy', 'medium', 'hard'],
   },
 ];
 
@@ -37,6 +46,11 @@ export const DIFFICULTIES = [
     description: 'Internals, edge cases, and the questions that bite in review.',
   },
 ];
+
+export function getDifficultiesForLanguage(languageId) {
+  const allowed = LANGUAGES.find((entry) => entry.id === languageId)?.difficulties ?? [];
+  return DIFFICULTIES.filter((difficulty) => allowed.includes(difficulty.id));
+}
 
 export const QUESTION_TYPES = {
   MULTIPLE_CHOICE: 'mc',

@@ -37,3 +37,11 @@ This triggered a full responsive pass across every component: unprefixed Tailwin
 Cards should have a min-height so that they so the cards don't jitter in size as theor content changes
 
 Question cards keep a reserved body height (`min-h-[22rem]` on mobile, `min-h-[32rem]` from `sm` up) so advancing from a short True/False card to a tall multiple-choice card with a code block does not jump the Continue row or the keyboard hint bar. Taller questions still grow past that floor.
+
+## Refinement: JavaScript track
+
+Add JavaScript as a third language track, with 100 easy questions and 100 medium questions. No hard bank. Hard stays available for Python and Postgres, and is hidden when JavaScript is selected so an empty round cannot start.
+
+## Refinement: JavaScript hard bank
+
+Add 100 hard JavaScript questions and show the Hard tier for that track again. Python and Postgres are unchanged.
