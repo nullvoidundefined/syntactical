@@ -1,0 +1,24 @@
+{
+  "reviewer": "security-reviewer subagent",
+  "model": "claude-fable-5-1",
+  "range": "b1b1449..a1afa3a",
+  "rounds": [
+    { "round": 1, "range": "b1b1449..7c53ee4", "findings": 3 },
+    { "round": 2, "range": "b1b1449..a1afa3a", "findings": 1 }
+  ],
+  "findings": [
+    { "id": 1, "severity": "LOW", "control": "topicCounts prototype keys untested", "status": "fixed de6e075" },
+    { "id": 2, "severity": "LOW", "control": "topicCounts values uncapped", "status": "fixed de6e075" },
+    { "id": 3, "severity": "LOW", "control": "content build ran buildBankContext before manifest validation", "status": "fixed de6e075" },
+    { "id": 4, "severity": "LOW", "control": "build-time assertSafeBankPaths insecure-value test", "status": "fixed de6e075 (covered by scripts/__tests__/buildContentManifestPathRule.test.ts:49-50, which fed ../outside.json and /etc/hosts.json and failed on a message regression during this fix)" }
+  ],
+  "nothingFound": [
+    "Manifest bank entry access and productId: tried missing, premium, Free, '', null, true, paid without productId, free with productId, wrong difficulty/language/prefix/case/suffix",
+    "contentVersion: tried missing, 0, -1, 1.5, '1', null, NaN, Infinity",
+    "topics and misconceptions lists and caps: tried non-list, null entries, bad ids, duplicates, 21 topics, 41 misconceptions, 65-character ids",
+    "Bank choices, choice.code, rationale, provenance, topic and misconception references, ab criterion: tried schema-1 string choices, null and oversized values, unknown and case-variant references",
+    "Cache read path: tried schema-1 bank and manifest, truncated JSON, malformed hash; all read as absent",
+    "Bundled read path and manifest-before-validation: no consumer reads an unvalidated manifest field",
+    "Rendered strings: choice.text rendered as React Native Text only"
+  ]
+}
