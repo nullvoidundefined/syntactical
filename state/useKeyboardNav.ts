@@ -38,11 +38,16 @@ function isBrowserShortcutOrRepeat(event: KeyboardEvent): boolean {
   return altKey || ctrlKey || metaKey || repeat;
 }
 
+// Input types that take no typed text; a key pressed on one of these
+// (a checkbox, a button) still belongs to the bindings.
+const NON_TEXT_INPUT_TYPES = new Set(['button', 'checkbox', 'color', 'file', 'image', 'radio', 'range', 'reset', 'submit']);
+
 // A key pressed inside a text field is text, not a command.
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
+  if (target instanceof HTMLInputElement) return !NON_TEXT_INPUT_TYPES.has(target.type);
   const tagName = target.tagName.toLowerCase();
-  if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') return true;
+  if (tagName === 'textarea' || tagName === 'select') return true;
   return target.isContentEditable || target.closest('[contenteditable]:not([contenteditable="false"])') !== null;
 }
 
