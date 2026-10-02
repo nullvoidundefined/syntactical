@@ -2,7 +2,7 @@
 
 **Ticket:** IAN-564
 **Branch:** `feat/expo-universal-app`
-**Status:** draft, revised after the adversarial spec review, awaiting owner approval
+**Status:** shipped in PRs #2, #3, and #4, except B-38 (accessibility pass on the live site, IAN-596) and the B-40 device runs (IAN-595)
 **Date:** 2026-10-02
 
 ## Goal
