@@ -5,7 +5,10 @@ import { Text } from 'react-native';
 import type { Question } from '../../../services/content/types/Question';
 import { QuizRound } from '../QuizRound';
 
-jest.mock('react-native-reanimated', () => ({ useReducedMotion: () => false }));
+// Reduced motion makes the query Modal close without a CSS animation;
+// react-native-web unmounts an animated Modal only on animationend, which
+// jsdom never fires.
+jest.mock('react-native-reanimated', () => ({ useReducedMotion: () => true }));
 jest.mock('../../../state/StatsProvider', () => ({
   useQuizStats: () => ({ isHydrated: true, recordAnswer: () => undefined, recordCompletion: () => undefined }),
 }));
