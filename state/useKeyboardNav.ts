@@ -30,6 +30,13 @@ function readChoiceIndex(key: string): number | null {
   return position === -1 ? null : position % CHOICES_PER_ROW;
 }
 
+// A modifier means the key belongs to a browser or OS shortcut (Cmd+C,
+// Ctrl+T), and a held key auto-repeats; neither may answer or advance.
+function isBrowserShortcutOrRepeat(event: KeyboardEvent): boolean {
+  const { altKey, ctrlKey, metaKey, repeat } = event;
+  return altKey || ctrlKey || metaKey || repeat;
+}
+
 function dispatchKey(key: string, handlers: KeyboardHandlers): void {
   const { onAdvance, onEscape, onSelectBool, onSelectChoice, onToggleQuery } = handlers;
   const { boolFalse, boolTrue, escape, next, query } = KEY_BINDINGS;
@@ -50,6 +57,7 @@ export function useKeyboardNav(handlers: KeyboardHandlers): void {
   useEffect(() => {
     if (Platform.OS !== 'web' || !isEnabled) return undefined;
     function handleKeyDown(event: KeyboardEvent) {
+      if (isBrowserShortcutOrRepeat(event)) return;
       dispatchKey(event.key, latestHandlers.current);
     }
     window.addEventListener('keydown', handleKeyDown);
