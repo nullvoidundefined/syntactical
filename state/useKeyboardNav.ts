@@ -1,7 +1,8 @@
 // Web-only global key bindings from KEY_BINDINGS: choice keys select by
 // position, T and F answer booleans, Enter advances, Q toggles the query,
 // and Escape backs out. A no-op on native, where every action is a touch
-// target. Handlers left undefined make their keys inert.
+// target. Handlers left undefined make their keys inert, and keys typed
+// into a text field belong to that field, never to the bindings.
 import { useEffect, useRef } from 'react';
 
 import { Platform } from 'react-native';
@@ -37,6 +38,14 @@ function isBrowserShortcutOrRepeat(event: KeyboardEvent): boolean {
   return altKey || ctrlKey || metaKey || repeat;
 }
 
+// A key pressed inside a text field is text, not a command.
+function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  const tagName = target.tagName.toLowerCase();
+  if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') return true;
+  return target.isContentEditable || target.closest('[contenteditable]:not([contenteditable="false"])') !== null;
+}
+
 function dispatchKey(key: string, handlers: KeyboardHandlers): void {
   const { onAdvance, onEscape, onSelectBool, onSelectChoice, onToggleQuery } = handlers;
   const { boolFalse, boolTrue, escape, next, query } = KEY_BINDINGS;
@@ -57,7 +66,7 @@ export function useKeyboardNav(handlers: KeyboardHandlers): void {
   useEffect(() => {
     if (Platform.OS !== 'web' || !isEnabled) return undefined;
     function handleKeyDown(event: KeyboardEvent) {
-      if (isBrowserShortcutOrRepeat(event)) return;
+      if (isBrowserShortcutOrRepeat(event) || isTypingTarget(event.target)) return;
       dispatchKey(event.key, latestHandlers.current);
     }
     window.addEventListener('keydown', handleKeyDown);

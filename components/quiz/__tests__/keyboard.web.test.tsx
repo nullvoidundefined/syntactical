@@ -134,3 +134,44 @@ describe('web keyboard navigation in a round', () => {
     expect(screen.queryByText('menu screen')).not.toBeNull();
   });
 });
+
+describe('web keyboard navigation ignores keys meant for something else', () => {
+  const threeChoiceQuestion: Question = { answerIndex: 2, choices: ['a', 'b', 'c'], id: 'q-3', prompt: 'Pick', query, type: 'mc' };
+
+  function pressKeyOn(target: HTMLElement, key: string) {
+    act(() => {
+      target.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key }));
+    });
+  }
+
+  it.each([
+    ['an input', () => document.createElement('input')],
+    ['a textarea', () => document.createElement('textarea')],
+    [
+      'a contenteditable element',
+      () => {
+        const element = document.createElement('div');
+        element.setAttribute('contenteditable', 'true');
+        return element;
+      },
+    ],
+  ])('does not answer, open the query, or advance while typing in %s', (_label, createField) => {
+    render(<RoundHarness question={mcQuestion} />);
+    const field = createField();
+    document.body.appendChild(field);
+    field.focus();
+    for (const key of ['3', 'c', 'q', 'Enter']) pressKeyOn(field, key);
+    expect(screen.queryByLabelText('c, correct')).toBeNull();
+    expect(screen.queryByTestId('query-modal')).toBeNull();
+    expect(screen.queryByText('round 0')).not.toBeNull();
+    field.remove();
+  });
+
+  it.each(['4', 'D'])('ignores choice key %p on a question with three choices', (key) => {
+    render(<RoundHarness question={threeChoiceQuestion} />);
+    pressKey(key);
+    expect(screen.queryByLabelText('c, correct')).toBeNull();
+    pressKey('3');
+    expect(screen.queryByLabelText('c, correct')).not.toBeNull();
+  });
+});
