@@ -10,9 +10,11 @@ import type { Question } from '../../services/content/types/Question';
 import { useQuizStats } from '../../state/StatsProvider';
 import { useQuizEngine } from '../../state/useQuizEngine';
 import { useRoundCompletion } from '../../state/useRoundCompletion';
+import { useRoundKeyboard } from '../../state/useRoundKeyboard';
 import { QueryDrawer } from '../query/QueryDrawer';
 
 import { BooleanCard } from './BooleanCard';
+import { KeyboardHintBar } from './KeyboardHintBar';
 import { MultipleChoiceCard } from './MultipleChoiceCard';
 import { ProgressBar } from './ProgressBar';
 import { QuestionCardFrame } from './QuestionCardFrame';
@@ -66,6 +68,19 @@ function AnswerActions({ onAdvance, onExplain, wasCorrect }: { onAdvance: () => 
   );
 }
 
+function RoundHeader({ currentIndex, onExit, totalQuestions }: { currentIndex: number; onExit: () => void; totalQuestions: number }) {
+  return (
+    <>
+      <View className="flex-row px-4 pt-3">
+        <Pressable role="button" aria-label="Back to menu" onPress={onExit}>
+          <Text className="font-mono text-xs text-muted">Back</Text>
+        </Pressable>
+      </View>
+      <ProgressBar current={currentIndex} total={totalQuestions} />
+    </>
+  );
+}
+
 export function QuizRound(props: QuizRoundProps) {
   const { difficulty, difficultyLabel, grammar, language, languageLabel, onExit, onRetry, questions } = props;
   const engine = useQuizEngine(questions);
@@ -85,31 +100,29 @@ export function QuizRound(props: QuizRoundProps) {
     advanceQuestion();
   }
 
+  useRoundKeyboard({
+    currentType: currentQuestion?.type,
+    isAnswered,
+    isComplete,
+    isQueryOpen,
+    onAdvance: handleAdvance,
+    onAnswer: handleAnswer,
+    onExit,
+    setIsQueryOpen,
+  });
+
   if (isComplete || !currentQuestion) {
     const { accuracy, correctCount, totalQuestions } = engine;
-    return (
-      <ResultsScreen
-        accuracy={accuracy}
-        correctCount={correctCount}
-        difficultyLabel={difficultyLabel}
-        languageLabel={languageLabel}
-        onMenu={onExit}
-        onRetry={onRetry}
-        totalQuestions={totalQuestions}
-      />
-    );
+    const results = { accuracy, correctCount, difficultyLabel, languageLabel, totalQuestions };
+    return <ResultsScreen {...results} onMenu={onExit} onRetry={onRetry} />;
   }
 
   const answerState = { grammar, isAnswered, submittedAnswer };
   const { currentIndex, totalQuestions } = engine;
+  const { query, type } = currentQuestion;
   return (
     <View className="flex-1">
-      <View className="flex-row px-4 pt-3">
-        <Pressable role="button" aria-label="Back to menu" onPress={onExit}>
-          <Text className="font-mono text-xs text-muted">Back</Text>
-        </Pressable>
-      </View>
-      <ProgressBar current={currentIndex} total={totalQuestions} />
+      <RoundHeader currentIndex={currentIndex} onExit={onExit} totalQuestions={totalQuestions} />
       <ScrollView contentContainerClassName="flex-grow items-center px-4 py-6">
         <View className="w-full max-w-2xl">
           <QuestionCard
@@ -123,7 +136,8 @@ export function QuizRound(props: QuizRoundProps) {
           {isAnswered ? <AnswerActions onAdvance={handleAdvance} onExplain={() => setIsQueryOpen(true)} wasCorrect={wasCorrect} /> : null}
         </View>
       </ScrollView>
-      <QueryDrawer isOpen={isQueryOpen} query={currentQuestion.query} grammar={grammar} onClose={() => setIsQueryOpen(false)} />
+      <KeyboardHintBar questionType={type} isAnswered={isAnswered} />
+      <QueryDrawer isOpen={isQueryOpen} query={query} grammar={grammar} onClose={() => setIsQueryOpen(false)} />
     </View>
   );
 }

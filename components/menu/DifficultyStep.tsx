@@ -5,6 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { DIFFICULTIES } from '../../constants/appConfig';
 import { useIsOnline } from '../../state/useIsOnline';
+import { useKeyboardNav } from '../../state/useKeyboardNav';
 import { useLanguageManifest } from '../../state/useLanguageManifest';
 import { useQuestionBank, type QuestionBankState } from '../../state/useQuestionBank';
 
@@ -34,13 +35,20 @@ function DifficultyOption({ difficultyId, keyHint, language, onSelect }: Difficu
   const { description, label } = readDifficultyCopy(difficultyId);
   const { status } = bankState;
   const isRetryable = status === 'error' && isOnline;
+  const isDisabled = status !== 'ready' && !isRetryable;
+  const handleSelect = pickSelectHandler(bankState, onSelect);
+  useKeyboardNav({
+    onSelectChoice: (index) => {
+      if (index === keyHint - 1 && !isDisabled) handleSelect();
+    },
+  });
   return (
     <SelectionCard
       keyHint={keyHint}
       title={label}
       subtitle={description}
-      onSelect={pickSelectHandler(bankState, onSelect)}
-      isDisabled={status !== 'ready' && !isRetryable}
+      onSelect={handleSelect}
+      isDisabled={isDisabled}
       statusLabel={describeBankStatus(bankState, isOnline)}
     />
   );
@@ -50,6 +58,7 @@ export function DifficultyStep({ language, onBack, onSelectDifficulty }: Difficu
   const { languages } = useLanguageManifest();
   const languageEntry = languages.find(({ id }) => id === language);
   const difficultyIds = DIFFICULTIES.map(({ id }) => id).filter((id) => languageEntry && Object.hasOwn(languageEntry.banks, id));
+  useKeyboardNav({ onEscape: onBack });
   return (
     <View>
       <View className="mb-4 flex-row items-center justify-between">
