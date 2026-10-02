@@ -23,6 +23,10 @@ function isOptionalText(value: unknown, maxLength: number): boolean {
   return value === undefined || (typeof value === 'string' && value.length <= maxLength);
 }
 
+function isOptionalDisplayText(value: unknown): boolean {
+  return value === undefined || isText(value, CONTENT_LIMITS.displayFieldLength);
+}
+
 function areValidTags(tags: unknown): boolean {
   if (tags === undefined) return true;
   const { maxTags, tagLength } = CONTENT_LIMITS;
@@ -44,12 +48,12 @@ function isValidQuery(query: unknown): boolean {
 function isValidChoice(choice: unknown): boolean {
   if (!isRecord(choice)) return false;
   const { code, misconceptionId, rationale, text } = choice;
-  const { choiceLength, displayFieldLength, longTextLength } = CONTENT_LIMITS;
+  const { choiceLength, longTextLength } = CONTENT_LIMITS;
   return (
     isText(text, choiceLength) &&
     isOptionalText(code, longTextLength) &&
     (rationale === undefined || typeof rationale === 'string') &&
-    isOptionalText(misconceptionId, displayFieldLength)
+    isOptionalDisplayText(misconceptionId)
   );
 }
 
@@ -67,7 +71,7 @@ function isValidBoolExtras(question: Record<string, unknown>): boolean {
   const { misconceptionId, rationale } = question;
   return (
     (rationale === undefined || typeof rationale === 'string') &&
-    isOptionalText(misconceptionId, CONTENT_LIMITS.displayFieldLength)
+    isOptionalDisplayText(misconceptionId)
   );
 }
 
@@ -92,13 +96,13 @@ function hasLongRationale(question: Record<string, unknown>): boolean {
 function findBrokenRule(question: unknown): string | null {
   if (!isRecord(question)) return 'malformed question';
   const { code, id, prompt, query, topic } = question;
-  const { longTextLength, promptLength, displayFieldLength } = CONTENT_LIMITS;
+  const { longTextLength, promptLength } = CONTENT_LIMITS;
   const isShapeValid =
     typeof id === 'string' &&
     QUESTION_ID.test(id) &&
     isText(prompt, promptLength) &&
     isOptionalText(code, longTextLength) &&
-    isOptionalText(topic, displayFieldLength) &&
+    isOptionalDisplayText(topic) &&
     isValidQuery(query);
   if (!isShapeValid) return 'malformed question';
   if (hasLongRationale(question)) return 'rationale-too-long';

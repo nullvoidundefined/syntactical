@@ -4,6 +4,6 @@ export type Provenance = {
   model?: string;
   promptVersion?: string;
   runtimeVersion?: string;
-  validation: { method: 'executed' | 'judged'; status: string };
+  validation: { method: 'executed' | 'judged'; status: 'pending' | 'passed' | 'failed' };
   isHumanReviewed: boolean;
 };

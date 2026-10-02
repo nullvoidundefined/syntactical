@@ -1,27 +1,38 @@
-// The strict publish check: every question needs a topic, and every wrong
-// answer (or a true/false question) needs a rationale. The client validator
-// stays lenient; this runs in the content build.
+// The strict publish check: every question needs a topic, every wrong
+// answer (or a true/false question) needs a rationale within the length cap,
+// and validation must not have failed or be pending without human review.
+// The client validator stays lenient; this runs in the content build.
+import { CONTENT_LIMITS } from './contentLimits.js';
 import type { BankContext } from './types/BankContext.js';
 import type { Question } from './types/Question.js';
 
 type PublishProblem = { id: string; rule: string };
 
 function hasText(value: string | undefined): boolean {
-  return typeof value === 'string' && value.length > 0;
+  return typeof value === 'string' && value.trim().length > 0;
 }
 
-function countMissingRationales(question: Question): number {
-  if (question.type === 'bool') return hasText(question.rationale) ? 0 : 1;
-  return question.choices.filter((choice, index) => index !== question.answerIndex && !hasText(choice.rationale)).length;
+function collectRationales(question: Question): (string | undefined)[] {
+  if (question.type === 'bool') return [question.rationale];
+  return question.choices.filter((_choice, index) => index !== question.answerIndex).map((choice) => choice.rationale);
+}
+
+function findValidationRule(question: Question): string | null {
+  const { isHumanReviewed, validation } = question.provenance;
+  if (validation.status === 'failed') return 'validation-failed';
+  return validation.status === 'pending' && !isHumanReviewed ? 'validation-pending' : null;
 }
 
 function findProblems(question: Question): PublishProblem[] {
-  const problems: PublishProblem[] = [];
-  if (!hasText(question.topic)) problems.push({ id: question.id, rule: 'missing-topic' });
-  for (let count = countMissingRationales(question); count > 0; count -= 1) {
-    problems.push({ id: question.id, rule: 'missing-rationale' });
+  const rules: string[] = [];
+  if (!hasText(question.topic)) rules.push('missing-topic');
+  for (const rationale of collectRationales(question)) {
+    if (!hasText(rationale)) rules.push('missing-rationale');
+    else if ((rationale as string).length > CONTENT_LIMITS.rationaleLength) rules.push('rationale-too-long');
   }
-  return problems;
+  const validationRule = findValidationRule(question);
+  if (validationRule !== null) rules.push(validationRule);
+  return rules.map((rule) => ({ id: question.id, rule }));
 }
 
 export function validateBankForPublish(

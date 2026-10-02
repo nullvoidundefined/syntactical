@@ -68,6 +68,28 @@ describe('validateBankForPublish', () => {
         expect(publish([question])).toEqual({ problems: [] });
     });
 
+    it('reports no problems for a wrong choice and a bool question with 280-character rationales', () => {
+        const questions = [
+            buildEnrichedMultipleChoiceQuestion('q-1', {
+                choices: [{ text: '1', rationale: 'r'.repeat(280) }, { text: '3' }],
+                answerIndex: 1,
+            }),
+            buildEnrichedBooleanQuestion('q-2', { rationale: 'r'.repeat(280) }),
+        ];
+        expect(publish(questions)).toEqual({ problems: [] });
+    });
+
+    it('reports no problems for a question pending validation that a human reviewed', () => {
+        const question = buildEnrichedMultipleChoiceQuestion('q-1', {
+            provenance: {
+                source: 'generated',
+                validation: { method: 'judged', status: 'pending' },
+                isHumanReviewed: true,
+            },
+        });
+        expect(publish([question])).toEqual({ problems: [] });
+    });
+
     it('reports missing-topic for an mc question with no topic', () => {
         const question = withoutField(buildEnrichedMultipleChoiceQuestion('q-1'), 'topic');
         expect(publish([question])).toEqual({ problems: [{ id: 'q-1', rule: 'missing-topic' }] });

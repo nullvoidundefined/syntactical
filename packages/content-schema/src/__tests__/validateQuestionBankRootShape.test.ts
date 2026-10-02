@@ -44,8 +44,17 @@ describe('validateQuestionBank rejects the whole bank', () => {
         ['a non-integer', 2.5],
         ['a numeric string', '2'],
         ['null', null],
+        ['one (schema 1)', 1],
     ])('with the schemaVersion rule when schemaVersion is %s', (_description, schemaVersion) => {
         const bank = buildBank([buildBooleanQuestion('q-1')], { schemaVersion });
+        expect(validateQuestionBank(bank)).toEqual({
+            isValid: false,
+            rule: 'schemaVersion is not supported',
+        });
+    });
+
+    it('with the schemaVersion rule when the bank has no schemaVersion key', () => {
+        const bank = { questions: [buildBooleanQuestion('q-1')] };
         expect(validateQuestionBank(bank)).toEqual({
             isValid: false,
             rule: 'schemaVersion is not supported',

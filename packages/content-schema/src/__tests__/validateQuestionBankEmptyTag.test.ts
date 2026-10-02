@@ -11,7 +11,7 @@ describe('validateQuestionBank empty tag', () => {
     const emptyTagQuestion = { ...validQuestion, id: 'q-empty-tag', query: { ...query, tags: [''] } };
     const result = validateQuestionBank({ questions: [validQuestion, emptyTagQuestion], schemaVersion: 2 });
     expect(result).toEqual({
-      dropped: [{ id: 'q-empty-tag', rule: expect.any(String) }],
+      dropped: [{ id: 'q-empty-tag', rule: 'malformed question' }],
       droppedQuestionIds: ['q-empty-tag'],
       isValid: true,
       questions: [validQuestion],

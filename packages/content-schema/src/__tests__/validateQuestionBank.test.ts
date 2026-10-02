@@ -71,7 +71,7 @@ function bankWithDrops(questions: unknown[], drops: { id: string; rule?: string 
         isValid: true,
         questions,
         droppedQuestionIds: drops.map((drop) => drop.id),
-        dropped: drops.map((drop) => ({ id: drop.id, rule: drop.rule ?? expect.any(String) })),
+        dropped: drops.map((drop) => ({ id: drop.id, rule: drop.rule ?? 'malformed question' })),
     };
 }
 
@@ -140,7 +140,7 @@ describe('validateQuestionBank (schema 2)', () => {
                         model: 'model-name',
                         promptVersion: 'enrich-v3',
                         runtimeVersion: 'python 3.13.1',
-                        validation: { method: 'judged', status: 'needs-review' },
+                        validation: { method: 'judged', status: 'pending' },
                         isHumanReviewed: true,
                     },
                 },
@@ -149,9 +149,34 @@ describe('validateQuestionBank (schema 2)', () => {
                 'executed provenance whose status is failed',
                 { provenance: buildProvenance({ validation: { method: 'executed', status: 'failed' } }) },
             ],
+            [
+                'executed provenance whose status is pending',
+                { provenance: buildProvenance({ validation: { method: 'executed', status: 'pending' } }) },
+            ],
+            [
+                '120-character provenance model, promptVersion, and runtimeVersion',
+                {
+                    provenance: buildProvenance({
+                        source: 'generated',
+                        model: 'm'.repeat(120),
+                        promptVersion: 'p'.repeat(120),
+                        runtimeVersion: 'r'.repeat(120),
+                    }),
+                },
+            ],
+            ['a 120-character topic', { topic: 't'.repeat(120) }],
+            [
+                'a 120-character choice misconceptionId',
+                { choices: [{ text: 'a' }, { text: 'b', misconceptionId: 'm'.repeat(120) }], answerIndex: 0 },
+            ],
         ])('keeps a multiple-choice question with %s', (_description, overrides) => {
             const question = buildMultipleChoiceQuestion('q-1', overrides);
             if (question.code === undefined) delete question.code;
+            expect(validateQuestionBank(buildBank([question]))).toEqual(acceptedBank([question]));
+        });
+
+        it('keeps a bool question with a 120-character topic and misconceptionId', () => {
+            const question = buildBooleanQuestion('q-1', { topic: 't'.repeat(120), misconceptionId: 'm'.repeat(120) });
             expect(validateQuestionBank(buildBank([question]))).toEqual(acceptedBank([question]));
         });
 
@@ -216,6 +241,7 @@ describe('validateQuestionBank (schema 2)', () => {
             ['a missing type', { type: undefined }],
             ['an uppercase type', { type: 'MC' }],
             ['a non-string topic', { topic: 42 }],
+            ['a topic over 120 characters', { topic: 't'.repeat(121) }],
             ['missing choices', { choices: undefined }],
             ['choices that are not an array', { choices: 'a,b' }],
             ['one choice', { choices: buildChoices(['only']), answerIndex: 0 }],
@@ -236,6 +262,10 @@ describe('validateQuestionBank (schema 2)', () => {
             [
                 'a non-string choice misconceptionId',
                 { choices: [{ text: 'a' }, { text: 'b', misconceptionId: 7 }], answerIndex: 0 },
+            ],
+            [
+                'a choice misconceptionId over 120 characters',
+                { choices: [{ text: 'a' }, { text: 'b', misconceptionId: 'm'.repeat(121) }], answerIndex: 0 },
             ],
             ['a missing answerIndex', { answerIndex: undefined }],
             ['a negative answerIndex', { answerIndex: -1 }],
@@ -259,6 +289,8 @@ describe('validateQuestionBank (schema 2)', () => {
             ['a null answer', { answer: null }],
             ['a non-string rationale', { rationale: 7 }],
             ['a non-string misconceptionId', { misconceptionId: 7 }],
+            ['a misconceptionId over 120 characters', { misconceptionId: 'm'.repeat(121) }],
+            ['a topic over 120 characters', { topic: 't'.repeat(121) }],
         ])('drops a bool question with %s', (_description, overrides) => {
             const keptFirst = buildBooleanQuestion('q-1');
             const malformed = buildBooleanQuestion('q-2', overrides);
@@ -336,7 +368,7 @@ describe('validateQuestionBank (schema 2)', () => {
             expect(result.isValid).toBe(true);
             if (result.isValid) {
                 expect(result.questions).toEqual([keptFirst, keptLast]);
-                expect(result.dropped).toHaveLength(1);
+                expect(result.dropped).toEqual([{ id: expect.any(String), rule: 'malformed question' }]);
             }
         });
 
@@ -352,7 +384,7 @@ describe('validateQuestionBank (schema 2)', () => {
             expect(result.isValid).toBe(true);
             if (result.isValid) {
                 expect(result.questions).toEqual([keptFirst, keptLast]);
-                expect(result.dropped).toHaveLength(1);
+                expect(result.dropped).toEqual([{ id: expect.any(String), rule: 'malformed question' }]);
             }
         });
 
@@ -361,7 +393,7 @@ describe('validateQuestionBank (schema 2)', () => {
             const duplicate = buildBooleanQuestion('q-1', { prompt: 'A different prompt.' });
             const other = buildBooleanQuestion('q-2');
             const result = validateQuestionBank(buildBank([original, duplicate, other]));
-            expect(result).toEqual(bankWithDrops([original, other], [{ id: 'q-1' }]));
+            expect(result).toEqual(bankWithDrops([original, other], [{ id: 'q-1', rule: 'duplicate id' }]));
         });
 
         it('lists every dropped id and its rule in input order', () => {
