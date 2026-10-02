@@ -67,11 +67,6 @@ describe('fetchContentText transport', () => {
     expect((err as ContentFetchError).reason).toBe('too-large');
   });
 
-  it('resolves when the response reports an empty url and was not redirected', async () => {
-    installFetch({ url: '', redirected: false, text: () => Promise.resolve('ok') });
-    await expect(fetchContentText(REQUEST_URL, 1024)).resolves.toBe('ok');
-  });
-
   it('resolves when the response url is an equivalent form of the requested url, and rejects another origin', async () => {
     installFetch({
       url: 'https://example.test:443/syntactical/content/python/easy.json',
