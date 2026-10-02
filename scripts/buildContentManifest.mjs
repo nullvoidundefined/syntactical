@@ -4,6 +4,7 @@
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, sep } from 'node:path';
+import { CONTENT_LIMITS } from '../constants/appConfig.ts';
 import { validateManifest } from '../services/content/validateManifest.ts';
 import { validateQuestionBank } from '../services/content/validateQuestionBank.ts';
 
@@ -24,6 +25,9 @@ function listBankEntries(manifest) {
 
 async function readBankBytes(contentDir, bankPath) {
   const bytes = await readFile(join(contentDir, bankPath));
+  if (bytes.length > CONTENT_LIMITS.bankBytes) {
+    throw new Error(`${bankPath} is over the ${CONTENT_LIMITS.bankBytes} byte limit`);
+  }
   if (hasByteOrderMark(bytes)) throw new Error(`${bankPath} starts with a UTF-8 byte-order mark`);
   return bytes;
 }
@@ -79,7 +83,11 @@ export async function buildContentManifest(contentDir, generatedPath) {
     ({ language, difficulty, bank }) =>
       `  '${language.id}/${difficulty}': require('${toRequirePath(generatedPath, contentDir, bank.path)}'),`,
   );
-  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  const manifestText = `${JSON.stringify(manifest, null, 2)}\n`;
+  if (Buffer.byteLength(manifestText, 'utf8') > CONTENT_LIMITS.manifestBytes) {
+    throw new Error(`manifest.json is over the ${CONTENT_LIMITS.manifestBytes} byte limit`);
+  }
+  await writeFile(manifestPath, manifestText);
   await mkdir(dirname(generatedPath), { recursive: true });
   await writeFile(generatedPath, renderGeneratedSource(manifest, bankLines));
 }

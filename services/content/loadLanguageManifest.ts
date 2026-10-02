@@ -1,6 +1,6 @@
 // Fetches, validates, and caches the manifest. Any failure returns null
 // after one warning, so the caller keeps the manifest it already has.
-import { fetchContentText } from '../../clients/contentClient';
+import { ContentFetchError, fetchContentText } from '../../clients/contentClient';
 import { logWarning } from '../../clients/logClient';
 import { CONTENT_LIMITS } from '../../constants/appConfig';
 import { writeCachedManifest } from './contentCache';
@@ -14,6 +14,15 @@ function rejectManifest(rule: string): null {
   return null;
 }
 
+function rejectFailure(err: unknown): null {
+  if (err instanceof ContentFetchError && err.reason === 'too-large') {
+    return rejectManifest('body exceeds the size limit');
+  }
+  if (err instanceof SyntaxError) return rejectManifest('body is not valid JSON');
+  logWarning({ document: MANIFEST_DOCUMENT, err }, 'content fetch failed');
+  return null;
+}
+
 export async function loadLanguageManifest(contentBaseUrl: string): Promise<Manifest | null> {
   try {
     const manifestUrl = new URL(MANIFEST_DOCUMENT, contentBaseUrl).toString();
@@ -23,6 +32,6 @@ export async function loadLanguageManifest(contentBaseUrl: string): Promise<Mani
     await writeCachedManifest(result.manifest);
     return result.manifest;
   } catch (err) {
-    return rejectManifest(String(err));
+    return rejectFailure(err);
   }
 }

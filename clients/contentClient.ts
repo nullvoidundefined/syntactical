@@ -3,7 +3,7 @@
 // UTF-8 byte-size limit on the body text.
 import { CONTENT_LIMITS } from '../constants/appConfig';
 
-export type ContentFetchReason = 'network' | 'timeout' | 'redirect' | 'status' | 'too-large';
+type ContentFetchReason = 'network' | 'timeout' | 'redirect' | 'status' | 'too-large';
 
 export class ContentFetchError extends Error {
   readonly reason: ContentFetchReason;
@@ -15,18 +15,34 @@ export class ContentFetchError extends Error {
   }
 }
 
-export type ContentFetchOptions = { timeoutMs?: number };
+type ContentFetchOptions = { timeoutMs?: number };
 
 function countUtf8Bytes(text: string): number {
   return new TextEncoder().encode(text).length;
 }
 
+function isSameUrl(responseUrl: string, requestedUrl: string): boolean {
+  if (responseUrl === '') return true;
+  try {
+    return new URL(responseUrl).href === new URL(requestedUrl).href;
+  } catch {
+    return false;
+  }
+}
+
 function assertDirectOkResponse(response: Response, requestedUrl: string): void {
-  if (response.redirected || response.url !== requestedUrl) {
+  if (response.redirected || !isSameUrl(response.url, requestedUrl)) {
     throw new ContentFetchError('redirect', 'Content request was redirected');
   }
   if (!response.ok) {
     throw new ContentFetchError('status', `Content request failed with ${response.status}`);
+  }
+}
+
+function assertDeclaredLengthWithinLimit(response: Response, maxBytes: number): void {
+  const declaredLength = Number(response.headers?.get('content-length'));
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    throw new ContentFetchError('too-large', 'Content body exceeds the size limit');
   }
 }
 
@@ -35,8 +51,9 @@ async function requestAndReadText(
   maxBytes: number,
   signal: AbortSignal,
 ): Promise<string> {
-  const response = await fetch(url, { redirect: 'error', signal });
+  const response = await fetch(url, { redirect: 'error', cache: 'no-cache', signal });
   assertDirectOkResponse(response, url);
+  assertDeclaredLengthWithinLimit(response, maxBytes);
   const text = await response.text();
   if (countUtf8Bytes(text) > maxBytes) {
     throw new ContentFetchError('too-large', 'Content body exceeds the size limit');

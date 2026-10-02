@@ -2,8 +2,10 @@
 // prefetch run after each manifest refresh. Shared by the content provider
 // and useQuestionBank, so neither imports the other.
 import type { QueryClient } from '@tanstack/react-query';
+import { logWarning } from '../../clients/logClient';
 import type { CachedBank } from './contentCache';
 import type { BankEntry, Manifest } from './contentTypes';
+import { loadLanguageManifest } from './loadLanguageManifest';
 import { loadQuestionBank } from './loadQuestionBank';
 
 export type ContentAccess = {
@@ -12,13 +14,22 @@ export type ContentAccess = {
   readLocalBank: (language: string, difficulty: string) => CachedBank | null;
 };
 
+export function buildManifestQuery(contentBaseUrl: string, isEnabled: boolean) {
+  return {
+    queryKey: ['manifest'],
+    queryFn: () => loadLanguageManifest(contentBaseUrl),
+    enabled: isEnabled,
+  };
+}
+
 export function findBankEntry(
   manifest: Manifest,
   language: string,
   difficulty: string,
 ): BankEntry | undefined {
   const languageEntry = manifest.languages.find((entry) => entry.id === language);
-  return (languageEntry?.banks as Record<string, BankEntry> | undefined)?.[difficulty];
+  const banks = languageEntry?.banks as Record<string, BankEntry> | undefined;
+  return banks && Object.hasOwn(banks, difficulty) ? banks[difficulty] : undefined;
 }
 
 function readCurrentHash(
@@ -61,9 +72,9 @@ export function prefetchChangedBanks(
   for (const language of manifest.languages) {
     for (const [difficulty, entry] of Object.entries(language.banks)) {
       if (!entry || access.readLocalBank(language.id, difficulty)?.hash === entry.hash) continue;
-      void queryClient.prefetchQuery(
-        buildBankQuery(queryClient, access, language.id, difficulty, entry),
-      );
+      queryClient
+        .prefetchQuery(buildBankQuery(queryClient, access, language.id, difficulty, entry))
+        .catch((err: unknown) => logWarning({ document: entry.path, err }, 'content prefetch failed'));
     }
   }
 }

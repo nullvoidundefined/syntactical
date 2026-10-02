@@ -1,19 +1,15 @@
 // Validates a fetched manifest. Returns the typed manifest, or the first
 // rule it broke so the caller can log it and keep the previous copy.
 import { CONTENT_LIMITS, DIFFICULTIES, GRAMMARS, SUPPORTED_SCHEMA_VERSION } from '../../constants/appConfig';
+import { SHA256_HEX, isRecord } from './contentGuards';
 import type { Manifest } from './contentTypes';
 import { isSafeBankPath } from './resolveBankUrl';
 
 const LANGUAGE_ID = /^[a-z0-9-]{1,32}$/;
-const SHA256_HEX = /^[0-9a-f]{64}$/;
 const DIFFICULTY_IDS: readonly string[] = DIFFICULTIES.map((difficulty) => difficulty.id);
 const GRAMMAR_IDS: readonly string[] = GRAMMARS;
 
 type ManifestResult = { isValid: true; manifest: Manifest } | { isValid: false; rule: string };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function isDisplayText(value: unknown): boolean {
   return typeof value === 'string' && value.length > 0 && value.length <= CONTENT_LIMITS.displayFieldLength;

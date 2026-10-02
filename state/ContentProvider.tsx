@@ -4,7 +4,9 @@
 // refreshes the manifest and prefetches every bank whose hash changed.
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { logWarning } from '../clients/logClient';
 import {
+  buildManifestQuery,
   findBankEntry,
   prefetchChangedBanks,
   type ContentAccess,
@@ -16,7 +18,6 @@ import {
   type CachedBank,
 } from '../services/content/contentCache';
 import type { Manifest } from '../services/content/contentTypes';
-import { loadLanguageManifest } from '../services/content/loadLanguageManifest';
 import { validateQuestionBank } from '../services/content/validateQuestionBank';
 
 type HydratedContent = { manifest: Manifest; banks: Map<string, CachedBank> };
@@ -75,7 +76,12 @@ export function ContentProvider({
   const [hydrated, setHydrated] = useState<HydratedContent | null>(null);
 
   useEffect(() => {
-    void hydrateContent().then(setHydrated);
+    hydrateContent()
+      .catch((err: unknown) => {
+        logWarning({ err }, 'content hydration failed');
+        return { manifest: BUNDLED, banks: new Map<string, CachedBank>() };
+      })
+      .then(setHydrated);
   }, []);
 
   const access = useMemo(
@@ -83,11 +89,7 @@ export function ContentProvider({
     [hydrated, contentBaseUrl],
   );
 
-  const { data: fetchedManifest } = useQuery({
-    queryKey: ['manifest'],
-    queryFn: () => loadLanguageManifest(contentBaseUrl),
-    enabled: access !== null,
-  });
+  const { data: fetchedManifest } = useQuery(buildManifestQuery(contentBaseUrl, access !== null));
 
   useEffect(() => {
     if (access && fetchedManifest) prefetchChangedBanks(queryClient, fetchedManifest, access);

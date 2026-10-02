@@ -3,6 +3,7 @@
 // the wrong hash. Entries that fail to parse or validate read as absent.
 import { readJson, writeJson } from '../../clients/storageClient';
 import { SUPPORTED_SCHEMA_VERSION } from '../../constants/appConfig';
+import { SHA256_HEX } from './contentGuards';
 import type { Manifest, Question } from './contentTypes';
 import { validateManifest } from './validateManifest';
 import { validateQuestionBank } from './validateQuestionBank';
@@ -11,7 +12,6 @@ export type CachedBank = { hash: string; questions: Question[] };
 
 const KEY_PREFIX = 'syntactical.content.v1.';
 const MANIFEST_KEY = `${KEY_PREFIX}manifest`;
-const SHA256_HEX = /^[0-9a-f]{64}$/;
 
 function buildBankKey(language: string, difficulty: string): string {
   return `${KEY_PREFIX}bank.${language}.${difficulty}`;
