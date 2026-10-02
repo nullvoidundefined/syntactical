@@ -8,6 +8,10 @@
     "Difficulty listing by manifest key (DifficultyStep): tried __proto__, constructor, toString, a language with no banks; refused or empty list",
     "Stats breakdown lookup (StatsPanel): tried __proto__ and constructor as stored keys, a removed language, attempted 0; no prototype read, omitted"
   ],
+  "passes": [
+    { "range": "eefcffd..8617153", "result": "no findings" },
+    { "range": "b21518b..f5c336e", "result": "no security control in range: DownloadIndicator web status region renders only a constant; QuestionCardFrame rename; useRoundCompletion forwards the already-gated route values" }
+  ],
   "model": "claude-fable-5-1",
   "reviewer": "security-reviewer subagent"
 }
