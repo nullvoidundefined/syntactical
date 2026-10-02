@@ -2,15 +2,17 @@
 // the rest kept; a malformed root, an unsupported schema, too many
 // questions, or no valid questions rejects the bank as a whole.
 import { CONTENT_LIMITS } from './contentLimits.js';
-import { SUPPORTED_SCHEMA_VERSION } from './supportedSchemaVersion.js';
-
+import { BANK_SCHEMA_VERSION } from './bankSchemaVersion.js';
 import { isRecord } from './isRecord.js';
+import { isValidProvenance } from './isValidProvenance.js';
 import type { Question } from './types/Question.js';
 
 const QUESTION_ID = /^[a-z0-9-]{1,64}$/;
 
+type DroppedQuestion = { id: string; rule: string };
+
 type BankResult =
-  | { droppedQuestionIds: string[]; isValid: true; questions: Question[] }
+  | { dropped: DroppedQuestion[]; droppedQuestionIds: string[]; isValid: true; questions: Question[] }
   | { isValid: false; rule: string };
 
 function isText(value: unknown, maxLength: number): boolean {
@@ -39,11 +41,21 @@ function isValidQuery(query: unknown): boolean {
   );
 }
 
-function hasValidChoices(choices: unknown[]): boolean {
-  const { minChoices, maxChoices, choiceLength } = CONTENT_LIMITS;
+function isValidChoice(choice: unknown): boolean {
+  if (!isRecord(choice)) return false;
+  const { code, misconceptionId, rationale, text } = choice;
+  const { choiceLength, displayFieldLength, longTextLength } = CONTENT_LIMITS;
   return (
-    choices.length >= minChoices && choices.length <= maxChoices && choices.every((choice) => isText(choice, choiceLength))
+    isText(text, choiceLength) &&
+    isOptionalText(code, longTextLength) &&
+    (rationale === undefined || typeof rationale === 'string') &&
+    isOptionalText(misconceptionId, displayFieldLength)
   );
+}
+
+function hasValidChoices(choices: unknown[]): boolean {
+  const { minChoices, maxChoices } = CONTENT_LIMITS;
+  return choices.length >= minChoices && choices.length <= maxChoices && choices.every(isValidChoice);
 }
 
 function isValidChoiceAnswer(choices: unknown, answerIndex: unknown): boolean {
@@ -51,43 +63,71 @@ function isValidChoiceAnswer(choices: unknown, answerIndex: unknown): boolean {
   return Number.isInteger(answerIndex) && (answerIndex as number) >= 0 && (answerIndex as number) < choices.length;
 }
 
+function isValidBoolExtras(question: Record<string, unknown>): boolean {
+  const { misconceptionId, rationale } = question;
+  return (
+    (rationale === undefined || typeof rationale === 'string') &&
+    isOptionalText(misconceptionId, CONTENT_LIMITS.displayFieldLength)
+  );
+}
+
 function isValidAnswerShape(question: Record<string, unknown>): boolean {
   const { type, choices, answerIndex, answer } = question;
-  if (type === 'bool') return typeof answer === 'boolean';
+  if (type === 'bool') return typeof answer === 'boolean' && isValidBoolExtras(question);
   return type === 'mc' && isValidChoiceAnswer(choices, answerIndex);
 }
 
-function isValidQuestion(question: unknown): question is Question {
-  if (!isRecord(question)) return false;
-  const { code, id, prompt, query } = question;
-  const { longTextLength, promptLength } = CONTENT_LIMITS;
-  return (
+function collectRationales(question: Record<string, unknown>): unknown[] {
+  if (question.type === 'bool') return [question.rationale];
+  return Array.isArray(question.choices) ? question.choices.map((choice) => (isRecord(choice) ? choice.rationale : undefined)) : [];
+}
+
+function hasLongRationale(question: Record<string, unknown>): boolean {
+  return collectRationales(question).some(
+    (rationale) => typeof rationale === 'string' && rationale.length > CONTENT_LIMITS.rationaleLength,
+  );
+}
+
+// Returns the rule a question breaks, or null when it is valid.
+function findBrokenRule(question: unknown): string | null {
+  if (!isRecord(question)) return 'malformed question';
+  const { code, id, prompt, query, topic } = question;
+  const { longTextLength, promptLength, displayFieldLength } = CONTENT_LIMITS;
+  const isShapeValid =
     typeof id === 'string' &&
     QUESTION_ID.test(id) &&
     isText(prompt, promptLength) &&
     isOptionalText(code, longTextLength) &&
-    isValidQuery(query) &&
-    isValidAnswerShape(question)
-  );
+    isOptionalText(topic, displayFieldLength) &&
+    isValidQuery(query);
+  if (!isShapeValid) return 'malformed question';
+  if (hasLongRationale(question)) return 'rationale-too-long';
+  if (!isValidAnswerShape(question)) return 'malformed question';
+  return isValidProvenance(question.provenance) ? null : 'missing-provenance';
 }
 
 function describeQuestionId(question: unknown): string {
   return isRecord(question) && typeof question.id === 'string' ? question.id : '(no id)';
 }
 
-function partitionQuestions(entries: unknown[]): { droppedQuestionIds: string[]; questions: Question[] } {
+function partitionQuestions(entries: unknown[]): {
+  dropped: DroppedQuestion[];
+  droppedQuestionIds: string[];
+  questions: Question[];
+} {
   const seenIds = new Set<string>();
   const questions: Question[] = [];
-  const droppedQuestionIds: string[] = [];
+  const dropped: DroppedQuestion[] = [];
   for (const entry of entries) {
-    if (isValidQuestion(entry) && !seenIds.has(entry.id)) {
-      seenIds.add(entry.id);
-      questions.push(entry);
+    const rule = findBrokenRule(entry);
+    if (rule === null && !seenIds.has((entry as Question).id)) {
+      seenIds.add((entry as Question).id);
+      questions.push(entry as Question);
     } else {
-      droppedQuestionIds.push(describeQuestionId(entry));
+      dropped.push({ id: describeQuestionId(entry), rule: rule ?? 'duplicate id' });
     }
   }
-  return { droppedQuestionIds, questions };
+  return { dropped, droppedQuestionIds: dropped.map((drop) => drop.id), questions };
 }
 
 export function validateQuestionBank(input: unknown): BankResult {
@@ -95,13 +135,13 @@ export function validateQuestionBank(input: unknown): BankResult {
     return { isValid: false, rule: 'root shape is invalid' };
   }
   const { questions: inputQuestions, schemaVersion } = input;
-  if (schemaVersion !== SUPPORTED_SCHEMA_VERSION) {
+  if (schemaVersion !== BANK_SCHEMA_VERSION) {
     return { isValid: false, rule: 'schemaVersion is not supported' };
   }
   if (inputQuestions.length > CONTENT_LIMITS.maxQuestions) {
     return { isValid: false, rule: 'too many questions' };
   }
-  const { droppedQuestionIds, questions } = partitionQuestions(inputQuestions);
+  const { dropped, droppedQuestionIds, questions } = partitionQuestions(inputQuestions);
   if (questions.length === 0) return { isValid: false, rule: 'no valid questions' };
-  return { droppedQuestionIds, isValid: true, questions };
+  return { dropped, droppedQuestionIds, isValid: true, questions };
 }

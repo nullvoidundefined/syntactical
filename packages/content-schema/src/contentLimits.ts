@@ -11,6 +11,7 @@ const QUERY_TITLE_LENGTH = 200;
 const LONG_TEXT_LENGTH = 4000;
 const MAX_TAGS = 10;
 const TAG_LENGTH = 40;
+const RATIONALE_LENGTH = 280;
 const FETCH_TIMEOUT_MS = 8000;
 
 export const CONTENT_LIMITS = {
@@ -26,5 +27,6 @@ export const CONTENT_LIMITS = {
   minChoices: 2,
   promptLength: PROMPT_LENGTH,
   queryTitleLength: QUERY_TITLE_LENGTH,
+  rationaleLength: RATIONALE_LENGTH,
   tagLength: TAG_LENGTH,
 } as const;
