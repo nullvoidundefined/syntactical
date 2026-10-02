@@ -30,7 +30,7 @@ One line per domain noun used in this codebase's names (files, functions, variab
 
 - round - in code - one pass through a shuffled list of questions, from the first question to the results screen (`QuizRound`, `useQuizEngine`); planned variants are a topic round (one topic of a bank) and a review round - chosen over: `session`, `attempt`, because `session` is reserved for sign-in and `useQuizEngine`'s `isComplete` and `ResultsScreen`'s Retry already model one pass as a unit.
 - review round - planned - a round built from due review state items instead of a bank - chosen over: `review session` (session is reserved) and `practice`.
-- review state - planned - the per-question and per-misconception scheduling record (interval, ease, due date, lapses) that the on-device scheduler reads to build a review round - chosen over: `srs card`, `schedule`.
+- review state - planned - the per-question and per-misconception `ts-fsrs` card (`due`, `stability`, `difficulty`, `reps`, `lapses`, `state`), rebuilt by replaying answer events, that the scheduler reads to build a review round - chosen over: `srs card`, `schedule`.
 - weakness report - planned - the on-device summary of the most-missed misconceptions over the last 7 days, shown once at least 20 answers exist in that window - chosen over: `insights`, and `analytics`, which names PostHog events.
 - verified badge - planned - the card label "Output verified on <runtime> <version>", shown only when `provenance.validation` is `executed` and `passed` - chosen over: `checkmark`, `trusted`.
 
@@ -52,9 +52,9 @@ One line per domain noun used in this codebase's names (files, functions, variab
 - session - planned - a sign-in session only: an opaque token whose SHA-256 is stored in `sessions`, carried in the `syntactical_session` cookie on web or an `Authorization: Bearer` header on native - chosen over: nothing; reserved so it never names a quiz pass.
 - one-time code - planned - the 6-digit sign-in code sent by email, stored only as a SHA-256 hash, single use, valid for 10 minutes (`one_time_codes` table) - chosen over: `OTP`, `magic code`, `PIN`.
 - bank access - planned - `bankEntry.access`: `'free'` (Easy banks, static host, bundled) or `'paid'` (Medium and Hard banks, served by the API after an entitlement check) - chosen over: `tier`, which this lexicon forbids as a difficulty synonym, and `plan`, which implies a subscription.
-- product id - planned - `bankEntry.productId`, the id of a paid bank's store and Stripe product, `syntactical.<language>.<difficulty>` - chosen over: `sku`, `price id`, because one id maps to App Store, Play, and Stripe products through RevenueCat.
+- product id - planned - `bankEntry.productId`, the id of a paid bank's product, `syntactical.<language>.<difficulty>` - chosen over: `sku`, `price id`, because one id maps to App Store, Play, and web billing products through RevenueCat.
 - entitlement - planned - the right of one user to one paid bank, whichever platform it was bought on (`entitlements` table) - chosen over: `purchase` (the event) and `license`.
-- purchase event - planned - one webhook delivery from Stripe or RevenueCat, recorded verbatim and keyed by the provider's event id (`purchase_events` table) - chosen over: `transaction`, `order`.
+- purchase event - planned - one RevenueCat webhook delivery (App Store, Play, or web billing), keyed by RevenueCat's event id (`purchase_events` table); email and name fields are nulled on account deletion - chosen over: `transaction`, `order`.
 - analytics event - planned - one PostHog event from the fixed registry in `constants/analyticsEvents.ts` - chosen over: `metric`, and `log`, which names structured warnings from `logWarning`.
 
 ### Content pipeline

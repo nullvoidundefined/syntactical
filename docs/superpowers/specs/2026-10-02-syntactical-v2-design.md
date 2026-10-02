@@ -2,7 +2,7 @@
 
 **Ticket:** IAN-601
 **Source:** Notion "Syntactical v2 Spec" (https://app.notion.com/p/3ede1531171b81a0b65fd7541f084171), grounded against this repo on 2026-10-02
-**Status:** grounded draft; adversarial spec review pending; awaiting owner approval
+**Status:** approved by the owner at Gate 1 (2026-10-02)
 **Date:** 2026-10-02
 
 ## Goal
@@ -22,7 +22,7 @@ Locked in Notion (2026-10-02), restated here so the spec stands alone:
 7. Guests play free content with local progress; an account adds sync and purchases; guest progress merges on first sign-in.
 8. Backend: Express 5 + TypeScript on Railway, Neon Postgres. Auth, progress, and entitlements only.
 9. Auth: email one-time code via Resend. Web uses an HttpOnly cookie; native uses a bearer session token in SecureStore; one sessions table.
-10. Payments: RevenueCat (App Store, Play) plus Stripe (web).
+10. Payments: RevenueCat for all three platforms: App Store and Play through the stores, web through RevenueCat Web Billing (Stripe underneath, connected in RevenueCat). Gate 1 choice, 2026-10-02.
 11. Analytics: PostHog, anonymous and cookieless for guests.
 12. Model access through a provider interface: `claude -p` on the owner's subscription for bulk runs, an Anthropic API key for CI and as the fallback.
 
@@ -45,7 +45,7 @@ Proposed during grounding, settled by approving this spec (each resolves a confl
 22. New client components follow this repo's domain-grouped layout (`components/<domain>/<Component>.tsx`), not one folder per component.
 23. Answer timestamps are trusted from the device within bounds (not more than 5 minutes in the future, not before the user's `created_at` minus 365 days). A learner can backdate their own day streak with a wrong clock; with no leaderboards that harms nobody, and rejecting backdated events would also reject legitimate offline play. The spec states this limit instead of claiming to prevent it.
 24. The server derives `isCorrect` from `choiceIndex` against the bank's answer and whether an answer was a due review by replaying the shared scheduler, so neither is a client claim; `roundKind` is recorded for analytics only.
-25. Open options for Gate 1 (owner picks; the plan is written for the first choice in each): Stripe direct for web vs RevenueCat Web Billing; `claude -p` for bulk runs vs the Message Batches API as the bulk path; a hand-rolled SM-2 scheduler vs `ts-fsrs`.
+25. Gate 1 choices (owner tiles, 2026-10-02): web payments through RevenueCat Web Billing, so one RevenueCat webhook serves every platform and the server holds no Stripe code; bulk model runs through `claude -p` on the owner's subscription, the API key path for CI and fallback; the review scheduler is `ts-fsrs` (FSRS), shared by app and server through `packages/progress`.
 
 ## Codebase grounding
 
@@ -157,9 +157,9 @@ Every term below is mirrored into `docs/lexicon.md` in the same PR as this spec.
 - quality page - the static app route showing current pipeline report numbers - chosen over: `trust page`, `audit page`.
 - verified badge - the card label "Output verified on <runtime> <version>", shown only when `provenance.validation.method === 'executed'` and `status === 'passed'` - chosen over: `checkmark`, `trusted`.
 - bank access - `bankEntry.access`, `'free'` or `'paid'` - chosen over: `tier` (reserved: the lexicon forbids it as a difficulty synonym) and `plan` (implies a subscription).
-- product id - `bankEntry.productId`, the store and Stripe product for a paid bank (`syntactical.<language>.<difficulty>`) - chosen over: `sku`, `price id` because one id maps to App Store, Play, and Stripe products through RevenueCat.
+- product id - `bankEntry.productId`, the product for a paid bank (`syntactical.<language>.<difficulty>`) - chosen over: `sku`, `price id` because one id maps to App Store, Play, and web billing products through RevenueCat.
 - entitlement - a row granting one user one paid bank, whatever the platform it was bought on - chosen over: `purchase`, `license` because a purchase is the event and the entitlement is the resulting right.
-- purchase event - one webhook delivery recorded verbatim from Stripe or RevenueCat, keyed by the provider's event id - chosen over: `transaction`, `order`.
+- purchase event - one RevenueCat webhook delivery (App Store, Play, or web), keyed by RevenueCat's event id, with email and name fields nulled on account deletion - chosen over: `transaction`, `order`.
 - user - an account, identified by email - chosen over: `account`, `member`.
 - session - a sign-in session only: an opaque token whose SHA-256 is stored in `sessions`, carried in the `syntactical_session` cookie on web or the `Authorization: Bearer` header on native - chosen over: nothing; reserved so it is never used for a quiz pass (that is a round).
 - one-time code - the 6-digit code emailed for sign-in, stored hashed, single use, short-lived - chosen over: `OTP`, `magic code`, `PIN`.
@@ -172,7 +172,7 @@ Every term below is mirrored into `docs/lexicon.md` in the same PR as this spec.
 - daily goal - the XP target per calendar day, one of 10, 20, or 50 - chosen over: `daily target`, `quota`.
 - daily progress - XP earned and goal met for one user on one local date - chosen over: `day stats`.
 - review round - a round built from due review items instead of a bank - chosen over: `review session` (session is reserved) and `practice`.
-- review state - the per-question and per-misconception scheduling record (interval, ease, due date, lapses) - chosen over: `srs card`, `schedule`.
+- review state - the per-question and per-misconception `ts-fsrs` card (`due`, `stability`, `difficulty`, `reps`, `lapses`, `state`) rebuilt by replaying answer events - chosen over: `srs card`, `schedule`.
 - weakness report - the on-device summary of the most-missed misconceptions over the last 7 days, shown once a minimum sample is reached - chosen over: `insights`, `analytics` (analytics names PostHog events).
 - analytics event - one PostHog event from the fixed registry in `constants/analyticsEvents.ts` - chosen over: `metric`, `log`, because logs are the structured warnings in `clients/logClient.ts`.
 
@@ -239,9 +239,7 @@ Routes (all under `/v1`, JSON, request id on every log line):
 | `POST /answer-events` | Upload a batch of answer events idempotently; returns derived XP, day streak, daily progress |
 | `GET /answer-events?after=<cursor>` | Page through the user's answer events so a second device can replay them |
 | `GET /banks/:language/:difficulty` | Paid bank body, entitlement-checked |
-| `POST /purchases/stripe/checkout` | Create a Stripe Checkout session for a product id |
-| `POST /webhooks/stripe` | Stripe webhook (signature verified, raw body) |
-| `POST /webhooks/revenuecat` | RevenueCat webhook (authorization header verified) |
+| `POST /webhooks/revenuecat` | RevenueCat webhook for App Store, Play, and web purchases (authorization header verified) |
 | `DELETE /me` | Delete the account: sessions, answer events, daily progress, goal changes deleted; entitlements and purchase events kept with email and name fields nulled for accounting |
 | `GET /health` | Liveness, no dependency call (R-345; outside `/v1`) |
 | `GET /health/ready` | Readiness, `SELECT 1`, 503 when degraded (outside `/v1`) |
@@ -250,13 +248,13 @@ XP, day streak, daily progress, and the review scheduler are pure functions in a
 
 Middleware follows the backend convention's stack: `helmet`, `cors` (exact origin), `cookie-parser`, `express.json` (10 KB default, 256 KB on `POST /answer-events`), a `csrfGuard` requiring `X-Requested-With: XMLHttpRequest` on every cookie-authenticated non-GET route, zod schemas under `server/src/schemas/`, and `app.set('trust proxy', 1)` for Railway's single proxy hop. `Secure` is set on the cookie everywhere except `NODE_ENV=development`. Sessions expire 30 days after creation or 14 days after last use, whichever is first. Issuing a one-time code invalidates earlier unused codes for that email; hashes are compared with `timingSafeEqual`. `POST /auth/sessions` carries the device's IANA timezone and stores it when the user has none.
 
-State-changing routes also accept only `Content-Type: application/json` (a cross-site form cannot send it without a CORS preflight, which CORS refuses), on top of `SameSite=Lax` and the exact-origin CORS allowlist; the two webhook routes are exempt and authenticate by signature instead.
+State-changing routes also accept only `Content-Type: application/json` (a cross-site form cannot send it without a CORS preflight, which CORS refuses), on top of `SameSite=Lax` and the exact-origin CORS allowlist; the webhook route is exempt and authenticates by its authorization header instead.
 
 One `requireSession` middleware reads the `syntactical_session` cookie or an `Authorization: Bearer` header, hashes the token with SHA-256, and loads the session. CORS allows exactly `https://syntactical.dev` with credentials. Cookies are `HttpOnly; Secure; SameSite=Lax; Path=/`, scoped to `api.syntactical.dev`.
 
 ### Client additions
 
-Topic view inside the difficulty step, review round, header with day streak, XP, and daily goal ring, `AbCard`, sign-in screen, purchase flow (Stripe Checkout on web, RevenueCat on native), choice rationale first in the query drawer, verified badge, quality page route, weakness report, analytics events, and an on-device answer event log with a sync queue. Review scheduling runs on device so review works offline.
+Topic view inside the difficulty step, review round, header with day streak, XP, and daily goal ring, `AbCard`, sign-in screen, purchase flow (RevenueCat Web Billing on web, the store sheet on native), choice rationale first in the query drawer, verified badge, quality page route, weakness report, analytics events, and an on-device answer event log with a sync queue. Review scheduling runs on device so review works offline.
 
 ### Pipeline
 
@@ -316,11 +314,11 @@ Order matches the slices in the plan. Each line is one RED slice.
 - B-35: Daily progress marks the goal met when that day's XP reaches the user's daily goal, and changing the goal to 10, 20, or 50 applies from the current day on.
 - B-36: On first sign-in from a device, the guest answer event log uploads in batches of at most 200 and each event is marked synced (kept locally, not cleared), so a 1,000-event guest log syncs completely; a retry after a dropped response double-counts nothing; a second device downloads the events through `GET /v1/answer-events`, replays them, and shows the same day streak, XP, and review queue.
 - B-37: `GET /v1/banks/:language/:difficulty` returns 401 without a session, 403 without the entitlement, and the bank JSON (hash matching the manifest) with it; a free bank path returns 404.
-- B-38: The checkout endpoint creates a Stripe Checkout session carrying `client_reference_id = user.id` and the product id; a webhook with an invalid signature is rejected; a valid `checkout.session.completed` with `payment_status === 'paid'` records one purchase event and grants the entitlement, an unpaid one grants nothing until `checkout.session.async_payment_succeeded`; `charge.refunded` and `charge.dispute.created` revoke it; events apply in the provider's event time order, not arrival order; a redelivered event changes nothing; after the redirect, the web success page polls `/me` until the entitlement appears or 30 seconds pass.
+- B-38: On web, the app configures RevenueCat Web Billing (`@revenuecat/purchases-js`) with `appUserId = user.id` and buys the product's package; the resulting RevenueCat webhook (store `RC_BILLING`) grants that user the entitlement exactly as a store purchase does; events apply in the provider's event time order, not arrival order, so a refund delivered before its purchase still ends revoked; after checkout the web app polls `/me` until the entitlement appears or 30 seconds pass.
 - B-39: After sign-in the app calls `Purchases.logIn(user.id)` (and `logOut` on sign-out), so webhooks carry the server user id; a RevenueCat webhook with a wrong authorization header is rejected; a valid purchase records one purchase event and grants that user the entitlement for the mapped product id; a refund or revocation removes it.
 - B-40: Stored v1 stats migrate to v2 on first launch: totals and tracks carry over, `streak` becomes the answer streak, and an empty answer event log and review state are created; a failed migration keeps the v1 value under the backup key.
 - B-41: A guest sees a dismissible sign-up prompt after the first completed round, and never again after dismissing it.
-- B-42: A paid bank shows a lock and its price (the store-localized string from the RevenueCat offering on native, the Stripe price on web) on the difficulty step for a user without the entitlement; selecting it opens the purchase flow (Stripe Checkout on web, RevenueCat on native).
+- B-42: A paid bank shows a lock and its price (the localized `priceString` from the RevenueCat offering on every platform) on the difficulty step for a user without the entitlement; selecting it opens the purchase flow (RevenueCat Web Billing on web, the store sheet on native).
 - B-43: "Restore purchases" on a fresh native install re-grants every entitlement the account holds.
 - B-44: A purchased paid bank, once downloaded, plays offline.
 - B-45: Each registered analytics event fires once at its trigger (round started, round completed, sign-up prompt shown, sign-up prompt accepted, paywall viewed, purchase completed, review round completed, bank exhausted), guests are tracked without cookies, and no event carries an email or code.
@@ -378,7 +376,7 @@ Order matches the slices in the plan. Each line is one RED slice.
 - Session: `active` → `revoked` | `expired`.
 - Entitlement: `granted` ↔ `revoked` (refund or chargeback revokes; a later valid purchase re-grants).
 - Question in the pipeline: `drafted` → `validated` (`passed` | `failed` | `not-executable`) → `enriched` → `reviewed` → `published`.
-- Review state item: `new` → `learning` → `review`, with a miss returning it to `learning`.
+- Review state item (FSRS states): `new` → `learning` → `review`, with a miss moving it to `relearning`.
 
 ## Non-goals
 
@@ -400,11 +398,12 @@ Reused (R-308): every module in the Codebase grounding table; the content build 
 
 New packages, each justified:
 
-- App: `posthog-react-native` (analytics, cookieless mode), `react-native-purchases` (RevenueCat), `expo-secure-store` (native session token).
-- Server: `express@5`, `pg`, `node-pg-migrate`, `zod` (request schemas, convention), `helmet`, `cors`, `cookie-parser` (convention middleware stack), `stripe` (webhook signature and Checkout), `resend` (email), `pino` and `pino-http` (logs with request id), `vitest`, `supertest`.
+- App: `posthog-react-native` (analytics, cookieless mode), `react-native-purchases` (RevenueCat on native), `@revenuecat/purchases-js` (RevenueCat Web Billing), `expo-secure-store` (native session token).
+- `packages/progress`: `ts-fsrs` (review scheduler, MIT, no dependencies).
+- Server: `express@5`, `pg`, `node-pg-migrate`, `zod` (request schemas, convention), `helmet`, `cors`, `cookie-parser` (convention middleware stack), `resend` (email), `pino` and `pino-http` (logs with request id), `vitest`, `supertest`.
 - Pipeline: `@anthropic-ai/sdk` (API provider path), `vitest`. Docker Engine on the owner's machine and in the pipeline CI job.
 
-Accounts and setup the owner provides (Stage 0): Apple Developer, Play Console, Stripe, RevenueCat, PostHog, Resend with SPF and DKIM on `syntactical.dev`, Neon project, Railway project, DNS for `syntactical.dev` and `api.syntactical.dev`.
+Accounts and setup the owner provides (Stage 0): Apple Developer, Play Console, Stripe (connected to RevenueCat Web Billing), RevenueCat, PostHog, Resend with SPF and DKIM on `syntactical.dev`, Neon project, Railway project, DNS for `syntactical.dev` and `api.syntactical.dev`.
 
 ## Observability
 
@@ -414,7 +413,7 @@ Accounts and setup the owner provides (Stage 0): Apple Developer, Play Console, 
 
 ## Security
 
-Security-touching controls, each needing the R-109 review and a test that feeds it its insecure value: one-time code issue and verify (rate limits with the trusted proxy hop, hashing, expiry, attempt cap, prior-code invalidation), session tokens (generation, hashing, revocation, absolute and idle expiry), the cookie attributes, the dual-transport `requireSession`, CORS, the `X-Requested-With` CSRF guard, account deletion, the private content deploy key, the API base URL allowlist, webhook signature verification (Stripe, RevenueCat), the paid bank entitlement check, the answer event timestamp bound, the content base URL allowlist change, and the runner sandbox (network, CPU, memory, pids, read-only filesystem, timeout). Never logged: email, one-time code, session token, webhook secrets. Content strings stay rendered as React Native `Text`, never markup.
+Security-touching controls, each needing the R-109 review and a test that feeds it its insecure value: one-time code issue and verify (rate limits with the trusted proxy hop, hashing, expiry, attempt cap, prior-code invalidation), session tokens (generation, hashing, revocation, absolute and idle expiry), the cookie attributes, the dual-transport `requireSession`, CORS, the `X-Requested-With` CSRF guard, account deletion, the private content deploy key, the API base URL allowlist, RevenueCat webhook authorization, the paid bank entitlement check, the answer event timestamp bound, the content base URL allowlist change, and the runner sandbox (network, CPU, memory, pids, read-only filesystem, timeout). Never logged: email, one-time code, session token, webhook secrets. Content strings stay rendered as React Native `Text`, never markup.
 
 ## Assumption ledger
 
@@ -422,7 +421,7 @@ Security-touching controls, each needing the R-109 review and a test that feeds 
 |---|---|---|---|---|---|
 | GitHub Pages serves `syntactical.dev` with HTTPS | GitHub Pages docs | Add the custom domain, `curl -I https://syntactical.dev/` | unverified | Ian | Stage 0 DNS |
 | `claude -p` structured output is usable for bulk runs under current subscription terms | Notion red team #9 | One 10-question classify run through each provider path | unverified | pipeline slice | Stage 1 |
-| RevenueCat webhooks can map App Store and Play products to one product id per bank | RevenueCat docs | Sandbox purchase on each store hits the webhook with the expected product id | unverified | payments slice | Stage 3 |
+| RevenueCat webhooks map App Store, Play, and Web Billing products to one product id per bank | RevenueCat docs | Sandbox purchase on each store hits the webhook with the expected product id | unverified | payments slice | Stage 3 |
 | Expo SDK 57 runs `posthog-react-native` and `react-native-purchases` in a dev build (not Expo Go) | package docs | EAS dev build launches and logs one event and one offering | unverified | Stage 0 | first real-device build |
 | A same-site cookie set by `api.syntactical.dev` is sent on credentialed fetches from `syntactical.dev` in Safari | browser behavior | Safari test against the deployed API | unverified | auth slice | Stage 3 |
 
@@ -464,4 +463,4 @@ Security-touching controls, each needing the R-109 review and a test that feeds 
 | 27 | LOW | "Today" streak semantics; webhook order | Fixed: B-34, B-38 |
 | 28 | LOW | Report path; `ab` choice code | Fixed: B-15, `Choice.code` |
 
-Stack options: keep npm workspaces, Express 5, node-pg-migrate, custom sessions, Resend, PostHog, Docker runners; add `zod`, `helmet`, `cookie-parser` per convention. Three options go to the owner at Gate 1 (decision 25).
+Stack options: keep npm workspaces, Express 5, node-pg-migrate, custom sessions, Resend, PostHog, Docker runners; add `zod`, `helmet`, `cookie-parser` per convention. The three owner options were decided at Gate 1 (decision 25).

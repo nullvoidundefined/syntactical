@@ -6,11 +6,11 @@
 
 **Architecture:** npm workspaces in this repo. The Expo app stays at the root. `packages/content-schema` holds content types, constants, and validators for every consumer; `packages/progress` holds XP, day streak, daily progress, and the review scheduler as pure functions shared by app and server. `pipeline/` is a Node CLI that runs oracles in hardened Docker runners and calls Claude through a `ModelProvider`. `server/` is an Express 5 API on Railway with Neon Postgres at `https://api.syntactical.dev`: auth, answer event sync, entitlements, account deletion, and paid banks. Paid bank sources live in the private `syntactical-content` repo. The web app moves to `https://syntactical.dev`.
 
-**Tech Stack:** Expo SDK 57, Expo Router, React Native + react-native-web, NativeWind, TanStack Query, AsyncStorage, expo-secure-store, posthog-react-native, react-native-purchases; Node 22, TypeScript, Express 5, zod, helmet, cors, cookie-parser, pg, node-pg-migrate, pino, Stripe, Resend, vitest, supertest; Docker; Anthropic SDK and `claude -p`.
+**Tech Stack:** Expo SDK 57, Expo Router, React Native + react-native-web, NativeWind, TanStack Query, AsyncStorage, expo-secure-store, posthog-react-native, react-native-purchases; Node 22, TypeScript, Express 5, zod, helmet, cors, cookie-parser, pg, node-pg-migrate, pino, Resend, vitest, supertest, ts-fsrs; RevenueCat (`react-native-purchases`, `@revenuecat/purchases-js` Web Billing); Docker; Anthropic SDK and `claude -p`.
 
 **Spec:** `docs/superpowers/specs/2026-10-02-syntactical-v2-design.md` (behaviors B-1 to B-64; decisions 1 to 25). Vocabulary: `docs/lexicon.md`.
 
-**Merge mode:** chosen by the owner at Gate 1 (R-514). Every PR touching a control in the spec's Security section is read and merged by the owner regardless.
+**Merge mode:** owner reads and merges every PR (Gate 1, 2026-10-02, R-514).
 
 ## Global Constraints
 
@@ -27,7 +27,7 @@
 - Answer events: batches of at most 200; `answeredAt` within [user `created_at` − 365 days, server now + 5 minutes]; the server derives `isCorrect`.
 - Never log email, one-time code, session token, or webhook secrets.
 - Lighthouse accessibility 100 on every route; reduced motion uses `animation: none`; screen readers and web keyboard supported on every new screen; no key binding fires while a text field has focus.
-- Prices come from the store offering (native) or the Stripe price (web); product id `syntactical.<language>.<difficulty>`; $5 list price.
+- Prices come from the RevenueCat offering's `priceString` on every platform; product id `syntactical.<language>.<difficulty>`; $5 list price. The server holds no Stripe code; RevenueCat is the only purchase webhook.
 - Paid bank files never appear in this public repo, the bundle, or the web export.
 - Root app tests: Jest (`native` and `web` projects), per-directory `__tests__/`. Workspace tests: vitest, one `src/__tests__/` tree mirroring `src/` (R-314). Server integration tests hit a real Postgres (CI service container), never mocks.
 - Follow `docs/lexicon.md` for every new identifier.
@@ -40,17 +40,13 @@ Inputs the spec implies but no single task's tests otherwise exercise; each line
 2. A device east of UTC answers just after local midnight: the day streak counts the local day (Task 3.6: `Pacific/Auckland` at 00:05 local).
 3. A user buys on web, then opens the iOS app signed in but offline: the bank shows as owned from the last `/me` and says "Needs a connection" rather than showing a paywall (Task 3.18).
 4. The pipeline publishes while a learner has an old cached free bank: one re-download, and the round in progress is not interrupted (Task 2.6).
-5. A Stripe refund webhook arrives before the original completion: the entitlement ends revoked (Task 3.16).
+5. A RevenueCat refund event is delivered before its purchase event: the entitlement ends revoked (Task 3.17).
 
 ---
 
 ## Gate 1 (owner)
 
-Approve this plan and the spec, choose the merge mode, and pick the three open options in decision 25, one tile each:
-
-1. Web payments: Stripe direct (as planned in Tasks 3.16 and 3.18) or RevenueCat Web Billing (one webhook for all platforms; Task 3.16 shrinks to configuration).
-2. Bulk model path: `claude -p` (as planned in Task 1.9) or the Message Batches API first with `claude -p` for interactive debugging.
-3. Review scheduler: hand-rolled SM-2 (as planned in Task 4.1) or `ts-fsrs`.
+Passed 2026-10-02. The owner approved the spec and plan, chose owner-merges-every-PR, and picked: RevenueCat Web Billing for web payments (Tasks 3.16 to 3.18), `claude -p` as the bulk model path (Task 1.9), and `ts-fsrs` as the review scheduler (Task 4.1).
 
 ## PR boundaries
 
@@ -73,7 +69,7 @@ Approve this plan and the spec, choose the merge mode, and pick the three open o
 | 15 | 3.9, 3.10, 3.11 | high (client sessions, guest merge) |
 | 16 | 3.12, 3.13 | standard |
 | 17 | 3.14, 3.15 | high (entitlement gate) |
-| 18 | 3.16, 3.17 | high (payments) |
+| 18 | 3.16, 3.17 | high (payments: web billing and the RevenueCat webhook) |
 | 19 | 3.18 | high (purchase flow) |
 | 20 | 3.21 | high (account deletion) |
 | 21 | 3.19, 3.20 | standard |
@@ -91,8 +87,8 @@ Approve this plan and the spec, choose the merge mode, and pick the three open o
 - [ ] GitHub repo Settings → Pages → custom domain `syntactical.dev`, enforce HTTPS.
 - [ ] Create the private repo `nullvoidundefined/syntactical-content`; add a read-only deploy key; store its private half as the Actions secret `CONTENT_DEPLOY_KEY` in this repo and in Railway.
 - [ ] Apple Developer Program, Play Console, tax and banking forms in both.
-- [ ] Stripe (test mode first), RevenueCat project linked to both stores, PostHog project, Resend with SPF and DKIM on `syntactical.dev`, Neon project (`main` and `ci` branches), Railway project.
-- [ ] Secrets in GitHub Actions and Railway: `DATABASE_URL`, `RESEND_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `REVENUECAT_WEBHOOK_AUTH`, `POSTHOG_API_KEY`, `ANTHROPIC_API_KEY` (pipeline CI only).
+- [ ] RevenueCat project linked to both stores and to a Stripe account for Web Billing (test mode first), PostHog project, Resend with SPF and DKIM on `syntactical.dev`, Neon project (`main` and `ci` branches), Railway project.
+- [ ] Secrets in GitHub Actions and Railway: `DATABASE_URL`, `RESEND_API_KEY`, `REVENUECAT_WEBHOOK_AUTH`, `REVENUECAT_WEB_BILLING_PUBLIC_KEY`, `POSTHOG_API_KEY`, `ANTHROPIC_API_KEY` (pipeline CI only).
 
 ### Task 0.1: move the web build and content origin to syntactical.dev
 
@@ -848,31 +844,32 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 - [ ] **Step 1:** tests: an entitled user's paid bank downloads through `apiFetch` under the `['bank', language, difficulty, hash]` query key (the download indicator shows), is hash-checked, cached, and plays offline after a simulated restart; a hash mismatch discards the body; a guest's launch makes no request for any paid bank; offline with no cached copy shows "Needs a connection".
 - [ ] **Steps 2–4:** implement; pass. **Step 5:** commit `feat(content): load paid banks from the API and cache them for offline play`.
 
-### Task 3.16: Stripe checkout and webhook
+### Task 3.16: RevenueCat Web Billing on web
 
-**Risk:** high. **Behaviors:** B-38; Review Focus 5.
+**Risk:** high (payment flow and user mapping). **Behaviors:** B-38.
 
-**Files:** Create `server/src/routes/stripeCheckout.ts`, `server/src/routes/stripeWebhook.ts` (raw body), `server/src/services/recordPurchaseEvent.ts`, `server/src/services/recomputeEntitlement.ts` (latest event by provider `occurred_at`), `server/src/clients/stripeClient.ts`, `app/purchase-complete.tsx` (web success page); tests (signatures from Stripe's test header helper).
+**Files:** Create `clients/webBillingClient.ts` (`@revenuecat/purchases-js`: `configure({ apiKey, appUserId: user.id })`, `getOfferings()`, `purchase(package)`), `app/purchase-complete.tsx` (polls `/me`); modify `state/AuthProvider.tsx` (configure web billing with the server user id after sign-in, reset on sign-out); tests.
 
 **Behaviors (RED tests):**
-- `POST /v1/purchases/stripe/checkout { productId }` requires a session, accepts only paid product ids from the manifest, and creates a Checkout session with `client_reference_id = user.id`, `metadata.productId`, and success and cancel URLs on `https://syntactical.dev`.
-- A webhook with a bad or missing signature → 400 and nothing recorded.
-- `checkout.session.completed` with `payment_status: 'paid'` → one purchase event and `granted`; with `unpaid` → recorded, nothing granted until `checkout.session.async_payment_succeeded`.
-- `charge.refunded` and `charge.dispute.created` → `revoked`; a refund delivered before the completion still ends `revoked` (ordered by `occurred_at`, Review Focus 5).
-- A redelivered event id → 200 and no change; two concurrent deliveries of one event leave one row.
+- After web sign-in, Web Billing is configured with `appUserId` equal to the server user id; before sign-in it is never configured (guests cannot buy).
+- Buying a paid bank purchases the offering package whose product id equals the bank's `productId`.
 - `/purchase-complete` polls `/me` every 2 seconds for up to 30 seconds and shows "Unlocked" or "Still processing, check back shortly".
+- Sign-out resets the Web Billing user so the next account cannot see the previous one's purchases.
+- No Stripe or RevenueCat secret key appears in the web bundle (only the public RevenueCat web billing key).
 
-- [ ] Gated cycle; commit `feat(payments): Stripe Checkout and webhook-driven entitlements`.
+- [ ] Gated cycle; commit `feat(payments): RevenueCat Web Billing on web`.
 
 ### Task 3.17: RevenueCat webhook and user mapping
 
 **Risk:** high. **Behaviors:** B-39.
 
-**Files:** Create `server/src/routes/revenueCatWebhook.ts`; reuse `recordPurchaseEvent` and `recomputeEntitlement`; modify `state/AuthProvider.tsx` (`Purchases.logIn(user.id)` after sign-in, `Purchases.logOut()` on sign-out, native only); tests.
+**Files:** Create `server/src/routes/revenueCatWebhook.ts`, `server/src/services/recordPurchaseEvent.ts`, `server/src/services/recomputeEntitlement.ts` (latest event by provider `event_timestamp_ms`); modify `state/AuthProvider.tsx` (`Purchases.logIn(user.id)` after sign-in, `Purchases.logOut()` on sign-out, native only); tests.
 
 **Behaviors (RED tests):**
 - A wrong or missing `Authorization` header (compared with `timingSafeEqual` against `REVENUECAT_WEBHOOK_AUTH`) → 401.
-- `NON_RENEWING_PURCHASE` for a mapped product → a purchase event and `granted` for the user whose id equals `app_user_id`; `REFUND` or `CANCELLATION` → `revoked`; a duplicate event id → no change.
+- `NON_RENEWING_PURCHASE` for a mapped product from `APP_STORE`, `PLAY_STORE`, or `RC_BILLING` (web) → a purchase event and `granted` for the user whose id equals `app_user_id`; `REFUND` or `CANCELLATION` → `revoked`; a duplicate event id → no change.
+- A refund event whose `event_timestamp_ms` precedes delivery of its purchase still leaves the entitlement `revoked`, because entitlements are recomputed from the latest event by provider time, not arrival (Review Focus 5).
+- Two concurrent deliveries of one event leave one `purchase_events` row.
 - An unknown `app_user_id` records the event with `user_id` null and grants nothing; an unmapped store product records the event, grants nothing, and logs a warning with no PII.
 - After native sign-in, `Purchases.logIn` was called with the server user id; after sign-out, `Purchases.logOut` was called.
 
@@ -882,12 +879,12 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 **Risk:** high. **Behaviors:** B-42, B-43, B-64 (paywall); Review Focus 3.
 
-**Files:** Create `state/usePurchases.ts` (web: `POST /purchases/stripe/checkout`, then `Linking.openURL`; native: `react-native-purchases` offerings, `purchasePackage`, `restorePurchases`), `components/purchase/PaywallSheet.tsx`; modify `components/menu/DifficultyStep.tsx` (lock and localized price for paid banks without the entitlement), `app/settings.tsx` ("Restore purchases" on native); tests.
+**Files:** Create `state/usePurchases.ts` (web: `webBillingClient`; native: `react-native-purchases` offerings, `purchasePackage`, `restorePurchases`), `components/purchase/PaywallSheet.tsx`; modify `components/menu/DifficultyStep.tsx` (lock and localized price for paid banks without the entitlement), `app/settings.tsx` ("Restore purchases" on native); tests.
 
 **Behaviors (RED tests):**
-- A paid bank without the entitlement shows a lock with the accessible name "Medium, locked, <price>", where the price is the offering's `priceString` on native and the Stripe price on web; selecting it opens the paywall and fires `paywall_viewed` once.
+- A paid bank without the entitlement shows a lock with the accessible name "Medium, locked, <price>", where the price is the RevenueCat offering's `priceString` on every platform; selecting it opens the paywall and fires `paywall_viewed` once.
 - A guest selecting a paid bank goes to sign-in first, then back to the paywall.
-- On web, Buy calls the checkout endpoint and opens the returned URL.
+- On web, Buy calls `webBillingClient.purchase` for the bank's package and then routes to `/purchase-complete`.
 - On native, Buy calls `purchasePackage`; success refetches `/me`.
 - Restore calls `restorePurchases`, then `/me`, and unlocks every entitled bank.
 - Offline, with an entitlement known from the last `/me` and no cached bank, the bank shows "Needs a connection", not the paywall (Review Focus 3).
@@ -934,25 +931,26 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 **Risk:** standard. **Behaviors:** B-46.
 
-**Files:** Create `packages/progress/src/scheduleReview.ts`, `packages/progress/src/buildReviewState.ts`, `packages/progress/src/types/ReviewItem.ts`; tests in `packages/progress/src/__tests__/`.
+**Files:** Create `packages/progress/src/scheduleReview.ts` (wraps `ts-fsrs`: `fsrs().next(card, at, isCorrect ? Rating.Good : Rating.Again)`), `packages/progress/src/buildReviewState.ts`, `packages/progress/src/types/ReviewItem.ts`; add `ts-fsrs` to `packages/progress`; tests in `packages/progress/src/__tests__/`.
 
-**Interfaces:** `ReviewItem = { id: string; intervalDays: number; ease: number; dueAt: string; lapses: number }`; `scheduleReview(item: ReviewItem, isCorrect: boolean, at: string): ReviewItem` (SM-2 style, ease floor 1.3); `buildReviewState(events: AnswerEvent[], misconceptionOf: (questionId: string, choiceIndex: number) => string | undefined): { questions: Record<string, ReviewItem>; misconceptions: Record<string, ReviewItem> }`; `isDueReview(event: AnswerEvent, priorEvents: AnswerEvent[]): boolean`.
+**Interfaces:** `ReviewItem = { id: string; card: Card }` (`Card` from `ts-fsrs`: `due`, `stability`, `difficulty`, `reps`, `lapses`, `state`, …); `newReviewItem(id: string, at: string): ReviewItem`; `scheduleReview(item: ReviewItem, isCorrect: boolean, at: string): ReviewItem`; `buildReviewState(events: AnswerEvent[], misconceptionOf: (questionId: string, choiceIndex: number) => string | undefined): { questions: Record<string, ReviewItem>; misconceptions: Record<string, ReviewItem> }`; `isDueReview(event: AnswerEvent, priorEvents: AnswerEvent[]): boolean`.
 
 - [ ] **Step 1: Write the failing tests**
 
 ```ts
 import { expect, it } from 'vitest';
 import { buildReviewState } from '../buildReviewState';
-import { scheduleReview } from '../scheduleReview';
+import { newReviewItem, scheduleReview } from '../scheduleReview';
 import { fixtureEvents, fixtureMisconceptionOf } from './fixtures/reviewFixtures';
 
 it('pushes a correct review further out and brings a miss back within a day', () => {
-  const item = { id: 'py-easy-01', intervalDays: 3, ease: 2.5, dueAt: '2026-10-02T00:00:00Z', lapses: 0 };
-  const afterCorrect = scheduleReview(item, true, '2026-10-02T10:00:00Z');
-  expect(afterCorrect.intervalDays).toBeGreaterThan(3);
-  const afterMiss = scheduleReview(item, false, '2026-10-02T10:00:00Z');
-  expect(Date.parse(afterMiss.dueAt) - Date.parse('2026-10-02T10:00:00Z')).toBeLessThanOrEqual(86_400_000);
-  expect(afterMiss.lapses).toBe(1);
+  const learned = scheduleReview(scheduleReview(newReviewItem('py-easy-01', '2026-09-20T10:00:00Z'), true, '2026-09-20T10:00:00Z'), true, '2026-09-23T10:00:00Z');
+  const previousGap = learned.card.due.getTime() - Date.parse('2026-09-23T10:00:00Z');
+  const afterCorrect = scheduleReview(learned, true, learned.card.due.toISOString());
+  expect(afterCorrect.card.due.getTime() - learned.card.due.getTime()).toBeGreaterThan(previousGap);
+  const afterMiss = scheduleReview(learned, false, learned.card.due.toISOString());
+  expect(afterMiss.card.due.getTime() - learned.card.due.getTime()).toBeLessThanOrEqual(86_400_000);
+  expect(afterMiss.card.lapses).toBe(learned.card.lapses + 1);
 });
 
 it('replays the same events to the same review state whatever their arrival order', () => {
@@ -1040,6 +1038,6 @@ it('replays the same events to the same review state whatever their arrival orde
 
 ## Self-review
 
-- Spec coverage: B-1 (1.1), B-2 (1.2), B-3/B-4/B-6 (1.3), B-5 (1.4), B-7 (1.5), B-8/B-12 (1.7), B-9/B-10/B-11 (1.8), B-13 (1.11, 1.12), B-14 (1.9), B-15 (1.13), B-16 (1.14), B-17/B-18 (2.1), B-19 (2.3), B-20/B-21 (2.4, 2.2), B-22 (2.6), B-23 (2.7), B-24 (2.8), B-25/B-26 (3.3), B-27/B-28 (3.4, 3.10), B-29/B-30/B-31 (3.5), B-32/B-33 (3.7), B-34/B-35 (3.6, 3.7, 3.8), B-36 (3.7, 3.11), B-37 (3.14), B-38 (3.16), B-39 (3.17), B-40 (3.9), B-41 (3.13), B-42/B-43 (3.18), B-44 (3.15), B-45 (3.19), B-46 (4.1), B-47/B-48 (4.1, 4.2), B-49 (4.3), B-50/B-51 (5.1, 5.2), B-52 (5.3), B-53 (5.4), B-54 (6.1), B-55 (0.1), B-56 (0.2), B-57/B-58 (1.0, 5.1), B-59 (3.21), B-60 (1.5, 1.6), B-61 (3.11), B-62 (3.1), B-63 (3.3, 3.5), B-64 (1.13, 2.7, 3.10, 3.12, 3.18, 4.2).
+- Spec coverage: B-1 (1.1), B-2 (1.2), B-3/B-4/B-6 (1.3), B-5 (1.4), B-7 (1.5), B-8/B-12 (1.7), B-9/B-10/B-11 (1.8), B-13 (1.11, 1.12), B-14 (1.9), B-15 (1.13), B-16 (1.14), B-17/B-18 (2.1), B-19 (2.3), B-20/B-21 (2.4, 2.2), B-22 (2.6), B-23 (2.7), B-24 (2.8), B-25/B-26 (3.3), B-27/B-28 (3.4, 3.10), B-29/B-30/B-31 (3.5), B-32/B-33 (3.7), B-34/B-35 (3.6, 3.7, 3.8), B-36 (3.7, 3.11), B-37 (3.14), B-38 (3.16, 3.17), B-39 (3.17), B-40 (3.9), B-41 (3.13), B-42/B-43 (3.18), B-44 (3.15), B-45 (3.19), B-46 (4.1), B-47/B-48 (4.1, 4.2), B-49 (4.3), B-50/B-51 (5.1, 5.2), B-52 (5.3), B-53 (5.4), B-54 (6.1), B-55 (0.1), B-56 (0.2), B-57/B-58 (1.0, 5.1), B-59 (3.21), B-60 (1.5, 1.6), B-61 (3.11), B-62 (3.1), B-63 (3.3, 3.5), B-64 (1.13, 2.7, 3.10, 3.12, 3.18, 4.2).
 - Placeholders: none. High-risk tasks deliberately carry behaviors instead of implementation code (R-411).
-- Type consistency: `AnswerEvent`, `BankContext`, `Choice`, `Oracle`, `OracleRun`, `ValidationResult`, `ModelProvider`, `PipelineReport`, and `ReviewItem` are each defined once and reused by name.
+- Type consistency: `AnswerEvent`, `BankContext`, `Choice`, `Oracle`, `OracleRun`, `ValidationResult`, `ModelProvider`, `PipelineReport`, and `ReviewItem` (wrapping the `ts-fsrs` `Card`) are each defined once and reused by name.
