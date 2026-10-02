@@ -1,9 +1,10 @@
 // A thin, low-contrast line under the header while a bank downloads.
-// Announced once per transfer as a polite status; static under reduced
-// motion. Renders nothing when no bank is transferring.
+// Announced once per transfer as a polite status (an explicit announcement
+// on native, a persistent live region on the web); static under reduced
+// motion. Shows no line when no bank is transferring.
 import { useEffect, useRef } from 'react';
 
-import { AccessibilityInfo, Animated, Easing, Platform, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Platform, Text, View } from 'react-native';
 
 import { useContentDownloads } from '../../state/useContentDownloads';
 import { useIsReducedMotion } from '../../state/useIsReducedMotion';
@@ -34,17 +35,24 @@ export function DownloadIndicator() {
     if (isDownloading && Platform.OS !== 'web') AccessibilityInfo.announceForAccessibility(STATUS_LABEL);
   }, [isDownloading]);
 
-  if (!isDownloading) return null;
   return (
-    <View
-      accessible
-      role="progressbar"
-      aria-label={STATUS_LABEL}
-      aria-live="polite"
-      accessibilityLiveRegion="polite"
-      className="h-px w-full overflow-hidden bg-line"
-    >
-      {isReducedMotion ? <View testID="download-indicator-static" className="h-full w-full bg-signal/30" /> : <SweepingLine />}
-    </View>
+    <>
+      {Platform.OS === 'web' ? <WebStatusRegion isDownloading={isDownloading} /> : null}
+      {isDownloading ? (
+        <View accessible role="progressbar" aria-label={STATUS_LABEL} className="h-px w-full overflow-hidden bg-line">
+          {isReducedMotion ? <View testID="download-indicator-static" className="h-full w-full bg-signal/30" /> : <SweepingLine />}
+        </View>
+      ) : null}
+    </>
+  );
+}
+
+// Screen readers on the web announce changes inside a live region that
+// already exists, so the region stays mounted and only its text changes.
+function WebStatusRegion({ isDownloading }: { isDownloading: boolean }) {
+  return (
+    <Text role="status" aria-live="polite" className="sr-only">
+      {isDownloading ? STATUS_LABEL : ''}
+    </Text>
   );
 }
