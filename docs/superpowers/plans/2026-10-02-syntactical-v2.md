@@ -674,15 +674,16 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 **Risk:** high. **Behaviors:** B-25, B-26, B-63 (rate-limit key).
 
-**Files:** Create `server/src/routes/authCodes.ts`, `server/src/services/issueOneTimeCode.ts`, `server/src/clients/emailClient.ts` (Resend; `sendSignInCode(email, code)`), `server/src/middleware/rateLimit.ts` (Postgres counters keyed per email and per `req.ip` with `trust proxy` 1), `server/src/schemas/authSchemas.ts`; tests.
+**Files:** Create `server/src/routes/authCodes.ts`, `server/src/services/issueOneTimeCode.ts`, `server/src/clients/emailClient.ts` (Resend; `sendSignInCode(email, code)`), `server/src/middleware/rateLimit.ts` (Postgres counters keyed by `sha256(normalized email)` and `sha256(ip key)` with `trust proxy` 1, so no plaintext email or IP is stored), `server/src/schemas/authSchemas.ts`; tests.
 
 **Behaviors (RED tests):**
 - A well-formed email gets 202, one row whose `code_hash` is `sha256(code)` and `expires_at` 10 minutes ahead, and one `sendSignInCode` call with a 6-digit code.
 - Emails are normalized (trim, NFKC, lowercase) before the rate-limit key and every lookup: 5 requests for `Foo@Example.com`, `FOO@example.com`, and `foo@example.com ` then a 6th in a new casing gets 429.
 - The code comes from an injected `randomInt(0, 1_000_000)` (Node `crypto.randomInt` in production), zero-padded to 6 digits; the test asserts the injected generator is the one called.
 - Rate-limit counters increment atomically (`INSERT ... ON CONFLICT DO UPDATE SET count = count + 1 RETURNING count`): 20 concurrent requests for one email send at most 5 codes.
-- IPv6 clients are keyed by their /64 prefix: two addresses in one /64 share a counter.
-- `POST /v1/auth/codes` with `Content-Type: text/plain` gets 415.
+- IPv6 clients are keyed by their /64 prefix and IPv4-mapped addresses (`::ffff:a.b.c.d`) are unmapped and keyed as the IPv4 address: `2001:db8::1` and `2001:db8::2` share a counter, `::ffff:203.0.113.7` and `::ffff:203.0.113.8` do not.
+- A `rate_limit_counters` row never contains the plaintext email or IP (the stored key is a SHA-256 hex digest).
+- `POST /v1/auth/codes` with `Content-Type: text/plain`, `application/x-www-form-urlencoded`, or `multipart/form-data` gets 415; `application/json; charset=utf-8` passes.
 - The plaintext code appears in no table and no log line.
 - A malformed email gets 400; the body for an existing and a new email is identical.
 - The 6th request for one email within an hour → 429; the 21st from one IP within an hour → 429; counters reset after the window.
@@ -706,6 +707,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 - The 5th wrong attempt exhausts the code.
 - Hash comparison uses `crypto.timingSafeEqual`.
 - Two concurrent requests with the same correct code create exactly one session (row lock on the code).
+- A code issued for `foo@example.com` verifies for `FOO@example.com ` (normalized), and wrong guesses under both casings count against the same `attempts`.
 - Every verify takes `SELECT ... FOR UPDATE` on the code row and increments `attempts` in the same transaction: 50 concurrent wrong guesses leave `attempts` at 5 and the then-correct code is rejected.
 - The session-creation response's `Set-Cookie` token never appears in any log line (captured pino destination).
 
@@ -721,7 +723,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 - A valid cookie authenticates; a valid bearer token authenticates; with both present the bearer token decides, and a failing bearer token returns 401 even if the cookie is valid.
 - Unknown, revoked, absolute-expired, and idle-expired tokens → 401 with the same body.
 - `Origin: https://syntactical.dev` gets `Access-Control-Allow-Origin` with credentials; `https://evil.com`, `null`, `https://syntactical.dev.evil.com`, and `http://syntactical.dev` get none.
-- A cookie-authenticated `POST` without `X-Requested-With: XMLHttpRequest` → 403; any non-GET route except the webhook with `Content-Type: text/plain` → 415, authenticated or not; bearer-authenticated native requests and the webhook routes are exempt from the header check.
+- A cookie-authenticated `POST` without `X-Requested-With: XMLHttpRequest` → 403; any non-GET route except the webhook with `Content-Type: text/plain`, `application/x-www-form-urlencoded`, or `multipart/form-data` → 415, authenticated or not, while `application/json; charset=utf-8` and a bodyless `DELETE` without `Content-Type` pass; bearer-authenticated native requests and the webhook routes are exempt from the header check.
 - `DELETE /v1/auth/sessions/current` sets `revoked_at`, clears the cookie, and the same token then gets 401.
 
 - [ ] Gated cycle; R-109 security review over PR 13 on `securityReviewModel`; commit `feat(auth): session middleware for cookie and bearer, CORS allowlist, CSRF guard, and sign-out`.
@@ -930,8 +932,8 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** Create `server/src/routes/deleteMe.ts`, `server/src/services/deleteUser.ts`, `components/auth/DeleteAccountDialog.tsx`; modify `app/settings.tsx`; tests.
 
 **Behaviors (RED tests):**
-- `DELETE /v1/me` (session, CSRF header) deletes the user's sessions, answer events, daily progress, and goal changes in one transaction; replaces every string in each of the user's `purchase_events.payload` that equals the user's email or display name, at any depth and under any key (`subscriber_attributes.$email`, `$displayName`, aliases), with `[deleted]`; deletes the `users` row, which sets `entitlements.user_id` and `purchase_events.user_id` to null (the rows stay for accounting); responds 204 and clears the cookie.
-- After deletion, a search of every table for the run-time email finds nothing, and the user's entitlement rows still exist with `user_id` null.
+- `DELETE /v1/me` (session, CSRF header) deletes the user's sessions, answer events, daily progress, and goal changes in one transaction; deletes every `one_time_codes` row for the user's normalized email; replaces every string in each of the user's `purchase_events.payload` that equals the user's email or display name after the same normalization on both sides (trim, NFKC, lowercase), at any depth and under any key (`subscriber_attributes.$email`, `$displayName`, aliases), with `[deleted]`; deletes the `users` row, which sets `entitlements.user_id` and `purchase_events.user_id` to null (the rows stay for accounting); responds 204 and clears the cookie.
+- After deletion, a case-insensitive search of every table for the run-time email finds nothing (the payload fixture carries a mixed-case copy of the email), and the user's entitlement rows still exist with `user_id` null.
 - The same token then gets 401; signing in again with the same email creates a new, empty user with no entitlements.
 - The settings screen shows "Delete account" with a confirmation dialog that requires typing `DELETE`; cancel changes nothing; success signs out locally and clears the event log.
 - No log line from deletion contains the email.
