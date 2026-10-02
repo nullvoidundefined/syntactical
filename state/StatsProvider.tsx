@@ -1,5 +1,6 @@
 // Owns lifetime stats for the whole app: reads them once at startup,
-// refuses changes until that read completes, then persists every change
+// treats a malformed stored value as empty stats, refuses changes until
+// that read completes, then persists every change
 // through one ordered write queue. In-memory stats stay authoritative
 // when a write fails.
 import {
@@ -17,6 +18,7 @@ import { readJson } from '../clients/readJson';
 import { writeJson } from '../clients/writeJson';
 import { STORAGE_KEY } from '../constants/appConfig';
 import { createEmptyStats } from '../services/stats/createEmptyStats';
+import { isStoredStats } from '../services/stats/isStoredStats';
 import { recordAnswer as foldAnswer } from '../services/stats/recordAnswer';
 import { recordCompletion as foldCompletion } from '../services/stats/recordCompletion';
 import type { RoundKey } from '../services/stats/types/RoundKey';
@@ -38,7 +40,8 @@ export function StatsProvider({ children }: { children: ReactNode }) {
   const writeQueue = useRef<Promise<unknown>>(Promise.resolve());
 
   useEffect(() => {
-    readJson(STORAGE_KEY, createEmptyStats()).then((stored) => {
+    readJson<unknown>(STORAGE_KEY, null).then((raw) => {
+      const stored = isStoredStats(raw) ? raw : createEmptyStats();
       statsRef.current = stored;
       setStats(stored);
       setIsHydrated(true);

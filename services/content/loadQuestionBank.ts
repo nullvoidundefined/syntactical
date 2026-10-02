@@ -64,7 +64,10 @@ export async function loadQuestionBank(args: LoadQuestionBankArgs): Promise<Cach
   const result = validateQuestionBank(parseBankJson(text, path));
   const { isValid } = result;
   if (!isValid) return rejectBank(path, result.rule);
-  const { questions } = result;
+  const { droppedQuestionIds, questions } = result;
+  if (droppedQuestionIds.length > 0) {
+    logWarning({ document: path, droppedQuestionIds }, 'content questions dropped');
+  }
   const bank = { hash, questions };
   if (isHashCurrent(hash)) await writeCachedBank(language, difficulty, bank);
   return bank;
