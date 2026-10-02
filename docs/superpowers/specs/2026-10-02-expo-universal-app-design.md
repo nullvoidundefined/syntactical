@@ -2,7 +2,7 @@
 
 **Ticket:** IAN-564
 **Branch:** `feat/expo-universal-app`
-**Status:** draft, revised after the adversarial spec review, awaiting owner review
+**Status:** draft, revised after the adversarial spec review, awaiting owner approval
 **Date:** 2026-10-02
 
 ## Goal
@@ -21,7 +21,7 @@ Syntactical is currently a static Vite + React single-page app deployed to GitHu
 8. Target about one day of work: the eight behavior slices ship as three PRs, and bank versions are content hashes computed at build time instead of numbers the owner bumps by hand.
 9. No Playwright suite. This overrides the shared convention that keyboard navigation, screen reader, and reduced-motion behavior are tested in E2E, and R-607's e2e spec per user story; those behaviors are covered by component tests and a manual Lighthouse and screen-reader pass before the web cutover.
 10. A very subtle indicator shows while a new language or a changed bank is downloading.
-11. Server-state layer: **open, asked of the owner** (adversarial review finding 13). The contract under "Content loading" holds either way; the choice is only whether TanStack Query implements it.
+11. TanStack Query fetches the manifest and banks, following CLAUDE-FRONTEND-REACT.md. It provides request deduplication, loading and error states with Retry, and the is-fetching flag that drives the download indicator. AsyncStorage still holds the hash-bound cache; TanStack Query's own persister is not used, because the cache entry must bind each bank to its verified hash.
 
 ## Domain vocabulary
 
@@ -102,7 +102,7 @@ Ordered by slice. Each line is one behavior a test can fail.
 ### Slice 8: device builds and docs
 
 - B-40: An EAS internal-distribution build installs and completes a round on an iOS device and an Android device, and the manual checklist records a pass for safe-area insets on a notched device, the query drawer, and the download indicator.
-- B-41: `docs/stack.md` has an entry for Expo, Expo Router, NativeWind, react-native-web, AsyncStorage, expo-crypto, Prism, and Jest; `docs/feature-list/features.md` and the user stories describe the shipped behavior; the README's setup and content-editing instructions run as written.
+- B-41: `docs/stack.md` has an entry for Expo, Expo Router, NativeWind, react-native-web, TanStack Query, AsyncStorage, expo-crypto, Prism, and Jest; `docs/feature-list/features.md` and the user stories describe the shipped behavior; the README's setup and content-editing instructions run as written.
 
 ## Architecture
 
@@ -118,7 +118,7 @@ state/                            hooks and providers (CLAUDE-FRONTEND-REACT.md:
   useQuizEngine, useQuizStats     ported; stats hydration added
   useLanguageManifest             new: the manifest with its load state
   useQuestionBank                 new: the bank with its load state
-  useContentDownloads             new: whether any manifest or bank transfer is in flight
+  useContentDownloads             new: whether any manifest or bank transfer is in flight (TanStack Query's useIsFetching)
   useKeyboardNav                  web build only
 services/
   quiz/                           quizService, unchanged logic
@@ -128,6 +128,8 @@ services/
 clients/
   storageClient                   AsyncStorage behind the existing readJson / writeJson interface
   contentClient                   fetch with an 8 second timeout and redirect: "error"
+config/
+  queryClient                     the TanStack Query client
 constants/
   appConfig                       difficulty registry (labels, descriptions), key bindings, storage keys
 content/                          source of truth for question content
@@ -150,7 +152,7 @@ The Expo app is added beside the Vite app: Expo uses `app/` and the new top-leve
 
 ### Content loading
 
-The contract below holds whether TanStack Query or hand-written code implements it (owner decision 11).
+TanStack Query implements the fetching side of this contract (owner decision 11): one query per manifest and per bank, keyed by language, difficulty, and bank hash, with its client configured in `config/queryClient.ts`. The hash-bound AsyncStorage cache and the verification step are this app's own code.
 
 1. **Cold start.** The app reads the cached manifest and the cached banks it needs from AsyncStorage, falling back to the bundled copies. A round may start as soon as that read completes; it never waits on the network.
 2. **Refresh.** In the background, the manifest is fetched. For each bank the user opens, the bank file is fetched only when its manifest hash differs from the cached bank's hash.
@@ -308,7 +310,7 @@ The slices ship as three PRs off `main` (owner decision 8), each PR running its 
 | 10 | MEDIUM | Fixed: size, count, and length limits; the timeout covers the body (Validation rules, B-13, B-18) |
 | 11 | MEDIUM | Fixed: segment grammar, URL resolution with origin and prefix checks, `redirect: "error"` (Bank path rule) |
 | 12 | MEDIUM | Fixed: the `DIFFICULTIES` registry stays (Data conversion, B-21) |
-| 13 | MEDIUM | Open: asked of the owner (owner decision 11) |
+| 13 | MEDIUM | Fixed: TanStack Query adopted for fetching (owner decision 11) |
 | 14 | LOW | Fixed: hooks live in `state/` |
 | 15 | MEDIUM | Fixed: the literal-text criterion moved to slice 5 against the real components (B-33) |
 | 16 | MEDIUM | Fixed: web `h1`, native header role (B-1) |
@@ -326,4 +328,4 @@ The slices ship as three PRs off `main` (owner decision 8), each PR running its 
 | 28 | MEDIUM | Fixed: script table and a single Pages artifact carrying both builds until cutover (Scripts, Coexistence, B-39) |
 | 29 | MEDIUM | Fixed: safe-area checklist, warning logging, difficulty registry, and docs completion criteria (B-20, B-21, B-40, B-41) |
 
-Stack options: keep Expo, NativeWind, static JSON hosting, AsyncStorage, Prism, `Modal`, and the manual device checklist (options 1, 3, 4, 7, 8, 9, 11). Option 2 (routing) is resolved by finding 5. Option 5 (TanStack Query) is owner decision 11. Option 6 (Zod): keep hand-written validators, since two small formats do not justify a dependency. Option 10 (Playwright) and option 12 (version script) are superseded by owner decisions 9 and 8.
+Stack options: keep Expo, NativeWind, static JSON hosting, AsyncStorage, Prism, `Modal`, and the manual device checklist (options 1, 3, 4, 7, 8, 9, 11). Option 2 (routing) is resolved by finding 5. Option 5 (TanStack Query) is adopted as owner decision 11. Option 6 (Zod): keep hand-written validators, since two small formats do not justify a dependency. Option 10 (Playwright) and option 12 (version script) are superseded by owner decisions 9 and 8.
