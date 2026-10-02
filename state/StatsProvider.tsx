@@ -1,6 +1,7 @@
 // Owns lifetime stats for the whole app: reads them once at startup,
-// treats a malformed stored value as empty stats, refuses changes until
-// that read completes, then persists every change
+// treats a malformed stored value as empty stats after copying it to a
+// backup key and logging one warning, refuses changes until that read and
+// backup complete, then persists every change
 // through one ordered write queue. In-memory stats stay authoritative
 // when a write fails.
 import {
@@ -15,8 +16,9 @@ import {
 } from 'react';
 
 import { readJson } from '../clients/readJson';
+import { logWarning } from '../clients/logClient';
 import { writeJson } from '../clients/writeJson';
-import { STORAGE_KEY } from '../constants/appConfig';
+import { REJECTED_STORAGE_KEY, STORAGE_KEY } from '../constants/appConfig';
 import { createEmptyStats } from '../services/stats/createEmptyStats';
 import { isStoredStats } from '../services/stats/isStoredStats';
 import { recordAnswer as foldAnswer } from '../services/stats/recordAnswer';
@@ -40,7 +42,12 @@ export function StatsProvider({ children }: { children: ReactNode }) {
   const writeQueue = useRef<Promise<unknown>>(Promise.resolve());
 
   useEffect(() => {
-    readJson<unknown>(STORAGE_KEY, null).then((raw) => {
+    readJson<unknown>(STORAGE_KEY, null).then(async (raw) => {
+      const isRejected = raw !== null && !isStoredStats(raw);
+      if (isRejected) {
+        logWarning({ backupKey: REJECTED_STORAGE_KEY, key: STORAGE_KEY }, 'stored stats rejected');
+        await writeJson(REJECTED_STORAGE_KEY, raw);
+      }
       const stored = isStoredStats(raw) ? raw : createEmptyStats();
       statsRef.current = stored;
       setStats(stored);
