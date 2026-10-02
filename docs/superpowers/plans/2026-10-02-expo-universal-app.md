@@ -38,7 +38,9 @@
 
 ## Gate 1
 
-**Merge mode:** pending the owner's choice at Gate 1. PR 1 and PR 2 are high-risk, so the owner reads and merges them regardless (R-514).
+**Merge mode:** merge-on-green for PR 3 (owner decision 2026-10-02 at Gate 1): the session merges it once CI is green and the R-517 review passes, through the harness's per-merge confirmation. PR 1 and PR 2 are high-risk, so the owner reads and merges them (R-514).
+
+**Execution:** native (owner decision 2026-10-02): the session implements every task, with the R-412 triad on the two high-risk slices.
 
 | PR | Branch | Slices | Risk |
 |---|---|---|---|
