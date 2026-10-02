@@ -5,6 +5,8 @@ import { Pressable, Text, View } from 'react-native';
 import type { Grammar } from '../../constants/appConfig';
 import type { Question } from '../../services/content/types/Question';
 
+import { CodeBlock } from './CodeBlock';
+
 const CHOICE_LABELS = ['A', 'B', 'C', 'D'];
 
 type McQuestion = Extract<Question, { type: 'mc' }>;
@@ -22,12 +24,12 @@ function describeChoice(index: number, answerIndex: number, submittedAnswer: num
   return { state: undefined, toneClass: 'border-line' };
 }
 
-export function MultipleChoiceCard({ isAnswered, onSelect, question, submittedAnswer }: MultipleChoiceCardProps) {
+export function MultipleChoiceCard({ grammar, isAnswered, onSelect, question, submittedAnswer }: MultipleChoiceCardProps) {
   const { answerIndex, choices, code, prompt } = question;
   return (
     <View>
       <Text className="text-lg leading-relaxed text-ink">{prompt}</Text>
-      {code ? <Text className="mt-4 font-mono text-sm text-ink">{code}</Text> : null}
+      {code ? <CodeBlock className="mt-4" code={code} grammar={grammar} /> : null}
       <View className="mt-6 gap-2">
         {choices.map((choice, index) => {
           const { state, toneClass } = describeChoice(index, answerIndex, submittedAnswer, isAnswered);

@@ -5,6 +5,8 @@ import { Pressable, Text, View } from 'react-native';
 import type { Grammar } from '../../constants/appConfig';
 import type { Question } from '../../services/content/types/Question';
 
+import { CodeBlock } from './CodeBlock';
+
 type BoolQuestion = Extract<Question, { type: 'bool' }>;
 type BooleanCardProps = {
   grammar: Grammar;
@@ -25,12 +27,12 @@ function describeOption(value: boolean, answer: boolean, submittedAnswer: number
   return { state: undefined, toneClass: 'border-line' };
 }
 
-export function BooleanCard({ isAnswered, onSelect, question, submittedAnswer }: BooleanCardProps) {
+export function BooleanCard({ grammar, isAnswered, onSelect, question, submittedAnswer }: BooleanCardProps) {
   const { answer, code, prompt } = question;
   return (
     <View>
       <Text className="text-lg leading-relaxed text-ink">{prompt}</Text>
-      {code ? <Text className="mt-4 font-mono text-sm text-ink">{code}</Text> : null}
+      {code ? <CodeBlock className="mt-4" code={code} grammar={grammar} /> : null}
       <View className="mt-6 flex-row gap-2">
         {OPTIONS.map(({ keyHint, label, value }) => {
           const { state, toneClass } = describeOption(value, answer, submittedAnswer, isAnswered);

@@ -6,10 +6,11 @@ import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import type { Grammar } from '../../constants/appConfig';
 import type { Query } from '../../services/content/types/Query';
 import { useIsReducedMotion } from '../../state/useIsReducedMotion';
+import { CodeBlock } from '../quiz/CodeBlock';
 
 type QueryDrawerProps = { grammar: Grammar; isOpen: boolean; onClose: () => void; query: Query };
 
-export function QueryDrawer({ isOpen, onClose, query }: QueryDrawerProps) {
+export function QueryDrawer({ grammar, isOpen, onClose, query }: QueryDrawerProps) {
   const isReducedMotion = useIsReducedMotion();
   const { explanation, syntax, tags, title } = query;
   return (
@@ -26,7 +27,7 @@ export function QueryDrawer({ isOpen, onClose, query }: QueryDrawerProps) {
           <Text role="heading" aria-level={2} className="mb-4 font-mono text-lg text-ink">
             {title}
           </Text>
-          {syntax ? <Text className="mb-4 font-mono text-sm text-ink">{syntax}</Text> : null}
+          {syntax ? <CodeBlock className="mb-4" code={syntax} grammar={grammar} /> : null}
           <Text className="text-sm leading-relaxed text-ink">{explanation}</Text>
           {tags?.length ? (
             <View className="mt-6 flex-row flex-wrap gap-2">
