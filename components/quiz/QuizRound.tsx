@@ -1,7 +1,7 @@
 // One round: wires the engine to the cards, the query drawer, and stats,
 // and switches to the results screen when the round completes. Answers
 // are refused while the drawer is open, and advancing closes it.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -72,9 +72,14 @@ export function QuizRound(props: QuizRoundProps) {
   const { recordAnswer, recordCompletion } = useQuizStats();
   const [isQueryOpen, setIsQueryOpen] = useState(false);
 
+  // recordCompletion changes identity whenever stats change, so the ref keeps
+  // the effect to one completion per round instead of re-firing after it.
+  const hasRecordedCompletion = useRef(false);
   useEffect(() => {
-    if (isComplete) recordCompletion({ difficulty, language });
-  }, [isComplete]);
+    if (!isComplete || hasRecordedCompletion.current) return;
+    hasRecordedCompletion.current = true;
+    recordCompletion({ difficulty, language });
+  }, [difficulty, isComplete, language, recordCompletion]);
 
   function handleAnswer(value: number | boolean) {
     if (isQueryOpen) return;
