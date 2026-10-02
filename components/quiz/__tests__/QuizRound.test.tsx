@@ -1,4 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { useState } from 'react';
+import { Text } from 'react-native';
 
 import type { Question } from '../../../services/content/types/Question';
 import { QuizRound } from '../QuizRound';
@@ -11,6 +13,25 @@ jest.mock('../../../state/StatsProvider', () => ({
 
 const query = { explanation: 'Because', title: 'Why' };
 const questions: Question[] = [{ answer: true, id: 'q-1', prompt: 'Is it?', query, type: 'bool' }];
+
+function RoundHarness() {
+  const [isOnMenu, setIsOnMenu] = useState(false);
+  const [roundKey, setRoundKey] = useState(0);
+  if (isOnMenu) return <Text>menu screen</Text>;
+  return (
+    <QuizRound
+      key={roundKey}
+      language="python"
+      languageLabel="Python"
+      difficulty="easy"
+      difficultyLabel="Easy"
+      grammar="python"
+      questions={questions}
+      onExit={() => setIsOnMenu(true)}
+      onRetry={() => setRoundKey((previousKey) => previousKey + 1)}
+    />
+  );
+}
 
 async function renderRound() {
   const handlers = { onExit: jest.fn(), onRetry: jest.fn() };
@@ -48,19 +69,26 @@ describe('QuizRound', () => {
   });
 
   it('records no completion when leaving early', async () => {
-    const { onExit } = await renderRound();
+    await render(<RoundHarness />);
     await fireEvent.press(screen.getByRole('button', { name: 'Back to menu' }));
-    expect(onExit).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('menu screen')).not.toBeNull();
     expect(mockRecordCompletion).not.toHaveBeenCalled();
   });
 
-  it('retries and returns to the menu from the results screen', async () => {
-    const { onExit, onRetry } = await renderRound();
+  it('retries into a fresh round from the results screen', async () => {
+    await render(<RoundHarness />);
     await fireEvent.press(screen.getByText('True'));
     await fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Retry' }));
+    expect(screen.queryByText('1 of 1 correct')).toBeNull();
+    expect(screen.queryByText('Is it?')).not.toBeNull();
+  });
+
+  it('returns to the menu from the results screen', async () => {
+    await render(<RoundHarness />);
+    await fireEvent.press(screen.getByText('True'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Menu' }));
-    expect(onRetry).toHaveBeenCalledTimes(1);
-    expect(onExit).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('menu screen')).not.toBeNull();
   });
 });
