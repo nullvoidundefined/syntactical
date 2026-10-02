@@ -2,20 +2,29 @@
 // refuses changes until that read completes, then persists every change
 // through one ordered write queue. In-memory stats stay authoritative
 // when a write fails.
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { readJson, writeJson } from '../clients/storageClient';
-import { STORAGE_KEY } from '../constants/appConfig';
 import {
-  createEmptyStats,
-  recordAnswer as foldAnswer,
-  recordCompletion as foldCompletion,
-  type Stats,
-} from '../services/stats/statsService';
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
-type RoundKey = { language: string; difficulty: string };
+import { readJson } from '../clients/readJson';
+import { writeJson } from '../clients/writeJson';
+import { STORAGE_KEY } from '../constants/appConfig';
+import { createEmptyStats } from '../services/stats/createEmptyStats';
+import { recordAnswer as foldAnswer } from '../services/stats/recordAnswer';
+import { recordCompletion as foldCompletion } from '../services/stats/recordCompletion';
+import type { RoundKey } from '../services/stats/types/RoundKey';
+import type { Stats } from '../services/stats/types/Stats';
+
 type StatsContextValue = {
-  stats: Stats;
   isHydrated: boolean;
+  stats: Stats;
   recordAnswer: (event: RoundKey & { wasCorrect: boolean }) => void;
   recordCompletion: (event: RoundKey) => void;
 };
@@ -49,10 +58,10 @@ export function StatsProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<StatsContextValue>(
     () => ({
-      stats,
       isHydrated,
       recordAnswer: (event) => applyChange((current) => foldAnswer(current, event)),
       recordCompletion: (event) => applyChange((current) => foldCompletion(current, event)),
+      stats,
     }),
     [stats, isHydrated, applyChange],
   );

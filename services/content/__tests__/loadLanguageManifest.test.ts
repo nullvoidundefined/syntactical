@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { CONTENT_LIMITS } from '../../../constants/appConfig';
-import { readCachedManifest, writeCachedManifest } from '../contentCache';
+import { readCachedManifest } from '../readCachedManifest';
+import { writeCachedManifest } from '../writeCachedManifest';
 import { loadLanguageManifest } from '../loadLanguageManifest';
 import {
     CONTENT_BASE_URL,

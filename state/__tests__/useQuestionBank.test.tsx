@@ -4,9 +4,10 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
 import { createQueryClient } from '../../config/queryClient';
-import { BUNDLED_BANKS, BUNDLED_MANIFEST } from '../../services/content/bundledContent.generated';
-import { readCachedBank } from '../../services/content/contentCache';
-import type { Manifest } from '../../services/content/contentTypes';
+import { BUNDLED_BANKS } from '../../services/content/bundledBanks.generated';
+import { BUNDLED_MANIFEST } from '../../services/content/bundledManifest.generated';
+import { readCachedBank } from '../../services/content/readCachedBank';
+import type { Manifest } from '../../services/content/types/Manifest';
 import {
     CONTENT_BASE_URL,
     MANIFEST_URL,

@@ -1,12 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import {
-    readCachedBank,
-    readCachedManifest,
-    writeCachedBank,
-    writeCachedManifest,
-} from '../contentCache';
-import type { Question } from '../contentTypes';
+import { readCachedBank } from '../readCachedBank';
+import { readCachedManifest } from '../readCachedManifest';
+import type { Question } from '../types/Question';
+import { writeCachedBank } from '../writeCachedBank';
+import { writeCachedManifest } from '../writeCachedManifest';
 import { buildBoolQuestion, cloneBundledManifest, hashUtf8Hex } from './fixtures/contentFixtures';
 
 const MANIFEST_KEY = 'syntactical.content.v1.manifest';

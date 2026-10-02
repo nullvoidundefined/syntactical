@@ -1,11 +1,13 @@
 // Fetches, validates, and caches the manifest. Any failure returns null
 // after one warning, so the caller keeps the manifest it already has.
-import { ContentFetchError, fetchContentText } from '../../clients/contentClient';
+import { ContentFetchError } from '../../clients/ContentFetchError';
+import { fetchContentText } from '../../clients/fetchContentText';
 import { logWarning } from '../../clients/logClient';
 import { CONTENT_LIMITS } from '../../constants/appConfig';
-import { writeCachedManifest } from './contentCache';
-import type { Manifest } from './contentTypes';
+
+import type { Manifest } from './types/Manifest';
 import { validateManifest } from './validateManifest';
+import { writeCachedManifest } from './writeCachedManifest';
 
 const MANIFEST_DOCUMENT = 'manifest.json';
 
@@ -28,9 +30,11 @@ export async function loadLanguageManifest(contentBaseUrl: string): Promise<Mani
     const manifestUrl = new URL(MANIFEST_DOCUMENT, contentBaseUrl).toString();
     const text = await fetchContentText(manifestUrl, CONTENT_LIMITS.manifestBytes);
     const result = validateManifest(JSON.parse(text));
-    if (!result.isValid) return rejectManifest(result.rule);
-    await writeCachedManifest(result.manifest);
-    return result.manifest;
+    const { isValid } = result;
+    if (!isValid) return rejectManifest(result.rule);
+    const { manifest } = result;
+    await writeCachedManifest(manifest);
+    return manifest;
   } catch (err) {
     return rejectFailure(err);
   }

@@ -1,4 +1,5 @@
-import { ContentFetchError, fetchContentText } from '../contentClient';
+import { ContentFetchError } from '../ContentFetchError';
+import { fetchContentText } from '../fetchContentText';
 
 const REQUEST_URL = 'https://example.test/syntactical/content/python/easy.json';
 

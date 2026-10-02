@@ -1,9 +1,11 @@
 // Build step for the content bundle: hashes every question bank into
 // content/manifest.json, validates banks and manifest with the app's own
-// validators, and generates the TypeScript index that bundles them offline.
+// validators, and generates the TypeScript modules that bundle them offline:
+// one exporting the manifest and one exporting the bank require map.
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, sep } from 'node:path';
+
 import { CONTENT_LIMITS } from '../constants/appConfig.ts';
 import { validateManifest } from '../services/content/validateManifest.ts';
 import { validateQuestionBank } from '../services/content/validateQuestionBank.ts';
@@ -59,41 +61,73 @@ function assertValidManifest(manifest) {
   if (!result.isValid) throw new Error(`manifest.json is invalid: ${result.rule}`);
 }
 
-function toRequirePath(generatedPath, contentDir, bankPath) {
-  const relativePath = relative(dirname(generatedPath), join(contentDir, bankPath)).split(sep).join('/');
+function toRequirePath(fromPath, targetPath) {
+  const relativePath = relative(dirname(fromPath), targetPath).split(sep).join('/');
   return relativePath.startsWith('.') ? relativePath : `./${relativePath}`;
 }
 
-function renderGeneratedSource(manifest, bankLines) {
-  return `${GENERATED_HEADER}
-export const BUNDLED_MANIFEST = ${JSON.stringify(manifest, null, 2)};
+function renderManifestSource(requirePath, isTyped) {
+  const typeImport = isTyped ? "\nimport type { Manifest } from './types/Manifest';\n" : '';
+  const typeCast = isTyped ? ' as Manifest' : '';
+  return `${GENERATED_HEADER}${typeImport}
+export const BUNDLED_MANIFEST = require('${requirePath}')${typeCast};
+`;
+}
 
-export const BUNDLED_BANKS: Record<string, unknown> = {
+function renderBanksSource(bankLines, hasHeader) {
+  return `${hasHeader ? `${GENERATED_HEADER}\n` : ''}export const BUNDLED_BANKS: Record<string, unknown> = {
 ${bankLines.join('\n')}
 };
 `;
 }
 
-export async function buildContentManifest(contentDir, generatedPath) {
+function listBankLines(contentDir, banksPath, manifest) {
+  return listBankEntries(manifest)
+    .map(({ language, difficulty, bank }) => ({
+      key: `${language.id}/${difficulty}`,
+      requirePath: toRequirePath(banksPath, join(contentDir, bank.path)),
+    }))
+    .sort((left, right) => (left.key < right.key ? -1 : 1))
+    .map(({ key, requirePath }) => `  '${key}': require('${requirePath}'),`);
+}
+
+// `outputs` is either one module path (a single module exporting both the
+// manifest and the banks) or { banksPath, manifestPath } (one export per file).
+async function writeGeneratedModules(contentDir, outputs, manifest) {
+  const isSplit = typeof outputs !== 'string';
+  const banksPath = isSplit ? outputs.banksPath : outputs;
+  const manifestPath = isSplit ? outputs.manifestPath : outputs;
+  const manifestRequirePath = toRequirePath(manifestPath, join(contentDir, 'manifest.json'));
+  const bankLines = listBankLines(contentDir, banksPath, manifest);
+  await mkdir(dirname(manifestPath), { recursive: true });
+  await mkdir(dirname(banksPath), { recursive: true });
+  if (!isSplit) {
+    const manifestSource = renderManifestSource(manifestRequirePath, false);
+    await writeFile(outputs, `${manifestSource}\n${renderBanksSource(bankLines, false)}`);
+    return;
+  }
+  await writeFile(manifestPath, renderManifestSource(manifestRequirePath, true));
+  await writeFile(banksPath, renderBanksSource(bankLines, true));
+}
+
+export async function buildContentManifest(contentDir, outputs) {
   const manifestPath = join(contentDir, 'manifest.json');
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   await hashAllBanks(contentDir, manifest);
   assertValidManifest(manifest);
-  const bankLines = listBankEntries(manifest).map(
-    ({ language, difficulty, bank }) =>
-      `  '${language.id}/${difficulty}': require('${toRequirePath(generatedPath, contentDir, bank.path)}'),`,
-  );
   const manifestText = `${JSON.stringify(manifest, null, 2)}\n`;
   if (Buffer.byteLength(manifestText, 'utf8') > CONTENT_LIMITS.manifestBytes) {
     throw new Error(`manifest.json is over the ${CONTENT_LIMITS.manifestBytes} byte limit`);
   }
   await writeFile(manifestPath, manifestText);
-  await mkdir(dirname(generatedPath), { recursive: true });
-  await writeFile(generatedPath, renderGeneratedSource(manifest, bankLines));
+  await writeGeneratedModules(contentDir, outputs, manifest);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  buildContentManifest('content', 'services/content/bundledContent.generated.ts').catch((err) => {
+  buildContentManifest('content', {
+    banksPath: 'services/content/bundledBanks.generated.ts',
+    manifestPath: 'services/content/bundledManifest.generated.ts',
+  }).catch((err) => {
     console.error(err);
     process.exitCode = 1;
   });

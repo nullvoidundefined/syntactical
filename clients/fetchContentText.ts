@@ -3,17 +3,7 @@
 // UTF-8 byte-size limit on the body text.
 import { CONTENT_LIMITS } from '../constants/appConfig';
 
-type ContentFetchReason = 'network' | 'timeout' | 'redirect' | 'status' | 'too-large';
-
-export class ContentFetchError extends Error {
-  readonly reason: ContentFetchReason;
-
-  constructor(reason: ContentFetchReason, message: string) {
-    super(message);
-    this.name = 'ContentFetchError';
-    this.reason = reason;
-  }
-}
+import { ContentFetchError } from './ContentFetchError';
 
 type ContentFetchOptions = { timeoutMs?: number };
 
@@ -31,11 +21,12 @@ function isSameUrl(responseUrl: string, requestedUrl: string): boolean {
 }
 
 function assertDirectOkResponse(response: Response, requestedUrl: string): void {
-  if (response.redirected || !isSameUrl(response.url, requestedUrl)) {
+  const { ok, redirected, status, url } = response;
+  if (redirected || !isSameUrl(url, requestedUrl)) {
     throw new ContentFetchError('redirect', 'Content request was redirected');
   }
-  if (!response.ok) {
-    throw new ContentFetchError('status', `Content request failed with ${response.status}`);
+  if (!ok) {
+    throw new ContentFetchError('status', `Content request failed with ${status}`);
   }
 }
 
@@ -51,7 +42,7 @@ async function requestAndReadText(
   maxBytes: number,
   signal: AbortSignal,
 ): Promise<string> {
-  const response = await fetch(url, { redirect: 'error', cache: 'no-cache', signal });
+  const response = await fetch(url, { cache: 'no-cache', redirect: 'error', signal });
   assertDirectOkResponse(response, url);
   assertDeclaredLengthWithinLimit(response, maxBytes);
   const text = await response.text();
@@ -72,7 +63,7 @@ function createTimeoutRace(
       reject(new ContentFetchError('timeout', 'Content request timed out'));
     }, timeoutMs);
   });
-  return { promise, clear: () => clearTimeout(timer) };
+  return { clear: () => clearTimeout(timer), promise };
 }
 
 function toContentFetchError(err: unknown): ContentFetchError {

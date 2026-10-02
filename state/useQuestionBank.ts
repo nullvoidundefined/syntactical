@@ -2,18 +2,21 @@
 // matches the manifest is used directly; otherwise the bank downloads,
 // keyed by its hash so overlapping requests share one fetch.
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { buildBankQuery, findBankEntry } from '../services/content/bankQueries';
-import type { CachedBank } from '../services/content/contentCache';
+
+import { buildBankQuery } from '../services/content/buildBankQuery';
+import { findBankEntry } from '../services/content/findBankEntry';
+import type { CachedBank } from '../services/content/types/CachedBank';
+
 import { useContentContext } from './ContentProvider';
 import { useLanguageManifest } from './useLanguageManifest';
 
 export type QuestionBankState =
-  | { status: 'ready'; bank: CachedBank }
+  | { bank: CachedBank; status: 'ready' }
   | { status: 'loading' }
-  | { status: 'error'; retry: () => void }
+  | { retry: () => void; status: 'error' }
   | { status: 'unknown' };
 
-const PLACEHOLDER_ENTRY = { path: '', hash: 'none' };
+const PLACEHOLDER_ENTRY = { hash: 'none', path: '' };
 
 export function useQuestionBank(language: string, difficulty: string): QuestionBankState {
   const queryClient = useQueryClient();
@@ -26,9 +29,10 @@ export function useQuestionBank(language: string, difficulty: string): QuestionB
     ...buildBankQuery(queryClient, access, language, difficulty, entry ?? PLACEHOLDER_ENTRY),
     enabled: needsDownload,
   });
+  const { data, isError } = query;
   if (!entry) return { status: 'unknown' };
-  if (needsDownload && query.data) return { status: 'ready', bank: query.data };
-  if (localBank) return { status: 'ready', bank: localBank };
-  if (query.isError) return { status: 'error', retry: () => void query.refetch() };
+  if (needsDownload && data) return { bank: data, status: 'ready' };
+  if (localBank) return { bank: localBank, status: 'ready' };
+  if (isError) return { retry: () => void query.refetch(), status: 'error' };
   return { status: 'loading' };
 }

@@ -2,8 +2,8 @@
 // builders, a Node SHA-256 hasher, and a URL-routed fetch stub.
 import { createHash } from 'crypto';
 
-import { BUNDLED_MANIFEST } from '../../bundledContent.generated';
-import type { Manifest } from '../../contentTypes';
+import { BUNDLED_MANIFEST } from '../../bundledManifest.generated';
+import type { Manifest } from '../../types/Manifest';
 
 export const CONTENT_BASE_URL = 'https://example.test/content/';
 export const MANIFEST_URL = `${CONTENT_BASE_URL}manifest.json`;

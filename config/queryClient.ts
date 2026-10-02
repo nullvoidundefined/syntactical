@@ -6,7 +6,12 @@ import { QueryClient } from '@tanstack/react-query';
 export function createQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
-      queries: { retry: false, staleTime: Infinity, gcTime: Infinity, refetchOnWindowFocus: false },
+      queries: {
+        gcTime: Infinity,
+        refetchOnWindowFocus: false,
+        retry: false,
+        staleTime: Infinity,
+      },
     },
   });
 }

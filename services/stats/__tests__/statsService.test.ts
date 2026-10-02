@@ -1,4 +1,6 @@
-import { createEmptyStats, recordAnswer, recordCompletion } from '../statsService';
+import { createEmptyStats } from '../createEmptyStats';
+import { recordAnswer } from '../recordAnswer';
+import { recordCompletion } from '../recordCompletion';
 
 const python = { language: 'python', difficulty: 'easy' };
 

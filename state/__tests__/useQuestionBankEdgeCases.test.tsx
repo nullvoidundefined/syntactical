@@ -4,7 +4,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
 import { createQueryClient } from '../../config/queryClient';
-import { BUNDLED_MANIFEST } from '../../services/content/bundledContent.generated';
+import { BUNDLED_MANIFEST } from '../../services/content/bundledManifest.generated';
 import {
     CONTENT_BASE_URL,
     MANIFEST_URL,

@@ -1,8 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { CONTENT_LIMITS } from '../../../constants/appConfig';
-import { readCachedBank, writeCachedBank } from '../contentCache';
-import type { Question } from '../contentTypes';
+import { readCachedBank } from '../readCachedBank';
+import type { Question } from '../types/Question';
+import { writeCachedBank } from '../writeCachedBank';
 import { loadQuestionBank } from '../loadQuestionBank';
 import {
     CONTENT_BASE_URL,

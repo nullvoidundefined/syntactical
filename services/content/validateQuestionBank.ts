@@ -2,13 +2,14 @@
 // the rest kept; a malformed root, an unsupported schema, too many
 // questions, or no valid questions rejects the bank as a whole.
 import { CONTENT_LIMITS, SUPPORTED_SCHEMA_VERSION } from '../../constants/appConfig';
-import { isRecord } from './contentGuards';
-import type { Question } from './contentTypes';
+
+import { isRecord } from './isRecord';
+import type { Question } from './types/Question';
 
 const QUESTION_ID = /^[a-z0-9-]{1,64}$/;
 
 type BankResult =
-  | { isValid: true; questions: Question[]; droppedQuestionIds: string[] }
+  | { droppedQuestionIds: string[]; isValid: true; questions: Question[] }
   | { isValid: false; rule: string };
 
 function isText(value: unknown, maxLength: number): boolean {
@@ -21,16 +22,18 @@ function isOptionalText(value: unknown, maxLength: number): boolean {
 
 function areValidTags(tags: unknown): boolean {
   if (tags === undefined) return true;
-  return Array.isArray(tags) && tags.length <= CONTENT_LIMITS.maxTags && tags.every((tag) => isText(tag, CONTENT_LIMITS.tagLength));
+  const { maxTags, tagLength } = CONTENT_LIMITS;
+  return Array.isArray(tags) && tags.length <= maxTags && tags.every((tag) => isText(tag, tagLength));
 }
 
 function isValidQuery(query: unknown): boolean {
   if (!isRecord(query)) return false;
-  const { title, explanation, syntax, tags } = query;
+  const { explanation, syntax, tags, title } = query;
+  const { longTextLength, queryTitleLength } = CONTENT_LIMITS;
   return (
-    isText(title, CONTENT_LIMITS.queryTitleLength) &&
-    isText(explanation, CONTENT_LIMITS.longTextLength) &&
-    isOptionalText(syntax, CONTENT_LIMITS.longTextLength) &&
+    isText(title, queryTitleLength) &&
+    isText(explanation, longTextLength) &&
+    isOptionalText(syntax, longTextLength) &&
     areValidTags(tags)
   );
 }
@@ -55,12 +58,13 @@ function isValidAnswerShape(question: Record<string, unknown>): boolean {
 
 function isValidQuestion(question: unknown): question is Question {
   if (!isRecord(question)) return false;
-  const { id, prompt, code, query } = question;
+  const { code, id, prompt, query } = question;
+  const { longTextLength, promptLength } = CONTENT_LIMITS;
   return (
     typeof id === 'string' &&
     QUESTION_ID.test(id) &&
-    isText(prompt, CONTENT_LIMITS.promptLength) &&
-    isOptionalText(code, CONTENT_LIMITS.longTextLength) &&
+    isText(prompt, promptLength) &&
+    isOptionalText(code, longTextLength) &&
     isValidQuery(query) &&
     isValidAnswerShape(question)
   );
@@ -70,7 +74,7 @@ function describeQuestionId(question: unknown): string {
   return isRecord(question) && typeof question.id === 'string' ? question.id : '(no id)';
 }
 
-function partitionQuestions(entries: unknown[]): { questions: Question[]; droppedQuestionIds: string[] } {
+function partitionQuestions(entries: unknown[]): { droppedQuestionIds: string[]; questions: Question[] } {
   const seenIds = new Set<string>();
   const questions: Question[] = [];
   const droppedQuestionIds: string[] = [];
@@ -82,14 +86,21 @@ function partitionQuestions(entries: unknown[]): { questions: Question[]; droppe
       droppedQuestionIds.push(describeQuestionId(entry));
     }
   }
-  return { questions, droppedQuestionIds };
+  return { droppedQuestionIds, questions };
 }
 
 export function validateQuestionBank(input: unknown): BankResult {
-  if (!isRecord(input) || !Array.isArray(input.questions)) return { isValid: false, rule: 'root shape is invalid' };
-  if (input.schemaVersion !== SUPPORTED_SCHEMA_VERSION) return { isValid: false, rule: 'schemaVersion is not supported' };
-  if (input.questions.length > CONTENT_LIMITS.maxQuestions) return { isValid: false, rule: 'too many questions' };
-  const { questions, droppedQuestionIds } = partitionQuestions(input.questions);
+  if (!isRecord(input) || !Array.isArray(input.questions)) {
+    return { isValid: false, rule: 'root shape is invalid' };
+  }
+  const { questions: inputQuestions, schemaVersion } = input;
+  if (schemaVersion !== SUPPORTED_SCHEMA_VERSION) {
+    return { isValid: false, rule: 'schemaVersion is not supported' };
+  }
+  if (inputQuestions.length > CONTENT_LIMITS.maxQuestions) {
+    return { isValid: false, rule: 'too many questions' };
+  }
+  const { droppedQuestionIds, questions } = partitionQuestions(inputQuestions);
   if (questions.length === 0) return { isValid: false, rule: 'no valid questions' };
-  return { isValid: true, questions, droppedQuestionIds };
+  return { droppedQuestionIds, isValid: true, questions };
 }

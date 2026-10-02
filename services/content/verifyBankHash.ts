@@ -1,7 +1,8 @@
 // Verifies downloaded bank text against the SHA-256 hash the manifest
 // declares. Fails closed: a malformed expected hash never matches.
 import { hashTextSha256 } from '../../clients/hashClient';
-import { SHA256_HEX } from './contentGuards';
+
+import { SHA256_HEX } from './SHA256_HEX';
 
 export async function verifyBankHash(
   text: string,

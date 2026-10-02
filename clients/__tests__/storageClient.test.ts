@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { readJson, writeJson } from '../storageClient';
+import { readJson } from '../readJson';
+import { writeJson } from '../writeJson';
 
 describe('storageClient', () => {
   beforeEach(() => AsyncStorage.clear());
