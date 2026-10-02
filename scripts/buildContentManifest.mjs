@@ -7,6 +7,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, sep } from 'node:path';
 
 import { CONTENT_LIMITS } from '../constants/appConfig.ts';
+import { isSafeBankPath } from '../services/content/isSafeBankPath.ts';
 import { validateManifest } from '../services/content/validateManifest.ts';
 import { validateQuestionBank } from '../services/content/validateQuestionBank.ts';
 
@@ -26,6 +27,7 @@ function listBankEntries(manifest) {
 }
 
 async function readBankBytes(contentDir, bankPath) {
+  if (!isSafeBankPath(bankPath)) throw new Error(`${bankPath} is not a safe bank path`);
   const bytes = await readFile(join(contentDir, bankPath));
   if (bytes.length > CONTENT_LIMITS.bankBytes) {
     throw new Error(`${bankPath} is over the ${CONTENT_LIMITS.bankBytes} byte limit`);

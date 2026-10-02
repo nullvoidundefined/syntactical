@@ -1,6 +1,7 @@
-// Thin wrapper around fetch for remote content files: refuses redirects,
-// bounds the whole request (headers and body) by a timer, and enforces a
-// UTF-8 byte-size limit on the body text.
+// Thin wrapper around fetch for remote content files: refuses redirects
+// (an empty response url is unverifiable and counts as one), bounds the whole
+// request (headers and body) by a timer, and enforces a UTF-8 byte-size limit
+// on the body text.
 import { CONTENT_LIMITS } from '../constants/appConfig';
 
 import { ContentFetchError } from './ContentFetchError';
@@ -12,7 +13,7 @@ function countUtf8Bytes(text: string): number {
 }
 
 function isSameUrl(responseUrl: string, requestedUrl: string): boolean {
-  if (responseUrl === '') return true;
+  if (responseUrl === '') return false;
   try {
     return new URL(responseUrl).href === new URL(requestedUrl).href;
   } catch {
