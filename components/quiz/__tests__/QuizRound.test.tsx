@@ -1,8 +1,8 @@
+import type { Question } from '@syntactical/content-schema';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { useState } from 'react';
 import { Text } from 'react-native';
 
-import type { Question } from '../../../services/content/types/Question';
 import { QuizRound } from '../QuizRound';
 
 const mockRecordAnswer = jest.fn();

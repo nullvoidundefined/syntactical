@@ -1,7 +1,7 @@
+import { DIFFICULTIES } from '@syntactical/content-schema';
+import type { LanguageEntry } from '@syntactical/content-schema';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
-import { DIFFICULTIES } from '../../../constants/appConfig';
-import type { LanguageEntry } from '../../../services/content/types/LanguageEntry';
 import { LanguageStep } from '../LanguageStep';
 import { SelectionCard } from '../SelectionCard';
 

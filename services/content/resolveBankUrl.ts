@@ -1,6 +1,6 @@
 // Resolves a bank path under the content base URL. An unsafe path or one
 // that escapes the base returns null and the bank is treated as unsafe.
-import { isSafeBankPath } from './isSafeBankPath';
+import { isSafeBankPath } from '@syntactical/content-schema';
 
 export function resolveBankUrl(path: string, contentBaseUrl: string): string | null {
   if (!isSafeBankPath(path)) return null;

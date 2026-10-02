@@ -2,9 +2,9 @@
 // inside a horizontal ScrollView so long lines scroll instead of wrapping.
 // On the web the scroller takes keyboard focus so long lines stay reachable
 // without a pointer; native platforms scroll by touch and need no extra stop.
+import type { Grammar } from '@syntactical/content-schema';
 import { Platform, ScrollView, Text } from 'react-native';
 
-import type { Grammar } from '../../constants/appConfig';
 import { tokenizeCode } from '../../services/codeBlock/tokenizeCode';
 import type { CodeToken } from '../../services/codeBlock/types/CodeToken';
 

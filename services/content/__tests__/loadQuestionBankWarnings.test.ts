@@ -1,8 +1,8 @@
+import { CONTENT_LIMITS } from '@syntactical/content-schema';
+import type { Question } from '@syntactical/content-schema';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { CONTENT_LIMITS } from '../../../constants/appConfig';
 import { readCachedBank } from '../readCachedBank';
-import type { Question } from '../types/Question';
 import { writeCachedBank } from '../writeCachedBank';
 import { loadQuestionBank } from '../loadQuestionBank';
 import {

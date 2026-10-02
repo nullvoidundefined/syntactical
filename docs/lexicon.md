@@ -2,7 +2,7 @@
 
 One line per domain noun used in this codebase's names (files, functions, variables, data keys, routes, tables). Each entry says whether the term is **in code** today or **planned** in `docs/superpowers/specs/2026-10-02-syntactical-v2-design.md`; a planned term becomes "in code" in the PR that introduces it.
 
-`language` and `difficulty` are not listed separately. A language is an entry in `content/manifest.json`'s `languages` list (`LanguageEntry`, id such as `python`); a difficulty is one of `DIFFICULTIES` in `constants/appConfig.ts` (`easy`, `medium`, `hard`, type `DifficultyId`). Never introduce `level`, `subject`, or `tier` as synonyms for either. `track` is not a synonym: it names the stats record for a language and difficulty pair (below).
+`language` and `difficulty` are not listed separately. A language is an entry in `content/manifest.json`'s `languages` list (`LanguageEntry`, id such as `python`); a difficulty is one of `DIFFICULTIES` in `@syntactical/content-schema` (`packages/content-schema/src/difficulties.ts`) (`easy`, `medium`, `hard`, type `DifficultyId`). Never introduce `level`, `subject`, or `tier` as synonyms for either. `track` is not a synonym: it names the stats record for a language and difficulty pair (below).
 
 ### Content
 

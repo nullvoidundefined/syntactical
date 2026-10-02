@@ -1,9 +1,8 @@
 // A multiple-choice question: prompt, optional code, and up to four
 // lettered choices that show correct and incorrect once answered.
+import type { Grammar, Question } from '@syntactical/content-schema';
 import { Pressable, Text, View } from 'react-native';
 
-import type { Grammar } from '../../constants/appConfig';
-import type { Question } from '../../services/content/types/Question';
 
 import { CodeBlock } from './CodeBlock';
 

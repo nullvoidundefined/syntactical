@@ -1,11 +1,11 @@
 // One bank's load state. A local copy (cached or bundled) whose hash
 // matches the manifest is used directly; otherwise the bank downloads,
 // keyed by its hash so overlapping requests share one fetch.
+import type { CachedBank } from '@syntactical/content-schema';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { buildBankQuery } from '../services/content/buildBankQuery';
 import { findBankEntry } from '../services/content/findBankEntry';
-import type { CachedBank } from '../services/content/types/CachedBank';
 
 import { useContentContext } from './ContentProvider';
 import { useLanguageManifest } from './useLanguageManifest';

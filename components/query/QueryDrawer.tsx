@@ -1,10 +1,9 @@
 // The Query panel: the syntax, method, and context behind the current
 // question, in a modal that closes by its control, the backdrop, or the
 // platform back action. Slides in unless reduced motion is requested.
+import type { Grammar, Query } from '@syntactical/content-schema';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 
-import type { Grammar } from '../../constants/appConfig';
-import type { Query } from '../../services/content/types/Query';
 import { useIsReducedMotion } from '../../state/useIsReducedMotion';
 import { CodeBlock } from '../quiz/CodeBlock';
 

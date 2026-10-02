@@ -1,12 +1,11 @@
 // One round: wires the engine to the cards, the query drawer, and stats,
 // and switches to the results screen when the round completes. Answers
 // are refused while the drawer is open, and advancing closes it.
+import type { Grammar, Question } from '@syntactical/content-schema';
 import { useState } from 'react';
 
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import type { Grammar } from '../../constants/appConfig';
-import type { Question } from '../../services/content/types/Question';
 import { useQuizStats } from '../../state/StatsProvider';
 import { useQuizEngine } from '../../state/useQuizEngine';
 import { useRoundCompletion } from '../../state/useRoundCompletion';

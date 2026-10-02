@@ -1,9 +1,9 @@
+import type { Grammar } from '@syntactical/content-schema';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 
 import { render, screen } from '@testing-library/react-native';
 
-import type { Grammar } from '../../../constants/appConfig';
 import { CodeBlock } from '../CodeBlock';
 
 type RenderedNode = {

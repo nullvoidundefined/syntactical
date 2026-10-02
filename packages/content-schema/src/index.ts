@@ -1,2 +1,21 @@
-// The content contract shared by the app, the content build, the pipeline, and the server: content types, schema constants, and validators.
+// The content contract shared by the app, the content build, the pipeline,
+// and the server: content types, schema constants, and validators.
 export { PACKAGE_NAME } from './packageName.js';
+export { CONTENT_LIMITS } from './contentLimits.js';
+export { DIFFICULTIES } from './difficulties.js';
+export type { DifficultyId } from './difficulties.js';
+export { GRAMMARS } from './grammars.js';
+export type { Grammar } from './grammars.js';
+export { QUESTION_TYPES } from './questionTypes.js';
+export { SUPPORTED_SCHEMA_VERSION } from './supportedSchemaVersion.js';
+export { SHA256_HEX } from './SHA256_HEX.js';
+export { isRecord } from './isRecord.js';
+export { isSafeBankPath } from './isSafeBankPath.js';
+export { validateManifest } from './validateManifest.js';
+export { validateQuestionBank } from './validateQuestionBank.js';
+export type { BankEntry } from './types/BankEntry.js';
+export type { CachedBank } from './types/CachedBank.js';
+export type { LanguageEntry } from './types/LanguageEntry.js';
+export type { Manifest } from './types/Manifest.js';
+export type { Query } from './types/Query.js';
+export type { Question } from './types/Question.js';

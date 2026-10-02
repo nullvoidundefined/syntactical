@@ -1,6 +1,6 @@
+import type { Question } from '@syntactical/content-schema';
 import { act, renderHook } from '@testing-library/react-native';
 
-import type { Question } from '../../services/content/types/Question';
 import { useQuizEngine } from '../useQuizEngine';
 
 const query = { explanation: 'e', title: 't' };

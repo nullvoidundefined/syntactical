@@ -1,6 +1,5 @@
 // Finds the manifest entry for one language and difficulty, if it exists.
-import type { BankEntry } from './types/BankEntry';
-import type { Manifest } from './types/Manifest';
+import type { BankEntry, Manifest } from '@syntactical/content-schema';
 
 export function findBankEntry(
   manifest: Manifest,

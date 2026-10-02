@@ -1,4 +1,4 @@
-import type { Grammar } from '../../../constants/appConfig';
+import type { Grammar } from '@syntactical/content-schema';
 import { tokenizeCode } from '../tokenizeCode';
 
 const CODE = '<div class="a">x</div> a { color: red; } const x = 1;';

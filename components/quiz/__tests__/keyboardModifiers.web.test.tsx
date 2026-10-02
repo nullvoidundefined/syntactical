@@ -1,6 +1,6 @@
+import type { Question } from '@syntactical/content-schema';
 import { act, render, screen } from '@testing-library/react';
 
-import type { Question } from '../../../services/content/types/Question';
 import { QuizRound } from '../QuizRound';
 
 jest.mock('react-native-reanimated', () => ({ useReducedMotion: () => true }));

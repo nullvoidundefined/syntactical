@@ -2,8 +2,8 @@
 // current schema version. A value that
 // parses as JSON but is malformed (null, {}, a partial object) would crash
 // the first answer, so the provider falls back to empty stats instead.
+import { isRecord } from '@syntactical/content-schema';
 import { STORAGE_SCHEMA_VERSION } from '../../constants/appConfig';
-import { isRecord } from '../content/isRecord';
 
 import type { Stats } from './types/Stats';
 

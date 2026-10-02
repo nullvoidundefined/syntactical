@@ -1,4 +1,6 @@
-import { validateQuestionBank } from '../validateQuestionBank';
+import { describe, expect, it } from 'vitest';
+
+import { validateQuestionBank } from '../validateQuestionBank.js';
 
 type QuestionFixture = Record<string, unknown>;
 

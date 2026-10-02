@@ -1,3 +1,4 @@
+import type { Manifest } from '@syntactical/content-schema';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
@@ -7,7 +8,6 @@ import { createQueryClient } from '../../config/queryClient';
 import { BUNDLED_BANKS } from '../../services/content/bundledBanks.generated';
 import { BUNDLED_MANIFEST } from '../../services/content/bundledManifest.generated';
 import { readCachedBank } from '../../services/content/readCachedBank';
-import type { Manifest } from '../../services/content/types/Manifest';
 import {
     CONTENT_BASE_URL,
     MANIFEST_URL,

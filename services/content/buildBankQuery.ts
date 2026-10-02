@@ -1,12 +1,11 @@
 // The TanStack Query definition for one bank download. Shared by the
 // content provider and useQuestionBank, so neither imports the other.
+import type { BankEntry, Manifest } from '@syntactical/content-schema';
 import type { QueryClient } from '@tanstack/react-query';
 
 import { findBankEntry } from './findBankEntry';
 import { loadQuestionBank } from './loadQuestionBank';
-import type { BankEntry } from './types/BankEntry';
 import type { ContentAccess } from './types/ContentAccess';
-import type { Manifest } from './types/Manifest';
 
 function readCurrentHash(
   queryClient: QueryClient,

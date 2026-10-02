@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "expo start",
     "build": "npm run content:build && expo export --platform web --output-dir dist && cp -R content dist/content && node scripts/copySpaFallback.mjs dist",
-    "content:build": "tsx scripts/buildContentManifest.mjs",
+    "content:build": "npm run build -w @syntactical/content-schema && tsx scripts/buildContentManifest.mjs",
     "lint": "oxlint",
     "test": "jest",
     "preview": "npx serve dist",

@@ -1,7 +1,7 @@
 // Step 1 of the launch flow: choose a language from the manifest.
+import type { LanguageEntry } from '@syntactical/content-schema';
 import { Text, View } from 'react-native';
 
-import type { LanguageEntry } from '../../services/content/types/LanguageEntry';
 import { useKeyboardNav } from '../../state/useKeyboardNav';
 
 import { SelectionCard } from './SelectionCard';

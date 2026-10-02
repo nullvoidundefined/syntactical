@@ -1,10 +1,11 @@
 // Validates a fetched question bank. A malformed question is dropped and
 // the rest kept; a malformed root, an unsupported schema, too many
 // questions, or no valid questions rejects the bank as a whole.
-import { CONTENT_LIMITS, SUPPORTED_SCHEMA_VERSION } from '../../constants/appConfig';
+import { CONTENT_LIMITS } from './contentLimits.js';
+import { SUPPORTED_SCHEMA_VERSION } from './supportedSchemaVersion.js';
 
-import { isRecord } from './isRecord';
-import type { Question } from './types/Question';
+import { isRecord } from './isRecord.js';
+import type { Question } from './types/Question.js';
 
 const QUESTION_ID = /^[a-z0-9-]{1,64}$/;
 

@@ -1,12 +1,11 @@
 // Fetches, validates, and caches the manifest. Any failure returns null
 // after one warning, so the caller keeps the manifest it already has.
+import { CONTENT_LIMITS, validateManifest } from '@syntactical/content-schema';
+import type { Manifest } from '@syntactical/content-schema';
 import { ContentFetchError } from '../../clients/ContentFetchError';
 import { fetchContentText } from '../../clients/fetchContentText';
 import { logWarning } from '../../clients/logClient';
-import { CONTENT_LIMITS } from '../../constants/appConfig';
 
-import type { Manifest } from './types/Manifest';
-import { validateManifest } from './validateManifest';
 import { writeCachedManifest } from './writeCachedManifest';
 
 const MANIFEST_DOCUMENT = 'manifest.json';

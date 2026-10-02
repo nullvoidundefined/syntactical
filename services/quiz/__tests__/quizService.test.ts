@@ -1,4 +1,4 @@
-import type { Question } from '../../content/types/Question';
+import type { Question } from '@syntactical/content-schema';
 import { calculateAccuracy } from '../calculateAccuracy';
 import { isAnswerCorrect } from '../isAnswerCorrect';
 import { shuffleQuestions } from '../shuffleQuestions';
