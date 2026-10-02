@@ -1,0 +1,17 @@
+{
+  "findings": [],
+  "nothingFound": [
+    "Prism grammar allowlist (services/codeBlock/tokenizeCode.ts): tried markup, css, clike, js, cobol, plain, __proto__, constructor, empty, null; all refused to plain text",
+    "Code rendered as nested Text, never markup (CodeBlock, QueryDrawer, BooleanCard, MultipleChoiceCard): tried <img src=x onerror=alert(1)>, </code><script>1</script>, empty, whitespace; literal text, no dangerouslySetInnerHTML in app trees",
+    "Prompt, choice, explanation, title, and tag rendering as literal Text: tried <img src=x onerror=alert(1)>, <b>IEEE</b> 754; literal text",
+    "Route parameter validation against the manifest and difficulty registry: tried cobol, expert, __proto__, constructor, ../python, %2e%2e, empty, Python; not-found screen, no fetch",
+    "Difficulty listing by manifest key (DifficultyStep): tried __proto__, constructor, toString, a language with no banks; refused or empty list",
+    "Stats breakdown lookup (StatsPanel): tried __proto__ and constructor as stored keys, a removed language, attempted 0; no prototype read, omitted"
+  ],
+  "passes": [
+    { "range": "eefcffd..8617153", "result": "no findings" },
+    { "range": "b21518b..f5c336e", "result": "no security control in range: DownloadIndicator web status region renders only a constant; QuestionCardFrame rename; useRoundCompletion forwards the already-gated route values" }
+  ],
+  "model": "claude-fable-5-1",
+  "reviewer": "security-reviewer subagent"
+}
