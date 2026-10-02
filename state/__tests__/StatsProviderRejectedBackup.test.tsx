@@ -34,13 +34,30 @@ describe('StatsProvider rejected stored stats', () => {
   });
   afterEach(() => warn.mockRestore());
 
-  it('keeps a rejected stored value under the backup key after the first answer overwrites it, and warns once', async () => {
-    await AsyncStorage.setItem(STORAGE_KEY, futureStats);
+  it.each([
+    ['another schema version', futureStats],
+    ['a negative count', futureStats.replace('"version":2', '"version":1').replace('"attempted":9', '"attempted":-1')],
+    ['a malformed track entry', futureStats.replace('"version":2', '"version":1').replace('"tracks":{}', '"tracks":{"python:easy":{"attempted":"x"}}')],
+  ])('keeps a stored value with %s under the backup key after the first answer overwrites it, and warns once', async (_case, stored) => {
+    await AsyncStorage.setItem(STORAGE_KEY, stored);
     await renderAndAnswerOnce();
-    expect(JSON.parse((await AsyncStorage.getItem(REJECTED_STORAGE_KEY)) ?? 'null')).toEqual(JSON.parse(futureStats));
+    expect(JSON.parse((await AsyncStorage.getItem(REJECTED_STORAGE_KEY)) ?? 'null')).toEqual(JSON.parse(stored));
     const rejectionWarnings = warn.mock.calls.filter(([line]) => String(line).includes('stored stats rejected'));
     expect(rejectionWarnings).toHaveLength(1);
     expect(JSON.parse(rejectionWarnings[0][0])).toMatchObject({ key: STORAGE_KEY, backupKey: REJECTED_STORAGE_KEY });
+  });
+
+  it('leaves the rejected value in place and keeps changes in memory when the backup cannot be written', async () => {
+    await AsyncStorage.setItem(STORAGE_KEY, futureStats);
+    // The backup is the first storage write after this seed; fail only that one.
+    (AsyncStorage.setItem as jest.Mock).mockImplementationOnce(() => Promise.reject(new Error('quota')));
+    await render(<StatsProvider><AnswerProbe /></StatsProvider>);
+    await waitFor(() => expect(screen.getByTestId('hydrated')).toHaveTextContent('true'));
+    await fireEvent.press(screen.getByTestId('answer'));
+    await waitFor(() => expect(screen.getByTestId('attempted')).toHaveTextContent('1'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(await AsyncStorage.getItem(STORAGE_KEY)).toBe(futureStats);
+    expect(warn.mock.calls.filter(([line]) => String(line).includes('stored stats backup failed'))).toHaveLength(1);
   });
 
   it('writes no backup and no warning when nothing is stored', async () => {
