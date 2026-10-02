@@ -1,146 +1,77 @@
 # syntactical
 
-High-velocity flashcard and lightning-round quiz drills for developers, built as a Vite + React + Tailwind CSS single-page app. Pick a language track (Python, Postgres, or JavaScript), pick a difficulty (Easy, Medium, or Hard), and run the deck entirely from the keyboard. JavaScript offers Easy, Medium, and Hard.
+Syntactical is a flashcard and lightning-round quiz app that drills developers on language syntax and behavior. Pick a language (Python, Postgres, or JavaScript), pick a difficulty (Easy, Medium, or Hard), and answer a shuffled round of multiple-choice and true/false questions. Wrong answers can be explained through the query drawer, and lifetime stats and streaks persist on the device.
 
-## Stack
-
-- **Vite** (build tool / dev server)
-- **React 19** (functional components, hooks only)
-- **Tailwind CSS v4** (via `@tailwindcss/vite`, CSS-first theme in `src/index.css`)
-- No backend, no database - all state lives in `localStorage`
-
-## Directory structure
-
-```
-syntactical/
-├── .github/workflows/deploy.yml   # GitHub Actions -> GitHub Pages
-├── index.html
-├── vite.config.js                 # base path handling for GH Pages
-├── src/
-│   ├── main.jsx                   # React root
-│   ├── App.jsx                    # view router: menu vs. quiz
-│   ├── index.css                  # Tailwind entry + theme tokens
-│   ├── constants/
-│   │   └── appConfig.js           # languages, difficulties, key bindings
-│   ├── data/
-│   │   ├── index.js                # getQuestionBank(language, difficulty)
-│   │   ├── python/{easy,medium,hard}.js
-│   │   ├── postgres/{easy,medium,hard}.js
-│   │   └── javascript/{easy,medium,hard}.js
-│   ├── clients/
-│   │   └── localStorageClient.js  # thin localStorage read/write wrapper
-│   ├── services/
-│   │   ├── quizService.js         # shuffle, grading, accuracy (pure)
-│   │   └── statsService.js        # persisted-stats reducers (pure)
-│   ├── hooks/
-│   │   ├── useQuizEngine.js       # round state machine
-│   │   ├── useQuizStats.js        # stats state <-> localStorage
-│   │   └── useKeyboardNav.js      # global key-binding listener
-│   └── components/
-│       ├── layout/AppShell.jsx
-│       ├── menu/
-│       │   ├── MainMenu.jsx        # two-step wizard orchestrator
-│       │   ├── LanguageStep.jsx
-│       │   ├── DifficultyStep.jsx
-│       │   └── SelectionCard.jsx
-│       ├── quiz/
-│       │   ├── QuizView.jsx        # round orchestrator + retry remount
-│       │   ├── Card.jsx            # shared card chrome + Query trigger
-│       │   ├── MultipleChoiceCard.jsx
-│       │   ├── BooleanCard.jsx
-│       │   ├── ProgressBar.jsx
-│       │   ├── KeyboardHintBar.jsx
-│       │   └── ResultsScreen.jsx
-│       ├── query/QueryDrawer.jsx   # slide-over explanation panel
-│       └── stats/StatsPanel.jsx
-```
-
-## Keyboard controls
-
-| Key | Action |
-|---|---|
-| `1`-`4` / `A`-`D` | Select a multiple-choice option |
-| `T` / `F` | Answer a True/False card |
-| `Enter` | Advance to the next card (once answered) / retry on results screen |
-| `Q` | Open or close the Query drawer for the current card |
-| `Esc` | Close the Query drawer, or return to the menu |
-
-Every action is also reachable by mouse/click; the keyboard bindings are additive for speed.
+It is one Expo universal app (Expo Router, NativeWind, react-native-web) that runs on iOS, Android, and the web. The web build is published at https://nullvoidundefined.github.io/syntactical/. See `docs/stack.md` for every dependency and why it was chosen.
 
 ## Local development
 
 ```bash
 npm install
-npm run dev
+npm run dev      # starts Expo; press w for the web build, i or a for a simulator
+npm test         # Jest (native and web projects)
+npm run lint     # oxlint
+npm run build    # content build, then the web export into dist/
 ```
 
-## Building
+Run `npx tsc --noEmit` to type check; CI runs it too.
 
-```bash
-npm run build      # outputs to dist/
-npm run preview    # serve the production build locally
-```
+## Keyboard controls (web)
 
-`vite.config.js` sets `base` to `/syntactical/` only for the production build (`command === 'build'`), so `npm run dev` keeps serving from `/`. **If you rename the GitHub repo, update `REPO_NAME` in `vite.config.js` to match.**
+| Key | Action |
+|---|---|
+| `1`-`4` / `A`-`D` | Select a multiple-choice option |
+| `T` / `F` | Answer a True/False card |
+| `Enter` | Advance to the next card (once answered) or retry on the results screen |
+| `Q` | Open or close the query drawer for the current card |
+| `Esc` | Close the query drawer, or return to the menu |
 
-## Deploying to GitHub Pages
+Every action is also reachable by pointer or touch; the keyboard bindings are additive for speed.
 
-### Option A: GitHub Actions (recommended, already configured)
+## Content
 
-1. Push this project to a GitHub repository named to match `REPO_NAME` in `vite.config.js` (default: `syntactical`), or update that constant to match whatever the repo is actually named.
-2. In the repo, go to **Settings -> Pages** and set **Source** to **GitHub Actions**.
-3. Push to `main`. The workflow at `.github/workflows/deploy.yml` will:
-   - install dependencies,
-   - run `npm run build`,
-   - upload `dist/` as a Pages artifact,
-   - deploy it.
-4. Watch the run under the **Actions** tab. When it finishes, the deployed URL appears in the job summary and under **Settings -> Pages** (typically `https://<username>.github.io/syntactical/`).
+Questions are not compiled into the app logic. They live in `content/manifest.json` and `content/<language>/<difficulty>.json`, and the app downloads them at runtime from the content base URL, verifying each bank against the SHA-256 recorded in the manifest. Copies of every bank are also bundled into the app so it works offline.
 
-No further steps are needed after the first push, every subsequent push to `main` redeploys automatically.
+Each question is either multiple choice or true/false, and carries a `query` (`title`, `syntax`, `explanation`, `tags`) that backs the query drawer:
 
-### Option B: `gh-pages` CLI (manual, from your machine)
-
-1. Make sure the repo has a `main` (or default) branch already pushed to GitHub.
-2. Confirm `REPO_NAME` in `vite.config.js` matches the actual GitHub repo name.
-3. Run:
-   ```bash
-   npm run deploy
-   ```
-   This runs `predeploy` (`npm run build`) automatically, then publishes `dist/` to a `gh-pages` branch via the `gh-pages` package.
-4. In the repo, go to **Settings -> Pages** and set **Source** to **Deploy from a branch**, branch `gh-pages`, folder `/ (root)`.
-5. The site will be live at `https://<username>.github.io/syntactical/` within a minute or two.
-
-Use Option A for a zero-touch pipeline; use Option B if you'd rather deploy on demand without GitHub Actions.
-
-## Data model
-
-Every question in `src/data/**` follows one of two shapes:
-
-```js
-// Multiple choice
+```json
 {
-  id: 'py-med-01',
-  type: 'mc',
-  prompt: '...',
-  code: '...',            // optional snippet
-  choices: ['...', '...', '...', '...'],
-  answerIndex: 0,
-  query: { title, syntax, explanation, tags },
-}
-
-// True / False
-{
-  id: 'pg-med-01',
-  type: 'bool',
-  prompt: '...',
-  code: '...',            // optional snippet
-  answer: true,
-  query: { title, syntax, explanation, tags },
+  "id": "py-med-01",
+  "type": "mc",
+  "prompt": "...",
+  "code": "...",
+  "choices": ["...", "...", "...", "..."],
+  "answerIndex": 0,
+  "query": { "title": "...", "syntax": "...", "explanation": "...", "tags": ["..."] }
 }
 ```
 
-`query` backs the Query drawer, and is required on every card per the spec: it names the underlying method/syntax rule and explains the context, not just restates the answer.
+A true/false question uses `"type": "bool"` and `"answer": true` or `false` in place of `choices` and `answerIndex`.
 
-## Adding a new question bank
+### Editing a question
 
-Add a new file under `src/data/<language>/<difficulty>.js` exporting an array in the shape above, then register it in `src/data/index.js`'s `QUESTION_BANKS` map. If it's a new language, also add an entry to `LANGUAGES` in `src/constants/appConfig.js`.
+1. Edit the question in `content/<language>/<difficulty>.json`.
+2. Run `npm run content:build`. It validates the content, recomputes every bank hash into `content/manifest.json`, and regenerates `services/content/bundledManifest.generated.ts` and `services/content/bundledBanks.generated.ts`.
+3. Commit the bank, `content/manifest.json`, and both `services/content/*.generated.ts` files together, then push. CI fails the pull request if any of them drift from what `npm run content:build` produces.
+
+### Adding a language
+
+1. Add the bank files, `content/<language>/<difficulty>.json`, for each difficulty the language offers.
+2. Add an entry to `languages` in `content/manifest.json` with `id`, `label`, `glyph`, `tagline`, `grammar` (the Prism language id used for highlighting), and a `banks` object whose entries each have a `path` and `"hash": ""`.
+3. Run `npm run content:build` to fill in the hashes and regenerate the bundled files, then commit and push as above.
+
+A `grammar` that the build does not include renders code as plain text; the supported list is `GRAMMARS` in `constants/appConfig.ts`. A language outside that list needs the list and the Prism imports in `services/codeBlock/tokenizeCode.ts` extended in code.
+
+## Deploying
+
+Pushing to `main` runs `.github/workflows/deploy.yml`, which installs dependencies, runs `npm run build`, and publishes `dist/` (the Expo web export plus `content/`) to GitHub Pages. Watch the run under the Actions tab. The site is served at `/syntactical/`, and `404.html` serves deep links to the single-page app. Banks pushed to `main` reach installed apps on their next manifest refresh, with no new build.
+
+## Device builds
+
+Internal iOS and Android builds go through EAS using the `preview` profile in `eas.json`. The commands, the Apple Developer requirement for iOS, and the manual checklist to run on each build are in `docs/device-checklist.md`.
+
+## More documentation
+
+- `docs/stack.md`: every dependency and tool, with its role.
+- `docs/lexicon.md`: the domain vocabulary used in names.
+- `docs/feature-list/features.md` and `docs/user-stories/`: what ships and its acceptance criteria.
