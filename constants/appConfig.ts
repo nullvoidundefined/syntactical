@@ -7,7 +7,6 @@ export const STORAGE_KEY = 'syntactical.stats.v1';
 export const REJECTED_STORAGE_KEY = 'syntactical.stats.v1.rejected';
 export const STORAGE_SCHEMA_VERSION = 1;
 
-
 // Web keyboard bindings, matched case-insensitively. A choice key's position
 // in its row of four is the choice index (1 and A select the first choice).
 export const KEY_BINDINGS = {
