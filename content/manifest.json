@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "glyph": "PY",
+      "tagline": "Runtime semantics, stdlib, and the sharp edges.",
+      "grammar": "python",
+      "banks": {
+        "easy": {
+          "path": "python/easy.json",
+          "hash": ""
+        },
+        "medium": {
+          "path": "python/medium.json",
+          "hash": ""
+        },
+        "hard": {
+          "path": "python/hard.json",
+          "hash": ""
+        }
+      }
+    },
+    {
+      "id": "postgres",
+      "label": "Postgres",
+      "glyph": "PG",
+      "tagline": "Query planning, concurrency, and storage internals.",
+      "grammar": "sql",
+      "banks": {
+        "easy": {
+          "path": "postgres/easy.json",
+          "hash": ""
+        },
+        "medium": {
+          "path": "postgres/medium.json",
+          "hash": ""
+        },
+        "hard": {
+          "path": "postgres/hard.json",
+          "hash": ""
+        }
+      }
+    },
+    {
+      "id": "javascript",
+      "label": "JavaScript",
+      "glyph": "JS",
+      "tagline": "Coercion, scope, and the runtime behavior that surprises.",
+      "grammar": "javascript",
+      "banks": {
+        "easy": {
+          "path": "javascript/easy.json",
+          "hash": ""
+        },
+        "medium": {
+          "path": "javascript/medium.json",
+          "hash": ""
+        },
+        "hard": {
+          "path": "javascript/hard.json",
+          "hash": ""
+        }
+      }
+    }
+  ]
+}
