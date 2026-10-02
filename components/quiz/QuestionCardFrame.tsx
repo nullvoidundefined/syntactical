@@ -7,7 +7,7 @@ import { Pressable, Text, View } from 'react-native';
 
 const TYPE_LABEL = { bool: 'True / False', mc: 'Multiple choice' } as const;
 
-type CardProps = {
+type QuestionCardFrameProps = {
   children: ReactNode;
   difficultyLabel: string;
   languageLabel: string;
@@ -15,7 +15,7 @@ type CardProps = {
   type: 'mc' | 'bool';
 };
 
-export function Card({ children, difficultyLabel, languageLabel, onOpenQuery, type }: CardProps) {
+export function QuestionCardFrame({ children, difficultyLabel, languageLabel, onOpenQuery, type }: QuestionCardFrameProps) {
   return (
     <View className="overflow-hidden rounded-lg border border-line bg-surface">
       <View className="flex-row flex-wrap items-center justify-between border-b border-line px-4 py-3">

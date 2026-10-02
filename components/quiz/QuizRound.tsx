@@ -1,7 +1,7 @@
 // One round: wires the engine to the cards, the query drawer, and stats,
 // and switches to the results screen when the round completes. Answers
 // are refused while the drawer is open, and advancing closes it.
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -9,12 +9,13 @@ import type { Grammar } from '../../constants/appConfig';
 import type { Question } from '../../services/content/types/Question';
 import { useQuizStats } from '../../state/StatsProvider';
 import { useQuizEngine } from '../../state/useQuizEngine';
+import { useRoundCompletion } from '../../state/useRoundCompletion';
 import { QueryDrawer } from '../query/QueryDrawer';
 
 import { BooleanCard } from './BooleanCard';
-import { Card } from './Card';
 import { MultipleChoiceCard } from './MultipleChoiceCard';
 import { ProgressBar } from './ProgressBar';
+import { QuestionCardFrame } from './QuestionCardFrame';
 import { ResultsScreen } from './ResultsScreen';
 
 type QuizRoundProps = {
@@ -40,13 +41,13 @@ type QuestionCardProps = {
 function QuestionCard({ answerState, difficultyLabel, languageLabel, onAnswer, onOpenQuery, question }: QuestionCardProps) {
   const labels = { difficultyLabel, languageLabel, onOpenQuery };
   return question.type === 'mc' ? (
-    <Card {...labels} type="mc">
+    <QuestionCardFrame {...labels} type="mc">
       <MultipleChoiceCard question={question} {...answerState} onSelect={onAnswer} />
-    </Card>
+    </QuestionCardFrame>
   ) : (
-    <Card {...labels} type="bool">
+    <QuestionCardFrame {...labels} type="bool">
       <BooleanCard question={question} {...answerState} onSelect={onAnswer} />
-    </Card>
+    </QuestionCardFrame>
   );
 }
 
@@ -69,17 +70,9 @@ export function QuizRound(props: QuizRoundProps) {
   const { difficulty, difficultyLabel, grammar, language, languageLabel, onExit, onRetry, questions } = props;
   const engine = useQuizEngine(questions);
   const { advanceQuestion, currentQuestion, isAnswered, isComplete, submitAnswer, submittedAnswer, wasCorrect } = engine;
-  const { recordAnswer, recordCompletion } = useQuizStats();
+  const { recordAnswer } = useQuizStats();
   const [isQueryOpen, setIsQueryOpen] = useState(false);
-
-  // recordCompletion changes identity whenever stats change, so the ref keeps
-  // the effect to one completion per round instead of re-firing after it.
-  const hasRecordedCompletion = useRef(false);
-  useEffect(() => {
-    if (!isComplete || hasRecordedCompletion.current) return;
-    hasRecordedCompletion.current = true;
-    recordCompletion({ difficulty, language });
-  }, [difficulty, isComplete, language, recordCompletion]);
+  useRoundCompletion(isComplete, { difficulty, language });
 
   function handleAnswer(value: number | boolean) {
     if (isQueryOpen) return;
