@@ -1,5 +1,8 @@
 // One-time converter from a schema 1 question bank to schema 2.
 
+const SCHEMA_VERSION_1 = 1;
+const SCHEMA_VERSION_2 = 2;
+
 type JsonObject = Record<string, unknown>;
 
 function isObject(value: unknown): value is JsonObject {
@@ -11,20 +14,25 @@ function convertQuestion(question: unknown): unknown {
         throw new Error('Question is not an object');
     }
     const converted: JsonObject = { ...structuredClone(question) };
-    if (question.type === 'mc' && Array.isArray(question.choices)) {
-        converted.choices = question.choices.map((choice) => ({ text: choice }));
+    const { choices, type } = question;
+    if (type === 'mc' && Array.isArray(choices)) {
+        converted.choices = choices.map((choice) => ({ text: choice }));
     }
     converted.provenance = {
+        isHumanReviewed: false,
         source: 'original',
         validation: { method: 'judged', status: 'pending' },
-        isHumanReviewed: false,
     };
     return converted;
 }
 
-export function migrateBankV1(bank: unknown): { schemaVersion: 2; questions: unknown[] } {
-    if (!isObject(bank) || bank.schemaVersion !== 1 || !Array.isArray(bank.questions)) {
+export function migrateBankV1(bank: unknown): { questions: unknown[]; schemaVersion: typeof SCHEMA_VERSION_2 } {
+    if (!isObject(bank)) {
         throw new Error('Not a schema 1 question bank');
     }
-    return { schemaVersion: 2, questions: bank.questions.map(convertQuestion) };
+    const { questions, schemaVersion } = bank;
+    if (schemaVersion !== SCHEMA_VERSION_1 || !Array.isArray(questions)) {
+        throw new Error('Not a schema 1 question bank');
+    }
+    return { questions: questions.map(convertQuestion), schemaVersion: SCHEMA_VERSION_2 };
 }

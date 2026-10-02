@@ -1,14 +1,15 @@
 // Validates a fetched question bank. A malformed question is dropped and
 // the rest kept; a malformed root, an unsupported schema, too many
 // questions, or no valid questions rejects the bank as a whole.
-import { CONTENT_LIMITS } from './contentLimits.js';
-import { SUPPORTED_SCHEMA_VERSION } from './supportedSchemaVersion.js';
 import { collectMisconceptionIds } from './collectMisconceptionIds.js';
+import { CONTENT_LIMITS } from './contentLimits.js';
 import { isRecord } from './isRecord.js';
 import { isValidProvenance } from './isValidProvenance.js';
+import { SUPPORTED_SCHEMA_VERSION } from './supportedSchemaVersion.js';
 import type { BankContext } from './types/BankContext.js';
 import type { Question } from './types/Question.js';
 
+const AB_CHOICE_COUNT = 2;
 const QUESTION_ID = /^[a-z0-9-]{1,64}$/;
 
 type DroppedQuestion = { id: string; rule: string };
@@ -85,7 +86,7 @@ function isValidAbShape(question: Record<string, unknown>): boolean {
   const { answerIndex, choices, criterion } = question;
   return (
     Array.isArray(choices) &&
-    choices.length === 2 &&
+    choices.length === AB_CHOICE_COUNT &&
     isValidChoiceAnswer(choices, answerIndex) &&
     isValidCriterion(criterion)
   );
@@ -107,8 +108,9 @@ function isValidAnswerShape(question: Record<string, unknown>): boolean {
 }
 
 function collectRationales(question: Record<string, unknown>): unknown[] {
-  if (question.type === 'bool') return [question.rationale];
-  return Array.isArray(question.choices) ? question.choices.map((choice) => (isRecord(choice) ? choice.rationale : undefined)) : [];
+  const { choices, rationale, type } = question;
+  if (type === 'bool') return [rationale];
+  return Array.isArray(choices) ? choices.map((choice) => (isRecord(choice) ? choice.rationale : undefined)) : [];
 }
 
 function hasLongRationale(question: Record<string, unknown>): boolean {
@@ -118,7 +120,8 @@ function hasLongRationale(question: Record<string, unknown>): boolean {
 }
 
 function findUnknownReferenceRule(question: Record<string, unknown>, context: BankContext): string | null {
-  if (typeof question.topic === 'string' && !context.topicIds.includes(question.topic)) return 'unknown-topic';
+  const { topic } = question;
+  if (typeof topic === 'string' && !context.topicIds.includes(topic)) return 'unknown-topic';
   const hasUnknownId = collectMisconceptionIds(question).some((id) => !context.misconceptionIds.includes(id));
   return hasUnknownId ? 'unknown-misconception' : null;
 }

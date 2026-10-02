@@ -2,14 +2,13 @@
 // rule it broke so the caller can log it and keep the previous copy.
 import { CONTENT_LIMITS } from './contentLimits.js';
 import { DIFFICULTIES } from './difficulties.js';
-import { GRAMMARS } from './grammars.js';
-import { SUPPORTED_SCHEMA_VERSION } from './supportedSchemaVersion.js';
-
 import { findBankEntryProblem } from './findBankEntryProblem.js';
 import { findMisconceptionsProblem } from './findMisconceptionsProblem.js';
 import { findTopicsProblem } from './findTopicsProblem.js';
+import { GRAMMARS } from './grammars.js';
 import { isRecord } from './isRecord.js';
 import { isTextWithin } from './isTextWithin.js';
+import { SUPPORTED_SCHEMA_VERSION } from './supportedSchemaVersion.js';
 import type { Manifest } from './types/Manifest.js';
 
 const LANGUAGE_ID = /^[a-z0-9-]{1,32}$/;

@@ -8,12 +8,14 @@ import { join } from 'node:path';
 import { migrateBankV1 } from '../services/migrateBankV1.js';
 import { migrateManifestV1 } from '../services/migrateManifestV1.js';
 
+const JSON_INDENT = 2;
+
 async function readJson(path: string): Promise<unknown> {
     return JSON.parse(await readFile(path, 'utf8'));
 }
 
 async function writeJson(path: string, value: unknown): Promise<void> {
-    await writeFile(path, `${JSON.stringify(value, null, 2)}\n`);
+    await writeFile(path, `${JSON.stringify(value, null, JSON_INDENT)}\n`);
 }
 
 export async function migrateContentDirectory(contentDir: string): Promise<void> {
@@ -27,8 +29,8 @@ export async function migrateContentDirectory(contentDir: string): Promise<void>
     const migratedManifest = migrateManifestV1(manifest);
     const migratedBanks = await Promise.all(
         bankPaths.map(async (path) => ({
-            path: join(contentDir, path),
             bank: migrateBankV1(await readJson(join(contentDir, path))),
+            path: join(contentDir, path),
         })),
     );
     for (const { path, bank } of migratedBanks) {

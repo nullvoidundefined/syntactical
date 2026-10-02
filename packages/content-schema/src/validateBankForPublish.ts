@@ -2,8 +2,8 @@
 // answer (or a true/false question) needs a rationale within the length cap,
 // and validation must not have failed or be pending without human review.
 // The client validator stays lenient; this runs in the content build.
-import { CONTENT_LIMITS } from './contentLimits.js';
 import { collectMisconceptionIds } from './collectMisconceptionIds.js';
+import { CONTENT_LIMITS } from './contentLimits.js';
 import { hasMalformedReference } from './hasMalformedReference.js';
 import type { BankContext } from './types/BankContext.js';
 import type { Question } from './types/Question.js';
@@ -15,8 +15,10 @@ function hasText(value: string | undefined): boolean {
 }
 
 function collectRationales(question: Question): (string | undefined)[] {
-  if (question.type === 'bool') return [question.rationale];
-  return question.choices.filter((_choice, index) => index !== question.answerIndex).map((choice) => choice.rationale);
+  const { type } = question;
+  if (type === 'bool') return [(question as Extract<Question, { type: 'bool' }>).rationale];
+  const { answerIndex, choices } = question as Exclude<Question, { type: 'bool' }>;
+  return choices.filter((_choice, index) => index !== answerIndex).map((choice) => choice.rationale);
 }
 
 function findValidationRule(question: Question): string | null {

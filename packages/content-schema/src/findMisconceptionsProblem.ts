@@ -3,11 +3,12 @@ import { CONTENT_LIMITS } from './contentLimits.js';
 import { isRecord } from './isRecord.js';
 import { isTextWithin } from './isTextWithin.js';
 
+const { maxMisconceptions, misconceptionDescriptionLength, referenceIdLength } = CONTENT_LIMITS;
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 export function findMisconceptionsProblem(misconceptions: unknown, languageId: string): string | null {
   if (!Array.isArray(misconceptions)) return 'misconceptions is not a list';
-  if (misconceptions.length > CONTENT_LIMITS.maxMisconceptions) {
+  if (misconceptions.length > maxMisconceptions) {
     return 'misconceptions has too many entries';
   }
   const prefix = `${languageId}.`;
@@ -17,13 +18,13 @@ export function findMisconceptionsProblem(misconceptions: unknown, languageId: s
     if (!isRecord(misconception)) return `${at} is not an object`;
     const { id, description } = misconception;
     if (typeof id !== 'string' ||
-      id.length > CONTENT_LIMITS.referenceIdLength ||
+      id.length > referenceIdLength ||
       !id.startsWith(prefix) || !SLUG.test(id.slice(prefix.length))) {
       return `${at}.id is invalid`;
     }
     if (seenIds.has(id)) return `${at}.id is a duplicate`;
     seenIds.add(id);
-    if (!isTextWithin(description, CONTENT_LIMITS.misconceptionDescriptionLength)) {
+    if (!isTextWithin(description, misconceptionDescriptionLength)) {
       return `${at}.description is invalid`;
     }
   }

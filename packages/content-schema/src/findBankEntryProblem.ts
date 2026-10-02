@@ -9,14 +9,14 @@ export function findBankEntryProblem(
   topicIds: readonly string[],
 ): string | null {
   if (!isRecord(bank)) return 'is not an object';
-  if (typeof bank.hash !== 'string' || !SHA256_HEX.test(bank.hash)) return 'hash is invalid';
-  if (!isSafeBankPath(bank.path)) return 'path is unsafe';
-  if (bank.access === 'paid') {
+  const { access, contentVersion, hash, path, topicCounts } = bank;
+  if (typeof hash !== 'string' || !SHA256_HEX.test(hash)) return 'hash is invalid';
+  if (!isSafeBankPath(path)) return 'path is unsafe';
+  if (access === 'paid') {
     if (bank.productId !== productId) return 'productId is invalid';
-  } else if (bank.access !== 'free' || 'productId' in bank) {
+  } else if (access !== 'free' || 'productId' in bank) {
     return 'access is invalid';
   }
-  const { contentVersion, topicCounts } = bank;
   if (!Number.isInteger(contentVersion) || (contentVersion as number) < 1) {
     return 'contentVersion is invalid';
   }

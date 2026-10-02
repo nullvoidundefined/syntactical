@@ -4,7 +4,7 @@ import type { LanguageEntry } from './types/LanguageEntry.js';
 
 export function buildBankContext(language: LanguageEntry): BankContext {
   return {
-    topicIds: language.topics.map((topic) => topic.id),
     misconceptionIds: language.misconceptions.map((misconception) => misconception.id),
+    topicIds: language.topics.map((topic) => topic.id),
   };
 }

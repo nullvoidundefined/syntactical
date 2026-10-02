@@ -3,6 +3,7 @@
 // parse or validate read as absent, which includes a schema 1 bank.
 import { SHA256_HEX, SUPPORTED_SCHEMA_VERSION, validateQuestionBank } from '@syntactical/content-schema';
 import type { BankContext, CachedBank } from '@syntactical/content-schema';
+
 import { readJson } from '../../clients/readJson';
 
 import { buildBankCacheKey } from './buildBankCacheKey';
