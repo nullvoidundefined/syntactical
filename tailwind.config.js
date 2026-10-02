@@ -1,5 +1,15 @@
 // Tailwind 3 theme for NativeWind 4: the obsidian/signal palette and fonts
 // that src/index.css declared in a Tailwind 4 @theme block.
+// Native builds load no custom fonts, so mono resolves to each platform's
+// system monospace face there. NativeWind sets NATIVEWIND_OS for every
+// bundle, web included, so only ios and android take the native value.
+const { platformSelect } = require('nativewind/theme');
+
+const isNativeBundle = ['android', 'ios'].includes(process.env.NATIVEWIND_OS ?? '');
+const monoFamily = isNativeBundle
+  ? platformSelect({ android: 'monospace', default: 'monospace', ios: 'Menlo' })
+  : ['JetBrains Mono', 'ui-monospace', 'Menlo', 'monospace'];
+
 module.exports = {
   content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}'],
   presets: [require('nativewind/preset')],
@@ -20,7 +30,7 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'ui-monospace', 'Menlo', 'monospace'],
+        mono: monoFamily,
       },
     },
   },
