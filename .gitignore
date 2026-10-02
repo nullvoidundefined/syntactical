@@ -25,3 +25,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Expo
+.expo/
+dist-expo/
+expo-env.d.ts
+
+# Plan execution workspace
+.superpowers/

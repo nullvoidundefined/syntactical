@@ -1,0 +1,16 @@
+{
+  "findings": [
+    {
+      "id": 1,
+      "severity": "LOW",
+      "control": "Body size limit in fetchContentText",
+      "evidence": "clients/fetchContentText.ts:49-52 buffers the whole body with response.text() before the byte count is compared to maxBytes when no content-length header is sent"
+    },
+    {
+      "id": 2,
+      "severity": "LOW",
+      "control": "Cached bank integrity on read (readCachedBank)",
+      "evidence": "services/content/readCachedBank.ts:22-25 accepts any 64-hex hash with shape-valid questions without rehashing; state/useQuestionBank.ts:27-35 then serves it"
+    }
+  ]
+}
