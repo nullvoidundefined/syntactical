@@ -369,6 +369,7 @@ it('exports the shared content contract', () => {
 - A paid bank found under `content/` fails the build with `paid bank in public content: python/medium`; a free bank under the private dir fails with `free bank in private content: python/easy`.
 - After `npm run build`, `dist/content` contains no file for a paid bank (test walks a fixture export).
 - A missing private dir fails with a message naming `CONTENT_PRIVATE_DIR`, never a path guess.
+- The build fails when any file under `pipeline/` (review queue, review files, reports) contains the text of a paid-bank question (matched by prompt).
 
 - [ ] Gated cycle; commit `feat(content): build from public free banks and private paid banks without shipping paid content`.
 
@@ -390,6 +391,7 @@ it('exports the shared content contract', () => {
 - Opening a socket (Python `socket.create_connection`, Node `fetch`) never yields a value.
 - `while True: pass` with `timeoutMs: 2000` → `timeout` within 4 seconds and the container is gone.
 - Allocating 512 MB → `resource-limit`; a fork bomb → `resource-limit`; a write to `/etc` fails; `id -u` inside prints `10001`.
+- Output beyond 64 KB (`print('x' * 10**9)` in a loop) is truncated and recorded `resource-limit`; the harness never buffers more than the cap.
 - The argument list includes `--rm --network none --cpus 1 --memory 256m --memory-swap 256m --pids-limit 64 --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m --user 10001:10001 --cap-drop ALL --security-opt no-new-privileges`.
 
 - [ ] Gated cycle; commit `feat(pipeline): hardened oracle runners for Python, Node, and Postgres`.
@@ -537,7 +539,7 @@ it.each([
 
 **Interfaces:** `classifyQuestion(question, topics, provider): Promise<{ topic: string; confidence: number }>`; `CLASSIFY_CONFIDENCE_MIN = 0.7`.
 
-- [ ] **Step 1:** tests with a fake provider: a topic outside the list fails the schema enum; confidence 0.6 writes `pipeline/review-queue/<id>.json` and leaves `question.topic` unset; two runs disagreeing on 1 of 4 questions report `agreement.classify = 0.75`; a bank where `wtf` exceeds 20% is flagged `wtf-overuse`.
+- [ ] **Step 1:** tests with a fake provider: a topic outside the list fails the schema enum; confidence 0.6 writes `pipeline/review-queue/<id>.json` for a free-bank question and `syntactical-content/review-queue/<id>.json` for a paid-bank question (nothing with paid question text under `pipeline/`), and leaves `question.topic` unset; two runs disagreeing on 1 of 4 questions report `agreement.classify = 0.75`; a bank where `wtf` exceeds 20% is flagged `wtf-overuse`.
 - [ ] **Steps 2–4:** implement; pass. **Step 5:** commit `feat(pipeline): classify questions into topics with agreement tracking`.
 
 ### Task 2.2: misconception taxonomy
@@ -638,13 +640,16 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 **Risk:** high (sets the middleware stack every security control depends on). **Behaviors:** B-62; foundation for B-25 to B-39.
 
-**Files:** Create `server/src/app.ts` (`createApp(deps)`: `helmet`, `cors`, `cookie-parser`, `express.json({ limit: '10kb' })`, `trust proxy` 1, request id, routes, error handler), `server/src/index.ts`, `server/src/config/env.ts` (zod-validated env), `server/src/middleware/requestId.ts`, `server/src/middleware/errorHandler.ts`, `server/src/routes/health.ts` (`/health`, `/health/ready`, outside `/v1`), `server/src/clients/logger.ts` (pino with redaction paths `req.headers.cookie`, `req.headers.authorization`, `*.email`, `*.code`, `*.token`); tests `server/src/__tests__/routes/health.test.ts`, `server/src/__tests__/clients/logger.test.ts`, `server/src/__tests__/config/env.test.ts`.
+**Files:** Create `server/src/app.ts` (`createApp(deps)`: `helmet`, `cors`, `cookie-parser`, `express.json({ limit: '10kb' })`, `trust proxy` 1, request id, routes, error handler), `server/src/index.ts`, `server/src/config/env.ts` (zod-validated env), `server/src/middleware/requestId.ts`, `server/src/middleware/errorHandler.ts`, `server/src/routes/health.ts` (`/health`, `/health/ready`, outside `/v1`), `server/src/clients/logger.ts` (pino with redaction paths `req.headers.cookie`, `req.headers.authorization`, `res.headers["set-cookie"]`, `*.email`, `*.code`, `*.token`); tests `server/src/__tests__/routes/health.test.ts`, `server/src/__tests__/clients/logger.test.ts`, `server/src/__tests__/config/env.test.ts`.
 
 **Behaviors (RED tests):**
 - `GET /health` returns 200 `{ status: 'ok' }` without touching the database (a db stub that throws is never called).
 - `GET /health/ready` returns 200 `{ status: 'ok', database: 'ok' }` with a reachable database and 503 `{ status: 'degraded' }` with an unreachable one.
 - Every response carries an `X-Request-Id` UUID, and every log line carries the same id.
 - Log redaction: a line logged with email, code, token, cookie, and authorization values built at run time contains none of those values.
+- A response carrying `Set-Cookie: syntactical_session=<run-time token>` through `createApp` with the pino destination captured leaves no log line containing the token.
+- The error handler logs a `pg` error by `code` and constraint name only: a unique violation whose `detail` contains a run-time email leaves no log line containing that email.
+- `REVENUECAT_WEBHOOK_AUTH` shorter than 32 characters, or empty, fails startup.
 - A missing required env variable fails startup with a message naming the variable and never printing any value.
 - Error responses are `{ error: { code, message, requestId } }` with no stack trace when `NODE_ENV=production`.
 - `helmet` headers are present (`X-Content-Type-Options: nosniff`).
@@ -655,13 +660,13 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 **Risk:** high (schema for auth, money, and sync). **Behaviors:** foundation.
 
-**Files:** One `server/migrations/<timestamp>_create-<table>.js` per table (node-pg-migrate, ESM, `up` and `down`): `users (id uuid pk, email citext unique, timezone text null, created_at)`; `daily_goal_changes (user_id fk, from_date date, goal int check (goal in (10,20,50)), pk (user_id, from_date))`; `one_time_codes (id, email citext, code_hash bytea, expires_at, attempts int default 0, used_at, invalidated_at, created_at; index on email)`; `sessions (id, user_id fk, token_hash bytea unique, created_at, last_used_at, expires_at, revoked_at)`; `answer_events (user_id fk, event_id uuid, question_id text, bank_key text, choice_index int, is_correct bool, answered_at timestamptz, round_kind text check in ('bank','topic','review'), received_at, pk (user_id, event_id))`; `daily_progress (user_id, local_date date, xp int, is_goal_met bool, pk (user_id, local_date))`; `entitlements (user_id, product_id text, status text check in ('granted','revoked'), source text, updated_at, pk (user_id, product_id))`; `purchase_events (provider text, provider_event_id text, user_id null, product_id, kind text, payload jsonb, occurred_at, received_at, pk (provider, provider_event_id))`; `rate_limit_counters (key text, window_start timestamptz, count int, pk (key, window_start))`. Test `server/src/__tests__/migrations/migrations.test.ts`.
+**Files:** One `server/migrations/<timestamp>_create-<table>.js` per table (node-pg-migrate, ESM, `up` and `down`): `users (id uuid pk, email citext unique, timezone text null, created_at)`; `daily_goal_changes (user_id fk, from_date date, goal int check (goal in (10,20,50)), pk (user_id, from_date))`; `one_time_codes (id, email citext, code_hash bytea, expires_at, attempts int default 0, used_at, invalidated_at, created_at; index on email)`; `sessions (id, user_id fk, token_hash bytea unique, created_at, last_used_at, expires_at, revoked_at)`; `answer_events (user_id fk, event_id uuid, question_id text, bank_key text, choice_index int, is_correct bool, answered_at timestamptz, round_kind text check in ('bank','topic','review'), received_at, pk (user_id, event_id))`; `daily_progress (user_id, local_date date, xp int, is_goal_met bool, pk (user_id, local_date))`; `entitlements (id uuid pk, user_id uuid null references users on delete set null, product_id text, status text check in ('granted','revoked'), source text, updated_at, unique (user_id, product_id))`; `purchase_events (provider text, provider_event_id text, user_id null, product_id, kind text, payload jsonb, occurred_at, received_at, pk (provider, provider_event_id))`; `rate_limit_counters (key text, window_start timestamptz, count int, pk (key, window_start))`. Test `server/src/__tests__/migrations/migrations.test.ts`.
 
 **Behaviors (RED tests, real Postgres):**
 - `up`, `down`, `up` succeeds on an empty database.
 - A duplicate `(user_id, event_id)` in `answer_events` fails with a unique violation; the same `event_id` under another user succeeds.
 - A goal of 15 fails the check constraint; a duplicate `(provider, provider_event_id)` fails.
-- Deleting a user cascades to sessions, answer events, daily progress, goal changes, and entitlements; purchase events keep their row with `user_id` set null.
+- Deleting a user cascades to sessions, answer events, daily progress, and goal changes; entitlements and purchase events keep their rows with `user_id` set null.
 
 - [ ] Gated cycle; commit `feat(server): database schema for users, sessions, events, progress, and entitlements`.
 
@@ -673,6 +678,11 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 **Behaviors (RED tests):**
 - A well-formed email gets 202, one row whose `code_hash` is `sha256(code)` and `expires_at` 10 minutes ahead, and one `sendSignInCode` call with a 6-digit code.
+- Emails are normalized (trim, NFKC, lowercase) before the rate-limit key and every lookup: 5 requests for `Foo@Example.com`, `FOO@example.com`, and `foo@example.com ` then a 6th in a new casing gets 429.
+- The code comes from an injected `randomInt(0, 1_000_000)` (Node `crypto.randomInt` in production), zero-padded to 6 digits; the test asserts the injected generator is the one called.
+- Rate-limit counters increment atomically (`INSERT ... ON CONFLICT DO UPDATE SET count = count + 1 RETURNING count`): 20 concurrent requests for one email send at most 5 codes.
+- IPv6 clients are keyed by their /64 prefix: two addresses in one /64 share a counter.
+- `POST /v1/auth/codes` with `Content-Type: text/plain` gets 415.
 - The plaintext code appears in no table and no log line.
 - A malformed email gets 400; the body for an existing and a new email is identical.
 - The 6th request for one email within an hour → 429; the 21st from one IP within an hour → 429; counters reset after the window.
@@ -696,6 +706,8 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 - The 5th wrong attempt exhausts the code.
 - Hash comparison uses `crypto.timingSafeEqual`.
 - Two concurrent requests with the same correct code create exactly one session (row lock on the code).
+- Every verify takes `SELECT ... FOR UPDATE` on the code row and increments `attempts` in the same transaction: 50 concurrent wrong guesses leave `attempts` at 5 and the then-correct code is rejected.
+- The session-creation response's `Set-Cookie` token never appears in any log line (captured pino destination).
 
 - [ ] Gated cycle; commit `feat(auth): exchange a one-time code for a session on web and native`.
 
@@ -709,7 +721,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 - A valid cookie authenticates; a valid bearer token authenticates; with both present the bearer token decides, and a failing bearer token returns 401 even if the cookie is valid.
 - Unknown, revoked, absolute-expired, and idle-expired tokens → 401 with the same body.
 - `Origin: https://syntactical.dev` gets `Access-Control-Allow-Origin` with credentials; `https://evil.com`, `null`, `https://syntactical.dev.evil.com`, and `http://syntactical.dev` get none.
-- A cookie-authenticated `POST` without `X-Requested-With: XMLHttpRequest` → 403; with `Content-Type: text/plain` → 415; bearer-authenticated native requests and the webhook routes are exempt from the header check.
+- A cookie-authenticated `POST` without `X-Requested-With: XMLHttpRequest` → 403; any non-GET route except the webhook with `Content-Type: text/plain` → 415, authenticated or not; bearer-authenticated native requests and the webhook routes are exempt from the header check.
 - `DELETE /v1/auth/sessions/current` sets `revoked_at`, clears the cookie, and the same token then gets 401.
 
 - [ ] Gated cycle; R-109 security review over PR 13 on `securityReviewModel`; commit `feat(auth): session middleware for cookie and bearer, CORS allowlist, CSRF guard, and sign-out`.
@@ -744,7 +756,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 - A batch over 200 events → 413; an unknown `bankKey` or `questionId` → 422.
 - Two concurrent uploads of overlapping batches for one user both succeed and leave each event once; derived XP equals `computeXp` summed over distinct events.
 - `daily_progress` for the affected local dates is recomputed with `@syntactical/progress` in the same transaction.
-- `GET /v1/answer-events?after=<cursor>` returns at most 500 events ordered by `received_at, event_id` with a `nextCursor`, and never another user's events.
+- `GET /v1/answer-events?after=<cursor>` returns at most 500 events ordered by `received_at, event_id` with a `nextCursor`, and never another user's events; the cursor is opaque base64url decoded by zod into `(received_at, event_id)`, and `' OR 1=1 --`, an oversized value, or a non-cursor string returns 400.
 
 - [ ] Gated cycle; commit `feat(sync): idempotent answer event upload and paged download`.
 
@@ -780,6 +792,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 **Behaviors (RED tests):**
 - `validateApiBaseUrl` accepts exactly `https://api.syntactical.dev/v1/` and rejects `http://`, other hosts, lookalike hosts, a missing trailing slash, a URL with userinfo (assembled at run time), `''`, and `null`.
+- With an invalid `extra.apiBaseUrl`, `apiFetch` throws `ApiUnavailable` and makes no network request (never falls back to a literal URL).
 - On web, `apiFetch` sends `credentials: 'include'` and `X-Requested-With: XMLHttpRequest`, and never reads or writes a token.
 - On native, a successful `verifyCode` stores the token in SecureStore (mocked); later calls send `Authorization: Bearer <token>`; `signOut` deletes it even when the network call fails.
 - A 401 response clears the stored token and sets `isSignedIn` false.
@@ -866,7 +879,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** Create `server/src/routes/revenueCatWebhook.ts`, `server/src/services/recordPurchaseEvent.ts`, `server/src/services/recomputeEntitlement.ts` (latest event by provider `event_timestamp_ms`); modify `state/AuthProvider.tsx` (`Purchases.logIn(user.id)` after sign-in, `Purchases.logOut()` on sign-out, native only); tests.
 
 **Behaviors (RED tests):**
-- A wrong or missing `Authorization` header (compared with `timingSafeEqual` against `REVENUECAT_WEBHOOK_AUTH`) → 401.
+- A wrong, empty, missing, or different-length `Authorization` header → 401, never 500: both sides are SHA-256 hashed before `timingSafeEqual`, so lengths always match.
 - `NON_RENEWING_PURCHASE` for a mapped product from `APP_STORE`, `PLAY_STORE`, or `RC_BILLING` (web) → a purchase event and `granted` for the user whose id equals `app_user_id`; `REFUND` or `CANCELLATION` → `revoked`; a duplicate event id → no change.
 - A refund event whose `event_timestamp_ms` precedes delivery of its purchase still leaves the entitlement `revoked`, because entitlements are recomputed from the latest event by provider time, not arrival (Review Focus 5).
 - Two concurrent deliveries of one event leave one `purchase_events` row.
@@ -905,8 +918,9 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 **Risk:** standard. **Behaviors:** operational.
 
-**Files:** Create `server/Dockerfile` (multi-stage, non-root user; a build stage checks out `syntactical-content` with `CONTENT_DEPLOY_KEY` and copies paid banks to `PAID_CONTENT_DIR`), `server/railway.json` (start `node-pg-migrate up && node dist/index.js`, health check `/health`), `.github/workflows/server.yml` (vitest with a Postgres service container, `tsc`, image build).
+**Files:** Create `server/Dockerfile` (multi-stage, non-root user; a build stage mounts `CONTENT_DEPLOY_KEY` with BuildKit `--mount=type=secret,id=content_deploy_key`, checks out `syntactical-content`, and copies only the paid bank files to `PAID_CONTENT_DIR`; the key never enters an `ARG`, `ENV`, or layer), `server/railway.json` (start `node-pg-migrate up && node dist/index.js`, health check `/health`), `.github/workflows/server.yml` (vitest with a Postgres service container, `tsc`, image build).
 
+- [ ] Check: `docker history --no-trunc` and every layer of the built image contain no key material and no `.ssh` directory (scripted in `server.yml`).
 - [ ] Steps: `docker build server` → deploy to Railway → the owner adds the `api` CNAME → `curl https://api.syntactical.dev/health` and `/health/ready` return ok → a credentialed fetch from `https://syntactical.dev` in Safari works (spec assumption ledger) → commit `chore(server): container, migrations on deploy, and CI`.
 
 ### Task 3.21: account deletion
@@ -916,7 +930,8 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** Create `server/src/routes/deleteMe.ts`, `server/src/services/deleteUser.ts`, `components/auth/DeleteAccountDialog.tsx`; modify `app/settings.tsx`; tests.
 
 **Behaviors (RED tests):**
-- `DELETE /v1/me` (session, CSRF header) deletes the user's sessions, answer events, daily progress, and goal changes in one transaction; nulls `email`, `name`, and customer details inside each of the user's `purchase_events.payload`; keeps entitlement rows detached for accounting; responds 204 and clears the cookie.
+- `DELETE /v1/me` (session, CSRF header) deletes the user's sessions, answer events, daily progress, and goal changes in one transaction; replaces every string in each of the user's `purchase_events.payload` that equals the user's email or display name, at any depth and under any key (`subscriber_attributes.$email`, `$displayName`, aliases), with `[deleted]`; deletes the `users` row, which sets `entitlements.user_id` and `purchase_events.user_id` to null (the rows stay for accounting); responds 204 and clears the cookie.
+- After deletion, a search of every table for the run-time email finds nothing, and the user's entitlement rows still exist with `user_id` null.
 - The same token then gets 401; signing in again with the same email creates a new, empty user with no entitlements.
 - The settings screen shows "Delete account" with a confirmation dialog that requires typing `DELETE`; cancel changes nothing; success signs out locally and clears the event log.
 - No log line from deletion contains the email.
