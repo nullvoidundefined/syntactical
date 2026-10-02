@@ -19,6 +19,9 @@ export type DifficultyId = (typeof DIFFICULTIES)[number]['id'];
 export const QUESTION_TYPES = { BOOLEAN: 'bool', MULTIPLE_CHOICE: 'mc' } as const;
 
 export const STORAGE_KEY = 'syntactical.stats.v1';
+// Holds the last stored stats value that failed validation, so a schema
+// mismatch or corruption never destroys a player's history silently.
+export const REJECTED_STORAGE_KEY = 'syntactical.stats.v1.rejected';
 export const STORAGE_SCHEMA_VERSION = 1;
 
 export const SUPPORTED_SCHEMA_VERSION = 1;
