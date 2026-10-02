@@ -51,11 +51,17 @@ function buildResponse(url: string, body: string) {
     return { ok: true, status: 200, url, redirected: false, text: () => Promise.resolve(body) };
 }
 
-// Routes each request by its exact URL; an unrouted URL never resolves.
-export function stubFetchRoutes(routes: Record<string, FetchRoute>): jest.Mock {
+export type StubFetchOptions = { shouldRejectUnrouted?: boolean };
+
+// Routes each request by its exact URL. An unrouted URL never resolves, or,
+// with shouldRejectUnrouted, fails at once like an offline request, so no
+// request is left waiting on the client's real timeout after a test ends.
+export function stubFetchRoutes(routes: Record<string, FetchRoute>, options: StubFetchOptions = {}): jest.Mock {
+    const { shouldRejectUnrouted = false } = options;
     const fetchMock = jest.fn((input: unknown) => {
         const url = String(input);
-        const route = routes[url];
+        const route = Object.prototype.hasOwnProperty.call(routes, url) ? routes[url] : undefined;
+        if (!route && shouldRejectUnrouted) return Promise.reject(new TypeError('Network request failed'));
         if (!route) return new Promise(() => {});
         return route().then((body) => buildResponse(url, body));
     });

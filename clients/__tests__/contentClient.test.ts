@@ -7,6 +7,7 @@ type FakeResponseShape = {
   status?: number;
   url?: string;
   redirected?: boolean;
+  headers?: { get: (name: string) => string | null };
   text?: () => Promise<string>;
 };
 
@@ -16,12 +17,19 @@ function createAbortError(): Error {
   return Object.assign(new Error('Aborted'), { name: 'AbortError' });
 }
 
+// A minimal Headers stand-in whose lookup is case-insensitive, as the real one is.
+function buildHeaders(values: Record<string, string>) {
+  const lowerCased = new Map(Object.entries(values).map(([name, value]) => [name.toLowerCase(), value]));
+  return { get: (name: string) => lowerCased.get(name.toLowerCase()) ?? null };
+}
+
 function buildResponse(shape: FakeResponseShape) {
   return {
     ok: true,
     status: 200,
     url: REQUEST_URL,
     redirected: false,
+    headers: buildHeaders({}),
     text: () => Promise.resolve(''),
     ...shape,
   };

@@ -62,15 +62,27 @@ function buildManifestWithPythonEasyHash(pythonEasyHash: string): Manifest {
     return manifest;
 }
 
+// Unrouted URLs fail at once, so no request waits on the client's real
+// 8-second timeout after a test ends.
 function respondWithManifest(manifest: unknown, bankRoutes: Record<string, FetchRoute> = {}) {
-    return stubFetchRoutes({ [MANIFEST_URL]: () => Promise.resolve(JSON.stringify(manifest)), ...bankRoutes });
+    return stubFetchRoutes(
+        { [MANIFEST_URL]: () => Promise.resolve(JSON.stringify(manifest)), ...bankRoutes },
+        { shouldRejectUnrouted: true },
+    );
 }
+
+// Bodies a test holds open; afterEach fails any still pending so their
+// request timers are cleared rather than left running past the test.
+const heldBodyRejections: Array<() => void> = [];
 
 function createDeferredBody() {
     let resolveBody: (body: string) => void = () => {};
-    const bodyPromise = new Promise<string>((resolve) => {
+    let rejectBody: (err: Error) => void = () => {};
+    const bodyPromise = new Promise<string>((resolve, reject) => {
         resolveBody = resolve;
+        rejectBody = reject;
     });
+    heldBodyRejections.push(() => rejectBody(new TypeError('Network request failed')));
     return { bodyPromise, resolveBody };
 }
 
@@ -90,9 +102,12 @@ describe('useQuestionBank inside ContentProvider', () => {
         await AsyncStorage.clear();
         queryClient = createQueryClient();
         jest.spyOn(console, 'warn').mockImplementation(() => {});
+        respondWithManifest(BUNDLED_MANIFEST);
     });
 
-    afterEach(() => {
+    afterEach(async () => {
+        heldBodyRejections.splice(0).forEach((rejectHeldBody) => rejectHeldBody());
+        await settleBackgroundWork();
         queryClient.clear();
         jest.restoreAllMocks();
     });
@@ -205,6 +220,45 @@ describe('useQuestionBank inside ContentProvider', () => {
             expect(new Set(listFetchedUrls())).toEqual(new Set([MANIFEST_URL, GO_EASY_URL]));
         });
 
+        it('discards a bank response for a manifest hash that is no longer current and serves the current bank', async () => {
+            const staleText = buildBankText(['py-stale']);
+            const staleHash = hashUtf8Hex(staleText);
+            const currentText = buildBankText(['py-current']);
+            const currentHash = hashUtf8Hex(currentText);
+            await AsyncStorage.setItem(MANIFEST_KEY, JSON.stringify(buildManifestWithPythonEasyHash(staleHash)));
+            const staleBody = createDeferredBody();
+            const fetchedManifestBody = createDeferredBody();
+            let pythonEasyRequestCount = 0;
+            stubFetchRoutes(
+                {
+                    [MANIFEST_URL]: () => fetchedManifestBody.bodyPromise,
+                    [PYTHON_EASY_URL]: () => {
+                        pythonEasyRequestCount += 1;
+                        return pythonEasyRequestCount === 1 ? staleBody.bodyPromise : Promise.resolve(currentText);
+                    },
+                },
+                { shouldRejectUnrouted: true },
+            );
+
+            const { result } = await renderHook(() => useQuestionBank('python', 'easy'), { wrapper: ContentWrapper });
+
+            await waitFor(() => expect(countFetchesFor(PYTHON_EASY_URL)).toBe(1));
+            await act(async () =>
+                fetchedManifestBody.resolveBody(JSON.stringify(buildManifestWithPythonEasyHash(currentHash))),
+            );
+            await waitFor(() => expect(readBankIds(result.current)).toEqual(['py-current']));
+            await waitFor(async () => expect((await readCachedBank('python', 'easy'))?.hash).toBe(currentHash));
+
+            await act(async () => staleBody.resolveBody(staleText));
+            await settleBackgroundWork();
+
+            const cachedBank = await readCachedBank('python', 'easy');
+            expect(cachedBank?.hash).toBe(currentHash);
+            expect(cachedBank?.questions.map((question) => question.id)).toEqual(['py-current']);
+            expect(result.current.status === 'ready' && result.current.bank.hash).toBe(currentHash);
+            expect(readBankIds(result.current)).toEqual(['py-current']);
+        });
+
         it('makes one request when the prefetch and two consumers of the same bank overlap', async () => {
             const { bodyPromise, resolveBody } = createDeferredBody();
             respondWithManifest(buildManifestWithGo(), { [GO_EASY_URL]: () => bodyPromise });
@@ -265,7 +319,8 @@ describe('useQuestionBank inside ContentProvider', () => {
 
     describe('bank with no local copy (B-19)', () => {
         it('reports loading while the bank downloads', async () => {
-            respondWithManifest(buildManifestWithGo(), { [GO_EASY_URL]: () => new Promise(() => {}) });
+            const { bodyPromise } = createDeferredBody();
+            respondWithManifest(buildManifestWithGo(), { [GO_EASY_URL]: () => bodyPromise });
 
             const { result } = await renderHook(() => useQuestionBank('go', 'easy'), { wrapper: ContentWrapper });
 
