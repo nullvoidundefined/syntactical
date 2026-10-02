@@ -17,6 +17,11 @@ describe('quiz screens on the web expose accessible names and headings', () => {
     expect(screen.getByRole('progressbar', { name: 'Question 5 of 100' })).toBeTruthy();
   });
 
+  it('keeps the progress bar name on the last question once every answer is in', () => {
+    render(<ProgressBar current={100} total={100} />);
+    expect(screen.getByRole('progressbar', { name: 'Question 100 of 100' })).toBeTruthy();
+  });
+
   it('names the query dialog after the query title', () => {
     render(<QueryDrawer isOpen query={query} grammar="python" onClose={jest.fn()} />);
     expect(screen.getByRole('dialog', { name: 'enumerate(iterable, start=0)' })).toBeTruthy();
