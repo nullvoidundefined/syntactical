@@ -1,0 +1,12 @@
+{
+  "findings": [],
+  "nothingFound": [
+    "Build-time content origin pin (app.config.ts readBaseUrl allowlist): tried unset, /syntactical/, /syntactical/preview/../x, empty, *, //evil.example, https://evil.example/syntactical, /Syntactical; unset resolves to the live URL and every other value throws at config load",
+    "Runtime content base URL allowlist (services/content/validateContentBaseUrl.ts): tried undefined, null, empty, a number, http downgrade, another origin, a lookalike host, another path, no trailing slash, credentials; every value yields null and disables fetching",
+    "Web key dispatch allowlist (state/useKeyboardNav.ts, state/useRoundKeyboard.ts, LanguageStep, DifficultyStep): tried unbound keys, mixed case, a digit past the list, modifier-held and auto-repeated keys, wrong-type answer keys, Enter before an answer, answer keys with the drawer open, keys after completion; all refused",
+    "Rendering boundary for content strings in touched components (KeyboardHintBar, ResultsScreen, QuizRound): tried <script>alert(1)</script>, {{7*7}}, oversized and empty labels; rendered as Text, never markup"
+  ],
+  "model": "claude-fable-5-1",
+  "range": "8bca8cd..e6c3ba4",
+  "reviewer": "security-reviewer subagent"
+}

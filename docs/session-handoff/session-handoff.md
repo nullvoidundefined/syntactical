@@ -1,34 +1,67 @@
-# Session Handoff: Explain button, question bank expansion (stopped early on quota)
+# Session Handoff: IAN-564, syntactical as one Expo universal app
 
 ## Last commit
-`cebf426` on `main`: explain/continue button, medium banks to 100, lexicon.md. Local only; push blocked in-session by R-109, needs a manual `git push` from a real terminal.
+
+- `e6c3ba4` feat(web): B-37 ignore modifier shortcuts and auto-repeated keys in the key bindings (branch `feat/expo-cutover`, PR 3). The final commit of this session adds this handoff and `docs/security-reviews/ian-564-pr3.json` on top of it.
 
 ## Production state
-Live site (`https://nullvoidundefined.github.io/syntactical/`) still serves the last deployed commit, predating this session's changes. Nothing here is live until the manual push above happens and the GitHub Actions workflow runs.
+
+- `main` is at 8bca8cd (PR 2, nullvoidundefined/syntactical#3). The live site at https://nullvoidundefined.github.io/syntactical/ is still the Vite app, and the Expo preview is at `/syntactical/preview/`. Both returned 200 after the PR 2 deploy.
+- PR 3, nullvoidundefined/syntactical#4 (`feat/expo-cutover`), is open, marked ready, and CI was green at e6c3ba4. It is not merged yet. Merging it switches the live site to the Expo web export at `/syntactical/` and removes Vite.
 
 ## Session metrics
-Stopped early: user reported quota nearing exhaustion (91% of Other Models used) partway through a planned six-bank question expansion. Two of six banks finished.
+
+- PR 1 (#2) and PR 2 (#3) were merged as squash commits. PR 3 has 10 commits on its branch, plus the handoff commit.
+- PR 3's diff touches 70 files: 928 insertions and 18,027 deletions, almost all of them the removed `src/` Vite app.
+- Rework count: 4.
+  - PR 2's R-517 round 1 needed fixes.
+  - PR 3's R-517 round 1 needed fixes.
+  - The owner deleted a stuck `tdd-lock.json` twice: once because amend could not re-prove RED with the implementation present, and once because obsolete tests could not be deleted while RED.
+- Velocity flag: none.
 
 ## What shipped
-Explain button next to Continue on wrong answers, both `medium` question banks expanded from 10 to 100 questions, `docs/lexicon.md` created and de-duplicated, Easy difficulty tier added then reverted from the UI (no backing data yet).
 
-## 2. State
-- Build passes (`npm run build`).
-- `python/medium.js`, `postgres/medium.js`: 100 questions each. Done.
-- `python/hard.js`, `postgres/hard.js`: still 10 questions each. Not expanded.
-- `easy.js` for both languages: never created. `DIFFICULTIES` in `appConfig.js` reverted to medium/hard only (removed the `easy` entry added earlier) so the UI never offers a tier with no backing data. This was my call, made under quota pressure without asking. Easy to re-add once easy.js files exist.
-- `DifficultyStep.jsx` still renders as a vertical stack (now 2 tiles, still fine visually).
-- 6 background subagents were dispatched to expand/create all 6 banks to 100; only the 2 `medium` ones appear to have finished and written output before the session stopped. The other 4 (python/hard, postgres/hard, python/easy, postgres/easy) may still be running in the background. Check for orphaned background tasks next session before re-dispatching.
+- **PR 2, merged (#3, 8bca8cd):**
+  - Language and difficulty menus built from the manifest.
+  - The download indicator, announced on native and through a persistent live region on the web.
+  - The quiz round with Explain, the query drawer, results, retry, and stats.
+  - `CodeBlock`, which renders Prism tokens as nested `Text`, with an allowlist of build grammars.
+  - Security review: two passes, no findings. R-517 review: round 1 found 2 MEDIUM and 4 LOW; round 2 was clean.
+- **PR 3, open (#4):**
+  - Web keyboard navigation and the hint bar (B-37), ignoring modifier shortcuts and auto-repeated keys.
+  - The cutover (B-39): `npm run build` exports Expo at `/syntactical/`, and `deploy.yml` runs that one build. `src/`, Vite, `gh-pages`, and the `tailwindcss-v4` alias are removed.
+  - `eas.json` and `docs/device-checklist.md` (B-40 config).
+  - Docs (B-41): stack, feature list, user stories, README, and lexicon.
+  - The production build was verified locally by driving a round with the keyboard.
+- **PR 3 reviews:**
+  - R-517 round 1 found 3 MEDIUM and 2 LOW, dispositioned in the PR body.
+  - The R-109 review on claude-fable-5-1 over 8bca8cd..e6c3ba4 found nothing. Its artefact is `docs/security-reviews/ian-564-pr3.json`.
+- **Tickets filed:**
+  - IAN-583: CodeBlock color tests.
+  - IAN-584: tokenizer keyword tests for 5 more grammars.
+  - IAN-595: run the EAS builds and the device checklist (B-40).
+  - IAN-596: the Lighthouse, VoiceOver, and reduced-motion pass on the live site (B-38). The owner deferred it at merge.
 
 ## Pending
-- `docs/original-prompt.md` still needs an entry logging every change since the user's standing "update the prompt with every change" instruction: explain/continue button, easy-tier attempt plus revert, DifficultyStep vertical stack, lexicon.md, medium banks to 100. Not done. Do this first next session, it is overdue across multiple turns.
-- Expand `python/hard.js` and `postgres/hard.js` to 100 questions each, same schema and rigor bar as the medium files, no topic overlap with their sibling medium file.
-- Decide whether to build `easy.js` for both languages (100 questions each) and re-add the `easy` entry to `DIFFICULTIES`, or drop the Easy tier idea entirely.
-- Browser-verify the Explain button on a wrong answer (never done). Dev server was up on port 5184 earlier, never actually clicked through.
-- Monetization decision ($5/mo vs. per-language one-time unlock) still open, no code started, correctly deferred.
+
+1. **Urgent, about 15 minutes: merge PR 3.**
+   - After the handoff commit is pushed, record the security artefact at the new head with `bash ~/.claude/enforce/security-review-record.sh docs/security-reviews/ian-564-pr3.json`. Skip this if the session already recorded it.
+   - Add a `## Security review` section to the PR #4 body, copied from the artefact, with the range ending at the PR head.
+   - Wait for CI to go green.
+   - Merge with `gh pr merge 4 --squash --delete-branch --match-head-commit <head sha>`.
+   - The owner said "Merge everything" on 2026-10-02. The first merge attempt was refused only for the missing `## Security review` section.
+2. **After the merge, about 10 minutes:** watch the Deploy to GitHub Pages run. Then confirm that `/syntactical/` and `/syntactical/python/easy` both load the Expo app.
+3. **Close IAN-564, about 10 minutes:** run `/task-cleanup`, then close the ticket with actuals. `started_at` is 2026-10-02T04:41:14Z, `risk` is high, and `findings_by_round` is PR 2 `r1:M2,L4; r2:none` and PR 3 `r1:M3,L2`.
+4. **Owner tasks:** IAN-596, the accessibility pass on the live site, and IAN-595, the device builds, which need the owner's Expo and Apple Developer accounts.
+5. **Low:** IAN-583 and IAN-584. Narrow the `app.config.ts` allowlist to drop the unused `/syntactical/preview` path; that is a change to a security control, so it needs its own PR and an R-109 review.
 
 ## Next session
-Read the pending list above in order: push manually, finish the `original-prompt.md` log entry (multi-turn overdue), then decide on `hard`/`easy` bank completion.
 
-## 4. Known false positive
-`new-file-header-reminder.sh` re-fires on `QuizView.jsx`/`DifficultyStep.jsx` on every `StrReplace` edit because it only checks `tool_input.content`, which is absent on Edit-shaped payloads. Both files have correct what+why headers, verified by direct Read. Not a real gap; the hook itself needs a fix but that is out of scope for this repo.
+- Read the PR #4 body and its review tables: https://github.com/nullvoidundefined/syntactical/pull/4
+- Read `docs/security-reviews/ian-564-pr3.json`.
+- Read `docs/superpowers/specs/2026-10-02-expo-universal-app-design.md` (B-37 to B-41).
+- Read the deploy workflow, `.github/workflows/deploy.yml`.
+- Gotchas:
+  - In this harness, `tdd.sh amend` cannot re-prove RED once the implementation exists.
+  - Delete obsolete tests before `tdd.sh red`, because the lock denies test deletions while the slice is RED.
+  - jsdom never fires `animationend`, so web tests of the query Modal mock reduced motion to true.
