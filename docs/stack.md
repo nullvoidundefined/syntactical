@@ -87,10 +87,10 @@ Last updated: 2026-10-02 (stack document created with the Expo app's foundation,
 
 ### Tailwind CSS
 
-- **Version:** ^3.4.19 (Expo app); 4.x through `@tailwindcss/vite` (Vite app)
+- **Version:** ^3.4.19 (Expo app); 4.3.3 as the npm alias `tailwindcss-v4` (Vite app)
 - **What it is:** A utility-first CSS framework.
 - **Docs:** https://v3.tailwindcss.com/docs
-- **Role here:** The theme (the obsidian/signal palette and fonts) in `tailwind.config.js` for NativeWind; the Vite app keeps its own nested Tailwind 4 until the cutover.
+- **Role here:** The theme (the obsidian/signal palette and fonts) in `tailwind.config.js` for NativeWind. The Vite app imports Tailwind 4 through the `tailwindcss-v4` alias, because only one `tailwindcss` can sit at the package root and NativeWind needs version 3; the alias goes away with the Vite app at the cutover.
 - **Why chosen:** Already the project's styling system; v3 because NativeWind 4 requires it.
 - **Configured in:** `tailwind.config.js` (Expo), `src/index.css` (Vite app).
 

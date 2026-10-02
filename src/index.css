@@ -2,7 +2,7 @@
    every custom utility class (bg-obsidian, text-signal, border-line, ...)
    used across the component tree. */
 
-@import "tailwindcss";
+@import "tailwindcss-v4";
 
 @theme {
   --color-obsidian: #05060a;
