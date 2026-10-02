@@ -33,7 +33,7 @@ Existing terms in `docs/lexicon.md` (`bank`, `round`, `query`, `question`, `code
 - cached bank - the last verified bank downloaded at runtime and stored on the device, stored together with its bank hash as one entry - chosen over: `stored bank`, `local bank`.
 - content base URL - the absolute URL the manifest and banks are fetched from, configured as `CONTENT_BASE_URL` - chosen over: `api url`, because there is no API.
 - grammar - the Prism language id used to highlight a language's code blocks, named per language in the manifest - chosen over: `syntax`, because `query.syntax` already names a question field.
-- download indicator - the subtle status element shown while a bank or manifest is actually transferring - chosen over: `spinner`, `loader`, because it names what is happening rather than how it looks.
+- download indicator - the subtle status element shown while a bank is transferring - chosen over: `spinner`, `loader`, because it names what is happening rather than how it looks.
 
 ## Acceptance criteria
 
@@ -55,14 +55,14 @@ Ordered by slice. Each line is one behavior a test can fail.
 
 ### Slice 3: content
 
-- B-9: `exportQuestionBanks` produces nine bank files whose questions deep-equal the current `src/data` modules, and a manifest listing the three current languages; a parity fixture keeps this assertion after `src/data` is deleted.
+- B-9: `exportQuestionBanks` produces nine bank files whose questions deep-equal the current `src/data` modules, and a manifest listing the three current languages. This test is deleted with `src/data` in PR 3, because `content/` then becomes owner-edited and a frozen fixture would fail on every edit.
 - B-10: `buildContentManifest` writes the SHA-256 of each bank file's bytes into the manifest, and the deploy workflow runs it before publishing `content/`.
 - B-11: `validateManifest` rejects each malformed field named under Validation rules: a wrong root shape, an empty `languages` array, a duplicate or non-conforming language id, a missing display field, an empty `banks` object, an unknown difficulty key, an unknown grammar, and each unsafe bank path.
 - B-12: `validateQuestionBank` drops each malformed question named under Validation rules, including a duplicate question id and a choice count outside 2 to 4, and keeps the valid questions in the same bank.
 - B-13: A manifest or bank whose `schemaVersion` is newer than the app supports, a bank with zero valid questions, and a document over its size limit are each rejected as a whole, and the previous copy stays in use.
 - B-14: A downloaded bank whose SHA-256 does not equal its manifest bank hash is rejected and not cached.
 - B-15: The cached bank, or the bundled bank when none is cached, is available before any fetch resolves, and a round may start from it once the cache read completes.
-- B-16: A bank whose manifest hash differs from the cached bank's is fetched and, when verified and valid, written to the cache with its hash in one entry; a bank whose hash matches is not fetched.
+- B-16: After each manifest refresh, every bank whose manifest hash differs from its local copy's, or that has no local copy, is fetched in the background and, when verified and valid, written to the cache with its hash in one entry; a bank whose hash matches is not fetched.
 - B-17: When two refreshes of the same bank overlap, only one request is in flight, and a response for a manifest hash that is no longer current is discarded rather than cached.
 - B-18: A fetch that fails, is redirected, or does not finish its body within 8 seconds leaves the current copy in use and shows no error.
 - B-19: A bank with no cached or bundled copy shows a loading state while online, and an error state with a Retry action when its fetch fails; a round cannot start from either state.
@@ -72,7 +72,7 @@ Ordered by slice. Each line is one behavior a test can fail.
 
 - B-21: The language step lists every language in the manifest, and the difficulty step lists only the difficulties that language's `banks` names, each with its label and description from the app's difficulty registry.
 - B-22: A difficulty with no cached or bundled bank while offline is disabled and labeled "Needs a connection to load".
-- B-23: While a manifest or bank is transferring, the download indicator is visible and announced once to assistive technology as a polite status; it is not shown when the refresh finds every hash unchanged, and it disappears when the transfer ends, whether it succeeded or failed.
+- B-23: While a bank is transferring, the download indicator is visible and announced once to assistive technology as a polite status; it is not shown while only the manifest is fetching, and it disappears when the transfer ends, whether it succeeded or failed.
 - B-24: With reduced motion requested, the download indicator renders without animation.
 
 ### Slice 5: quiz
@@ -155,7 +155,7 @@ The Expo app is added beside the Vite app: Expo uses `app/` and the new top-leve
 TanStack Query implements the fetching side of this contract (owner decision 11): one query per manifest and per bank, keyed by language, difficulty, and bank hash, with its client configured in `config/queryClient.ts`. The hash-bound AsyncStorage cache and the verification step are this app's own code.
 
 1. **Cold start.** The app reads the cached manifest and the cached banks it needs from AsyncStorage, falling back to the bundled copies. A round may start as soon as that read completes; it never waits on the network.
-2. **Refresh.** In the background, the manifest is fetched. For each bank the user opens, the bank file is fetched only when its manifest hash differs from the cached bank's hash.
+2. **Refresh.** In the background, the manifest is fetched. Every bank whose manifest hash differs from its local copy's, or that has no local copy, is then prefetched, so a new language or a changed bank is ready before the user opens it.
 3. **Verify.** A fetched bank's bytes are hashed with SHA-256 (`expo-crypto`) and must equal the manifest's bank hash. Then the document is validated. Only a verified, valid document is cached, and the bank and its hash are written as one AsyncStorage entry, so a cached bank can never be paired with the wrong hash.
 4. **Coordination.** One request per bank is in flight at a time. When a response arrives, it is committed only if its hash still matches the current manifest; a response for an outdated manifest is discarded.
 5. **Round isolation.** A round takes a snapshot of its bank when it starts. A refresh that lands mid-round is used from the next round on.
@@ -163,11 +163,11 @@ TanStack Query implements the fetching side of this contract (owner decision 11)
 
 ### Download indicator
 
-A thin, low-contrast progress line at the top edge of the app shell, below the safe-area inset, appears only while a manifest or bank is actually transferring. It is not shown for a refresh that finds every hash unchanged. A difficulty card whose bank is downloading for the first time shows a small inline "Downloading" label in place of its question count. The line has `role="status"` on the web and `accessibilityLiveRegion="polite"` on Android (iOS announces through `AccessibilityInfo.announceForAccessibility`), announcing "Updating questions" once per transfer. With reduced motion, the line is static rather than animated.
+A thin, low-contrast progress line at the top edge of the app shell, below the safe-area inset, appears only while a bank is transferring. The manifest is fetched on every launch and is small, so its fetch does not show the line, and a refresh that finds every hash unchanged shows nothing. A difficulty card whose bank is downloading for the first time shows a small inline "Downloading" label in place of its question count. The line has `role="status"` on the web and `accessibilityLiveRegion="polite"` on Android (iOS announces through `AccessibilityInfo.announceForAccessibility`), announcing "Updating questions" once per transfer. With reduced motion, the line is static rather than animated.
 
 ### Data conversion
 
-`scripts/exportQuestionBanks` reads the nine current bank modules and writes them to `content/` as JSON with no change to the question objects. It writes the initial manifest from `LANGUAGES` in `appConfig.js`, adding each language's grammar. The owner edits the manifest's display fields, grammars, and bank paths by hand; `buildContentManifest` fills in every bank hash, so the owner never edits a hash. A parity fixture captures the converted banks so B-9 still runs after PR 3 deletes `src/data` and the `LANGUAGES` list. The `DIFFICULTIES` display registry stays in `appConfig.js`.
+`scripts/exportQuestionBanks` reads the nine current bank modules and writes them to `content/` as JSON with no change to the question objects. It writes the initial manifest from `LANGUAGES` in `appConfig.js`, adding each language's grammar. The owner edits the manifest's display fields, grammars, and bank paths by hand; `buildContentManifest` fills in every bank hash, so the owner never edits a hash. The conversion parity test (B-9) is deleted with `src/data` and the `LANGUAGES` list in PR 3. The `DIFFICULTIES` display registry stays in `appConfig.js`.
 
 ### Storage
 
