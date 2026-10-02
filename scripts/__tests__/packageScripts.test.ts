@@ -28,3 +28,30 @@ describe('cutover to the Expo web build', () => {
     expect(deployWorkflow).not.toContain('dist/preview');
   });
 });
+
+describe('workspaces', () => {
+  const workspacePackages = ['packages/content-schema', 'packages/progress', 'pipeline', 'server'];
+
+  it('declares the workspace packages', () => {
+    const { workspaces } = JSON.parse(readFileSync('package.json', 'utf8'));
+    expect(workspaces).toEqual(['packages/*', 'pipeline', 'server']);
+  });
+
+  it('gives each workspace an ESM package with vitest and a type check', () => {
+    for (const directory of workspacePackages) {
+      const workspace = JSON.parse(readFileSync(`${directory}/package.json`, 'utf8'));
+      expect(workspace.name).toMatch(/^@syntactical\//);
+      expect(workspace.type).toBe('module');
+      expect(workspace.scripts).toEqual(expect.objectContaining({ test: 'vitest run', typecheck: 'tsc --noEmit' }));
+    }
+  });
+
+  it('keeps workspace code out of the root Jest projects and root type check', () => {
+    const jestConfig = require('../../jest.config.js');
+    for (const project of jestConfig.projects) {
+      expect(project.testPathIgnorePatterns).toEqual(expect.arrayContaining(['/packages/', '/pipeline/', '/server/']));
+    }
+    const rootTsconfig = JSON.parse(readFileSync('tsconfig.json', 'utf8'));
+    expect(rootTsconfig.exclude).toEqual(expect.arrayContaining(['packages', 'pipeline', 'server']));
+  });
+});
