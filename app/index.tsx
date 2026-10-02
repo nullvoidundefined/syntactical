@@ -1,8 +1,10 @@
-// Language step route: the app title and the languages the manifest lists.
+// Language step route: the app title, the languages the manifest lists,
+// and lifetime stats.
 import { router } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 
 import { LanguageStep } from '../components/menu/LanguageStep';
+import { StatsPanel } from '../components/stats/StatsPanel';
 import { useLanguageManifest } from '../state/useLanguageManifest';
 
 export default function LanguageScreen() {
@@ -19,6 +21,7 @@ export default function LanguageScreen() {
           </Text>
         </View>
         <LanguageStep languages={languages} onSelectLanguage={(language) => router.push(`/${language}`)} />
+        <StatsPanel />
       </View>
     </ScrollView>
   );

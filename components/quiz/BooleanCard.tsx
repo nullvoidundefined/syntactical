@@ -1,0 +1,54 @@
+// A True/False statement with two large choices that show correct and
+// incorrect once answered.
+import { Pressable, Text, View } from 'react-native';
+
+import type { Grammar } from '../../constants/appConfig';
+import type { Question } from '../../services/content/types/Question';
+
+type BoolQuestion = Extract<Question, { type: 'bool' }>;
+type BooleanCardProps = {
+  grammar: Grammar;
+  isAnswered: boolean;
+  onSelect: (value: boolean) => void;
+  question: BoolQuestion;
+  submittedAnswer: number | boolean | null;
+};
+
+const OPTIONS = [
+  { keyHint: 'T', label: 'True', value: true },
+  { keyHint: 'F', label: 'False', value: false },
+] as const;
+
+function describeOption(value: boolean, answer: boolean, submittedAnswer: number | boolean | null, isAnswered: boolean) {
+  if (isAnswered && value === answer) return { state: 'correct', toneClass: 'border-signal bg-signal/10' };
+  if (isAnswered && value === submittedAnswer) return { state: 'incorrect', toneClass: 'border-danger bg-danger/10' };
+  return { state: undefined, toneClass: 'border-line' };
+}
+
+export function BooleanCard({ isAnswered, onSelect, question, submittedAnswer }: BooleanCardProps) {
+  const { answer, code, prompt } = question;
+  return (
+    <View>
+      <Text className="text-lg leading-relaxed text-ink">{prompt}</Text>
+      {code ? <Text className="mt-4 font-mono text-sm text-ink">{code}</Text> : null}
+      <View className="mt-6 flex-row gap-2">
+        {OPTIONS.map(({ keyHint, label, value }) => {
+          const { state, toneClass } = describeOption(value, answer, submittedAnswer, isAnswered);
+          return (
+            <Pressable
+              key={label}
+              role="button"
+              disabled={isAnswered}
+              aria-label={state ? `${label}, ${state}` : label}
+              onPress={() => onSelect(value)}
+              className={`flex-1 flex-row items-center justify-center gap-3 rounded-md border px-4 py-5 ${toneClass}`}
+            >
+              <Text className="rounded border border-line px-1.5 py-0.5 font-mono text-xs text-muted">{keyHint}</Text>
+              <Text className="font-mono text-base text-ink">{label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
