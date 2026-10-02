@@ -2,7 +2,7 @@
 
 - reviewer: security-reviewer subagent
 - model: claude-fable-5-1
-- range: 4b0ffb24b8c7c745ec9a2dc0b045f0c6a7d3e703..7f0754ec328d834a7da2f7f511e8bdbd09e6f502
+- range: 4b0ffb24b8c7c745ec9a2dc0b045f0c6a7d3e703..b6a68b6841f409687e3231ef935d512451e8f80f
 - artefact: docs/security-reviews/ian-564-pr1.md
 
 | # | Severity | Control | Source | Worst value tried | Evidence | Fix | Status |
@@ -33,3 +33,5 @@ Nothing found: own-key lookup of language and difficulty (`services/content/find
 Nothing found: stored stats validation (`services/stats/isStoredStats.ts:10-32`, `state/StatsProvider.tsx:44`): sources the AsyncStorage entry under `syntactical.stats.v1`, absence of that key, a storage read that throws: tried `{}`, `null`, `[]`, a partial object, a string `streak`, `version` `0`/`2`/`-1`, a negative count, `1e999`, a string track entry, a track entry missing `completions`, non-JSON text, a throwing store
 
 Nothing found: diagnostic logging (`clients/logClient.ts:4-13`, `clients/writeJson.ts:11`, `services/content/loadQuestionBank.ts:26-30`, `:69`): sources caught `Error` values, validated bank paths and question ids, storage keys: tried an `Error` with a multi-line message, a network error, an oversized body, non-JSON with a matching hash, an offline fetch
+
+Nothing found: Tailwind 4 dependency alias for the Vite app (`package.json` `"tailwindcss-v4": "npm:tailwindcss@^4.3.3"`, `src/index.css:5`, the `node_modules/tailwindcss-v4` lockfile entry with a pinned `sha512` integrity): sources the npm alias target and registry URL in the lockfile, the CSS import specifier: tried an alias pointing at a different package name, an unpinned or non-registry `resolved` URL, a mutated tarball
