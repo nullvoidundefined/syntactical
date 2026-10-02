@@ -135,9 +135,9 @@ Last updated: 2026-10-02 (stack document created with the Expo app's foundation,
 - **Version:** ^1.30.0
 - **What it is:** A syntax highlighter that tokenizes code by language grammar.
 - **Docs:** https://prismjs.com/
-- **Role here:** Highlights question code. The Vite app renders its HTML output; the Expo app (PR 2) renders its tokens as text.
+- **Role here:** Highlights question code. The Vite app renders its HTML output; the Expo app renders its tokens as nested `Text` runs and never renders HTML, and a grammar outside the build's `GRAMMARS` list renders as plain text.
 - **Why chosen:** Already in use; its tokenizer runs without a DOM, so the native app can reuse it.
-- **Configured in:** `src/components/quiz/highlightQuestionCode.js` (Vite app).
+- **Configured in:** `services/codeBlock/tokenizeCode.ts` and `components/quiz/CodeBlock.tsx` (Expo app); `services/codeBlock/types/prismjs.d.ts` holds local typings so no `@types/prismjs` dependency is needed; `src/components/quiz/highlightQuestionCode.js` (Vite app, removed in PR 3).
 
 ### Vite and @vitejs/plugin-react (Vite app)
 
