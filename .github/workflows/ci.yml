@@ -29,5 +29,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run build:workspaces
+      - name: Import the built shared packages from Node
+        run: node --input-type=module -e "const a = await import('@syntactical/content-schema'); const b = await import('@syntactical/progress'); if (a.PACKAGE_NAME !== '@syntactical/content-schema' || b.PACKAGE_NAME !== '@syntactical/progress') process.exit(1);"
       - run: npm run typecheck:workspaces
       - run: npm run test:workspaces

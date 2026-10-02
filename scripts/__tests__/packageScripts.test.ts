@@ -46,10 +46,20 @@ describe('workspaces', () => {
     }
   });
 
+  it('exposes TypeScript source to Metro and built output to Node for the shared packages', () => {
+    for (const directory of ['packages/content-schema', 'packages/progress']) {
+      const shared = JSON.parse(readFileSync(`${directory}/package.json`, 'utf8'));
+      expect(shared['react-native']).toBe('./src/index.ts');
+      expect(shared.main).toBe('./dist/index.js');
+      expect(shared.exports['.']).toEqual({ types: './src/index.ts', 'react-native': './src/index.ts', default: './dist/index.js' });
+      expect(shared.scripts.build).toBe('tsc -p tsconfig.build.json');
+    }
+  });
+
   it('keeps workspace code out of the root Jest projects and root type check', () => {
     const jestConfig = require('../../jest.config.js');
     for (const project of jestConfig.projects) {
-      expect(project.testPathIgnorePatterns).toEqual(expect.arrayContaining(['/packages/', '/pipeline/', '/server/']));
+      expect(project.testPathIgnorePatterns).toEqual(expect.arrayContaining(['<rootDir>/packages/', '<rootDir>/pipeline/', '<rootDir>/server/']));
     }
     const rootTsconfig = JSON.parse(readFileSync('tsconfig.json', 'utf8'));
     expect(rootTsconfig.exclude).toEqual(expect.arrayContaining(['packages', 'pipeline', 'server']));
