@@ -3,6 +3,8 @@
 const shared = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: { '\\.css$': '<rootDir>/config/jestStyleStub.js' },
+  // Node build scripts are ES modules (.mjs); Babel transpiles them for Jest.
+  transform: { '^.+\\.mjs$': 'babel-jest' },
   testPathIgnorePatterns: ['/node_modules/', '/src/', '/dist'],
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|expo-router|nativewind|react-native-css-interop|@tanstack/.*|standard-navigation|@react-navigation/.*|react-navigation))',
@@ -16,6 +18,7 @@ module.exports = {
       displayName: 'native',
       preset: 'jest-expo/ios',
       testMatch: ['**/__tests__/**/*.test.ts?(x)'],
+      moduleFileExtensions: ['ios.ts', 'ios.tsx', 'ios.js', 'native.ts', 'native.tsx', 'native.js', 'ts', 'tsx', 'js', 'jsx', 'mjs', 'json'],
       testPathIgnorePatterns: [...shared.testPathIgnorePatterns, '\\.web\\.test\\.tsx?$'],
     },
     {

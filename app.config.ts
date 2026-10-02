@@ -15,7 +15,7 @@ const config: ExpoConfig = {
   userInterfaceStyle: 'dark',
   ios: { bundleIdentifier: 'dev.nullvoidundefined.syntactical', supportsTablet: true },
   android: { package: 'dev.nullvoidundefined.syntactical' },
-  web: { bundler: 'metro', output: 'single', favicon: './public/favicon.svg' },
+  web: { bundler: 'metro', output: 'single' },
   plugins: ['expo-router'],
   experiments: { baseUrl: BASE_URL, typedRoutes: true },
   extra: { contentBaseUrl: CONTENT_BASE_URL },
