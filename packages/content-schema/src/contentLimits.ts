@@ -30,7 +30,6 @@ export const CONTENT_LIMITS = {
   maxQuestions: MAX_QUESTIONS_PER_BANK,
   maxTags: MAX_TAGS,
   maxTopics: MAX_TOPICS,
- MAX_TAGS,
   minChoices: 2,
   misconceptionDescriptionLength: MISCONCEPTION_DESCRIPTION_LENGTH,
   promptLength: PROMPT_LENGTH,

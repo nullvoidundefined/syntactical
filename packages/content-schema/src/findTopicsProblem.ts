@@ -13,7 +13,7 @@ export function findTopicsProblem(topics: unknown): string | null {
     const at = `topics[${index}]`;
     if (!isRecord(topic)) return `${at} is not an object`;
     const { id, label } = topic;
-    if (typeof id !== 'string' || !TOPIC_ID.test(id) || id.length > CONTENT_LIMITS.referenceIdLength) return `${at}.id is invalid`;
+    if (typeof id !== 'string' || id.length > CONTENT_LIMITS.referenceIdLength || !TOPIC_ID.test(id)) return `${at}.id is invalid`;
     if (seenIds.has(id)) return `${at}.id is a duplicate`;
     seenIds.add(id);
     if (!isTextWithin(label, CONTENT_LIMITS.displayFieldLength)) return `${at}.label is invalid`;
