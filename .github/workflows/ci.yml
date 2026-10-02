@@ -17,5 +17,6 @@ jobs:
       - run: npm run lint
       - run: npx tsc --noEmit
       - run: npm test
+      - run: npm run content:build && git diff --exit-code content/manifest.json services/content/bundledContent.generated.ts
       - run: npm run build
       - run: npm run expo:export:preview

@@ -11,7 +11,8 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
     "expo:start": "expo start",
-    "expo:export:preview": "EXPO_BASE_URL=/syntactical/preview expo export --platform web --output-dir dist-expo && node scripts/copySpaFallback.mjs dist-expo"
+    "content:build": "tsx scripts/buildContentManifest.mjs",
+    "expo:export:preview": "npm run content:build && EXPO_BASE_URL=/syntactical/preview expo export --platform web --output-dir dist-expo && cp -R content dist-expo/content && node scripts/copySpaFallback.mjs dist-expo"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
