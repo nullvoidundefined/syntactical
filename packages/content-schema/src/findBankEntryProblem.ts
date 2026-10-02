@@ -21,8 +21,9 @@ export function findBankEntryProblem(
     return 'contentVersion is invalid';
   }
   if (!isRecord(topicCounts)) return 'topicCounts is invalid';
+  const listedTopics = new Set(topicIds);
   for (const [topicId, count] of Object.entries(topicCounts)) {
-    if (!topicIds.includes(topicId)) return `topicCounts.${topicId} is not a listed topic`;
+    if (!listedTopics.has(topicId)) return `topicCounts.${topicId} is not a listed topic`;
     if (!Number.isInteger(count) || (count as number) < 0) return `topicCounts.${topicId} is invalid`;
   }
   return null;

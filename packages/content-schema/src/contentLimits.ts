@@ -13,6 +13,9 @@ const MAX_TAGS = 10;
 const TAG_LENGTH = 40;
 const RATIONALE_LENGTH = 280;
 const MISCONCEPTION_DESCRIPTION_LENGTH = 280;
+const REFERENCE_ID_LENGTH = 64;
+const MAX_TOPICS = 20;
+const MAX_MISCONCEPTIONS = 40;
 const FETCH_TIMEOUT_MS = 8000;
 
 export const CONTENT_LIMITS = {
@@ -23,12 +26,16 @@ export const CONTENT_LIMITS = {
   longTextLength: LONG_TEXT_LENGTH,
   manifestBytes: MANIFEST_KILOBYTES * BYTES_PER_KILOBYTE,
   maxChoices: MAX_CHOICES,
+  maxMisconceptions: MAX_MISCONCEPTIONS,
   maxQuestions: MAX_QUESTIONS_PER_BANK,
   maxTags: MAX_TAGS,
+  maxTopics: MAX_TOPICS,
+ MAX_TAGS,
   minChoices: 2,
   misconceptionDescriptionLength: MISCONCEPTION_DESCRIPTION_LENGTH,
   promptLength: PROMPT_LENGTH,
   queryTitleLength: QUERY_TITLE_LENGTH,
   rationaleLength: RATIONALE_LENGTH,
+  referenceIdLength: REFERENCE_ID_LENGTH,
   tagLength: TAG_LENGTH,
 } as const;

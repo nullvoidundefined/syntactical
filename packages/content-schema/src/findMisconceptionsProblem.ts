@@ -7,13 +7,18 @@ const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 export function findMisconceptionsProblem(misconceptions: unknown, languageId: string): string | null {
   if (!Array.isArray(misconceptions)) return 'misconceptions is not a list';
+  if (misconceptions.length > CONTENT_LIMITS.maxMisconceptions) {
+    return 'misconceptions has too many entries';
+  }
   const prefix = `${languageId}.`;
   const seenIds = new Set<string>();
   for (const [index, misconception] of misconceptions.entries()) {
     const at = `misconceptions[${index}]`;
     if (!isRecord(misconception)) return `${at} is not an object`;
     const { id, description } = misconception;
-    if (typeof id !== 'string' || !id.startsWith(prefix) || !SLUG.test(id.slice(prefix.length))) {
+    if (typeof id !== 'string' ||
+      id.length > CONTENT_LIMITS.referenceIdLength ||
+      !id.startsWith(prefix) || !SLUG.test(id.slice(prefix.length))) {
       return `${at}.id is invalid`;
     }
     if (seenIds.has(id)) return `${at}.id is a duplicate`;
