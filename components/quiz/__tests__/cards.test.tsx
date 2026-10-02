@@ -1,6 +1,6 @@
+import type { Question } from '@syntactical/content-schema';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
-import type { Question } from '../../../services/content/types/Question';
 import { BooleanCard } from '../BooleanCard';
 import { MultipleChoiceCard } from '../MultipleChoiceCard';
 import { ProgressBar } from '../ProgressBar';

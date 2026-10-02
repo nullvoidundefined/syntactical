@@ -3,9 +3,9 @@
 // nothing until the next round. An answer that does not fit the current
 // question (a choice index it does not have, or the wrong kind of answer)
 // is ignored rather than recorded as wrong.
+import type { Question } from '@syntactical/content-schema';
 import { useState } from 'react';
 
-import type { Question } from '../services/content/types/Question';
 import { calculateAccuracy } from '../services/quiz/calculateAccuracy';
 import { isAnswerCorrect } from '../services/quiz/isAnswerCorrect';
 import { shuffleQuestions } from '../services/quiz/shuffleQuestions';

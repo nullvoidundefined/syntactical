@@ -1,8 +1,8 @@
+import type { Question } from '@syntactical/content-schema';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { readCachedBank } from '../readCachedBank';
 import { readCachedManifest } from '../readCachedManifest';
-import type { Question } from '../types/Question';
 import { writeCachedBank } from '../writeCachedBank';
 import { writeCachedManifest } from '../writeCachedManifest';
 import { buildBoolQuestion, cloneBundledManifest, hashUtf8Hex } from './fixtures/contentFixtures';

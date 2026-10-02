@@ -1,8 +1,8 @@
+import type { Question } from '@syntactical/content-schema';
 import { act, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { Text } from 'react-native';
 
-import type { Question } from '../../../services/content/types/Question';
 import { QuizRound } from '../QuizRound';
 
 // Reduced motion makes the query Modal close without a CSS animation;

@@ -1,4 +1,6 @@
-import { validateManifest } from '../validateManifest';
+import { describe, expect, it } from 'vitest';
+
+import { validateManifest } from '../validateManifest.js';
 
 const VALID_HASH = 'a'.repeat(32) + '0123456789abcdef'.repeat(2);
 

@@ -1,6 +1,6 @@
+import { DIFFICULTIES } from '@syntactical/content-schema';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
-import { DIFFICULTIES } from '../../../constants/appConfig';
 import { DifficultyStep } from '../DifficultyStep';
 
 const mockBankState = { current: { status: 'ready' } as Record<string, unknown> };

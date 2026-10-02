@@ -1,9 +1,9 @@
 // Lifetime accuracy and a per-language, per-difficulty breakdown for the
 // languages the manifest currently lists.
+import { DIFFICULTIES } from '@syntactical/content-schema';
+import type { Manifest } from '@syntactical/content-schema';
 import { Text, View } from 'react-native';
 
-import { DIFFICULTIES } from '../../constants/appConfig';
-import type { Manifest } from '../../services/content/types/Manifest';
 import { calculateAccuracy } from '../../services/quiz/calculateAccuracy';
 import { buildStatsKey } from '../../services/stats/buildStatsKey';
 import type { Stats } from '../../services/stats/types/Stats';

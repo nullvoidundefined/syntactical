@@ -1,9 +1,9 @@
 // Step 2 of the launch flow: the difficulties the chosen language's
 // manifest entry names, labeled from the app's registry, each showing
 // whether its bank is ready, downloading, failed, or needs a connection.
+import { DIFFICULTIES } from '@syntactical/content-schema';
 import { Pressable, Text, View } from 'react-native';
 
-import { DIFFICULTIES } from '../../constants/appConfig';
 import { useIsOnline } from '../../state/useIsOnline';
 import { useKeyboardNav } from '../../state/useKeyboardNav';
 import { useLanguageManifest } from '../../state/useLanguageManifest';

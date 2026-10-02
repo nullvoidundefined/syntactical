@@ -1,4 +1,6 @@
-import { validateQuestionBank } from '../validateQuestionBank';
+import { describe, expect, it } from 'vitest';
+
+import { validateQuestionBank } from '../validateQuestionBank.js';
 
 const query = { explanation: 'Explanation', title: 'Title' };
 const validQuestion = { answer: true, id: 'q-valid', prompt: 'True?', query, type: 'bool' };

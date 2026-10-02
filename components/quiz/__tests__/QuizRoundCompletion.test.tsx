@@ -1,7 +1,7 @@
+import type { Question } from '@syntactical/content-schema';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
-import type { Question } from '../../../services/content/types/Question';
 import { StatsProvider, useQuizStats } from '../../../state/StatsProvider';
 import { QuizRound } from '../QuizRound';
 

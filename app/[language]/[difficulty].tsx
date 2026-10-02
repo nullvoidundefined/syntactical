@@ -2,6 +2,7 @@
 // and the difficulty registry, waits for stats hydration and a ready
 // bank, and remounts the round under a new key on Retry so every piece
 // of round state resets.
+import { DIFFICULTIES } from '@syntactical/content-schema';
 import { useState } from 'react';
 
 import { router, useLocalSearchParams } from 'expo-router';
@@ -9,7 +10,6 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import NotFoundScreen from '../+not-found';
 import { QuizRound } from '../../components/quiz/QuizRound';
-import { DIFFICULTIES } from '../../constants/appConfig';
 import { useQuizStats } from '../../state/StatsProvider';
 import { useLanguageManifest } from '../../state/useLanguageManifest';
 import { useQuestionBank } from '../../state/useQuestionBank';

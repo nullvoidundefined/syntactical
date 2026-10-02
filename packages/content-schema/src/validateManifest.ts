@@ -1,11 +1,11 @@
 // Validates a fetched manifest. Returns the typed manifest, or the first
 // rule it broke so the caller can log it and keep the previous copy.
-import { CONTENT_LIMITS, DIFFICULTIES, GRAMMARS, SUPPORTED_SCHEMA_VERSION } from '../../constants/appConfig';
+import { CONTENT_LIMITS, DIFFICULTIES, GRAMMARS, SUPPORTED_SCHEMA_VERSION } from './constants.js';
 
-import { SHA256_HEX } from './SHA256_HEX';
-import { isRecord } from './isRecord';
-import { isSafeBankPath } from './isSafeBankPath';
-import type { Manifest } from './types/Manifest';
+import { SHA256_HEX } from './SHA256_HEX.js';
+import { isRecord } from './isRecord.js';
+import { isSafeBankPath } from './isSafeBankPath.js';
+import type { Manifest } from './types/Manifest.js';
 
 const LANGUAGE_ID = /^[a-z0-9-]{1,32}$/;
 const DIFFICULTY_IDS: readonly string[] = DIFFICULTIES.map((difficulty) => difficulty.id);

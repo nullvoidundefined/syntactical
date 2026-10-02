@@ -1,7 +1,6 @@
+import type { Grammar, Question } from '@syntactical/content-schema';
 import { render, screen, waitFor } from '@testing-library/react-native';
 
-import type { Grammar } from '../../../constants/appConfig';
-import type { Question } from '../../../services/content/types/Question';
 import { QueryDrawer } from '../../query/QueryDrawer';
 import { BooleanCard } from '../BooleanCard';
 import { MultipleChoiceCard } from '../MultipleChoiceCard';

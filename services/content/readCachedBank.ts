@@ -1,13 +1,11 @@
 // Reads one cached bank with its verified hash as a single entry, so a
 // cached bank can never be paired with the wrong hash. Entries that fail to
 // parse or validate read as absent.
+import { SHA256_HEX, SUPPORTED_SCHEMA_VERSION, validateQuestionBank } from '@syntactical/content-schema';
+import type { CachedBank } from '@syntactical/content-schema';
 import { readJson } from '../../clients/readJson';
-import { SUPPORTED_SCHEMA_VERSION } from '../../constants/appConfig';
 
-import { SHA256_HEX } from './SHA256_HEX';
 import { buildBankCacheKey } from './buildBankCacheKey';
-import type { CachedBank } from './types/CachedBank';
-import { validateQuestionBank } from './validateQuestionBank';
 
 export async function readCachedBank(
   language: string,

@@ -1,7 +1,7 @@
 // A manifest entry for one language and the banks it offers per difficulty.
-import type { DifficultyId, Grammar } from '../../../constants/appConfig';
+import type { DifficultyId, Grammar } from '../constants.js';
 
-import type { BankEntry } from './BankEntry';
+import type { BankEntry } from './BankEntry.js';
 
 export type LanguageEntry = {
   id: string;

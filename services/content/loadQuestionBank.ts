@@ -1,15 +1,13 @@
 // Downloads one bank, verifies its bytes against the manifest hash,
 // validates it, and caches it only if that hash is still the current one.
 // Throws on any failure so TanStack Query reports the error state.
+import { CONTENT_LIMITS, validateQuestionBank } from '@syntactical/content-schema';
+import type { BankEntry, CachedBank } from '@syntactical/content-schema';
 import { ContentFetchError } from '../../clients/ContentFetchError';
 import { fetchContentText } from '../../clients/fetchContentText';
 import { logWarning } from '../../clients/logClient';
-import { CONTENT_LIMITS } from '../../constants/appConfig';
 
 import { resolveBankUrl } from './resolveBankUrl';
-import type { BankEntry } from './types/BankEntry';
-import type { CachedBank } from './types/CachedBank';
-import { validateQuestionBank } from './validateQuestionBank';
 import { verifyBankHash } from './verifyBankHash';
 import { writeCachedBank } from './writeCachedBank';
 

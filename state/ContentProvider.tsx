@@ -2,6 +2,8 @@
 // renders the app. Rounds never wait on the network: whatever is cached,
 // or bundled, is available as soon as this read completes. It then
 // refreshes the manifest and prefetches every bank whose hash changed.
+import { validateQuestionBank } from '@syntactical/content-schema';
+import type { CachedBank, Manifest } from '@syntactical/content-schema';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -14,10 +16,7 @@ import { findBankEntry } from '../services/content/findBankEntry';
 import { prefetchChangedBanks } from '../services/content/prefetchChangedBanks';
 import { readCachedBank } from '../services/content/readCachedBank';
 import { readCachedManifest } from '../services/content/readCachedManifest';
-import type { CachedBank } from '../services/content/types/CachedBank';
 import type { ContentAccess } from '../services/content/types/ContentAccess';
-import type { Manifest } from '../services/content/types/Manifest';
-import { validateQuestionBank } from '../services/content/validateQuestionBank';
 
 type HydratedContent = { banks: Map<string, CachedBank>; manifest: Manifest };
 

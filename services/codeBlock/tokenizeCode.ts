@@ -1,5 +1,7 @@
 // Splits source code into flat, typed text runs using Prism's tokenizer.
 // Returns plain data only, never markup, so callers render it as text.
+import { GRAMMARS } from '@syntactical/content-schema';
+import type { Grammar } from '@syntactical/content-schema';
 import Prism from 'prismjs';
 import type { Token } from 'prismjs';
 import 'prismjs/components/prism-bash';
@@ -10,8 +12,6 @@ import 'prismjs/components/prism-rust';
 import 'prismjs/components/prism-sql';
 import 'prismjs/components/prism-typescript';
 
-import { GRAMMARS } from '../../constants/appConfig';
-import type { Grammar } from '../../constants/appConfig';
 
 import type { CodeToken } from './types/CodeToken';
 

@@ -1,4 +1,4 @@
-import type { Grammar } from '../../../constants/appConfig';
+import type { Grammar } from '@syntactical/content-schema';
 import { tokenizeCode } from '../tokenizeCode';
 import type { CodeToken } from '../types/CodeToken';
 

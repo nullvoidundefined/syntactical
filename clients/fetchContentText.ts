@@ -2,8 +2,8 @@
 // (an empty response url is unverifiable and counts as one), bounds the whole
 // request (headers and body) by a timer, and enforces a UTF-8 byte-size limit
 // on the body text.
-import { CONTENT_LIMITS } from '../constants/appConfig';
 
+import { CONTENT_LIMITS } from '@syntactical/content-schema';
 import { ContentFetchError } from './ContentFetchError';
 
 type ContentFetchOptions = { timeoutMs?: number };

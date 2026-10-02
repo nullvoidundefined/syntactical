@@ -1,6 +1,6 @@
+import { CONTENT_LIMITS } from '@syntactical/content-schema';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { CONTENT_LIMITS } from '../../../constants/appConfig';
 import { readCachedManifest } from '../readCachedManifest';
 import { writeCachedManifest } from '../writeCachedManifest';
 import { loadLanguageManifest } from '../loadLanguageManifest';
