@@ -62,7 +62,7 @@ export function DifficultyStep({ language, onBack, onSelectDifficulty }: Difficu
   return (
     <View>
       <View className="mb-4 flex-row items-center justify-between">
-        <Text className="font-mono text-xs uppercase tracking-widest text-muted">
+        <Text role="heading" aria-level={1} className="font-mono text-xs uppercase tracking-widest text-muted">
           Step 2 / Select difficulty <Text className="text-signal">{languageEntry?.label ?? language}</Text>
         </Text>
         <Pressable role="button" aria-label="Back" onPress={onBack}>

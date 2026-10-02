@@ -14,7 +14,7 @@ export function QueryDrawer({ grammar, isOpen, onClose, query }: QueryDrawerProp
   const isReducedMotion = useIsReducedMotion();
   const { explanation, syntax, tags, title } = query;
   return (
-    <Modal testID="query-modal" visible={isOpen} transparent animationType={isReducedMotion ? 'none' : 'slide'} onRequestClose={onClose}>
+    <Modal testID="query-modal" aria-label={title} visible={isOpen} transparent animationType={isReducedMotion ? 'none' : 'slide'} onRequestClose={onClose}>
       <View className="flex-1 flex-row">
         <Pressable testID="query-backdrop" accessible={false} importantForAccessibility="no" className="flex-1 bg-black/60" onPress={onClose} />
         <ScrollView className="w-full max-w-[420px] border-l border-line bg-surface" contentContainerClassName="p-5">
