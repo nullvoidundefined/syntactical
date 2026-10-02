@@ -33,3 +33,4 @@ expo-env.d.ts
 
 # Plan execution workspace
 .superpowers/
+packages/*/dist/

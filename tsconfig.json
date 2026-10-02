@@ -1,6 +1,26 @@
 {
   "extends": "expo/tsconfig.base",
-  "compilerOptions": { "strict": true, "resolveJsonModule": true, "types": ["jest", "node"] },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "nativewind-env.d.ts"],
-  "exclude": ["node_modules", "dist", "dist-expo"]
+  "compilerOptions": {
+    "strict": true,
+    "resolveJsonModule": true,
+    "types": [
+      "jest",
+      "node"
+    ]
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "dist-expo",
+    "packages",
+    "pipeline",
+    "server"
+  ]
 }

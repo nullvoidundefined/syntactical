@@ -6,7 +6,8 @@ const shared = {
   moduleNameMapper: { '\\.css$': '<rootDir>/config/jestStyleStub.js' },
   // Node build scripts are ES modules (.mjs); Babel transpiles them for Jest.
   transform: { '^.+\\.mjs$': 'babel-jest' },
-  testPathIgnorePatterns: ['/node_modules/', '/dist'],
+  // Workspace packages (packages/, pipeline/, server/) run their own vitest suites.
+  testPathIgnorePatterns: ['/node_modules/', '/dist', '/packages/', '/pipeline/', '/server/'],
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|expo-router|nativewind|react-native-css-interop|@tanstack/.*|standard-navigation|@react-navigation/.*|react-navigation))',
   ],

@@ -8,7 +8,9 @@
     "content:build": "tsx scripts/buildContentManifest.mjs",
     "lint": "oxlint",
     "test": "jest",
-    "preview": "npx serve dist"
+    "preview": "npx serve dist",
+    "test:workspaces": "npm test --workspaces --if-present",
+    "typecheck:workspaces": "npm run typecheck --workspaces --if-present"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -45,5 +47,10 @@
     "tsx": "^4.23.15",
     "typescript": "~6.0.3"
   },
-  "main": "expo-router/entry"
+  "main": "expo-router/entry",
+  "workspaces": [
+    "packages/*",
+    "pipeline",
+    "server"
+  ]
 }
