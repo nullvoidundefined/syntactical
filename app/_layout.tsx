@@ -14,15 +14,21 @@ import { validateContentBaseUrl } from '../services/content/validateContentBaseU
 import { ContentProvider } from '../state/ContentProvider';
 import { StatsProvider } from '../state/StatsProvider';
 
-const CONTENT_BASE_URL = validateContentBaseUrl(Constants.expoConfig?.extra?.contentBaseUrl);
-if (CONTENT_BASE_URL === null) logWarning({}, 'content base URL is missing or untrusted; content fetching is disabled');
+function readTrustedContentBaseUrl(): string | null {
+  const contentBaseUrl = validateContentBaseUrl(Constants.expoConfig?.extra?.contentBaseUrl);
+  if (contentBaseUrl === null) {
+    logWarning({}, 'content base URL is missing or untrusted; content fetching is disabled');
+  }
+  return contentBaseUrl;
+}
 
 export default function RootLayout() {
   const [queryClient] = useState(createQueryClient);
+  const [contentBaseUrl] = useState(readTrustedContentBaseUrl);
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        <ContentProvider contentBaseUrl={CONTENT_BASE_URL}>
+        <ContentProvider contentBaseUrl={contentBaseUrl}>
           <StatsProvider>
             <Slot />
           </StatsProvider>
