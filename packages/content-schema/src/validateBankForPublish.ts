@@ -14,8 +14,13 @@ function hasText(value: string | undefined): boolean {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function isBoolQuestion(question: Question): question is Extract<Question, { type: 'bool' }> {
+  const { type } = question;
+  return type === 'bool';
+}
+
 function collectRationales(question: Question): (string | undefined)[] {
-  if (question.type === 'bool') return [question.rationale];
+  if (isBoolQuestion(question)) return [question.rationale];
   const { answerIndex, choices } = question;
   return choices.filter((_choice, index) => index !== answerIndex).map((choice) => choice.rationale);
 }
