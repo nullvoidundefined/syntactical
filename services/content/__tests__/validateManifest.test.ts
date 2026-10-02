@@ -167,7 +167,7 @@ describe('validateManifest', () => {
     });
 
     describe('display fields', () => {
-        const displayFieldCases = ['label', 'glyph', 'tagline'].flatMap((field) => [
+        const displayFieldCases = ['label', 'glyph', 'tagline'].flatMap((field): [string, string, unknown][] => [
             [field, 'missing', undefined],
             [field, 'empty', ''],
             [field, 'over 120 characters', 'x'.repeat(121)],
