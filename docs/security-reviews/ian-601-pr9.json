@@ -1,0 +1,169 @@
+{
+  "reviewer": "security-reviewer subagent",
+  "model": "claude-fable-5-1",
+  "range": "183747a..9af5c15",
+  "rounds": [
+    {
+      "round": 1,
+      "range": "183747a..e641bbe",
+      "findings": 16
+    },
+    {
+      "round": 2,
+      "range": "183747a..3c60231",
+      "findings": 5
+    },
+    {
+      "round": 3,
+      "range": "183747a..11c95c5",
+      "findings": 1
+    }
+  ],
+  "findings": [
+    {
+      "id": 1,
+      "severity": "HIGH",
+      "control": "Never-logged secrets (session token in Set-Cookie)",
+      "status": "fixed 3c60231"
+    },
+    {
+      "id": 2,
+      "severity": "MEDIUM",
+      "control": "Never-logged secrets (email in pg error detail)",
+      "status": "fixed 3c60231"
+    },
+    {
+      "id": 3,
+      "severity": "MEDIUM",
+      "control": "One-time code rate limit key normalization",
+      "status": "fixed 3c60231"
+    },
+    {
+      "id": 4,
+      "severity": "MEDIUM",
+      "control": "One-time code generation (CSPRNG)",
+      "status": "fixed 3c60231"
+    },
+    {
+      "id": 5,
+      "severity": "MEDIUM",
+      "control": "One-time code attempt cap under concurrency",
+      "status": "fixed 3c60231"
+    },
+    {
+      "id": 6,
+      "severity": "MEDIUM",
+      "control": "Rate-limit counter atomicity",
+      "status": "fixed 3c60231"
+    },
+    {
+      "id": 7,
+      "severity": "MEDIUM",
+      "control": "RevenueCat webhook authorization (empty secret, length mismatch)",
+      "status": "fixed 3c60231"
+    },
+    {
+      "id": 8,
+      "severity": "MEDIUM",
+      "control": "Private content deploy key in image layers",
+      "status": "fixed 3c60231"
+    },
+    {
+      "id": 9,
+      "severity": "MEDIUM",
+      "control": "Account deletion model consistency",
+      "status": "fixed 3c60231"
+    },
+    {
+      "id": 10,
+      "severity": "MEDIUM",
+      "control": "Paid question text kept out of the public pipeline tree",
+      "status": "fixed 3c60231"
+    },
+    {
+      "id": 11,
+      "severity": "LOW",
+      "control": "Account deletion value-based PII scrub",
+      "status": "fixed 3c60231"
+    },
+    {
+      "id": 12,
+      "severity": "LOW",
+      "control": "JSON-only bodies on unauthenticated state-changing routes",
+      "status": "fixed 3c60231"
+    },
+    {
+      "id": 13,
+      "severity": "LOW",
+      "control": "Answer event download cursor validation",
+      "status": "fixed 3c60231"
+    },
+    {
+      "id": 14,
+      "severity": "LOW",
+      "control": "API base URL allowlist fail path",
+      "status": "fixed 3c60231"
+    },
+    {
+      "id": 15,
+      "severity": "LOW",
+      "control": "Runner sandbox output bound",
+      "status": "fixed 3c60231"
+    },
+    {
+      "id": 16,
+      "severity": "LOW",
+      "control": "Per-IP rate limit key for IPv6",
+      "status": "fixed 3c60231"
+    },
+    {
+      "id": 17,
+      "severity": "MEDIUM",
+      "control": "Account deletion leaves the email in one_time_codes and rate_limit_counters",
+      "status": "fixed 11c95c5"
+    },
+    {
+      "id": 18,
+      "severity": "MEDIUM",
+      "control": "IPv4-mapped IPv6 addresses share one rate-limit key",
+      "status": "fixed 11c95c5"
+    },
+    {
+      "id": 19,
+      "severity": "LOW",
+      "control": "PII scrub casing",
+      "status": "fixed 11c95c5"
+    },
+    {
+      "id": 20,
+      "severity": "LOW",
+      "control": "415 guard coverage of simple-request content types",
+      "status": "fixed 11c95c5"
+    },
+    {
+      "id": 21,
+      "severity": "LOW",
+      "control": "Email casing at code verify",
+      "status": "fixed 11c95c5"
+    },
+    {
+      "id": 22,
+      "severity": "LOW",
+      "control": "Unkeyed rate-limit digests and unbounded counter retention",
+      "status": "fixed 9af5c15"
+    }
+  ],
+  "nothingFound": [
+    "Cookie attributes: tried NODE_ENV unset, Development (mixed case), production, X-Client: Native, X-Client empty",
+    "Session tokens (generation, hashing, revocation, absolute and idle expiry): tried a reused token after sign-out, day-30 token with recent use, day-14 idle token",
+    "Dual-transport requireSession: tried empty bearer, Basic auth, oversized token, valid cookie with invalid bearer, unknown/revoked/expired hashes",
+    "CORS: tried *, null, absent, https://evil.com, https://syntactical.dev.evil.com, http://syntactical.dev, HTTPS://SYNTACTICAL.DEV",
+    "X-Requested-With CSRF guard: tried missing header, lowercase value, text/plain, multipart/form-data, cookie plus forged bearer",
+    "Paid bank entitlement check: tried no session, revoked, ..%2F, %00, mixed-case language, free path, unknown language",
+    "Answer event timestamp bound and choiceIndex: tried now+6 min, created_at-366 days, null, non-ISO, -1, 1e9, NaN, \"0\", 201 events, unknown ids",
+    "Content base URL allowlist change: tried old Pages URL, http, lookalike hosts, no trailing slash, userinfo, '', null, 42, uppercase host",
+    "One-time code hashing, expiry, prior-code invalidation: tried reused code, 11-minute-old code, earlier code after reissue, plaintext search",
+    "Trusted proxy hop: tried a spoofed multi-hop X-Forwarded-For chain and an absent header",
+    "Runner sandbox (network, CPU, memory, pids, read-only fs, timeout, non-root): tried socket, fetch, infinite loop, 512 MB, fork bomb, write to /etc, id -u, language bash"
+  ]
+}

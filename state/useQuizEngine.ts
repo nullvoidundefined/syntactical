@@ -1,6 +1,8 @@
 // Drives one round. The shuffled question list is a snapshot taken when
 // the round mounts, so a bank refresh that lands mid-round changes
-// nothing until the next round.
+// nothing until the next round. An answer that does not fit the current
+// question (a choice index it does not have, or the wrong kind of answer)
+// is ignored rather than recorded as wrong.
 import { useState } from 'react';
 
 import type { Question } from '../services/content/types/Question';
@@ -21,8 +23,13 @@ export function useQuizEngine(bankQuestions: readonly Question[]) {
   const isAnswered = submittedAnswer !== null;
   const wasCorrect = isAnswered && currentQuestion !== null && isAnswerCorrect(currentQuestion, submittedAnswer);
 
+  function fitsCurrentQuestion(question: Question, value: number | boolean): boolean {
+    if (question.type === 'bool') return typeof value === 'boolean';
+    return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value < question.choices.length;
+  }
+
   function submitAnswer(value: number | boolean): boolean | null {
-    if (isAnswered || !currentQuestion) return null;
+    if (isAnswered || !currentQuestion || !fitsCurrentQuestion(currentQuestion, value)) return null;
     const isCorrect = isAnswerCorrect(currentQuestion, value);
     setSubmittedAnswer(value);
     if (isCorrect) setCorrectCount((count) => count + 1);

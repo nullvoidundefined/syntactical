@@ -134,3 +134,78 @@ describe('web keyboard navigation in a round', () => {
     expect(screen.queryByText('menu screen')).not.toBeNull();
   });
 });
+
+describe('web keyboard navigation ignores keys meant for something else', () => {
+  const threeChoiceQuestion: Question = { answerIndex: 2, choices: ['a', 'b', 'c'], id: 'q-3', prompt: 'Pick', query, type: 'mc' };
+
+  function pressKeyOn(target: HTMLElement, key: string) {
+    act(() => {
+      target.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key }));
+    });
+  }
+
+  it.each([
+    ['an input', () => document.createElement('input')],
+    ['a textarea', () => document.createElement('textarea')],
+    ['a select', () => document.createElement('select')],
+    [
+      'a child of a contenteditable element',
+      () => {
+        const editor = document.createElement('div');
+        editor.setAttribute('contenteditable', 'true');
+        const child = document.createElement('span');
+        child.tabIndex = 0;
+        editor.appendChild(child);
+        document.body.appendChild(editor);
+        return child;
+      },
+    ],
+    [
+      'a contenteditable element',
+      () => {
+        const element = document.createElement('div');
+        element.setAttribute('contenteditable', 'true');
+        return element;
+      },
+    ],
+  ])('does not answer, open the query, or advance while typing in %s', (_label, createField) => {
+    render(<RoundHarness question={mcQuestion} />);
+    const field = createField();
+    if (!field.isConnected) document.body.appendChild(field);
+    field.focus();
+    for (const key of ['3', 'c', 't', 'q', 'Enter', 'Escape']) pressKeyOn(field, key);
+    expect(screen.queryByLabelText('c, correct')).toBeNull();
+    expect(screen.queryByTestId('query-modal')).toBeNull();
+    expect(screen.queryByText('round 0')).not.toBeNull();
+    expect(screen.queryByText('menu screen')).toBeNull();
+    (field.parentElement === document.body ? field : field.parentElement)?.remove();
+  });
+
+  it.each([
+    ['a focused button', () => document.createElement('button')],
+    [
+      'a checkbox',
+      () => {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        return checkbox;
+      },
+    ],
+  ])('still answers when the key comes from %s', (_label, createControl) => {
+    render(<RoundHarness question={mcQuestion} />);
+    const control = createControl();
+    document.body.appendChild(control);
+    control.focus();
+    pressKeyOn(control, '3');
+    expect(screen.queryByLabelText('c, correct')).not.toBeNull();
+    control.remove();
+  });
+
+  it.each(['4', 'D'])('ignores choice key %p on a question with three choices', (key) => {
+    render(<RoundHarness question={threeChoiceQuestion} />);
+    pressKey(key);
+    expect(screen.queryByLabelText('c, correct')).toBeNull();
+    pressKey('3');
+    expect(screen.queryByLabelText('c, correct')).not.toBeNull();
+  });
+});
