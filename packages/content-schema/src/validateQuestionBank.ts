@@ -69,6 +69,28 @@ function isValidChoiceAnswer(choices: unknown, answerIndex: unknown): boolean {
   return Number.isInteger(answerIndex) && (answerIndex as number) >= 0 && (answerIndex as number) < choices.length;
 }
 
+const CRITERION_TYPES = ['performance', 'correctness', 'readability'];
+
+function isCriterionText(value: unknown): boolean {
+  return typeof value === 'string' && value.trim().length > 0 && value.length <= CONTENT_LIMITS.longTextLength;
+}
+
+function isValidCriterion(criterion: unknown): boolean {
+  if (!isRecord(criterion)) return false;
+  const { evidence, statement, type } = criterion;
+  return CRITERION_TYPES.includes(type as string) && isCriterionText(statement) && isCriterionText(evidence);
+}
+
+function isValidAbShape(question: Record<string, unknown>): boolean {
+  const { answerIndex, choices, criterion } = question;
+  return (
+    Array.isArray(choices) &&
+    choices.length === 2 &&
+    isValidChoiceAnswer(choices, answerIndex) &&
+    isValidCriterion(criterion)
+  );
+}
+
 function isValidBoolExtras(question: Record<string, unknown>): boolean {
   const { misconceptionId, rationale } = question;
   return (
@@ -80,6 +102,7 @@ function isValidBoolExtras(question: Record<string, unknown>): boolean {
 function isValidAnswerShape(question: Record<string, unknown>): boolean {
   const { type, choices, answerIndex, answer } = question;
   if (type === 'bool') return typeof answer === 'boolean' && isValidBoolExtras(question);
+  if (type === 'ab') return isValidAbShape(question);
   return type === 'mc' && isValidChoiceAnswer(choices, answerIndex);
 }
 
