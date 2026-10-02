@@ -56,7 +56,7 @@ async function hydrateContent(): Promise<HydratedContent> {
   return { banks: await readAllCachedBanks(manifest), manifest };
 }
 
-function buildContentAccess(hydrated: HydratedContent, contentBaseUrl: string): ContentAccess {
+function buildContentAccess(hydrated: HydratedContent, contentBaseUrl: string | null): ContentAccess {
   const { banks, manifest } = hydrated;
   return {
     baselineManifest: manifest,
@@ -70,7 +70,7 @@ export function ContentProvider({
   contentBaseUrl,
   children,
 }: {
-  contentBaseUrl: string;
+  contentBaseUrl: string | null;
   children: ReactNode;
 }) {
   const queryClient = useQueryClient();

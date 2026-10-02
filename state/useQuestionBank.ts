@@ -27,7 +27,7 @@ export function useQuestionBank(language: string, difficulty: string): QuestionB
   const needsDownload = entry !== undefined && localBank?.hash !== entry.hash;
   const query = useQuery({
     ...buildBankQuery(queryClient, access, language, difficulty, entry ?? PLACEHOLDER_ENTRY),
-    enabled: needsDownload,
+    enabled: needsDownload && access.contentBaseUrl !== null,
   });
   const { data, isError } = query;
   if (!entry) return { status: 'unknown' };

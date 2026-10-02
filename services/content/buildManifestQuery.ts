@@ -1,10 +1,12 @@
-// The TanStack Query definition for the manifest refresh.
+// The TanStack Query definition for the manifest refresh, disabled when there is no
+// content base URL.
 import { loadLanguageManifest } from './loadLanguageManifest';
 
-export function buildManifestQuery(contentBaseUrl: string, isEnabled: boolean) {
+export function buildManifestQuery(contentBaseUrl: string | null, isEnabled: boolean) {
   return {
-    enabled: isEnabled,
-    queryFn: () => loadLanguageManifest(contentBaseUrl),
+    enabled: isEnabled && contentBaseUrl !== null,
+    queryFn: () =>
+      contentBaseUrl === null ? Promise.resolve(null) : loadLanguageManifest(contentBaseUrl),
     queryKey: ['manifest'],
   };
 }

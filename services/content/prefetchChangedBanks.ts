@@ -1,5 +1,5 @@
 // The background prefetch run after each manifest refresh: downloads every
-// bank whose hash differs from the local copy.
+// bank whose hash differs from the local copy. Does nothing without a content base URL.
 import type { QueryClient } from '@tanstack/react-query';
 
 import { logWarning } from '../../clients/logClient';
@@ -13,6 +13,7 @@ export function prefetchChangedBanks(
   manifest: Manifest,
   access: ContentAccess,
 ): void {
+  if (access.contentBaseUrl === null) return;
   for (const language of manifest.languages) {
     const { banks, id } = language;
     for (const [difficulty, entry] of Object.entries(banks)) {

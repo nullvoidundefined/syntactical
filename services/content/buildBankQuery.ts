@@ -28,15 +28,18 @@ export function buildBankQuery(
 ) {
   const { contentBaseUrl } = access;
   return {
-    queryFn: () =>
-      loadQuestionBank({
+    enabled: contentBaseUrl !== null,
+    queryFn: () => {
+      if (contentBaseUrl === null) return Promise.reject(new Error('no content base URL'));
+      return loadQuestionBank({
         contentBaseUrl,
         difficulty,
         entry,
         isHashCurrent: (hash: string) =>
           readCurrentHash(queryClient, access, language, difficulty) === hash,
         language,
-      }),
+      });
+    },
     queryKey: ['bank', language, difficulty, entry.hash],
   };
 }
