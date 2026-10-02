@@ -50,6 +50,16 @@ describe('QuizRound', () => {
     expect(screen.queryByText('Is it?')).not.toBeNull();
   });
 
+  it('ignores an answer pressed while the query drawer is open', async () => {
+    await renderRound();
+    await fireEvent.press(screen.getByRole('button', { name: 'Query' }));
+    await fireEvent.press(screen.getByText('False'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Close query' }));
+    expect(screen.queryByRole('button', { name: 'Continue' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Explain' })).toBeNull();
+    expect(mockRecordAnswer).not.toHaveBeenCalled();
+  });
+
   it('does not offer Explain after a correct answer', async () => {
     await renderRound();
     await fireEvent.press(screen.getByText('True'));
