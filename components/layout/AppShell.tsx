@@ -15,14 +15,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { best, current } = stats.streak;
   return (
     <SafeAreaView className="flex-1 bg-obsidian">
-      <View className="flex-row items-center justify-between border-b border-line px-4 py-3">
+      <View role="banner" className="flex-row items-center justify-between border-b border-line px-4 py-3">
         <Text className="font-mono text-xs tracking-widest text-ink">SYNTACTICAL</Text>
         <Text className="font-mono text-xs uppercase tracking-widest text-muted">
           streak <Text className="text-signal">{current}</Text> / best <Text className="text-ink">{best}</Text>
         </Text>
       </View>
-      <DownloadIndicator />
-      <View className="flex-1">{children}</View>
+      <View role="main" className="flex-1">
+        <DownloadIndicator />
+        {children}
+      </View>
     </SafeAreaView>
   );
 }

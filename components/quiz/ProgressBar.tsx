@@ -13,6 +13,7 @@ export function ProgressBar({ current, total }: { current: number; total: number
       <View
         accessible
         role="progressbar"
+        aria-label={`Question ${Math.min(current + 1, total)} of ${total}`}
         aria-valuemin={0}
         aria-valuemax={total}
         aria-valuenow={current}

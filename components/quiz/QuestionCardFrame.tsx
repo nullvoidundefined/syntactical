@@ -19,7 +19,7 @@ export function QuestionCardFrame({ children, difficultyLabel, languageLabel, on
   return (
     <View className="overflow-hidden rounded-lg border border-line bg-surface">
       <View className="flex-row flex-wrap items-center justify-between border-b border-line px-4 py-3">
-        <Text className="font-mono text-[11px] uppercase tracking-widest text-muted">
+        <Text role="heading" aria-level={1} className="font-mono text-[11px] uppercase tracking-widest text-muted">
           {`${languageLabel} / ${difficultyLabel} / ${TYPE_LABEL[type]}`}
         </Text>
         <Pressable role="button" aria-label="Query" onPress={onOpenQuery} className="rounded border border-line px-2 py-1">

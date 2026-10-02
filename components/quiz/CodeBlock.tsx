@@ -1,6 +1,8 @@
 // Renders source code as nested Text runs colored per Prism token type,
 // inside a horizontal ScrollView so long lines scroll instead of wrapping.
-import { ScrollView, Text } from 'react-native';
+// On the web the scroller takes keyboard focus so long lines stay reachable
+// without a pointer; native platforms scroll by touch and need no extra stop.
+import { Platform, ScrollView, Text } from 'react-native';
 
 import type { Grammar } from '../../constants/appConfig';
 import { tokenizeCode } from '../../services/codeBlock/tokenizeCode';
@@ -42,7 +44,7 @@ function mergeRuns(tokens: CodeToken[]): ColoredRun[] {
 export function CodeBlock({ className, code, grammar }: CodeBlockProps) {
   const runs = mergeRuns(tokenizeCode(code, grammar));
   return (
-    <ScrollView horizontal className={className}>
+    <ScrollView horizontal tabIndex={Platform.OS === 'web' ? 0 : undefined} className={className}>
       <Text testID="code-block" className="font-mono text-sm text-ink">
         {runs.map(({ color, text }, index) => (
           <Text key={`${index}-${text}`} style={{ color }}>

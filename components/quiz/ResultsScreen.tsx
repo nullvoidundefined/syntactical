@@ -17,7 +17,9 @@ export function ResultsScreen({ accuracy, correctCount, difficultyLabel, languag
   useKeyboardNav({ onAdvance: onRetry, onEscape: onMenu });
   return (
     <View className="flex-1 items-center justify-center px-4 py-8">
-      <Text className="mb-3 font-mono text-xs uppercase tracking-widest text-muted">{`${languageLabel} / ${difficultyLabel} / Complete`}</Text>
+      <Text role="heading" aria-level={1} className="mb-3 font-mono text-xs uppercase tracking-widest text-muted">
+        {`${languageLabel} / ${difficultyLabel} / Complete`}
+      </Text>
       <Text className="font-mono text-5xl text-signal">{`${accuracy}%`}</Text>
       <Text className="mt-3 text-sm text-muted">{`${correctCount} of ${totalQuestions} correct`}</Text>
       <View className="mt-10 w-full max-w-xs gap-3">
