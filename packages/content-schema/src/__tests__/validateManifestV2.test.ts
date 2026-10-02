@@ -309,6 +309,8 @@ describe('validateManifest schema 2', () => {
             ['unknown anywhere', 'generics'],
             ["only in another language's topics", 'security'],
             ['a case variant of a listed topic', 'Strings'],
+            ['a prototype key', '__proto__'],
+            ['constructor, which is not listed', 'constructor'],
         ])('rejects a topicCounts key that is %s', (_description, topicId) => {
             expectRejectedAt(
                 buildManifestWithPythonBank(
@@ -325,6 +327,7 @@ describe('validateManifest schema 2', () => {
             ['a numeric string', '3'],
             ['null', null],
             ['NaN', Number.NaN],
+            ['over the bank question cap', 501],
         ])('rejects a topicCounts value that is %s', (_description, count) => {
             expectRejectedAt(
                 buildManifestWithPythonBank(

@@ -86,7 +86,8 @@ export function QuizRound(props: QuizRoundProps) {
   const { advanceQuestion, currentQuestion, isAnswered, isComplete, submitAnswer, submittedAnswer, wasCorrect } = engine;
   const { recordAnswer } = useQuizStats();
   const [isQueryOpen, setIsQueryOpen] = useState(false);
-  useRoundCompletion(isComplete, { difficulty, language });
+  // A round with no playable questions (an A/B-only bank before Stage 5) is not a completion.
+  useRoundCompletion(isComplete && engine.totalQuestions > 0, { difficulty, language });
 
   function handleAnswer(value: number | boolean) {
     if (isQueryOpen) return;

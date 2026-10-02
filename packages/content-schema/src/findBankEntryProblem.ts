@@ -1,5 +1,6 @@
 // Finds the first rule one manifest bank entry breaks, or null.
 import { SHA256_HEX } from './SHA256_HEX.js';
+import { CONTENT_LIMITS } from './contentLimits.js';
 import { isRecord } from './isRecord.js';
 import { isSafeBankPath } from './isSafeBankPath.js';
 
@@ -24,7 +25,9 @@ export function findBankEntryProblem(
   const listedTopics = new Set(topicIds);
   for (const [topicId, count] of Object.entries(topicCounts)) {
     if (!listedTopics.has(topicId)) return `topicCounts.${topicId} is not a listed topic`;
-    if (!Number.isInteger(count) || (count as number) < 0) return `topicCounts.${topicId} is invalid`;
+    if (!Number.isInteger(count) || (count as number) < 0 || (count as number) > CONTENT_LIMITS.maxQuestions) {
+      return `topicCounts.${topicId} is invalid`;
+    }
   }
   return null;
 }

@@ -15,9 +15,8 @@ function hasText(value: string | undefined): boolean {
 }
 
 function collectRationales(question: Question): (string | undefined)[] {
-  const { type } = question;
-  if (type === 'bool') return [(question as Extract<Question, { type: 'bool' }>).rationale];
-  const { answerIndex, choices } = question as Exclude<Question, { type: 'bool' }>;
+  if (question.type === 'bool') return [question.rationale];
+  const { answerIndex, choices } = question;
   return choices.filter((_choice, index) => index !== answerIndex).map((choice) => choice.rationale);
 }
 

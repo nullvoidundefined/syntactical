@@ -37,6 +37,9 @@ function readBundledBank(language: string, difficulty: string): CachedBank | nul
   return { hash: entry.hash, questions };
 }
 
+// Cached banks are validated against the baseline (cached or bundled) manifest's
+// topics and misconceptions; a bank cached under a newer manifest whose cache is
+// gone may drop questions and fall back to the bundled bank, never crash.
 async function readAllCachedBanks(manifest: Manifest): Promise<Map<string, CachedBank>> {
   const slots = manifest.languages.flatMap((languageEntry) =>
     Object.keys(languageEntry.banks).map((difficulty) => ({ difficulty, language: languageEntry.id, languageEntry })),

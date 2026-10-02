@@ -141,6 +141,13 @@ describe('buildContentManifest', () => {
         await expect(buildContentManifest(contentDir, generatedPath)).rejects.toThrow(/manifest/);
     });
 
+    it('rejects naming the manifest, not a TypeError, when a language topic list is malformed', async () => {
+        const manifest = await readJsonFile<{ languages: Record<string, unknown>[] }>(join(contentDir, 'manifest.json'));
+        manifest.languages[0].topics = [null];
+        await writeJsonFile(join(contentDir, 'manifest.json'), manifest);
+        await expect(buildContentManifest(contentDir, generatedPath)).rejects.toThrow(/manifest\.json is invalid/);
+    });
+
     it('rejects a bank file that starts with a UTF-8 byte-order mark', async () => {
         const bankPath = join(contentDir, 'javascript', 'hard.json');
         const bankBytes = await readFile(bankPath);

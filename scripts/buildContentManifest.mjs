@@ -61,6 +61,33 @@ async function hashAllBanks(contentDir, manifest) {
   );
 }
 
+// Names an unsafe bank path before anything else, so the error points at the
+// path itself and no file outside the content directory is ever read.
+function assertSafeBankPaths(manifest) {
+  for (const language of Array.isArray(manifest?.languages) ? manifest.languages : []) {
+    for (const bank of Object.values(language?.banks ?? {})) {
+      const bankPath = bank?.path;
+      if (typeof bankPath === 'string' && !isSafeBankPath(bankPath)) {
+        throw new Error(`${bankPath} is not a safe bank path`);
+      }
+    }
+  }
+}
+
+// Validates the manifest's shape before any bank is read, so a malformed entry
+// reports the manifest rule instead of failing deep in hashing. Hashes are
+// recomputed afterwards, so stale or empty ones are replaced for this check.
+function withPlaceholderHashes(manifest) {
+  const copy = structuredClone(manifest);
+  if (!Array.isArray(copy?.languages)) return copy;
+  for (const language of copy.languages) {
+    for (const bank of Object.values(language?.banks ?? {})) {
+      if (bank && typeof bank === 'object') bank.hash = '0'.repeat(64);
+    }
+  }
+  return copy;
+}
+
 function assertValidManifest(manifest) {
   const result = validateManifest(manifest);
   if (!result.isValid) throw new Error(`manifest.json is invalid: ${result.rule}`);
@@ -118,6 +145,8 @@ async function writeGeneratedModules(contentDir, outputs, manifest) {
 export async function buildContentManifest(contentDir, outputs) {
   const manifestPath = join(contentDir, 'manifest.json');
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  assertSafeBankPaths(manifest);
+  assertValidManifest(withPlaceholderHashes(manifest));
   await hashAllBanks(contentDir, manifest);
   assertValidManifest(manifest);
   const manifestText = `${JSON.stringify(manifest, null, 2)}\n`;
