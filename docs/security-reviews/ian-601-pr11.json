@@ -1,0 +1,19 @@
+{
+  "reviewer": "security-reviewer subagent",
+  "model": "claude-fable-5-1",
+  "range": "ef08550..4a0309c",
+  "findings": [
+    {
+      "id": 1,
+      "severity": "LOW",
+      "control": "Metro .js-strip origin allowlist (metro.config.js)",
+      "status": "fixed 4a0309c"
+    }
+  ],
+  "nothingFound": [
+    "CI workflow ci.yml: tried untrusted-input interpolation, pull_request_target, secret references; trigger is pull_request, run steps static, no secrets",
+    "Jest moduleNameMapper: tried @syntactical/../../x, @syntactical/content-schema/../x, ./a.js with sibling ./a.ts; anchored mapper, js resolves before ts",
+    "Supply chain: tried non-registry resolved URLs, missing integrity, workspace name collisions; 1085/1085 registry entries with integrity, workspaces private and scoped",
+    "Root tsconfig and Jest ignore patterns: static path lists, no input"
+  ]
+}
