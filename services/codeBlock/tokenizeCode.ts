@@ -10,6 +10,7 @@ import 'prismjs/components/prism-rust';
 import 'prismjs/components/prism-sql';
 import 'prismjs/components/prism-typescript';
 
+import { GRAMMARS } from '../../constants/appConfig';
 import type { Grammar } from '../../constants/appConfig';
 
 import type { CodeToken } from './types/CodeToken';
@@ -26,9 +27,11 @@ function flattenPiece(piece: PrismPiece, outerTypes: string[]): CodeToken[] {
 }
 
 export function tokenizeCode(code: string, grammar: Grammar): CodeToken[] {
-  const languageGrammar = Object.hasOwn(Prism.languages, grammar)
-    ? Prism.languages[grammar]
-    : undefined;
+  const isBuiltGrammar = (GRAMMARS as readonly string[]).includes(grammar);
+  const languageGrammar =
+    isBuiltGrammar && Object.hasOwn(Prism.languages, grammar)
+      ? Prism.languages[grammar]
+      : undefined;
   if (grammar === 'plain' || !languageGrammar) return [{ text: code, types: [] }];
   return Prism.tokenize(code, languageGrammar).flatMap((piece) => flattenPiece(piece, []));
 }
