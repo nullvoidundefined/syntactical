@@ -18,13 +18,15 @@ Syntactical is currently a static Vite + React single-page app deployed to GitHu
 5. The fetched manifest defines the languages and their difficulties as well as pointing to the banks, so adding a language is a JSON push.
 6. The ticket ends with the web build live and EAS internal device builds installable on the owner's phone. App Store and Play Store submission is a follow-up ticket.
 7. The slice 3 threat model and acceptance boundary below are approved as written; content signing is not required.
+8. Target about one day of work: the eight behavior slices ship as three PRs, and bank versions are content hashes computed at build time instead of numbers the owner bumps by hand.
+9. No Playwright suite. This overrides the shared convention that keyboard navigation, screen reader, and reduced-motion behavior are tested in E2E, and R-607's e2e spec per user story; those behaviors are covered by component tests and a manual Lighthouse and screen-reader pass before the web cutover.
 
 ## Domain vocabulary
 
 Existing terms in `docs/lexicon.md` (`bank`, `round`, `query`, `question`, `code block`) keep their meanings. `track`, `tier`, `level`, and `subject` stay banned as identifiers; this spec uses `language` and `difficulty`.
 
-- manifest - the fetched `manifest.json` that lists every language, its display fields, and the bank file and bank version for each of its difficulties - chosen over: `catalog`, `index`, because `index` already names `src/data/index.js` and `catalog` suggests something purchasable.
-- bank version - the integer `version` the manifest records for one bank, raised by the owner on every edit to that bank and compared against the cached bank to decide whether to download - chosen over: `revision`, `etag`, because it is owner-maintained data, not an HTTP header.
+- manifest - the fetched `manifest.json` that lists every language, its display fields, and the bank file and bank hash for each of its difficulties - chosen over: `catalog`, `index`, because `index` already names `src/data/index.js` and `catalog` suggests something purchasable.
+- bank hash - the SHA-256 of a bank file's contents, written into the manifest at build time and compared against the cached bank's hash to decide whether to download - chosen over: `version`, `etag`, because it is computed rather than maintained by hand, and it is manifest data rather than an HTTP header.
 - bundled bank - the copy of a bank shipped inside the app build, used when no cached bank exists - chosen over: `default bank`, `seed`, because `seed` implies a database.
 - cached bank - the last validated bank downloaded at runtime and stored on the device - chosen over: `stored bank`, `local bank`.
 - content base URL - the absolute URL the manifest and banks are fetched from, configured as `CONTENT_BASE_URL` - chosen over: `api url`, because there is no API.
@@ -36,14 +38,14 @@ Ordered by slice. Each line is one behavior a test can fail.
 - B-1 (slice 1): The Expo web export builds, and its root route renders the app shell with one `h1` on web, iOS, and Android.
 - B-2 (slice 2): `storageClient.readJson` returns the fallback when the key is missing, when the stored value is not valid JSON, and when storage throws.
 - B-3 (slice 2): Stats written by the current Vite build under `syntactical.stats.v1` are read unchanged by the Expo web build served from the same origin.
-- B-4 (slice 3): `exportQuestionBanks` produces nine bank files whose questions deep-equal the current `src/data` modules, and a manifest listing the three current languages with every bank version at 1.
+- B-4 (slice 3): `exportQuestionBanks` produces nine bank files whose questions deep-equal the current `src/data` modules, and a manifest listing the three current languages.
 - B-5 (slice 3): `validateManifest` rejects each malformed manifest field named under Validation rules, including a bank path containing `..` or an absolute URL.
 - B-6 (slice 3): `validateQuestionBank` drops each malformed question named under Validation rules and keeps the valid questions in the same bank.
 - B-7 (slice 3): A bank or manifest whose `schemaVersion` is newer than the app supports, or a bank with zero valid questions, is rejected as a whole and the previous copy stays in use.
 - B-8 (slice 3): `useQuestionBank` returns the cached bank, or the bundled bank when none is cached, before any fetch resolves.
-- B-9 (slice 3): A fetched bank whose bank version is newer than the cached bank's and that validates is written to the cache, and one whose version is not newer is not fetched.
+- B-9 (slice 3): A bank whose manifest hash differs from the cached bank's is fetched and, when it validates, written to the cache; a bank whose hash matches is not fetched.
 - B-10 (slice 3): A fetch that fails or exceeds 8 seconds leaves the current copy in use and shows no error.
-- B-11 (slice 3): `checkBankVersions` exits non-zero when a bank file's contents differ from `main` and its bank version in the manifest did not increase.
+- B-11 (slice 3): `buildContentManifest` writes the SHA-256 of each bank file into the manifest, and the deploy workflow runs it before publishing `content/`.
 - B-12 (slice 3): A prompt, a choice, and a query explanation containing `<script>` and HTML markup render as literal text.
 - B-13 (slice 4): The language step lists every language in the manifest, and the difficulty step lists only the difficulties that language's `banks` names.
 - B-14 (slice 4): A difficulty with no cached or bundled bank while offline is disabled and labeled "Needs a connection to load".
@@ -52,7 +54,7 @@ Ordered by slice. Each line is one behavior a test can fail.
 - B-17 (slice 5): Stats recorded during a round appear in the stats panel and persist across an app restart.
 - B-18 (slice 6): `CodeBlock` renders `question.code` and `query.syntax` as Prism tokens in nested `Text` with token classes mapped to colors, and never uses `dangerouslySetInnerHTML`.
 - B-19 (slice 7): On the web build, every binding in `KEY_BINDINGS` performs its action, and on native the keyboard hint bar is not rendered.
-- B-20 (slice 7): The Playwright suite covers a full round, stats surviving a reload, and offline fallback, and the web build scores 100 on Lighthouse accessibility.
+- B-20 (slice 7): Before the web cutover, a manual Lighthouse run on the web build scores 100 on accessibility, and a screen-reader and reduced-motion pass is recorded in the PR body.
 - B-21 (slice 7): The GitHub Pages deploy publishes the Expo web export and `content/`, and the repository no longer contains Vite configuration or dependencies.
 - B-22 (slice 8): An EAS internal-distribution build installs and completes a round on an iOS device and an Android device, recorded in the manual checklist.
 
@@ -83,7 +85,7 @@ content/                          source of truth for question content
   <language>/<difficulty>.json
 scripts/
   exportQuestionBanks             one-time: converts src/data/*.js to content/*.json
-  checkBankVersions               CI: fails when a bank's contents changed without a bank version bump
+  buildContentManifest            build and deploy: writes each bank's hash into manifest.json
 ```
 
 Dependencies flow `app -> components -> hooks -> services -> clients` (R-303).
@@ -91,14 +93,14 @@ Dependencies flow `app -> components -> hooks -> services -> clients` (R-303).
 ### Content load sequence
 
 1. `useQuestionBank` returns the cached bank immediately, or the bundled bank when no cached bank exists, so a round starts without waiting on the network.
-2. In the background, `loadLanguageManifest` fetches `manifest.json`, then `loadQuestionBank` fetches the bank file when the manifest's bank version is newer than the cached bank's.
+2. In the background, `loadLanguageManifest` fetches `manifest.json`, then `loadQuestionBank` fetches the bank file when the manifest's bank hash differs from the cached bank's.
 3. Each fetched document passes through its validator. A document that passes is written to the cache and used from the next round on. A document that fails is discarded and the previous copy stays in use.
 
 The manifest follows the same rule: cached manifest first, bundled manifest when none is cached, refreshed in the background.
 
 ### Data conversion
 
-`scripts/exportQuestionBanks` reads the nine current bank modules and writes them to `content/` as JSON with no change to the question objects. It writes the initial manifest from `LANGUAGES` and `DIFFICULTIES` in `appConfig.js`, every bank version starting at 1. After the export, `src/data/` and the language and difficulty lists in `appConfig.js` are deleted, and `content/` becomes the only place questions are edited.
+`scripts/exportQuestionBanks` reads the nine current bank modules and writes them to `content/` as JSON with no change to the question objects. It writes the initial manifest from `LANGUAGES` and `DIFFICULTIES` in `appConfig.js`. The owner edits the manifest's display fields and bank paths by hand; `buildContentManifest` fills in every bank hash, so the owner never edits a hash. After the export, `src/data/` and the language and difficulty lists in `appConfig.js` are deleted, and `content/` becomes the only place questions are edited.
 
 ### Storage
 
@@ -121,9 +123,9 @@ The manifest follows the same rule: cached manifest first, bundled manifest when
       "glyph": "PY",
       "tagline": "Runtime semantics, stdlib, and the sharp edges.",
       "banks": {
-        "easy":   { "path": "python/easy.json",   "version": 1 },
-        "medium": { "path": "python/medium.json", "version": 1 },
-        "hard":   { "path": "python/hard.json",   "version": 1 }
+        "easy":   { "path": "python/easy.json",   "hash": "<sha256 of the file>" },
+        "medium": { "path": "python/medium.json", "hash": "<sha256 of the file>" },
+        "hard":   { "path": "python/hard.json",   "hash": "<sha256 of the file>" }
       }
     }
   ]
@@ -139,7 +141,7 @@ Difficulty display fields (label and description) stay in the app, since they ar
 
 ### Validation rules
 
-The validators are hand-written (no schema library, R-331). A manifest is valid when `schemaVersion` is an integer the app supports and every language has a non-empty string `id`, `label`, `glyph`, and `tagline`, and a `banks` object whose keys are known difficulty ids and whose values have a relative `path` ending in `.json` with no `..` segment and an integer `version` of at least 1.
+The validators are hand-written (no schema library, R-331). A manifest is valid when `schemaVersion` is an integer the app supports and every language has a non-empty string `id`, `label`, `glyph`, and `tagline`, and a `banks` object whose keys are known difficulty ids and whose values have a relative `path` ending in `.json` with no `..` segment and a `hash` of 64 lowercase hexadecimal characters.
 
 A question is valid when it has a non-empty string `id`, `prompt`, `query.title`, and `query.explanation`, and either `type: "mc"` with a `choices` array of 2 to 6 non-empty strings and an integer `answerIndex` inside that array, or `type: "bool"` with a boolean `answer`. Optional `code`, `query.syntax`, and `query.tags` must be a string, a string, and an array of strings when present.
 
@@ -169,10 +171,9 @@ The rule is that the user always gets a round.
 |---|---|---|
 | Unit | Jest through `jest-expo` | Services, validators, the content loader, the storage client, and hooks |
 | Component | React Native Testing Library | Cards, the menu steps, the query drawer, the code block, and the stats panel |
-| E2E (web) | Playwright against the Expo web export | Choosing a language and difficulty, answering, results, stats surviving a reload, offline fallback, keyboard navigation, and accessibility |
 | Native | Manual checklist on a device build | The same main path, safe-area insets, and the query drawer |
 
-Jest replaces `node --test` because Expo's toolchain supports only Jest; Vitest, the house default, is not supported for React Native (R-331). The existing `highlightQuestionCode` test is ported. Accessibility on the web build must reach a Lighthouse accessibility score of 100.
+Jest replaces `node --test` because Expo's toolchain supports only Jest; Vitest, the house default, is not supported for React Native (R-331). The existing `highlightQuestionCode` test is ported. There is no E2E suite (owner decision 9); a full round, stats persistence, offline fallback, and keyboard bindings are covered at the component and hook level. Accessibility on the web build must reach a Lighthouse accessibility score of 100, checked manually before the cutover.
 
 ## Slices
 
@@ -180,14 +181,22 @@ Jest replaces `node --test` because Expo's toolchain supports only Jest; Vitest,
 |---|---|---|
 | 1 | Expo scaffold: Expo Router, NativeWind, Jest, and the web export deploying to a Pages preview path as an empty app shell | standard |
 | 2 | `storageClient` on AsyncStorage; stats service and hook ported with the `syntactical.stats.v1` key unchanged | standard |
-| 3 | Content: the export script, `content/` JSON, validators, `contentClient`, the loaders, cache and fallback, and the `checkBankVersions` CI step | high |
+| 3 | Content: the export script, `content/` JSON, validators, `contentClient`, the loaders, cache and fallback, and `buildContentManifest` | high |
 | 4 | Menu screens (language step, difficulty step) rendered from the manifest | standard |
 | 5 | Quiz screens: the cards, progress bar, results, the query drawer as a `Modal`, and the stats panel | standard |
 | 6 | `CodeBlock` built from `Prism.tokenize()` tokens rendered as nested `Text` | standard |
-| 7 | Web parity: keyboard shortcuts on the web, accessibility, the Playwright suite, and removal of Vite | standard |
+| 7 | Web parity: keyboard shortcuts on the web, accessibility, and removal of Vite | standard |
 | 8 | EAS internal device builds, and the docs: `docs/stack.md`, the feature list, user stories, and the README | standard |
 
-Each slice ships as one PR off `main`, except that slices 1 to 7 replace the Vite app progressively, so the web deploy switches from Vite to Expo only in slice 7. Until then the Expo build deploys to a preview path and the live site stays on Vite.
+The slices ship as three PRs off `main` (owner decision 8), each PR running its slices in order under the TDD lock:
+
+| PR | Slices | Risk |
+|---|---|---|
+| 1 | 1, 2, 3: scaffold, storage, content | high, because slice 3 is |
+| 2 | 4, 5, 6: every screen and `CodeBlock` | standard |
+| 3 | 7, 8: web parity, the cutover from Vite, EAS builds, docs | standard |
+
+The web deploy switches from Vite to Expo only in PR 3. Until then the Expo build deploys to a preview path and the live site stays on Vite.
 
 ## Non-goals
 
