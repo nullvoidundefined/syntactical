@@ -2,7 +2,7 @@
 // the rest kept; a malformed root, an unsupported schema, too many
 // questions, or no valid questions rejects the bank as a whole.
 import { CONTENT_LIMITS } from './contentLimits.js';
-import { BANK_SCHEMA_VERSION } from './bankSchemaVersion.js';
+import { SUPPORTED_SCHEMA_VERSION } from './supportedSchemaVersion.js';
 import { collectMisconceptionIds } from './collectMisconceptionIds.js';
 import { isRecord } from './isRecord.js';
 import { isValidProvenance } from './isValidProvenance.js';
@@ -171,7 +171,7 @@ export function validateQuestionBank(input: unknown, context: BankContext): Bank
     return { isValid: false, rule: 'root shape is invalid' };
   }
   const { questions: inputQuestions, schemaVersion } = input;
-  if (schemaVersion !== BANK_SCHEMA_VERSION) {
+  if (schemaVersion !== SUPPORTED_SCHEMA_VERSION) {
     return { isValid: false, rule: 'schemaVersion is not supported' };
   }
   if (inputQuestions.length > CONTENT_LIMITS.maxQuestions) {

@@ -12,6 +12,7 @@ const LONG_TEXT_LENGTH = 4000;
 const MAX_TAGS = 10;
 const TAG_LENGTH = 40;
 const RATIONALE_LENGTH = 280;
+const MISCONCEPTION_DESCRIPTION_LENGTH = 280;
 const FETCH_TIMEOUT_MS = 8000;
 
 export const CONTENT_LIMITS = {
@@ -25,6 +26,7 @@ export const CONTENT_LIMITS = {
   maxQuestions: MAX_QUESTIONS_PER_BANK,
   maxTags: MAX_TAGS,
   minChoices: 2,
+  misconceptionDescriptionLength: MISCONCEPTION_DESCRIPTION_LENGTH,
   promptLength: PROMPT_LENGTH,
   queryTitleLength: QUERY_TITLE_LENGTH,
   rationaleLength: RATIONALE_LENGTH,
