@@ -1,0 +1,15 @@
+{
+  "reviewer": "security-reviewer subagent",
+  "model": "claude-fable-5-1",
+  "range": "c916ef3..86aaf06",
+  "rounds": [
+    { "round": 1, "range": "c916ef3..20f59ed", "findings": 0 },
+    { "round": 2, "range": "c916ef3..86aaf06", "findings": 0 }
+  ],
+  "findings": [],
+  "nothingFound": [
+    "validateManifest, validateQuestionBank, isSafeBankPath, SHA256_HEX, isRecord: moved byte-equivalent apart from imports; tried bank path traversal (../, %2e%2e, backslash, absolute URL), non-hex and g-prefixed hashes, schemaVersion 0/2/string/null, unknown and mixed-case difficulty keys, oversized fields and content",
+    "CONTENT_LIMITS, SUPPORTED_SCHEMA_VERSION, DIFFICULTIES, GRAMMARS, QUESTION_TYPES: values identical after the move and the per-module split",
+    "Call sites: every consumer still validates (loaders, cache reads, ContentProvider, content build); insecure-value tests moved and run under vitest (191 passing)"
+  ]
+}
