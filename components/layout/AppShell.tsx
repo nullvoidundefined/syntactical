@@ -1,11 +1,14 @@
-// The persistent frame: brand mark, live streak readout, and the content
-// slot every route renders into, inside the safe area.
+// The persistent frame: brand mark, live streak readout, the download
+// indicator, and the content slot every route renders into, inside the
+// safe area.
 import type { ReactNode } from 'react';
 
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useQuizStats } from '../../state/StatsProvider';
+
+import { DownloadIndicator } from './DownloadIndicator';
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { stats } = useQuizStats();
@@ -18,6 +21,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           streak <Text className="text-signal">{current}</Text> / best <Text className="text-ink">{best}</Text>
         </Text>
       </View>
+      <DownloadIndicator />
       <View className="flex-1">{children}</View>
     </SafeAreaView>
   );
