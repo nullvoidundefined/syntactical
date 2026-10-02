@@ -1,6 +1,8 @@
 // Shown when a round ends: accuracy, correct count, and Retry or Menu.
 import { Pressable, Text, View } from 'react-native';
 
+import { useKeyboardNav } from '../../state/useKeyboardNav';
+
 type ResultsScreenProps = {
   accuracy: number;
   correctCount: number;
@@ -12,6 +14,7 @@ type ResultsScreenProps = {
 };
 
 export function ResultsScreen({ accuracy, correctCount, difficultyLabel, languageLabel, onMenu, onRetry, totalQuestions }: ResultsScreenProps) {
+  useKeyboardNav({ onAdvance: onRetry, onEscape: onMenu });
   return (
     <View className="flex-1 items-center justify-center px-4 py-8">
       <Text className="mb-3 font-mono text-xs uppercase tracking-widest text-muted">{`${languageLabel} / ${difficultyLabel} / Complete`}</Text>

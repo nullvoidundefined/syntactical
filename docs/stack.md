@@ -1,13 +1,11 @@
 # Syntactical Stack
 
 Every significant language, runtime, framework, library, tool, service, and
-infrastructure piece this application uses, grouped by layer. Until the IAN-564
-cutover (PR 3) the repository holds two apps side by side: the live Vite web
-app in `src/` and the Expo universal app in `app/`, `components/`, `state/`,
-`services/`, `clients/`, `config/`, and `constants/`. Entries marked "Vite app"
-are removed at the cutover.
+infrastructure piece this application uses, grouped by layer. The repository holds
+one Expo universal app in `app/`, `components/`, `state/`, `services/`, `clients/`,
+`config/`, and `constants/`; it builds for iOS, Android, and the web.
 
-Last updated: 2026-10-02 (stack document created with the Expo app's foundation, IAN-564 PR 1)
+Last updated: 2026-10-02 (Vite app, gh-pages, and the Tailwind 4 alias removed at the cutover, EAS added, IAN-564)
 
 ## Languages and runtimes
 
@@ -17,7 +15,7 @@ Last updated: 2026-10-02 (stack document created with the Expo app's foundation,
 - **What it is:** JavaScript with static types, checked at build time.
 - **Docs:** https://www.typescriptlang.org/docs/
 - **Role here:** The language of the Expo app; `npx tsc --noEmit` runs in CI.
-- **Why chosen:** Expo's templates and tooling are TypeScript-first, and the content validators and query layer benefit from checked shapes. The Vite app stays JavaScript until it is deleted.
+- **Why chosen:** Expo's templates and tooling are TypeScript-first, and the content validators and query layer benefit from checked shapes.
 - **Configured in:** `tsconfig.json` (extends `expo/tsconfig.base`, strict).
 
 ### Node.js
@@ -54,7 +52,7 @@ Last updated: 2026-10-02 (stack document created with the Expo app's foundation,
 - **Version:** 19.2.3
 - **What it is:** The UI library both apps are written in.
 - **Docs:** https://react.dev/
-- **Role here:** Components and hooks for the Expo app and the Vite app.
+- **Role here:** Components and hooks for every screen of the Expo app.
 - **Why chosen:** Already the project's UI library; the version is pinned to what Expo SDK 57 requires.
 - **Configured in:** `package.json`.
 
@@ -73,7 +71,7 @@ Last updated: 2026-10-02 (stack document created with the Expo app's foundation,
 - **What it is:** An implementation of React Native's components on top of the DOM.
 - **Docs:** https://necolas.github.io/react-native-web/
 - **Role here:** Renders the Expo app in the browser, so one codebase serves the web build.
-- **Why chosen:** Expo's standard web target; the alternative, keeping the Vite app, was rejected in favor of one codebase (owner decision 1).
+- **Why chosen:** Expo's standard web target; the alternative, a separate web app, was rejected in favor of one codebase (owner decision 1).
 - **Configured in:** `package.json`; used automatically by Expo's web bundler.
 
 ### NativeWind
@@ -81,18 +79,18 @@ Last updated: 2026-10-02 (stack document created with the Expo app's foundation,
 - **Version:** ^4.2.7 (with react-native-css-interop ^0.2.7)
 - **What it is:** Tailwind CSS class names for React Native components, compiled to native styles.
 - **Docs:** https://www.nativewind.dev/
-- **Role here:** Styles every Expo component with the same Tailwind utility classes the Vite app used.
+- **Role here:** Styles every Expo component with Tailwind utility classes, the same styling vocabulary the earlier web app used.
 - **Why chosen:** Owner decision 2 keeps Tailwind; v4 is the stable release (v5, which supports Tailwind 4, is a pre-release). `react-native-css-interop` is a direct dependency because npm nested it under NativeWind, where Babel's JSX runtime could not resolve it.
 - **Configured in:** `tailwind.config.js`, `global.css`, `babel.config.js`, `metro.config.js`, `nativewind-env.d.ts`.
 
 ### Tailwind CSS
 
-- **Version:** ^3.4.19 (Expo app); 4.3.3 as the npm alias `tailwindcss-v4` (Vite app)
+- **Version:** ^3.4.19
 - **What it is:** A utility-first CSS framework.
 - **Docs:** https://v3.tailwindcss.com/docs
-- **Role here:** The theme (the obsidian/signal palette and fonts) in `tailwind.config.js` for NativeWind. The Vite app imports Tailwind 4 through the `tailwindcss-v4` alias, because only one `tailwindcss` can sit at the package root and NativeWind needs version 3; the alias goes away with the Vite app at the cutover.
-- **Why chosen:** Already the project's styling system; v3 because NativeWind 4 requires it.
-- **Configured in:** `tailwind.config.js` (Expo), `src/index.css` (Vite app).
+- **Role here:** The theme (the obsidian/signal palette and fonts) in `tailwind.config.js`, consumed by NativeWind.
+- **Why chosen:** Already the project's styling system; version 3 because NativeWind 4 requires it.
+- **Configured in:** `tailwind.config.js`, `global.css`.
 
 ### react-native-safe-area-context
 
@@ -135,18 +133,9 @@ Last updated: 2026-10-02 (stack document created with the Expo app's foundation,
 - **Version:** ^1.30.0
 - **What it is:** A syntax highlighter that tokenizes code by language grammar.
 - **Docs:** https://prismjs.com/
-- **Role here:** Highlights question code. The Vite app renders its HTML output; the Expo app renders its tokens as nested `Text` runs and never renders HTML, and a grammar outside the build's `GRAMMARS` list renders as plain text.
+- **Role here:** Highlights question code. The app renders Prism tokens as nested `Text` runs and never renders HTML, and a grammar outside the build's `GRAMMARS` list renders as plain text.
 - **Why chosen:** Already in use; its tokenizer runs without a DOM, so the native app can reuse it.
-- **Configured in:** `services/codeBlock/tokenizeCode.ts` and `components/quiz/CodeBlock.tsx` (Expo app); `services/codeBlock/types/prismjs.d.ts` holds local typings so no `@types/prismjs` dependency is needed; `src/components/quiz/highlightQuestionCode.js` (Vite app, removed in PR 3).
-
-### Vite and @vitejs/plugin-react (Vite app)
-
-- **Version:** ^8.3.0, ^6.1.1
-- **What it is:** The bundler and dev server for the current web app.
-- **Docs:** https://vite.dev/guide/
-- **Role here:** Builds the live site at `/syntactical/` until the PR 3 cutover.
-- **Why chosen:** The original stack; removed at the cutover.
-- **Configured in:** `vite.config.js`, `index.html`.
+- **Configured in:** `services/codeBlock/tokenizeCode.ts` and `components/quiz/CodeBlock.tsx`; `services/codeBlock/types/prismjs.d.ts` holds local typings so no `@types/prismjs` dependency is needed.
 
 ## Data
 
@@ -155,7 +144,7 @@ Last updated: 2026-10-02 (stack document created with the Expo app's foundation,
 - **Version:** 2.2.0
 - **What it is:** A key-value store for React Native, backed by `localStorage` on the web.
 - **Docs:** https://react-native-async-storage.github.io/async-storage/
-- **Role here:** Stores lifetime stats under `syntactical.stats.v1` and the hash-bound content cache under `syntactical.content.v1.`; on the web it reads the stats the Vite app already wrote.
+- **Role here:** Stores lifetime stats under `syntactical.stats.v1` and the hash-bound content cache under `syntactical.content.v1.`; on the web it reads the stats the earlier web app wrote under the same key.
 - **Why chosen:** Small JSON documents need no database; SQLite would not remove the hydration or ordering work (spec review stack option 7).
 - **Configured in:** `clients/readJson.ts`, `clients/writeJson.ts`, `constants/appConfig.ts`.
 
@@ -184,7 +173,7 @@ Last updated: 2026-10-02 (stack document created with the Expo app's foundation,
 - **Version:** 12.0.1
 - **What it is:** Network connectivity status for React Native.
 - **Docs:** https://github.com/react-native-netinfo/react-native-netinfo
-- **Role here:** Lets the difficulty step label a bank with no local copy as "Needs a connection to load" while offline (PR 2).
+- **Role here:** Lets the difficulty step label a bank with no local copy as "Needs a connection to load" while offline.
 - **Why chosen:** The standard connectivity module for React Native.
 - **Configured in:** `package.json`.
 
@@ -253,7 +242,7 @@ Last updated: 2026-10-02 (stack document created with the Expo app's foundation,
 - **Version:** none (hosted service)
 - **What it is:** GitHub's CI and deployment runner.
 - **Docs:** https://docs.github.com/actions
-- **Role here:** `ci.yml` runs lint, type check, tests, both builds, and the content drift check on every pull request; `deploy.yml` publishes to Pages on every push to `main`.
+- **Role here:** `ci.yml` runs lint, type check, tests, the web build, and the content drift check on every pull request; `deploy.yml` publishes to Pages on every push to `main`.
 - **Why chosen:** The repository already deploys through it.
 - **Configured in:** `.github/workflows/ci.yml`, `.github/workflows/deploy.yml`.
 
@@ -264,15 +253,15 @@ Last updated: 2026-10-02 (stack document created with the Expo app's foundation,
 - **Version:** none (hosted service)
 - **What it is:** Static hosting from a GitHub repository.
 - **Docs:** https://docs.github.com/pages
-- **Role here:** Serves the web app at `/syntactical/`, the Expo preview at `/syntactical/preview/` until the cutover, and the question content (`content/`) the app downloads at runtime.
+- **Role here:** Serves the Expo web export at `/syntactical/` and the question content (`content/`) the app downloads at runtime.
 - **Why chosen:** Free static hosting already in use; owner decision 3 serves question content from it instead of a CMS or API.
 - **Configured in:** `.github/workflows/deploy.yml`, `scripts/copySpaFallback.mjs`.
 
-### gh-pages (Vite app)
+### EAS (Expo Application Services)
 
-- **Version:** ^6.3.0
-- **What it is:** A CLI that pushes a directory to a `gh-pages` branch.
-- **Docs:** https://github.com/tschaub/gh-pages
-- **Role here:** The old manual `npm run deploy` path; unused by CI and removed at the cutover.
-- **Why chosen:** Legacy; superseded by the Actions deploy.
-- **Configured in:** `package.json`.
+- **Version:** none (hosted service; the CLI runs through `npx eas-cli@latest`)
+- **What it is:** Expo's cloud build service for native iOS and Android binaries.
+- **Docs:** https://docs.expo.dev/eas/
+- **Role here:** Builds the internal-distribution `preview` profile (an Android APK and an iOS build) for the manual device checklist; it is not part of CI or the Pages deploy.
+- **Why chosen:** The build service Expo supports, so no local Xcode or Android Studio setup is required to produce a device build.
+- **Configured in:** `eas.json`, `docs/device-checklist.md`.

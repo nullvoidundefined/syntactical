@@ -65,3 +65,14 @@ export const CONTENT_LIMITS = {
   queryTitleLength: QUERY_TITLE_LENGTH,
   tagLength: TAG_LENGTH,
 } as const;
+
+// Web keyboard bindings, matched case-insensitively. A choice key's position
+// in its row of four is the choice index (1 and A select the first choice).
+export const KEY_BINDINGS = {
+  boolFalse: ['F'],
+  boolTrue: ['T'],
+  choice: ['1', '2', '3', '4', 'A', 'B', 'C', 'D'],
+  escape: ['Escape'],
+  next: ['Enter'],
+  query: ['Q'],
+} as const;
