@@ -3,8 +3,10 @@
 // questions, or no valid questions rejects the bank as a whole.
 import { CONTENT_LIMITS } from './contentLimits.js';
 import { BANK_SCHEMA_VERSION } from './bankSchemaVersion.js';
+import { collectMisconceptionIds } from './collectMisconceptionIds.js';
 import { isRecord } from './isRecord.js';
 import { isValidProvenance } from './isValidProvenance.js';
+import type { BankContext } from './types/BankContext.js';
 import type { Question } from './types/Question.js';
 
 const QUESTION_ID = /^[a-z0-9-]{1,64}$/;
@@ -92,8 +94,14 @@ function hasLongRationale(question: Record<string, unknown>): boolean {
   );
 }
 
+function findUnknownReferenceRule(question: Record<string, unknown>, context: BankContext): string | null {
+  if (typeof question.topic === 'string' && !context.topicIds.includes(question.topic)) return 'unknown-topic';
+  const hasUnknownId = collectMisconceptionIds(question).some((id) => !context.misconceptionIds.includes(id));
+  return hasUnknownId ? 'unknown-misconception' : null;
+}
+
 // Returns the rule a question breaks, or null when it is valid.
-function findBrokenRule(question: unknown): string | null {
+function findBrokenRule(question: unknown, context: BankContext): string | null {
   if (!isRecord(question)) return 'malformed question';
   const { code, id, prompt, query, topic } = question;
   const { longTextLength, promptLength } = CONTENT_LIMITS;
@@ -107,14 +115,15 @@ function findBrokenRule(question: unknown): string | null {
   if (!isShapeValid) return 'malformed question';
   if (hasLongRationale(question)) return 'rationale-too-long';
   if (!isValidAnswerShape(question)) return 'malformed question';
-  return isValidProvenance(question.provenance) ? null : 'missing-provenance';
+  if (!isValidProvenance(question.provenance)) return 'missing-provenance';
+  return findUnknownReferenceRule(question, context);
 }
 
 function describeQuestionId(question: unknown): string {
   return isRecord(question) && typeof question.id === 'string' ? question.id : '(no id)';
 }
 
-function partitionQuestions(entries: unknown[]): {
+function partitionQuestions(entries: unknown[], context: BankContext): {
   dropped: DroppedQuestion[];
   droppedQuestionIds: string[];
   questions: Question[];
@@ -123,7 +132,7 @@ function partitionQuestions(entries: unknown[]): {
   const questions: Question[] = [];
   const dropped: DroppedQuestion[] = [];
   for (const entry of entries) {
-    const rule = findBrokenRule(entry);
+    const rule = findBrokenRule(entry, context);
     if (rule === null && !seenIds.has((entry as Question).id)) {
       seenIds.add((entry as Question).id);
       questions.push(entry as Question);
@@ -134,7 +143,7 @@ function partitionQuestions(entries: unknown[]): {
   return { dropped, droppedQuestionIds: dropped.map((drop) => drop.id), questions };
 }
 
-export function validateQuestionBank(input: unknown): BankResult {
+export function validateQuestionBank(input: unknown, context: BankContext): BankResult {
   if (!isRecord(input) || !Array.isArray(input.questions)) {
     return { isValid: false, rule: 'root shape is invalid' };
   }
@@ -145,7 +154,7 @@ export function validateQuestionBank(input: unknown): BankResult {
   if (inputQuestions.length > CONTENT_LIMITS.maxQuestions) {
     return { isValid: false, rule: 'too many questions' };
   }
-  const { dropped, droppedQuestionIds, questions } = partitionQuestions(inputQuestions);
+  const { dropped, droppedQuestionIds, questions } = partitionQuestions(inputQuestions, context);
   if (questions.length === 0) return { isValid: false, rule: 'no valid questions' };
   return { dropped, droppedQuestionIds, isValid: true, questions };
 }

@@ -4,6 +4,9 @@ import { describe, expect, it } from 'vitest';
 
 import { validateQuestionBank } from '../validateQuestionBank.js';
 
+// No fixture here carries a topic or misconceptionId, so the context lists none.
+const CONTEXT = { topicIds: [], misconceptionIds: [] };
+
 function buildBooleanQuestion(id: string): Record<string, unknown> {
     return {
         id,
@@ -33,7 +36,7 @@ describe('validateQuestionBank rejects the whole bank', () => {
         ['carrying questions as an object', buildBank({ 'q-1': buildBooleanQuestion('q-1') })],
         ['carrying questions as a string', buildBank('q-1')],
     ])('with the root shape rule when the root is %s', (_description, input) => {
-        expect(validateQuestionBank(input)).toEqual({ isValid: false, rule: 'root shape is invalid' });
+        expect(validateQuestionBank(input, CONTEXT)).toEqual({ isValid: false, rule: 'root shape is invalid' });
     });
 
     it.each([
@@ -47,7 +50,7 @@ describe('validateQuestionBank rejects the whole bank', () => {
         ['one (schema 1)', 1],
     ])('with the schemaVersion rule when schemaVersion is %s', (_description, schemaVersion) => {
         const bank = buildBank([buildBooleanQuestion('q-1')], { schemaVersion });
-        expect(validateQuestionBank(bank)).toEqual({
+        expect(validateQuestionBank(bank, CONTEXT)).toEqual({
             isValid: false,
             rule: 'schemaVersion is not supported',
         });
@@ -55,7 +58,7 @@ describe('validateQuestionBank rejects the whole bank', () => {
 
     it('with the schemaVersion rule when the bank has no schemaVersion key', () => {
         const bank = { questions: [buildBooleanQuestion('q-1')] };
-        expect(validateQuestionBank(bank)).toEqual({
+        expect(validateQuestionBank(bank, CONTEXT)).toEqual({
             isValid: false,
             rule: 'schemaVersion is not supported',
         });

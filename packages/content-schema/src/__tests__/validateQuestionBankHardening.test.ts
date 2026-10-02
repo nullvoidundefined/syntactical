@@ -10,6 +10,9 @@ type QuestionFixture = Record<string, unknown>;
 
 const OVER_DISPLAY_FIELD = 'x'.repeat(CONTENT_LIMITS.displayFieldLength + 1);
 
+// Fixtures carry only empty or malformed references, so the context lists none.
+const CONTEXT = { topicIds: [], misconceptionIds: [] };
+
 function buildProvenance(overrides: QuestionFixture = {}): QuestionFixture {
     return {
         source: 'generated',
@@ -60,14 +63,14 @@ describe('validateQuestionBank hardening (B-3b)', () => {
         it('drops an mc question whose topic is the empty string', () => {
             const kept = buildBooleanQuestion('q-1');
             const malformed = buildMultipleChoiceQuestion('q-2', { topic: '' });
-            const result = validateQuestionBank(buildBank([kept, malformed]));
+            const result = validateQuestionBank(buildBank([kept, malformed]), CONTEXT);
             expect(result).toEqual(bankWithOneDrop([kept], 'q-2', 'malformed question'));
         });
 
         it('drops a bool question whose topic is the empty string', () => {
             const kept = buildMultipleChoiceQuestion('q-1');
             const malformed = buildBooleanQuestion('q-2', { topic: '' });
-            const result = validateQuestionBank(buildBank([kept, malformed]));
+            const result = validateQuestionBank(buildBank([kept, malformed]), CONTEXT);
             expect(result).toEqual(bankWithOneDrop([kept], 'q-2', 'malformed question'));
         });
 
@@ -76,14 +79,14 @@ describe('validateQuestionBank hardening (B-3b)', () => {
             const malformed = buildMultipleChoiceQuestion('q-2', {
                 choices: [{ text: '1' }, { text: '2', misconceptionId: '' }, { text: '3' }],
             });
-            const result = validateQuestionBank(buildBank([kept, malformed]));
+            const result = validateQuestionBank(buildBank([kept, malformed]), CONTEXT);
             expect(result).toEqual(bankWithOneDrop([kept], 'q-2', 'malformed question'));
         });
 
         it('drops a bool question whose misconceptionId is the empty string', () => {
             const kept = buildMultipleChoiceQuestion('q-1');
             const malformed = buildBooleanQuestion('q-2', { misconceptionId: '' });
-            const result = validateQuestionBank(buildBank([kept, malformed]));
+            const result = validateQuestionBank(buildBank([kept, malformed]), CONTEXT);
             expect(result).toEqual(bankWithOneDrop([kept], 'q-2', 'malformed question'));
         });
     });
@@ -96,7 +99,7 @@ describe('validateQuestionBank hardening (B-3b)', () => {
         ])('drops a question whose provenance %s is 121 characters', (_field, provenance) => {
             const kept = buildBooleanQuestion('q-1');
             const malformed = buildMultipleChoiceQuestion('q-2', { provenance });
-            const result = validateQuestionBank(buildBank([kept, malformed]));
+            const result = validateQuestionBank(buildBank([kept, malformed]), CONTEXT);
             expect(result).toEqual(bankWithOneDrop([kept], 'q-2', 'missing-provenance'));
         });
     });
@@ -112,7 +115,7 @@ describe('validateQuestionBank hardening (B-3b)', () => {
             const malformed = buildMultipleChoiceQuestion('q-2', {
                 provenance: buildProvenance({ validation: { method: 'executed', status } }),
             });
-            const result = validateQuestionBank(buildBank([kept, malformed]));
+            const result = validateQuestionBank(buildBank([kept, malformed]), CONTEXT);
             expect(result).toEqual(bankWithOneDrop([kept], 'q-2', 'missing-provenance'));
         });
 
@@ -121,7 +124,7 @@ describe('validateQuestionBank hardening (B-3b)', () => {
             const malformed = buildBooleanQuestion('q-2', {
                 provenance: buildProvenance({ validation: { method: 'judged', status: 'needs-review' } }),
             });
-            const result = validateQuestionBank(buildBank([kept, malformed]));
+            const result = validateQuestionBank(buildBank([kept, malformed]), CONTEXT);
             expect(result).toEqual(bankWithOneDrop([kept], 'q-2', 'missing-provenance'));
         });
     });

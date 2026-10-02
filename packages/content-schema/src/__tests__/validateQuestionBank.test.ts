@@ -6,6 +6,11 @@ type QuestionFixture = Record<string, unknown>;
 
 const MAX_RATIONALE_LENGTH = 280;
 
+const CONTEXT = {
+    topicIds: ['iterables', 't'.repeat(120)],
+    misconceptionIds: ['python.x', 'python.lists-immutable', 'm'.repeat(120)],
+};
+
 function buildProvenance(overrides: QuestionFixture = {}): QuestionFixture {
     return {
         source: 'original',
@@ -79,7 +84,7 @@ describe('validateQuestionBank (schema 2)', () => {
     describe('accepts well-formed questions', () => {
         it('keeps every valid question and drops none', () => {
             const questions = [buildMultipleChoiceQuestion('q-1'), buildBooleanQuestion('q-2')];
-            expect(validateQuestionBank(buildBank(questions))).toEqual(acceptedBank(questions));
+            expect(validateQuestionBank(buildBank(questions), CONTEXT)).toEqual(acceptedBank(questions));
         });
 
         it('keeps an mc question with object choices, rationale, and misconceptionId but no topic, unchanged', () => {
@@ -92,14 +97,14 @@ describe('validateQuestionBank (schema 2)', () => {
                 ],
             });
             expect(question).not.toHaveProperty('topic');
-            const result = validateQuestionBank(buildBank([question]));
+            const result = validateQuestionBank(buildBank([question]), CONTEXT);
             expect(result).toEqual(acceptedBank([question]));
             if (result.isValid) expect(result.questions[0]).toStrictEqual(question);
         });
 
         it('keeps an mc question that carries a topic', () => {
             const question = buildMultipleChoiceQuestion('q-1', { topic: 'iterables' });
-            expect(validateQuestionBank(buildBank([question]))).toEqual(acceptedBank([question]));
+            expect(validateQuestionBank(buildBank([question]), CONTEXT)).toEqual(acceptedBank([question]));
         });
 
         it('keeps a bool question with a rationale and a misconceptionId', () => {
@@ -107,7 +112,7 @@ describe('validateQuestionBank (schema 2)', () => {
                 rationale: 'Tuples are the immutable sequence, not lists.',
                 misconceptionId: 'python.lists-immutable',
             });
-            expect(validateQuestionBank(buildBank([question]))).toEqual(acceptedBank([question]));
+            expect(validateQuestionBank(buildBank([question]), CONTEXT)).toEqual(acceptedBank([question]));
         });
 
         it.each([
@@ -172,22 +177,22 @@ describe('validateQuestionBank (schema 2)', () => {
         ])('keeps a multiple-choice question with %s', (_description, overrides) => {
             const question = buildMultipleChoiceQuestion('q-1', overrides);
             if (question.code === undefined) delete question.code;
-            expect(validateQuestionBank(buildBank([question]))).toEqual(acceptedBank([question]));
+            expect(validateQuestionBank(buildBank([question]), CONTEXT)).toEqual(acceptedBank([question]));
         });
 
         it('keeps a bool question with a 120-character topic and misconceptionId', () => {
             const question = buildBooleanQuestion('q-1', { topic: 't'.repeat(120), misconceptionId: 'm'.repeat(120) });
-            expect(validateQuestionBank(buildBank([question]))).toEqual(acceptedBank([question]));
+            expect(validateQuestionBank(buildBank([question]), CONTEXT)).toEqual(acceptedBank([question]));
         });
 
         it('keeps a bool question whose answer is false', () => {
             const question = buildBooleanQuestion('q-1', { answer: false });
-            expect(validateQuestionBank(buildBank([question]))).toEqual(acceptedBank([question]));
+            expect(validateQuestionBank(buildBank([question]), CONTEXT)).toEqual(acceptedBank([question]));
         });
 
         it('keeps a bool question with a 280-character rationale', () => {
             const question = buildBooleanQuestion('q-1', { rationale: 'r'.repeat(MAX_RATIONALE_LENGTH) });
-            expect(validateQuestionBank(buildBank([question]))).toEqual(acceptedBank([question]));
+            expect(validateQuestionBank(buildBank([question]), CONTEXT)).toEqual(acceptedBank([question]));
         });
 
         it('keeps markup inside strings as plain data', () => {
@@ -200,12 +205,12 @@ describe('validateQuestionBank (schema 2)', () => {
                 ],
                 answerIndex: 0,
             });
-            expect(validateQuestionBank(buildBank([question]))).toEqual(acceptedBank([question]));
+            expect(validateQuestionBank(buildBank([question]), CONTEXT)).toEqual(acceptedBank([question]));
         });
 
         it('accepts exactly 500 questions', () => {
             const questions = buildQuestionIds(500).map((id) => buildBooleanQuestion(id));
-            const result = validateQuestionBank(buildBank(questions));
+            const result = validateQuestionBank(buildBank(questions), CONTEXT);
             expect(result.isValid).toBe(true);
             if (result.isValid) expect(result.questions).toHaveLength(500);
         });
@@ -278,7 +283,7 @@ describe('validateQuestionBank (schema 2)', () => {
             const keptFirst = buildMultipleChoiceQuestion('q-1');
             const malformed = buildMultipleChoiceQuestion('q-2', overrides);
             const keptLast = buildBooleanQuestion('q-3');
-            const result = validateQuestionBank(buildBank([keptFirst, malformed, keptLast]));
+            const result = validateQuestionBank(buildBank([keptFirst, malformed, keptLast]), CONTEXT);
             expect(result).toEqual(bankWithDrops([keptFirst, keptLast], [{ id: 'q-2' }]));
         });
 
@@ -295,7 +300,7 @@ describe('validateQuestionBank (schema 2)', () => {
             const keptFirst = buildBooleanQuestion('q-1');
             const malformed = buildBooleanQuestion('q-2', overrides);
             const keptLast = buildMultipleChoiceQuestion('q-3');
-            const result = validateQuestionBank(buildBank([keptFirst, malformed, keptLast]));
+            const result = validateQuestionBank(buildBank([keptFirst, malformed, keptLast]), CONTEXT);
             expect(result).toEqual(bankWithDrops([keptFirst, keptLast], [{ id: 'q-2' }]));
         });
 
@@ -322,7 +327,7 @@ describe('validateQuestionBank (schema 2)', () => {
             const malformed = buildMultipleChoiceQuestion('q-2', { provenance });
             if (provenance === undefined) delete malformed.provenance;
             const keptLast = buildBooleanQuestion('q-3');
-            const result = validateQuestionBank(buildBank([keptFirst, malformed, keptLast]));
+            const result = validateQuestionBank(buildBank([keptFirst, malformed, keptLast]), CONTEXT);
             expect(result).toEqual(bankWithDrops([keptFirst, keptLast], [{ id: 'q-2', rule: 'missing-provenance' }]));
         });
 
@@ -330,7 +335,7 @@ describe('validateQuestionBank (schema 2)', () => {
             const kept = buildMultipleChoiceQuestion('q-1');
             const malformed = buildBooleanQuestion('q-2');
             delete malformed.provenance;
-            const result = validateQuestionBank(buildBank([kept, malformed]));
+            const result = validateQuestionBank(buildBank([kept, malformed]), CONTEXT);
             expect(result).toEqual(bankWithDrops([kept], [{ id: 'q-2', rule: 'missing-provenance' }]));
         });
 
@@ -340,14 +345,14 @@ describe('validateQuestionBank (schema 2)', () => {
                 choices: [{ text: 'a' }, { text: 'b', rationale: 'r'.repeat(MAX_RATIONALE_LENGTH + 1) }],
                 answerIndex: 0,
             });
-            const result = validateQuestionBank(buildBank([kept, malformed]));
+            const result = validateQuestionBank(buildBank([kept, malformed]), CONTEXT);
             expect(result).toEqual(bankWithDrops([kept], [{ id: 'q-2', rule: 'rationale-too-long' }]));
         });
 
         it('drops a bool question whose rationale is over 280 characters with the rationale-too-long rule', () => {
             const kept = buildMultipleChoiceQuestion('q-1');
             const malformed = buildBooleanQuestion('q-2', { rationale: 'r'.repeat(MAX_RATIONALE_LENGTH + 1) });
-            const result = validateQuestionBank(buildBank([kept, malformed]));
+            const result = validateQuestionBank(buildBank([kept, malformed]), CONTEXT);
             expect(result).toEqual(bankWithDrops([kept], [{ id: 'q-2', rule: 'rationale-too-long' }]));
         });
 
@@ -364,7 +369,7 @@ describe('validateQuestionBank (schema 2)', () => {
             const keptFirst = buildMultipleChoiceQuestion('q-1');
             const malformed = buildMultipleChoiceQuestion('placeholder', { id });
             const keptLast = buildBooleanQuestion('q-3');
-            const result = validateQuestionBank(buildBank([keptFirst, malformed, keptLast]));
+            const result = validateQuestionBank(buildBank([keptFirst, malformed, keptLast]), CONTEXT);
             expect(result.isValid).toBe(true);
             if (result.isValid) {
                 expect(result.questions).toEqual([keptFirst, keptLast]);
@@ -380,7 +385,7 @@ describe('validateQuestionBank (schema 2)', () => {
         ])('drops a question entry that is %s', (_description, entry) => {
             const keptFirst = buildMultipleChoiceQuestion('q-1');
             const keptLast = buildBooleanQuestion('q-3');
-            const result = validateQuestionBank(buildBank([keptFirst, entry, keptLast]));
+            const result = validateQuestionBank(buildBank([keptFirst, entry, keptLast]), CONTEXT);
             expect(result.isValid).toBe(true);
             if (result.isValid) {
                 expect(result.questions).toEqual([keptFirst, keptLast]);
@@ -392,7 +397,7 @@ describe('validateQuestionBank (schema 2)', () => {
             const original = buildMultipleChoiceQuestion('q-1');
             const duplicate = buildBooleanQuestion('q-1', { prompt: 'A different prompt.' });
             const other = buildBooleanQuestion('q-2');
-            const result = validateQuestionBank(buildBank([original, duplicate, other]));
+            const result = validateQuestionBank(buildBank([original, duplicate, other]), CONTEXT);
             expect(result).toEqual(bankWithDrops([original, other], [{ id: 'q-1', rule: 'duplicate id' }]));
         });
 
@@ -408,7 +413,7 @@ describe('validateQuestionBank (schema 2)', () => {
                 buildBooleanQuestion('q-6', { rationale: 'r'.repeat(MAX_RATIONALE_LENGTH + 1) }),
                 buildMultipleChoiceQuestion('q-7', { prompt: '' }),
             ];
-            const result = validateQuestionBank(buildBank(questions));
+            const result = validateQuestionBank(buildBank(questions), CONTEXT);
             expect(result).toEqual(
                 bankWithDrops(
                     [questions[1], questions[4]],
@@ -427,7 +432,7 @@ describe('validateQuestionBank (schema 2)', () => {
     describe('rejects the whole bank', () => {
         it('with the schemaVersion rule when the bank is schema 1', () => {
             const bank = buildBank([buildBooleanQuestion('q-1')], { schemaVersion: 1 });
-            expect(validateQuestionBank(bank)).toEqual({
+            expect(validateQuestionBank(bank, CONTEXT)).toEqual({
                 isValid: false,
                 rule: 'schemaVersion is not supported',
             });
@@ -442,7 +447,7 @@ describe('validateQuestionBank (schema 2)', () => {
                 answerIndex: 2,
                 query: { title: 'len() on a list', explanation: 'len returns the number of items.' },
             };
-            expect(validateQuestionBank({ schemaVersion: 1, questions: [v1Question] })).toEqual({
+            expect(validateQuestionBank({ schemaVersion: 1, questions: [v1Question] }, CONTEXT)).toEqual({
                 isValid: false,
                 rule: 'schemaVersion is not supported',
             });
@@ -450,7 +455,7 @@ describe('validateQuestionBank (schema 2)', () => {
 
         it('with the too-many rule when it holds more than 500 questions', () => {
             const questions = buildQuestionIds(501).map((id) => buildBooleanQuestion(id));
-            expect(validateQuestionBank(buildBank(questions))).toEqual({
+            expect(validateQuestionBank(buildBank(questions), CONTEXT)).toEqual({
                 isValid: false,
                 rule: 'too many questions',
             });
@@ -461,7 +466,7 @@ describe('validateQuestionBank (schema 2)', () => {
                 buildBooleanQuestion('q-1', { answer: 'yes' }),
                 buildMultipleChoiceQuestion('q-2', { choices: [] }),
             ];
-            expect(validateQuestionBank(buildBank(questions))).toEqual({
+            expect(validateQuestionBank(buildBank(questions), CONTEXT)).toEqual({
                 isValid: false,
                 rule: 'no valid questions',
             });
@@ -470,14 +475,14 @@ describe('validateQuestionBank (schema 2)', () => {
         it('with the no-valid-questions rule when every question lacks provenance', () => {
             const questions = [buildBooleanQuestion('q-1'), buildMultipleChoiceQuestion('q-2')];
             for (const question of questions) delete question.provenance;
-            expect(validateQuestionBank(buildBank(questions))).toEqual({
+            expect(validateQuestionBank(buildBank(questions), CONTEXT)).toEqual({
                 isValid: false,
                 rule: 'no valid questions',
             });
         });
 
         it('with the no-valid-questions rule when the questions array is empty', () => {
-            expect(validateQuestionBank(buildBank([]))).toEqual({
+            expect(validateQuestionBank(buildBank([]), CONTEXT)).toEqual({
                 isValid: false,
                 rule: 'no valid questions',
             });
