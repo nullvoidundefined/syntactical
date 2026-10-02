@@ -88,7 +88,7 @@ Passed 2026-10-02. The owner approved the spec and plan, chose owner-merges-ever
 - [ ] Create the private repo `nullvoidundefined/syntactical-content`; add a read-only deploy key; store its private half as the Actions secret `CONTENT_DEPLOY_KEY` in this repo and in Railway.
 - [ ] Apple Developer Program, Play Console, tax and banking forms in both.
 - [ ] RevenueCat project linked to both stores and to a Stripe account for Web Billing (test mode first), PostHog project, Resend with SPF and DKIM on `syntactical.dev`, Neon project (`main` and `ci` branches), Railway project.
-- [ ] Secrets in GitHub Actions and Railway: `DATABASE_URL`, `RESEND_API_KEY`, `REVENUECAT_WEBHOOK_AUTH`, `REVENUECAT_WEB_BILLING_PUBLIC_KEY`, `POSTHOG_API_KEY`, `ANTHROPIC_API_KEY` (pipeline CI only).
+- [ ] Secrets in GitHub Actions and Railway: `DATABASE_URL`, `RESEND_API_KEY`, `REVENUECAT_WEBHOOK_AUTH`, `RATE_LIMIT_KEY_SECRET`, `REVENUECAT_WEB_BILLING_PUBLIC_KEY`, `POSTHOG_API_KEY`, `ANTHROPIC_API_KEY` (pipeline CI only).
 
 ### Task 0.1: move the web build and content origin to syntactical.dev
 
@@ -674,7 +674,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 **Risk:** high. **Behaviors:** B-25, B-26, B-63 (rate-limit key).
 
-**Files:** Create `server/src/routes/authCodes.ts`, `server/src/services/issueOneTimeCode.ts`, `server/src/clients/emailClient.ts` (Resend; `sendSignInCode(email, code)`), `server/src/middleware/rateLimit.ts` (Postgres counters keyed by `sha256(normalized email)` and `sha256(ip key)` with `trust proxy` 1, so no plaintext email or IP is stored), `server/src/schemas/authSchemas.ts`; tests.
+**Files:** Create `server/src/routes/authCodes.ts`, `server/src/services/issueOneTimeCode.ts`, `server/src/clients/emailClient.ts` (Resend; `sendSignInCode(email, code)`), `server/src/middleware/rateLimit.ts` (Postgres counters keyed by `HMAC-SHA256(RATE_LIMIT_KEY_SECRET, normalized email)` and `HMAC-SHA256(RATE_LIMIT_KEY_SECRET, ip key)` with `trust proxy` 1, so no plaintext or brute-forceable email or IP is stored), `server/src/schemas/authSchemas.ts`; tests.
 
 **Behaviors (RED tests):**
 - A well-formed email gets 202, one row whose `code_hash` is `sha256(code)` and `expires_at` 10 minutes ahead, and one `sendSignInCode` call with a 6-digit code.
@@ -682,7 +682,9 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 - The code comes from an injected `randomInt(0, 1_000_000)` (Node `crypto.randomInt` in production), zero-padded to 6 digits; the test asserts the injected generator is the one called.
 - Rate-limit counters increment atomically (`INSERT ... ON CONFLICT DO UPDATE SET count = count + 1 RETURNING count`): 20 concurrent requests for one email send at most 5 codes.
 - IPv6 clients are keyed by their /64 prefix and IPv4-mapped addresses (`::ffff:a.b.c.d`) are unmapped and keyed as the IPv4 address: `2001:db8::1` and `2001:db8::2` share a counter, `::ffff:203.0.113.7` and `::ffff:203.0.113.8` do not.
-- A `rate_limit_counters` row never contains the plaintext email or IP (the stored key is a SHA-256 hex digest).
+- A `rate_limit_counters` row never contains the plaintext email or IP, and its key differs from `sha256(email)` (keyed HMAC with a server secret).
+- Rows whose `window_start` is older than the window are deleted on the next insert; after the window passes, no row keyed by the user's email or IP remains. Account deletion also deletes counter rows keyed by the user's email.
+- `RATE_LIMIT_KEY_SECRET` shorter than 32 characters, or empty, fails startup.
 - `POST /v1/auth/codes` with `Content-Type: text/plain`, `application/x-www-form-urlencoded`, or `multipart/form-data` gets 415; `application/json; charset=utf-8` passes.
 - The plaintext code appears in no table and no log line.
 - A malformed email gets 400; the body for an existing and a new email is identical.
