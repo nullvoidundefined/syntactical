@@ -1,5 +1,5 @@
 // Root layout: global styles, safe area, the query client, and the
-// content and stats providers, around every route.
+// content and stats providers, and the app shell, around every route.
 import '../global.css';
 import { useState } from 'react';
 
@@ -9,6 +9,7 @@ import { Slot } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { logWarning } from '../clients/logClient';
+import { AppShell } from '../components/layout/AppShell';
 import { createQueryClient } from '../config/queryClient';
 import { validateContentBaseUrl } from '../services/content/validateContentBaseUrl';
 import { ContentProvider } from '../state/ContentProvider';
@@ -30,7 +31,9 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ContentProvider contentBaseUrl={contentBaseUrl}>
           <StatsProvider>
-            <Slot />
+            <AppShell>
+              <Slot />
+            </AppShell>
           </StatsProvider>
         </ContentProvider>
       </QueryClientProvider>
