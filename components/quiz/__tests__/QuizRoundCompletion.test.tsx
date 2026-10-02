@@ -4,8 +4,9 @@ import { Text } from 'react-native';
 
 import { StatsProvider, useQuizStats } from '../../../state/StatsProvider';
 import { QuizRound } from '../QuizRound';
+import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/contentFixtures';
 
-const questions: Question[] = [{ answer: true, id: 'q-1', prompt: 'Is it?', query: { explanation: 'Because', title: 'Why' }, type: 'bool' }];
+const questions: Question[] = [{ answer: true, id: 'q-1', prompt: 'Is it?', query: { explanation: 'Because', title: 'Why' }, provenance: TEST_PROVENANCE, type: 'bool' }];
 
 function CompletionsProbe() {
   const { isHydrated, stats } = useQuizStats();

@@ -6,8 +6,8 @@ import { LanguageStep } from '../LanguageStep';
 import { SelectionCard } from '../SelectionCard';
 
 const languages: LanguageEntry[] = [
-  { banks: { easy: { hash: 'a'.repeat(64), path: 'python/easy.json' } }, glyph: 'PY', grammar: 'python', id: 'python', label: 'Python', tagline: 'Sharp edges.' },
-  { banks: { hard: { hash: 'b'.repeat(64), path: 'elixir/hard.json' } }, glyph: 'EX', grammar: 'plain', id: 'elixir', label: 'Elixir', tagline: 'Pipes.' },
+  { banks: { easy: { access: 'free', contentVersion: 1, hash: 'a'.repeat(64), path: 'python/easy.json', topicCounts: {} } }, glyph: 'PY', grammar: 'python', id: 'python', label: 'Python', misconceptions: [], tagline: 'Sharp edges.', topics: [] },
+  { banks: { hard: { access: 'paid', contentVersion: 1, hash: 'b'.repeat(64), path: 'elixir/hard.json', productId: 'syntactical.elixir.hard', topicCounts: {} } }, glyph: 'EX', grammar: 'plain', id: 'elixir', label: 'Elixir', misconceptions: [], tagline: 'Pipes.', topics: [] },
 ];
 
 describe('menu', () => {

@@ -1,6 +1,6 @@
 // Shared fixtures for the content loading tests: question and bank
 // builders, a Node SHA-256 hasher, and a URL-routed fetch stub.
-import type { Manifest } from '@syntactical/content-schema';
+import type { BankEntry, Manifest } from '@syntactical/content-schema';
 import { createHash } from 'crypto';
 
 import { BUNDLED_MANIFEST } from '../../bundledManifest.generated';
@@ -16,17 +16,30 @@ export async function hashTextWithNode(text: string): Promise<string> {
     return hashUtf8Hex(text);
 }
 
+export const EMPTY_BANK_CONTEXT = { topicIds: [], misconceptionIds: [] };
+
+export function buildBankEntry(path: string, hash: string): BankEntry {
+    return { path, hash, access: 'free', contentVersion: 1, topicCounts: {} };
+}
+
+export const TEST_PROVENANCE = {
+    source: 'original',
+    validation: { method: 'judged', status: 'pending' },
+    isHumanReviewed: false,
+} as const;
+
 export function buildBoolQuestion(id: string) {
     return {
         id,
         type: 'bool',
+        provenance: TEST_PROVENANCE,
         prompt: `Prompt for ${id}`,
         answer: true,
         query: { title: `Title for ${id}`, explanation: `Explanation for ${id}` },
     };
 }
 
-export function buildBankText(questionIds: string[], schemaVersion = 1): string {
+export function buildBankText(questionIds: string[], schemaVersion = 2): string {
     return JSON.stringify({ schemaVersion, questions: questionIds.map(buildBoolQuestion) });
 }
 
@@ -41,7 +54,17 @@ export function buildGoLanguage(easyBankHash: string) {
         glyph: 'GO',
         tagline: 'Goroutines, interfaces, and the zero value.',
         grammar: 'go',
-        banks: { easy: { path: 'go/easy.json', hash: easyBankHash } },
+        topics: [{ id: 'goroutines', label: 'Goroutines' }],
+        misconceptions: [],
+        banks: {
+            easy: {
+                path: 'go/easy.json',
+                hash: easyBankHash,
+                access: 'free',
+                contentVersion: 1,
+                topicCounts: {},
+            },
+        },
     };
 }
 

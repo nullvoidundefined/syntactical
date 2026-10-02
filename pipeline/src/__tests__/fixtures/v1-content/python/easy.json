@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 1,
   "questions": [
     {
       "id": "py-easy-01",
@@ -7,18 +7,10 @@
       "prompt": "What does `int(-3.9)` evaluate to?",
       "code": "int(-3.9)",
       "choices": [
-        {
-          "text": "-4"
-        },
-        {
-          "text": "-3"
-        },
-        {
-          "text": "-3.9"
-        },
-        {
-          "text": "Raises a TypeError"
-        }
+        "-4",
+        "-3",
+        "-3.9",
+        "Raises a TypeError"
       ],
       "answerIndex": 1,
       "query": {
@@ -28,14 +20,6 @@
           "type-conversion",
           "numbers"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -44,18 +28,10 @@
       "prompt": "What does `float('nan') == float('nan')` evaluate to?",
       "code": "float('nan') == float('nan')",
       "choices": [
-        {
-          "text": "True"
-        },
-        {
-          "text": "False"
-        },
-        {
-          "text": "Raises ValueError"
-        },
-        {
-          "text": "None"
-        }
+        "True",
+        "False",
+        "Raises ValueError",
+        "None"
       ],
       "answerIndex": 1,
       "query": {
@@ -65,14 +41,6 @@
           "numbers",
           "float"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -81,18 +49,10 @@
       "prompt": "What is the type and value of `7 / 2` in Python 3?",
       "code": "7 / 2",
       "choices": [
-        {
-          "text": "int, 3"
-        },
-        {
-          "text": "float, 3.5"
-        },
-        {
-          "text": "float, 3.0"
-        },
-        {
-          "text": "int, 3.5 (raises no error)"
-        }
+        "int, 3",
+        "float, 3.5",
+        "float, 3.0",
+        "int, 3.5 (raises no error)"
       ],
       "answerIndex": 1,
       "query": {
@@ -102,14 +62,6 @@
           "operators",
           "numbers"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -118,18 +70,10 @@
       "prompt": "What does `-7 % 3` evaluate to in Python?",
       "code": "-7 % 3",
       "choices": [
-        {
-          "text": "-1"
-        },
-        {
-          "text": "1"
-        },
-        {
-          "text": "2"
-        },
-        {
-          "text": "-2"
-        }
+        "-1",
+        "1",
+        "2",
+        "-2"
       ],
       "answerIndex": 2,
       "query": {
@@ -139,14 +83,6 @@
           "operators",
           "numbers"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -155,18 +91,10 @@
       "prompt": "What does `-2 ** 2` evaluate to?",
       "code": "-2 ** 2",
       "choices": [
-        {
-          "text": "4"
-        },
-        {
-          "text": "-4"
-        },
-        {
-          "text": "-2"
-        },
-        {
-          "text": "Raises SyntaxError"
-        }
+        "4",
+        "-4",
+        "-2",
+        "Raises SyntaxError"
       ],
       "answerIndex": 1,
       "query": {
@@ -176,14 +104,6 @@
           "operators",
           "precedence"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -199,14 +119,6 @@
           "operators",
           "comparisons"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -215,18 +127,10 @@
       "prompt": "What does the expression `3 or 5` evaluate to?",
       "code": "3 or 5",
       "choices": [
-        {
-          "text": "True"
-        },
-        {
-          "text": "5"
-        },
-        {
-          "text": "3"
-        },
-        {
-          "text": "False"
-        }
+        "True",
+        "5",
+        "3",
+        "False"
       ],
       "answerIndex": 2,
       "query": {
@@ -236,14 +140,6 @@
           "operators",
           "booleans"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -252,18 +148,10 @@
       "prompt": "What does `not 0` evaluate to?",
       "code": "not 0",
       "choices": [
-        {
-          "text": "False"
-        },
-        {
-          "text": "0"
-        },
-        {
-          "text": "True"
-        },
-        {
-          "text": "None"
-        }
+        "False",
+        "0",
+        "True",
+        "None"
       ],
       "answerIndex": 2,
       "query": {
@@ -273,14 +161,6 @@
           "operators",
           "booleans"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -296,14 +176,6 @@
           "booleans",
           "numbers"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -318,14 +190,6 @@
           "none",
           "comparisons"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -334,18 +198,10 @@
       "prompt": "How do you check whether `x` is either an `int` or a `float` using `isinstance`?",
       "code": "isinstance(x, (int, float))",
       "choices": [
-        {
-          "text": "isinstance(x, int, float)"
-        },
-        {
-          "text": "isinstance(x, (int, float))"
-        },
-        {
-          "text": "isinstance(x, [int, float])"
-        },
-        {
-          "text": "isinstance(x) in (int, float)"
-        }
+        "isinstance(x, int, float)",
+        "isinstance(x, (int, float))",
+        "isinstance(x, [int, float])",
+        "isinstance(x) in (int, float)"
       ],
       "answerIndex": 1,
       "query": {
@@ -355,14 +211,6 @@
           "types",
           "builtins"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -377,14 +225,6 @@
           "tuples",
           "lists"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -399,14 +239,6 @@
           "strings",
           "immutability"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -415,18 +247,10 @@
       "prompt": "What does `[10, 20, 30, 40, 50][1:3]` evaluate to?",
       "code": "[10, 20, 30, 40, 50][1:3]",
       "choices": [
-        {
-          "text": "[20, 30]"
-        },
-        {
-          "text": "[20, 30, 40]"
-        },
-        {
-          "text": "[10, 20]"
-        },
-        {
-          "text": "[30, 40]"
-        }
+        "[20, 30]",
+        "[20, 30, 40]",
+        "[10, 20]",
+        "[30, 40]"
       ],
       "answerIndex": 0,
       "query": {
@@ -436,14 +260,6 @@
           "slicing",
           "lists"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -452,18 +268,10 @@
       "prompt": "What does `'python'[-2]` evaluate to?",
       "code": "'python'[-2]",
       "choices": [
-        {
-          "text": "'n'"
-        },
-        {
-          "text": "'o'"
-        },
-        {
-          "text": "'h'"
-        },
-        {
-          "text": "'t'"
-        }
+        "'n'",
+        "'o'",
+        "'h'",
+        "'t'"
       ],
       "answerIndex": 1,
       "query": {
@@ -473,14 +281,6 @@
           "strings",
           "indexing"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -496,14 +296,6 @@
           "slicing",
           "lists"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -512,18 +304,10 @@
       "prompt": "What does `list(range(10))[::3]` evaluate to?",
       "code": "list(range(10))[::3]",
       "choices": [
-        {
-          "text": "[0, 3, 6, 9]"
-        },
-        {
-          "text": "[0, 1, 2]"
-        },
-        {
-          "text": "[3, 6, 9]"
-        },
-        {
-          "text": "[0, 3, 6, 9, 10]"
-        }
+        "[0, 3, 6, 9]",
+        "[0, 1, 2]",
+        "[3, 6, 9]",
+        "[0, 3, 6, 9, 10]"
       ],
       "answerIndex": 0,
       "query": {
@@ -533,14 +317,6 @@
           "slicing",
           "lists"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -556,14 +332,6 @@
           "lists",
           "gotchas"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -572,18 +340,10 @@
       "prompt": "What does `'ab' * 3` evaluate to?",
       "code": "'ab' * 3",
       "choices": [
-        {
-          "text": "'ababab'"
-        },
-        {
-          "text": "'ab ab ab'"
-        },
-        {
-          "text": "['ab', 'ab', 'ab']"
-        },
-        {
-          "text": "A TypeError"
-        }
+        "'ababab'",
+        "'ab ab ab'",
+        "['ab', 'ab', 'ab']",
+        "A TypeError"
       ],
       "answerIndex": 0,
       "query": {
@@ -593,14 +353,6 @@
           "strings",
           "operators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -609,18 +361,10 @@
       "prompt": "What does `[1, 2] + [3, 4]` evaluate to?",
       "code": "[1, 2] + [3, 4]",
       "choices": [
-        {
-          "text": "[1, 2, 3, 4]"
-        },
-        {
-          "text": "[[1, 2], [3, 4]]"
-        },
-        {
-          "text": "10"
-        },
-        {
-          "text": "A TypeError, lists cannot use +"
-        }
+        "[1, 2, 3, 4]",
+        "[[1, 2], [3, 4]]",
+        "10",
+        "A TypeError, lists cannot use +"
       ],
       "answerIndex": 0,
       "query": {
@@ -630,14 +374,6 @@
           "lists",
           "operators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -645,18 +381,10 @@
       "type": "mc",
       "prompt": "Given `lst = [1, 2]`, what is the difference between `lst.append([3, 4])` and `lst.extend([3, 4])`?",
       "choices": [
-        {
-          "text": "append adds [3, 4] as one nested element; extend adds 3 and 4 as separate elements"
-        },
-        {
-          "text": "They behave identically"
-        },
-        {
-          "text": "append raises a TypeError on lists; extend does not"
-        },
-        {
-          "text": "extend adds [3, 4] as one nested element; append adds 3 and 4 as separate elements"
-        }
+        "append adds [3, 4] as one nested element; extend adds 3 and 4 as separate elements",
+        "They behave identically",
+        "append raises a TypeError on lists; extend does not",
+        "extend adds [3, 4] as one nested element; append adds 3 and 4 as separate elements"
       ],
       "answerIndex": 0,
       "query": {
@@ -667,14 +395,6 @@
           "lists",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -683,18 +403,10 @@
       "prompt": "What does `lst.insert(1, 'x')` do to `lst = ['a', 'b', 'c']`?",
       "code": "lst = ['a', 'b', 'c']\nlst.insert(1, 'x')",
       "choices": [
-        {
-          "text": "Inserts 'x' at index 1, giving ['a', 'x', 'b', 'c']"
-        },
-        {
-          "text": "Replaces the item at index 1 with 'x'"
-        },
-        {
-          "text": "Appends 'x' to the end"
-        },
-        {
-          "text": "Raises IndexError because index 1 is already occupied"
-        }
+        "Inserts 'x' at index 1, giving ['a', 'x', 'b', 'c']",
+        "Replaces the item at index 1 with 'x'",
+        "Appends 'x' to the end",
+        "Raises IndexError because index 1 is already occupied"
       ],
       "answerIndex": 0,
       "query": {
@@ -705,14 +417,6 @@
           "lists",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -720,18 +424,10 @@
       "type": "mc",
       "prompt": "What is the key difference between `lst.remove(value)` and `lst.pop(index)`?",
       "choices": [
-        {
-          "text": "remove deletes by value (the first matching one); pop deletes by index and returns the removed item"
-        },
-        {
-          "text": "remove returns the removed item; pop does not"
-        },
-        {
-          "text": "They are aliases for the same operation"
-        },
-        {
-          "text": "pop only works on tuples"
-        }
+        "remove deletes by value (the first matching one); pop deletes by index and returns the removed item",
+        "remove returns the removed item; pop does not",
+        "They are aliases for the same operation",
+        "pop only works on tuples"
       ],
       "answerIndex": 0,
       "query": {
@@ -742,14 +438,6 @@
           "lists",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -757,18 +445,10 @@
       "type": "mc",
       "prompt": "Calling `lst.pop()` with no arguments removes and returns which element?",
       "choices": [
-        {
-          "text": "The first element"
-        },
-        {
-          "text": "The last element"
-        },
-        {
-          "text": "A random element"
-        },
-        {
-          "text": "The smallest element"
-        }
+        "The first element",
+        "The last element",
+        "A random element",
+        "The smallest element"
       ],
       "answerIndex": 1,
       "query": {
@@ -779,14 +459,6 @@
           "lists",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -795,18 +467,10 @@
       "prompt": "What does `del lst[1]` do to `lst = ['a', 'b', 'c']`?",
       "code": "lst = ['a', 'b', 'c']\ndel lst[1]",
       "choices": [
-        {
-          "text": "Removes 'b', leaving ['a', 'c']"
-        },
-        {
-          "text": "Sets index 1 to None, leaving ['a', None, 'c']"
-        },
-        {
-          "text": "Deletes the entire list"
-        },
-        {
-          "text": "Removes 'a' and 'b'"
-        }
+        "Removes 'b', leaving ['a', 'c']",
+        "Sets index 1 to None, leaving ['a', None, 'c']",
+        "Deletes the entire list",
+        "Removes 'a' and 'b'"
       ],
       "answerIndex": 0,
       "query": {
@@ -817,14 +481,6 @@
           "lists",
           "del"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -832,18 +488,10 @@
       "type": "mc",
       "prompt": "What is the difference between `lst.sort()` and `sorted(lst)`?",
       "choices": [
-        {
-          "text": "sort() mutates lst in place and returns None; sorted(lst) returns a new sorted list and leaves lst unchanged"
-        },
-        {
-          "text": "sorted(lst) mutates lst in place; sort() returns a new list"
-        },
-        {
-          "text": "They both return a new list and leave lst unchanged"
-        },
-        {
-          "text": "sort() only works on strings"
-        }
+        "sort() mutates lst in place and returns None; sorted(lst) returns a new sorted list and leaves lst unchanged",
+        "sorted(lst) mutates lst in place; sort() returns a new list",
+        "They both return a new list and leave lst unchanged",
+        "sort() only works on strings"
       ],
       "answerIndex": 0,
       "query": {
@@ -854,14 +502,6 @@
           "lists",
           "builtins"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -869,18 +509,10 @@
       "type": "mc",
       "prompt": "How do you sort a list in descending order using the `sorted()` builtin?",
       "choices": [
-        {
-          "text": "sorted(lst, reverse=True)"
-        },
-        {
-          "text": "sorted(lst, descending=True)"
-        },
-        {
-          "text": "sorted(lst)[::-1] is the only way"
-        },
-        {
-          "text": "reverse(sorted(lst))"
-        }
+        "sorted(lst, reverse=True)",
+        "sorted(lst, descending=True)",
+        "sorted(lst)[::-1] is the only way",
+        "reverse(sorted(lst))"
       ],
       "answerIndex": 0,
       "query": {
@@ -891,14 +523,6 @@
           "lists",
           "builtins"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -907,18 +531,10 @@
       "prompt": "What does `sorted(['banana', 'kiwi', 'fig'], key=len)` return?",
       "code": "sorted(['banana', 'kiwi', 'fig'], key=len)",
       "choices": [
-        {
-          "text": "['fig', 'kiwi', 'banana']"
-        },
-        {
-          "text": "['banana', 'kiwi', 'fig']"
-        },
-        {
-          "text": "['fig', 'banana', 'kiwi']"
-        },
-        {
-          "text": "A TypeError, since key must be a string"
-        }
+        "['fig', 'kiwi', 'banana']",
+        "['banana', 'kiwi', 'fig']",
+        "['fig', 'banana', 'kiwi']",
+        "A TypeError, since key must be a string"
       ],
       "answerIndex": 0,
       "query": {
@@ -929,14 +545,6 @@
           "lists",
           "builtins"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -945,18 +553,10 @@
       "prompt": "What does `max(['a', 'bbb', 'cc'], key=len)` return?",
       "code": "max(['a', 'bbb', 'cc'], key=len)",
       "choices": [
-        {
-          "text": "'bbb'"
-        },
-        {
-          "text": "'cc'"
-        },
-        {
-          "text": "'a'"
-        },
-        {
-          "text": "3"
-        }
+        "'bbb'",
+        "'cc'",
+        "'a'",
+        "3"
       ],
       "answerIndex": 0,
       "query": {
@@ -967,14 +567,6 @@
           "builtins",
           "numbers"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -983,18 +575,10 @@
       "prompt": "What does `sum([1, 2, 3], 10)` evaluate to?",
       "code": "sum([1, 2, 3], 10)",
       "choices": [
-        {
-          "text": "16"
-        },
-        {
-          "text": "6"
-        },
-        {
-          "text": "10"
-        },
-        {
-          "text": "A TypeError"
-        }
+        "16",
+        "6",
+        "10",
+        "A TypeError"
       ],
       "answerIndex": 0,
       "query": {
@@ -1005,14 +589,6 @@
           "builtins",
           "numbers"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1027,14 +603,6 @@
           "builtins",
           "sets"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1043,18 +611,10 @@
       "prompt": "How many elements does `list(range(5))` contain?",
       "code": "list(range(5))",
       "choices": [
-        {
-          "text": "4"
-        },
-        {
-          "text": "5"
-        },
-        {
-          "text": "6"
-        },
-        {
-          "text": "It depends on the platform"
-        }
+        "4",
+        "5",
+        "6",
+        "It depends on the platform"
       ],
       "answerIndex": 1,
       "query": {
@@ -1065,14 +625,6 @@
           "range",
           "builtins"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1081,18 +633,10 @@
       "prompt": "What does `list(range(10, 0, -2))` produce?",
       "code": "list(range(10, 0, -2))",
       "choices": [
-        {
-          "text": "[10, 8, 6, 4, 2]"
-        },
-        {
-          "text": "[10, 8, 6, 4, 2, 0]"
-        },
-        {
-          "text": "[0, 2, 4, 6, 8, 10]"
-        },
-        {
-          "text": "An empty list"
-        }
+        "[10, 8, 6, 4, 2]",
+        "[10, 8, 6, 4, 2, 0]",
+        "[0, 2, 4, 6, 8, 10]",
+        "An empty list"
       ],
       "answerIndex": 0,
       "query": {
@@ -1103,14 +647,6 @@
           "range",
           "builtins"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1119,18 +655,10 @@
       "prompt": "What does `list(enumerate(['a', 'b'], start=1))` produce?",
       "code": "list(enumerate(['a', 'b'], start=1))",
       "choices": [
-        {
-          "text": "[(1, 'a'), (2, 'b')]"
-        },
-        {
-          "text": "[(0, 'a'), (1, 'b')]"
-        },
-        {
-          "text": "[('a', 1), ('b', 2)]"
-        },
-        {
-          "text": "[(1, 'a'), (1, 'b')]"
-        }
+        "[(1, 'a'), (2, 'b')]",
+        "[(0, 'a'), (1, 'b')]",
+        "[('a', 1), ('b', 2)]",
+        "[(1, 'a'), (1, 'b')]"
       ],
       "answerIndex": 0,
       "query": {
@@ -1141,14 +669,6 @@
           "builtins",
           "loops"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1164,14 +684,6 @@
           "builtins",
           "loops"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1187,14 +699,6 @@
           "builtins",
           "lists"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1203,18 +707,10 @@
       "prompt": "What does `all([1, 2, 0, 3])` evaluate to?",
       "code": "all([1, 2, 0, 3])",
       "choices": [
-        {
-          "text": "False"
-        },
-        {
-          "text": "True"
-        },
-        {
-          "text": "0"
-        },
-        {
-          "text": "Raises TypeError"
-        }
+        "False",
+        "True",
+        "0",
+        "Raises TypeError"
       ],
       "answerIndex": 0,
       "query": {
@@ -1225,14 +721,6 @@
           "builtins",
           "booleans"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1241,18 +729,10 @@
       "prompt": "What does `list(map(lambda x: x * 2, [1, 2, 3]))` produce?",
       "code": "list(map(lambda x: x * 2, [1, 2, 3]))",
       "choices": [
-        {
-          "text": "[2, 4, 6]"
-        },
-        {
-          "text": "[1, 2, 3, 1, 2, 3]"
-        },
-        {
-          "text": "6"
-        },
-        {
-          "text": "A map object printed directly as a list of tuples"
-        }
+        "[2, 4, 6]",
+        "[1, 2, 3, 1, 2, 3]",
+        "6",
+        "A map object printed directly as a list of tuples"
       ],
       "answerIndex": 0,
       "query": {
@@ -1263,14 +743,6 @@
           "builtins",
           "lambda"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1279,18 +751,10 @@
       "prompt": "What does `list(filter(lambda x: x % 2 == 0, [1, 2, 3, 4]))` produce?",
       "code": "list(filter(lambda x: x % 2 == 0, [1, 2, 3, 4]))",
       "choices": [
-        {
-          "text": "[2, 4]"
-        },
-        {
-          "text": "[1, 3]"
-        },
-        {
-          "text": "[True, False, True, False]"
-        },
-        {
-          "text": "[1, 2, 3, 4]"
-        }
+        "[2, 4]",
+        "[1, 3]",
+        "[True, False, True, False]",
+        "[1, 2, 3, 4]"
       ],
       "answerIndex": 0,
       "query": {
@@ -1301,14 +765,6 @@
           "builtins",
           "lambda"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1316,18 +772,10 @@
       "type": "mc",
       "prompt": "Which of these is a valid way to write a one-line function that adds two numbers using `lambda`?",
       "choices": [
-        {
-          "text": "lambda x, y: x + y"
-        },
-        {
-          "text": "lambda(x, y): x + y"
-        },
-        {
-          "text": "lambda x, y -> x + y"
-        },
-        {
-          "text": "function(x, y) = x + y"
-        }
+        "lambda x, y: x + y",
+        "lambda(x, y): x + y",
+        "lambda x, y -> x + y",
+        "function(x, y) = x + y"
       ],
       "answerIndex": 0,
       "query": {
@@ -1338,14 +786,6 @@
           "lambda",
           "functions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1354,18 +794,10 @@
       "prompt": "What does `[x * x for x in range(4)]` produce?",
       "code": "[x * x for x in range(4)]",
       "choices": [
-        {
-          "text": "[0, 1, 4, 9]"
-        },
-        {
-          "text": "[1, 4, 9, 16]"
-        },
-        {
-          "text": "[0, 1, 2, 3]"
-        },
-        {
-          "text": "A generator object"
-        }
+        "[0, 1, 4, 9]",
+        "[1, 4, 9, 16]",
+        "[0, 1, 2, 3]",
+        "A generator object"
       ],
       "answerIndex": 0,
       "query": {
@@ -1376,14 +808,6 @@
           "comprehensions",
           "lists"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1392,18 +816,10 @@
       "prompt": "What does `[x for x in range(10) if x % 3 == 0]` produce?",
       "code": "[x for x in range(10) if x % 3 == 0]",
       "choices": [
-        {
-          "text": "[0, 3, 6, 9]"
-        },
-        {
-          "text": "[3, 6, 9]"
-        },
-        {
-          "text": "[0, 1, 2]"
-        },
-        {
-          "text": "[1, 2, 4, 5, 7, 8]"
-        }
+        "[0, 3, 6, 9]",
+        "[3, 6, 9]",
+        "[0, 1, 2]",
+        "[1, 2, 4, 5, 7, 8]"
       ],
       "answerIndex": 0,
       "query": {
@@ -1414,14 +830,6 @@
           "comprehensions",
           "lists"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1430,18 +838,10 @@
       "prompt": "What does `{x: x * x for x in range(3)}` produce?",
       "code": "{x: x * x for x in range(3)}",
       "choices": [
-        {
-          "text": "{0: 0, 1: 1, 2: 4}"
-        },
-        {
-          "text": "[0, 1, 4]"
-        },
-        {
-          "text": "{0, 1, 4}"
-        },
-        {
-          "text": "A SyntaxError, dicts can't be built from comprehensions"
-        }
+        "{0: 0, 1: 1, 2: 4}",
+        "[0, 1, 4]",
+        "{0, 1, 4}",
+        "A SyntaxError, dicts can't be built from comprehensions"
       ],
       "answerIndex": 0,
       "query": {
@@ -1452,14 +852,6 @@
           "comprehensions",
           "dicts"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1468,18 +860,10 @@
       "prompt": "What does `{x % 3 for x in range(6)}` produce?",
       "code": "{x % 3 for x in range(6)}",
       "choices": [
-        {
-          "text": "{0, 1, 2}"
-        },
-        {
-          "text": "[0, 1, 2, 0, 1, 2]"
-        },
-        {
-          "text": "{0, 1, 2, 0, 1, 2}"
-        },
-        {
-          "text": "(0, 1, 2)"
-        }
+        "{0, 1, 2}",
+        "[0, 1, 2, 0, 1, 2]",
+        "{0, 1, 2, 0, 1, 2}",
+        "(0, 1, 2)"
       ],
       "answerIndex": 0,
       "query": {
@@ -1490,14 +874,6 @@
           "comprehensions",
           "sets"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1506,18 +882,10 @@
       "prompt": "Given `users = [{'name': 'Al'}, {'name': 'Bo'}]`, how do you get `'Bo'`?",
       "code": "users = [{'name': 'Al'}, {'name': 'Bo'}]",
       "choices": [
-        {
-          "text": "users[1]['name']"
-        },
-        {
-          "text": "users['name'][1]"
-        },
-        {
-          "text": "users[1].name"
-        },
-        {
-          "text": "users[name][1]"
-        }
+        "users[1]['name']",
+        "users['name'][1]",
+        "users[1].name",
+        "users[name][1]"
       ],
       "answerIndex": 0,
       "query": {
@@ -1527,14 +895,6 @@
           "dicts",
           "lists"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1550,14 +910,6 @@
           "loops",
           "control-flow"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1565,18 +917,10 @@
       "type": "mc",
       "prompt": "Inside a loop, what does `continue` do that `break` does not?",
       "choices": [
-        {
-          "text": "continue skips to the next iteration; break exits the loop entirely"
-        },
-        {
-          "text": "continue exits the loop entirely; break skips to the next iteration"
-        },
-        {
-          "text": "They are interchangeable"
-        },
-        {
-          "text": "continue only works in while loops"
-        }
+        "continue skips to the next iteration; break exits the loop entirely",
+        "continue exits the loop entirely; break skips to the next iteration",
+        "They are interchangeable",
+        "continue only works in while loops"
       ],
       "answerIndex": 0,
       "query": {
@@ -1586,14 +930,6 @@
           "loops",
           "control-flow"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1602,18 +938,10 @@
       "prompt": "What does the `pass` statement do?",
       "code": "def todo():\n    pass",
       "choices": [
-        {
-          "text": "Nothing, it is a no-op placeholder required wherever a statement is syntactically needed"
-        },
-        {
-          "text": "Skips to the next loop iteration"
-        },
-        {
-          "text": "Exits the current function immediately"
-        },
-        {
-          "text": "Passes control to a parent class method"
-        }
+        "Nothing, it is a no-op placeholder required wherever a statement is syntactically needed",
+        "Skips to the next loop iteration",
+        "Exits the current function immediately",
+        "Passes control to a parent class method"
       ],
       "answerIndex": 0,
       "query": {
@@ -1623,14 +951,6 @@
           "syntax",
           "control-flow"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1639,18 +959,10 @@
       "prompt": "What values do `a` and `b` hold after `a, b = 1, 2`?",
       "code": "a, b = 1, 2",
       "choices": [
-        {
-          "text": "a = 1, b = 2"
-        },
-        {
-          "text": "a = 2, b = 1"
-        },
-        {
-          "text": "a = (1, 2), b = (1, 2)"
-        },
-        {
-          "text": "A SyntaxError"
-        }
+        "a = 1, b = 2",
+        "a = 2, b = 1",
+        "a = (1, 2), b = (1, 2)",
+        "A SyntaxError"
       ],
       "answerIndex": 0,
       "query": {
@@ -1661,14 +973,6 @@
           "unpacking",
           "assignment"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1677,18 +981,10 @@
       "prompt": "After `a, *b, c = [1, 2, 3, 4, 5]`, what is `b`?",
       "code": "a, *b, c = [1, 2, 3, 4, 5]",
       "choices": [
-        {
-          "text": "[2, 3, 4]"
-        },
-        {
-          "text": "[2, 3, 4, 5]"
-        },
-        {
-          "text": "2"
-        },
-        {
-          "text": "[1, 2, 3, 4]"
-        }
+        "[2, 3, 4]",
+        "[2, 3, 4, 5]",
+        "2",
+        "[1, 2, 3, 4]"
       ],
       "answerIndex": 0,
       "query": {
@@ -1699,14 +995,6 @@
           "unpacking",
           "assignment"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1714,18 +1002,10 @@
       "type": "mc",
       "prompt": "What is the idiomatic Python way to swap the values of `a` and `b`?",
       "choices": [
-        {
-          "text": "a, b = b, a"
-        },
-        {
-          "text": "swap(a, b)"
-        },
-        {
-          "text": "a = b; b = a"
-        },
-        {
-          "text": "temp = a; a = b; b = a"
-        }
+        "a, b = b, a",
+        "swap(a, b)",
+        "a = b; b = a",
+        "temp = a; a = b; b = a"
       ],
       "answerIndex": 0,
       "query": {
@@ -1735,14 +1015,6 @@
           "unpacking",
           "assignment"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1758,14 +1030,6 @@
           "tuples",
           "syntax"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1781,14 +1045,6 @@
           "tuples",
           "gotchas"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1804,14 +1060,6 @@
           "assignment",
           "gotchas"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1819,18 +1067,10 @@
       "type": "mc",
       "prompt": "What type does `d.items()` return for a dict `d`?",
       "choices": [
-        {
-          "text": "A view object of (key, value) tuples that stays in sync with the dict"
-        },
-        {
-          "text": "A plain list of (key, value) tuples, a snapshot at call time"
-        },
-        {
-          "text": "A generator that can only be consumed once"
-        },
-        {
-          "text": "A new dict"
-        }
+        "A view object of (key, value) tuples that stays in sync with the dict",
+        "A plain list of (key, value) tuples, a snapshot at call time",
+        "A generator that can only be consumed once",
+        "A new dict"
       ],
       "answerIndex": 0,
       "query": {
@@ -1841,14 +1081,6 @@
           "dicts",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1857,18 +1089,10 @@
       "prompt": "What does `{'a': 1}.get('b', 0)` evaluate to?",
       "code": "{'a': 1}.get('b', 0)",
       "choices": [
-        {
-          "text": "0"
-        },
-        {
-          "text": "None"
-        },
-        {
-          "text": "Raises KeyError"
-        },
-        {
-          "text": "'b'"
-        }
+        "0",
+        "None",
+        "Raises KeyError",
+        "'b'"
       ],
       "answerIndex": 0,
       "query": {
@@ -1879,14 +1103,6 @@
           "dicts",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1895,18 +1111,10 @@
       "prompt": "What does `d.setdefault('x', []).append(1)` do if `'x'` is not yet a key in `d`?",
       "code": "d = {}\nd.setdefault('x', []).append(1)",
       "choices": [
-        {
-          "text": "Inserts 'x': [] into d, then appends 1 to that new list, leaving d as {'x': [1]}"
-        },
-        {
-          "text": "Raises KeyError because 'x' does not exist"
-        },
-        {
-          "text": "Does nothing since 'x' is not present"
-        },
-        {
-          "text": "Overwrites d entirely with [1]"
-        }
+        "Inserts 'x': [] into d, then appends 1 to that new list, leaving d as {'x': [1]}",
+        "Raises KeyError because 'x' does not exist",
+        "Does nothing since 'x' is not present",
+        "Overwrites d entirely with [1]"
       ],
       "answerIndex": 0,
       "query": {
@@ -1917,14 +1125,6 @@
           "dicts",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1940,14 +1140,6 @@
           "dicts",
           "operators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1956,18 +1148,10 @@
       "prompt": "What does `'lo' in 'hello'` evaluate to?",
       "code": "'lo' in 'hello'",
       "choices": [
-        {
-          "text": "True"
-        },
-        {
-          "text": "False"
-        },
-        {
-          "text": "Raises TypeError"
-        },
-        {
-          "text": "The index 3"
-        }
+        "True",
+        "False",
+        "Raises TypeError",
+        "The index 3"
       ],
       "answerIndex": 0,
       "query": {
@@ -1977,14 +1161,6 @@
           "strings",
           "operators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1992,18 +1168,10 @@
       "type": "mc",
       "prompt": "What is the time complexity of checking `x in some_list` for a plain Python list?",
       "choices": [
-        {
-          "text": "O(n) in the worst case"
-        },
-        {
-          "text": "O(1) always"
-        },
-        {
-          "text": "O(log n)"
-        },
-        {
-          "text": "O(n^2)"
-        }
+        "O(n) in the worst case",
+        "O(1) always",
+        "O(log n)",
+        "O(n^2)"
       ],
       "answerIndex": 0,
       "query": {
@@ -2013,14 +1181,6 @@
           "lists",
           "operators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2029,18 +1189,10 @@
       "prompt": "What does `set([1, 2, 2, 3, 3, 3])` evaluate to?",
       "code": "set([1, 2, 2, 3, 3, 3])",
       "choices": [
-        {
-          "text": "{1, 2, 3}"
-        },
-        {
-          "text": "[1, 2, 3]"
-        },
-        {
-          "text": "{1: 1, 2: 2, 3: 3}"
-        },
-        {
-          "text": "{1, 2, 2, 3, 3, 3}"
-        }
+        "{1, 2, 3}",
+        "[1, 2, 3]",
+        "{1: 1, 2: 2, 3: 3}",
+        "{1, 2, 2, 3, 3, 3}"
       ],
       "answerIndex": 0,
       "query": {
@@ -2049,14 +1201,6 @@
         "tags": [
           "sets"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2065,18 +1209,10 @@
       "prompt": "What does `{1, 2, 3} & {2, 3, 4}` evaluate to?",
       "code": "{1, 2, 3} & {2, 3, 4}",
       "choices": [
-        {
-          "text": "{2, 3}"
-        },
-        {
-          "text": "{1, 2, 3, 4}"
-        },
-        {
-          "text": "{1, 4}"
-        },
-        {
-          "text": "{1, 2, 3}"
-        }
+        "{2, 3}",
+        "{1, 2, 3, 4}",
+        "{1, 4}",
+        "{1, 2, 3}"
       ],
       "answerIndex": 0,
       "query": {
@@ -2087,14 +1223,6 @@
           "sets",
           "operators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2110,14 +1238,6 @@
           "dicts",
           "hashing"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2132,14 +1252,6 @@
           "dicts",
           "ordering"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2148,18 +1260,10 @@
       "prompt": "What does `'  hello  '.strip()` evaluate to?",
       "code": "'  hello  '.strip()",
       "choices": [
-        {
-          "text": "'hello'"
-        },
-        {
-          "text": "' hello '"
-        },
-        {
-          "text": "'hello  '"
-        },
-        {
-          "text": "'  hello'"
-        }
+        "'hello'",
+        "' hello '",
+        "'hello  '",
+        "'  hello'"
       ],
       "answerIndex": 0,
       "query": {
@@ -2170,14 +1274,6 @@
           "strings",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2193,14 +1289,6 @@
           "strings",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2209,18 +1297,10 @@
       "prompt": "What does `'a,b,,c'.split(',')` evaluate to?",
       "code": "'a,b,,c'.split(',')",
       "choices": [
-        {
-          "text": "['a', 'b', '', 'c']"
-        },
-        {
-          "text": "['a', 'b', 'c']"
-        },
-        {
-          "text": "['a,b,,c']"
-        },
-        {
-          "text": "['a', 'b', 'c', '']"
-        }
+        "['a', 'b', '', 'c']",
+        "['a', 'b', 'c']",
+        "['a,b,,c']",
+        "['a', 'b', 'c', '']"
       ],
       "answerIndex": 0,
       "query": {
@@ -2230,14 +1310,6 @@
           "strings",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2246,18 +1318,10 @@
       "prompt": "What does `'banana'.replace('a', 'o', 2)` evaluate to?",
       "code": "'banana'.replace('a', 'o', 2)",
       "choices": [
-        {
-          "text": "'bonona'"
-        },
-        {
-          "text": "'bonono'"
-        },
-        {
-          "text": "'bonana'"
-        },
-        {
-          "text": "'banana'"
-        }
+        "'bonona'",
+        "'bonono'",
+        "'bonana'",
+        "'banana'"
       ],
       "answerIndex": 0,
       "query": {
@@ -2268,14 +1332,6 @@
           "strings",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2284,18 +1340,10 @@
       "prompt": "What does `'Hello World'.lower()` evaluate to?",
       "code": "'Hello World'.lower()",
       "choices": [
-        {
-          "text": "'hello world'"
-        },
-        {
-          "text": "'HELLO WORLD'"
-        },
-        {
-          "text": "'Hello world'"
-        },
-        {
-          "text": "'hello World'"
-        }
+        "'hello world'",
+        "'HELLO WORLD'",
+        "'Hello world'",
+        "'hello World'"
       ],
       "answerIndex": 0,
       "query": {
@@ -2305,14 +1353,6 @@
           "strings",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2320,18 +1360,10 @@
       "type": "mc",
       "prompt": "Which method checks whether a string begins with a given prefix?",
       "choices": [
-        {
-          "text": "'text'.startswith(prefix)"
-        },
-        {
-          "text": "'text'.find(prefix) == True"
-        },
-        {
-          "text": "'text'.index(prefix) == 0 is the only way"
-        },
-        {
-          "text": "prefix in 'text'[0]"
-        }
+        "'text'.startswith(prefix)",
+        "'text'.find(prefix) == True",
+        "'text'.index(prefix) == 0 is the only way",
+        "prefix in 'text'[0]"
       ],
       "answerIndex": 0,
       "query": {
@@ -2342,14 +1374,6 @@
           "strings",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2358,18 +1382,10 @@
       "prompt": "What does `'abc123'.isalpha()` evaluate to?",
       "code": "'abc123'.isalpha()",
       "choices": [
-        {
-          "text": "False"
-        },
-        {
-          "text": "True"
-        },
-        {
-          "text": "Raises TypeError"
-        },
-        {
-          "text": "The string 'abc'"
-        }
+        "False",
+        "True",
+        "Raises TypeError",
+        "The string 'abc'"
       ],
       "answerIndex": 0,
       "query": {
@@ -2380,14 +1396,6 @@
           "strings",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2396,18 +1404,10 @@
       "prompt": "Given `name = 'Ada'`, what does `f'Hello, {name}!'` evaluate to?",
       "code": "name = 'Ada'\nf'Hello, {name}!'",
       "choices": [
-        {
-          "text": "'Hello, Ada!'"
-        },
-        {
-          "text": "'Hello, {name}!'"
-        },
-        {
-          "text": "'Hello, name!'"
-        },
-        {
-          "text": "A SyntaxError"
-        }
+        "'Hello, Ada!'",
+        "'Hello, {name}!'",
+        "'Hello, name!'",
+        "A SyntaxError"
       ],
       "answerIndex": 0,
       "query": {
@@ -2418,14 +1418,6 @@
           "strings",
           "f-strings"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2434,18 +1426,10 @@
       "prompt": "What does `f'{2 + 3}'` evaluate to?",
       "code": "f'{2 + 3}'",
       "choices": [
-        {
-          "text": "'5'"
-        },
-        {
-          "text": "'2 + 3'"
-        },
-        {
-          "text": "5"
-        },
-        {
-          "text": "A SyntaxError, only variable names are allowed inside {}"
-        }
+        "'5'",
+        "'2 + 3'",
+        "5",
+        "A SyntaxError, only variable names are allowed inside {}"
       ],
       "answerIndex": 0,
       "query": {
@@ -2455,14 +1439,6 @@
           "strings",
           "f-strings"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2470,18 +1446,10 @@
       "type": "mc",
       "prompt": "For an object like a `datetime`, what is the main difference between `str(obj)` and `repr(obj)`?",
       "choices": [
-        {
-          "text": "str() aims for a readable display; repr() aims for an unambiguous, often code-like representation"
-        },
-        {
-          "text": "They always return identical strings"
-        },
-        {
-          "text": "repr() is only usable in the interactive shell, never in scripts"
-        },
-        {
-          "text": "str() raises an error for objects without a custom __str__"
-        }
+        "str() aims for a readable display; repr() aims for an unambiguous, often code-like representation",
+        "They always return identical strings",
+        "repr() is only usable in the interactive shell, never in scripts",
+        "str() raises an error for objects without a custom __str__"
       ],
       "answerIndex": 0,
       "query": {
@@ -2492,14 +1460,6 @@
           "strings",
           "builtins"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2508,18 +1468,10 @@
       "prompt": "What does `print('a\\tb')` output?",
       "code": "print('a\\tb')",
       "choices": [
-        {
-          "text": "a followed by a tab then b"
-        },
-        {
-          "text": "a\\tb literally"
-        },
-        {
-          "text": "ab"
-        },
-        {
-          "text": "A SyntaxError"
-        }
+        "a followed by a tab then b",
+        "a\\tb literally",
+        "ab",
+        "A SyntaxError"
       ],
       "answerIndex": 0,
       "query": {
@@ -2530,14 +1482,6 @@
           "strings",
           "syntax"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2545,18 +1489,10 @@
       "type": "mc",
       "prompt": "What is the purpose of the `r` prefix on a string literal, as in `r'C:\\new\\folder'`?",
       "choices": [
-        {
-          "text": "It disables escape sequence processing, so backslashes are kept literally"
-        },
-        {
-          "text": "It marks the string as read-only"
-        },
-        {
-          "text": "It converts the string to bytes"
-        },
-        {
-          "text": "It forces the string to lowercase"
-        }
+        "It disables escape sequence processing, so backslashes are kept literally",
+        "It marks the string as read-only",
+        "It converts the string to bytes",
+        "It forces the string to lowercase"
       ],
       "answerIndex": 0,
       "query": {
@@ -2567,14 +1503,6 @@
           "strings",
           "syntax"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2590,14 +1518,6 @@
           "strings",
           "syntax"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2613,14 +1533,6 @@
           "strings",
           "syntax"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2636,14 +1548,6 @@
           "type-conversion",
           "gotchas"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2652,18 +1556,10 @@
       "prompt": "What does `float('  3.14  ')` evaluate to?",
       "code": "float('  3.14  ')",
       "choices": [
-        {
-          "text": "3.14"
-        },
-        {
-          "text": "A ValueError, since whitespace is not allowed"
-        },
-        {
-          "text": "'3.14'"
-        },
-        {
-          "text": "3"
-        }
+        "3.14",
+        "A ValueError, since whitespace is not allowed",
+        "'3.14'",
+        "3"
       ],
       "answerIndex": 0,
       "query": {
@@ -2672,14 +1568,6 @@
         "tags": [
           "type-conversion"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2695,14 +1583,6 @@
           "truthiness",
           "strings"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2710,18 +1590,10 @@
       "type": "mc",
       "prompt": "Which of these evaluates to `False`?",
       "choices": [
-        {
-          "text": "bool(0.0)"
-        },
-        {
-          "text": "bool('False')"
-        },
-        {
-          "text": "bool([0])"
-        },
-        {
-          "text": "bool(' ')"
-        }
+        "bool(0.0)",
+        "bool('False')",
+        "bool([0])",
+        "bool(' ')"
       ],
       "answerIndex": 0,
       "query": {
@@ -2732,14 +1604,6 @@
           "truthiness",
           "booleans"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2748,18 +1612,10 @@
       "prompt": "What happens when the code inside a `try` block raises an exception that matches the `except` clause?",
       "code": "try:\n    risky()\nexcept ValueError:\n    handle()",
       "choices": [
-        {
-          "text": "Execution jumps to the except block, and the program continues after the try/except"
-        },
-        {
-          "text": "The program terminates immediately regardless of the except clause"
-        },
-        {
-          "text": "The try block re-runs automatically"
-        },
-        {
-          "text": "The except clause is ignored unless finally is also present"
-        }
+        "Execution jumps to the except block, and the program continues after the try/except",
+        "The program terminates immediately regardless of the except clause",
+        "The try block re-runs automatically",
+        "The except clause is ignored unless finally is also present"
       ],
       "answerIndex": 0,
       "query": {
@@ -2770,14 +1626,6 @@
           "exceptions",
           "control-flow"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2785,18 +1633,10 @@
       "type": "mc",
       "prompt": "How do you catch both `ValueError` and `TypeError` with one `except` clause?",
       "choices": [
-        {
-          "text": "except (ValueError, TypeError):"
-        },
-        {
-          "text": "except ValueError, TypeError:"
-        },
-        {
-          "text": "except [ValueError, TypeError]:"
-        },
-        {
-          "text": "except ValueError or TypeError:"
-        }
+        "except (ValueError, TypeError):",
+        "except ValueError, TypeError:",
+        "except [ValueError, TypeError]:",
+        "except ValueError or TypeError:"
       ],
       "answerIndex": 0,
       "query": {
@@ -2806,14 +1646,6 @@
         "tags": [
           "exceptions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2821,18 +1653,10 @@
       "type": "mc",
       "prompt": "In a `try`/`except`/`else`/`finally` statement, when does the `else` block run?",
       "choices": [
-        {
-          "text": "Only if the try block completed with no exception raised"
-        },
-        {
-          "text": "Only if an exception was raised and caught"
-        },
-        {
-          "text": "Always, regardless of whether an exception occurred"
-        },
-        {
-          "text": "Only if there is no except clause at all"
-        }
+        "Only if the try block completed with no exception raised",
+        "Only if an exception was raised and caught",
+        "Always, regardless of whether an exception occurred",
+        "Only if there is no except clause at all"
       ],
       "answerIndex": 0,
       "query": {
@@ -2843,14 +1667,6 @@
           "exceptions",
           "control-flow"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2859,18 +1675,10 @@
       "prompt": "What exception does `1 / 0` raise?",
       "code": "1 / 0",
       "choices": [
-        {
-          "text": "ZeroDivisionError"
-        },
-        {
-          "text": "ValueError"
-        },
-        {
-          "text": "ArithmeticError (never a subclass)"
-        },
-        {
-          "text": "It returns float(\"inf\") instead of raising"
-        }
+        "ZeroDivisionError",
+        "ValueError",
+        "ArithmeticError (never a subclass)",
+        "It returns float(\"inf\") instead of raising"
       ],
       "answerIndex": 0,
       "query": {
@@ -2880,14 +1688,6 @@
           "exceptions",
           "numbers"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2895,18 +1695,10 @@
       "type": "mc",
       "prompt": "What is the difference between `IndexError` and `KeyError`?",
       "choices": [
-        {
-          "text": "IndexError is raised for an out-of-range sequence index; KeyError is raised for a missing dict key"
-        },
-        {
-          "text": "They are the same exception under different names"
-        },
-        {
-          "text": "KeyError applies to lists; IndexError applies to dicts"
-        },
-        {
-          "text": "IndexError is only raised for negative indices"
-        }
+        "IndexError is raised for an out-of-range sequence index; KeyError is raised for a missing dict key",
+        "They are the same exception under different names",
+        "KeyError applies to lists; IndexError applies to dicts",
+        "IndexError is only raised for negative indices"
       ],
       "answerIndex": 0,
       "query": {
@@ -2918,14 +1710,6 @@
           "lists",
           "dicts"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2934,18 +1718,10 @@
       "prompt": "Which exception does `int('abc')` raise, and why is it that one rather than `TypeError`?",
       "code": "int('abc')",
       "choices": [
-        {
-          "text": "ValueError, because the argument is the right type (a string) but has an inappropriate value/content"
-        },
-        {
-          "text": "TypeError, because strings can never be converted to int"
-        },
-        {
-          "text": "KeyError, because 'abc' is not a valid key"
-        },
-        {
-          "text": "It raises nothing and returns 0"
-        }
+        "ValueError, because the argument is the right type (a string) but has an inappropriate value/content",
+        "TypeError, because strings can never be converted to int",
+        "KeyError, because 'abc' is not a valid key",
+        "It raises nothing and returns 0"
       ],
       "answerIndex": 0,
       "query": {
@@ -2955,14 +1731,6 @@
           "exceptions",
           "type-conversion"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2971,18 +1739,10 @@
       "prompt": "What does the statement `raise ValueError('bad input')` do?",
       "code": "raise ValueError('bad input')",
       "choices": [
-        {
-          "text": "Immediately raises a ValueError with that message, interrupting normal flow unless caught"
-        },
-        {
-          "text": "Logs a warning and continues execution"
-        },
-        {
-          "text": "Defines a new exception type named ValueError"
-        },
-        {
-          "text": "Only works inside an except block"
-        }
+        "Immediately raises a ValueError with that message, interrupting normal flow unless caught",
+        "Logs a warning and continues execution",
+        "Defines a new exception type named ValueError",
+        "Only works inside an except block"
       ],
       "answerIndex": 0,
       "query": {
@@ -2992,14 +1752,6 @@
         "tags": [
           "exceptions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3008,18 +1760,10 @@
       "prompt": "What is the purpose of guarding code with `if __name__ == '__main__':` at the bottom of a script?",
       "code": "if __name__ == '__main__':\n    main()",
       "choices": [
-        {
-          "text": "The guarded code only runs when the file is executed directly, not when it's imported as a module"
-        },
-        {
-          "text": "It marks the entry point for the Python interpreter itself, required in every file"
-        },
-        {
-          "text": "It disables the garbage collector for that block"
-        },
-        {
-          "text": "It's required syntax for defining a main function"
-        }
+        "The guarded code only runs when the file is executed directly, not when it's imported as a module",
+        "It marks the entry point for the Python interpreter itself, required in every file",
+        "It disables the garbage collector for that block",
+        "It's required syntax for defining a main function"
       ],
       "answerIndex": 0,
       "query": {
@@ -3030,14 +1774,6 @@
           "modules",
           "idioms"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3045,18 +1781,10 @@
       "type": "mc",
       "prompt": "What is the difference between `import math` and `from math import sqrt`?",
       "choices": [
-        {
-          "text": "import math binds the name 'math' and requires math.sqrt(); from math import sqrt binds 'sqrt' directly into the current namespace"
-        },
-        {
-          "text": "They are functionally identical in every way"
-        },
-        {
-          "text": "from math import sqrt imports the entire module renamed as sqrt"
-        },
-        {
-          "text": "import math only works for standard library modules"
-        }
+        "import math binds the name 'math' and requires math.sqrt(); from math import sqrt binds 'sqrt' directly into the current namespace",
+        "They are functionally identical in every way",
+        "from math import sqrt imports the entire module renamed as sqrt",
+        "import math only works for standard library modules"
       ],
       "answerIndex": 0,
       "query": {
@@ -3067,14 +1795,6 @@
           "modules",
           "imports"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3083,18 +1803,10 @@
       "prompt": "Without the `global` keyword, what happens when a function assigns to a variable that also exists at module level?",
       "code": "count = 0\ndef increment():\n    count = count + 1  # UnboundLocalError\nincrement()",
       "choices": [
-        {
-          "text": "Python treats the name as local to the function, and referencing it before that local assignment raises UnboundLocalError"
-        },
-        {
-          "text": "It transparently modifies the module-level variable"
-        },
-        {
-          "text": "It raises NameError immediately at function definition time"
-        },
-        {
-          "text": "It silently creates a second module-level variable"
-        }
+        "Python treats the name as local to the function, and referencing it before that local assignment raises UnboundLocalError",
+        "It transparently modifies the module-level variable",
+        "It raises NameError immediately at function definition time",
+        "It silently creates a second module-level variable"
       ],
       "answerIndex": 0,
       "query": {
@@ -3105,14 +1817,6 @@
           "scope",
           "functions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3128,14 +1832,6 @@
           "scope",
           "functions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3144,18 +1840,10 @@
       "prompt": "Given `def f(a, b=1, c=2): return a, b, c`, what does `f(5, c=9)` return?",
       "code": "def f(a, b=1, c=2):\n    return a, b, c\nf(5, c=9)",
       "choices": [
-        {
-          "text": "(5, 1, 9)"
-        },
-        {
-          "text": "(5, 9, 2)"
-        },
-        {
-          "text": "A TypeError, c cannot be set without b"
-        },
-        {
-          "text": "(5, 1, 2)"
-        }
+        "(5, 1, 9)",
+        "(5, 9, 2)",
+        "A TypeError, c cannot be set without b",
+        "(5, 1, 2)"
       ],
       "answerIndex": 0,
       "query": {
@@ -3166,14 +1854,6 @@
           "functions",
           "arguments"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3181,18 +1861,10 @@
       "type": "mc",
       "prompt": "Given `def greet(name, greeting): ...`, which call is equivalent to `greet('Al', 'Hi')`?",
       "choices": [
-        {
-          "text": "greet(greeting='Hi', name='Al')"
-        },
-        {
-          "text": "greet('Hi', 'Al')"
-        },
-        {
-          "text": "greet(name='Hi', greeting='Al')"
-        },
-        {
-          "text": "greet(Hi, Al)"
-        }
+        "greet(greeting='Hi', name='Al')",
+        "greet('Hi', 'Al')",
+        "greet(name='Hi', greeting='Al')",
+        "greet(Hi, Al)"
       ],
       "answerIndex": 0,
       "query": {
@@ -3203,14 +1875,6 @@
           "functions",
           "arguments"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3226,14 +1890,6 @@
           "functions",
           "none"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3242,18 +1898,10 @@
       "prompt": "Given `def minmax(nums): return min(nums), max(nums)`, how would you capture both results?",
       "code": "def minmax(nums):\n    return min(nums), max(nums)\nlo, hi = minmax([3, 1, 4, 1, 5])",
       "choices": [
-        {
-          "text": "lo, hi = minmax(nums), unpacking the returned tuple"
-        },
-        {
-          "text": "You cannot return two values from a Python function"
-        },
-        {
-          "text": "result[0], result[1] is the only valid syntax"
-        },
-        {
-          "text": "minmax returns a list, which cannot be unpacked"
-        }
+        "lo, hi = minmax(nums), unpacking the returned tuple",
+        "You cannot return two values from a Python function",
+        "result[0], result[1] is the only valid syntax",
+        "minmax returns a list, which cannot be unpacked"
       ],
       "answerIndex": 0,
       "query": {
@@ -3263,14 +1911,6 @@
           "functions",
           "tuples"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3286,14 +1926,6 @@
           "lists",
           "gotchas"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3309,14 +1941,6 @@
           "lists",
           "slicing"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3332,14 +1956,6 @@
           "numbers",
           "builtins"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     }
   ]

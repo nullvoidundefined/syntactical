@@ -12,8 +12,15 @@ import { shuffleQuestions } from '../services/quiz/shuffleQuestions';
 
 type SubmittedAnswer = number | boolean | null;
 
+export type PlayableQuestion = Exclude<Question, { type: 'ab' }>;
+
+function isPlayable(question: Question): question is PlayableQuestion {
+  // A/B questions stay out of the round until the A/B card exists (Stage 5).
+  return question.type !== 'ab';
+}
+
 export function useQuizEngine(bankQuestions: readonly Question[]) {
-  const [questions] = useState(() => shuffleQuestions(bankQuestions));
+  const [questions] = useState(() => shuffleQuestions(bankQuestions.filter(isPlayable)));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [submittedAnswer, setSubmittedAnswer] = useState<SubmittedAnswer>(null);
   const [correctCount, setCorrectCount] = useState(0);
@@ -23,7 +30,7 @@ export function useQuizEngine(bankQuestions: readonly Question[]) {
   const isAnswered = submittedAnswer !== null;
   const wasCorrect = isAnswered && currentQuestion !== null && isAnswerCorrect(currentQuestion, submittedAnswer);
 
-  function fitsCurrentQuestion(question: Question, value: number | boolean): boolean {
+  function fitsCurrentQuestion(question: PlayableQuestion, value: number | boolean): boolean {
     if (question.type === 'bool') return typeof value === 'boolean';
     return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value < question.choices.length;
   }

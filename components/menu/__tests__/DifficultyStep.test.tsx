@@ -10,7 +10,7 @@ const mockRetry = jest.fn();
 jest.mock('../../../state/useLanguageManifest', () => ({
   useLanguageManifest: () => ({
     languages: [{ banks: { hard: { hash: 'b'.repeat(64), path: 'elixir/hard.json' } }, glyph: 'EX', grammar: 'plain', id: 'elixir', label: 'Elixir', tagline: 'Pipes.' }],
-    schemaVersion: 1,
+    schemaVersion: 2,
   }),
 }));
 jest.mock('../../../state/useQuestionBank', () => ({ useQuestionBank: () => mockBankState.current }));

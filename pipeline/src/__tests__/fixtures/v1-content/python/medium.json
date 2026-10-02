@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 1,
   "questions": [
     {
       "id": "py-med-01",
@@ -7,18 +7,10 @@
       "prompt": "What does `lst[::-1]` produce for `lst = [1, 2, 3]`?",
       "code": "lst = [1, 2, 3]\nlst[::-1]",
       "choices": [
-        {
-          "text": "A new list, reversed"
-        },
-        {
-          "text": "The same list object, mutated in place"
-        },
-        {
-          "text": "A ValueError"
-        },
-        {
-          "text": "Only the first and last elements"
-        }
+        "A new list, reversed",
+        "The same list object, mutated in place",
+        "A ValueError",
+        "Only the first and last elements"
       ],
       "answerIndex": 0,
       "query": {
@@ -29,14 +21,6 @@
           "slicing",
           "lists"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -45,18 +29,10 @@
       "prompt": "What happens when you evaluate `i` immediately after `y = [i for i in range(3)]` in Python 3?",
       "code": "y = [i for i in range(3)]\nprint(i)",
       "choices": [
-        {
-          "text": "Prints `2`"
-        },
-        {
-          "text": "Prints `3`"
-        },
-        {
-          "text": "Raises `NameError`"
-        },
-        {
-          "text": "Prints `0`"
-        }
+        "Prints `2`",
+        "Prints `3`",
+        "Raises `NameError`",
+        "Prints `0`"
       ],
       "answerIndex": 2,
       "query": {
@@ -67,14 +43,6 @@
           "comprehensions",
           "scope"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -90,14 +58,6 @@
           "closures",
           "gotchas"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -106,18 +66,10 @@
       "prompt": "Inside a function signature, `*args` collects extra positional arguments into a:",
       "code": "def f(*args):\n    print(type(args))",
       "choices": [
-        {
-          "text": "dict"
-        },
-        {
-          "text": "list"
-        },
-        {
-          "text": "tuple"
-        },
-        {
-          "text": "set"
-        }
+        "dict",
+        "list",
+        "tuple",
+        "set"
       ],
       "answerIndex": 2,
       "query": {
@@ -128,14 +80,6 @@
           "functions",
           "unpacking"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -144,18 +88,10 @@
       "prompt": "Which dunder method is invoked when Python enters a `with obj:` block?",
       "code": "class Resource:\n    def __enter__(self):\n        ...\n    def __exit__(self, exc_type, exc_val, tb):\n        ...",
       "choices": [
-        {
-          "text": "__init__"
-        },
-        {
-          "text": "__call__"
-        },
-        {
-          "text": "__enter__"
-        },
-        {
-          "text": "__context__"
-        }
+        "__init__",
+        "__call__",
+        "__enter__",
+        "__context__"
       ],
       "answerIndex": 2,
       "query": {
@@ -166,14 +102,6 @@
           "context-managers",
           "dunder"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -182,18 +110,10 @@
       "prompt": "What are `bool([])` and `bool([0])`, respectively?",
       "code": "bool([]), bool([0])",
       "choices": [
-        {
-          "text": "False, False"
-        },
-        {
-          "text": "True, True"
-        },
-        {
-          "text": "False, True"
-        },
-        {
-          "text": "True, False"
-        }
+        "False, False",
+        "True, True",
+        "False, True",
+        "True, False"
       ],
       "answerIndex": 2,
       "query": {
@@ -204,14 +124,6 @@
           "truthiness",
           "lists"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -227,14 +139,6 @@
           "functions",
           "gotchas"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -243,18 +147,10 @@
       "prompt": "What must the argument to `'-'.join(...)` be?",
       "code": "'-'.join(['a', 'b', 'c'])",
       "choices": [
-        {
-          "text": "A single string"
-        },
-        {
-          "text": "Any iterable of strings"
-        },
-        {
-          "text": "A list of any type"
-        },
-        {
-          "text": "A dictionary"
-        }
+        "A single string",
+        "Any iterable of strings",
+        "A list of any type",
+        "A dictionary"
       ],
       "answerIndex": 1,
       "query": {
@@ -265,14 +161,6 @@
           "strings",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -281,18 +169,10 @@
       "prompt": "Inside a function signature, `**kwargs` collects extra keyword arguments into a:",
       "code": "def f(**kwargs):\n    print(type(kwargs))",
       "choices": [
-        {
-          "text": "tuple"
-        },
-        {
-          "text": "list"
-        },
-        {
-          "text": "dict"
-        },
-        {
-          "text": "namedtuple"
-        }
+        "tuple",
+        "list",
+        "dict",
+        "namedtuple"
       ],
       "answerIndex": 2,
       "query": {
@@ -303,14 +183,6 @@
           "functions",
           "unpacking"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -319,18 +191,10 @@
       "prompt": "What does `\"{:.2f}\".format(3.14159)` evaluate to?",
       "code": "\"{:.2f}\".format(3.14159)",
       "choices": [
-        {
-          "text": "'3.14'"
-        },
-        {
-          "text": "'3.1'"
-        },
-        {
-          "text": "'3.142'"
-        },
-        {
-          "text": "'3.14159'"
-        }
+        "'3.14'",
+        "'3.1'",
+        "'3.142'",
+        "'3.14159'"
       ],
       "answerIndex": 0,
       "query": {
@@ -341,14 +205,6 @@
           "strings",
           "formatting"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -357,18 +213,10 @@
       "prompt": "What does calling a function defined with `yield` in its body return, before any iteration happens?",
       "code": "def counter():\n    yield 1\n    yield 2\n\nresult = counter()",
       "choices": [
-        {
-          "text": "A generator object; the body has not run yet"
-        },
-        {
-          "text": "The value `1`, immediately"
-        },
-        {
-          "text": "A list `[1, 2]`"
-        },
-        {
-          "text": "A `TypeError`, because `yield` requires `return` too"
-        }
+        "A generator object; the body has not run yet",
+        "The value `1`, immediately",
+        "A list `[1, 2]`",
+        "A `TypeError`, because `yield` requires `return` too"
       ],
       "answerIndex": 0,
       "query": {
@@ -379,14 +227,6 @@
           "generators",
           "iterators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -402,14 +242,6 @@
           "generators",
           "comprehensions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -418,18 +250,10 @@
       "prompt": "What is `logger` in the following snippet, once the module has finished loading?",
       "code": "@some_decorator\ndef log(fn):\n    ...\n\n@log\ndef greet():\n    print(\"hi\")",
       "choices": [
-        {
-          "text": "The original `greet` function, unchanged"
-        },
-        {
-          "text": "Whatever object `log(greet)` returned, rebound to the name `greet`"
-        },
-        {
-          "text": "A syntax error, decorators cannot take user-defined functions"
-        },
-        {
-          "text": "Both `log` and `greet` merged into one function object"
-        }
+        "The original `greet` function, unchanged",
+        "Whatever object `log(greet)` returned, rebound to the name `greet`",
+        "A syntax error, decorators cannot take user-defined functions",
+        "Both `log` and `greet` merged into one function object"
       ],
       "answerIndex": 1,
       "query": {
@@ -440,14 +264,6 @@
           "decorators",
           "functions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -456,18 +272,10 @@
       "prompt": "Why do well-written decorators apply `functools.wraps(fn)` to their inner wrapper?",
       "code": "import functools\n\ndef log(fn):\n    @functools.wraps(fn)\n    def wrapper(*args, **kwargs):\n        return fn(*args, **kwargs)\n    return wrapper",
       "choices": [
-        {
-          "text": "It makes the wrapper run faster"
-        },
-        {
-          "text": "It copies `__name__`, `__doc__`, and other metadata from the original function onto the wrapper"
-        },
-        {
-          "text": "It is required for the decorator syntax to work at all"
-        },
-        {
-          "text": "It prevents the wrapper from accepting keyword arguments"
-        }
+        "It makes the wrapper run faster",
+        "It copies `__name__`, `__doc__`, and other metadata from the original function onto the wrapper",
+        "It is required for the decorator syntax to work at all",
+        "It prevents the wrapper from accepting keyword arguments"
       ],
       "answerIndex": 1,
       "query": {
@@ -478,14 +286,6 @@
           "decorators",
           "functools"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -502,14 +302,6 @@
           "unpacking",
           "functions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -518,18 +310,10 @@
       "prompt": "What does `f(**opts)` do at a call site, given `opts = {\"sep\": \"-\", \"end\": \"!\"}`?",
       "code": "opts = {\"sep\": \"-\", \"end\": \"!\"}\nprint(\"a\", \"b\", **opts)",
       "choices": [
-        {
-          "text": "Raises `TypeError` because dicts cannot be passed to functions"
-        },
-        {
-          "text": "Passes the dict itself as one positional argument"
-        },
-        {
-          "text": "Expands the dict into keyword arguments `sep='-', end='!'`"
-        },
-        {
-          "text": "Passes only the dict’s keys as positional arguments"
-        }
+        "Raises `TypeError` because dicts cannot be passed to functions",
+        "Passes the dict itself as one positional argument",
+        "Expands the dict into keyword arguments `sep='-', end='!'`",
+        "Passes only the dict’s keys as positional arguments"
       ],
       "answerIndex": 2,
       "query": {
@@ -540,14 +324,6 @@
           "unpacking",
           "functions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -556,18 +332,10 @@
       "prompt": "What gets embedded in the resulting string for `f\"{name.upper()}\"` if `name = \"ana\"`?",
       "code": "name = \"ana\"\nf\"{name.upper()}\"",
       "choices": [
-        {
-          "text": "The literal text 'name.upper()'"
-        },
-        {
-          "text": "'ANA'"
-        },
-        {
-          "text": "A `SyntaxError`, method calls are not allowed inside f-strings"
-        },
-        {
-          "text": "'ana'"
-        }
+        "The literal text 'name.upper()'",
+        "'ANA'",
+        "A `SyntaxError`, method calls are not allowed inside f-strings",
+        "'ana'"
       ],
       "answerIndex": 1,
       "query": {
@@ -578,14 +346,6 @@
           "strings",
           "f-strings"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -594,18 +354,10 @@
       "prompt": "What does the `=` specifier do in an f-string like `f\"{count=}\"`?",
       "code": "count = 5\nprint(f\"{count=}\")",
       "choices": [
-        {
-          "text": "It is a syntax error in f-strings"
-        },
-        {
-          "text": "It prints just the value: '5'"
-        },
-        {
-          "text": "It prints both the expression text and its value: 'count=5'"
-        },
-        {
-          "text": "It assigns 5 to a new variable called count"
-        }
+        "It is a syntax error in f-strings",
+        "It prints just the value: '5'",
+        "It prints both the expression text and its value: 'count=5'",
+        "It assigns 5 to a new variable called count"
       ],
       "answerIndex": 2,
       "query": {
@@ -616,14 +368,6 @@
           "strings",
           "f-strings"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -632,18 +376,10 @@
       "prompt": "What does `{k: len(k) for k in [\"a\", \"bb\", \"ccc\"]}` evaluate to?",
       "code": "{k: len(k) for k in [\"a\", \"bb\", \"ccc\"]}",
       "choices": [
-        {
-          "text": "{'a': 1, 'bb': 2, 'ccc': 3}"
-        },
-        {
-          "text": "['a', 'bb', 'ccc']"
-        },
-        {
-          "text": "{1: 'a', 2: 'bb', 3: 'ccc'}"
-        },
-        {
-          "text": "A SyntaxError, dict comprehensions need two `for` clauses"
-        }
+        "{'a': 1, 'bb': 2, 'ccc': 3}",
+        "['a', 'bb', 'ccc']",
+        "{1: 'a', 2: 'bb', 3: 'ccc'}",
+        "A SyntaxError, dict comprehensions need two `for` clauses"
       ],
       "answerIndex": 0,
       "query": {
@@ -654,14 +390,6 @@
           "comprehensions",
           "dicts"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -679,14 +407,6 @@
           "sets",
           "dicts"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -695,18 +415,10 @@
       "prompt": "What does `with open(\"a\") as fa, open(\"b\") as fb:` do?",
       "code": "with open(\"a\") as fa, open(\"b\") as fb:\n    data = fa.read() + fb.read()",
       "choices": [
-        {
-          "text": "Only opens the first file, the second is ignored"
-        },
-        {
-          "text": "Opens both files, entering two context managers in one `with` statement"
-        },
-        {
-          "text": "Raises a `SyntaxError`, `with` only accepts one context manager"
-        },
-        {
-          "text": "Opens the files sequentially, closing `fa` before opening `fb`"
-        }
+        "Only opens the first file, the second is ignored",
+        "Opens both files, entering two context managers in one `with` statement",
+        "Raises a `SyntaxError`, `with` only accepts one context manager",
+        "Opens the files sequentially, closing `fa` before opening `fb`"
       ],
       "answerIndex": 1,
       "query": {
@@ -716,14 +428,6 @@
         "tags": [
           "context-managers"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -732,18 +436,10 @@
       "prompt": "What does `@contextlib.contextmanager` let you write a context manager as?",
       "code": "from contextlib import contextmanager\n\n@contextmanager\ndef managed():\n    print(\"enter\")\n    yield \"resource\"\n    print(\"exit\")",
       "choices": [
-        {
-          "text": "A class implementing `__enter__` and `__exit__`"
-        },
-        {
-          "text": "A generator function with exactly one `yield`, split into setup and teardown code"
-        },
-        {
-          "text": "A lambda that returns a tuple of two functions"
-        },
-        {
-          "text": "A regular function that must call `return` twice"
-        }
+        "A class implementing `__enter__` and `__exit__`",
+        "A generator function with exactly one `yield`, split into setup and teardown code",
+        "A lambda that returns a tuple of two functions",
+        "A regular function that must call `return` twice"
       ],
       "answerIndex": 1,
       "query": {
@@ -754,14 +450,6 @@
           "context-managers",
           "contextlib"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -776,14 +464,6 @@
         "tags": [
           "exceptions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -792,18 +472,10 @@
       "prompt": "What is the idiomatic way to define a custom exception type in Python?",
       "code": "class InsufficientFundsError(Exception):\n    def __init__(self, balance, amount):\n        super().__init__(f\"Cannot withdraw {amount} from {balance}\")\n        self.balance = balance\n        self.amount = amount",
       "choices": [
-        {
-          "text": "Subclass `Exception` (or a more specific built-in exception)"
-        },
-        {
-          "text": "Subclass `dict`, since exceptions are just structured data"
-        },
-        {
-          "text": "Decorate a plain function with `@exception`"
-        },
-        {
-          "text": "There is no way to add custom fields to an exception"
-        }
+        "Subclass `Exception` (or a more specific built-in exception)",
+        "Subclass `dict`, since exceptions are just structured data",
+        "Decorate a plain function with `@exception`",
+        "There is no way to add custom fields to an exception"
       ],
       "answerIndex": 0,
       "query": {
@@ -814,14 +486,6 @@
           "exceptions",
           "classes"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -830,18 +494,10 @@
       "prompt": "What does declaring `radius` as a `@property` let callers do?",
       "code": "class Circle:\n    def __init__(self, radius):\n        self._radius = radius\n\n    @property\n    def radius(self):\n        return self._radius",
       "choices": [
-        {
-          "text": "Call it like `c.radius()`"
-        },
-        {
-          "text": "Access it like a plain attribute, `c.radius`, while it actually runs a method"
-        },
-        {
-          "text": "Nothing, `@property` only works on class-level constants"
-        },
-        {
-          "text": "Access it as `Circle.radius` without an instance"
-        }
+        "Call it like `c.radius()`",
+        "Access it like a plain attribute, `c.radius`, while it actually runs a method",
+        "Nothing, `@property` only works on class-level constants",
+        "Access it as `Circle.radius` without an instance"
       ],
       "answerIndex": 1,
       "query": {
@@ -852,14 +508,6 @@
           "properties",
           "classes"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -868,18 +516,10 @@
       "prompt": "What is required to make `c.radius = 5` work for the `radius` property below?",
       "code": "class Circle:\n    @property\n    def radius(self):\n        return self._radius\n\n    @radius.setter\n    def radius(self, value):\n        if value < 0:\n            raise ValueError(\"negative radius\")\n        self._radius = value",
       "choices": [
-        {
-          "text": "Nothing extra, every `@property` is automatically settable"
-        },
-        {
-          "text": "A separate method decorated with `@radius.setter`, using the same method name"
-        },
-        {
-          "text": "Overriding `__setattr__` on the class"
-        },
-        {
-          "text": "Making `radius` a class variable instead of a property"
-        }
+        "Nothing extra, every `@property` is automatically settable",
+        "A separate method decorated with `@radius.setter`, using the same method name",
+        "Overriding `__setattr__` on the class",
+        "Making `radius` a class variable instead of a property"
       ],
       "answerIndex": 1,
       "query": {
@@ -890,14 +530,6 @@
           "properties",
           "classes"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -914,14 +546,6 @@
           "classes",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -930,18 +554,10 @@
       "prompt": "Why do factory constructors like `dict.fromkeys` use `@classmethod`?",
       "code": "class Pizza:\n    def __init__(self, size, toppings):\n        self.size = size\n        self.toppings = toppings\n\n    @classmethod\n    def margherita(cls, size):\n        return cls(size, [\"tomato\", \"mozzarella\"])",
       "choices": [
-        {
-          "text": "It gives the method access to the class itself via `cls`, so it can call `cls(...)` and work correctly for subclasses too"
-        },
-        {
-          "text": "It is required syntax for any method that returns an instance"
-        },
-        {
-          "text": "It makes the method private"
-        },
-        {
-          "text": "`cls` is just a naming convention with no special behavior"
-        }
+        "It gives the method access to the class itself via `cls`, so it can call `cls(...)` and work correctly for subclasses too",
+        "It is required syntax for any method that returns an instance",
+        "It makes the method private",
+        "`cls` is just a naming convention with no special behavior"
       ],
       "answerIndex": 0,
       "query": {
@@ -952,14 +568,6 @@
           "classes",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -976,14 +584,6 @@
           "enumerate",
           "iteration"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -999,14 +599,6 @@
           "zip",
           "iteration"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1015,18 +607,10 @@
       "prompt": "How do you sort a list of strings by length instead of alphabetically?",
       "code": "words = [\"banana\", \"fig\", \"kiwi\"]\nsorted(words, key=len)",
       "choices": [
-        {
-          "text": "sorted(words, compare=len)"
-        },
-        {
-          "text": "sorted(words, key=len)"
-        },
-        {
-          "text": "words.sort(len)"
-        },
-        {
-          "text": "sorted(words, by=len)"
-        }
+        "sorted(words, compare=len)",
+        "sorted(words, key=len)",
+        "words.sort(len)",
+        "sorted(words, by=len)"
       ],
       "answerIndex": 1,
       "query": {
@@ -1036,14 +620,6 @@
         "tags": [
           "sorting"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1052,18 +628,10 @@
       "prompt": "What does `sorted([3, 1, 2], reverse=True)` return?",
       "code": "sorted([3, 1, 2], reverse=True)",
       "choices": [
-        {
-          "text": "[1, 2, 3]"
-        },
-        {
-          "text": "[3, 2, 1]"
-        },
-        {
-          "text": "[3, 1, 2]"
-        },
-        {
-          "text": "[2, 1, 3]"
-        }
+        "[1, 2, 3]",
+        "[3, 2, 1]",
+        "[3, 1, 2]",
+        "[2, 1, 3]"
       ],
       "answerIndex": 1,
       "query": {
@@ -1073,14 +641,6 @@
         "tags": [
           "sorting"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1089,18 +649,10 @@
       "prompt": "What does `collections.Counter(\"mississippi\")` let you get easily?",
       "code": "from collections import Counter\nc = Counter(\"mississippi\")\nc[\"s\"]",
       "choices": [
-        {
-          "text": "The index of the first \"s\""
-        },
-        {
-          "text": "The number of times \"s\" appears in the string"
-        },
-        {
-          "text": "A boolean for whether \"s\" is in the string"
-        },
-        {
-          "text": "A `KeyError`, `Counter` only works on lists"
-        }
+        "The index of the first \"s\"",
+        "The number of times \"s\" appears in the string",
+        "A boolean for whether \"s\" is in the string",
+        "A `KeyError`, `Counter` only works on lists"
       ],
       "answerIndex": 1,
       "query": {
@@ -1110,14 +662,6 @@
         "tags": [
           "collections"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1126,18 +670,10 @@
       "prompt": "What problem does `collections.defaultdict(list)` solve compared to a plain dict?",
       "code": "from collections import defaultdict\ngroups = defaultdict(list)\ngroups[\"a\"].append(1)",
       "choices": [
-        {
-          "text": "It sorts keys automatically"
-        },
-        {
-          "text": "It avoids a `KeyError` by auto-creating a new list the first time a key is accessed"
-        },
-        {
-          "text": "It makes the dict immutable"
-        },
-        {
-          "text": "It limits the dict to a fixed maximum size"
-        }
+        "It sorts keys automatically",
+        "It avoids a `KeyError` by auto-creating a new list the first time a key is accessed",
+        "It makes the dict immutable",
+        "It limits the dict to a fixed maximum size"
       ],
       "answerIndex": 1,
       "query": {
@@ -1147,14 +683,6 @@
         "tags": [
           "collections"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1163,18 +691,10 @@
       "prompt": "What can you do with a `collections.namedtuple` that you cannot do with a plain tuple?",
       "code": "from collections import namedtuple\nPoint = namedtuple(\"Point\", [\"x\", \"y\"])\np = Point(1, 2)\np.x",
       "choices": [
-        {
-          "text": "Mutate its fields after creation"
-        },
-        {
-          "text": "Access fields by name (`p.x`) in addition to by index (`p[0]`)"
-        },
-        {
-          "text": "Store more than 255 elements"
-        },
-        {
-          "text": "Nest it inside a dict, which plain tuples cannot do"
-        }
+        "Mutate its fields after creation",
+        "Access fields by name (`p.x`) in addition to by index (`p[0]`)",
+        "Store more than 255 elements",
+        "Nest it inside a dict, which plain tuples cannot do"
       ],
       "answerIndex": 1,
       "query": {
@@ -1184,14 +704,6 @@
         "tags": [
           "collections"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1200,18 +712,10 @@
       "prompt": "What does `list(itertools.chain([1, 2], [3, 4], [5]))` produce?",
       "code": "import itertools\nlist(itertools.chain([1, 2], [3, 4], [5]))",
       "choices": [
-        {
-          "text": "[[1, 2], [3, 4], [5]]"
-        },
-        {
-          "text": "[1, 2, 3, 4, 5]"
-        },
-        {
-          "text": "(1, 2, 3, 4, 5)"
-        },
-        {
-          "text": "A TypeError, chain needs a single iterable of iterables"
-        }
+        "[[1, 2], [3, 4], [5]]",
+        "[1, 2, 3, 4, 5]",
+        "(1, 2, 3, 4, 5)",
+        "A TypeError, chain needs a single iterable of iterables"
       ],
       "answerIndex": 1,
       "query": {
@@ -1221,14 +725,6 @@
         "tags": [
           "itertools"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1237,18 +733,10 @@
       "prompt": "What does `list(itertools.combinations([1, 2, 3], 2))` produce?",
       "code": "import itertools\nlist(itertools.combinations([1, 2, 3], 2))",
       "choices": [
-        {
-          "text": "[(1, 2), (1, 3), (2, 3)]"
-        },
-        {
-          "text": "[(1, 2), (2, 1), (1, 3), (3, 1), (2, 3), (3, 2)]"
-        },
-        {
-          "text": "[1, 2, 3]"
-        },
-        {
-          "text": "[(1, 1), (2, 2), (3, 3)]"
-        }
+        "[(1, 2), (1, 3), (2, 3)]",
+        "[(1, 2), (2, 1), (1, 3), (3, 1), (2, 3), (3, 2)]",
+        "[1, 2, 3]",
+        "[(1, 1), (2, 2), (3, 3)]"
       ],
       "answerIndex": 0,
       "query": {
@@ -1258,14 +746,6 @@
         "tags": [
           "itertools"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1281,14 +761,6 @@
           "copy",
           "mutability"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1297,18 +769,10 @@
       "prompt": "If a class defines `__repr__` but not `__str__`, what does `str(instance)` use?",
       "code": "class Point:\n    def __repr__(self):\n        return f\"Point({self.x}, {self.y})\"",
       "choices": [
-        {
-          "text": "Python's default `<Point object at 0x...>` text, ignoring `__repr__`"
-        },
-        {
-          "text": "It falls back to `__repr__`"
-        },
-        {
-          "text": "It raises `AttributeError`"
-        },
-        {
-          "text": "It returns an empty string"
-        }
+        "Python's default `<Point object at 0x...>` text, ignoring `__repr__`",
+        "It falls back to `__repr__`",
+        "It raises `AttributeError`",
+        "It returns an empty string"
       ],
       "answerIndex": 1,
       "query": {
@@ -1319,14 +783,6 @@
           "dunder",
           "classes"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1343,14 +799,6 @@
           "dunder",
           "equality"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1359,18 +807,10 @@
       "prompt": "What does `@functools.total_ordering` do once a class defines `__eq__` and one ordering method like `__lt__`?",
       "code": "from functools import total_ordering\n\n@total_ordering\nclass Version:\n    def __eq__(self, other): ...\n    def __lt__(self, other): ...",
       "choices": [
-        {
-          "text": "It fills in the remaining comparisons (`__le__`, `__gt__`, `__ge__`) automatically"
-        },
-        {
-          "text": "It requires you to still define all six comparison methods yourself"
-        },
-        {
-          "text": "It makes the class sortable without defining any comparison method"
-        },
-        {
-          "text": "It overrides `__eq__` to always return `True`"
-        }
+        "It fills in the remaining comparisons (`__le__`, `__gt__`, `__ge__`) automatically",
+        "It requires you to still define all six comparison methods yourself",
+        "It makes the class sortable without defining any comparison method",
+        "It overrides `__eq__` to always return `True`"
       ],
       "answerIndex": 0,
       "query": {
@@ -1381,14 +821,6 @@
           "functools",
           "equality"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1397,18 +829,10 @@
       "prompt": "Given `a, *b, c = [1, 2, 3, 4, 5]`, what are `a`, `b`, and `c`?",
       "code": "a, *b, c = [1, 2, 3, 4, 5]",
       "choices": [
-        {
-          "text": "a=1, b=[2, 3, 4], c=5"
-        },
-        {
-          "text": "a=1, b=[2, 3, 4, 5], c=undefined"
-        },
-        {
-          "text": "a=[1], b=[2, 3, 4], c=[5]"
-        },
-        {
-          "text": "A ValueError, only one starred target is allowed and it must be last"
-        }
+        "a=1, b=[2, 3, 4], c=5",
+        "a=1, b=[2, 3, 4, 5], c=undefined",
+        "a=[1], b=[2, 3, 4], c=[5]",
+        "A ValueError, only one starred target is allowed and it must be last"
       ],
       "answerIndex": 0,
       "query": {
@@ -1419,14 +843,6 @@
           "unpacking",
           "assignment"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1435,18 +851,10 @@
       "prompt": "What does the walrus operator accomplish inside this comprehension that a plain condition could not do without recomputing?",
       "code": "data = [\"1\", \"x\", \"3\"]\nresults = [n for s in data if (n := int(s)) if False]  # illustrative\nvalid = [y for x in data if (y := safe_parse(x)) is not None]",
       "choices": [
-        {
-          "text": "It filters on the parsed value while reusing it as the output, without calling the parser twice"
-        },
-        {
-          "text": "It declares `y` as a global variable"
-        },
-        {
-          "text": "It is only legal inside `while` loops, not comprehensions"
-        },
-        {
-          "text": "It converts the comprehension into a generator expression automatically"
-        }
+        "It filters on the parsed value while reusing it as the output, without calling the parser twice",
+        "It declares `y` as a global variable",
+        "It is only legal inside `while` loops, not comprehensions",
+        "It converts the comprehension into a generator expression automatically"
       ],
       "answerIndex": 0,
       "query": {
@@ -1457,14 +865,6 @@
           "walrus",
           "comprehensions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1479,14 +879,6 @@
         "tags": [
           "type-hints"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1495,18 +887,10 @@
       "prompt": "What does the type hint `Optional[str]` mean?",
       "code": "from typing import Optional\n\ndef find(name: str) -> Optional[str]:\n    ...",
       "choices": [
-        {
-          "text": "The parameter is optional and can be omitted from the call"
-        },
-        {
-          "text": "It is shorthand for `Union[str, None]`, the value is either a `str` or `None`"
-        },
-        {
-          "text": "It means the function returns nothing"
-        },
-        {
-          "text": "It marks the function as deprecated"
-        }
+        "The parameter is optional and can be omitted from the call",
+        "It is shorthand for `Union[str, None]`, the value is either a `str` or `None`",
+        "It means the function returns nothing",
+        "It marks the function as deprecated"
       ],
       "answerIndex": 1,
       "query": {
@@ -1516,14 +900,6 @@
         "tags": [
           "type-hints"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1538,14 +914,6 @@
         "tags": [
           "assert"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1554,18 +922,10 @@
       "prompt": "Why does this function fail to update the module-level counter as intended?",
       "code": "count = 0\n\ndef increment():\n    count = count + 1  # UnboundLocalError",
       "choices": [
-        {
-          "text": "It does not fail, `count` updates correctly"
-        },
-        {
-          "text": "Assigning to `count` anywhere in the function makes Python treat it as a local, so reading it before the assignment raises `UnboundLocalError`"
-        },
-        {
-          "text": "Module-level variables can never be read inside a function"
-        },
-        {
-          "text": "`count + 1` is invalid syntax"
-        }
+        "It does not fail, `count` updates correctly",
+        "Assigning to `count` anywhere in the function makes Python treat it as a local, so reading it before the assignment raises `UnboundLocalError`",
+        "Module-level variables can never be read inside a function",
+        "`count + 1` is invalid syntax"
       ],
       "answerIndex": 1,
       "query": {
@@ -1576,14 +936,6 @@
           "scope",
           "global"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1592,18 +944,10 @@
       "prompt": "What does `nonlocal` do inside a nested function?",
       "code": "def outer():\n    total = 0\n    def inner():\n        nonlocal total\n        total += 1\n    inner()\n    return total",
       "choices": [
-        {
-          "text": "It reaches all the way to module-level (global) scope"
-        },
-        {
-          "text": "It lets `inner` reassign a variable from the nearest enclosing function scope, rather than creating a new local"
-        },
-        {
-          "text": "It is a synonym for `global`"
-        },
-        {
-          "text": "It makes `total` read-only inside `inner`"
-        }
+        "It reaches all the way to module-level (global) scope",
+        "It lets `inner` reassign a variable from the nearest enclosing function scope, rather than creating a new local",
+        "It is a synonym for `global`",
+        "It makes `total` read-only inside `inner`"
       ],
       "answerIndex": 1,
       "query": {
@@ -1615,14 +959,6 @@
           "nonlocal",
           "closures"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1639,14 +975,6 @@
           "strings",
           "encoding"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1655,18 +983,10 @@
       "prompt": "Why does `a = 1000; b = 1000; a is b` commonly print `False` even though `a == b` is `True`?",
       "code": "a = 1000\nb = 1000\nprint(a == b, a is b)",
       "choices": [
-        {
-          "text": "`==` and `is` always agree for integers, this is a trick question"
-        },
-        {
-          "text": "`==` compares values; `is` compares object identity, and large integers outside the small-int cache are typically separate objects"
-        },
-        {
-          "text": "`is` is deprecated and always returns `False`"
-        },
-        {
-          "text": "`1000` is not a valid integer literal"
-        }
+        "`==` and `is` always agree for integers, this is a trick question",
+        "`==` compares values; `is` compares object identity, and large integers outside the small-int cache are typically separate objects",
+        "`is` is deprecated and always returns `False`",
+        "`1000` is not a valid integer literal"
       ],
       "answerIndex": 1,
       "query": {
@@ -1677,14 +997,6 @@
           "identity",
           "equality"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1701,14 +1013,6 @@
           "hashing",
           "tuples"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1717,18 +1021,10 @@
       "prompt": "Given `def f(a, b, c): ...`, which of these calls is invalid?",
       "code": "def f(a, b, c):\n    ...\n\nf(1, c=3, b=2)     # valid\nf(1, a=1, b=2, c=3)  # ?",
       "choices": [
-        {
-          "text": "f(1, a=1, b=2, c=3)  — raises TypeError for a duplicate value for argument \"a\""
-        },
-        {
-          "text": "f(1, c=3, b=2)  — raises TypeError"
-        },
-        {
-          "text": "f(a=1, b=2, c=3)  — raises TypeError"
-        },
-        {
-          "text": "Neither call is invalid"
-        }
+        "f(1, a=1, b=2, c=3)  — raises TypeError for a duplicate value for argument \"a\"",
+        "f(1, c=3, b=2)  — raises TypeError",
+        "f(a=1, b=2, c=3)  — raises TypeError",
+        "Neither call is invalid"
       ],
       "answerIndex": 0,
       "query": {
@@ -1739,14 +1035,6 @@
           "functions",
           "arguments"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1755,18 +1043,10 @@
       "prompt": "How does Python evaluate the chained comparison `1 < x < 10`?",
       "code": "x = 5\n1 < x < 10",
       "choices": [
-        {
-          "text": "As `(1 < x) < 10`, comparing a boolean to `10`"
-        },
-        {
-          "text": "As `1 < x and x < 10`, with `x` evaluated only once"
-        },
-        {
-          "text": "It is a SyntaxError, comparisons cannot be chained"
-        },
-        {
-          "text": "As `1 < x or x < 10`"
-        }
+        "As `(1 < x) < 10`, comparing a boolean to `10`",
+        "As `1 < x and x < 10`, with `x` evaluated only once",
+        "It is a SyntaxError, comparisons cannot be chained",
+        "As `1 < x or x < 10`"
       ],
       "answerIndex": 1,
       "query": {
@@ -1777,14 +1057,6 @@
           "comparisons",
           "operators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1801,14 +1073,6 @@
           "conditionals",
           "expressions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1824,14 +1088,6 @@
           "assignment",
           "mutability"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1840,18 +1096,10 @@
       "prompt": "What is the idiomatic way to swap two variables in Python?",
       "code": "a, b = 1, 2\na, b = b, a",
       "choices": [
-        {
-          "text": "Using a temporary variable, since Python has no other way"
-        },
-        {
-          "text": "Tuple packing and unpacking in one line: `a, b = b, a`"
-        },
-        {
-          "text": "Calling `swap(a, b)`, a built-in function"
-        },
-        {
-          "text": "It is not possible without the `copy` module"
-        }
+        "Using a temporary variable, since Python has no other way",
+        "Tuple packing and unpacking in one line: `a, b = b, a`",
+        "Calling `swap(a, b)`, a built-in function",
+        "It is not possible without the `copy` module"
       ],
       "answerIndex": 1,
       "query": {
@@ -1862,14 +1110,6 @@
           "unpacking",
           "assignment"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1886,14 +1126,6 @@
           "strings",
           "operators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1910,14 +1142,6 @@
           "gotchas",
           "mutability"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1926,18 +1150,10 @@
       "prompt": "What does `all([1, 2, 0, 4])` return, and why?",
       "code": "all([1, 2, 0, 4])",
       "choices": [
-        {
-          "text": "True, because the list is non-empty"
-        },
-        {
-          "text": "False, because 0 is falsy and all() requires every element to be truthy"
-        },
-        {
-          "text": "True, because most elements are truthy"
-        },
-        {
-          "text": "It raises TypeError on a list containing 0"
-        }
+        "True, because the list is non-empty",
+        "False, because 0 is falsy and all() requires every element to be truthy",
+        "True, because most elements are truthy",
+        "It raises TypeError on a list containing 0"
       ],
       "answerIndex": 1,
       "query": {
@@ -1948,14 +1164,6 @@
           "builtins",
           "truthiness"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1964,18 +1172,10 @@
       "prompt": "What does `map(str.upper, [\"a\", \"b\"])` return, before you do anything else with it?",
       "code": "result = map(str.upper, [\"a\", \"b\"])\ntype(result)",
       "choices": [
-        {
-          "text": "['A', 'B'], a list"
-        },
-        {
-          "text": "A `map` object, a lazy iterator; nothing is computed until it's consumed"
-        },
-        {
-          "text": "'AB', a single string"
-        },
-        {
-          "text": "A TypeError, map needs a lambda, not a bound method"
-        }
+        "['A', 'B'], a list",
+        "A `map` object, a lazy iterator; nothing is computed until it's consumed",
+        "'AB', a single string",
+        "A TypeError, map needs a lambda, not a bound method"
       ],
       "answerIndex": 1,
       "query": {
@@ -1986,14 +1186,6 @@
           "map",
           "iterators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2002,18 +1194,10 @@
       "prompt": "What does `list(filter(None, [0, 1, \"\", \"a\", None, 2]))` produce?",
       "code": "list(filter(None, [0, 1, \"\", \"a\", None, 2]))",
       "choices": [
-        {
-          "text": "[0, 1, \"\", \"a\", None, 2]"
-        },
-        {
-          "text": "[1, 'a', 2]"
-        },
-        {
-          "text": "[0, \"\", None]"
-        },
-        {
-          "text": "A TypeError, `None` is not callable"
-        }
+        "[0, 1, \"\", \"a\", None, 2]",
+        "[1, 'a', 2]",
+        "[0, \"\", None]",
+        "A TypeError, `None` is not callable"
       ],
       "answerIndex": 1,
       "query": {
@@ -2024,14 +1208,6 @@
           "filter",
           "truthiness"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2040,18 +1216,10 @@
       "prompt": "Why does `sorted(names, key=lambda: n.lower())` fail to run at all?",
       "code": "names = [\"Bob\", \"alice\"]\nsorted(names, key=lambda: n.lower())",
       "choices": [
-        {
-          "text": "lambdas cannot reference variables at all"
-        },
-        {
-          "text": "The lambda takes zero parameters, but `sorted` calls the key function with one argument (each element)"
-        },
-        {
-          "text": "`lower()` does not exist on strings"
-        },
-        {
-          "text": "lambdas cannot be passed as arguments to other functions"
-        }
+        "lambdas cannot reference variables at all",
+        "The lambda takes zero parameters, but `sorted` calls the key function with one argument (each element)",
+        "`lower()` does not exist on strings",
+        "lambdas cannot be passed as arguments to other functions"
       ],
       "answerIndex": 1,
       "query": {
@@ -2062,14 +1230,6 @@
           "lambda",
           "functions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2085,14 +1245,6 @@
         "tags": [
           "dicts"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2101,18 +1253,10 @@
       "prompt": "What does `groups.setdefault(\"a\", []).append(1)` do if `\"a\"` is not yet a key in `groups`?",
       "code": "groups = {}\ngroups.setdefault(\"a\", []).append(1)",
       "choices": [
-        {
-          "text": "Raises `KeyError` because `\"a\"` does not exist yet"
-        },
-        {
-          "text": "Inserts `\"a\": []` into `groups`, then appends `1` to that new list, leaving `groups == {\"a\": [1]}`"
-        },
-        {
-          "text": "Does nothing, since `setdefault` only reads existing keys"
-        },
-        {
-          "text": "Overwrites any existing value for `\"a\"` with `[1]`"
-        }
+        "Raises `KeyError` because `\"a\"` does not exist yet",
+        "Inserts `\"a\": []` into `groups`, then appends `1` to that new list, leaving `groups == {\"a\": [1]}`",
+        "Does nothing, since `setdefault` only reads existing keys",
+        "Overwrites any existing value for `\"a\"` with `[1]`"
       ],
       "answerIndex": 1,
       "query": {
@@ -2122,14 +1266,6 @@
         "tags": [
           "dicts"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2138,18 +1274,10 @@
       "prompt": "What does `{\"a\": 1, \"b\": 2} | {\"b\": 3, \"c\": 4}` evaluate to (Python 3.9+)?",
       "code": "{\"a\": 1, \"b\": 2} | {\"b\": 3, \"c\": 4}",
       "choices": [
-        {
-          "text": "{'a': 1, 'b': 2, 'c': 4}"
-        },
-        {
-          "text": "{'a': 1, 'b': 3, 'c': 4}"
-        },
-        {
-          "text": "A TypeError, dicts do not support `|`"
-        },
-        {
-          "text": "{'a': 1, 'b': 5, 'c': 4}"
-        }
+        "{'a': 1, 'b': 2, 'c': 4}",
+        "{'a': 1, 'b': 3, 'c': 4}",
+        "A TypeError, dicts do not support `|`",
+        "{'a': 1, 'b': 5, 'c': 4}"
       ],
       "answerIndex": 1,
       "query": {
@@ -2159,14 +1287,6 @@
         "tags": [
           "dicts"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2175,18 +1295,10 @@
       "prompt": "What does `{1, 2, 3} & {2, 3, 4}` return?",
       "code": "{1, 2, 3} & {2, 3, 4}",
       "choices": [
-        {
-          "text": "{1, 2, 3, 4}"
-        },
-        {
-          "text": "{2, 3}"
-        },
-        {
-          "text": "{1, 4}"
-        },
-        {
-          "text": "set()"
-        }
+        "{1, 2, 3, 4}",
+        "{2, 3}",
+        "{1, 4}",
+        "set()"
       ],
       "answerIndex": 1,
       "query": {
@@ -2196,14 +1308,6 @@
         "tags": [
           "sets"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2219,14 +1323,6 @@
           "sets",
           "hashing"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2235,18 +1331,10 @@
       "prompt": "After `s = \"hello\"; s.upper()`, what is `s`?",
       "code": "s = \"hello\"\ns.upper()\nprint(s)",
       "choices": [
-        {
-          "text": "'HELLO', because .upper() mutates the string in place"
-        },
-        {
-          "text": "'hello', unchanged, because strings are immutable and .upper() returns a new string"
-        },
-        {
-          "text": "An error, strings have no `.upper()` method"
-        },
-        {
-          "text": "'Hello'"
-        }
+        "'HELLO', because .upper() mutates the string in place",
+        "'hello', unchanged, because strings are immutable and .upper() returns a new string",
+        "An error, strings have no `.upper()` method",
+        "'Hello'"
       ],
       "answerIndex": 1,
       "query": {
@@ -2257,14 +1345,6 @@
           "strings",
           "immutability"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2273,18 +1353,10 @@
       "prompt": "What is the difference between `lst.append(x)` and `lst.extend(x)` when `x` is itself a list?",
       "code": "a = [1, 2]\na.append([3, 4])   # -> [1, 2, [3, 4]]\n\nb = [1, 2]\nb.extend([3, 4])   # -> [1, 2, 3, 4]",
       "choices": [
-        {
-          "text": "They are identical, just different names for the same operation"
-        },
-        {
-          "text": "`append` adds `x` as a single new element (even if it is a list); `extend` iterates over `x` and adds each of its elements individually"
-        },
-        {
-          "text": "`extend` only works on tuples, not lists"
-        },
-        {
-          "text": "`append` raises `TypeError` if given a list"
-        }
+        "They are identical, just different names for the same operation",
+        "`append` adds `x` as a single new element (even if it is a list); `extend` iterates over `x` and adds each of its elements individually",
+        "`extend` only works on tuples, not lists",
+        "`append` raises `TypeError` if given a list"
       ],
       "answerIndex": 1,
       "query": {
@@ -2295,14 +1367,6 @@
           "lists",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2319,14 +1383,6 @@
           "lists",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2343,14 +1399,6 @@
           "lists",
           "del"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2359,18 +1407,10 @@
       "prompt": "What does `lst = [1, 2, 3, 4]; lst[1:3] = [9]` leave `lst` as?",
       "code": "lst = [1, 2, 3, 4]\nlst[1:3] = [9]",
       "choices": [
-        {
-          "text": "[1, 9, 4]"
-        },
-        {
-          "text": "[1, 9, 2, 3, 4]"
-        },
-        {
-          "text": "[1, 9, 9, 4]"
-        },
-        {
-          "text": "A ValueError, the replacement must match the slice length"
-        }
+        "[1, 9, 4]",
+        "[1, 9, 2, 3, 4]",
+        "[1, 9, 9, 4]",
+        "A ValueError, the replacement must match the slice length"
       ],
       "answerIndex": 0,
       "query": {
@@ -2381,14 +1421,6 @@
           "slicing",
           "lists"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2405,14 +1437,6 @@
           "indexing",
           "lists"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2428,14 +1452,6 @@
           "range",
           "iterators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2444,18 +1460,10 @@
       "prompt": "What happens when you call `next()` on an exhausted iterator?",
       "code": "it = iter([1, 2])\nnext(it)\nnext(it)\nnext(it)  # ?",
       "choices": [
-        {
-          "text": "It returns `None`"
-        },
-        {
-          "text": "It raises `StopIteration`"
-        },
-        {
-          "text": "It silently restarts from the beginning"
-        },
-        {
-          "text": "It raises `IndexError`"
-        }
+        "It returns `None`",
+        "It raises `StopIteration`",
+        "It silently restarts from the beginning",
+        "It raises `IndexError`"
       ],
       "answerIndex": 1,
       "query": {
@@ -2465,14 +1473,6 @@
         "tags": [
           "iterators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2481,18 +1481,10 @@
       "prompt": "When does the `else` clause of a `try`/`except`/`else` block run?",
       "code": "try:\n    result = risky()\nexcept ValueError:\n    result = None\nelse:\n    print(\"no exception occurred\")",
       "choices": [
-        {
-          "text": "Only if an exception was caught"
-        },
-        {
-          "text": "Only if the `try` block completed with no exception raised"
-        },
-        {
-          "text": "Always, regardless of whether an exception occurred"
-        },
-        {
-          "text": "Only if there is no `except` clause at all"
-        }
+        "Only if an exception was caught",
+        "Only if the `try` block completed with no exception raised",
+        "Always, regardless of whether an exception occurred",
+        "Only if there is no `except` clause at all"
       ],
       "answerIndex": 1,
       "query": {
@@ -2503,14 +1495,6 @@
           "exceptions",
           "try-except"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2519,18 +1503,10 @@
       "prompt": "What does `except (ValueError, TypeError) as e:` do?",
       "code": "try:\n    risky()\nexcept (ValueError, TypeError) as e:\n    print(\"bad input:\", e)",
       "choices": [
-        {
-          "text": "It is a syntax error; each exception type needs its own `except` clause"
-        },
-        {
-          "text": "It catches either a `ValueError` or a `TypeError` with one clause, binding whichever was raised to `e`"
-        },
-        {
-          "text": "It only catches `ValueError`, the tuple is ignored"
-        },
-        {
-          "text": "It catches only exceptions that are simultaneously both types"
-        }
+        "It is a syntax error; each exception type needs its own `except` clause",
+        "It catches either a `ValueError` or a `TypeError` with one clause, binding whichever was raised to `e`",
+        "It only catches `ValueError`, the tuple is ignored",
+        "It catches only exceptions that are simultaneously both types"
       ],
       "answerIndex": 1,
       "query": {
@@ -2541,14 +1517,6 @@
           "exceptions",
           "try-except"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2557,18 +1525,10 @@
       "prompt": "What does a bare `raise` (with no exception given) do inside an `except` block?",
       "code": "try:\n    risky()\nexcept ValueError:\n    log_error()\n    raise",
       "choices": [
-        {
-          "text": "Raises a generic `Exception`"
-        },
-        {
-          "text": "Re-raises the exception currently being handled, preserving its original traceback"
-        },
-        {
-          "text": "Does nothing, it is a no-op outside a function"
-        },
-        {
-          "text": "Raises `StopIteration`"
-        }
+        "Raises a generic `Exception`",
+        "Re-raises the exception currently being handled, preserving its original traceback",
+        "Does nothing, it is a no-op outside a function",
+        "Raises `StopIteration`"
       ],
       "answerIndex": 1,
       "query": {
@@ -2579,14 +1539,6 @@
           "exceptions",
           "try-except"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2595,18 +1547,10 @@
       "prompt": "What is the main advantage of `pathlib.Path` over building paths with `os.path` and string concatenation?",
       "code": "from pathlib import Path\np = Path(\"data\") / \"raw\" / \"file.csv\"",
       "choices": [
-        {
-          "text": "It is the only way to check if a file exists"
-        },
-        {
-          "text": "The `/` operator joins path segments in an object-oriented way, and it is OS-independent about separators"
-        },
-        {
-          "text": "`os.path` is deprecated and no longer works"
-        },
-        {
-          "text": "`pathlib.Path` objects can be used interchangeably with integers"
-        }
+        "It is the only way to check if a file exists",
+        "The `/` operator joins path segments in an object-oriented way, and it is OS-independent about separators",
+        "`os.path` is deprecated and no longer works",
+        "`pathlib.Path` objects can be used interchangeably with integers"
       ],
       "answerIndex": 1,
       "query": {
@@ -2617,14 +1561,6 @@
           "pathlib",
           "filesystem"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2633,18 +1569,10 @@
       "prompt": "What does `json.dumps({\"a\": 1, \"b\": [1, 2]})` return?",
       "code": "import json\njson.dumps({\"a\": 1, \"b\": [1, 2]})",
       "choices": [
-        {
-          "text": "A dict, `{'a': 1, 'b': [1, 2]}`"
-        },
-        {
-          "text": "A JSON-formatted string: '{\"a\": 1, \"b\": [1, 2]}'"
-        },
-        {
-          "text": "A bytes object"
-        },
-        {
-          "text": "Writes directly to a file named after the dict"
-        }
+        "A dict, `{'a': 1, 'b': [1, 2]}`",
+        "A JSON-formatted string: '{\"a\": 1, \"b\": [1, 2]}'",
+        "A bytes object",
+        "Writes directly to a file named after the dict"
       ],
       "answerIndex": 1,
       "query": {
@@ -2655,14 +1583,6 @@
           "json",
           "serialization"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2671,18 +1591,10 @@
       "prompt": "What does `datetime(2024, 1, 31) + timedelta(days=1)` evaluate to?",
       "code": "from datetime import datetime, timedelta\ndatetime(2024, 1, 31) + timedelta(days=1)",
       "choices": [
-        {
-          "text": "datetime(2024, 1, 32)"
-        },
-        {
-          "text": "datetime(2024, 2, 1)"
-        },
-        {
-          "text": "A ValueError, January has only 31 days"
-        },
-        {
-          "text": "datetime(2024, 1, 30)"
-        }
+        "datetime(2024, 1, 32)",
+        "datetime(2024, 2, 1)",
+        "A ValueError, January has only 31 days",
+        "datetime(2024, 1, 30)"
       ],
       "answerIndex": 1,
       "query": {
@@ -2692,14 +1604,6 @@
         "tags": [
           "datetime"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2708,18 +1612,10 @@
       "prompt": "What does calling `random.seed(42)` before generating random numbers accomplish?",
       "code": "import random\nrandom.seed(42)\nprint(random.random())",
       "choices": [
-        {
-          "text": "It makes every future call to `random.random()` return exactly `42`"
-        },
-        {
-          "text": "It initializes the pseudo-random generator so the resulting sequence of \"random\" numbers is reproducible"
-        },
-        {
-          "text": "It disables randomness, making the module raise an error on use"
-        },
-        {
-          "text": "It only affects `random.randint`, not other functions in the module"
-        }
+        "It makes every future call to `random.random()` return exactly `42`",
+        "It initializes the pseudo-random generator so the resulting sequence of \"random\" numbers is reproducible",
+        "It disables randomness, making the module raise an error on use",
+        "It only affects `random.randint`, not other functions in the module"
       ],
       "answerIndex": 1,
       "query": {
@@ -2729,14 +1625,6 @@
         "tags": [
           "random"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2753,14 +1641,6 @@
           "strings",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2769,18 +1649,10 @@
       "prompt": "What does `\"report.csv\".endswith((\".csv\", \".tsv\"))` return?",
       "code": "\"report.csv\".endswith((\".csv\", \".tsv\"))",
       "choices": [
-        {
-          "text": "A TypeError, endswith only accepts a single string"
-        },
-        {
-          "text": "True, because a tuple of suffixes checks if any of them match"
-        },
-        {
-          "text": "False, because the argument is a tuple, not a string"
-        },
-        {
-          "text": "'.csv'"
-        }
+        "A TypeError, endswith only accepts a single string",
+        "True, because a tuple of suffixes checks if any of them match",
+        "False, because the argument is a tuple, not a string",
+        "'.csv'"
       ],
       "answerIndex": 1,
       "query": {
@@ -2791,14 +1663,6 @@
           "strings",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2814,14 +1678,6 @@
           "dicts",
           "membership"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2830,18 +1686,10 @@
       "prompt": "Why does `len(my_custom_object)` work for a user-defined class with no inheritance from any built-in container?",
       "code": "class Playlist:\n    def __init__(self, songs):\n        self.songs = songs\n\n    def __len__(self):\n        return len(self.songs)\n\nlen(Playlist([\"a\", \"b\"]))",
       "choices": [
-        {
-          "text": "It does not work, `len()` only works on built-in types"
-        },
-        {
-          "text": "Python's `len()` calls the object's `__len__` method; any class defining it works, regardless of inheritance"
-        },
-        {
-          "text": "The class must inherit from `list` for `len()` to work"
-        },
-        {
-          "text": "`len()` silently returns 0 for any object without a length"
-        }
+        "It does not work, `len()` only works on built-in types",
+        "Python's `len()` calls the object's `__len__` method; any class defining it works, regardless of inheritance",
+        "The class must inherit from `list` for `len()` to work",
+        "`len()` silently returns 0 for any object without a length"
       ],
       "answerIndex": 1,
       "query": {
@@ -2852,14 +1700,6 @@
           "dunder",
           "duck-typing"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2868,18 +1708,10 @@
       "prompt": "What happens if you try to instantiate a class that inherits from `abc.ABC` but has not implemented one of its `@abstractmethod` methods?",
       "code": "from abc import ABC, abstractmethod\n\nclass Shape(ABC):\n    @abstractmethod\n    def area(self):\n        ...\n\nShape()  # ?",
       "choices": [
-        {
-          "text": "It works fine, abstract methods are just documentation"
-        },
-        {
-          "text": "Python raises `TypeError` at instantiation time, refusing to create the object"
-        },
-        {
-          "text": "It creates the object but calling `.area()` raises `NotImplementedError`"
-        },
-        {
-          "text": "It silently returns `None` instead of an instance"
-        }
+        "It works fine, abstract methods are just documentation",
+        "Python raises `TypeError` at instantiation time, refusing to create the object",
+        "It creates the object but calling `.area()` raises `NotImplementedError`",
+        "It silently returns `None` instead of an instance"
       ],
       "answerIndex": 1,
       "query": {
@@ -2890,14 +1722,6 @@
           "abc",
           "classes"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2913,14 +1737,6 @@
           "classes",
           "attributes"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2929,18 +1745,10 @@
       "prompt": "What does calling `super().__init__(name)` inside a subclass’s `__init__` do?",
       "code": "class Animal:\n    def __init__(self, name):\n        self.name = name\n\nclass Dog(Animal):\n    def __init__(self, name, breed):\n        super().__init__(name)\n        self.breed = breed",
       "choices": [
-        {
-          "text": "Creates a brand-new, unrelated `Animal` instance and discards it"
-        },
-        {
-          "text": "Calls the parent class's `__init__` on the current instance, letting the subclass reuse the parent's setup logic"
-        },
-        {
-          "text": "Is only valid syntax inside `__init__`, never in other methods"
-        },
-        {
-          "text": "Skips the parent class entirely and calls `object.__init__` directly"
-        }
+        "Creates a brand-new, unrelated `Animal` instance and discards it",
+        "Calls the parent class's `__init__` on the current instance, letting the subclass reuse the parent's setup logic",
+        "Is only valid syntax inside `__init__`, never in other methods",
+        "Skips the parent class entirely and calls `object.__init__` directly"
       ],
       "answerIndex": 1,
       "query": {
@@ -2952,14 +1760,6 @@
           "inheritance",
           "super"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2968,18 +1768,10 @@
       "prompt": "Given `data = (1, (2, 3), 4)`, what does `a, (b, c), d = data` bind `b` and `c` to?",
       "code": "data = (1, (2, 3), 4)\na, (b, c), d = data",
       "choices": [
-        {
-          "text": "b=(2, 3), c=undefined"
-        },
-        {
-          "text": "b=2, c=3"
-        },
-        {
-          "text": "A ValueError, nested unpacking is not allowed"
-        },
-        {
-          "text": "b=1, c=4"
-        }
+        "b=(2, 3), c=undefined",
+        "b=2, c=3",
+        "A ValueError, nested unpacking is not allowed",
+        "b=1, c=4"
       ],
       "answerIndex": 1,
       "query": {
@@ -2990,14 +1782,6 @@
           "unpacking",
           "tuples"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3006,18 +1790,10 @@
       "prompt": "What makes this method chaining pattern work, `builder.add(1).add(2).build()`?",
       "code": "class Builder:\n    def __init__(self):\n        self.items = []\n\n    def add(self, x):\n        self.items.append(x)\n        return self\n\n    def build(self):\n        return self.items",
       "choices": [
-        {
-          "text": "Python automatically chains methods on any class"
-        },
-        {
-          "text": "Each method explicitly returns `self`, so the next `.method()` call is made on the same instance"
-        },
-        {
-          "text": "`add` must be a `@staticmethod` for chaining to work"
-        },
-        {
-          "text": "Chaining only works with built-in types like strings"
-        }
+        "Python automatically chains methods on any class",
+        "Each method explicitly returns `self`, so the next `.method()` call is made on the same instance",
+        "`add` must be a `@staticmethod` for chaining to work",
+        "Chaining only works with built-in types like strings"
       ],
       "answerIndex": 1,
       "query": {
@@ -3028,14 +1804,6 @@
           "classes",
           "methods"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3044,18 +1812,10 @@
       "prompt": "What does `[x for x in range(10) if x % 2 == 0]` produce?",
       "code": "[x for x in range(10) if x % 2 == 0]",
       "choices": [
-        {
-          "text": "[0, 2, 4, 6, 8]"
-        },
-        {
-          "text": "[1, 3, 5, 7, 9]"
-        },
-        {
-          "text": "[True, False, True, ...]"
-        },
-        {
-          "text": "range(0, 10, 2)"
-        }
+        "[0, 2, 4, 6, 8]",
+        "[1, 3, 5, 7, 9]",
+        "[True, False, True, ...]",
+        "range(0, 10, 2)"
       ],
       "answerIndex": 0,
       "query": {
@@ -3066,14 +1826,6 @@
           "comprehensions",
           "filtering"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3082,18 +1834,10 @@
       "prompt": "What does `[\"even\" if x % 2 == 0 else \"odd\" for x in range(4)]` produce?",
       "code": "[\"even\" if x % 2 == 0 else \"odd\" for x in range(4)]",
       "choices": [
-        {
-          "text": "['even', 'odd']"
-        },
-        {
-          "text": "['even', 'odd', 'even', 'odd']"
-        },
-        {
-          "text": "A SyntaxError, if/else cannot appear before the for clause"
-        },
-        {
-          "text": "['odd', 'even', 'odd', 'even']"
-        }
+        "['even', 'odd']",
+        "['even', 'odd', 'even', 'odd']",
+        "A SyntaxError, if/else cannot appear before the for clause",
+        "['odd', 'even', 'odd', 'even']"
       ],
       "answerIndex": 1,
       "query": {
@@ -3104,14 +1848,6 @@
           "comprehensions",
           "conditionals"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3120,18 +1856,10 @@
       "prompt": "What does `[x for row in matrix for x in row]` do for `matrix = [[1, 2], [3, 4]]`?",
       "code": "matrix = [[1, 2], [3, 4]]\n[x for row in matrix for x in row]",
       "choices": [
-        {
-          "text": "[[1, 2], [3, 4]]"
-        },
-        {
-          "text": "[1, 2, 3, 4]"
-        },
-        {
-          "text": "[1, 3, 2, 4]"
-        },
-        {
-          "text": "A SyntaxError, comprehensions allow only one for clause"
-        }
+        "[[1, 2], [3, 4]]",
+        "[1, 2, 3, 4]",
+        "[1, 3, 2, 4]",
+        "A SyntaxError, comprehensions allow only one for clause"
       ],
       "answerIndex": 1,
       "query": {
@@ -3142,14 +1870,6 @@
           "comprehensions",
           "nested"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3158,18 +1878,10 @@
       "prompt": "What does `functools.reduce(lambda acc, x: acc + x, [1, 2, 3, 4], 0)` compute?",
       "code": "from functools import reduce\nreduce(lambda acc, x: acc + x, [1, 2, 3, 4], 0)",
       "choices": [
-        {
-          "text": "[1, 2, 3, 4]"
-        },
-        {
-          "text": "10"
-        },
-        {
-          "text": "24"
-        },
-        {
-          "text": "A TypeError, reduce needs exactly two arguments"
-        }
+        "[1, 2, 3, 4]",
+        "10",
+        "24",
+        "A TypeError, reduce needs exactly two arguments"
       ],
       "answerIndex": 1,
       "query": {
@@ -3180,14 +1892,6 @@
           "functools",
           "reduce"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3196,18 +1900,10 @@
       "prompt": "What does `functools.partial(pow, exp=2)` produce?",
       "code": "from functools import partial\nsquare = partial(pow, exp=2)\nsquare(base=5)",
       "choices": [
-        {
-          "text": "A number, `25`, computed immediately"
-        },
-        {
-          "text": "A new callable with `exp` pre-filled to `2`, so calling it only needs the remaining arguments"
-        },
-        {
-          "text": "A `TypeError`, partial cannot be used with keyword arguments"
-        },
-        {
-          "text": "An identical copy of the `pow` function"
-        }
+        "A number, `25`, computed immediately",
+        "A new callable with `exp` pre-filled to `2`, so calling it only needs the remaining arguments",
+        "A `TypeError`, partial cannot be used with keyword arguments",
+        "An identical copy of the `pow` function"
       ],
       "answerIndex": 1,
       "query": {
@@ -3218,14 +1914,6 @@
           "functools",
           "partial"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3234,18 +1922,10 @@
       "prompt": "What does `list(zip(*[(1, \"a\"), (2, \"b\"), (3, \"c\")]))` produce?",
       "code": "pairs = [(1, \"a\"), (2, \"b\"), (3, \"c\")]\nlist(zip(*pairs))",
       "choices": [
-        {
-          "text": "[(1, 'a'), (2, 'b'), (3, 'c')]"
-        },
-        {
-          "text": "[(1, 2, 3), ('a', 'b', 'c')]"
-        },
-        {
-          "text": "[1, 2, 3, a, b, c]"
-        },
-        {
-          "text": "A TypeError, zip cannot be unpacked with *"
-        }
+        "[(1, 'a'), (2, 'b'), (3, 'c')]",
+        "[(1, 2, 3), ('a', 'b', 'c')]",
+        "[1, 2, 3, a, b, c]",
+        "A TypeError, zip cannot be unpacked with *"
       ],
       "answerIndex": 1,
       "query": {
@@ -3256,14 +1936,6 @@
           "zip",
           "unpacking"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3280,14 +1952,6 @@
           "strings",
           "formatting"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3303,14 +1967,6 @@
           "functions",
           "tuples"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3319,18 +1975,10 @@
       "prompt": "What does the bare `*` do in this function signature?",
       "code": "def connect(host, port, *, timeout=30):\n    ...\n\nconnect(\"localhost\", 8080, timeout=5)   # OK\nconnect(\"localhost\", 8080, 5)            # TypeError",
       "choices": [
-        {
-          "text": "It collects extra positional arguments, just like `*args`"
-        },
-        {
-          "text": "It marks every parameter after it as keyword-only, callers cannot pass them positionally"
-        },
-        {
-          "text": "It is a syntax error on its own with no name attached"
-        },
-        {
-          "text": "It makes `timeout` a required positional argument"
-        }
+        "It collects extra positional arguments, just like `*args`",
+        "It marks every parameter after it as keyword-only, callers cannot pass them positionally",
+        "It is a syntax error on its own with no name attached",
+        "It makes `timeout` a required positional argument"
       ],
       "answerIndex": 1,
       "query": {
@@ -3341,14 +1989,6 @@
           "functions",
           "arguments"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     }
   ]

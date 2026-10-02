@@ -12,7 +12,7 @@ import { describe, expect, it } from 'vitest';
 
 import { migrateManifestV1 } from '../../services/migrateManifestV1.js';
 
-const COMMITTED_MANIFEST = new URL('../../../../content/manifest.json', import.meta.url);
+const COMMITTED_MANIFEST = new URL('../fixtures/v1-content/manifest.json', import.meta.url);
 
 // Built at run time: a 64-character lowercase hex digest per bank.
 function buildHash(seed: string): string {
@@ -139,7 +139,7 @@ describe('migrateManifestV1', () => {
         expect(result).toMatchObject({ isValid: true });
     });
 
-    it('converts the committed content/manifest.json to a valid v2 manifest with the same languages and bank paths', () => {
+    it('converts the frozen v1 content/manifest.json to a valid v2 manifest with the same languages and bank paths', () => {
         const manifestV1 = readCommittedManifest() as {
             schemaVersion: number;
             languages: { id: string; banks: Record<string, { path: string; hash: string }> }[];

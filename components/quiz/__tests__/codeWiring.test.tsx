@@ -4,6 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react-native';
 import { QueryDrawer } from '../../query/QueryDrawer';
 import { BooleanCard } from '../BooleanCard';
 import { MultipleChoiceCard } from '../MultipleChoiceCard';
+import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/contentFixtures';
 
 type McQuestion = Extract<Question, { type: 'mc' }>;
 type BoolQuestion = Extract<Question, { type: 'bool' }>;
@@ -16,11 +17,11 @@ const baseQuery = { explanation: 'e', title: 't' };
 const EXACT_RUN = { normalizer: (text: string) => text };
 
 function buildMcQuestion(code?: string): McQuestion {
-    return { answerIndex: 0, choices: ['a', 'b'], code, id: 'q-mc', prompt: 'p', query: baseQuery, type: 'mc' } as McQuestion;
+    return { answerIndex: 0, choices: [{ text: 'a' }, { text: 'b' }], code, id: 'q-mc', prompt: 'p', query: baseQuery, provenance: TEST_PROVENANCE, type: 'mc' } as McQuestion;
 }
 
 function buildBoolQuestion(code?: string): BoolQuestion {
-    return { answer: true, code, id: 'q-bool', prompt: 'p', query: baseQuery, type: 'bool' } as BoolQuestion;
+    return { answer: true, code, id: 'q-bool', prompt: 'p', query: baseQuery, provenance: TEST_PROVENANCE, type: 'bool' } as BoolQuestion;
 }
 
 function collectText(node: RenderedNode | string): string {

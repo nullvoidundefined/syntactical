@@ -7,6 +7,8 @@ import { writeCachedBank } from '../writeCachedBank';
 import { loadQuestionBank } from '../loadQuestionBank';
 import {
     CONTENT_BASE_URL,
+    EMPTY_BANK_CONTEXT,
+    buildBankEntry,
     buildBankText,
     buildBoolQuestion,
     hashTextWithNode,
@@ -24,9 +26,10 @@ const PREVIOUS_QUESTIONS = [buildBoolQuestion('q-previous')] as Question[];
 
 function loadPythonEasy(bankHash: string) {
     return loadQuestionBank({
+        context: EMPTY_BANK_CONTEXT,
         language: 'python',
         difficulty: 'easy',
-        entry: { path: BANK_PATH, hash: bankHash },
+        entry: buildBankEntry(BANK_PATH, bankHash),
         contentBaseUrl: CONTENT_BASE_URL,
         isHashCurrent: () => true,
         hashText: hashTextWithNode,
@@ -83,7 +86,7 @@ describe('loadQuestionBank rejection warnings (B-20)', () => {
 
         await expect(loadPythonEasy(hashUtf8Hex(notJsonText))).rejects.toThrow();
 
-        expect((await readCachedBank('python', 'easy'))?.hash).toBe(PREVIOUS_HASH);
+        expect((await readCachedBank('python', 'easy', EMPTY_BANK_CONTEXT))?.hash).toBe(PREVIOUS_HASH);
         expectOneRejectionWarning(/json/i);
     });
 });

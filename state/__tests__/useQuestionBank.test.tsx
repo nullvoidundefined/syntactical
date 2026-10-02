@@ -12,6 +12,7 @@ import {
     CONTENT_BASE_URL,
     MANIFEST_URL,
     buildBankText,
+    EMPTY_BANK_CONTEXT,
     buildBoolQuestion,
     buildGoLanguage,
     cloneBundledManifest,
@@ -59,7 +60,7 @@ function buildManifestWithGo(): Manifest {
 
 function buildManifestWithPythonEasyHash(pythonEasyHash: string): Manifest {
     const manifest = cloneBundledManifest();
-    manifest.languages[0].banks.easy = { path: 'python/easy.json', hash: pythonEasyHash };
+    manifest.languages[0].banks.easy = { ...manifest.languages[0].banks.easy!, hash: pythonEasyHash };
     return manifest;
 }
 
@@ -136,6 +137,22 @@ describe('useQuestionBank inside ContentProvider', () => {
             expect(readBankIds(result.current)).toEqual(['q-cached']);
         });
 
+        it('ignores a cached schema 1 bank and serves the bundled schema 2 bank', async () => {
+            const schemaOneBank = {
+                hash: hashUtf8Hex('cached schema 1 python easy'),
+                questions: [
+                    { id: 'q-v1', type: 'mc', prompt: 'p', choices: ['a', 'b'], answerIndex: 0, query: { title: 't', explanation: 'e' } },
+                ],
+            };
+            await AsyncStorage.setItem(PYTHON_EASY_KEY, JSON.stringify(schemaOneBank));
+
+            const { result } = await renderHook(() => useQuestionBank('python', 'easy'), { wrapper: ContentWrapper });
+
+            await waitFor(() => expect(result.current?.status).toBe('ready'));
+            expect(result.current.status === 'ready' && result.current.bank.hash).toBe(BUNDLED_PYTHON_EASY_HASH);
+            expect(readBankIds(result.current)).toEqual(BUNDLED_PYTHON_EASY_IDS);
+        });
+
         it('falls back to the bundled bank when the cached entry is truncated JSON', async () => {
             await AsyncStorage.setItem(PYTHON_EASY_KEY, '{"hash":"abc","questions":[{"id":');
 
@@ -180,7 +197,7 @@ describe('useQuestionBank inside ContentProvider', () => {
 
         it('keeps the previous manifest when the fetched one has a newer schemaVersion', async () => {
             await AsyncStorage.setItem(MANIFEST_KEY, JSON.stringify(buildManifestWithGo()));
-            respondWithManifest({ ...cloneBundledManifest(), schemaVersion: 2 });
+            respondWithManifest({ ...cloneBundledManifest(), schemaVersion: 3 });
 
             const { result } = await renderHook(() => useLanguageManifest(), { wrapper: ContentWrapper });
 
@@ -200,7 +217,7 @@ describe('useQuestionBank inside ContentProvider', () => {
 
             const { result } = await renderHook(() => useQuestionBank('python', 'easy'), { wrapper: ContentWrapper });
 
-            await waitFor(async () => expect((await readCachedBank('python', 'easy'))?.hash).toBe(changedHash));
+            await waitFor(async () => expect((await readCachedBank('python', 'easy', EMPTY_BANK_CONTEXT))?.hash).toBe(changedHash));
             await waitFor(() => expect(readBankIds(result.current)).toEqual(['py-new-1']));
             await settleBackgroundWork();
             expect(countFetchesFor(PYTHON_EASY_URL)).toBe(1);
@@ -212,8 +229,8 @@ describe('useQuestionBank inside ContentProvider', () => {
 
             await renderHook(() => useLanguageManifest(), { wrapper: ContentWrapper });
 
-            await waitFor(async () => expect((await readCachedBank('go', 'easy'))?.hash).toBe(GO_EASY_HASH));
-            expect((await readCachedBank('go', 'easy'))?.questions.map((question) => question.id)).toEqual([
+            await waitFor(async () => expect((await readCachedBank('go', 'easy', EMPTY_BANK_CONTEXT))?.hash).toBe(GO_EASY_HASH));
+            expect((await readCachedBank('go', 'easy', EMPTY_BANK_CONTEXT))?.questions.map((question) => question.id)).toEqual([
                 'go-q-1',
                 'go-q-2',
             ]);
@@ -248,12 +265,12 @@ describe('useQuestionBank inside ContentProvider', () => {
                 fetchedManifestBody.resolveBody(JSON.stringify(buildManifestWithPythonEasyHash(currentHash))),
             );
             await waitFor(() => expect(readBankIds(result.current)).toEqual(['py-current']));
-            await waitFor(async () => expect((await readCachedBank('python', 'easy'))?.hash).toBe(currentHash));
+            await waitFor(async () => expect((await readCachedBank('python', 'easy', EMPTY_BANK_CONTEXT))?.hash).toBe(currentHash));
 
             await act(async () => staleBody.resolveBody(staleText));
             await settleBackgroundWork();
 
-            const cachedBank = await readCachedBank('python', 'easy');
+            const cachedBank = await readCachedBank('python', 'easy', EMPTY_BANK_CONTEXT);
             expect(cachedBank?.hash).toBe(currentHash);
             expect(cachedBank?.questions.map((question) => question.id)).toEqual(['py-current']);
             expect(result.current.status === 'ready' && result.current.bank.hash).toBe(currentHash);
@@ -289,7 +306,7 @@ describe('useQuestionBank inside ContentProvider', () => {
             await settleBackgroundWork();
             expect(result.current.status).toBe('ready');
             expect(readBankIds(result.current)).toEqual(BUNDLED_PYTHON_EASY_IDS);
-            expect(await readCachedBank('python', 'easy')).toBeNull();
+            expect(await readCachedBank('python', 'easy', EMPTY_BANK_CONTEXT)).toBeNull();
         });
 
         it('keeps the bundled bank and shows no error when the bank response was redirected', async () => {
@@ -314,7 +331,7 @@ describe('useQuestionBank inside ContentProvider', () => {
             await settleBackgroundWork();
             expect(result.current.status).toBe('ready');
             expect(readBankIds(result.current)).toEqual(BUNDLED_PYTHON_EASY_IDS);
-            expect(await readCachedBank('python', 'easy')).toBeNull();
+            expect(await readCachedBank('python', 'easy', EMPTY_BANK_CONTEXT)).toBeNull();
         });
     });
 

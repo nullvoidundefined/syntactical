@@ -8,12 +8,12 @@ jest.mock('../../state/StatsProvider', () => ({
 jest.mock('../../state/useLanguageManifest', () => ({
   useLanguageManifest: () => ({
     languages: [{ banks: { easy: { hash: 'a'.repeat(64), path: 'python/easy.json' } }, glyph: 'PY', grammar: 'python', id: 'python', label: 'Python', tagline: 't' }],
-    schemaVersion: 1,
+    schemaVersion: 2,
   }),
 }));
 jest.mock('../../state/useQuestionBank', () => ({
   useQuestionBank: () => ({
-    bank: { hash: 'a'.repeat(64), questions: [{ answer: true, id: 'q-1', prompt: 'Is it?', query: { explanation: 'e', title: 't' }, type: 'bool' }] },
+    bank: { hash: 'a'.repeat(64), questions: [{ answer: true, id: 'q-1', prompt: 'Is it?', query: { explanation: 'e', title: 't' }, provenance: { isHumanReviewed: false, source: 'original', validation: { method: 'judged', status: 'pending' } }, type: 'bool' }] },
     status: 'ready',
   }),
 }));

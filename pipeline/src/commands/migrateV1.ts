@@ -1,3 +1,6 @@
+// One-time conversion of a schema-1 content directory to schema 2. It keeps
+// each bank's old hash, so run `npm run content:build` right after it to
+// rehash; it ran once on 2026-10-03 and the committed content is now v2.
 // Rewrites a content directory from schema 1 to schema 2 in place.
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';

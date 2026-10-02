@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "languages": [
     {
       "id": "python",
@@ -7,18 +7,31 @@
       "glyph": "PY",
       "tagline": "Runtime semantics, stdlib, and the sharp edges.",
       "grammar": "python",
+      "topics": [],
+      "misconceptions": [],
       "banks": {
         "easy": {
           "path": "python/easy.json",
-          "hash": "a8c9861b2c34733d58223f48710933baa221036fc6f3a1937f24e94112550ccc"
+          "hash": "3e9a2fd9095ba24923c6ce5f2ddd5968553374aaa451a2c10927145b7c7f25f1",
+          "access": "free",
+          "contentVersion": 1,
+          "topicCounts": {}
         },
         "medium": {
           "path": "python/medium.json",
-          "hash": "055d4b82db2d960808b0409f60bb5c122b06ffa344be76f79cf7642c03d044e0"
+          "hash": "c597bf8a2e09da3411e08e4474eee4936308b7e1fcd8da93fc1761562166704b",
+          "access": "paid",
+          "productId": "syntactical.python.medium",
+          "contentVersion": 1,
+          "topicCounts": {}
         },
         "hard": {
           "path": "python/hard.json",
-          "hash": "0a7aae2818ec1ff2f1945727034881867d03085955565bf724eca1e67ecb2b76"
+          "hash": "1b4a5b06e6139797d9c8a21041f0b3dd731e9bddfc6da596adfe135c8ae99c71",
+          "access": "paid",
+          "productId": "syntactical.python.hard",
+          "contentVersion": 1,
+          "topicCounts": {}
         }
       }
     },
@@ -28,18 +41,31 @@
       "glyph": "PG",
       "tagline": "Query planning, concurrency, and storage internals.",
       "grammar": "sql",
+      "topics": [],
+      "misconceptions": [],
       "banks": {
         "easy": {
           "path": "postgres/easy.json",
-          "hash": "ca2f0895bea7d01ee7202e6e600f07dca1e1fa25371dbd6bb1e23bd48d951058"
+          "hash": "1bf91d4bbffa90bb30ad5fb9ede1bf3bca481f270ccccd7c082b4d470b9c26b3",
+          "access": "free",
+          "contentVersion": 1,
+          "topicCounts": {}
         },
         "medium": {
           "path": "postgres/medium.json",
-          "hash": "809c07c5004b3c1a799684b3ae4d843b05c1f1284ef7bd3ea3818826568f2027"
+          "hash": "050ec0863297446aab3d9b39f1fac188f593e1995d683efb713efaa5f29af8f0",
+          "access": "paid",
+          "productId": "syntactical.postgres.medium",
+          "contentVersion": 1,
+          "topicCounts": {}
         },
         "hard": {
           "path": "postgres/hard.json",
-          "hash": "cf5bb9f298484f2f4945673169b364d973c4720798c3b8e1bb818b98963d0d2a"
+          "hash": "7f1f34c42cddd29e57c2ef8358ebe03f51f5d105804817d30a2644da7db88253",
+          "access": "paid",
+          "productId": "syntactical.postgres.hard",
+          "contentVersion": 1,
+          "topicCounts": {}
         }
       }
     },
@@ -49,18 +75,31 @@
       "glyph": "JS",
       "tagline": "Coercion, scope, and the runtime behavior that surprises.",
       "grammar": "javascript",
+      "topics": [],
+      "misconceptions": [],
       "banks": {
         "easy": {
           "path": "javascript/easy.json",
-          "hash": "e2ac160fa9e5c8c76e3f688d387bc96bc5018a0a10be7d05961f01fff70b61da"
+          "hash": "8fb0f85457cf64087a893e0a9a10e02c0af66d511fce9c6e126e89679124d4e2",
+          "access": "free",
+          "contentVersion": 1,
+          "topicCounts": {}
         },
         "medium": {
           "path": "javascript/medium.json",
-          "hash": "33463099dcff6d6c1e3e2a3b0d8204fbf7d3598a3069be80eb7ebcd874964d67"
+          "hash": "e4db32e3b16847c7c8c1e3f34d4f0a926787f166c3aca493825f188fd5a9f9d1",
+          "access": "paid",
+          "productId": "syntactical.javascript.medium",
+          "contentVersion": 1,
+          "topicCounts": {}
         },
         "hard": {
           "path": "javascript/hard.json",
-          "hash": "e00a1cdee82f0d586b53af87c5e7ed7a502715bb9bd6fd857d68e8e30940aa9d"
+          "hash": "17d06a1a6e51084784e9bec9ab59937c661efb26bfec5812c2ad5e2d180fa5c7",
+          "access": "paid",
+          "productId": "syntactical.javascript.hard",
+          "contentVersion": 1,
+          "topicCounts": {}
         }
       }
     }

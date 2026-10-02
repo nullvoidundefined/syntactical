@@ -18,7 +18,7 @@ jest.mock('../../../state/StatsProvider', () => ({
 jest.mock('../../../state/useLanguageManifest', () => ({
   useLanguageManifest: () => ({
     languages: [{ banks: {}, glyph: 'PY', grammar: 'python', id: 'python', label: 'Python', tagline: 't' }],
-    schemaVersion: 1,
+    schemaVersion: 2,
   }),
 }));
 

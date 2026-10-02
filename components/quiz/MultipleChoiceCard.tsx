@@ -34,15 +34,15 @@ export function MultipleChoiceCard({ grammar, isAnswered, onSelect, question, su
           const { state, toneClass } = describeChoice(index, answerIndex, submittedAnswer, isAnswered);
           return (
             <Pressable
-              key={`${index}-${choice}`}
+              key={`${index}-${choice.text}`}
               role="button"
               disabled={isAnswered}
-              aria-label={state ? `${choice}, ${state}` : choice}
+              aria-label={state ? `${choice.text}, ${state}` : choice.text}
               onPress={() => onSelect(index)}
               className={`flex-row items-center gap-3 rounded-md border px-4 py-3 ${toneClass}`}
             >
               <Text className="rounded border border-line px-1.5 py-0.5 font-mono text-xs text-muted">{CHOICE_LABELS[index]}</Text>
-              <Text className="flex-1 text-sm text-ink">{choice}</Text>
+              <Text className="flex-1 text-sm text-ink">{choice.text}</Text>
             </Pressable>
           );
         })}

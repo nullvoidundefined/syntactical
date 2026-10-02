@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 1,
   "questions": [
     {
       "id": "js-hard-01",
@@ -7,18 +7,10 @@
       "prompt": "What does `new C()` return?",
       "code": "function C() {\n  this.n = 1;\n  return { n: 2 };\n}\nnew C();",
       "choices": [
-        {
-          "text": "the allocated instance, with n equal to 1"
-        },
-        {
-          "text": "the object { n: 2 }"
-        },
-        {
-          "text": "the number 2"
-        },
-        {
-          "text": "undefined"
-        }
+        "the allocated instance, with n equal to 1",
+        "the object { n: 2 }",
+        "the number 2",
+        "undefined"
       ],
       "answerIndex": 1,
       "query": {
@@ -29,14 +21,6 @@
           "constructors",
           "new"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -45,18 +29,10 @@
       "prompt": "What does `new C()` return?",
       "code": "function C() {\n  this.n = 1;\n  return 2;\n}\nnew C();",
       "choices": [
-        {
-          "text": "the number 2"
-        },
-        {
-          "text": "undefined"
-        },
-        {
-          "text": "the allocated instance, with n equal to 1"
-        },
-        {
-          "text": "a TypeError"
-        }
+        "the number 2",
+        "undefined",
+        "the allocated instance, with n equal to 1",
+        "a TypeError"
       ],
       "answerIndex": 2,
       "query": {
@@ -67,14 +43,6 @@
           "constructors",
           "new"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -83,18 +51,10 @@
       "prompt": "What is `steps` after `new C()`?",
       "code": "const steps = [];\nclass C {\n  n = steps.push(\"field\");\n  constructor() {\n    steps.push(\"body\");\n  }\n}\nnew C();",
       "choices": [
-        {
-          "text": "[\"body\", \"field\"]"
-        },
-        {
-          "text": "[\"field\", \"body\"]"
-        },
-        {
-          "text": "[\"body\"]"
-        },
-        {
-          "text": "[\"field\"]"
-        }
+        "[\"body\", \"field\"]",
+        "[\"field\", \"body\"]",
+        "[\"body\"]",
+        "[\"field\"]"
       ],
       "answerIndex": 1,
       "query": {
@@ -105,14 +65,6 @@
           "class-fields",
           "constructors"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -121,18 +73,10 @@
       "prompt": "What is `new C().b`?",
       "code": "class C {\n  a = 1;\n  b = this.a + 1;\n}\nnew C().b;",
       "choices": [
-        {
-          "text": "1"
-        },
-        {
-          "text": "undefined"
-        },
-        {
-          "text": "2"
-        },
-        {
-          "text": "a ReferenceError"
-        }
+        "1",
+        "undefined",
+        "2",
+        "a ReferenceError"
       ],
       "answerIndex": 2,
       "query": {
@@ -142,14 +86,6 @@
         "tags": [
           "class-fields"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -158,18 +94,10 @@
       "prompt": "What happens when `new C()` runs?",
       "code": "class C {\n  a = this.b;\n  b = 1;\n}\nnew C();",
       "choices": [
-        {
-          "text": "an instance with a undefined and b equal to 1"
-        },
-        {
-          "text": "an instance with a and b both equal to 1"
-        },
-        {
-          "text": "a ReferenceError"
-        },
-        {
-          "text": "a TypeError"
-        }
+        "an instance with a undefined and b equal to 1",
+        "an instance with a and b both equal to 1",
+        "a ReferenceError",
+        "a TypeError"
       ],
       "answerIndex": 0,
       "query": {
@@ -179,14 +107,6 @@
         "tags": [
           "class-fields"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -195,18 +115,10 @@
       "prompt": "What is `steps` after `new C()`?",
       "code": "const steps = [];\nclass B {\n  constructor() {\n    steps.push(\"super\");\n  }\n}\nclass C extends B {\n  n = steps.push(\"field\");\n  constructor() {\n    steps.push(\"before\");\n    super();\n    steps.push(\"after\");\n  }\n}\nnew C();",
       "choices": [
-        {
-          "text": "[\"before\", \"field\", \"super\", \"after\"]"
-        },
-        {
-          "text": "[\"before\", \"super\", \"field\", \"after\"]"
-        },
-        {
-          "text": "[\"field\", \"before\", \"super\", \"after\"]"
-        },
-        {
-          "text": "[\"before\", \"super\", \"after\", \"field\"]"
-        }
+        "[\"before\", \"field\", \"super\", \"after\"]",
+        "[\"before\", \"super\", \"field\", \"after\"]",
+        "[\"field\", \"before\", \"super\", \"after\"]",
+        "[\"before\", \"super\", \"after\", \"field\"]"
       ],
       "answerIndex": 1,
       "query": {
@@ -217,14 +129,6 @@
           "class-fields",
           "inheritance"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -233,18 +137,10 @@
       "prompt": "What is `steps` after the class declaration is evaluated?",
       "code": "const steps = [];\nclass C {\n  static a = steps.push(\"a\");\n  static b = steps.push(\"b\");\n}",
       "choices": [
-        {
-          "text": "[\"b\", \"a\"]"
-        },
-        {
-          "text": "[] until new C()"
-        },
-        {
-          "text": "[\"a\", \"b\"]"
-        },
-        {
-          "text": "a TypeError"
-        }
+        "[\"b\", \"a\"]",
+        "[] until new C()",
+        "[\"a\", \"b\"]",
+        "a TypeError"
       ],
       "answerIndex": 2,
       "query": {
@@ -255,14 +151,6 @@
           "class-fields",
           "static"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -271,18 +159,10 @@
       "prompt": "What is `steps` after `class C` is evaluated?",
       "code": "const steps = [];\nclass C extends class {\n  static x = steps.push(\"base\");\n} {\n  static y = steps.push(\"sub\");\n}",
       "choices": [
-        {
-          "text": "[\"sub\", \"base\"]"
-        },
-        {
-          "text": "[\"base\", \"sub\"]"
-        },
-        {
-          "text": "[\"sub\"]"
-        },
-        {
-          "text": "[\"base\"]"
-        }
+        "[\"sub\", \"base\"]",
+        "[\"base\", \"sub\"]",
+        "[\"sub\"]",
+        "[\"base\"]"
       ],
       "answerIndex": 1,
       "query": {
@@ -293,14 +173,6 @@
           "classes",
           "inheritance"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -309,18 +181,10 @@
       "prompt": "What does calling the class as a function do?",
       "code": "class C {}\nC();",
       "choices": [
-        {
-          "text": "undefined"
-        },
-        {
-          "text": "a new instance"
-        },
-        {
-          "text": "a TypeError"
-        },
-        {
-          "text": "a ReferenceError"
-        }
+        "undefined",
+        "a new instance",
+        "a TypeError",
+        "a ReferenceError"
       ],
       "answerIndex": 2,
       "query": {
@@ -331,14 +195,6 @@
           "classes",
           "constructors"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -347,18 +203,10 @@
       "prompt": "What is `seen === S` after `new S()`?",
       "code": "let seen;\nclass B {\n  constructor() {\n    seen = new.target;\n  }\n}\nclass S extends B {}\nnew S();",
       "choices": [
-        {
-          "text": "false, because new.target is B"
-        },
-        {
-          "text": "true"
-        },
-        {
-          "text": "false, because new.target is undefined"
-        },
-        {
-          "text": "a TypeError"
-        }
+        "false, because new.target is B",
+        "true",
+        "false, because new.target is undefined",
+        "a TypeError"
       ],
       "answerIndex": 1,
       "query": {
@@ -369,14 +217,6 @@
           "new-target",
           "inheritance"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -385,18 +225,10 @@
       "prompt": "What is `steps` after `class C` is evaluated?",
       "code": "const steps = [];\nfunction getBase() {\n  steps.push(\"extends\");\n  return class {};\n}\nclass C extends getBase() {\n  static y = steps.push(\"body\");\n}",
       "choices": [
-        {
-          "text": "[\"body\", \"extends\"]"
-        },
-        {
-          "text": "[\"extends\", \"body\"]"
-        },
-        {
-          "text": "[\"body\"]"
-        },
-        {
-          "text": "[\"extends\"]"
-        }
+        "[\"body\", \"extends\"]",
+        "[\"extends\", \"body\"]",
+        "[\"body\"]",
+        "[\"extends\"]"
       ],
       "answerIndex": 1,
       "query": {
@@ -407,14 +239,6 @@
           "classes",
           "inheritance"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -423,18 +247,10 @@
       "prompt": "Which statement is true of `class C extends null`?",
       "code": "class C extends null {\n  constructor() {\n    super();\n  }\n}",
       "choices": [
-        {
-          "text": "C.prototype has a null [[Prototype]], and super() throws TypeError"
-        },
-        {
-          "text": "C.prototype inherits from Object.prototype, and super() returns the instance"
-        },
-        {
-          "text": "C.prototype has a null [[Prototype]], and super() returns the instance"
-        },
-        {
-          "text": "the class declaration is a SyntaxError"
-        }
+        "C.prototype has a null [[Prototype]], and super() throws TypeError",
+        "C.prototype inherits from Object.prototype, and super() returns the instance",
+        "C.prototype has a null [[Prototype]], and super() returns the instance",
+        "the class declaration is a SyntaxError"
       ],
       "answerIndex": 0,
       "query": {
@@ -445,14 +261,6 @@
           "classes",
           "inheritance"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -461,18 +269,10 @@
       "prompt": "What does `Object.keys(C.prototype)` return?",
       "code": "class C {\n  m() {}\n}\nObject.keys(C.prototype);",
       "choices": [
-        {
-          "text": "[\"m\"]"
-        },
-        {
-          "text": "[]"
-        },
-        {
-          "text": "[\"constructor\", \"m\"]"
-        },
-        {
-          "text": "a TypeError"
-        }
+        "[\"m\"]",
+        "[]",
+        "[\"constructor\", \"m\"]",
+        "a TypeError"
       ],
       "answerIndex": 1,
       "query": {
@@ -483,14 +283,6 @@
           "classes",
           "enumerability"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -499,18 +291,10 @@
       "prompt": "What is `1 instanceof C`?",
       "code": "class C {\n  static [Symbol.hasInstance](value) {\n    return value === 1;\n  }\n}\n1 instanceof C;",
       "choices": [
-        {
-          "text": "false"
-        },
-        {
-          "text": "true"
-        },
-        {
-          "text": "a TypeError"
-        },
-        {
-          "text": "undefined"
-        }
+        "false",
+        "true",
+        "a TypeError",
+        "undefined"
       ],
       "answerIndex": 1,
       "query": {
@@ -521,14 +305,6 @@
           "instanceof",
           "symbols"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -537,18 +313,10 @@
       "prompt": "What is `f.bind(null, 1).length`?",
       "code": "function f(a, b) {}\nf.bind(null, 1).length;",
       "choices": [
-        {
-          "text": "2"
-        },
-        {
-          "text": "0"
-        },
-        {
-          "text": "1"
-        },
-        {
-          "text": "3"
-        }
+        "2",
+        "0",
+        "1",
+        "3"
       ],
       "answerIndex": 2,
       "query": {
@@ -559,14 +327,6 @@
           "bind",
           "functions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -575,18 +335,10 @@
       "prompt": "What is `f.bind(null).prototype`?",
       "code": "function f() {}\nf.bind(null).prototype;",
       "choices": [
-        {
-          "text": "the same object as f.prototype"
-        },
-        {
-          "text": "a fresh object"
-        },
-        {
-          "text": "undefined"
-        },
-        {
-          "text": "null"
-        }
+        "the same object as f.prototype",
+        "a fresh object",
+        "undefined",
+        "null"
       ],
       "answerIndex": 2,
       "query": {
@@ -597,14 +349,6 @@
           "bind",
           "prototypes"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -613,18 +357,10 @@
       "prompt": "What does `outer()` do?",
       "code": "function outer() {\n  const x = 1;\n  const f = new Function(\"return x;\");\n  return f();\n}\nouter();",
       "choices": [
-        {
-          "text": "returns 1"
-        },
-        {
-          "text": "returns undefined"
-        },
-        {
-          "text": "throws a ReferenceError"
-        },
-        {
-          "text": "returns null"
-        }
+        "returns 1",
+        "returns undefined",
+        "throws a ReferenceError",
+        "returns null"
       ],
       "answerIndex": 2,
       "query": {
@@ -635,14 +371,6 @@
           "new-function",
           "scope"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -651,18 +379,10 @@
       "prompt": "What is `this` inside `f` when `f()` is called as a bare call?",
       "code": "const f = new Function(\"return this;\");\nf();",
       "choices": [
-        {
-          "text": "undefined"
-        },
-        {
-          "text": "null"
-        },
-        {
-          "text": "the global object"
-        },
-        {
-          "text": "f itself"
-        }
+        "undefined",
+        "null",
+        "the global object",
+        "f itself"
       ],
       "answerIndex": 2,
       "query": {
@@ -673,14 +393,6 @@
           "new-function",
           "strict-mode"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -689,18 +401,10 @@
       "prompt": "What does `f(1)` return?",
       "code": "function f(a) {\n  \"use strict\";\n  arguments[0] = 9;\n  return a;\n}\nf(1);",
       "choices": [
-        {
-          "text": "9"
-        },
-        {
-          "text": "1"
-        },
-        {
-          "text": "undefined"
-        },
-        {
-          "text": "a TypeError"
-        }
+        "9",
+        "1",
+        "undefined",
+        "a TypeError"
       ],
       "answerIndex": 1,
       "query": {
@@ -711,14 +415,6 @@
           "arguments",
           "strict-mode"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -727,18 +423,10 @@
       "prompt": "What does `f(1)` return?",
       "code": "const f = new Function(\n  \"a\",\n  \"arguments[0] = 9; return a;\"\n);\nf(1);",
       "choices": [
-        {
-          "text": "1"
-        },
-        {
-          "text": "undefined"
-        },
-        {
-          "text": "a TypeError"
-        },
-        {
-          "text": "9"
-        }
+        "1",
+        "undefined",
+        "a TypeError",
+        "9"
       ],
       "answerIndex": 3,
       "query": {
@@ -748,14 +436,6 @@
         "tags": [
           "arguments"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -764,18 +444,10 @@
       "prompt": "What is `this` for `fn.call(null)` in each mode?",
       "code": "function strictFn() {\n  \"use strict\";\n  return this;\n}\nconst sloppyFn = new Function(\"return this;\");\nstrictFn.call(null);\nsloppyFn.call(null);",
       "choices": [
-        {
-          "text": "strict: null; sloppy: the global object"
-        },
-        {
-          "text": "strict: undefined; sloppy: null"
-        },
-        {
-          "text": "strict: the global object; sloppy: null"
-        },
-        {
-          "text": "both modes: null"
-        }
+        "strict: null; sloppy: the global object",
+        "strict: undefined; sloppy: null",
+        "strict: the global object; sloppy: null",
+        "both modes: null"
       ],
       "answerIndex": 0,
       "query": {
@@ -786,14 +458,6 @@
           "this",
           "strict-mode"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -802,18 +466,10 @@
       "prompt": "What does `f()` return?",
       "code": "function f() {\n  \"use strict\";\n  eval(\"var x = 1\");\n  return typeof x;\n}\nf();",
       "choices": [
-        {
-          "text": "\"number\""
-        },
-        {
-          "text": "\"undefined\""
-        },
-        {
-          "text": "\"object\""
-        },
-        {
-          "text": "a SyntaxError"
-        }
+        "\"number\"",
+        "\"undefined\"",
+        "\"object\"",
+        "a SyntaxError"
       ],
       "answerIndex": 1,
       "query": {
@@ -824,14 +480,6 @@
           "eval",
           "strict-mode"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -840,18 +488,10 @@
       "prompt": "What does calling `f` do?",
       "code": "function f(a = 1) {\n  let a = 2;\n  return a;\n}\nf();",
       "choices": [
-        {
-          "text": "it returns 2"
-        },
-        {
-          "text": "it returns 1"
-        },
-        {
-          "text": "it is a SyntaxError"
-        },
-        {
-          "text": "it returns undefined"
-        }
+        "it returns 2",
+        "it returns 1",
+        "it is a SyntaxError",
+        "it returns undefined"
       ],
       "answerIndex": 2,
       "query": {
@@ -862,14 +502,6 @@
           "scope",
           "parameters"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -878,18 +510,10 @@
       "prompt": "What does `f()` do?",
       "code": "function f(a = b, b = 2) {\n  return a;\n}\nf();",
       "choices": [
-        {
-          "text": "returns 2"
-        },
-        {
-          "text": "returns undefined"
-        },
-        {
-          "text": "throws a ReferenceError"
-        },
-        {
-          "text": "returns 1"
-        }
+        "returns 2",
+        "returns undefined",
+        "throws a ReferenceError",
+        "returns 1"
       ],
       "answerIndex": 2,
       "query": {
@@ -900,14 +524,6 @@
           "parameters",
           "scope"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -916,18 +532,10 @@
       "prompt": "What are the first two `g.next()` results?",
       "code": "function* inner() {\n  yield 1;\n  return 9;\n}\nfunction* outer() {\n  const value = yield* inner();\n  yield value;\n}\nconst g = outer();\n[g.next(), g.next()];",
       "choices": [
-        {
-          "text": "[{value:1, done:false}, {value:9, done:true}]"
-        },
-        {
-          "text": "[{value:1, done:false}, {value:9, done:false}]"
-        },
-        {
-          "text": "[{value:1, done:false}, {value:undefined, done:true}]"
-        },
-        {
-          "text": "[{value:9, done:false}, {value:1, done:false}]"
-        }
+        "[{value:1, done:false}, {value:9, done:true}]",
+        "[{value:1, done:false}, {value:9, done:false}]",
+        "[{value:1, done:false}, {value:undefined, done:true}]",
+        "[{value:9, done:false}, {value:1, done:false}]"
       ],
       "answerIndex": 1,
       "query": {
@@ -938,14 +546,6 @@
           "generators",
           "yield"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -954,18 +554,10 @@
       "prompt": "What does `it.throw(new Error(\"boom\"))` return?",
       "code": "function* g() {\n  try {\n    yield 1;\n  } catch (error) {\n    return error.message;\n  }\n}\nconst it = g();\nit.next();\nit.throw(new Error(\"boom\"));",
       "choices": [
-        {
-          "text": "{value:1, done:false}"
-        },
-        {
-          "text": "{value:\"boom\", done:true}"
-        },
-        {
-          "text": "the exception escapes and the generator stays paused"
-        },
-        {
-          "text": "{value:undefined, done:true}"
-        }
+        "{value:1, done:false}",
+        "{value:\"boom\", done:true}",
+        "the exception escapes and the generator stays paused",
+        "{value:undefined, done:true}"
       ],
       "answerIndex": 1,
       "query": {
@@ -975,14 +567,6 @@
         "tags": [
           "generators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -991,18 +575,10 @@
       "prompt": "What are `result` and `steps` after `it.return(7)`?",
       "code": "const steps = [];\nfunction* g() {\n  try {\n    yield 1;\n  } finally {\n    steps.push(\"fin\");\n  }\n}\nconst it = g();\nit.next();\nconst result = it.return(7);",
       "choices": [
-        {
-          "text": "result is {value:7, done:true}, and steps is [\"fin\"]"
-        },
-        {
-          "text": "result is {value:7, done:true}, and steps is []"
-        },
-        {
-          "text": "result is {value:1, done:true}, and steps is [\"fin\"]"
-        },
-        {
-          "text": "result is {value:undefined, done:true}, and steps is [\"fin\"]"
-        }
+        "result is {value:7, done:true}, and steps is [\"fin\"]",
+        "result is {value:7, done:true}, and steps is []",
+        "result is {value:1, done:true}, and steps is [\"fin\"]",
+        "result is {value:undefined, done:true}, and steps is [\"fin\"]"
       ],
       "answerIndex": 0,
       "query": {
@@ -1012,14 +588,6 @@
         "tags": [
           "generators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1028,18 +596,10 @@
       "prompt": "What does the promise from `f()` fulfill with?",
       "code": "const thenable = {\n  then(resolve) {\n    resolve(5);\n  },\n};\nconst f = async () => thenable;\nf();",
       "choices": [
-        {
-          "text": "the thenable object"
-        },
-        {
-          "text": "5"
-        },
-        {
-          "text": "undefined"
-        },
-        {
-          "text": "a rejection"
-        }
+        "the thenable object",
+        "5",
+        "undefined",
+        "a rejection"
       ],
       "answerIndex": 1,
       "query": {
@@ -1050,14 +610,6 @@
           "async",
           "promises"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1066,18 +618,10 @@
       "prompt": "What is `steps` immediately after `new Promise` returns, before any await?",
       "code": "const steps = [];\nconst p = new Promise((resolve) => {\n  steps.push(\"exec\");\n  resolve(1);\n});\nsteps.push(\"after\");",
       "choices": [
-        {
-          "text": "[\"after\", \"exec\"]"
-        },
-        {
-          "text": "[\"exec\"]"
-        },
-        {
-          "text": "[\"exec\", \"after\"]"
-        },
-        {
-          "text": "[]"
-        }
+        "[\"after\", \"exec\"]",
+        "[\"exec\"]",
+        "[\"exec\", \"after\"]",
+        "[]"
       ],
       "answerIndex": 2,
       "query": {
@@ -1087,14 +631,6 @@
         "tags": [
           "promises"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1103,18 +639,10 @@
       "prompt": "What does the promise fulfill with?",
       "code": "const p = new Promise((resolve) => {\n  resolve(1);\n  resolve(2);\n});",
       "choices": [
-        {
-          "text": "2"
-        },
-        {
-          "text": "1"
-        },
-        {
-          "text": "undefined"
-        },
-        {
-          "text": "it rejects"
-        }
+        "2",
+        "1",
+        "undefined",
+        "it rejects"
       ],
       "answerIndex": 1,
       "query": {
@@ -1124,14 +652,6 @@
         "tags": [
           "promises"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1140,18 +660,10 @@
       "prompt": "What is `Promise.resolve(p) === p`?",
       "code": "const p = Promise.resolve(1);\nPromise.resolve(p) === p;",
       "choices": [
-        {
-          "text": "false, because resolve always wraps its argument"
-        },
-        {
-          "text": "true"
-        },
-        {
-          "text": "false, because it throws"
-        },
-        {
-          "text": "true only after p is already fulfilled"
-        }
+        "false, because resolve always wraps its argument",
+        "true",
+        "false, because it throws",
+        "true only after p is already fulfilled"
       ],
       "answerIndex": 1,
       "query": {
@@ -1161,14 +673,6 @@
         "tags": [
           "promises"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1177,18 +681,10 @@
       "prompt": "What does `p` fulfill with?",
       "code": "const thenable = {\n  then(resolve) {\n    resolve(4);\n  },\n};\nconst p = Promise.resolve(thenable);",
       "choices": [
-        {
-          "text": "p is the thenable itself"
-        },
-        {
-          "text": "4"
-        },
-        {
-          "text": "the thenable object"
-        },
-        {
-          "text": "a rejection"
-        }
+        "p is the thenable itself",
+        "4",
+        "the thenable object",
+        "a rejection"
       ],
       "answerIndex": 1,
       "query": {
@@ -1199,14 +695,6 @@
           "promises",
           "thenable"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1215,18 +703,10 @@
       "prompt": "What happens to `p`?",
       "code": "const thenable = {\n  then() {\n    throw new Error(\"sync\");\n  },\n};\nconst p = Promise.resolve(thenable);",
       "choices": [
-        {
-          "text": "p fulfills with undefined"
-        },
-        {
-          "text": "the throw escapes Promise.resolve synchronously"
-        },
-        {
-          "text": "p rejects with that error"
-        },
-        {
-          "text": "p stays pending"
-        }
+        "p fulfills with undefined",
+        "the throw escapes Promise.resolve synchronously",
+        "p rejects with that error",
+        "p stays pending"
       ],
       "answerIndex": 2,
       "query": {
@@ -1237,14 +717,6 @@
           "promises",
           "thenable"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1253,18 +725,10 @@
       "prompt": "After the microtask queue drains, what is `order`?",
       "code": "const order = [];\nPromise.resolve().then(() => {\n  order.push(\"first\");\n  queueMicrotask(() => order.push(\"inner\"));\n});\nPromise.resolve().then(() => {\n  order.push(\"second\");\n});",
       "choices": [
-        {
-          "text": "[\"first\", \"inner\", \"second\"]"
-        },
-        {
-          "text": "[\"first\", \"second\", \"inner\"]"
-        },
-        {
-          "text": "[\"second\", \"first\", \"inner\"]"
-        },
-        {
-          "text": "[\"inner\", \"first\", \"second\"]"
-        }
+        "[\"first\", \"inner\", \"second\"]",
+        "[\"first\", \"second\", \"inner\"]",
+        "[\"second\", \"first\", \"inner\"]",
+        "[\"inner\", \"first\", \"second\"]"
       ],
       "answerIndex": 1,
       "query": {
@@ -1275,14 +739,6 @@
           "microtasks",
           "promises"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1291,18 +747,10 @@
       "prompt": "What does `JSON.stringify(-0)` return?",
       "code": "JSON.stringify(-0);",
       "choices": [
-        {
-          "text": "\"-0\""
-        },
-        {
-          "text": "\"0\""
-        },
-        {
-          "text": "0"
-        },
-        {
-          "text": "null"
-        }
+        "\"-0\"",
+        "\"0\"",
+        "0",
+        "null"
       ],
       "answerIndex": 1,
       "query": {
@@ -1313,14 +761,6 @@
           "json",
           "numbers"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1329,18 +769,10 @@
       "prompt": "What does `JSON.stringify(1n)` do?",
       "code": "JSON.stringify(1n);",
       "choices": [
-        {
-          "text": "returns \"1\""
-        },
-        {
-          "text": "returns \"1n\""
-        },
-        {
-          "text": "throws a TypeError"
-        },
-        {
-          "text": "returns undefined"
-        }
+        "returns \"1\"",
+        "returns \"1n\"",
+        "throws a TypeError",
+        "returns undefined"
       ],
       "answerIndex": 2,
       "query": {
@@ -1351,14 +783,6 @@
           "json",
           "bigint"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1367,18 +791,10 @@
       "prompt": "What does `JSON.stringify(o)` do?",
       "code": "const o = {};\no.self = o;\nJSON.stringify(o);",
       "choices": [
-        {
-          "text": "returns \"{}\""
-        },
-        {
-          "text": "returns \"{\\\"self\\\":null}\""
-        },
-        {
-          "text": "throws a TypeError"
-        },
-        {
-          "text": "returns undefined"
-        }
+        "returns \"{}\"",
+        "returns \"{\\\"self\\\":null}\"",
+        "throws a TypeError",
+        "returns undefined"
       ],
       "answerIndex": 2,
       "query": {
@@ -1388,14 +804,6 @@
         "tags": [
           "json"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1404,18 +812,10 @@
       "prompt": "What does `JSON.stringify` return?",
       "code": "JSON.stringify({\n  toJSON() {\n    return { n: 1 };\n  },\n  x: 2,\n});",
       "choices": [
-        {
-          "text": "\"{\\\"x\\\":2}\""
-        },
-        {
-          "text": "\"{\\\"n\\\":1}\""
-        },
-        {
-          "text": "\"{\\\"toJSON\\\":null}\""
-        },
-        {
-          "text": "a TypeError"
-        }
+        "\"{\\\"x\\\":2}\"",
+        "\"{\\\"n\\\":1}\"",
+        "\"{\\\"toJSON\\\":null}\"",
+        "a TypeError"
       ],
       "answerIndex": 1,
       "query": {
@@ -1425,14 +825,6 @@
         "tags": [
           "json"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1441,18 +833,10 @@
       "prompt": "What is `seen` after the parse?",
       "code": "const seen = [];\nJSON.parse('{\"a\":{\"b\":1}}', (key, value) => {\n  seen.push(key);\n  return value;\n});",
       "choices": [
-        {
-          "text": "[\"\", \"a\", \"b\"]"
-        },
-        {
-          "text": "[\"b\", \"a\", \"\"]"
-        },
-        {
-          "text": "[\"a\", \"b\", \"\"]"
-        },
-        {
-          "text": "[\"\", \"b\", \"a\"]"
-        }
+        "[\"\", \"a\", \"b\"]",
+        "[\"b\", \"a\", \"\"]",
+        "[\"a\", \"b\", \"\"]",
+        "[\"\", \"b\", \"a\"]"
       ],
       "answerIndex": 1,
       "query": {
@@ -1462,14 +846,6 @@
         "tags": [
           "json"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1478,18 +854,10 @@
       "prompt": "What is `clone.self === clone`?",
       "code": "const o = {};\no.self = o;\nconst clone = structuredClone(o);\nclone.self === clone;",
       "choices": [
-        {
-          "text": "false, because the cycle is dropped"
-        },
-        {
-          "text": "true, and clone is a different object from o"
-        },
-        {
-          "text": "false, because structuredClone throws on a cycle"
-        },
-        {
-          "text": "true, and clone === o"
-        }
+        "false, because the cycle is dropped",
+        "true, and clone is a different object from o",
+        "false, because structuredClone throws on a cycle",
+        "true, and clone === o"
       ],
       "answerIndex": 1,
       "query": {
@@ -1499,14 +867,6 @@
         "tags": [
           "structured-clone"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1515,18 +875,10 @@
       "prompt": "What is true of `structuredClone(new Map([[1, 2]]))`?",
       "code": "const clone = structuredClone(new Map([[1, 2]]));",
       "choices": [
-        {
-          "text": "it is a plain object"
-        },
-        {
-          "text": "it is a Map whose get(1) is 2"
-        },
-        {
-          "text": "it throws a DataCloneError"
-        },
-        {
-          "text": "it is an array of pairs"
-        }
+        "it is a plain object",
+        "it is a Map whose get(1) is 2",
+        "it throws a DataCloneError",
+        "it is an array of pairs"
       ],
       "answerIndex": 1,
       "query": {
@@ -1537,14 +889,6 @@
           "structured-clone",
           "map"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1553,18 +897,10 @@
       "prompt": "In strict mode, what does the assignment do?",
       "code": "\"use strict\";\nconst p = new Proxy({}, {\n  set() {\n    return false;\n  },\n});\np.x = 1;",
       "choices": [
-        {
-          "text": "the assignment is ignored"
-        },
-        {
-          "text": "it throws a TypeError"
-        },
-        {
-          "text": "the target gains an own property x"
-        },
-        {
-          "text": "the assignment expression evaluates to false"
-        }
+        "the assignment is ignored",
+        "it throws a TypeError",
+        "the target gains an own property x",
+        "the assignment expression evaluates to false"
       ],
       "answerIndex": 1,
       "query": {
@@ -1575,14 +911,6 @@
           "proxy",
           "strict-mode"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1591,18 +919,10 @@
       "prompt": "In strict mode, what does `delete p.a` do?",
       "code": "\"use strict\";\nconst p = new Proxy({ a: 1 }, {\n  deleteProperty() {\n    return false;\n  },\n});\ndelete p.a;",
       "choices": [
-        {
-          "text": "returns false and leaves a in place"
-        },
-        {
-          "text": "returns true and removes a"
-        },
-        {
-          "text": "throws a TypeError"
-        },
-        {
-          "text": "returns undefined"
-        }
+        "returns false and leaves a in place",
+        "returns true and removes a",
+        "throws a TypeError",
+        "returns undefined"
       ],
       "answerIndex": 2,
       "query": {
@@ -1613,14 +933,6 @@
           "proxy",
           "strict-mode"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1629,18 +941,10 @@
       "prompt": "What does reading `p.a` do?",
       "code": "const target = {};\nObject.defineProperty(target, \"a\", {\n  value: 1,\n  writable: false,\n  configurable: false,\n});\nconst p = new Proxy(target, {\n  get() {\n    return 2;\n  },\n});\np.a;",
       "choices": [
-        {
-          "text": "returns 2"
-        },
-        {
-          "text": "returns 1"
-        },
-        {
-          "text": "returns undefined"
-        },
-        {
-          "text": "throws a TypeError"
-        }
+        "returns 2",
+        "returns 1",
+        "returns undefined",
+        "throws a TypeError"
       ],
       "answerIndex": 3,
       "query": {
@@ -1650,14 +954,6 @@
         "tags": [
           "proxy"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1666,18 +962,10 @@
       "prompt": "In strict mode, what does `o.a = 2` do?",
       "code": "\"use strict\";\nconst o = {};\nObject.defineProperty(o, \"a\", {\n  value: 1,\n  writable: false,\n});\no.a = 2;",
       "choices": [
-        {
-          "text": "leaves a at 1 and does not throw"
-        },
-        {
-          "text": "sets a to 2"
-        },
-        {
-          "text": "throws a TypeError"
-        },
-        {
-          "text": "throws a ReferenceError"
-        }
+        "leaves a at 1 and does not throw",
+        "sets a to 2",
+        "throws a TypeError",
+        "throws a ReferenceError"
       ],
       "answerIndex": 2,
       "query": {
@@ -1688,14 +976,6 @@
           "strict-mode",
           "objects"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1704,18 +984,10 @@
       "prompt": "In strict mode, what does `o.a = 2` do?",
       "code": "\"use strict\";\nconst o = Object.freeze({ a: 1 });\no.a = 2;",
       "choices": [
-        {
-          "text": "leaves a at 1 and does not throw"
-        },
-        {
-          "text": "sets a to 2"
-        },
-        {
-          "text": "throws a TypeError"
-        },
-        {
-          "text": "throws a SyntaxError"
-        }
+        "leaves a at 1 and does not throw",
+        "sets a to 2",
+        "throws a TypeError",
+        "throws a SyntaxError"
       ],
       "answerIndex": 2,
       "query": {
@@ -1726,14 +998,6 @@
           "object-freeze",
           "strict-mode"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1742,18 +1006,10 @@
       "prompt": "In strict mode, what does `delete o.a` do?",
       "code": "\"use strict\";\nconst o = Object.seal({ a: 1 });\ndelete o.a;",
       "choices": [
-        {
-          "text": "returns true and removes a"
-        },
-        {
-          "text": "returns false and leaves a"
-        },
-        {
-          "text": "throws a TypeError"
-        },
-        {
-          "text": "returns undefined"
-        }
+        "returns true and removes a",
+        "returns false and leaves a",
+        "throws a TypeError",
+        "returns undefined"
       ],
       "answerIndex": 2,
       "query": {
@@ -1764,14 +1020,6 @@
           "object-seal",
           "strict-mode"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1780,18 +1028,10 @@
       "prompt": "In strict mode, what does `o.a = 1` do?",
       "code": "\"use strict\";\nconst o = Object.preventExtensions({});\no.a = 1;",
       "choices": [
-        {
-          "text": "adds a with value 1"
-        },
-        {
-          "text": "leaves a undefined and does not throw"
-        },
-        {
-          "text": "throws a TypeError"
-        },
-        {
-          "text": "throws a SyntaxError"
-        }
+        "adds a with value 1",
+        "leaves a undefined and does not throw",
+        "throws a TypeError",
+        "throws a SyntaxError"
       ],
       "answerIndex": 2,
       "query": {
@@ -1802,14 +1042,6 @@
           "strict-mode",
           "objects"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1818,18 +1050,10 @@
       "prompt": "What is `[typeof (d + 1), typeof (d - 1)]`?",
       "code": "const d = new Date(0);\n[typeof (d + 1), typeof (d - 1)];",
       "choices": [
-        {
-          "text": "[\"string\", \"number\"]"
-        },
-        {
-          "text": "[\"number\", \"number\"]"
-        },
-        {
-          "text": "[\"string\", \"string\"]"
-        },
-        {
-          "text": "[\"number\", \"string\"]"
-        }
+        "[\"string\", \"number\"]",
+        "[\"number\", \"number\"]",
+        "[\"string\", \"string\"]",
+        "[\"number\", \"string\"]"
       ],
       "answerIndex": 0,
       "query": {
@@ -1840,14 +1064,6 @@
           "date",
           "coercion"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1856,18 +1072,10 @@
       "prompt": "For an ordinary object, which ToPrimitive order is correct?",
       "code": "const o = {\n  valueOf() {\n    return 2;\n  },\n  toString() {\n    return \"3\";\n  },\n};\n[o + 1, String(o)];",
       "choices": [
-        {
-          "text": "number hint: valueOf then toString; string hint: toString then valueOf"
-        },
-        {
-          "text": "both hints: toString then valueOf"
-        },
-        {
-          "text": "both hints: valueOf then toString"
-        },
-        {
-          "text": "number hint: toString then valueOf; string hint: valueOf then toString"
-        }
+        "number hint: valueOf then toString; string hint: toString then valueOf",
+        "both hints: toString then valueOf",
+        "both hints: valueOf then toString",
+        "number hint: toString then valueOf; string hint: valueOf then toString"
       ],
       "answerIndex": 0,
       "query": {
@@ -1878,14 +1086,6 @@
           "coercion",
           "to-primitive"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1894,18 +1094,10 @@
       "prompt": "What does `Object.prototype.toString.call(o)` return?",
       "code": "const o = { [Symbol.toStringTag]: \"Box\" };\nObject.prototype.toString.call(o);",
       "choices": [
-        {
-          "text": "\"[object Object]\""
-        },
-        {
-          "text": "\"[object Box]\""
-        },
-        {
-          "text": "\"Box\""
-        },
-        {
-          "text": "a TypeError"
-        }
+        "\"[object Object]\"",
+        "\"[object Box]\"",
+        "\"Box\"",
+        "a TypeError"
       ],
       "answerIndex": 1,
       "query": {
@@ -1916,14 +1108,6 @@
           "symbols",
           "to-string-tag"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1932,18 +1116,10 @@
       "prompt": "What does `-1 >>> 0` evaluate to?",
       "code": "-1 >>> 0;",
       "choices": [
-        {
-          "text": "-1"
-        },
-        {
-          "text": "4294967295"
-        },
-        {
-          "text": "0"
-        },
-        {
-          "text": "1"
-        }
+        "-1",
+        "4294967295",
+        "0",
+        "1"
       ],
       "answerIndex": 1,
       "query": {
@@ -1953,14 +1129,6 @@
         "tags": [
           "bitwise"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1969,18 +1137,10 @@
       "prompt": "What does `1.9 | 0` evaluate to?",
       "code": "1.9 | 0;",
       "choices": [
-        {
-          "text": "1.9"
-        },
-        {
-          "text": "2"
-        },
-        {
-          "text": "1"
-        },
-        {
-          "text": "0"
-        }
+        "1.9",
+        "2",
+        "1",
+        "0"
       ],
       "answerIndex": 2,
       "query": {
@@ -1990,14 +1150,6 @@
         "tags": [
           "bitwise"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2006,18 +1158,10 @@
       "prompt": "What is `Number.MAX_SAFE_INTEGER + 1 === Number.MAX_SAFE_INTEGER + 2`?",
       "code": "Number.MAX_SAFE_INTEGER + 1 === Number.MAX_SAFE_INTEGER + 2;",
       "choices": [
-        {
-          "text": "false"
-        },
-        {
-          "text": "true"
-        },
-        {
-          "text": "NaN"
-        },
-        {
-          "text": "a TypeError"
-        }
+        "false",
+        "true",
+        "NaN",
+        "a TypeError"
       ],
       "answerIndex": 1,
       "query": {
@@ -2027,14 +1171,6 @@
         "tags": [
           "numbers"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2043,18 +1179,10 @@
       "prompt": "What does `1 / -0` evaluate to?",
       "code": "1 / -0;",
       "choices": [
-        {
-          "text": "Infinity"
-        },
-        {
-          "text": "-Infinity"
-        },
-        {
-          "text": "NaN"
-        },
-        {
-          "text": "0"
-        }
+        "Infinity",
+        "-Infinity",
+        "NaN",
+        "0"
       ],
       "answerIndex": 1,
       "query": {
@@ -2064,14 +1192,6 @@
         "tags": [
           "numbers"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2080,18 +1200,10 @@
       "prompt": "What are `Math.round(1.5)` and `Math.round(-1.5)`?",
       "code": "[Math.round(1.5), Math.round(-1.5)];",
       "choices": [
-        {
-          "text": "[2, -2]"
-        },
-        {
-          "text": "[2, -1]"
-        },
-        {
-          "text": "[1, -1]"
-        },
-        {
-          "text": "[1, -2]"
-        }
+        "[2, -2]",
+        "[2, -1]",
+        "[1, -1]",
+        "[1, -2]"
       ],
       "answerIndex": 1,
       "query": {
@@ -2101,14 +1213,6 @@
         "tags": [
           "math"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2117,18 +1221,10 @@
       "prompt": "What does the mapped index list equal after the sort?",
       "code": "const items = [\n  { k: 1, i: 0 },\n  { k: 1, i: 1 },\n  { k: 1, i: 2 },\n];\nitems.sort((a, b) => a.k - b.k).map((item) => item.i);",
       "choices": [
-        {
-          "text": "[0, 1, 2]"
-        },
-        {
-          "text": "[2, 1, 0]"
-        },
-        {
-          "text": "an order the spec leaves undefined"
-        },
-        {
-          "text": "[1, 0, 2]"
-        }
+        "[0, 1, 2]",
+        "[2, 1, 0]",
+        "an order the spec leaves undefined",
+        "[1, 0, 2]"
       ],
       "answerIndex": 0,
       "query": {
@@ -2139,14 +1235,6 @@
           "arrays",
           "sort"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2155,18 +1243,10 @@
       "prompt": "What is `[map.size, map.get(+0)]`?",
       "code": "const map = new Map();\nmap.set(+0, \"pos\");\nmap.set(-0, \"neg\");\n[map.size, map.get(+0)];",
       "choices": [
-        {
-          "text": "[2, \"pos\"]"
-        },
-        {
-          "text": "[1, \"neg\"]"
-        },
-        {
-          "text": "[1, \"pos\"]"
-        },
-        {
-          "text": "[2, \"neg\"]"
-        }
+        "[2, \"pos\"]",
+        "[1, \"neg\"]",
+        "[1, \"pos\"]",
+        "[2, \"neg\"]"
       ],
       "answerIndex": 1,
       "query": {
@@ -2176,14 +1256,6 @@
         "tags": [
           "map"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2192,18 +1264,10 @@
       "prompt": "What is `[a[1], b[1]]`?",
       "code": "const a = [1, 2, 3];\nconst b = a.with(1, 9);\n[a[1], b[1]];",
       "choices": [
-        {
-          "text": "[9, 9]"
-        },
-        {
-          "text": "[2, 9]"
-        },
-        {
-          "text": "[9, 2]"
-        },
-        {
-          "text": "[2, 2]"
-        }
+        "[9, 9]",
+        "[2, 9]",
+        "[9, 2]",
+        "[2, 2]"
       ],
       "answerIndex": 1,
       "query": {
@@ -2213,14 +1277,6 @@
         "tags": [
           "arrays"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2229,18 +1285,10 @@
       "prompt": "What does `findLast` return?",
       "code": "[1, 2, 3, 4].findLast((n) => n % 2 === 0);",
       "choices": [
-        {
-          "text": "2"
-        },
-        {
-          "text": "4"
-        },
-        {
-          "text": "3"
-        },
-        {
-          "text": "undefined"
-        }
+        "2",
+        "4",
+        "3",
+        "undefined"
       ],
       "answerIndex": 1,
       "query": {
@@ -2250,14 +1298,6 @@
         "tags": [
           "arrays"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2266,18 +1306,10 @@
       "prompt": "What is `seen` after `reduce`?",
       "code": "const seen = [];\n[1, , 3].reduce((acc, value, index) => {\n  seen.push(index);\n  return acc + value;\n}, 0);",
       "choices": [
-        {
-          "text": "[0, 1, 2]"
-        },
-        {
-          "text": "[0, 2]"
-        },
-        {
-          "text": "[1, 2]"
-        },
-        {
-          "text": "[0]"
-        }
+        "[0, 1, 2]",
+        "[0, 2]",
+        "[1, 2]",
+        "[0]"
       ],
       "answerIndex": 1,
       "query": {
@@ -2288,14 +1320,6 @@
           "arrays",
           "reduce"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2304,18 +1328,10 @@
       "prompt": "What does `copyWithin` return?",
       "code": "[1, 2, 3, 4, 5].copyWithin(2, 0, 3);",
       "choices": [
-        {
-          "text": "[1, 2, 1, 2, 3]"
-        },
-        {
-          "text": "[1, 2, 1, 2, 1]"
-        },
-        {
-          "text": "[1, 2, 3, 1, 2]"
-        },
-        {
-          "text": "[1, 2, 3, 4, 5]"
-        }
+        "[1, 2, 1, 2, 3]",
+        "[1, 2, 1, 2, 1]",
+        "[1, 2, 3, 1, 2]",
+        "[1, 2, 3, 4, 5]"
       ],
       "answerIndex": 0,
       "query": {
@@ -2325,14 +1341,6 @@
         "tags": [
           "arrays"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2341,18 +1349,10 @@
       "prompt": "What is `Array.isArray(new Uint8Array([1]))`?",
       "code": "Array.isArray(new Uint8Array([1]));",
       "choices": [
-        {
-          "text": "true"
-        },
-        {
-          "text": "false"
-        },
-        {
-          "text": "a TypeError"
-        },
-        {
-          "text": "undefined"
-        }
+        "true",
+        "false",
+        "a TypeError",
+        "undefined"
       ],
       "answerIndex": 1,
       "query": {
@@ -2362,14 +1362,6 @@
         "tags": [
           "typed-arrays"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2378,18 +1370,10 @@
       "prompt": "Which statement is true?",
       "code": "const proto = {};\nconst literal = { __proto__: proto };\nconst computed = { [\"__proto__\"]: proto };",
       "choices": [
-        {
-          "text": "literal uses proto as its prototype, and computed has an own __proto__ property"
-        },
-        {
-          "text": "both objects use proto as their prototype"
-        },
-        {
-          "text": "both objects have an own __proto__ property and neither changes the prototype"
-        },
-        {
-          "text": "literal has an own __proto__ property, and computed uses proto as its prototype"
-        }
+        "literal uses proto as its prototype, and computed has an own __proto__ property",
+        "both objects use proto as their prototype",
+        "both objects have an own __proto__ property and neither changes the prototype",
+        "literal has an own __proto__ property, and computed uses proto as its prototype"
       ],
       "answerIndex": 0,
       "query": {
@@ -2400,14 +1384,6 @@
           "prototypes",
           "objects"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2416,18 +1392,10 @@
       "prompt": "What does `1n + 1` do?",
       "code": "1n + 1;",
       "choices": [
-        {
-          "text": "2n"
-        },
-        {
-          "text": "2"
-        },
-        {
-          "text": "throws a TypeError"
-        },
-        {
-          "text": "\"11\""
-        }
+        "2n",
+        "2",
+        "throws a TypeError",
+        "\"11\""
       ],
       "answerIndex": 2,
       "query": {
@@ -2437,14 +1405,6 @@
         "tags": [
           "bigint"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2453,18 +1413,10 @@
       "prompt": "What is `[typeof 1n, 1n === 1]`?",
       "code": "[typeof 1n, 1n === 1];",
       "choices": [
-        {
-          "text": "[\"bigint\", false]"
-        },
-        {
-          "text": "[\"bigint\", true]"
-        },
-        {
-          "text": "[\"number\", false]"
-        },
-        {
-          "text": "[\"object\", false]"
-        }
+        "[\"bigint\", false]",
+        "[\"bigint\", true]",
+        "[\"number\", false]",
+        "[\"object\", false]"
       ],
       "answerIndex": 0,
       "query": {
@@ -2474,14 +1426,6 @@
         "tags": [
           "bigint"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2490,18 +1434,10 @@
       "prompt": "What does `5n / 2n` evaluate to?",
       "code": "5n / 2n;",
       "choices": [
-        {
-          "text": "2.5n"
-        },
-        {
-          "text": "2n"
-        },
-        {
-          "text": "2"
-        },
-        {
-          "text": "a RangeError"
-        }
+        "2.5n",
+        "2n",
+        "2",
+        "a RangeError"
       ],
       "answerIndex": 1,
       "query": {
@@ -2511,14 +1447,6 @@
         "tags": [
           "bigint"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2527,18 +1455,10 @@
       "prompt": "What does `+Symbol(\"s\")` do?",
       "code": "+Symbol(\"s\");",
       "choices": [
-        {
-          "text": "NaN"
-        },
-        {
-          "text": "throws a TypeError"
-        },
-        {
-          "text": "0"
-        },
-        {
-          "text": "\"Symbol(s)\""
-        }
+        "NaN",
+        "throws a TypeError",
+        "0",
+        "\"Symbol(s)\""
       ],
       "answerIndex": 1,
       "query": {
@@ -2549,14 +1469,6 @@
           "symbols",
           "coercion"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2565,18 +1477,10 @@
       "prompt": "Which statement is true for `const symbol = Symbol(\"s\")`?",
       "code": "const symbol = Symbol(\"s\");",
       "choices": [
-        {
-          "text": "symbol + \"\" throws TypeError, and String(symbol) returns a string"
-        },
-        {
-          "text": "both symbol + \"\" and String(symbol) throw TypeError"
-        },
-        {
-          "text": "both symbol + \"\" and String(symbol) return a string"
-        },
-        {
-          "text": "symbol + \"\" returns a string, and String(symbol) throws TypeError"
-        }
+        "symbol + \"\" throws TypeError, and String(symbol) returns a string",
+        "both symbol + \"\" and String(symbol) throw TypeError",
+        "both symbol + \"\" and String(symbol) return a string",
+        "symbol + \"\" returns a string, and String(symbol) throws TypeError"
       ],
       "answerIndex": 0,
       "query": {
@@ -2587,14 +1491,6 @@
           "symbols",
           "coercion"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2603,18 +1499,10 @@
       "prompt": "What is `[Object.hasOwn(returned, \"n\"), created.n]`?",
       "code": "let created;\nclass B {}\nclass C extends B {\n  n = (created = this, 1);\n  constructor() {\n    super();\n    return {};\n  }\n}\nconst returned = new C();",
       "choices": [
-        {
-          "text": "[false, 1]"
-        },
-        {
-          "text": "[true, 1]"
-        },
-        {
-          "text": "[false, undefined]"
-        },
-        {
-          "text": "a TypeError"
-        }
+        "[false, 1]",
+        "[true, 1]",
+        "[false, undefined]",
+        "a TypeError"
       ],
       "answerIndex": 0,
       "query": {
@@ -2625,14 +1513,6 @@
           "class-fields",
           "constructors"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2648,14 +1528,6 @@
         "tags": [
           "optional-call"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2671,14 +1543,6 @@
         "tags": [
           "nullish-assignment"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2694,14 +1558,6 @@
         "tags": [
           "logical-assignment"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2717,14 +1573,6 @@
         "tags": [
           "operators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2741,14 +1589,6 @@
           "super",
           "arrow-functions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2764,14 +1604,6 @@
         "tags": [
           "regexp"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2788,14 +1620,6 @@
           "regexp",
           "unicode"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2811,14 +1635,6 @@
         "tags": [
           "tagged-templates"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2834,14 +1650,6 @@
         "tags": [
           "to-string"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2858,14 +1666,6 @@
           "arguments",
           "strict-mode"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2881,14 +1681,6 @@
         "tags": [
           "eval"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2905,14 +1697,6 @@
           "classes",
           "static"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2929,14 +1713,6 @@
           "symbol-species",
           "arrays"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2952,14 +1728,6 @@
         "tags": [
           "modules"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2975,14 +1743,6 @@
         "tags": [
           "modules"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2999,14 +1759,6 @@
           "finally",
           "errors"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3022,14 +1774,6 @@
         "tags": [
           "private-fields"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3046,14 +1790,6 @@
           "private-fields",
           "static"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3069,14 +1805,6 @@
         "tags": [
           "errors"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3093,14 +1821,6 @@
           "errors",
           "aggregate-error"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3116,14 +1836,6 @@
         "tags": [
           "async-iteration"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3139,14 +1851,6 @@
         "tags": [
           "async-generators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3163,14 +1867,6 @@
           "regexp",
           "strings"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3186,14 +1882,6 @@
         "tags": [
           "regexp"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3209,14 +1897,6 @@
         "tags": [
           "arrays"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3232,14 +1912,6 @@
         "tags": [
           "arrays"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3256,14 +1928,6 @@
           "json",
           "symbols"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3279,14 +1943,6 @@
         "tags": [
           "proxy"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3302,14 +1958,6 @@
         "tags": [
           "proxy"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3326,14 +1974,6 @@
           "class-fields",
           "enumerability"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     }
   ]

@@ -2,7 +2,7 @@
 // content/manifest.json, validates banks and manifest with the app's own
 // validators, and generates the TypeScript modules that bundle them offline:
 // one exporting the manifest and one exporting the bank require map.
-import { CONTENT_LIMITS, isSafeBankPath, validateManifest, validateQuestionBank } from '@syntactical/content-schema';
+import { CONTENT_LIMITS, buildBankContext, isSafeBankPath, validateManifest, validateQuestionBank } from '@syntactical/content-schema';
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, sep } from 'node:path';
@@ -32,24 +32,31 @@ async function readBankBytes(contentDir, bankPath) {
   return bytes;
 }
 
-function assertValidBank(bankPath, bytes) {
-  const result = validateQuestionBank(JSON.parse(bytes.toString('utf8')));
+function buildLanguageContext(bankPath, language) {
+  if (!Array.isArray(language.topics) || !Array.isArray(language.misconceptions)) {
+    throw new Error(`manifest.json is invalid: ${language.id} has no topics or misconceptions for ${bankPath}`);
+  }
+  return buildBankContext(language);
+}
+
+function assertValidBank(bankPath, bytes, language) {
+  const result = validateQuestionBank(JSON.parse(bytes.toString('utf8')), buildLanguageContext(bankPath, language));
   if (!result.isValid) throw new Error(`${bankPath} is invalid: ${result.rule}`);
   if (result.droppedQuestionIds.length > 0) {
     throw new Error(`${bankPath} has invalid questions: ${result.droppedQuestionIds.join(', ')}`);
   }
 }
 
-async function hashBank(contentDir, bank) {
+async function hashBank(contentDir, bank, language) {
   const bytes = await readBankBytes(contentDir, bank.path);
-  assertValidBank(bank.path, bytes);
+  assertValidBank(bank.path, bytes, language);
   return createHash('sha256').update(bytes).digest('hex');
 }
 
 async function hashAllBanks(contentDir, manifest) {
   await Promise.all(
-    listBankEntries(manifest).map(async ({ bank }) => {
-      bank.hash = await hashBank(contentDir, bank);
+    listBankEntries(manifest).map(async ({ bank, language }) => {
+      bank.hash = await hashBank(contentDir, bank, language);
     }),
   );
 }

@@ -14,7 +14,7 @@ import { describe, expect, it } from 'vitest';
 import { migrateBankV1 } from '../../services/migrateBankV1.js';
 import { migrateManifestV1 } from '../../services/migrateManifestV1.js';
 
-const CONTENT_ROOT = new URL('../../../../content/', import.meta.url);
+const CONTENT_ROOT = new URL('../fixtures/v1-content/', import.meta.url);
 
 const EXPECTED_PROVENANCE = {
     source: 'original',

@@ -1,23 +1,15 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 1,
   "questions": [
     {
       "id": "py-hard-01",
       "type": "mc",
       "prompt": "What algorithm does Python use to compute a class’s Method Resolution Order (MRO)?",
       "choices": [
-        {
-          "text": "Plain depth-first search"
-        },
-        {
-          "text": "Breadth-first search"
-        },
-        {
-          "text": "C3 linearization"
-        },
-        {
-          "text": "Topological sort of import order"
-        }
+        "Plain depth-first search",
+        "Breadth-first search",
+        "C3 linearization",
+        "Topological sort of import order"
       ],
       "answerIndex": 2,
       "query": {
@@ -29,14 +21,6 @@
           "mro",
           "internals"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -52,14 +36,6 @@
           "asyncio",
           "concurrency"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -68,18 +44,10 @@
       "prompt": "What does `functools.lru_cache(maxsize=None)` do?",
       "code": "@functools.lru_cache(maxsize=None)\ndef fib(n): ...",
       "choices": [
-        {
-          "text": "Disables caching entirely"
-        },
-        {
-          "text": "Caches results with no upper bound on entries"
-        },
-        {
-          "text": "Caches only calls made with default arguments"
-        },
-        {
-          "text": "Limits the cache to exactly zero entries"
-        }
+        "Disables caching entirely",
+        "Caches results with no upper bound on entries",
+        "Caches only calls made with default arguments",
+        "Limits the cache to exactly zero entries"
       ],
       "answerIndex": 1,
       "query": {
@@ -90,14 +58,6 @@
           "functools",
           "caching"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -105,18 +65,10 @@
       "type": "mc",
       "prompt": "What is the Global Interpreter Lock (GIL)?",
       "choices": [
-        {
-          "text": "A static type-checking layer"
-        },
-        {
-          "text": "A mutex that allows only one thread to execute Python bytecode at a time"
-        },
-        {
-          "text": "The garbage collector’s lock on the heap"
-        },
-        {
-          "text": "A lock that exists only in Python 2"
-        }
+        "A static type-checking layer",
+        "A mutex that allows only one thread to execute Python bytecode at a time",
+        "The garbage collector’s lock on the heap",
+        "A lock that exists only in Python 2"
       ],
       "answerIndex": 1,
       "query": {
@@ -128,14 +80,6 @@
           "concurrency",
           "internals"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -144,18 +88,10 @@
       "prompt": "In CPython, what is true about `id(256) == id(256)`?",
       "code": "a = 256\nb = 256\nid(a) == id(b)",
       "choices": [
-        {
-          "text": "Always `True`, due to small-integer interning"
-        },
-        {
-          "text": "Always `False`"
-        },
-        {
-          "text": "Undefined, depends on the machine’s word size"
-        },
-        {
-          "text": "Raises `TypeError`"
-        }
+        "Always `True`, due to small-integer interning",
+        "Always `False`",
+        "Undefined, depends on the machine’s word size",
+        "Raises `TypeError`"
       ],
       "answerIndex": 0,
       "query": {
@@ -166,14 +102,6 @@
           "internals",
           "cpython"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -181,18 +109,10 @@
       "type": "mc",
       "prompt": "Which dunder method is the fallback called only when normal attribute lookup fails?",
       "choices": [
-        {
-          "text": "__getattribute__"
-        },
-        {
-          "text": "__getattr__"
-        },
-        {
-          "text": "__setattr__"
-        },
-        {
-          "text": "__get__"
-        }
+        "__getattribute__",
+        "__getattr__",
+        "__setattr__",
+        "__get__"
       ],
       "answerIndex": 1,
       "query": {
@@ -203,14 +123,6 @@
           "dunder",
           "attributes"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -219,18 +131,10 @@
       "prompt": "What does the walrus operator `:=` do?",
       "code": "if (n := len(data)) > 10:\n    print(n)",
       "choices": [
-        {
-          "text": "Assigns a value and evaluates to that value, usable inside an expression"
-        },
-        {
-          "text": "Swaps the values of two variables"
-        },
-        {
-          "text": "Unpacks a dictionary into keyword arguments"
-        },
-        {
-          "text": "Chains multiple comparisons together"
-        }
+        "Assigns a value and evaluates to that value, usable inside an expression",
+        "Swaps the values of two variables",
+        "Unpacks a dictionary into keyword arguments",
+        "Chains multiple comparisons together"
       ],
       "answerIndex": 0,
       "query": {
@@ -241,14 +145,6 @@
           "syntax",
           "pep572"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -256,18 +152,10 @@
       "type": "mc",
       "prompt": "When a metaclass constructs a new class object, which method is called first?",
       "choices": [
-        {
-          "text": "__init__"
-        },
-        {
-          "text": "__new__"
-        },
-        {
-          "text": "__call__"
-        },
-        {
-          "text": "__class_getitem__"
-        }
+        "__init__",
+        "__new__",
+        "__call__",
+        "__class_getitem__"
       ],
       "answerIndex": 1,
       "query": {
@@ -278,14 +166,6 @@
           "metaclasses",
           "internals"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -301,14 +181,6 @@
           "generators",
           "coroutines"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -317,18 +189,10 @@
       "prompt": "What does defining `__slots__` on a class primarily do?",
       "code": "class Point:\n    __slots__ = ('x', 'y')",
       "choices": [
-        {
-          "text": "Adds automatically generated getter/setter methods"
-        },
-        {
-          "text": "Removes the per-instance `__dict__` and restricts instances to the named attributes"
-        },
-        {
-          "text": "Makes the class abstract and unable to be instantiated"
-        },
-        {
-          "text": "Enables multiple inheritance from unrelated base classes"
-        }
+        "Adds automatically generated getter/setter methods",
+        "Removes the per-instance `__dict__` and restricts instances to the named attributes",
+        "Makes the class abstract and unable to be instantiated",
+        "Enables multiple inheritance from unrelated base classes"
       ],
       "answerIndex": 1,
       "query": {
@@ -339,14 +203,6 @@
           "classes",
           "memory"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -354,18 +210,10 @@
       "type": "mc",
       "prompt": "When a Python thread makes a blocking I/O call (for example, a network read), what happens to the GIL?",
       "choices": [
-        {
-          "text": "The GIL stays held until the whole call returns"
-        },
-        {
-          "text": "The GIL is released for the duration of the blocking call, letting other threads run"
-        },
-        {
-          "text": "The interpreter spawns a second GIL for that thread"
-        },
-        {
-          "text": "The thread is suspended and its memory is immediately garbage collected"
-        }
+        "The GIL stays held until the whole call returns",
+        "The GIL is released for the duration of the blocking call, letting other threads run",
+        "The interpreter spawns a second GIL for that thread",
+        "The thread is suspended and its memory is immediately garbage collected"
       ],
       "answerIndex": 1,
       "query": {
@@ -377,14 +225,6 @@
           "threading",
           "io"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -401,14 +241,6 @@
           "gil",
           "concurrency"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -426,14 +258,6 @@
           "inheritance",
           "memory"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -441,18 +265,10 @@
       "type": "mc",
       "prompt": "A class defines `__slots__ = ('x', 'y')` with no `'__weakref__'` entry. What happens when you call `weakref.ref(instance)` on it?",
       "choices": [
-        {
-          "text": "It works exactly as it would without __slots__"
-        },
-        {
-          "text": "It raises TypeError because the instance has no slot to store the weak reference"
-        },
-        {
-          "text": "It silently returns None instead of a weakref"
-        },
-        {
-          "text": "It automatically adds a __dict__ to hold the reference"
-        }
+        "It works exactly as it would without __slots__",
+        "It raises TypeError because the instance has no slot to store the weak reference",
+        "It silently returns None instead of a weakref",
+        "It automatically adds a __dict__ to hold the reference"
       ],
       "answerIndex": 1,
       "query": {
@@ -463,14 +279,6 @@
           "slots",
           "weakref"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -479,18 +287,10 @@
       "prompt": "When you write `MyClass(*args)` to instantiate an object, which method on the metaclass runs first?",
       "code": "class Meta(type):\n    def __call__(cls, *args, **kwargs):\n        print(\"creating instance\")\n        return super().__call__(*args, **kwargs)",
       "choices": [
-        {
-          "text": "Meta.__new__"
-        },
-        {
-          "text": "Meta.__call__"
-        },
-        {
-          "text": "MyClass.__new__"
-        },
-        {
-          "text": "MyClass.__init__"
-        }
+        "Meta.__new__",
+        "Meta.__call__",
+        "MyClass.__new__",
+        "MyClass.__init__"
       ],
       "answerIndex": 1,
       "query": {
@@ -501,14 +301,6 @@
           "metaclasses",
           "dunder"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -517,18 +309,10 @@
       "prompt": "What does `type('Foo', (Base,), {'x': 1})` produce?",
       "code": "Foo = type('Foo', (Base,), {'x': 1})",
       "choices": [
-        {
-          "text": "A TypeError, since type() only takes one argument"
-        },
-        {
-          "text": "A new class named Foo, inheriting from Base, with a class attribute x = 1"
-        },
-        {
-          "text": "An instance of Base with attribute x"
-        },
-        {
-          "text": "A tuple containing the class name and namespace"
-        }
+        "A TypeError, since type() only takes one argument",
+        "A new class named Foo, inheriting from Base, with a class attribute x = 1",
+        "An instance of Base with attribute x",
+        "A tuple containing the class name and namespace"
       ],
       "answerIndex": 1,
       "query": {
@@ -539,14 +323,6 @@
           "metaclasses",
           "type"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -555,18 +331,10 @@
       "prompt": "What is `__init_subclass__` used for?",
       "code": "class Plugin:\n    registry = []\n    def __init_subclass__(cls, **kwargs):\n        super().__init_subclass__(**kwargs)\n        Plugin.registry.append(cls)",
       "choices": [
-        {
-          "text": "Running code every time a subclass is defined, without needing a custom metaclass"
-        },
-        {
-          "text": "Initializing instance attributes before __init__"
-        },
-        {
-          "text": "Preventing a class from ever being subclassed"
-        },
-        {
-          "text": "Replacing __new__ for immutable types"
-        }
+        "Running code every time a subclass is defined, without needing a custom metaclass",
+        "Initializing instance attributes before __init__",
+        "Preventing a class from ever being subclassed",
+        "Replacing __new__ for immutable types"
       ],
       "answerIndex": 0,
       "query": {
@@ -577,14 +345,6 @@
           "classes",
           "inheritance"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -593,18 +353,10 @@
       "prompt": "When is a descriptor's `__set_name__` method called?",
       "code": "class Descriptor:\n    def __set_name__(self, owner, name):\n        self.name = name\n\nclass Widget:\n    attr = Descriptor()",
       "choices": [
-        {
-          "text": "Every time the attribute is set on an instance"
-        },
-        {
-          "text": "Once, automatically, right after the owning class body finishes executing"
-        },
-        {
-          "text": "Only if you call it manually after class creation"
-        },
-        {
-          "text": "Before __init__ runs on each new instance"
-        }
+        "Every time the attribute is set on an instance",
+        "Once, automatically, right after the owning class body finishes executing",
+        "Only if you call it manually after class creation",
+        "Before __init__ runs on each new instance"
       ],
       "answerIndex": 1,
       "query": {
@@ -615,14 +367,6 @@
           "descriptors",
           "classes"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -630,18 +374,10 @@
       "type": "mc",
       "prompt": "What makes an object a \"descriptor\" in Python's data model?",
       "choices": [
-        {
-          "text": "It subclasses abc.ABC"
-        },
-        {
-          "text": "It defines any of __get__, __set__, or __delete__ and is stored as a class attribute"
-        },
-        {
-          "text": "It is decorated with @dataclass"
-        },
-        {
-          "text": "It implements __slots__"
-        }
+        "It subclasses abc.ABC",
+        "It defines any of __get__, __set__, or __delete__ and is stored as a class attribute",
+        "It is decorated with @dataclass",
+        "It implements __slots__"
       ],
       "answerIndex": 1,
       "query": {
@@ -652,14 +388,6 @@
           "descriptors",
           "internals"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -675,14 +403,6 @@
           "descriptors",
           "attributes"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -690,18 +410,10 @@
       "type": "mc",
       "prompt": "Under the hood, `@property` is implemented as:",
       "choices": [
-        {
-          "text": "A compiler-level keyword with no runtime object behind it"
-        },
-        {
-          "text": "A built-in data descriptor whose __get__/__set__/__delete__ call the getter/setter/deleter functions you supplied"
-        },
-        {
-          "text": "A metaclass that intercepts all attribute access"
-        },
-        {
-          "text": "A subclass of dict"
-        }
+        "A compiler-level keyword with no runtime object behind it",
+        "A built-in data descriptor whose __get__/__set__/__delete__ call the getter/setter/deleter functions you supplied",
+        "A metaclass that intercepts all attribute access",
+        "A subclass of dict"
       ],
       "answerIndex": 1,
       "query": {
@@ -712,14 +424,6 @@
           "descriptors",
           "property"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -735,14 +439,6 @@
           "descriptors",
           "attributes"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -751,18 +447,10 @@
       "prompt": "In a diamond inheritance layout (D inherits from B and C, both of which inherit from A), why should every __init__ call super().__init__(...) instead of naming a specific parent class?",
       "code": "class B(A):\n    def __init__(self):\n        super().__init__()\n\nclass C(A):\n    def __init__(self):\n        super().__init__()\n\nclass D(B, C):\n    def __init__(self):\n        super().__init__()",
       "choices": [
-        {
-          "text": "It has no effect either way, they are equivalent"
-        },
-        {
-          "text": "super() follows the MRO cooperatively, so A.__init__ runs exactly once even though both B and C lead to it"
-        },
-        {
-          "text": "Naming the parent directly is required for diamond inheritance to work at all"
-        },
-        {
-          "text": "super() only works in classes that inherit from object directly"
-        }
+        "It has no effect either way, they are equivalent",
+        "super() follows the MRO cooperatively, so A.__init__ runs exactly once even though both B and C lead to it",
+        "Naming the parent directly is required for diamond inheritance to work at all",
+        "super() only works in classes that inherit from object directly"
       ],
       "answerIndex": 1,
       "query": {
@@ -774,14 +462,6 @@
           "super",
           "inheritance"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -797,14 +477,6 @@
           "super",
           "internals"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -813,18 +485,10 @@
       "prompt": "Why must you override `__new__` instead of `__init__` to customize construction of a subclass of `int` or `str`?",
       "code": "class PositiveInt(int):\n    def __new__(cls, value):\n        if value <= 0:\n            raise ValueError('must be positive')\n        return super().__new__(cls, value)",
       "choices": [
-        {
-          "text": "Because __init__ does not exist for built-in types"
-        },
-        {
-          "text": "Because the immutable value is already fixed by the time __init__ runs; __new__ is what actually builds the object"
-        },
-        {
-          "text": "Because __new__ runs faster than __init__"
-        },
-        {
-          "text": "There is no real difference, either works identically"
-        }
+        "Because __init__ does not exist for built-in types",
+        "Because the immutable value is already fixed by the time __init__ runs; __new__ is what actually builds the object",
+        "Because __new__ runs faster than __init__",
+        "There is no real difference, either works identically"
       ],
       "answerIndex": 1,
       "query": {
@@ -836,14 +500,6 @@
           "init",
           "immutability"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -860,14 +516,6 @@
           "new",
           "init"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -876,18 +524,10 @@
       "prompt": "The pattern below is a common way to implement a singleton. What mechanism does it rely on?",
       "code": "class Singleton:\n    _instance = None\n    def __new__(cls):\n        if cls._instance is None:\n            cls._instance = super().__new__(cls)\n        return cls._instance",
       "choices": [
-        {
-          "text": "__new__ can return a previously created instance instead of always allocating a new one"
-        },
-        {
-          "text": "Python automatically deduplicates classes with identical names"
-        },
-        {
-          "text": "A built-in @singleton decorator in functools"
-        },
-        {
-          "text": "Metaclasses are required for this to work at all"
-        }
+        "__new__ can return a previously created instance instead of always allocating a new one",
+        "Python automatically deduplicates classes with identical names",
+        "A built-in @singleton decorator in functools",
+        "Metaclasses are required for this to work at all"
       ],
       "answerIndex": 0,
       "query": {
@@ -898,14 +538,6 @@
           "new",
           "design-patterns"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -914,18 +546,10 @@
       "prompt": "What happens when you call a `weakref.ref` object after its referent has been garbage collected?",
       "code": "import weakref\nr = weakref.ref(obj)\ndel obj\nr()",
       "choices": [
-        {
-          "text": "It raises ReferenceError"
-        },
-        {
-          "text": "It returns None"
-        },
-        {
-          "text": "It re-creates the object"
-        },
-        {
-          "text": "It raises AttributeError"
-        }
+        "It raises ReferenceError",
+        "It returns None",
+        "It re-creates the object",
+        "It raises AttributeError"
       ],
       "answerIndex": 1,
       "query": {
@@ -936,14 +560,6 @@
           "weakref",
           "gc"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -951,18 +567,10 @@
       "type": "mc",
       "prompt": "What is the main use case for `weakref.WeakValueDictionary`?",
       "choices": [
-        {
-          "text": "Storing secrets that expire automatically after a timeout"
-        },
-        {
-          "text": "A cache that lets its cached objects be garbage collected once nothing else references them, instead of keeping them alive forever"
-        },
-        {
-          "text": "A dictionary that is faster than the built-in dict"
-        },
-        {
-          "text": "A thread-safe alternative to the built-in dict"
-        }
+        "Storing secrets that expire automatically after a timeout",
+        "A cache that lets its cached objects be garbage collected once nothing else references them, instead of keeping them alive forever",
+        "A dictionary that is faster than the built-in dict",
+        "A thread-safe alternative to the built-in dict"
       ],
       "answerIndex": 1,
       "query": {
@@ -973,14 +581,6 @@
           "weakref",
           "caching"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -997,14 +597,6 @@
           "gc",
           "refcounting"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1012,18 +604,10 @@
       "type": "mc",
       "prompt": "CPython's cyclic garbage collector organizes tracked objects into how many generations, and why?",
       "choices": [
-        {
-          "text": "Just one, scanned on every allocation"
-        },
-        {
-          "text": "Three, on the assumption that most garbage is short-lived, so newer generations are scanned far more often than older ones"
-        },
-        {
-          "text": "Infinitely many, one per object"
-        },
-        {
-          "text": "Two, corresponding to mutable and immutable objects"
-        }
+        "Just one, scanned on every allocation",
+        "Three, on the assumption that most garbage is short-lived, so newer generations are scanned far more often than older ones",
+        "Infinitely many, one per object",
+        "Two, corresponding to mutable and immutable objects"
       ],
       "answerIndex": 1,
       "query": {
@@ -1034,14 +618,6 @@
           "gc",
           "internals"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1057,14 +633,6 @@
           "gc",
           "del"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1073,18 +641,10 @@
       "prompt": "What does `__class_getitem__` let a class support?",
       "code": "class Stack:\n    def __class_getitem__(cls, item):\n        return f\"Stack[{item}]\"\n\nStack[int]  # calls Stack.__class_getitem__(int)",
       "choices": [
-        {
-          "text": "Indexing into instances with square brackets, same as __getitem__"
-        },
-        {
-          "text": "Subscripting the class itself with square brackets, which is how generic-looking annotations such as list[int] or a custom Stack[int] are implemented without a metaclass"
-        },
-        {
-          "text": "Iterating over the class's attributes"
-        },
-        {
-          "text": "Converting the class into a dictionary"
-        }
+        "Indexing into instances with square brackets, same as __getitem__",
+        "Subscripting the class itself with square brackets, which is how generic-looking annotations such as list[int] or a custom Stack[int] are implemented without a metaclass",
+        "Iterating over the class's attributes",
+        "Converting the class into a dictionary"
       ],
       "answerIndex": 1,
       "query": {
@@ -1096,14 +656,6 @@
           "typing",
           "generics"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1120,14 +672,6 @@
           "threading",
           "locks"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1136,18 +680,10 @@
       "prompt": "What happens when you call `task.cancel()` on a running `asyncio.Task`?",
       "code": "task = asyncio.create_task(long_running())\ntask.cancel()",
       "choices": [
-        {
-          "text": "The task is destroyed immediately, mid-instruction, with no chance to react"
-        },
-        {
-          "text": "A CancelledError is raised inside the coroutine at its next suspension point (the next await), which it can catch to clean up, or let propagate to actually stop"
-        },
-        {
-          "text": "cancel() silently does nothing unless the task has already finished"
-        },
-        {
-          "text": "It pauses the task indefinitely until resume() is called"
-        }
+        "The task is destroyed immediately, mid-instruction, with no chance to react",
+        "A CancelledError is raised inside the coroutine at its next suspension point (the next await), which it can catch to clean up, or let propagate to actually stop",
+        "cancel() silently does nothing unless the task has already finished",
+        "It pauses the task indefinitely until resume() is called"
       ],
       "answerIndex": 1,
       "query": {
@@ -1158,14 +694,6 @@
           "asyncio",
           "cancellation"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1174,18 +702,10 @@
       "prompt": "What does `functools.singledispatch` let you do?",
       "code": "@functools.singledispatch\ndef render(obj):\n    raise NotImplementedError\n\n@render.register(int)\ndef _(obj):\n    return str(obj)",
       "choices": [
-        {
-          "text": "Restrict a function to being called only once"
-        },
-        {
-          "text": "Define a generic function that dispatches to a different implementation based on the runtime type of its first argument"
-        },
-        {
-          "text": "Automatically parallelize a function across multiple cores"
-        },
-        {
-          "text": "Cache results keyed by argument type"
-        }
+        "Restrict a function to being called only once",
+        "Define a generic function that dispatches to a different implementation based on the runtime type of its first argument",
+        "Automatically parallelize a function across multiple cores",
+        "Cache results keyed by argument type"
       ],
       "answerIndex": 1,
       "query": {
@@ -1196,14 +716,6 @@
           "functools",
           "dispatch"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1219,14 +731,6 @@
           "functools",
           "caching"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1243,14 +747,6 @@
           "asyncio",
           "coroutines"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1258,18 +754,10 @@
       "type": "mc",
       "prompt": "What happens if you call `time.sleep(5)` (instead of `await asyncio.sleep(5)`) inside an async def function?",
       "choices": [
-        {
-          "text": "It behaves identically to asyncio.sleep"
-        },
-        {
-          "text": "It blocks the entire event loop for 5 seconds, freezing every other task that loop is running"
-        },
-        {
-          "text": "It raises SyntaxError because blocking calls are forbidden in async functions"
-        },
-        {
-          "text": "It runs on a background thread automatically"
-        }
+        "It behaves identically to asyncio.sleep",
+        "It blocks the entire event loop for 5 seconds, freezing every other task that loop is running",
+        "It raises SyntaxError because blocking calls are forbidden in async functions",
+        "It runs on a background thread automatically"
       ],
       "answerIndex": 1,
       "query": {
@@ -1280,14 +768,6 @@
           "asyncio",
           "blocking"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1295,18 +775,10 @@
       "type": "mc",
       "prompt": "What does `await asyncio.sleep(0)` do?",
       "choices": [
-        {
-          "text": "Nothing, it is a no-op that returns instantly without yielding"
-        },
-        {
-          "text": "Yields control back to the event loop for one iteration, letting other ready tasks run, then resumes"
-        },
-        {
-          "text": "Cancels the current task"
-        },
-        {
-          "text": "Raises a TimeoutError immediately"
-        }
+        "Nothing, it is a no-op that returns instantly without yielding",
+        "Yields control back to the event loop for one iteration, letting other ready tasks run, then resumes",
+        "Cancels the current task",
+        "Raises a TimeoutError immediately"
       ],
       "answerIndex": 1,
       "query": {
@@ -1317,14 +789,6 @@
           "asyncio",
           "event-loop"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1333,18 +797,10 @@
       "prompt": "What is `async def gen(): yield 1` and how do you consume it?",
       "code": "async def gen():\n    yield 1\n    yield 2\n\nasync for value in gen():\n    print(value)",
       "choices": [
-        {
-          "text": "A regular coroutine; consume it with await"
-        },
-        {
-          "text": "An async generator; consume it with async for, not a plain for loop"
-        },
-        {
-          "text": "A syntax error, async and yield cannot be combined"
-        },
-        {
-          "text": "Identical to a regular generator, just with extra syntax"
-        }
+        "A regular coroutine; consume it with await",
+        "An async generator; consume it with async for, not a plain for loop",
+        "A syntax error, async and yield cannot be combined",
+        "Identical to a regular generator, just with extra syntax"
       ],
       "answerIndex": 1,
       "query": {
@@ -1355,14 +811,6 @@
           "asyncio",
           "generators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1370,18 +818,10 @@
       "type": "mc",
       "prompt": "Given that only one coroutine runs Python bytecode at a time on the event loop, why would you ever need asyncio.Lock?",
       "choices": [
-        {
-          "text": "You never do, asyncio.Lock is vestigial"
-        },
-        {
-          "text": "To protect a critical section that spans an await point, since another task can run and interleave during that suspension even though nothing runs truly in parallel"
-        },
-        {
-          "text": "To prevent two threads from importing the same module"
-        },
-        {
-          "text": "To make coroutines run on separate CPU cores"
-        }
+        "You never do, asyncio.Lock is vestigial",
+        "To protect a critical section that spans an await point, since another task can run and interleave during that suspension even though nothing runs truly in parallel",
+        "To prevent two threads from importing the same module",
+        "To make coroutines run on separate CPU cores"
       ],
       "answerIndex": 1,
       "query": {
@@ -1392,14 +832,6 @@
           "asyncio",
           "concurrency"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1416,14 +848,6 @@
           "asyncio",
           "generators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1432,18 +856,10 @@
       "prompt": "A generator has `return 42` instead of just falling off the end. How does the caller retrieve that 42?",
       "code": "def gen():\n    yield 1\n    return 42\n\ng = gen()\nnext(g)\ntry:\n    next(g)\nexcept StopIteration as e:\n    print(e.value)",
       "choices": [
-        {
-          "text": "It is silently discarded, generators cannot return values"
-        },
-        {
-          "text": "It is attached as the .value attribute of the StopIteration raised when the generator finishes"
-        },
-        {
-          "text": "It becomes the generator's __repr__"
-        },
-        {
-          "text": "It is yielded one more time"
-        }
+        "It is silently discarded, generators cannot return values",
+        "It is attached as the .value attribute of the StopIteration raised when the generator finishes",
+        "It becomes the generator's __repr__",
+        "It is yielded one more time"
       ],
       "answerIndex": 1,
       "query": {
@@ -1454,14 +870,6 @@
           "generators",
           "stopiteration"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1470,18 +878,10 @@
       "prompt": "What problem does `contextvars.ContextVar` solve that `threading.local` does not, in async code?",
       "code": "request_id = contextvars.ContextVar(\"request_id\")\nrequest_id.set(\"abc-123\")",
       "choices": [
-        {
-          "text": "It makes variables thread-safe, which threading.local already does"
-        },
-        {
-          "text": "It gives each asyncio Task its own isolated copy of the value, since many tasks share one OS thread and threading.local would see them all as the same context"
-        },
-        {
-          "text": "It automatically serializes the value to disk"
-        },
-        {
-          "text": "It replaces global variables entirely"
-        }
+        "It makes variables thread-safe, which threading.local already does",
+        "It gives each asyncio Task its own isolated copy of the value, since many tasks share one OS thread and threading.local would see them all as the same context",
+        "It automatically serializes the value to disk",
+        "It replaces global variables entirely"
       ],
       "answerIndex": 1,
       "query": {
@@ -1492,14 +892,6 @@
           "contextvars",
           "asyncio"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1517,14 +909,6 @@
           "threading",
           "concurrency"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1532,18 +916,10 @@
       "type": "mc",
       "prompt": "Why does `'hello' is 'hello'` typically evaluate to True inside the same module, while a string built at runtime through concatenation usually is not the same object as an equal literal?",
       "choices": [
-        {
-          "text": "Both are actually always False, this is a trick question"
-        },
-        {
-          "text": "Literal identifier-like strings compiled in the same code object are interned by CPython, but strings built at runtime through concatenation or joins usually are not"
-        },
-        {
-          "text": "is always compares strings by value"
-        },
-        {
-          "text": "The second example raises a TypeError"
-        }
+        "Both are actually always False, this is a trick question",
+        "Literal identifier-like strings compiled in the same code object are interned by CPython, but strings built at runtime through concatenation or joins usually are not",
+        "is always compares strings by value",
+        "The second example raises a TypeError"
       ],
       "answerIndex": 1,
       "query": {
@@ -1555,14 +931,6 @@
           "interning",
           "internals"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1571,18 +939,10 @@
       "prompt": "What does `sys.intern()` let you do that ordinary string literal interning does not cover?",
       "code": "a = sys.intern(build_string())\nb = sys.intern(build_string())\na is b  # True",
       "choices": [
-        {
-          "text": "Force any runtime-built string into the intern pool so equal strings from different sources become the same object"
-        },
-        {
-          "text": "Make a string immutable (strings already are)"
-        },
-        {
-          "text": "Convert a string to bytes"
-        },
-        {
-          "text": "Cache the string on disk between program runs"
-        }
+        "Force any runtime-built string into the intern pool so equal strings from different sources become the same object",
+        "Make a string immutable (strings already are)",
+        "Convert a string to bytes",
+        "Cache the string on disk between program runs"
       ],
       "answerIndex": 0,
       "query": {
@@ -1593,14 +953,6 @@
           "strings",
           "interning"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1608,18 +960,10 @@
       "type": "mc",
       "prompt": "Why do CPython C extensions wrap long-running, pure-C computation in `Py_BEGIN_ALLOW_THREADS` / `Py_END_ALLOW_THREADS`?",
       "choices": [
-        {
-          "text": "To disable the garbage collector for that section"
-        },
-        {
-          "text": "To explicitly release the GIL for the duration of that C code, so other Python threads can run while this thread is busy doing work that touches no Python objects"
-        },
-        {
-          "text": "To force the code to run on a separate CPU core automatically"
-        },
-        {
-          "text": "To catch and suppress any exception raised inside the block"
-        }
+        "To disable the garbage collector for that section",
+        "To explicitly release the GIL for the duration of that C code, so other Python threads can run while this thread is busy doing work that touches no Python objects",
+        "To force the code to run on a separate CPU core automatically",
+        "To catch and suppress any exception raised inside the block"
       ],
       "answerIndex": 1,
       "query": {
@@ -1630,14 +974,6 @@
           "gil",
           "c-extensions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1655,14 +991,6 @@
           "identity",
           "internals"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1671,18 +999,10 @@
       "prompt": "What problem do exception groups (`ExceptionGroup`, `except*`, Python 3.11+) solve?",
       "code": "try:\n    ...\nexcept* ValueError as eg:\n    handle(eg.exceptions)",
       "choices": [
-        {
-          "text": "They let you catch multiple unrelated exception types with one except clause, which regular except (A, B) already does"
-        },
-        {
-          "text": "They let code that runs multiple independent operations (like asyncio TaskGroup) raise and handle several unrelated exceptions from that operation together, since a normal try can only ever propagate one exception at a time"
-        },
-        {
-          "text": "They deprecate the traceback module entirely"
-        },
-        {
-          "text": "They are only usable inside async functions"
-        }
+        "They let you catch multiple unrelated exception types with one except clause, which regular except (A, B) already does",
+        "They let code that runs multiple independent operations (like asyncio TaskGroup) raise and handle several unrelated exceptions from that operation together, since a normal try can only ever propagate one exception at a time",
+        "They deprecate the traceback module entirely",
+        "They are only usable inside async functions"
       ],
       "answerIndex": 1,
       "query": {
@@ -1693,14 +1013,6 @@
           "exceptions",
           "exception-groups"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1709,18 +1021,10 @@
       "prompt": "What does overriding a metaclass's `__prepare__` method let you control?",
       "code": "class Meta(type):\n    @classmethod\n    def __prepare__(mcls, name, bases, **kwargs):\n        return collections.OrderedDict()\n\nclass Foo(metaclass=Meta):\n    a = 1\n    b = 2",
       "choices": [
-        {
-          "text": "Which base classes are allowed"
-        },
-        {
-          "text": "The namespace object (normally a plain dict) that the class body executes into, before any of the class attributes are assigned"
-        },
-        {
-          "text": "The final __name__ of the created class"
-        },
-        {
-          "text": "Whether __init__ is called at all"
-        }
+        "Which base classes are allowed",
+        "The namespace object (normally a plain dict) that the class body executes into, before any of the class attributes are assigned",
+        "The final __name__ of the created class",
+        "Whether __init__ is called at all"
       ],
       "answerIndex": 1,
       "query": {
@@ -1731,14 +1035,6 @@
           "metaclasses",
           "internals"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1746,18 +1042,10 @@
       "type": "mc",
       "prompt": "On Unix, the default multiprocessing start method is `fork`, which copies the parent process's entire memory space. Why is this both convenient and dangerous?",
       "choices": [
-        {
-          "text": "It is always safe; fork has no downsides compared to spawn"
-        },
-        {
-          "text": "It is fast and lets the child inherit already-open objects without re-importing, but it also copies locks, file handles, and threads mid-operation, which can deadlock or corrupt state if the parent was multi-threaded at fork time"
-        },
-        {
-          "text": "fork always fails on machines with more than one CPU core"
-        },
-        {
-          "text": "fork requires every object passed to the child to be pickled first, just like spawn"
-        }
+        "It is always safe; fork has no downsides compared to spawn",
+        "It is fast and lets the child inherit already-open objects without re-importing, but it also copies locks, file handles, and threads mid-operation, which can deadlock or corrupt state if the parent was multi-threaded at fork time",
+        "fork always fails on machines with more than one CPU core",
+        "fork requires every object passed to the child to be pickled first, just like spawn"
       ],
       "answerIndex": 1,
       "query": {
@@ -1768,14 +1056,6 @@
           "multiprocessing",
           "fork"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1793,14 +1073,6 @@
           "eq",
           "gotchas"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1808,18 +1080,10 @@
       "type": "mc",
       "prompt": "Why is it dangerous to use a mutable object as a dictionary key by giving it a custom __hash__ based on its current mutable state?",
       "choices": [
-        {
-          "text": "It is not dangerous, Python recomputes the hash whenever the key changes"
-        },
-        {
-          "text": "If the object's hash changes after insertion, the dict can no longer find it in its bucket, effectively losing the entry even though the key object still exists"
-        },
-        {
-          "text": "It causes a MemoryError"
-        },
-        {
-          "text": "Dictionaries do not allow custom __hash__ at all"
-        }
+        "It is not dangerous, Python recomputes the hash whenever the key changes",
+        "If the object's hash changes after insertion, the dict can no longer find it in its bucket, effectively losing the entry even though the key object still exists",
+        "It causes a MemoryError",
+        "Dictionaries do not allow custom __hash__ at all"
       ],
       "answerIndex": 1,
       "query": {
@@ -1831,14 +1095,6 @@
           "dict",
           "gotchas"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1847,18 +1103,10 @@
       "prompt": "Inside an except block, `sys.exc_info()` returns a tuple describing the currently handled exception. What happens if you call it outside of any except block, with nothing being handled?",
       "code": "sys.exc_info()  # outside any except block",
       "choices": [
-        {
-          "text": "It raises RuntimeError"
-        },
-        {
-          "text": "It returns (None, None, None)"
-        },
-        {
-          "text": "It re-raises the last exception that was ever handled, anywhere in the program"
-        },
-        {
-          "text": "It returns the tuple from the most recently defined function"
-        }
+        "It raises RuntimeError",
+        "It returns (None, None, None)",
+        "It re-raises the last exception that was ever handled, anywhere in the program",
+        "It returns the tuple from the most recently defined function"
       ],
       "answerIndex": 1,
       "query": {
@@ -1869,14 +1117,6 @@
           "exceptions",
           "sys"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1885,18 +1125,10 @@
       "prompt": "What does calling `MyABC.register(SomeClass)` do?",
       "code": "class Drawable(abc.ABC):\n    @abc.abstractmethod\n    def draw(self): ...\n\nDrawable.register(ThirdPartyWidget)\nisinstance(ThirdPartyWidget(), Drawable)  # True",
       "choices": [
-        {
-          "text": "It makes SomeClass literally inherit from MyABC, changing its MRO"
-        },
-        {
-          "text": "It registers SomeClass as a \"virtual subclass,\" so isinstance/issubclass checks against MyABC succeed even though SomeClass never actually inherits from it"
-        },
-        {
-          "text": "It raises an error unless SomeClass already implements every abstract method"
-        },
-        {
-          "text": "It copies MyABC's methods onto SomeClass"
-        }
+        "It makes SomeClass literally inherit from MyABC, changing its MRO",
+        "It registers SomeClass as a \"virtual subclass,\" so isinstance/issubclass checks against MyABC succeed even though SomeClass never actually inherits from it",
+        "It raises an error unless SomeClass already implements every abstract method",
+        "It copies MyABC's methods onto SomeClass"
       ],
       "answerIndex": 1,
       "query": {
@@ -1907,14 +1139,6 @@
           "abc",
           "isinstance"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1922,18 +1146,10 @@
       "type": "mc",
       "prompt": "Why does `isinstance([1, 2], collections.abc.Iterable)` return True even though `list` never explicitly inherits from Iterable?",
       "choices": [
-        {
-          "text": "It does not, this would raise TypeError"
-        },
-        {
-          "text": "Several collections.abc classes implement __subclasshook__ to recognize any class that defines the right dunder methods (like __iter__), without requiring explicit registration or inheritance"
-        },
-        {
-          "text": "list secretly inherits from Iterable internally, contradicting the premise"
-        },
-        {
-          "text": "isinstance always returns True for built-in types"
-        }
+        "It does not, this would raise TypeError",
+        "Several collections.abc classes implement __subclasshook__ to recognize any class that defines the right dunder methods (like __iter__), without requiring explicit registration or inheritance",
+        "list secretly inherits from Iterable internally, contradicting the premise",
+        "isinstance always returns True for built-in types"
       ],
       "answerIndex": 1,
       "query": {
@@ -1944,14 +1160,6 @@
           "abc",
           "collections"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1960,18 +1168,10 @@
       "prompt": "For a custom iterator class (not just an iterable), what should `__iter__` return?",
       "code": "class Counter:\n    def __iter__(self):\n        return self\n    def __next__(self):\n        ...",
       "choices": [
-        {
-          "text": "A brand new object every time, never self"
-        },
-        {
-          "text": "self, since an iterator is defined as an object that is its own iterator"
-        },
-        {
-          "text": "__iter__ is optional on iterators and may be omitted"
-        },
-        {
-          "text": "A list of all remaining values"
-        }
+        "A brand new object every time, never self",
+        "self, since an iterator is defined as an object that is its own iterator",
+        "__iter__ is optional on iterators and may be omitted",
+        "A list of all remaining values"
       ],
       "answerIndex": 1,
       "query": {
@@ -1982,14 +1182,6 @@
           "iterators",
           "protocol"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -1998,18 +1190,10 @@
       "prompt": "A class defines `__slots__ = (\"x\",)` and separately gains a `functools.cached_property` for an expensive computed attribute. What goes wrong?",
       "code": "class Widget:\n    __slots__ = (\"x\",)\n\n    @functools.cached_property\n    def expensive(self):\n        return compute(self.x)",
       "choices": [
-        {
-          "text": "Nothing, cached_property works fine with __slots__"
-        },
-        {
-          "text": "cached_property stores its cached value directly in the instance __dict__ on first access, so it raises AttributeError (no __dict__ to write to) on a __slots__-only class"
-        },
-        {
-          "text": "It silently recomputes the value on every access instead of caching"
-        },
-        {
-          "text": "It raises a SyntaxError at class definition time"
-        }
+        "Nothing, cached_property works fine with __slots__",
+        "cached_property stores its cached value directly in the instance __dict__ on first access, so it raises AttributeError (no __dict__ to write to) on a __slots__-only class",
+        "It silently recomputes the value on every access instead of caching",
+        "It raises a SyntaxError at class definition time"
       ],
       "answerIndex": 1,
       "query": {
@@ -2021,14 +1205,6 @@
           "descriptors",
           "caching"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2037,18 +1213,10 @@
       "prompt": "What does implementing `__call__` on a class let you do?",
       "code": "class Adder:\n    def __init__(self, n):\n        self.n = n\n    def __call__(self, x):\n        return x + self.n\n\nadd5 = Adder(5)\nadd5(10)  # 15",
       "choices": [
-        {
-          "text": "Nothing, __call__ is reserved for internal use"
-        },
-        {
-          "text": "Make instances of the class invokable with function-call syntax, blurring the line between \"object\" and \"function\""
-        },
-        {
-          "text": "Override how the class itself is instantiated"
-        },
-        {
-          "text": "Allow the class to be used only as a decorator, never called directly"
-        }
+        "Nothing, __call__ is reserved for internal use",
+        "Make instances of the class invokable with function-call syntax, blurring the line between \"object\" and \"function\"",
+        "Override how the class itself is instantiated",
+        "Allow the class to be used only as a decorator, never called directly"
       ],
       "answerIndex": 1,
       "query": {
@@ -2059,14 +1227,6 @@
           "dunder",
           "callable"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2084,14 +1244,6 @@
           "attributes",
           "gotchas"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2099,18 +1251,10 @@
       "type": "mc",
       "prompt": "What happens if you try to do `str.upper = lambda self: \"patched\"`?",
       "choices": [
-        {
-          "text": "It succeeds and every string's .upper() now returns \"patched\""
-        },
-        {
-          "text": "It raises TypeError, because built-in types implemented in C are immutable from pure Python and cannot be monkeypatched directly"
-        },
-        {
-          "text": "It only patches new string instances created after the assignment"
-        },
-        {
-          "text": "It silently does nothing"
-        }
+        "It succeeds and every string's .upper() now returns \"patched\"",
+        "It raises TypeError, because built-in types implemented in C are immutable from pure Python and cannot be monkeypatched directly",
+        "It only patches new string instances created after the assignment",
+        "It silently does nothing"
       ],
       "answerIndex": 1,
       "query": {
@@ -2121,14 +1265,6 @@
           "monkeypatching",
           "internals"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2136,18 +1272,10 @@
       "type": "mc",
       "prompt": "What extra safety does `unittest.mock.patch('module.func', autospec=True)` give you over a plain patch?",
       "choices": [
-        {
-          "text": "It makes the mock run the real implementation once before mocking"
-        },
-        {
-          "text": "It makes the mock enforce the original function’s signature, so calling it with the wrong number or kind of arguments in a test raises TypeError instead of silently passing"
-        },
-        {
-          "text": "It patches every function in the module automatically"
-        },
-        {
-          "text": "It disables the mock entirely in CI"
-        }
+        "It makes the mock run the real implementation once before mocking",
+        "It makes the mock enforce the original function’s signature, so calling it with the wrong number or kind of arguments in a test raises TypeError instead of silently passing",
+        "It patches every function in the module automatically",
+        "It disables the mock entirely in CI"
       ],
       "answerIndex": 1,
       "query": {
@@ -2158,14 +1286,6 @@
           "mock",
           "testing"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2181,14 +1301,6 @@
           "monkeypatching",
           "classes"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2196,18 +1308,10 @@
       "type": "mc",
       "prompt": "What does `sys.setrecursionlimit(n)` actually control?",
       "choices": [
-        {
-          "text": "The maximum depth of nested loops"
-        },
-        {
-          "text": "The maximum depth of the Python call stack before a RecursionError is raised, as a safety net against genuine infinite recursion crashing the interpreter"
-        },
-        {
-          "text": "The maximum number of imported modules"
-        },
-        {
-          "text": "The maximum size of a single function body"
-        }
+        "The maximum depth of nested loops",
+        "The maximum depth of the Python call stack before a RecursionError is raised, as a safety net against genuine infinite recursion crashing the interpreter",
+        "The maximum number of imported modules",
+        "The maximum size of a single function body"
       ],
       "answerIndex": 1,
       "query": {
@@ -2218,14 +1322,6 @@
           "recursion",
           "sys"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2241,14 +1337,6 @@
           "recursion",
           "internals"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2257,18 +1345,10 @@
       "prompt": "What advantage does `memoryview(some_bytes)[10:20]` have over `some_bytes[10:20]`?",
       "code": "data = bytes(10_000_000)\nview = memoryview(data)[10:20]   # no copy\nchunk = data[10:20]                # copies 10 bytes into a new object",
       "choices": [
-        {
-          "text": "None, they are identical operations"
-        },
-        {
-          "text": "The memoryview slice shares the underlying buffer with the original object with no copy, while slicing bytes directly allocates a new object and copies the data"
-        },
-        {
-          "text": "memoryview slices are always faster to print"
-        },
-        {
-          "text": "memoryview makes the data mutable even though bytes is immutable"
-        }
+        "None, they are identical operations",
+        "The memoryview slice shares the underlying buffer with the original object with no copy, while slicing bytes directly allocates a new object and copies the data",
+        "memoryview slices are always faster to print",
+        "memoryview makes the data mutable even though bytes is immutable"
       ],
       "answerIndex": 1,
       "query": {
@@ -2279,14 +1359,6 @@
           "memoryview",
           "buffer-protocol"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2294,18 +1366,10 @@
       "type": "mc",
       "prompt": "Which of bytes, bytearray, and memoryview is mutable, and how does that differ from the others?",
       "choices": [
-        {
-          "text": "All three are mutable"
-        },
-        {
-          "text": "bytes is immutable like str; bytearray is a mutable buffer you can modify in place; memoryview is a view that may or may not be writable depending on what it wraps, and never owns the underlying data itself"
-        },
-        {
-          "text": "None of the three are mutable"
-        },
-        {
-          "text": "Only memoryview is mutable; bytes and bytearray are both immutable"
-        }
+        "All three are mutable",
+        "bytes is immutable like str; bytearray is a mutable buffer you can modify in place; memoryview is a view that may or may not be writable depending on what it wraps, and never owns the underlying data itself",
+        "None of the three are mutable",
+        "Only memoryview is mutable; bytes and bytearray are both immutable"
       ],
       "answerIndex": 1,
       "query": {
@@ -2317,14 +1381,6 @@
           "bytearray",
           "memoryview"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2333,18 +1389,10 @@
       "prompt": "What does defining `__reduce__` on a class let you control?",
       "code": "class Connection:\n    def __reduce__(self):\n        return (Connection, (self.host, self.port))",
       "choices": [
-        {
-          "text": "How the object is printed by repr()"
-        },
-        {
-          "text": "How pickle reconstructs the object: __reduce__ returns a callable plus the arguments to pass it, letting objects that hold unpicklable state (like a live socket) rebuild themselves from scratch instead of being pickled field-by-field"
-        },
-        {
-          "text": "How the object compares for equality"
-        },
-        {
-          "text": "How deepcopy handles the object, with no effect on pickle"
-        }
+        "How the object is printed by repr()",
+        "How pickle reconstructs the object: __reduce__ returns a callable plus the arguments to pass it, letting objects that hold unpicklable state (like a live socket) rebuild themselves from scratch instead of being pickled field-by-field",
+        "How the object compares for equality",
+        "How deepcopy handles the object, with no effect on pickle"
       ],
       "answerIndex": 1,
       "query": {
@@ -2355,14 +1403,6 @@
           "pickle",
           "dunder"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2371,18 +1411,10 @@
       "prompt": "How can a class customize what `copy.deepcopy` does to its instances?",
       "code": "class Node:\n    def __deepcopy__(self, memo):\n        new = Node()\n        memo[id(self)] = new\n        new.children = copy.deepcopy(self.children, memo)\n        return new",
       "choices": [
-        {
-          "text": "It cannot, deepcopy always uses the same generic algorithm"
-        },
-        {
-          "text": "By defining a __deepcopy__(self, memo) method, which the copy module calls instead of its default recursive strategy"
-        },
-        {
-          "text": "By setting __slots__ to an empty tuple"
-        },
-        {
-          "text": "By overriding __eq__"
-        }
+        "It cannot, deepcopy always uses the same generic algorithm",
+        "By defining a __deepcopy__(self, memo) method, which the copy module calls instead of its default recursive strategy",
+        "By setting __slots__ to an empty tuple",
+        "By overriding __eq__"
       ],
       "answerIndex": 1,
       "query": {
@@ -2393,14 +1425,6 @@
           "copy",
           "dunder"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2418,14 +1442,6 @@
           "deepcopy",
           "cycles"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2434,18 +1450,10 @@
       "prompt": "Why does passing a lambda as the target function to `multiprocessing.Process` typically fail on some platforms?",
       "code": "p = multiprocessing.Process(target=lambda: print('hi'))\np.start()  # PicklingError on some start methods",
       "choices": [
-        {
-          "text": "Lambdas are not real functions in Python"
-        },
-        {
-          "text": "Spawning a new process needs to pickle the target and its arguments to hand them to the child process, and lambdas (and most local closures) cannot be pickled"
-        },
-        {
-          "text": "Lambdas run synchronously and block the process pool"
-        },
-        {
-          "text": "multiprocessing does not support functions with zero arguments"
-        }
+        "Lambdas are not real functions in Python",
+        "Spawning a new process needs to pickle the target and its arguments to hand them to the child process, and lambdas (and most local closures) cannot be pickled",
+        "Lambdas run synchronously and block the process pool",
+        "multiprocessing does not support functions with zero arguments"
       ],
       "answerIndex": 1,
       "query": {
@@ -2456,14 +1464,6 @@
           "multiprocessing",
           "pickle"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2472,18 +1472,10 @@
       "prompt": "Since separate processes don't share memory the way threads do, how does `multiprocessing.Value` let processes share a single mutable value?",
       "code": "counter = multiprocessing.Value(\"i\", 0)\nwith counter.get_lock():\n    counter.value += 1",
       "choices": [
-        {
-          "text": "It secretly uses threads under the hood instead of real processes"
-        },
-        {
-          "text": "It allocates memory in an OS-backed shared-memory segment that every process maps into its own address space, giving them a genuinely shared piece of memory rather than separate copies"
-        },
-        {
-          "text": "It copies the value to every process once at startup and never updates it again"
-        },
-        {
-          "text": "It uses sockets to synchronously transmit every read and write"
-        }
+        "It secretly uses threads under the hood instead of real processes",
+        "It allocates memory in an OS-backed shared-memory segment that every process maps into its own address space, giving them a genuinely shared piece of memory rather than separate copies",
+        "It copies the value to every process once at startup and never updates it again",
+        "It uses sockets to synchronously transmit every read and write"
       ],
       "answerIndex": 1,
       "query": {
@@ -2494,14 +1486,6 @@
           "multiprocessing",
           "shared-memory"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2510,18 +1494,10 @@
       "prompt": "A context manager's __exit__ method returns True while an exception is propagating through the with block. What happens?",
       "code": "class Suppressor:\n    def __enter__(self): return self\n    def __exit__(self, exc_type, exc_val, tb):\n        return True\n\nwith Suppressor():\n    raise ValueError(\"boom\")\nprint(\"still runs\")",
       "choices": [
-        {
-          "text": "The exception still propagates after __exit__ finishes"
-        },
-        {
-          "text": "The exception is suppressed entirely, execution continues normally after the with block as if nothing was raised"
-        },
-        {
-          "text": "It raises a new SystemExit"
-        },
-        {
-          "text": "It only works for exceptions of type Warning"
-        }
+        "The exception still propagates after __exit__ finishes",
+        "The exception is suppressed entirely, execution continues normally after the with block as if nothing was raised",
+        "It raises a new SystemExit",
+        "It only works for exceptions of type Warning"
       ],
       "answerIndex": 1,
       "query": {
@@ -2532,14 +1508,6 @@
           "context-managers",
           "exceptions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2548,18 +1516,10 @@
       "prompt": "What does `contextlib.suppress(FileNotFoundError)` do?",
       "code": "with contextlib.suppress(FileNotFoundError):\n    os.remove(\"maybe_missing.txt\")",
       "choices": [
-        {
-          "text": "Logs the exception without stopping it from propagating"
-        },
-        {
-          "text": "Turns try/except FileNotFoundError: pass into a reusable context manager, silently ignoring exactly that exception type if it occurs inside the block"
-        },
-        {
-          "text": "Retries the block up to 3 times before giving up"
-        },
-        {
-          "text": "Suppresses all warnings, not exceptions"
-        }
+        "Logs the exception without stopping it from propagating",
+        "Turns try/except FileNotFoundError: pass into a reusable context manager, silently ignoring exactly that exception type if it occurs inside the block",
+        "Retries the block up to 3 times before giving up",
+        "Suppresses all warnings, not exceptions"
       ],
       "answerIndex": 1,
       "query": {
@@ -2570,14 +1530,6 @@
           "contextlib",
           "exceptions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2586,18 +1538,10 @@
       "prompt": "A custom numeric-like class defines `__int__` but not `__index__`. Why does `some_list[my_number]` still raise TypeError even though `int(my_number)` works fine?",
       "code": "class Fraction:\n    def __int__(self):\n        return self.numerator // self.denominator\n    # no __index__\n\nsome_list[Fraction(3, 1)]  # TypeError: list indices must be integers",
       "choices": [
-        {
-          "text": "They are the same protocol; defining __int__ is always enough for indexing too"
-        },
-        {
-          "text": "Slicing, indexing, and functions like operator.index() specifically require __index__, a stricter protocol than __int__ meant only for objects that are exact, lossless integer substitutes, not for anything merely convertible to an int"
-        },
-        {
-          "text": "__int__ is deprecated and no longer called by int()"
-        },
-        {
-          "text": "It is a bug in Python that will be fixed in a future version"
-        }
+        "They are the same protocol; defining __int__ is always enough for indexing too",
+        "Slicing, indexing, and functions like operator.index() specifically require __index__, a stricter protocol than __int__ meant only for objects that are exact, lossless integer substitutes, not for anything merely convertible to an int",
+        "__int__ is deprecated and no longer called by int()",
+        "It is a bug in Python that will be fixed in a future version"
       ],
       "answerIndex": 1,
       "query": {
@@ -2608,14 +1552,6 @@
           "dunder",
           "operators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2632,14 +1568,6 @@
           "context-managers",
           "exceptions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2648,18 +1576,10 @@
       "prompt": "What does this function return?",
       "code": "def f():\n    try:\n        return 1\n    finally:\n        print('cleanup')\n\nf()",
       "choices": [
-        {
-          "text": "It returns 1 without ever printing \"cleanup\""
-        },
-        {
-          "text": "It prints \"cleanup\" and then returns 1; finally always runs even when try exits via return"
-        },
-        {
-          "text": "It raises an exception because return and finally conflict"
-        },
-        {
-          "text": "It returns None instead of 1"
-        }
+        "It returns 1 without ever printing \"cleanup\"",
+        "It prints \"cleanup\" and then returns 1; finally always runs even when try exits via return",
+        "It raises an exception because return and finally conflict",
+        "It returns None instead of 1"
       ],
       "answerIndex": 1,
       "query": {
@@ -2670,14 +1590,6 @@
           "try-finally",
           "control-flow"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2686,18 +1598,10 @@
       "prompt": "What does `SomeClass.__subclasses__()` return, and why does it not keep those subclasses alive forever?",
       "code": "class Base:\n    pass\n\nclass Child(Base):\n    pass\n\nBase.__subclasses__()  # [<class Child>]",
       "choices": [
-        {
-          "text": "A list of every subclass ever defined, kept alive permanently by this reference"
-        },
-        {
-          "text": "A list of currently-alive direct subclasses, tracked internally via weak references, so a subclass that has otherwise been garbage collected disappears from this list too"
-        },
-        {
-          "text": "A single string naming the most recently defined subclass"
-        },
-        {
-          "text": "An empty list unless the class defines __slots__"
-        }
+        "A list of every subclass ever defined, kept alive permanently by this reference",
+        "A list of currently-alive direct subclasses, tracked internally via weak references, so a subclass that has otherwise been garbage collected disappears from this list too",
+        "A single string naming the most recently defined subclass",
+        "An empty list unless the class defines __slots__"
       ],
       "answerIndex": 1,
       "query": {
@@ -2709,14 +1613,6 @@
           "weakref",
           "introspection"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2733,14 +1629,6 @@
           "try-finally",
           "exceptions"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2749,18 +1637,10 @@
       "prompt": "What does the `__format__` dunder method have to do with f-strings and the built-in `format()` function?",
       "code": "class Money:\n    def __format__(self, spec):\n        return f\"${self.amount:{spec}}\"\n\nf\"{Money(9.5):.2f}\"  # calls Money.__format__('.2f')",
       "choices": [
-        {
-          "text": "Nothing, __format__ is unrelated to f-strings"
-        },
-        {
-          "text": "format(obj, spec) and the {obj:spec} syntax inside f-strings and str.format both ultimately call obj.__format__(spec), letting a class define its own mini-language for the part after the colon"
-        },
-        {
-          "text": "__format__ only controls how repr() displays an object"
-        },
-        {
-          "text": "__format__ is called once per program to set global formatting defaults"
-        }
+        "Nothing, __format__ is unrelated to f-strings",
+        "format(obj, spec) and the {obj:spec} syntax inside f-strings and str.format both ultimately call obj.__format__(spec), letting a class define its own mini-language for the part after the colon",
+        "__format__ only controls how repr() displays an object",
+        "__format__ is called once per program to set global formatting defaults"
       ],
       "answerIndex": 1,
       "query": {
@@ -2771,14 +1651,6 @@
           "dunder",
           "formatting"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2796,14 +1668,6 @@
           "gotchas",
           "mutability"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2811,18 +1675,10 @@
       "type": "mc",
       "prompt": "What happens if you try to define `class C(A, B):` where A's metaclass is MetaA and B's metaclass is an unrelated MetaB (neither a subclass of the other)?",
       "choices": [
-        {
-          "text": "Python picks MetaA arbitrarily since it is listed first"
-        },
-        {
-          "text": "It raises TypeError: metaclass conflict, since Python cannot determine a single consistent metaclass for C"
-        },
-        {
-          "text": "It silently creates C with metaclass type, ignoring both"
-        },
-        {
-          "text": "It merges MetaA and MetaB automatically into a new metaclass"
-        }
+        "Python picks MetaA arbitrarily since it is listed first",
+        "It raises TypeError: metaclass conflict, since Python cannot determine a single consistent metaclass for C",
+        "It silently creates C with metaclass type, ignoring both",
+        "It merges MetaA and MetaB automatically into a new metaclass"
       ],
       "answerIndex": 1,
       "query": {
@@ -2833,14 +1689,6 @@
           "metaclasses",
           "inheritance"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2849,18 +1697,10 @@
       "prompt": "To make an abstract property, which decorator order is correct?",
       "code": "class Shape(abc.ABC):\n    @property\n    @abc.abstractmethod\n    def area(self): ...",
       "choices": [
-        {
-          "text": "@abc.abstractmethod must be the outermost (topmost) decorator"
-        },
-        {
-          "text": "@property must be the outermost decorator, with @abc.abstractmethod directly beneath it, closest to the function"
-        },
-        {
-          "text": "Order does not matter for decorators in Python"
-        },
-        {
-          "text": "Abstract properties are not possible in Python at all"
-        }
+        "@abc.abstractmethod must be the outermost (topmost) decorator",
+        "@property must be the outermost decorator, with @abc.abstractmethod directly beneath it, closest to the function",
+        "Order does not matter for decorators in Python",
+        "Abstract properties are not possible in Python at all"
       ],
       "answerIndex": 1,
       "query": {
@@ -2872,14 +1712,6 @@
           "property",
           "decorators"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2888,18 +1720,10 @@
       "prompt": "What is `__radd__` for, and when does Python call it?",
       "code": "class Money:\n    def __radd__(self, other):\n        ...\n\n5 + Money(10)  # int.__add__ returns NotImplemented, so Money.__radd__ is tried",
       "choices": [
-        {
-          "text": "It is called instead of __add__ whenever the left operand is a subclass"
-        },
-        {
-          "text": "It is the fallback for a + b when a.__add__(b) returns NotImplemented (or a lacks __add__), letting b handle the operation with the operands reversed"
-        },
-        {
-          "text": "It is used only for in-place addition (+=)"
-        },
-        {
-          "text": "It is deprecated in favor of __add__ alone"
-        }
+        "It is called instead of __add__ whenever the left operand is a subclass",
+        "It is the fallback for a + b when a.__add__(b) returns NotImplemented (or a lacks __add__), letting b handle the operation with the operands reversed",
+        "It is used only for in-place addition (+=)",
+        "It is deprecated in favor of __add__ alone"
       ],
       "answerIndex": 1,
       "query": {
@@ -2910,14 +1734,6 @@
           "operators",
           "dunder"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2935,14 +1751,6 @@
           "operators",
           "notimplemented"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2951,18 +1759,10 @@
       "prompt": "What problem does `contextlib.ExitStack` solve?",
       "code": "with contextlib.ExitStack() as stack:\n    files = [stack.enter_context(open(name)) for name in filenames]\n    # every opened file is closed on the way out, in reverse order",
       "choices": [
-        {
-          "text": "It replaces the with statement entirely for single context managers"
-        },
-        {
-          "text": "It lets you enter a variable, runtime-determined number of context managers in one with block, and guarantees all of them are exited in reverse order even if entering a later one fails partway through"
-        },
-        {
-          "text": "It suppresses all exceptions raised inside the block"
-        },
-        {
-          "text": "It only works with context managers that support async with"
-        }
+        "It replaces the with statement entirely for single context managers",
+        "It lets you enter a variable, runtime-determined number of context managers in one with block, and guarantees all of them are exited in reverse order even if entering a later one fails partway through",
+        "It suppresses all exceptions raised inside the block",
+        "It only works with context managers that support async with"
       ],
       "answerIndex": 1,
       "query": {
@@ -2973,14 +1773,6 @@
           "contextlib",
           "context-managers"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -2997,14 +1789,6 @@
           "enum",
           "gotchas"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3013,18 +1797,10 @@
       "prompt": "By default, `@dataclass` generates __eq__ but sets __hash__ to None (unhashable). What changes if you add `frozen=True`?",
       "code": "@dataclass(frozen=True)\nclass Point:\n    x: int\n    y: int",
       "choices": [
-        {
-          "text": "Nothing changes regarding hashing"
-        },
-        {
-          "text": "Because the instance is now immutable, dataclass also generates a __hash__ based on the fields, making instances usable as dict keys or set members"
-        },
-        {
-          "text": "frozen=True disables __eq__ instead"
-        },
-        {
-          "text": "frozen=True has no effect on hashing but prevents attribute reads"
-        }
+        "Nothing changes regarding hashing",
+        "Because the instance is now immutable, dataclass also generates a __hash__ based on the fields, making instances usable as dict keys or set members",
+        "frozen=True disables __eq__ instead",
+        "frozen=True has no effect on hashing but prevents attribute reads"
       ],
       "answerIndex": 1,
       "query": {
@@ -3036,14 +1812,6 @@
           "hash",
           "immutability"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3052,18 +1820,10 @@
       "prompt": "Why must a mutable default for a dataclass field be written as `field(default_factory=list)` instead of `= []`?",
       "code": "@dataclass\nclass Bag:\n    items: list = field(default_factory=list)  # correct\n    # items: list = []  # raises ValueError at class definition time",
       "choices": [
-        {
-          "text": "It has no real reason, both are equally valid"
-        },
-        {
-          "text": "dataclass explicitly detects a mutable default value and raises ValueError at class-definition time, precisely to prevent the shared-mutable-default bug that plain function defaults are prone to"
-        },
-        {
-          "text": "default_factory makes the field read-only"
-        },
-        {
-          "text": "Lists cannot be class attributes at all"
-        }
+        "It has no real reason, both are equally valid",
+        "dataclass explicitly detects a mutable default value and raises ValueError at class-definition time, precisely to prevent the shared-mutable-default bug that plain function defaults are prone to",
+        "default_factory makes the field read-only",
+        "Lists cannot be class attributes at all"
       ],
       "answerIndex": 1,
       "query": {
@@ -3074,14 +1834,6 @@
           "dataclasses",
           "mutability"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3098,14 +1850,6 @@
           "array",
           "memory"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3114,18 +1858,10 @@
       "prompt": "What actually happens to an attribute named `self.__secret` (two leading underscores, at most one trailing) inside a class body?",
       "code": "class Base:\n    def __init__(self):\n        self.__secret = 42\n\nBase().__dict__  # {'_Base__secret': 42}",
       "choices": [
-        {
-          "text": "Nothing, it is stored exactly as __secret"
-        },
-        {
-          "text": "The compiler mangles the name to _ClassName__secret, a weak mechanism to avoid accidental name clashes in subclasses, not true privacy"
-        },
-        {
-          "text": "It raises a SyntaxError"
-        },
-        {
-          "text": "It becomes a read-only class attribute"
-        }
+        "Nothing, it is stored exactly as __secret",
+        "The compiler mangles the name to _ClassName__secret, a weak mechanism to avoid accidental name clashes in subclasses, not true privacy",
+        "It raises a SyntaxError",
+        "It becomes a read-only class attribute"
       ],
       "answerIndex": 1,
       "query": {
@@ -3136,14 +1872,6 @@
           "name-mangling",
           "classes"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3160,14 +1888,6 @@
           "refcounting",
           "sys"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3176,18 +1896,10 @@
       "prompt": "Why is it unsafe to use id() values as long-lived, unique identifiers for objects, for example stored in a dict across a program's lifetime?",
       "code": "cache = {}\ncache[id(obj)] = \"some metadata\"\ndel obj\n# id() of a brand new, unrelated object can now collide with the old key",
       "choices": [
-        {
-          "text": "id() values are actually random and change on every call"
-        },
-        {
-          "text": "Once an object is garbage collected, CPython is free to reuse its memory address (and thus its id()) for a completely different, later object"
-        },
-        {
-          "text": "id() is not available for user-defined classes"
-        },
-        {
-          "text": "id() values are only unique within a single thread"
-        }
+        "id() values are actually random and change on every call",
+        "Once an object is garbage collected, CPython is free to reuse its memory address (and thus its id()) for a completely different, later object",
+        "id() is not available for user-defined classes",
+        "id() values are only unique within a single thread"
       ],
       "answerIndex": 1,
       "query": {
@@ -3199,14 +1911,6 @@
           "gc",
           "gotchas"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3215,18 +1919,10 @@
       "prompt": "In structural pattern matching, why does this `match` statement never reach the second case?",
       "code": "def handle(point):\n    match point:\n        case (x, y):\n            return \"any pair\"\n        case (0, 0):\n            return \"origin\"",
       "choices": [
-        {
-          "text": "It does not, this code is a SyntaxError"
-        },
-        {
-          "text": "The first case, (x, y), is a capture pattern that matches any two-element tuple unconditionally (binding x and y), so it always matches first and the more specific (0, 0) case below it becomes unreachable dead code"
-        },
-        {
-          "text": "match statements always evaluate every case, so both branches run"
-        },
-        {
-          "text": "Cases must be in alphabetical order or Python reorders them at runtime"
-        }
+        "It does not, this code is a SyntaxError",
+        "The first case, (x, y), is a capture pattern that matches any two-element tuple unconditionally (binding x and y), so it always matches first and the more specific (0, 0) case below it becomes unreachable dead code",
+        "match statements always evaluate every case, so both branches run",
+        "Cases must be in alphabetical order or Python reorders them at runtime"
       ],
       "answerIndex": 1,
       "query": {
@@ -3237,14 +1933,6 @@
           "pattern-matching",
           "control-flow"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3261,14 +1949,6 @@
           "iterators",
           "gotchas"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3285,14 +1965,6 @@
           "gc",
           "multiprocessing"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3301,18 +1973,10 @@
       "prompt": "A class defines `__len__` but not `__bool__`. What does `bool(instance)` use to decide truthiness?",
       "code": "class Bag:\n    def __len__(self):\n        return self._count\n\nbool(Bag())  # falls back to len() != 0",
       "choices": [
-        {
-          "text": "It is always True regardless of __len__"
-        },
-        {
-          "text": "It falls back to __len__, treating the instance as falsy exactly when len(instance) == 0"
-        },
-        {
-          "text": "It raises TypeError since __bool__ is required"
-        },
-        {
-          "text": "It uses the object's __repr__ string length instead"
-        }
+        "It is always True regardless of __len__",
+        "It falls back to __len__, treating the instance as falsy exactly when len(instance) == 0",
+        "It raises TypeError since __bool__ is required",
+        "It uses the object's __repr__ string length instead"
       ],
       "answerIndex": 1,
       "query": {
@@ -3324,14 +1988,6 @@
           "len",
           "truthiness"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     },
     {
@@ -3340,18 +1996,10 @@
       "prompt": "Both @staticmethod and @classmethod are themselves implemented as descriptors. What is the key functional difference in what their __get__ binds?",
       "code": "class C:\n    @classmethod\n    def make(cls): return cls()\n    @staticmethod\n    def helper(): return 42",
       "choices": [
-        {
-          "text": "They are functionally identical; the decorators are just stylistic"
-        },
-        {
-          "text": "classmethod's __get__ binds the owning class as the first argument (cls); staticmethod's __get__ binds nothing extra at all, behaving like a plain function attached to the class"
-        },
-        {
-          "text": "staticmethod binds the instance; classmethod binds nothing"
-        },
-        {
-          "text": "Both bind the instance, differing only in return type"
-        }
+        "They are functionally identical; the decorators are just stylistic",
+        "classmethod's __get__ binds the owning class as the first argument (cls); staticmethod's __get__ binds nothing extra at all, behaving like a plain function attached to the class",
+        "staticmethod binds the instance; classmethod binds nothing",
+        "Both bind the instance, differing only in return type"
       ],
       "answerIndex": 1,
       "query": {
@@ -3363,14 +2011,6 @@
           "classmethod",
           "descriptors"
         ]
-      },
-      "provenance": {
-        "source": "original",
-        "validation": {
-          "method": "judged",
-          "status": "pending"
-        },
-        "isHumanReviewed": false
       }
     }
   ]

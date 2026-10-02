@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { useQuizStats } from '../../state/StatsProvider';
-import { useQuizEngine } from '../../state/useQuizEngine';
+import { useQuizEngine, type PlayableQuestion } from '../../state/useQuizEngine';
 import { useRoundCompletion } from '../../state/useRoundCompletion';
 import { useRoundKeyboard } from '../../state/useRoundKeyboard';
 import { QueryDrawer } from '../query/QueryDrawer';
@@ -36,7 +36,7 @@ type QuestionCardProps = {
   languageLabel: string;
   onAnswer: (value: number | boolean) => void;
   onOpenQuery: () => void;
-  question: Question;
+  question: PlayableQuestion;
 };
 
 function QuestionCard({ answerState, difficultyLabel, languageLabel, onAnswer, onOpenQuery, question }: QuestionCardProps) {
