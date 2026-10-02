@@ -2,6 +2,7 @@
 // and DOM assertions for the web build in files ending .web.test.tsx.
 const shared = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  clearMocks: true,
   moduleNameMapper: { '\\.css$': '<rootDir>/config/jestStyleStub.js' },
   // Node build scripts are ES modules (.mjs); Babel transpiles them for Jest.
   transform: { '^.+\\.mjs$': 'babel-jest' },
