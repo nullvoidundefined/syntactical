@@ -266,6 +266,38 @@ describe('draftOracles', () => {
             expect(logs.some((line) => line.includes('p-1') && line.includes('model output invalid'))).toBe(true);
         });
 
+        // Turns the (not yet created) oracles dir into a file mid-run, so the bank's save fails.
+        function blockingSaves(inner: ModelProvider, failOn?: string): ModelProvider {
+            return {
+                async generate(request) {
+                    await writeFile(oraclesDir, 'in the way');
+                    if (failOn && request.prompt.includes(`prompt ${failOn}`)) {
+                        throw new Error('network down');
+                    }
+                    return inner.generate(request);
+                },
+            };
+        }
+
+        it('keeps the original error visible when saving partial results fails too', async () => {
+            await writeContent(contentDir, {
+                'python/easy.json': { questions: [buildQuestion('p-0'), buildQuestion('p-1')] },
+            });
+            const provider = blockingSaves(scripted(), 'p-1');
+            await expect(draftOracles({ contentDir, log, oraclesDir, provider })).rejects.toThrow('network down');
+            expect(logs.some((line) => line.includes('python/easy') && line.includes('could not save partial results'))).toBe(true);
+        });
+
+        it('propagates the save error when drafting itself succeeded', async () => {
+            const provider = blockingSaves(scripted());
+            const outcome = await draftOracles({ contentDir, log, oraclesDir, provider }).then(
+                () => 'resolved',
+                (error: Error) => error.message,
+            );
+            expect(outcome).not.toBe('resolved');
+            expect(outcome).not.toContain('network down');
+        });
+
         it('propagates any other error, after saving what the bank drafted so far', async () => {
             await writeContent(contentDir, {
                 'python/easy.json': { questions: [buildQuestion('p-0'), buildQuestion('p-1'), buildQuestion('p-2')] },

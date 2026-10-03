@@ -1,7 +1,7 @@
 // `pipeline draft-oracles`: drafts an oracle for every question in each FREE bank and
 // writes `<oraclesDir>/<language>/<difficulty>.json` (question id to oracle). Paid
 // banks are skipped, and content files are only read, never written.
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { type Question, validateManifest } from '@syntactical/content-schema';
@@ -10,6 +10,7 @@ import { draftOracle } from '../services/draftOracle.js';
 import { findRefusedConstruct } from '../services/findRefusedConstruct.js';
 import { readExistingOracles } from '../services/readExistingOracles.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
+import { writeFileAtomic } from '../services/writeFileAtomic.js';
 import { ModelOutputInvalid } from '../types/ModelOutputInvalid.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 import type { Oracle } from '../types/Oracle.js';
@@ -54,7 +55,7 @@ async function saveBank(args: SaveBankArgs): Promise<void> {
     // Maps keep a question id such as `__proto__` as a plain key; Object.fromEntries defines own properties.
     const merged = new Map([...kept, ...oracles]);
     await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, `${JSON.stringify(Object.fromEntries(merged), null, JSON_INDENT)}\n`);
+    await writeFileAtomic(file, `${JSON.stringify(Object.fromEntries(merged), null, JSON_INDENT)}\n`);
     log(`${bankKey}: ${oracles.size} of ${total} oracles drafted, ${merged.size} in file`);
 }
 
@@ -103,6 +104,7 @@ export async function draftOracles(options: DraftOraclesOptions): Promise<void> 
             const kept = await readExistingOracles(file);
             const dropped = await dropRefused(kept, bankKey, log);
             const oracles = new Map<string, Oracle>();
+            let completed = false;
             try {
                 for (const question of bank.questions) {
                     try {
@@ -119,9 +121,20 @@ export async function draftOracles(options: DraftOraclesOptions): Promise<void> 
                         log(`${bankKey} ${question.id}: model output invalid (${error.message})`);
                     }
                 }
+                completed = true;
             } finally {
-                // An error that stops the run still saves what this bank drafted so far.
-                await saveBank({ bankKey, dropped, file, kept, log, oracles, total: bank.questions.length });
+                // An error that stops the run still saves what this bank drafted so far. If that
+                // save fails too, log it and let the original error stay the one that propagates.
+                const saveArgs = { bankKey, dropped, file, kept, log, oracles, total: bank.questions.length };
+                if (completed) {
+                    await saveBank(saveArgs);
+                } else {
+                    try {
+                        await saveBank(saveArgs);
+                    } catch (saveError) {
+                        log(`${bankKey}: could not save partial results (${String(saveError)})`);
+                    }
+                }
             }
         }
     }
