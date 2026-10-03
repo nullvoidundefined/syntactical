@@ -259,6 +259,45 @@ describe('publish: which questions are written', () => {
     });
 });
 
+describe('publish: reviews already recorded on the bank', () => {
+    const reviewed = { isHumanReviewed: true, source: 'original', validation: { method: 'judged', status: 'pending' } };
+
+    async function setReviewed(id: string): Promise<void> {
+        const file = join(dirs.contentDir, 'python', 'easy.json');
+        const bank = await readBank(file);
+        const questions = bank.questions.map((question) => (question.id === id ? { ...question, provenance: reviewed } : question));
+        await writeJson(file, { questions, schemaVersion: 2 });
+    }
+
+    it('keeps a question already marked reviewed when there is no decision and no passing verdict', async () => {
+        await setReviewed('q-2');
+        await writeReport({ 'q-1': 'passed', 'q-2': 'not-executable' });
+        const { banks } = await run();
+
+        expect(banks['python/easy']?.refused).toEqual([]);
+        const { questions } = await readBank(join(dirs.contentDir, 'python', 'easy.json'));
+        expect(questions[1]).toMatchObject({ id: 'q-2', provenance: { isHumanReviewed: true, validation: { status: 'pending' } } });
+    });
+
+    it('keeps the human flag on a question that passed validation', async () => {
+        await setReviewed('q-1');
+        await writeReport({ 'q-1': 'passed', 'q-2': 'passed' });
+        await run();
+
+        const { questions } = await readBank(join(dirs.contentDir, 'python', 'easy.json'));
+        expect(questions[0]).toMatchObject({ provenance: { isHumanReviewed: true, validation: { status: 'passed' } } });
+    });
+
+    it('lets an explicit reject beat an existing review', async () => {
+        await setReviewed('q-2');
+        await writeReport({ 'q-1': 'passed', 'q-2': 'passed' });
+        await writeDecisions(dirs.pipelineDir, 'python-easy', { 'q-2': 'reject' });
+        const { banks } = await run();
+
+        expect(banks['python/easy']?.refused).toEqual([{ id: 'q-2', reason: 'rejected' }]);
+    });
+});
+
 describe('publish: bank-level refusal', () => {
     it('refuses the whole bank on any publish-validator problem and writes nothing', async () => {
         await writeReport({ 'q-1': 'passed', 'q-2': 'passed' });

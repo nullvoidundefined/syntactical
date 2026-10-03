@@ -15,9 +15,11 @@ export function decideQuestion(
     decision: PublishDecision | undefined,
 ): { question: Question } | { reason: RefusedQuestion['reason'] } {
     const { provenance } = question;
+    const { isHumanReviewed: wasReviewed } = provenance;
     const { runtimeVersion, status } = verdict;
     const { decision: verdictOfOwner, isHumanReviewed: isMarkedReviewed } = decision ?? {};
-    const isHumanReviewed = isMarkedReviewed === true && verdictOfOwner === 'approve';
+    // A decision file entry wins; with none, a review already recorded on the question stands.
+    const isHumanReviewed = decision === undefined ? wasReviewed : isMarkedReviewed === true && verdictOfOwner === 'approve';
     if (verdictOfOwner === 'reject') {
         return { reason: 'rejected' };
     }
