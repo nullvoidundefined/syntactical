@@ -4,7 +4,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-import type { Manifest, Question } from '@syntactical/content-schema';
+import { type Question, validateManifest } from '@syntactical/content-schema';
 
 import { draftOracle } from '../services/draftOracle.js';
 import { ModelOutputInvalid } from '../types/ModelOutputInvalid.js';
@@ -33,9 +33,15 @@ async function readJson(path: string): Promise<unknown> {
 
 export async function draftOracles(options: DraftOraclesOptions): Promise<void> {
     const { contentDir, log, oraclesDir, provider } = options;
-    const manifest = (await readJson(join(contentDir, 'manifest.json'))) as Manifest;
-    for (const { banks, id: languageId } of manifest.languages) {
-        const language = ORACLE_LANGUAGES[languageId];
+    // The manifest is untrusted: its language ids, difficulty keys, and bank paths are
+    // joined into file paths below, so nothing is read or written before it validates
+    // (id charset, known difficulties, safe bank paths).
+    const checked = validateManifest(await readJson(join(contentDir, 'manifest.json')));
+    if (!checked.isValid) {
+        throw new Error(`Manifest rejected: ${checked.rule}`);
+    }
+    for (const { banks, id: languageId } of checked.manifest.languages) {
+        const language = Object.hasOwn(ORACLE_LANGUAGES, languageId) ? ORACLE_LANGUAGES[languageId] : undefined;
         for (const [difficulty, { access, path }] of Object.entries(banks)) {
             const bankKey = `${languageId}/${difficulty}`;
             if (access !== 'free') {
