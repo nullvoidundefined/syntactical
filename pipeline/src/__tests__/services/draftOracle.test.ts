@@ -3,8 +3,10 @@
 import type { Question } from '@syntactical/content-schema';
 import { describe, expect, it } from 'vitest';
 
+import { generateWithRetries } from '../../clients/generateWithRetries.js';
 import { draftOracle } from '../../services/draftOracle.js';
-import type { ModelProvider } from '../../types/ModelProvider.js';
+import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
+import type { ModelProvider, ModelRequest } from '../../types/ModelProvider.js';
 
 const PROVENANCE = { source: 'test' } as unknown as Question['provenance'];
 const QUERY = { explanation: 'e', title: 't' };
@@ -108,5 +110,33 @@ describe('draftOracle model text limits', () => {
     it('refuses a 100 KB reason instead of passing it on', async () => {
         const reason = 'x'.repeat(KIBIBYTES * BYTES_PER_KIBIBYTE);
         await expect(draftOracle(buildBool('q'), 'python', fakeProvider({ isExecutable: false, reason }))).rejects.toThrow();
+    });
+});
+
+describe('draftOracle through the real retry loop', () => {
+    const OVER_LONG = 201;
+
+    function retryingProvider(text: string): ModelProvider & { asks: number } {
+        const provider = {
+            asks: 0,
+            generate<T>(request: ModelRequest<T>) {
+                return generateWithRetries(request, async () => {
+                    provider.asks += 1;
+                    return { model: 'fake', text };
+                });
+            },
+        };
+        return provider;
+    }
+
+    it('turns an over-long reason into ModelOutputInvalid after the retries, not a zod crash', async () => {
+        const provider = retryingProvider(JSON.stringify({ isExecutable: false, reason: 'x'.repeat(OVER_LONG) }));
+        await expect(draftOracle(buildBool('q'), 'python', provider)).rejects.toBeInstanceOf(ModelOutputInvalid);
+        expect(provider.asks).toBeGreaterThan(1);
+    });
+
+    it('accepts a reason exactly at the limit', async () => {
+        const provider = retryingProvider(JSON.stringify({ isExecutable: false, reason: 'x'.repeat(OVER_LONG - 1) }));
+        expect(await draftOracle(buildBool('q'), 'python', provider)).toMatchObject({ isExecutable: false });
     });
 });
