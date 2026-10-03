@@ -3,8 +3,10 @@
 // transient storage error never overwrites unsynced events. Well-formed
 // entries are kept; only malformed ones (or a stored value that is not a
 // list at all) are appended to the rejected-entries backup, which is never
-// overwritten. When that backup cannot be read or written, new events stay
-// in memory, so no stored answer is ever overwritten unseen.
+// overwritten, and the log is then stored with only the kept entries so a
+// later launch does not back them up again. When the backup or that rewrite
+// fails, new events stay in memory, so no stored answer is ever overwritten
+// unseen.
 import { logWarning } from '../../clients/logClient';
 import { readStoredJson } from '../../clients/readStoredJson';
 import type { StoredRead } from '../../clients/types/StoredRead';
@@ -35,6 +37,13 @@ export async function resolveStoredEventLog(read: StoredRead): Promise<ResolvedE
   if (rejected.length === 0) return { eventLog, isPersistenceBlocked: false };
   logWarning({ ...LOG_CONTEXT, rejectedCount: rejected.length }, 'stored answer event log entries rejected');
   const isBackedUp = await appendToBackup(rejected);
-  if (!isBackedUp) logWarning(LOG_CONTEXT, 'stored answer event log backup failed, keeping events in memory');
-  return { eventLog, isPersistenceBlocked: !isBackedUp };
+  if (!isBackedUp) {
+    logWarning(LOG_CONTEXT, 'stored answer event log backup failed, keeping events in memory');
+    return { eventLog, isPersistenceBlocked: true };
+  }
+  // Store only the kept entries now, so the next launch does not back up
+  // the same rejected entries again.
+  const isRewritten = await writeJson(EVENT_LOG_STORAGE_KEY, eventLog);
+  if (!isRewritten) logWarning(LOG_CONTEXT, 'stored answer event log rewrite failed, keeping events in memory');
+  return { eventLog, isPersistenceBlocked: !isRewritten };
 }
