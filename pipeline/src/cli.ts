@@ -5,6 +5,7 @@ import { createModelProvider } from './clients/modelProvider.js';
 import { classify } from './commands/classify.js';
 import { draftOracles } from './commands/draftOracles.js';
 import { draftTaxonomy } from './commands/draftTaxonomy.js';
+import { review } from './commands/review.js';
 import { runCli } from './commands/runCli.js';
 import { validateContent } from './commands/validate.js';
 
@@ -19,6 +20,7 @@ process.exitCode = await runCli(argv, {
     draftTaxonomy,
     env,
     pipelineDir: fileURLToPath(new URL('../', import.meta.url)),
+    review,
     stderr: (text) => stderr.write(text),
     stdout: (text) => stdout.write(text),
     validate: validateContent,

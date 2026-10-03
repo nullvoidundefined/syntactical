@@ -1,17 +1,19 @@
 // The pipeline CLI's command dispatch, with every side effect injected so the real
 // entry path can be tested: `validate`, `draft-oracles [--api]`, or
-// `classify [--api] [--content-root <path>]`.
+// `classify [--api] [--content-root <path>]`, or `review [--content-root <path>]`.
 import { randomUUID } from 'node:crypto';
 
 import { readContentRootFlag } from '../services/classify/readContentRootFlag.js';
 import { createOracleSource } from '../services/createOracleSource.js';
 import { exitCodeFor } from '../services/exitCodeFor.js';
 import { pickProviderKind } from '../services/pickProviderKind.js';
+import { validateQuestion } from '../services/validateQuestion.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 
 import type { classify } from './classify.js';
 import type { draftOracles } from './draftOracles.js';
 import type { draftTaxonomy } from './draftTaxonomy.js';
+import type { review } from './review.js';
 import type { validateContent } from './validate.js';
 
 export interface CliDeps {
@@ -23,6 +25,7 @@ export interface CliDeps {
     draft: typeof draftOracles;
     draftTaxonomy: typeof draftTaxonomy;
     pipelineDir: string;
+    review: typeof review;
     stderr: (text: string) => void;
     stdout: (text: string) => void;
     validate: typeof validateContent;
@@ -51,6 +54,28 @@ async function runClassify(argv: string[], deps: CliDeps): Promise<number> {
         provider: createProvider(pickProviderKind(argv)),
     });
     return 0;
+}
+
+// `review` needs no model: it shows each item's oracle output, re-run through the sandbox.
+async function runReview(argv: string[], deps: CliDeps): Promise<number> {
+    const { contentDir, defaultContentRoot, env, pipelineDir, review: run, stderr, stdout } = deps;
+    let flagRoot: string | undefined;
+    try {
+        flagRoot = readContentRootFlag(argv);
+    } catch (error) {
+        stderr(`${(error as Error).message}\n`);
+        return 1;
+    }
+    const oracleSource = createOracleSource(`${pipelineDir}oracles`);
+    const result = await run({
+        contentDir,
+        contentRoot: flagRoot ?? (env.SYNTACTICAL_CONTENT_ROOT || defaultContentRoot),
+        log: (line) => stdout(`${line}\n`),
+        observe: async (bankKey, question) =>
+            (await validateQuestion(question, await oracleSource(bankKey, question.id))).observed,
+        pipelineDir,
+    });
+    return result.problems > 0 ? 1 : 0;
 }
 
 export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
@@ -84,8 +109,11 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
     if (command === 'classify') {
         return runClassify(argv, deps);
     }
+    if (command === 'review') {
+        return runReview(argv, deps);
+    }
     if (command !== 'validate') {
-        stderr('Usage: pipeline validate | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>]\n');
+        stderr('Usage: pipeline validate | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | review [--content-root <path>]\n');
         return 1;
     }
     const report = await validate({
