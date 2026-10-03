@@ -5,13 +5,12 @@
 // later lock_timeout elsewhere is never mistaken for it.
 import type pg from 'pg';
 
+import { TRANSACTION_TIMEOUTS } from '../constants/transactionTimeouts.js';
 import type { LockedUser } from '../types/LockedUser.js';
 import type { UserLockResult } from '../types/UserLockResult.js';
 
-const LOCK_NOT_AVAILABLE = '55P03';
-
 function isLockNotAvailable(error: unknown): boolean {
-  return typeof error === 'object' && error !== null && (error as { code?: unknown }).code === LOCK_NOT_AVAILABLE;
+  return typeof error === 'object' && error !== null && (error as { code?: unknown }).code === TRANSACTION_TIMEOUTS.LOCK_TIMEOUT_CODE;
 }
 
 async function lockUserRow(client: pg.PoolClient, userId: string): Promise<UserLockResult> {

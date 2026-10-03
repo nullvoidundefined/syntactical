@@ -7,6 +7,7 @@ import { Router } from 'express';
 
 import { HTTP } from '../constants/http.js';
 import { SYNC } from '../constants/sync.js';
+import { TRANSACTION_TIMEOUTS } from '../constants/transactionTimeouts.js';
 import { createErrorResponse, ERROR_CODES } from '../errors.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
 import { createRequireSession } from '../middleware/requireSession.js';
@@ -55,7 +56,7 @@ function createMeRouter(deps: ResolvedSyncDeps): Router {
     if (result.kind === 'busy') {
       res
         .status(TOO_MANY_REQUESTS)
-        .set('Retry-After', String(SYNC.BUSY_RETRY_AFTER_SECONDS))
+        .set('Retry-After', String(TRANSACTION_TIMEOUTS.BUSY_RETRY_AFTER_SECONDS))
         .json(createErrorResponse(ERROR_CODES.SYNC.USER_BUSY, 'Another sync is in progress; retry shortly', requestId));
       return;
     }
