@@ -83,7 +83,7 @@ BANNED_ATTRIBUTE_PREFIXES = ("_", "f_", "tb_", "gi_", "cr_", "ag_", "co_", "func
 
 
 def refuse(reason):
-    print(json.dumps({"ok": False, "reason": reason}))
+    sys.stdout.write(json.dumps({"ok": False, "reason": reason}) + "\n")
     sys.exit(0)
 
 
@@ -157,7 +157,7 @@ def main():
         refuse("does not parse: %s" % type(error).__name__)
     for node in ast.walk(tree):
         check_node(node)
-    print(json.dumps({"ok": True}))
+    sys.stdout.write(json.dumps({"ok": True}) + "\n")
 
 
 main()
