@@ -33,4 +33,22 @@ jobs:
       - name: Import the built shared packages from Node
         run: node --input-type=module -e "const a = await import('@syntactical/content-schema'); const b = await import('@syntactical/progress'); if (a.PACKAGE_NAME !== '@syntactical/content-schema' || b.PACKAGE_NAME !== '@syntactical/progress') process.exit(1);"
       - run: npm run typecheck:workspaces
-      - run: npm run test:workspaces
+      - name: Run the workspace tests (the Docker oracle tests run in oracle-runners)
+        run: npm run test:workspaces
+        env:
+          SKIP_DOCKER_TESTS: '1'
+
+  oracle-runners:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # No SKIP_DOCKER_TESTS: these run real containers. ensureRunnerImage builds the
+      # runner images on demand.
+      - name: Run the Docker oracle tests
+        working-directory: pipeline
+        run: npx vitest run src/__tests__/clients/dockerRunner src/__tests__/services/goldenSet.test.ts
