@@ -17,13 +17,14 @@ function isGoalChange(value: unknown): boolean {
 
 export function isStoredStats(value: unknown): value is Stats {
   if (!isRecord(value)) return false;
-  const { goalHistory, isSignUpPromptDismissed, syncCursor, version } = value;
+  const { goalHistory, isSignUpPromptDismissed, syncCursor, syncCursorOwner, version } = value;
   return (
     version === STORAGE_SCHEMA_VERSION &&
     hasStatsCounts(value, 'answerStreak') &&
     Array.isArray(goalHistory) &&
     goalHistory.every(isGoalChange) &&
     typeof isSignUpPromptDismissed === 'boolean' &&
-    (syncCursor === undefined || typeof syncCursor === 'string')
+    (syncCursor === undefined || typeof syncCursor === 'string') &&
+    (syncCursorOwner === undefined || typeof syncCursorOwner === 'string')
   );
 }
