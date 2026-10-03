@@ -1,6 +1,6 @@
 // Auth constants: one-time code shape and lifetime, session lifetimes and cookie name, and
-// the rate limits on issuing and verifying codes. One place so routes, middleware, and
-// account deletion agree on the numbers.
+// the rate limits on issuing and verifying codes, and the waits an account deletion may spend.
+// One place so routes, middleware, and account deletion agree on the numbers.
 const HOUR_MS = 3_600_000;
 
 const AUTH = {
@@ -11,6 +11,13 @@ const AUTH = {
     TTL_MS: 600_000,
     // crypto.randomInt's exclusive upper bound: every 6-digit code, 000000 to 999999.
     UPPER_BOUND: 1_000_000,
+  },
+  DELETION: {
+    // Postgres lock_timeout for the deletion transaction: how long it waits on the email's
+    // advisory lock or a row lock before failing (and rolling back).
+    LOCK_TIMEOUT: '5s',
+    // Postgres statement_timeout for the deletion transaction: the cap on any one statement.
+    STATEMENT_TIMEOUT: '15s',
   },
   EMAIL: {
     // The sign-in email is sent inside the issue transaction, so a stalled send must not hold

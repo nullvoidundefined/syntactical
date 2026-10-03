@@ -1,4 +1,6 @@
 // Deletes a user and everything derived from them (B-59.2), on the caller's transaction client.
+// The transaction first bounds its waits (B-59.5): a lock_timeout and a statement_timeout, so a held
+// lock surfaces as an error (a 500 after rollback) instead of a hang.
 // Lock order matches sign-in (email advisory lock, then rows) so the two cannot deadlock: the
 // email's one-time codes go, the user row is locked, purchase payloads naming the email or id are
 // scrubbed in place (rows linked to the user, plus rows whose payload carries the email as a whole
@@ -6,6 +8,8 @@
 // answer events, progress, and goal changes cascade; entitlements and purchase_events user_id go
 // null by foreign key). Resolves false when no such user exists. Nothing here logs the email or id.
 import type pg from "pg";
+
+import { AUTH } from "../constants/auth.js";
 
 import { carriesPurchaseIdentity } from "./carriesPurchaseIdentity.js";
 import { deleteRateLimitCountersForEmail } from "./deleteRateLimitCountersForEmail.js";
@@ -90,6 +94,11 @@ async function deleteUser(
   input: DeleteUserInput,
 ): Promise<boolean> {
   const { rateLimitKeySecret, userId } = input;
+  // SET LOCAL takes no bind parameters; both values are constants from AUTH.DELETION.
+  await client.query(`SET LOCAL lock_timeout = '${AUTH.DELETION.LOCK_TIMEOUT}'`);
+  await client.query(
+    `SET LOCAL statement_timeout = '${AUTH.DELETION.STATEMENT_TIMEOUT}'`,
+  );
   const found = await client.query<{ email: string }>(
     "SELECT email FROM users WHERE id = $1",
     [userId],
