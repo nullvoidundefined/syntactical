@@ -23,6 +23,7 @@ type AbCardProps = {
 function describeOption(index: number, answerIndex: number, submittedAnswer: number | boolean | null, isAnswered: boolean) {
   if (isAnswered && index === answerIndex) return { state: 'correct', toneClass: 'border-signal bg-signal/10' };
   if (isAnswered && index === submittedAnswer) return { state: 'incorrect', toneClass: 'border-danger bg-danger/10' };
+  if (isAnswered) return { state: 'not chosen', toneClass: 'border-line' };
   return { state: undefined, toneClass: 'border-line' };
 }
 

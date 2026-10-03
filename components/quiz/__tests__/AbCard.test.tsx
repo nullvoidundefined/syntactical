@@ -61,6 +61,12 @@ describe('AbCard', () => {
     expect(screen.getByRole('button', { name: 'Option B, correct' })).toBeDisabled();
   });
 
+  it('labels the option that was neither chosen nor correct as not chosen, never as something to choose', async () => {
+    await render(<AbCard question={buildAbQuestion(PERFORMANCE)} grammar="javascript" submittedAnswer={1} isAnswered onSelect={jest.fn()} />);
+    expect(screen.getByRole('button', { name: 'Option A, not chosen' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: /^Choose/ })).toBeNull();
+  });
+
   it.each([
     [PERFORMANCE, 'Benchmark result'],
     [{ evidence: 'Fails for input []: IndexError', statement: 'Handles every input', type: 'correctness' }, 'Failing edge case'],
