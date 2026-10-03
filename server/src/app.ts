@@ -10,7 +10,7 @@ import type { Logger } from 'pino';
 import { createLogger } from './clients/logger.js';
 import { createCorsOptions } from './config/cors.js';
 import { HTTP } from './constants/http.js';
-import { csrfGuard } from './middleware/csrfGuard.js';
+import { createCsrfGuard } from './middleware/csrfGuard.js';
 import { dropForwardedHeaders } from './middleware/dropForwardedHeaders.js';
 import { createErrorHandler, createNotFoundHandler } from './middleware/errorHandler.js';
 import { requestId } from './middleware/requestId.js';
@@ -46,7 +46,7 @@ function createApp(deps: AppDeps) {
   app.use(requireJson);
   app.use(express.json({ limit: HTTP.JSON_BODY_SIZE_LIMIT }));
   app.use(cookieParser());
-  app.use(csrfGuard);
+  app.use(createCsrfGuard(allowedOrigins));
 
   app.use('/health', createHealthRouter(db, logger));
 

@@ -1,7 +1,9 @@
 // CSRF guard (B-63), ported from the template's csrfGuardMiddleware: a state-changing request
 // (POST, PUT, PATCH, DELETE) that carries the session cookie must also carry
 // X-Requested-With: XMLHttpRequest. A cross-site page cannot add that header without a CORS
-// preflight, which the exact-origin allowlist refuses. A request with an Authorization header
+// preflight, which the exact-origin allowlist refuses. As a second check, an Origin header,
+// when present, must be an allowed origin (never `*` or `null`); a missing Origin passes on the
+// header alone. A request with an Authorization header
 // is exempt: requireSession then authenticates by the bearer token alone, never the cookie.
 // The webhook routes are exempt; they carry no cookie and authenticate by their own header.
 import type { NextFunction, Request, Response } from 'express';
@@ -13,6 +15,7 @@ import { createErrorResponse, ERROR_CODES } from '../errors.js';
 const STATE_CHANGING_METHODS = new Set(['DELETE', 'PATCH', 'POST', 'PUT']);
 const WEBHOOK_PATH_PREFIX = '/v1/webhooks/';
 const REQUIRED_VALUE = 'XMLHttpRequest';
+const UNGRANTABLE_ORIGINS = new Set(['*', 'null']);
 const {
   SESSION: { COOKIE_NAME },
 } = AUTH;
@@ -23,20 +26,25 @@ function isCookieAuthenticated(req: Request): boolean {
   return cookie !== undefined && headers.authorization === undefined;
 }
 
-function csrfGuard(req: Request, res: Response, next: NextFunction): void {
-  const { method, path } = req;
-  if (!STATE_CHANGING_METHODS.has(method) || path.startsWith(WEBHOOK_PATH_PREFIX) || !isCookieAuthenticated(req)) {
+function createCsrfGuard(allowedOrigins: string[]) {
+  const allowed = new Set(allowedOrigins.filter((origin) => !UNGRANTABLE_ORIGINS.has(origin)));
+  return function csrfGuard(req: Request, res: Response, next: NextFunction): void {
+    const { headers, method, path } = req;
+    if (!STATE_CHANGING_METHODS.has(method) || path.startsWith(WEBHOOK_PATH_PREFIX) || !isCookieAuthenticated(req)) {
+      next();
+      return;
+    }
+    const { origin } = headers;
+    const isOriginAllowed = origin === undefined || allowed.has(origin);
+    if (req.get('X-Requested-With') !== REQUIRED_VALUE || !isOriginAllowed) {
+      const { requestId } = res.locals as { requestId: string };
+      res
+        .status(HTTP.STATUS.FORBIDDEN)
+        .json(createErrorResponse(ERROR_CODES.CSRF.HEADER_MISSING, 'Cross-site request refused', requestId));
+      return;
+    }
     next();
-    return;
-  }
-  if (req.get('X-Requested-With') !== REQUIRED_VALUE) {
-    const { requestId } = res.locals as { requestId: string };
-    res
-      .status(HTTP.STATUS.FORBIDDEN)
-      .json(createErrorResponse(ERROR_CODES.CSRF.HEADER_MISSING, 'Missing X-Requested-With header', requestId));
-    return;
-  }
-  next();
+  };
 }
 
-export { csrfGuard };
+export { createCsrfGuard };
