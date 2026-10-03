@@ -42,7 +42,12 @@ describe('computeXp', () => {
         expect(computeXp(bankRound, true)).toBe(2);
     });
 
-    it('throws on a bank key whose difficulty is not easy, medium, or hard', () => {
+    it('gives a topic round answer XP from its language/difficulty bank key', () => {
+        const event = buildEvent({ bankKey: 'python/medium', roundKind: 'topic' });
+        expect(computeXp(event, false)).toBe(2);
+    });
+
+    it('throws on a correct answer whose bank key has no easy, medium, or hard difficulty', () => {
         expect(() => computeXp(buildEvent({ bankKey: 'python/expert' }), false)).toThrow(
             RangeError,
         );
