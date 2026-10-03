@@ -107,6 +107,11 @@ describe('draftOracles', () => {
         expect(logs.some((line) => line.includes('p-2') && line.includes('not executable'))).toBe(true);
     });
 
+    it('logs the Python version the oracle checker runs under', async () => {
+        await draftOracles({ contentDir, log, oraclesDir, provider: scripted() });
+        expect(logs.some((line) => /^python checker running under Python 3\.\d+\.\d+/.test(line))).toBe(true);
+    });
+
     it('never calls the model for a paid bank and leaves content files byte-identical', async () => {
         const before = await snapshot(contentDir);
         const provider = scripted();

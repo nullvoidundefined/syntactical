@@ -8,6 +8,7 @@ import { type Question, validateManifest } from '@syntactical/content-schema';
 
 import { draftOracle } from '../services/draftOracle.js';
 import { findRefusedConstruct } from '../services/findRefusedConstruct.js';
+import { readCheckerPythonVersion } from '../services/readCheckerPythonVersion.js';
 import { readExistingOracles } from '../services/readExistingOracles.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
 import { writeFileAtomic } from '../services/writeFileAtomic.js';
@@ -86,6 +87,7 @@ export async function draftOracles(options: DraftOraclesOptions): Promise<void> 
         throw new Error(`Manifest rejected: ${sanitizeLogText(checked.rule)}`);
     }
     const { manifest } = checked;
+    log(`python checker running under Python ${await readCheckerPythonVersion()}`);
     for (const { banks, id: languageId } of manifest.languages) {
         const language = Object.hasOwn(ORACLE_LANGUAGES, languageId) ? ORACLE_LANGUAGES[languageId] : undefined;
         for (const [difficulty, { access, path }] of Object.entries(banks)) {

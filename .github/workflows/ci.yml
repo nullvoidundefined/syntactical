@@ -13,6 +13,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          # The pipeline's Python oracle checker parses with the same Python as the runner image.
+          python-version: '3.13'
       - run: npm ci
       - run: npm run lint
       - run: npx tsc --noEmit
@@ -28,6 +32,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          # The pipeline's Python oracle checker parses with the same Python as the runner image.
+          python-version: '3.13'
       - run: npm ci
       - run: npm run build:workspaces
       - name: Import the built shared packages from Node
