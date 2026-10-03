@@ -17,6 +17,7 @@ const RAW_OUTPUT_CAP_KIBIBYTES = 512;
 const VALUE_CAP_BYTES = VALUE_CAP_KIBIBYTES * KIBIBYTE;
 const RAW_OUTPUT_CAP_BYTES = RAW_OUTPUT_CAP_KIBIBYTES * KIBIBYTE;
 const OOM_EXIT_CODE = 137;
+const LANGUAGES: readonly string[] = ['python', 'node', 'postgres'];
 
 const OUTCOMES: OracleOutcome[] = [
     'value',
@@ -65,6 +66,11 @@ function applyValueCap(run: OracleRun): OracleRun {
 
 export async function runOracle(oracle: Oracle, limits: RunLimits = {}): Promise<OracleRun> {
     const { code: oracleCode, language, setupSql } = oracle;
+    // The type is a closed union, but the language later builds a filesystem path, so the
+    // runtime value is checked before anything touches Docker or the disk.
+    if (!LANGUAGES.includes(language)) {
+        return { exceptionType: 'RunnerFailure', outcome: 'exception' };
+    }
     await ensureRunnerImage(language);
     const timeoutMs = Math.min(limits.timeoutMs ?? DEFAULT_TIMEOUT_MS, MAX_TIMEOUT_MS);
     const args = buildDockerArgs(oracle, runnerImageTag(language));
