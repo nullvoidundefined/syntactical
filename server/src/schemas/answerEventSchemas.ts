@@ -58,7 +58,7 @@ const downloadCursor = z
 
 const answerEventSchemas = {
   download: z.object({ after: downloadCursor.optional() }),
-  upload: z.object({ events: z.array(answerEvent) }),
+  upload: z.object({ events: z.array(answerEvent).min(1) }),
 };
 
 type AnswerEventInput = z.infer<typeof answerEvent>;
