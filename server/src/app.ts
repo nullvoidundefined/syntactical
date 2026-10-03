@@ -8,7 +8,7 @@ import type { Logger } from 'pino';
 import { createLogger } from './clients/logger.js';
 import { createCorsOptions } from './config/cors.js';
 import { HTTP } from './constants/http.js';
-import { dropForwardedHost } from './middleware/dropForwardedHost.js';
+import { dropForwardedHeaders } from './middleware/dropForwardedHeaders.js';
 import { createErrorHandler, createNotFoundHandler } from './middleware/errorHandler.js';
 import { requestId } from './middleware/requestId.js';
 import { createRequestLogger } from './middleware/requestLogger.js';
@@ -28,9 +28,7 @@ function createApp(deps: AppDeps) {
   const app = express();
 
   app.set('trust proxy', 1);
-  // Trusting one proxy hop is for req.ip only. A client can set X-Forwarded-Host and
-  // Express reads its leftmost entry, so drop it; absolute URLs come from configuration.
-  app.use(dropForwardedHost);
+  app.use(dropForwardedHeaders);
   app.use(helmet());
   app.use(requestId);
   app.use(cors(createCorsOptions(allowedOrigins)));

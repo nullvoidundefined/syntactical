@@ -3,12 +3,16 @@ const TRUNCATED = '[Truncated]';
 const MAX_DEPTH = 8;
 // Any key containing one of these words is censored, so userEmail and otpCode cannot slip past.
 const SENSITIVE_WORDS = ['authorization', 'cookie', 'email', 'otp', 'password', 'secret', 'token'];
+// pg error payload fields, which can quote row values such as an email.
+const PG_PAYLOAD_KEYS = new Set(['column', 'datatype', 'detail', 'hint', 'internalposition', 'internalquery', 'routine', 'stack', 'where']);
+// On an object shaped like an error, its message is censored too.
+const ERROR_SHAPE_KEYS = ['detail', 'hint', 'stack', 'where'];
 // Keys ending in "code" are one-time codes unless they are one of these readable codes.
 const READABLE_CODE_KEYS = new Set(['pgcode', 'statuscode']);
 
 function isSensitiveKey(key: string): boolean {
   const lowered = key.toLowerCase();
-  if (SENSITIVE_WORDS.some((word) => lowered.includes(word))) {
+  if (PG_PAYLOAD_KEYS.has(lowered) || SENSITIVE_WORDS.some((word) => lowered.includes(word))) {
     return true;
   }
   return lowered.endsWith('code') && !READABLE_CODE_KEYS.has(lowered);
@@ -36,6 +40,16 @@ function isWalkable(value: unknown): value is object {
   return proto === null || proto === Object.prototype;
 }
 
+function walkObject(value: Record<string, unknown>, depth: number, seen: WeakSet<object>): Record<string, unknown> {
+  const isErrorShaped = ERROR_SHAPE_KEYS.some((key) => key in value);
+  return Object.fromEntries(
+    Object.entries(value).map(([key, item]) => {
+      const isCensored = isSensitiveKey(key) || (isErrorShaped && key === 'message');
+      return [key, isCensored ? CENSOR : walk(item, depth + 1, seen)];
+    }),
+  );
+}
+
 function walk(value: unknown, depth: number, seen: WeakSet<object>): unknown {
   if (value instanceof Error) {
     return summarizeError(value);
@@ -49,9 +63,7 @@ function walk(value: unknown, depth: number, seen: WeakSet<object>): unknown {
   seen.add(value);
   const copy = Array.isArray(value)
     ? value.map((item: unknown) => walk(item, depth + 1, seen))
-    : Object.fromEntries(
-        Object.entries(value).map(([key, item]) => [key, isSensitiveKey(key) ? CENSOR : walk(item, depth + 1, seen)]),
-      );
+    : walkObject(value as Record<string, unknown>, depth, seen);
   seen.delete(value);
   return copy;
 }

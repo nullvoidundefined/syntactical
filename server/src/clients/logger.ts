@@ -17,13 +17,15 @@ interface LoggerDestination {
   write(chunk: string): void;
 }
 
-// pino resets the bindings formatter on every child, so redact child bindings here,
-// and keep doing it for grandchildren.
-function guardChildren(logger: Logger): Logger {
-  const original = logger.child.bind(logger);
+// pino resets the bindings formatter on every child, so redact child bindings in a
+// child() override installed once on the root. Children are created with
+// Object.create(parent), so they inherit the override and keep their own bindings.
+function redactChildBindings(logger: Logger): Logger {
+  const protoChild = (Object.getPrototypeOf(logger) as Logger).child;
   Object.defineProperty(logger, 'child', {
-    value: (bindings: Record<string, unknown>, options?: Parameters<Logger['child']>[1]) =>
-      guardChildren(original(redactDeep(bindings), options) as unknown as Logger),
+    value: function child(this: Logger, bindings: Record<string, unknown>, options?: Parameters<Logger['child']>[1]) {
+      return protoChild.call(this, redactDeep(bindings), options);
+    },
   });
   return logger;
 }
@@ -50,7 +52,7 @@ function createLogger({ destination }: { destination: LoggerDestination }): Logg
     },
     destination,
   );
-  return guardChildren(logger);
+  return redactChildBindings(logger);
 }
 
 export { createLogger };

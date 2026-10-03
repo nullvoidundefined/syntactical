@@ -49,6 +49,7 @@ function secret(): string {
 function validEnv(): NodeJS.ProcessEnv {
   return {
     ALLOWED_ORIGINS: 'https://syntactical.dev',
+    PUBLIC_BASE_URL: 'https://api.syntactical.dev',
     DATABASE_URL: `postgres-url-${token()}`,
     RATE_LIMIT_KEY_SECRET: secret(),
     REVENUECAT_WEBHOOK_AUTH: secret(),
