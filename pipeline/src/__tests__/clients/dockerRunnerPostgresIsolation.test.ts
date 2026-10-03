@@ -125,4 +125,20 @@ describe.skipIf(SKIP_DOCKER)('runOracle Postgres privilege isolation (B-8c)', ()
             expect(runningRunnerContainers('postgres')).toBe('');
         }, RUN_TIMEOUT_MS);
     });
+
+    describe('the oracle role cannot become the bootstrap superuser', () => {
+        it.each([
+            ['SET ROLE runner; SELECT 1'],
+            ['SET SESSION AUTHORIZATION runner; SELECT 1'],
+            ['CREATE EXTENSION dblink; SELECT 1'],
+            ["SELECT lo_export(lo_from_bytea(0, 'x'), '/tmp/work/ready')"],
+        ])('refuses %s with insufficient_privilege', async (code) => {
+            const run = await runOracle({ code, language: 'postgres' });
+
+            expect(run.outcome, JSON.stringify(run)).toBe('exception');
+            expect(run.exceptionType).toBe(INSUFFICIENT_PRIVILEGE);
+            expect(run.value).toBeUndefined();
+            expect(runningRunnerContainers('postgres')).toBe('');
+        }, RUN_TIMEOUT_MS);
+    });
 });

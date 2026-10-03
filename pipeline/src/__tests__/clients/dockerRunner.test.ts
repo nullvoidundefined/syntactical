@@ -14,6 +14,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { runOracle } from '../../clients/dockerRunner.js';
 import { ensureRunnerImage } from '../../clients/ensureRunnerImage.js';
+import { runnerImageTag } from '../../clients/runnerImageTag.js';
+import type { OracleLanguage } from '../../types/OracleLanguage.js';
 import {
     acquireDockerTestLock,
     DOCKER_LOCK_WAIT_MS,
@@ -24,10 +26,10 @@ const SKIP_DOCKER = process.env.SKIP_DOCKER_TESTS === '1';
 
 const RUN_TIMEOUT_MS = 60_000;
 
-function runningContainers(language: 'python' | 'node' | 'postgres'): string {
+function runningContainers(language: OracleLanguage): string {
     return execFileSync(
         'docker',
-        ['ps', '-q', '--filter', `ancestor=syntactical-runner-${language}:1`],
+        ['ps', '-q', '--filter', `ancestor=${runnerImageTag(language)}`],
         { encoding: 'utf8' },
     ).trim();
 }
