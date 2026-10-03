@@ -15,7 +15,7 @@ import {
   toLogged,
 } from './fakeSyncServer';
 import type { FakeSyncServer } from './fakeSyncServer';
-import { buildFailure } from './syncServerResponses';
+import { buildFailure, buildRejectedEvents, SERVER_ERROR_CODES } from './syncServerResponses';
 
 // One device: its event log and stored sync cursor, with the callbacks
 // runSyncPass expects wired to mutate them the way StatsProvider would.
@@ -204,11 +204,12 @@ describe('runSyncPass uploads', () => {
     }
   });
 
-  it('stops with isOk false and holds nothing when a 422 names no event ids', async () => {
+  it('stops with isOk false and holds nothing when a 422 SYNC_INVALID_EVENTS names no event ids', async () => {
     const userId = randomUUID();
     const log = buildOwnedLog(250, userId);
     const device = createFakeDevice(userId, log);
-    const server = createFakeSyncServer({ onPost: (_events, postNumber) => (postNumber === 1 ? serverError(422) : undefined) });
+    const namingNothing = buildRejectedEvents(SERVER_ERROR_CODES.INVALID_EVENTS, []);
+    const server = createFakeSyncServer({ onPost: (_events, postNumber) => (postNumber === 1 ? namingNothing : undefined) });
 
     const result = await runDevicePass(device, server);
 

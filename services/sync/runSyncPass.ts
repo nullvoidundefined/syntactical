@@ -6,13 +6,16 @@ import type { AnswerEvent } from '@syntactical/progress';
 import type { apiFetch } from '../../clients/apiClient';
 import { logWarning } from '../../clients/logClient';
 import {
+  HTTP_STATUS_BAD_REQUEST,
   HTTP_STATUS_MULTIPLE_CHOICES,
   HTTP_STATUS_OK,
+  HTTP_STATUS_PAYLOAD_TOO_LARGE,
   HTTP_STATUS_UNPROCESSABLE,
+  SYNC_FUTURE_TOLERANCE_MS,
   SYNC_MAX_PAGES_PER_PASS,
 } from '../../constants/appConfig';
 import { isAnswerEvent } from '../stats/isAnswerEvent';
-import type { LoggedAnswerEvent } from '../stats/types/LoggedAnswerEvent';
+import type { HeldReason, LoggedAnswerEvent } from '../stats/types/LoggedAnswerEvent';
 
 import { buildUploadBatches } from './buildUploadBatches';
 
@@ -20,12 +23,17 @@ type SyncPassInput = {
   userId: string;
   eventLog: LoggedAnswerEvent[];
   syncCursor: string | null;
+  now?: () => Date;
   request: typeof apiFetch;
   isCurrent(): boolean;
   markSynced(ids: string[]): void | Promise<void>;
-  markHeld(ids: string[]): void | Promise<void>;
+  markHeld(ids: string[], reason: HeldReason): void | Promise<void>;
+  // Reserved for releasing timestamp-future holds; this pass does not call it yet.
+  markReleased?(ids: string[]): void | Promise<void>;
   mergeDownloaded(events: AnswerEvent[], cursor: string | null): void | Promise<void>;
 };
+
+type UploadOutcome = 'cap' | 'failed' | 'ok' | 'stop';
 
 type DownloadPage = { events: AnswerEvent[]; nextCursor: string | null };
 
@@ -35,6 +43,11 @@ function isSuccess(status: number): boolean {
 
 function isStoredBody(body: unknown): boolean {
   return isRecord(body) && isRecord(body.data);
+}
+
+function readErrorCode(body: unknown): string | null {
+  if (!isRecord(body) || !isRecord(body.error)) return null;
+  return typeof body.error.code === 'string' ? body.error.code : null;
 }
 
 function readRejectedIds(body: unknown): string[] {
@@ -52,9 +65,34 @@ function readDownloadPage(body: unknown): DownloadPage | null {
   return { events: unique, nextCursor };
 }
 
+// Why an event the server refused for its timestamp is held: answered more
+// than 5 minutes ahead of the device clock, or too long ago.
+function readTimestampReason(event: AnswerEvent, nowMs: number): HeldReason {
+  return Date.parse(event.answeredAt) > nowMs + SYNC_FUTURE_TOLERANCE_MS ? 'timestamp-future' : 'timestamp-past';
+}
+
+// Holds the events a 422 names and returns the rest, or null when it names none of this batch.
+async function holdNamed(input: SyncPassInput, pending: AnswerEvent[], body: unknown, code: string): Promise<AnswerEvent[] | null> {
+  const named = new Set(readRejectedIds(body));
+  const held = pending.filter(({ eventId }) => named.has(eventId));
+  if (held.length === 0) return null;
+  if (code === 'SYNC_INVALID_EVENTS') {
+    await input.markHeld(held.map(({ eventId }) => eventId), 'invalid-events');
+  } else {
+    const nowMs = (input.now ?? (() => new Date()))().getTime();
+    const byReason = new Map<HeldReason, string[]>();
+    for (const event of held) {
+      const reason = readTimestampReason(event, nowMs);
+      byReason.set(reason, [...(byReason.get(reason) ?? []), event.eventId]);
+    }
+    for (const [reason, ids] of byReason) await input.markHeld(ids, reason);
+  }
+  return pending.filter(({ eventId }) => !named.has(eventId));
+}
+
 // Posts one batch. 'stop' ends the pass at once; 'failed' (a rejected upload)
-// still lets the download run.
-async function uploadBatch(input: SyncPassInput, batch: AnswerEvent[]): Promise<'failed' | 'ok' | 'stop'> {
+// and 'cap' (the stored-event cap) still let the download run.
+async function uploadBatch(input: SyncPassInput, batch: AnswerEvent[]): Promise<UploadOutcome> {
   let pending = batch;
   while (pending.length > 0) {
     if (!input.isCurrent()) return 'stop';
@@ -68,13 +106,22 @@ async function uploadBatch(input: SyncPassInput, batch: AnswerEvent[]): Promise<
       await input.markSynced(pending.map(({ eventId }) => eventId));
       return 'ok';
     }
-    if (status !== HTTP_STATUS_UNPROCESSABLE) return 'failed';
-    const named = new Set(readRejectedIds(body));
-    const held = pending.filter(({ eventId }) => named.has(eventId));
+    const code = readErrorCode(body);
+    if (status === HTTP_STATUS_UNPROCESSABLE && code === 'SYNC_EVENT_CAP_REACHED') return 'cap';
+    if (
+      (status === HTTP_STATUS_BAD_REQUEST && code === 'INPUT_INVALID_BODY') ||
+      (status === HTTP_STATUS_PAYLOAD_TOO_LARGE && code === 'INPUT_PAYLOAD_TOO_LARGE')
+    ) {
+      await input.markHeld(pending.map(({ eventId }) => eventId), 'invalid-batch');
+      return 'ok';
+    }
+    if (status !== HTTP_STATUS_UNPROCESSABLE || (code !== 'SYNC_INVALID_EVENTS' && code !== 'SYNC_TIMESTAMP_OUT_OF_RANGE')) {
+      return 'failed';
+    }
+    const rest = await holdNamed(input, pending, body, code);
     // A 422 naming nothing in this batch is not understood: hold nothing and stop.
-    if (held.length === 0) return 'failed';
-    await input.markHeld(held.map(({ eventId }) => eventId));
-    pending = pending.filter(({ eventId }) => !named.has(eventId));
+    if (rest === null) return 'failed';
+    pending = rest;
   }
   return 'ok';
 }
@@ -103,15 +150,15 @@ async function downloadAll(input: SyncPassInput): Promise<boolean> {
   return true;
 }
 
-export async function runSyncPass(input: SyncPassInput): Promise<{ isOk: boolean }> {
+export async function runSyncPass(input: SyncPassInput): Promise<{ isOk: boolean; isUploadCapReached?: true }> {
   const { eventLog, userId } = input;
   try {
     for (const batch of buildUploadBatches(eventLog, userId)) {
       const outcome = await uploadBatch(input, batch);
       if (outcome === 'ok') continue;
       // A rejected upload does not starve the download.
-      if (outcome === 'failed' && input.isCurrent()) await downloadAll(input);
-      return { isOk: false };
+      if (outcome !== 'stop' && input.isCurrent()) await downloadAll(input);
+      return outcome === 'cap' ? { isOk: false, isUploadCapReached: true } : { isOk: false };
     }
     return { isOk: await downloadAll(input) };
   } catch (error) {

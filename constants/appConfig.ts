@@ -45,6 +45,10 @@ export const KEY_BINDINGS = {
 // The most events one answer-events upload carries (the server limit).
 export const SYNC_BATCH_SIZE = 200;
 
+// The user ids whose uploads the server stopped at the stored-event cap; they
+// post nothing until the cap clears, but still download.
+export const SYNC_CAP_REACHED_STORAGE_KEY = 'syntactical.sync.cap-reached.v1';
+
 // The most download pages one sync pass requests; the next pass resumes from the stored cursor.
 export const SYNC_MAX_PAGES_PER_PASS = 100;
 
@@ -52,8 +56,12 @@ const MS_PER_SECOND = 1000;
 const SECONDS_PER_MINUTE = 60;
 const MS_PER_MINUTE = SECONDS_PER_MINUTE * MS_PER_SECOND;
 const SYNC_INTERVAL_MINUTES = 5;
+const SYNC_FUTURE_TOLERANCE_MINUTES = 5;
 const SYNC_BACKOFF_START_SECONDS = 30;
 const SYNC_BACKOFF_CAP_MINUTES = 15;
+
+// An event answered more than this far ahead of the device clock is held as timestamp-future.
+export const SYNC_FUTURE_TOLERANCE_MS = SYNC_FUTURE_TOLERANCE_MINUTES * MS_PER_MINUTE;
 
 // How often a signed-in, online client runs a sync pass.
 export const SYNC_INTERVAL_MS = SYNC_INTERVAL_MINUTES * MS_PER_MINUTE;
@@ -69,6 +77,7 @@ export const HTTP_STATUS_CREATED = 201;
 export const HTTP_STATUS_ACCEPTED = 202;
 export const HTTP_STATUS_MULTIPLE_CHOICES = 300;
 export const HTTP_STATUS_BAD_REQUEST = 400;
+export const HTTP_STATUS_PAYLOAD_TOO_LARGE = 413;
 export const HTTP_STATUS_UNAUTHORIZED = 401;
 export const HTTP_STATUS_UNPROCESSABLE = 422;
 export const HTTP_STATUS_TOO_MANY_REQUESTS = 429;

@@ -68,8 +68,7 @@ describe('runSyncPass downloads after a failed upload batch', () => {
   it.each([
     ['a 500', failure(500)],
     ['a 503', failure(503)],
-    ['a 400', failure(400)],
-    ['a 422 naming no ids', failure(422)],
+    ['a 422 naming no ids', failure(422, { eventIds: [] })],
     ['a 422 naming only ids outside the batch', failure(422, { eventIds: [randomUUID()] })],
   ])('still merges the server events after %s on the upload, then resolves isOk false', async (_label, response) => {
     const userId = randomUUID();

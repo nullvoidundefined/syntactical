@@ -174,7 +174,7 @@ describe('sync server contract: upload rejections', () => {
 
     const [rejection] = postsOf(exchanges);
     expectErrorEnvelope(rejection.response, SERVER_STATUS.UNPROCESSABLE, SERVER_ERROR_CODES.EVENT_CAP_REACHED);
-    expect(result).toEqual({ isOk: false });
+    expect(result).toEqual({ isOk: false, isUploadCapReached: true });
     expect(device.heldCalls).toEqual([]);
     expect(device.syncedCalls).toEqual([]);
     expect(server.storedEvents()).toEqual([]);

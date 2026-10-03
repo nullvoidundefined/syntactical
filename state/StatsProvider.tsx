@@ -38,7 +38,7 @@ import { recordAnswer as foldAnswer } from '../services/stats/recordAnswer';
 import { recordCompletion as foldCompletion } from '../services/stats/recordCompletion';
 import { resolveStoredEventLog } from '../services/stats/resolveStoredEventLog';
 import { resolveStoredStats } from '../services/stats/resolveStoredStats';
-import type { LoggedAnswerEvent } from '../services/stats/types/LoggedAnswerEvent';
+import type { HeldReason, LoggedAnswerEvent } from '../services/stats/types/LoggedAnswerEvent';
 import type { RecordedAnswer } from '../services/stats/types/RecordedAnswer';
 import type { RoundKey } from '../services/stats/types/RoundKey';
 import type { Stats } from '../services/stats/types/Stats';
@@ -50,7 +50,7 @@ type StatsContextValue = {
   discardUnsyncedEvents: (userId: string) => Promise<void>;
   eventLog: LoggedAnswerEvent[];
   isHydrated: boolean;
-  markEventsHeld: (eventIds: string[], ownerUserId: string) => Promise<void>;
+  markEventsHeld: (eventIds: string[], ownerUserId: string, reason?: HeldReason) => Promise<void>;
   markEventsSynced: (eventIds: string[], ownerUserId: string) => Promise<void>;
   mergeDownloadedEvents: (events: AnswerEvent[], cursor: string | null, ownerUserId: string) => Promise<void>;
   recordAnswer: (answer: RecordedAnswer) => void;
@@ -213,10 +213,10 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
   }, []);
 
   const markEventsAs = useCallback(
-    (flag: 'isHeld' | 'isSynced') => async (eventIds: string[], expectedOwner: string) => {
+    (flag: 'isHeld' | 'isSynced') => async (eventIds: string[], expectedOwner: string, reason?: HeldReason) => {
       assertOwner(expectedOwner);
       if (!isHydrated) return;
-      await requirePersisted(changeSlot(eventLogSlot, (current) => markEvents(current, eventIds, flag)));
+      await requirePersisted(changeSlot(eventLogSlot, (current) => markEvents(current, eventIds, flag, reason)));
     },
     [assertOwner, eventLogSlot, isHydrated],
   );
