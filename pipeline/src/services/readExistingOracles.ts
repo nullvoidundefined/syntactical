@@ -7,6 +7,7 @@ import { readFile } from 'node:fs/promises';
 import { z } from 'zod';
 
 import type { Oracle } from '../types/Oracle.js';
+
 import { sanitizeLogText } from './sanitizeLogText.js';
 
 const oracleSchema = z.strictObject({
@@ -41,11 +42,11 @@ export async function readExistingOracles(file: string): Promise<Map<string, Ora
     }
     const oracles = new Map<string, Oracle>();
     for (const [id, value] of Object.entries(parsed)) {
-        const entry = oracleSchema.safeParse(value);
-        if (!entry.success) {
-            throw invalid(file, `entry "${id}" is not an oracle (${entry.error.issues[0]?.message ?? 'unknown'})`);
+        const { data, error, success } = oracleSchema.safeParse(value);
+        if (!success) {
+            throw invalid(file, `entry "${id}" is not an oracle (${error.issues[0]?.message ?? 'unknown'})`);
         }
-        oracles.set(id, entry.data);
+        oracles.set(id, data);
     }
     return oracles;
 }

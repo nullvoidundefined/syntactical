@@ -6,6 +6,7 @@ import { createOracleSource } from '../services/createOracleSource.js';
 import { exitCodeFor } from '../services/exitCodeFor.js';
 import { pickProviderKind } from '../services/pickProviderKind.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
+
 import type { draftOracles } from './draftOracles.js';
 import type { validateContent } from './validate.js';
 
