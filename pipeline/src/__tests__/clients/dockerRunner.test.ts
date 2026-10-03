@@ -81,6 +81,28 @@ describe.skipIf(SKIP_DOCKER)('runOracle (docker)', () => {
         }, RUN_TIMEOUT_MS);
     });
 
+    describe('large oracle source', () => {
+        const LARGE_COMMENT_CHARS = 200_000;
+
+        it('runs a Python oracle far larger than one argv argument', async () => {
+            const run = await runOracle({
+                language: 'python',
+                code: `# ${'x'.repeat(LARGE_COMMENT_CHARS)}\nprint(1)`,
+            });
+
+            expect(run).toMatchObject({ outcome: 'value', value: '1' });
+        }, RUN_TIMEOUT_MS);
+
+        it('runs a Node oracle far larger than one argv argument', async () => {
+            const run = await runOracle({
+                language: 'node',
+                code: `// ${'x'.repeat(LARGE_COMMENT_CHARS)}\nconsole.log(1)`,
+            });
+
+            expect(run).toMatchObject({ outcome: 'value', value: '1' });
+        }, RUN_TIMEOUT_MS);
+    });
+
     describe('exceptions and syntax errors (B-12)', () => {
         it('records a Python raise with its exception type', async () => {
             const run = await runOracle({ language: 'python', code: "raise TypeError('x')" });

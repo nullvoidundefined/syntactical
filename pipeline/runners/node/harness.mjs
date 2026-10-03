@@ -62,9 +62,12 @@ function classify(code, signal, out, err) {
 const payload = JSON.parse(readFileSync(0, 'utf8'));
 const child = spawn(
     process.execPath,
-    ['--max-old-space-size=160', '--input-type=module', '-e', buildChildSource(payload.code)],
-    { stdio: ['ignore', 'pipe', 'pipe'], detached: true },
+    ['--max-old-space-size=160', '--input-type=module', '-'],
+    { stdio: ['pipe', 'pipe', 'pipe'], detached: true },
 );
+// The source travels on stdin, not argv, so its size is not capped by the per-argument limit.
+child.stdin.on('error', () => undefined);
+child.stdin.end(buildChildSource(payload.code));
 
 function killGroup() {
     try {

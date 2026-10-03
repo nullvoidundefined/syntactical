@@ -27,7 +27,7 @@ FAILURE_EXIT_CODE = 70
 
 CHILD_WRAPPER = """
 import os, sys
-code = sys.argv[1]
+code = sys.stdin.read()
 try:
     compiled = compile(code, "<oracle>", "exec")
 except (SyntaxError, ValueError):
@@ -95,13 +95,19 @@ def main():
     payload = json.loads(sys.stdin.read())
     deadline = time.monotonic() + payload.get("timeoutMs", 5000) / 1000
     child = subprocess.Popen(
-        [sys.executable, "-c", CHILD_WRAPPER, payload["code"]],
-        stdin=subprocess.DEVNULL,
+        [sys.executable, "-c", CHILD_WRAPPER],
+        stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         preexec_fn=limit_memory,
         start_new_session=True,
     )
+    # The code travels on stdin, not argv, so its size is not capped by the kernel's per-argument limit.
+    try:
+        child.stdin.write(payload["code"].encode("utf-8"))
+        child.stdin.close()
+    except OSError:
+        pass
     buffers = {child.stdout: bytearray(), child.stderr: bytearray()}
     caps = {child.stdout: OUTPUT_CAP_BYTES, child.stderr: STDERR_CAP_BYTES}
     selector = selectors.DefaultSelector()
