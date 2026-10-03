@@ -3,22 +3,16 @@
 // the RevenueCat PII attributes are cleared whether or not they match. Returns a copy. A renamed
 // key never overwrites another key (it takes the first free `[deleted]-n`), a blank identity
 // throws, containers nested deeper than 64 levels become `[deleted]`, and an own `__proto__` key
-// is kept as a plain own property.
-import { normalizeEmail } from './normalizeEmail.js';
+// is kept as a plain own property. The id matches anywhere inside a string; the email matches only
+// as a whole address (no local-part character before it, no domain continuation after it), so
+// `jo<email>`, `<email>m`, and `<email>.uk` are kept (see carriesIdentity.ts).
+import { carriesIdentity } from './carriesIdentity.js';
+import type { PurchaseIdentity } from './purchaseIdentity.js';
+import { buildNeedles } from './purchaseNeedles.js';
 
 const DELETED = '[deleted]';
 const MAX_DEPTH = 64;
 const PII_ATTRIBUTE_KEYS = new Set(['$displayName', '$email', '$phoneNumber']);
-
-interface PurchaseIdentity {
-  email: string;
-  userId: string;
-}
-
-function carriesIdentity(text: string, needles: string[]): boolean {
-  const normalized = normalizeEmail(text);
-  return needles.some((needle) => normalized.includes(needle));
-}
 
 function setOwn(target: Record<string, unknown>, key: string, value: unknown): void {
   Object.defineProperty(target, key, {
@@ -38,7 +32,7 @@ function firstFreeDeletedName(taken: Set<string>): string {
 }
 
 // A PII attribute is cleared whatever its type; an object keeps its shape but its `value` is cleared.
-function clearAttribute(value: unknown, needles: string[], depth: number): unknown {
+function clearAttribute(value: unknown, needles: PurchaseIdentity, depth: number): unknown {
   if (value === null || value === undefined) {
     return value;
   }
@@ -50,7 +44,7 @@ function clearAttribute(value: unknown, needles: string[], depth: number): unkno
 
 function walkObject(
   node: Record<string, unknown>,
-  needles: string[],
+  needles: PurchaseIdentity,
   depth: number,
   isAttribute: boolean,
 ): Record<string, unknown> {
@@ -81,7 +75,7 @@ function walkObject(
   return copy;
 }
 
-function walk(node: unknown, needles: string[], depth: number): unknown {
+function walk(node: unknown, needles: PurchaseIdentity, depth: number): unknown {
   if (typeof node === 'string') {
     return carriesIdentity(node, needles) ? DELETED : node;
   }
@@ -98,12 +92,7 @@ function walk(node: unknown, needles: string[], depth: number): unknown {
 }
 
 function scrubPurchasePayload(payload: unknown, identity: PurchaseIdentity): unknown {
-  const { email, userId } = identity;
-  const needles = [email, userId].map((raw) => normalizeEmail(raw));
-  if (needles.some((needle) => needle === '')) {
-    throw new Error('scrubPurchasePayload requires a non-blank email and userId');
-  }
-  return walk(payload, needles, 1);
+  return walk(payload, buildNeedles(identity), 1);
 }
 
 export { scrubPurchasePayload };

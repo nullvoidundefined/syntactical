@@ -1,11 +1,13 @@
 // Deletes a user and everything derived from them (B-59.2), on the caller's transaction client.
 // Lock order matches sign-in (email advisory lock, then rows) so the two cannot deadlock: the
 // email's one-time codes go, the user row is locked, purchase payloads naming the email or id are
-// scrubbed in place, the email's rate-limit counters go, then the user row is deleted (sessions,
+// scrubbed in place (rows linked to the user, plus rows whose payload carries the email as a whole
+// address or the id), the email's rate-limit counters go, then the user row is deleted (sessions,
 // answer events, progress, and goal changes cascade; entitlements and purchase_events user_id go
 // null by foreign key). Resolves false when no such user exists. Nothing here logs the email or id.
 import type pg from 'pg';
 
+import { carriesPurchaseIdentity } from './carriesPurchaseIdentity.js';
 import { deleteRateLimitCountersForEmail } from './deleteRateLimitCountersForEmail.js';
 import { normalizeEmail } from './normalizeEmail.js';
 import { scrubPurchasePayload } from './scrubPurchasePayload.js';
@@ -19,6 +21,7 @@ interface PurchaseEventRow {
   payload: unknown;
   provider: string;
   provider_event_id: string;
+  user_id: string | null;
 }
 
 // Escapes the LIKE wildcards and the escape character itself, then wraps the value in `%`.
@@ -31,13 +34,20 @@ async function scrubPurchaseEvents(
   identity: { email: string; userId: string },
 ): Promise<void> {
   const { email, userId } = identity;
+  // The SQL is a superset (it also folds NFKC forms); the JS predicate decides which rows change.
   const { rows } = await client.query<PurchaseEventRow>(
-    `SELECT provider, provider_event_id, payload FROM purchase_events
-     WHERE user_id = $1 OR payload::text ILIKE $2 ESCAPE '\\' OR payload::text ILIKE $3 ESCAPE '\\'
+    `SELECT provider, provider_event_id, payload, user_id FROM purchase_events
+     WHERE user_id = $1
+        OR lower(normalize(payload::text, NFKC)) LIKE $2 ESCAPE '\\'
+        OR lower(normalize(payload::text, NFKC)) LIKE $3 ESCAPE '\\'
      FOR UPDATE`,
     [userId, containsPattern(email), containsPattern(userId)],
   );
   const changed = rows
+    .filter(
+      ({ payload, user_id: rowUserId }) =>
+        rowUserId === userId || carriesPurchaseIdentity(payload, identity),
+    )
     .map(({ payload, provider, provider_event_id: providerEventId }) => ({
       payload: scrubPurchasePayload(payload, identity),
       previous: payload,
@@ -45,7 +55,11 @@ async function scrubPurchaseEvents(
       providerEventId,
     }))
     .filter(({ payload, previous }) => JSON.stringify(payload) !== JSON.stringify(previous))
-    .map(({ payload, provider, providerEventId }) => ({ payload, provider, providerEventId }));
+    .map(({ payload, provider, providerEventId }) => ({
+      payload,
+      provider,
+      providerEventId,
+    }));
   if (changed.length === 0) {
     return;
   }
