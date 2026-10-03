@@ -12,6 +12,7 @@ function buildDeps(
 ): CliDeps & {
     kinds: string[];
     drafted: number;
+    reviewProblems: number;
     err: string[];
     gapRoots: string[];
     languages: string[];
@@ -50,6 +51,11 @@ function buildDeps(
         err: [] as string[],
         kinds: [] as string[],
         pipelineDir: '/pipeline/',
+        review: async (options: { contentRoot: string }) => {
+            deps.roots.push(options.contentRoot);
+            return { approved: 0, items: 0, pending: 0, problems: deps.reviewProblems, rejected: 0 };
+        },
+        reviewProblems: 0,
         roots: [] as string[],
         stderr: (text: string) => {
             deps.err.push(text);
@@ -158,5 +164,18 @@ describe('runCli', () => {
         ]);
         expect(withFlag.kinds).toEqual(['api']);
         expect(withFlag.roots).toEqual([]);
+    });
+
+    it('review resolves the content root like classify, builds no provider, and exits 1 on file problems', async () => {
+        const argv = ['node', 'cli.ts', 'review'];
+        const clean = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
+        expect(await runCli([...argv, '--content-root', '/flag-root'], clean)).toBe(0);
+        const fromEnv = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
+        await runCli(argv, fromEnv);
+        const broken = buildDeps();
+        broken.reviewProblems = 2;
+        expect(await runCli(argv, broken)).toBe(1);
+        expect([clean.roots, fromEnv.roots, broken.roots]).toEqual([['/flag-root'], ['/env-root'], ['/default-root']]);
+        expect(clean.kinds).toEqual([]);
     });
 });
