@@ -15,7 +15,9 @@ export function buildEnrichReport(
 ): PipelineReport {
     const { accepted, agreed, compared, contradicted, dropped } = totals;
     const { agreement, counts, questions } = previous ?? { counts: {}, questions: [] };
-    const hasAgreement = compared > 0 || agreement !== undefined;
+    // With nothing compared this run, drop any earlier `enrich` rate instead of republishing it.
+    const { enrich: _stale, ...otherAgreement } = agreement ?? {};
+    const merged = { ...otherAgreement, ...(compared > 0 ? { enrich: agreed / compared } : {}) };
     return {
         ...meta,
         counts: {
@@ -26,8 +28,6 @@ export function buildEnrichReport(
         },
         questions,
         stage: STAGE,
-        ...(hasAgreement
-            ? { agreement: { ...agreement, ...(compared > 0 ? { enrich: agreed / compared } : {}) } }
-            : {}),
+        ...(Object.keys(merged).length > 0 ? { agreement: merged } : {}),
     };
 }
