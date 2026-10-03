@@ -1,30 +1,30 @@
-// `pipeline classify`: assigns each question one topic from its language's closed list.
-// Every question is classified twice (two independent model calls); their agreement rate
-// goes in the pipeline report as `agreement.classify`. A question whose two runs disagree,
-// or whose confidence is below CLASSIFY_CONFIDENCE_MIN, gets a review-queue file instead of
-// a topic. Content files are only read, never written: accepted topics land in
-// `classifications/<language>/<difficulty>.json` (question id to topic), and assigning them
-// into banks is publish's job.
+// `pipeline gap-fill`: tops up every topic that has fewer than TARGET_QUESTIONS_PER_TOPIC
+// questions with model-generated questions, each kept only when its claimed answer matches
+// its executed oracle. Generated code runs only through the sandboxed `runOracle`.
+// Content bank files are only read, never written: kept questions are staged in
+// `generated/<language>/<difficulty>.json` and publish moves them into banks.
 //
 // Free-bank output goes under the public `pipelineDir`. Paid-bank output goes under
-// `contentRoot` (the private content repo) and carries ids and topics only; no paid
-// question text is written anywhere, and nothing paid is ever written under `pipelineDir`.
+// `contentRoot` (the private content repo); nothing paid is ever written under `pipelineDir`.
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { type Question, validateManifest } from '@syntactical/content-schema';
 
+import type { runOracle } from '../clients/dockerRunner.js';
+import { ORACLE_LANGUAGES } from '../services/ORACLE_LANGUAGES.js';
 import { assertContentRootUsable } from '../services/classify/assertContentRootUsable.js';
-import { classifyBank } from '../services/classify/classifyBank.js';
 import { pickTopics } from '../services/classify/pickTopics.js';
 import { readFallbackTopics } from '../services/classify/readFallbackTopics.js';
 import { readLatestReport } from '../services/classify/readLatestReport.js';
+import { fillBank } from '../services/gapFill/fillBank.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
 import { writePipelineReport } from '../services/writePipelineReport.js';
+import type { FillBankResult } from '../types/FillBankResult.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 import type { PipelineReport } from '../types/PipelineReport.js';
 
-export interface ClassifyOptions {
+export interface GapFillOptions {
     contentDir: string;
     contentRoot: string;
     log: (line: string) => void;
@@ -32,16 +32,10 @@ export interface ClassifyOptions {
     now: () => string;
     pipelineDir: string;
     provider: ModelProvider;
+    run?: typeof runOracle;
 }
 
-interface Totals {
-    accepted: number;
-    agreed: number;
-    compared: number;
-    queued: number;
-}
-
-const STAGE = 'classify';
+const STAGE = 'gap-fill';
 
 async function readJson(path: string): Promise<unknown> {
     return JSON.parse(await readFile(path, 'utf8'));
@@ -49,43 +43,31 @@ async function readJson(path: string): Promise<unknown> {
 
 function buildReport(
     previous: PipelineReport | null,
-    totals: Totals,
-    flags: string[],
+    totals: FillBankResult,
     meta: Pick<PipelineReport, 'finishedAt' | 'runId' | 'startedAt'>,
 ): PipelineReport {
-    const { accepted, agreed, compared, queued } = totals;
-    const { agreement, counts, questions } = previous ?? {
-        counts: {},
-        questions: [],
-    };
-    const hasAgreement = compared > 0 || agreement !== undefined;
+    const { counts, questions } = previous ?? { counts: {}, questions: [] };
+    const { duplicate, failed, generated } = totals;
     return {
         ...meta,
         counts: {
             ...counts,
-            'classify-accepted': accepted,
-            'classify-review': queued,
+            'gap-fill-duplicate': duplicate,
+            'gap-fill-failed': failed,
+            'gap-fill-generated': generated,
         },
         questions,
         stage: STAGE,
-        ...(flags.length > 0 ? { flags } : {}),
-        ...(hasAgreement
-            ? {
-                  agreement: {
-                      ...agreement,
-                      ...(compared > 0 ? { classify: agreed / compared } : {}),
-                  },
-              }
-            : {}),
+        ...(previous?.agreement === undefined ? {} : { agreement: previous.agreement }),
     };
 }
 
-export async function classify(options: ClassifyOptions): Promise<PipelineReport> {
-    const { contentDir, contentRoot, newRunId, pipelineDir, provider } = options;
+export async function gapFill(options: GapFillOptions): Promise<PipelineReport> {
+    const { contentDir, contentRoot, newRunId, pipelineDir, provider, run } = options;
     const log = (line: string): void => options.log(sanitizeLogText(line));
     const startedAt = options.now();
     // The manifest is untrusted: language ids, difficulty keys, and bank paths are joined
-    // into file paths below, so nothing is read, queued, or written before it validates.
+    // into file paths below, so nothing is read or written before it validates.
     const checked = validateManifest(await readJson(join(contentDir, 'manifest.json')));
     if ('rule' in checked) {
         throw new Error(`Manifest rejected: ${sanitizeLogText(checked.rule)}`);
@@ -97,25 +79,24 @@ export async function classify(options: ClassifyOptions): Promise<PipelineReport
     }
     const fallbackTopics = await readFallbackTopics(join(pipelineDir, 'topics.json'));
     const previous = await readLatestReport(join(pipelineDir, 'reports'));
-    const totals: Totals = { accepted: 0, agreed: 0, compared: 0, queued: 0 };
-    const flags: string[] = [];
+    const totals: FillBankResult = { duplicate: 0, failed: 0, generated: 0 };
     for (const { banks, id: languageId, topics: manifestTopics } of languages) {
+        const language = Object.hasOwn(ORACLE_LANGUAGES, languageId) ? ORACLE_LANGUAGES[languageId] : undefined;
         const topics = pickTopics(
             manifestTopics,
             Object.hasOwn(fallbackTopics, languageId) ? fallbackTopics[languageId] : undefined,
         );
         for (const [difficulty, { access, path }] of Object.entries(banks)) {
             const bankKey = `${languageId}/${difficulty}`;
-            if (topics.length === 0) {
-                log(`skipping bank ${bankKey}: no topic list for language ${languageId}`);
+            if (!language || topics.length === 0) {
+                log(`skipping bank ${bankKey}: no oracle runner or topic list for language ${languageId}`);
                 continue;
             }
-            const bank = (await readJson(join(contentDir, path))) as {
-                questions: Question[];
-            };
-            const result = await classifyBank({
+            const bank = (await readJson(join(contentDir, path))) as { questions: Question[] };
+            const result = await fillBank({
                 bankKey,
                 difficulty,
+                language,
                 languageId,
                 log,
                 // Free output stays in the public tree; paid output goes to the private content root.
@@ -123,23 +104,15 @@ export async function classify(options: ClassifyOptions): Promise<PipelineReport
                 provider,
                 questions: bank.questions,
                 topics,
+                ...(run === undefined ? {} : { run }),
             });
-            const { accepted, agreed, compared, isWtfOveruse, queued } = result;
-            totals.accepted += accepted;
-            totals.agreed += agreed;
-            totals.compared += compared;
-            totals.queued += queued;
-            if (isWtfOveruse) {
-                flags.push(`${bankKey}: wtf-overuse`);
-                log(`${bankKey}: flagged wtf-overuse`);
-            }
+            const { duplicate, failed, generated } = result;
+            totals.duplicate += duplicate;
+            totals.failed += failed;
+            totals.generated += generated;
         }
     }
-    const report = buildReport(previous, totals, flags, {
-        finishedAt: options.now(),
-        runId: newRunId(),
-        startedAt,
-    });
+    const report = buildReport(previous, totals, { finishedAt: options.now(), runId: newRunId(), startedAt });
     await writePipelineReport(join(pipelineDir, 'reports'), report);
     return report;
 }

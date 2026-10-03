@@ -1,0 +1,92 @@
+// Tops up every thin topic of one bank. Topic counts come from the classify output plus
+// what is already staged, so a rerun fills the gap instead of overshooting. Kept questions
+// go to `<outRoot>/generated/<language>/<difficulty>.json`, never into the content bank
+// file (publish does that). A bank with no classification file is skipped: without topic
+// counts every topic would look empty.
+import { join } from 'node:path';
+
+import { type Question, SUPPORTED_SCHEMA_VERSION } from '@syntactical/content-schema';
+import { z } from 'zod';
+
+import type { FillBankArgs } from '../../types/FillBankArgs.js';
+import type { FillBankResult } from '../../types/FillBankResult.js';
+import { writeJsonAtomic } from '../classify/writeJsonAtomic.js';
+
+import { countQuestionsNeeded } from './countQuestionsNeeded.js';
+import { generateQuestion } from './generateQuestion.js';
+import { normalizePrompt } from './normalizePrompt.js';
+import { readJsonIfPresent } from './readJsonIfPresent.js';
+
+const classificationsSchema = z.record(z.string(), z.looseObject({ topic: z.string() }));
+
+const stagedSchema = z.looseObject({
+    questions: z.array(z.looseObject({ id: z.string(), prompt: z.string(), topic: z.string().optional() })),
+});
+
+function countByTopic(questions: Question[], classified: Map<string, { topic: string }>): Map<string, number> {
+    const counts = new Map<string, number>();
+    for (const { id, topic: ownTopic } of questions) {
+        const topic = classified.get(id)?.topic ?? ownTopic;
+        if (topic !== undefined) {
+            counts.set(topic, (counts.get(topic) ?? 0) + 1);
+        }
+    }
+    return counts;
+}
+
+export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
+    const { bankKey, difficulty, language, languageId, log, outRoot, provider, questions, run, topics } = args;
+    const result: FillBankResult = { duplicate: 0, failed: 0, generated: 0 };
+    const rawClassified = await readJsonIfPresent(join(outRoot, 'classifications', languageId, `${difficulty}.json`));
+    if (rawClassified === undefined) {
+        log(`skipping bank ${bankKey}: no classifications, run classify first`);
+        return result;
+    }
+    const classified = new Map(Object.entries(classificationsSchema.parse(rawClassified)));
+    const stagedFile = join(outRoot, 'generated', languageId, `${difficulty}.json`);
+    const rawStaged = await readJsonIfPresent(stagedFile);
+    const staged = (rawStaged === undefined ? [] : stagedSchema.parse(rawStaged).questions) as Question[];
+    const counts = countByTopic([...questions, ...staged], classified);
+    const existingPrompts = new Set([...questions, ...staged].map(({ prompt }) => normalizePrompt(prompt)));
+    const added: Question[] = [];
+    try {
+        for (const topic of topics) {
+            const needed = countQuestionsNeeded(counts.get(topic) ?? 0);
+            if (needed > 0) {
+                log(`${bankKey} ${topic}: requesting ${needed}`);
+            }
+            for (let index = 0; index < needed; index += 1) {
+                const outcome = await generateQuestion({
+                    difficulty,
+                    existingPrompts,
+                    language,
+                    languageId,
+                    provider,
+                    topic,
+                    ...(run === undefined ? {} : { run }),
+                });
+                if (outcome.status === 'kept') {
+                    const { question } = outcome;
+                    const { id, prompt } = question;
+                    existingPrompts.add(normalizePrompt(prompt));
+                    added.push(question);
+                    result.generated += 1;
+                    log(`${bankKey} ${topic}: generated ${id}`);
+                } else {
+                    const { reason } = outcome;
+                    result[reason === 'duplicate' ? 'duplicate' : 'failed'] += 1;
+                    log(`${bankKey} ${topic}: dropped (${reason})`);
+                }
+            }
+        }
+    } finally {
+        // An error that stops the run still stages what this bank generated so far.
+        if (added.length > 0) {
+            await writeJsonAtomic(stagedFile, {
+                questions: [...staged, ...added],
+                schemaVersion: SUPPORTED_SCHEMA_VERSION,
+            });
+        }
+    }
+    return result;
+}
