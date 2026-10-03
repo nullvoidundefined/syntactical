@@ -1,6 +1,9 @@
 // The calendar date (YYYY-MM-DD) of an instant in an IANA timezone. An
 // unknown or missing timezone throws rather than falling back to UTC or the
-// host zone, because a wrong date silently moves XP and streak days.
+// host zone, because a wrong date silently moves XP and streak days. The
+// instant must carry `Z` or an explicit offset; one without would be read in
+// the host zone.
+const ISO_INSTANT_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/;
 const formatterByTimezone = new Map<string, Intl.DateTimeFormat>();
 
 function readFormatter(timezone: string): Intl.DateTimeFormat {
@@ -33,6 +36,9 @@ function readPart(parts: Intl.DateTimeFormatPart[], type: 'day' | 'month' | 'yea
 
 export function toLocalDate(instant: string, timezone: string): string {
     const formatter = readFormatter(timezone);
+    if (!ISO_INSTANT_PATTERN.test(instant)) {
+        throw new RangeError(`Not an ISO 8601 instant with Z or an offset: ${instant}`);
+    }
     const date = new Date(instant);
     if (Number.isNaN(date.getTime())) {
         throw new RangeError(`Invalid instant: ${instant}`);

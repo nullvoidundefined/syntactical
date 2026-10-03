@@ -50,7 +50,12 @@ describe('toLocalDate', () => {
         expect(() => toLocalDate('2026-10-02T11:05:00Z', missingZone)).toThrow(RangeError);
     });
 
+    it('accepts an instant with fractional seconds and Z', () => {
+        expect(toLocalDate('2026-10-02T11:05:00.123Z', 'Pacific/Auckland')).toBe('2026-10-03');
+    });
+
     it('throws on an instant that is not a valid date', () => {
+        expect(() => toLocalDate('2026-13-02T11:05:00Z', 'UTC')).toThrow(RangeError);
         expect(() => toLocalDate('not a date', 'UTC')).toThrow(RangeError);
     });
 });
