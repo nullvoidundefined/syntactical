@@ -1,29 +1,17 @@
-// The pipeline CLI: `npm run pipeline -- <command>`. Only `validate` is wired so far.
-import { randomUUID } from 'node:crypto';
+// The pipeline CLI: `npm run pipeline -- <command>`. Dispatch lives in runCli.
 import { fileURLToPath } from 'node:url';
 
+import { createModelProvider } from './clients/modelProvider.js';
+import { draftOracles } from './commands/draftOracles.js';
+import { runCli } from './commands/runCli.js';
 import { validateContent } from './commands/validate.js';
-import { createOracleSource } from './services/createOracleSource.js';
-import { exitCodeFor } from './services/exitCodeFor.js';
 
-const PIPELINE_DIR = fileURLToPath(new URL('../', import.meta.url));
-const FIRST_COMMAND_ARG = 2;
-
-async function main(argv: string[]): Promise<number> {
-    const [command] = argv.slice(FIRST_COMMAND_ARG);
-    if (command !== 'validate') {
-        process.stderr.write('Usage: pipeline validate\n');
-        return 1;
-    }
-    const report = await validateContent({
-        contentDir: fileURLToPath(new URL('../../content', import.meta.url)),
-        newRunId: randomUUID,
-        now: () => new Date().toISOString(),
-        oracleSource: createOracleSource(`${PIPELINE_DIR}oracles`),
-        reportsDir: `${PIPELINE_DIR}reports`,
-    });
-    process.stdout.write(`${JSON.stringify(report.counts)}\n`);
-    return exitCodeFor(report.counts);
-}
-
-process.exitCode = await main(process.argv);
+process.exitCode = await runCli(process.argv, {
+    contentDir: fileURLToPath(new URL('../../content', import.meta.url)),
+    createProvider: createModelProvider,
+    draft: draftOracles,
+    pipelineDir: fileURLToPath(new URL('../', import.meta.url)),
+    stderr: (text) => process.stderr.write(text),
+    stdout: (text) => process.stdout.write(text),
+    validate: validateContent,
+});

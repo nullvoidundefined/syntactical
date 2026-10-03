@@ -1,0 +1,41 @@
+{
+  "reviewer": "security-reviewer subagent",
+  "model": "claude-fable-5-1",
+  "range": "96d27d4..93f8d63",
+  "rounds": [
+    { "round": 1, "range": "96d27d4..1b23d1c", "findings": 4 },
+    { "round": 2, "range": "96d27d4..4bcdc4d", "findings": 2 },
+    { "round": 3, "range": "96d27d4..7c9584d", "findings": 3 },
+    { "round": 4, "range": "96d27d4..5e54040", "findings": 5 },
+    { "round": 5, "range": "96d27d4..77a4f05", "findings": 1 },
+    { "round": 6, "range": "96d27d4..93f8d63", "findings": 0 }
+  ],
+  "ownerDecisions": [
+    "2026-10-03: replace the deny-list with an allow-list after round 2",
+    "2026-10-03: replace text matching with real parsers (Python ast, acorn, normalized Postgres rules) after round 3"
+  ],
+  "findings": [
+    { "id": 1, "severity": "MEDIUM", "control": "manifest-derived file paths", "status": "fixed 1c07025" },
+    { "id": 2, "severity": "MEDIUM", "control": "no hostile-manifest test", "status": "fixed 1c07025" },
+    { "id": 3, "severity": "LOW", "control": "deny floor missed network and process primitives", "status": "fixed 4acdad9" },
+    { "id": 4, "severity": "LOW", "control": "model reason reached logs unbounded", "status": "fixed e035457" },
+    { "id": 5, "severity": "HIGH", "control": "deny-list bypassable as a class", "status": "fixed a9f57f8" },
+    { "id": 6, "severity": "LOW", "control": "manifest rule text could forge log lines", "status": "fixed 99af970" },
+    { "id": 7, "severity": "MEDIUM", "control": "random._os reached os.system", "status": "fixed 61cb70a" },
+    { "id": 8, "severity": "LOW", "control": "Node constructor reflection", "status": "fixed d99940b" },
+    { "id": 9, "severity": "LOW", "control": "string-argument setTimeout", "status": "fixed d99940b" },
+    { "id": 10, "severity": "HIGH", "control": "enum.bltns and collections.abc.FunctionType code execution", "status": "fixed 660cd93" },
+    { "id": 11, "severity": "MEDIUM", "control": "Node this is globalThis in the runner", "status": "fixed 9f13634" },
+    { "id": 12, "severity": "LOW", "control": "Postgres DO E'', set_config, *_to_xml", "status": "fixed 77a4f05" },
+    { "id": 13, "severity": "MEDIUM", "control": "no tests feeding rows 10 to 12", "status": "fixed 77a4f05" },
+    { "id": 14, "severity": "LOW", "control": "checker Python unpinned against the runner", "status": "fixed 6531d53" },
+    { "id": 15, "severity": "LOW", "control": "pg_file_* and path functions outside the file rule", "status": "fixed 93f8d63" }
+  ],
+  "nothingFound": [
+    "Python safe-module attribute allow-list: surveyed every allowed attribute of 18 modules under 3.13; no module or public module attribute reachable; dunder, module-as-value, and unlisted attributes refused",
+    "Node reach-globalThis without this: new.target, getters, nested functions in class bodies, extends-clause and computed-key this, call/bind/constructor, (0, eval), Reflect, globalThis",
+    "Postgres SQL-string and server functions: dblink, *_to_xml, xpath_table, EXECUTE, DO, set_config, COPY PROGRAM, lo_*, pg_* admin and file functions, extensions, languages, roles, digit-tagged dollar quotes",
+    "Node computed access and loop counters; acorn-vs-V8 parse differentials; checker fail-closed paths on crash, timeout, garbage output, deep nesting",
+    "prompt data boundary, manifest validation, log sanitizer, existing-oracle-file validation, model output schema and reason cap"
+  ]
+}
