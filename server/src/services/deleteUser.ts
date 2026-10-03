@@ -9,8 +9,9 @@
 // rate-limit counters go, then the user row is deleted (sessions, answer events, progress, and goal
 // changes cascade; entitlements and purchase_events user_id go null by foreign key). Resolves false, having
 // changed nothing, when no such user exists, including when a concurrent deletion of the same user won the
-// email's advisory lock first (B-59.6: the user row is re-checked after the lock, before the codes go, and the
-// row lock's result is checked too). Nothing here logs the email or id.
+// email's advisory lock first (B-59.6: the user row is re-checked after the lock, before the codes go). The row
+// lock's result is checked too and also resolves false, but by then the email's codes are already deleted;
+// only a user row removed outside the advisory lock reaches that branch. Nothing here logs the email or id.
 import type pg from 'pg';
 
 import { AUTH } from '../constants/auth.js';
