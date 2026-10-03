@@ -1,5 +1,7 @@
 // Guards on /v1/me from the PR #32 review: the per-user PATCH rate limit fed its insecure value
-// (the request past the limit).
+// (the request past the limit), and two users' profiles kept apart.
+import { randomUUID } from 'node:crypto';
+
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, inject, it } from 'vitest';
 
@@ -66,5 +68,47 @@ describe.skipIf(SKIP_DATABASE_TESTS)('/v1/me guards', () => {
         expect(pastLimit.body.error.code).toBe('RATE_LIMIT_EXCEEDED');
         expect(profile.status).toBe(HTTP_OK);
         expect(profile.body.data).toMatchObject({ dailyGoal: 10, timezone: null });
+    });
+
+    it("keeps one user's PATCH out of another user's profile, goal changes, and progress", async () => {
+        const { app, now } = createSyncTestApp({ answerKey, pool: database.pool });
+        const first = await insertSession(database.pool, { createdAt: now() });
+        const second = await insertSession(database.pool, { createdAt: now() });
+        const firstAuthorization = `Bearer ${first.sessionToken}`;
+        const secondAuthorization = `Bearer ${second.sessionToken}`;
+        const event = {
+            answeredAt: new Date(now().getTime() - 60_000).toISOString(),
+            bankKey: 'python/easy',
+            choiceIndex: 1,
+            eventId: randomUUID(),
+            questionId: 'py-easy-001',
+            roundKind: 'bank',
+        };
+        await request(app).post('/v1/answer-events').set('Authorization', secondAuthorization).send({ events: [event] });
+        const secondBefore = await request(app).get(ME_ROUTE).set('Authorization', secondAuthorization);
+        const secondProgressBefore = await database.pool.query(
+            'SELECT local_date, xp, is_goal_met FROM daily_progress WHERE user_id = $1 ORDER BY local_date',
+            [second.userId],
+        );
+
+        const patched = await request(app)
+            .patch(ME_ROUTE)
+            .set('Authorization', firstAuthorization)
+            .send({ dailyGoal: 50, timezone: 'Pacific/Auckland' });
+
+        const secondAfter = await request(app).get(ME_ROUTE).set('Authorization', secondAuthorization);
+        const secondGoalChanges = await database.pool.query('SELECT 1 FROM daily_goal_changes WHERE user_id = $1', [
+            second.userId,
+        ]);
+        const secondProgressAfter = await database.pool.query(
+            'SELECT local_date, xp, is_goal_met FROM daily_progress WHERE user_id = $1 ORDER BY local_date',
+            [second.userId],
+        );
+        expect(patched.status).toBe(HTTP_OK);
+        expect(patched.body.data).toMatchObject({ dailyGoal: 50, timezone: 'Pacific/Auckland', xpTotal: 0 });
+        expect(secondBefore.body.data.xpTotal).toBe(1);
+        expect(secondAfter.body).toEqual(secondBefore.body);
+        expect(secondGoalChanges.rowCount).toBe(0);
+        expect(secondProgressAfter.rows).toEqual(secondProgressBefore.rows);
     });
 });
