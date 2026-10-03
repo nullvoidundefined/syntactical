@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 import { validateContent } from './commands/validate.js';
 import { createOracleSource } from './services/createOracleSource.js';
+import { exitCodeFor } from './services/exitCodeFor.js';
 
 const PIPELINE_DIR = fileURLToPath(new URL('../', import.meta.url));
 const FIRST_COMMAND_ARG = 2;
@@ -22,7 +23,7 @@ async function main(argv: string[]): Promise<number> {
         reportsDir: `${PIPELINE_DIR}reports`,
     });
     process.stdout.write(`${JSON.stringify(report.counts)}\n`);
-    return 0;
+    return exitCodeFor(report.counts);
 }
 
 process.exitCode = await main(process.argv);
