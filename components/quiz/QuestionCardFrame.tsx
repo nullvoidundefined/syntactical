@@ -2,6 +2,7 @@
 // header, the verified badge, the Query trigger, and a body slot with a
 // stable minimum height so advancing does not shift the controls below it.
 import type { Provenance } from '@syntactical/content-schema';
+
 import type { ReactNode } from 'react';
 
 import { Pressable, Text, View } from 'react-native';
