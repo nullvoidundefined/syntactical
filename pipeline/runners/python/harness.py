@@ -77,7 +77,10 @@ def classify(child, out, err):
             return {"outcome": "syntax-error"}
         for line in reversed(stderr_text.splitlines()):
             if line.startswith(EXCEPTION_MARKER):
-                return {"outcome": "exception", "exceptionType": line[len(EXCEPTION_MARKER):]}
+                exception_type = line[len(EXCEPTION_MARKER):]
+                if exception_type == "MemoryError":
+                    return {"outcome": "resource-limit"}
+                return {"outcome": "exception", "exceptionType": exception_type}
     if child.returncode < 0 or child.returncode == SIGKILL_EXIT_STATUS:
         return {"outcome": "resource-limit"}
     if child.returncode != 0:

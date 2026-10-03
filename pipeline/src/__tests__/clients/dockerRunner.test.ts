@@ -147,10 +147,8 @@ describe.skipIf(SKIP_DOCKER)('runOracle (docker)', () => {
                 code: 'data = bytearray(512 * 1024 * 1024)\nprint(len(data))',
             });
 
-            expect(run.outcome).not.toBe('value');
-            const isResourceLimit = run.outcome === 'resource-limit';
-            const isMemoryError = run.outcome === 'exception' && run.exceptionType === 'MemoryError';
-            expect(isResourceLimit || isMemoryError, JSON.stringify(run)).toBe(true);
+            expect(run).toMatchObject({ outcome: 'resource-limit' });
+            expect(run.exceptionType).toBeUndefined();
         }, RUN_TIMEOUT_MS);
 
         it('stops a fork bomb and leaves no container running', async () => {
