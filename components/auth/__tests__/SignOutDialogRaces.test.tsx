@@ -27,6 +27,7 @@ import {
   type ApiRouter,
   type Hold,
 } from '../../../state/__tests__/syncTestSupport';
+import './preloadNativeModal';
 import { SignOutDialog } from '../SignOutDialog';
 
 const mockApi: { router: ApiRouter | null } = { router: null };
