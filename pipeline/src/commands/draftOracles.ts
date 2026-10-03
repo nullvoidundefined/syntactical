@@ -31,6 +31,19 @@ async function readJson(path: string): Promise<unknown> {
     return JSON.parse(await readFile(path, 'utf8'));
 }
 
+// An existing oracle file is data worth keeping: a rerun adds to it, and a file
+// that cannot be parsed stops the run instead of being overwritten.
+async function readExistingOracles(file: string): Promise<Record<string, Oracle>> {
+    try {
+        return (await readJson(file)) as Record<string, Oracle>;
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return {};
+        }
+        throw error;
+    }
+}
+
 export async function draftOracles(options: DraftOraclesOptions): Promise<void> {
     const { contentDir, log, oraclesDir, provider } = options;
     // The manifest is untrusted: its language ids, difficulty keys, and bank paths are
@@ -53,6 +66,7 @@ export async function draftOracles(options: DraftOraclesOptions): Promise<void> 
                 continue;
             }
             const bank = (await readJson(join(contentDir, path))) as { questions: Question[] };
+            const file = join(oraclesDir, `${bankKey}.json`);
             const oracles: Record<string, Oracle> = {};
             for (const question of bank.questions) {
                 try {
@@ -69,10 +83,16 @@ export async function draftOracles(options: DraftOraclesOptions): Promise<void> 
                     log(`${bankKey} ${question.id}: model output invalid (${error.message})`);
                 }
             }
-            const file = join(oraclesDir, `${bankKey}.json`);
+            const draftedCount = Object.keys(oracles).length;
+            if (draftedCount === 0) {
+                log(`${bankKey}: nothing drafted, existing file left as is`);
+                continue;
+            }
+            // Merge into what is already there: a rerun never deletes an oracle it did not redraft.
+            const merged = { ...(await readExistingOracles(file)), ...oracles };
             await mkdir(dirname(file), { recursive: true });
-            await writeFile(file, `${JSON.stringify(oracles, null, JSON_INDENT)}\n`);
-            log(`${bankKey}: ${Object.keys(oracles).length} of ${bank.questions.length} oracles written`);
+            await writeFile(file, `${JSON.stringify(merged, null, JSON_INDENT)}\n`);
+            log(`${bankKey}: ${draftedCount} of ${bank.questions.length} oracles drafted, ${Object.keys(merged).length} in file`);
         }
     }
 }

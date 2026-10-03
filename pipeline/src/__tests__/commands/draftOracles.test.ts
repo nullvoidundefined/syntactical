@@ -159,4 +159,54 @@ describe('draftOracles', () => {
             expect(logs.some((line) => line.includes('constructor') && line.includes('no oracle runner'))).toBe(true);
         });
     });
+
+    describe('a rerun', () => {
+        const PYTHON_FILE = join('python', 'easy.json');
+        const KEPT = { code: 'print("kept")', language: 'python' };
+
+        async function seed(existing: Record<string, unknown>): Promise<string> {
+            await writeContent(oraclesDir, { [PYTHON_FILE]: existing });
+            return readFile(join(oraclesDir, PYTHON_FILE), 'utf8');
+        }
+
+        it('keeps oracles this run did not produce and refreshes the ones it did', async () => {
+            await seed({ 'old-1': KEPT, 'p-1': { code: 'stale', language: 'python' }, 'p-2': KEPT });
+            await draftOracles({ contentDir, log, oraclesDir, provider: scripted() });
+            const merged = JSON.parse(await readFile(join(oraclesDir, PYTHON_FILE), 'utf8')) as Record<string, unknown>;
+            expect(merged).toEqual({
+                'old-1': KEPT,
+                'p-1': { code: 'print(1)', language: 'python' },
+                'p-2': KEPT,
+            });
+        });
+
+        it('does not write when nothing was drafted, so an existing file is untouched', async () => {
+            const before = await seed({ 'old-1': KEPT });
+            const nothing: ModelProvider = {
+                async generate(request) {
+                    return { model: 'fake', value: request.schema.parse({ isExecutable: false, reason: 'no' }) };
+                },
+            };
+            await draftOracles({ contentDir, log, oraclesDir, provider: nothing });
+            expect(await readFile(join(oraclesDir, PYTHON_FILE), 'utf8')).toBe(before);
+            expect(logs.some((line) => line.includes('python/easy') && line.includes('nothing drafted'))).toBe(true);
+        });
+
+        it('writes no file at all for a bank where nothing was drafted', async () => {
+            const nothing: ModelProvider = {
+                async generate(request) {
+                    return { model: 'fake', value: request.schema.parse({ isExecutable: false, reason: 'no' }) };
+                },
+            };
+            await draftOracles({ contentDir, log, oraclesDir, provider: nothing });
+            expect(await readdir(root)).toEqual(['content']);
+        });
+
+        it('refuses to overwrite an existing file it cannot parse', async () => {
+            await mkdir(join(oraclesDir, 'python'), { recursive: true });
+            await writeFile(join(oraclesDir, PYTHON_FILE), '{ not json');
+            await expect(draftOracles({ contentDir, log, oraclesDir, provider: scripted() })).rejects.toThrow();
+            expect(await readFile(join(oraclesDir, PYTHON_FILE), 'utf8')).toBe('{ not json');
+        });
+    });
 });
