@@ -41,7 +41,8 @@ export async function enrichQuestion(
         if (!(error instanceof ModelOutputInvalid)) {
             throw error;
         }
-        return { ...outcome, accepted: [], isInvalid: true };
+        // The question is skipped whole, so nothing it tallied before the failure counts.
+        return { accepted: [], agreed: 0, compared: 0, drops: [], isInvalid: true };
     }
     return outcome;
 }
