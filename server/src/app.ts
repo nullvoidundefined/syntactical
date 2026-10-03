@@ -19,6 +19,7 @@ import { requireJson } from './middleware/requireJson.js';
 import { createAuthCodesRouter } from './routes/authCodes.js';
 import type { AuthDeps, ResolvedAuthDeps } from './routes/authDeps.js';
 import { createAuthSessionsRouter } from './routes/authSessions.js';
+import { createDeleteMeRouter } from './routes/deleteMe.js';
 import { createHealthRouter } from './routes/health.js';
 import type { HealthDb } from './routes/health.js';
 import { createSignOutRouter } from './routes/signOut.js';
@@ -59,6 +60,7 @@ function createApp(deps: AppDeps) {
       createAuthSessionsRouter(resolved),
       createSignOutRouter(resolved),
     );
+    app.use('/v1', createDeleteMeRouter(resolved));
   }
 
   if (extraRoutes) {
