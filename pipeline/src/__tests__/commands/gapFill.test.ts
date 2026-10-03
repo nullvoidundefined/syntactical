@@ -1,7 +1,7 @@
 // `pipeline gap-fill` with a fake provider and a fake runOracle: how many questions each topic
 // requests, where the staging files land (free under pipeline/, paid under the content root),
 // and that content bank files are never written. No Docker, no real model.
-import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -16,6 +16,7 @@ const TOPICS = [
     { id: 'strings', label: 'Strings' },
     { id: 'lists', label: 'Lists' },
 ];
+const READ_ONLY_MODE = 0o555;
 const PAID_MARKER = 'PAID-BANK-MARKER';
 
 function buildEntry(path: string, access: 'free' | 'paid'): Record<string, unknown> {
@@ -234,6 +235,50 @@ describe('gapFill', () => {
         expect(report.counts['gap-fill-generated']).toBe(0);
         expect(ranOracles).toHaveLength(0);
         expect(await listFiles(join(pipelineDir, 'generated'))).toEqual([]);
+    });
+
+    function goodThenThrowing(): ModelProvider {
+        let calls = 0;
+        return {
+            async generate(request) {
+                calls += 1;
+                if (calls > 1) {
+                    throw new Error('transport down');
+                }
+                const draft = {
+                    question: {
+                        answer: true,
+                        oracle: { code: 'print(True)' },
+                        prompt: 'One good generated question?',
+                        query: { explanation: 'e', title: 't' },
+                        type: 'bool',
+                    },
+                };
+                return { model: 'fake-model', value: request.schema.parse(draft) };
+            },
+        };
+    }
+
+    it('keeps the original error when staging the partial results also fails', async () => {
+        await seed({ 'easy:free': [...Array(8).fill('strings'), ...Array(10).fill('lists')] });
+        // A read-only staging directory lets the read see no file but makes the write fail.
+        const stagingDir = join(pipelineDir, 'generated/python');
+        await mkdir(stagingDir, { recursive: true });
+        await chmod(stagingDir, READ_ONLY_MODE);
+        await expect(run(goodThenThrowing())).rejects.toThrow('transport down');
+        expect(logs.join('\n')).toContain('could not stage');
+    });
+
+    it('still writes the report with earlier banks counts when a later bank throws', async () => {
+        await seed({
+            'easy:free': [...Array(9).fill('strings'), ...Array(10).fill('lists')],
+            'medium:free': [...Array(9).fill('strings'), ...Array(10).fill('lists')],
+        });
+        // The first bank's one request succeeds; the second bank's request throws.
+        await expect(run(goodThenThrowing())).rejects.toThrow('transport down');
+        const latest = await readJson(join(pipelineDir, 'reports/latest.json'));
+        expect(latest.stage).toBe('gap-fill');
+        expect(latest.counts).toMatchObject({ 'gap-fill-generated': 1 });
     });
 
     it('reports dropped questions in counts without staging them', async () => {

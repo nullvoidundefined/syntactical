@@ -80,39 +80,55 @@ export async function gapFill(options: GapFillOptions): Promise<PipelineReport> 
     const fallbackTopics = await readFallbackTopics(join(pipelineDir, 'topics.json'));
     const previous = await readLatestReport(join(pipelineDir, 'reports'));
     const totals: FillBankResult = { duplicate: 0, failed: 0, generated: 0 };
-    for (const { banks, id: languageId, topics: manifestTopics } of languages) {
-        const language = Object.hasOwn(ORACLE_LANGUAGES, languageId) ? ORACLE_LANGUAGES[languageId] : undefined;
-        const topics = pickTopics(
-            manifestTopics,
-            Object.hasOwn(fallbackTopics, languageId) ? fallbackTopics[languageId] : undefined,
-        );
-        for (const [difficulty, { access, path }] of Object.entries(banks)) {
-            const bankKey = `${languageId}/${difficulty}`;
-            if (!language || topics.length === 0) {
-                log(`skipping bank ${bankKey}: no oracle runner or topic list for language ${languageId}`);
-                continue;
+    const reportsDir = join(pipelineDir, 'reports');
+    let isCompleted = false;
+    let report: PipelineReport;
+    try {
+        for (const { banks, id: languageId, topics: manifestTopics } of languages) {
+            const language = Object.hasOwn(ORACLE_LANGUAGES, languageId) ? ORACLE_LANGUAGES[languageId] : undefined;
+            const topics = pickTopics(
+                manifestTopics,
+                Object.hasOwn(fallbackTopics, languageId) ? fallbackTopics[languageId] : undefined,
+            );
+            for (const [difficulty, { access, path }] of Object.entries(banks)) {
+                const bankKey = `${languageId}/${difficulty}`;
+                if (!language || topics.length === 0) {
+                    log(`skipping bank ${bankKey}: no oracle runner or topic list for language ${languageId}`);
+                    continue;
+                }
+                const bank = (await readJson(join(contentDir, path))) as { questions: Question[] };
+                const result = await fillBank({
+                    bankKey,
+                    difficulty,
+                    language,
+                    languageId,
+                    log,
+                    // Free output stays in the public tree; paid output goes to the private content root.
+                    outRoot: access === 'free' ? pipelineDir : contentRoot,
+                    provider,
+                    questions: bank.questions,
+                    topics,
+                    ...(run === undefined ? {} : { run }),
+                });
+                const { duplicate, failed, generated } = result;
+                totals.duplicate += duplicate;
+                totals.failed += failed;
+                totals.generated += generated;
             }
-            const bank = (await readJson(join(contentDir, path))) as { questions: Question[] };
-            const result = await fillBank({
-                bankKey,
-                difficulty,
-                language,
-                languageId,
-                log,
-                // Free output stays in the public tree; paid output goes to the private content root.
-                outRoot: access === 'free' ? pipelineDir : contentRoot,
-                provider,
-                questions: bank.questions,
-                topics,
-                ...(run === undefined ? {} : { run }),
-            });
-            const { duplicate, failed, generated } = result;
-            totals.duplicate += duplicate;
-            totals.failed += failed;
-            totals.generated += generated;
+        }
+        isCompleted = true;
+    } finally {
+        // A later bank that throws must not lose the counts of the banks already filled.
+        report = buildReport(previous, totals, { finishedAt: options.now(), runId: newRunId(), startedAt });
+        if (isCompleted) {
+            await writePipelineReport(reportsDir, report);
+        } else {
+            try {
+                await writePipelineReport(reportsDir, report);
+            } catch (writeError) {
+                log(`could not write the partial report (${String(writeError)})`);
+            }
         }
     }
-    const report = buildReport(previous, totals, { finishedAt: options.now(), runId: newRunId(), startedAt });
-    await writePipelineReport(join(pipelineDir, 'reports'), report);
     return report;
 }

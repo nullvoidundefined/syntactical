@@ -49,6 +49,7 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
     const counts = countByTopic([...questions, ...staged], classified);
     const existingPrompts = new Set([...questions, ...staged].map(({ prompt }) => normalizePrompt(prompt)));
     const added: Question[] = [];
+    let isCompleted = false;
     try {
         for (const topic of topics) {
             const needed = countQuestionsNeeded(counts.get(topic) ?? 0);
@@ -79,13 +80,21 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
                 }
             }
         }
+        isCompleted = true;
     } finally {
-        // An error that stops the run still stages what this bank generated so far.
+        // An error that stops the run still stages what this bank generated so far. If that
+        // write fails too, log it and let the original error stay the one that propagates.
         if (added.length > 0) {
-            await writeJsonAtomic(stagedFile, {
-                questions: [...staged, ...added],
-                schemaVersion: SUPPORTED_SCHEMA_VERSION,
-            });
+            const stagedBody = { questions: [...staged, ...added], schemaVersion: SUPPORTED_SCHEMA_VERSION };
+            if (isCompleted) {
+                await writeJsonAtomic(stagedFile, stagedBody);
+            } else {
+                try {
+                    await writeJsonAtomic(stagedFile, stagedBody);
+                } catch (writeError) {
+                    log(`${bankKey}: could not stage partial results (${String(writeError)})`);
+                }
+            }
         }
     }
     return result;
