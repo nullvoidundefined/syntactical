@@ -1,12 +1,13 @@
 {
   "reviewer": "security-reviewer subagent",
   "model": "claude-fable-5-1",
-  "range": "90dfb70..0698e6b",
+  "range": "90dfb70..b7cd1ed",
   "rounds": [
     { "round": 1, "range": "90dfb70..c78dbaf", "findings": 5 },
     { "round": 2, "range": "90dfb70..0d7f140", "findings": 6 },
     { "round": 3, "range": "90dfb70..11db85d", "findings": 2 },
-    { "round": 4, "range": "90dfb70..0698e6b", "findings": 3 }
+    { "round": 4, "range": "90dfb70..0698e6b", "findings": 3 },
+    { "round": 5, "range": "ed1439f..b7cd1ed", "findings": 0 }
   ],
   "ownerDecisions": [
     "2026-10-03: standing waiver for LOW findings contained by another reviewed control",
@@ -39,6 +40,7 @@
     "native token storage: SecureStore only, never AsyncStorage, never logged",
     "stale-401 isolation: older request 401s ignored; only the sending session cleared",
     "cross-user upload and download: other owners' events never posted, marked, or merged; owner change mid-pass stops the pass",
-    "upload 2xx body check, 422 hold filter, cap list and marker parsing, held-event release, download page validation"
+    "upload 2xx body check, 422 hold filter, cap list and marker parsing, held-event release, download page validation",
+    "round 5: b7cd1ed renames a test helper only; no control, production code, or assertion changed; cap-window tests pass"
   ]
 }
