@@ -10,10 +10,15 @@
 // runs by default.
 import { execFileSync } from 'node:child_process';
 
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { runOracle } from '../../clients/dockerRunner.js';
 import { ensureRunnerImage } from '../../clients/ensureRunnerImage.js';
+import {
+    acquireDockerTestLock,
+    DOCKER_LOCK_WAIT_MS,
+    releaseDockerTestLock,
+} from '../fixtures/dockerTestLock.js';
 
 const SKIP_DOCKER = process.env.SKIP_DOCKER_TESTS === '1';
 
@@ -29,10 +34,15 @@ function runningContainers(language: 'python' | 'node' | 'postgres'): string {
 
 describe.skipIf(SKIP_DOCKER)('runOracle (docker)', () => {
     beforeAll(async () => {
+        await acquireDockerTestLock();
         await ensureRunnerImage('python');
         await ensureRunnerImage('node');
         await ensureRunnerImage('postgres');
-    }, 300_000);
+    }, DOCKER_LOCK_WAIT_MS + 300_000);
+
+    afterAll(() => {
+        releaseDockerTestLock();
+    });
 
     describe('values and runtime versions', () => {
         it('reports a Python printed value and the Python version', async () => {
