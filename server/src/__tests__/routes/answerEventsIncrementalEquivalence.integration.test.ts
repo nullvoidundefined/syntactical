@@ -3,8 +3,9 @@
 // equal the full replay of the stored events (computeDailyProgress with findDueReviewEventIds,
 // the user's timezone, and the goal history the server applies). Seeded pseudo-random histories
 // (fixed seeds) cover several questions across easy, medium, and hard banks, misses, due and
-// early reviews, bank, topic, and review rounds, a non-UTC timezone, a recorded goal change,
-// out-of-order and backdated batches, and duplicate event ids within and across batches; the
+// early reviews, bank, topic, and review rounds, non-UTC timezones including the extreme
+// offsets Pacific/Kiritimati (+14) and Etc/GMT+12 (-12), a recorded goal change dated inside
+// the history, after every event, or before the first event, out-of-order and backdated batches, and duplicate event ids within and across batches; the
 // rows are checked after every upload. A backdated event that flips a later due-review decision
 // of the same question must update that later date's row. These pass against the full replay
 // and guard the incremental path.
@@ -26,7 +27,7 @@ const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.en
 const ROUTE = '/v1/answer-events';
 const HTTP_OK = 200;
 const SETUP_TIMEOUT_MS = 120_000;
-const HISTORY_TIMEOUT_MS = 60_000;
+const HISTORY_TIMEOUT_MS = 180_000;
 const MINUTE_MS = 60_000;
 const HOUR_MS = 3_600_000;
 const DAY_MS = 86_400_000;
@@ -34,6 +35,10 @@ const DEFAULT_GOAL = 20;
 const CHOICE_COUNT = 4;
 const SEEDS = [1, 7, 42, 1337, 20_261_003, 99_991];
 const TIMEZONES = ['Pacific/Auckland', 'America/Los_Angeles', 'Asia/Kolkata'];
+const KIRITIMATI = 'Pacific/Kiritimati';
+const GMT_MINUS_12 = 'Etc/GMT+12';
+// Before the earliest generated event (at most 60 days and 600 minutes before the clock).
+const BEFORE_HISTORY_DAYS = 75;
 const CHANGED_GOALS = [10, 50];
 const GAPS_MS = [10 * MINUTE_MS, 3 * HOUR_MS, DAY_MS, 2 * DAY_MS, 5 * DAY_MS, 9 * DAY_MS];
 const MAX_BATCH_SIZE = 12;
@@ -67,6 +72,26 @@ const answerKey: AnswerKey = new Map(
 );
 
 type RoundKind = AnswerEvent['roundKind'];
+
+// Where the recorded goal change falls: inside the history, on the local day after the clock
+// (after every event), or before the first event.
+type GoalPlacement = 'after' | 'before' | 'within';
+
+interface HistoryCase {
+    placement: GoalPlacement;
+    seed: number;
+    timezone: string;
+}
+
+const HISTORY_CASES: HistoryCase[] = [
+    ...SEEDS.map((seed) => ({ placement: 'within' as const, seed, timezone: TIMEZONES[seed % TIMEZONES.length] })),
+    { placement: 'within', seed: 5, timezone: KIRITIMATI },
+    { placement: 'within', seed: 11, timezone: GMT_MINUS_12 },
+    { placement: 'after', seed: 23, timezone: KIRITIMATI },
+    { placement: 'before', seed: 31, timezone: GMT_MINUS_12 },
+    { placement: 'after', seed: 47, timezone: 'Pacific/Auckland' },
+    { placement: 'before', seed: 53, timezone: 'America/Los_Angeles' },
+];
 
 interface WireEvent {
     answeredAt: string;
@@ -306,20 +331,25 @@ describe.skipIf(SKIP_DATABASE_TESTS)('POST /v1/answer-events daily progress equa
         await database.reset();
     });
 
-    it.each(SEEDS)(
-        'seed %i: after every upload of a random batch split, daily_progress rows and response totals equal the full replay',
-        async (seed) => {
+    it.each(HISTORY_CASES)(
+        'seed $seed in $timezone, goal change $placement the history: after every upload of a random batch split, daily_progress rows and response totals equal the full replay',
+        async ({ placement, seed, timezone }) => {
             const random = createRandom(seed);
             const { app, now } = createSyncTestApp({
                 answerKey,
                 pool: database.pool,
             });
             const nowMs = now().getTime();
-            const timezone = TIMEZONES[seed % TIMEZONES.length];
             const today = toLocalDate(now().toISOString(), timezone);
             const { authorization, userId } = await signIn(now(), timezone);
+            const withinDaysAgo = integerBetween(random, 5, 25);
+            const fromMs = {
+                after: nowMs + DAY_MS,
+                before: nowMs - BEFORE_HISTORY_DAYS * DAY_MS,
+                within: nowMs - withinDaysAgo * DAY_MS,
+            }[placement];
             const goalChange: GoalChange = {
-                from: toLocalDate(new Date(nowMs - integerBetween(random, 5, 25) * DAY_MS).toISOString(), timezone),
+                from: toLocalDate(new Date(fromMs).toISOString(), timezone),
                 goal: pick(random, CHANGED_GOALS),
             };
             await database.pool.query('INSERT INTO daily_goal_changes (user_id, from_date, goal) VALUES ($1, $2, $3)', [
@@ -327,7 +357,15 @@ describe.skipIf(SKIP_DATABASE_TESTS)('POST /v1/answer-events daily progress equa
                 goalChange.from,
                 goalChange.goal,
             ]);
-            const batches = splitIntoBatches(random, generateHistory(random, nowMs));
+            const history = generateHistory(random, nowMs);
+            const historyDates = history.map((event) => toLocalDate(event.answeredAt, timezone)).sort();
+            if (placement === 'after') {
+                expect(goalChange.from > historyDates[historyDates.length - 1]).toBe(true);
+            }
+            if (placement === 'before') {
+                expect(goalChange.from < historyDates[0]).toBe(true);
+            }
+            const batches = splitIntoBatches(random, history);
 
             for (const batch of batches) {
                 const response = await upload(app, authorization, batch);
