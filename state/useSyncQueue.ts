@@ -5,6 +5,7 @@
 // longer the current one, and every write it makes names that user.
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { isRecord } from '@syntactical/content-schema';
 import { AppState } from 'react-native';
 
 import { apiFetch } from '../clients/apiClient';
@@ -15,6 +16,7 @@ import {
   SYNC_BACKOFF_FACTOR,
   SYNC_BACKOFF_START_MS,
   SYNC_CAP_REACHED_STORAGE_KEY,
+  SYNC_CAP_RETRY_MS,
   SYNC_INTERVAL_MS,
 } from '../constants/appConfig';
 import { runSyncPass } from '../services/sync/runSyncPass';
@@ -26,10 +28,17 @@ type RunningPass = { generation: number; promise: Promise<boolean>; userId: stri
 
 type SyncQueue = { cancelPass: () => void; isSyncing: boolean; isUploadCapReached: boolean; syncNow: () => Promise<boolean> };
 
-// The user ids the server stopped at the stored-event cap, as stored.
-async function readCappedUserIds(): Promise<Set<string>> {
-  const stored = await readJson<unknown>(SYNC_CAP_REACHED_STORAGE_KEY, []);
-  return new Set(Array.isArray(stored) ? stored.filter((id): id is string => typeof id === 'string') : []);
+// The users the server stopped at the stored-event cap, with when (ms). The
+// first stored form was an array of ids; those read as capped at 0.
+async function readCappedUsers(): Promise<Map<string, number>> {
+  const stored = await readJson<unknown>(SYNC_CAP_REACHED_STORAGE_KEY, {});
+  const capped = new Map<string, number>();
+  if (Array.isArray(stored)) {
+    for (const id of stored) if (typeof id === 'string') capped.set(id, 0);
+  } else if (isRecord(stored)) {
+    for (const [id, cappedAt] of Object.entries(stored)) if (typeof cappedAt === 'number') capped.set(id, cappedAt);
+  }
+  return capped;
 }
 
 export function useSyncQueue(userId: string | null): SyncQueue {
@@ -37,7 +46,7 @@ export function useSyncQueue(userId: string | null): SyncQueue {
   const isOnline = useIsOnline();
   const [isSyncing, setIsSyncing] = useState(false);
   const [cappedUserIds, setCappedUserIds] = useState<string[]>([]);
-  const capLoad = useRef<Promise<Set<string>> | null>(null);
+  const capLoad = useRef<Promise<Map<string, number>> | null>(null);
 
   const latest = useRef({ stats, userId });
   latest.current = { stats, userId };
@@ -48,18 +57,27 @@ export function useSyncQueue(userId: string | null): SyncQueue {
   const isMounted = useRef(true);
 
   // Reads the stored cap list once; later passes and the exposed flag share it.
-  const loadCapped = useCallback((): Promise<Set<string>> => {
-    capLoad.current ??= readCappedUserIds();
+  const loadCapped = useCallback((): Promise<Map<string, number>> => {
+    capLoad.current ??= readCappedUsers();
     return capLoad.current;
   }, []);
 
   const rememberCapped = useCallback(
     async (user: string): Promise<void> => {
       const capped = await loadCapped();
-      if (capped.has(user)) return;
-      capped.add(user);
-      if (isMounted.current) setCappedUserIds([...capped]);
-      await writeJson(SYNC_CAP_REACHED_STORAGE_KEY, [...capped]);
+      capped.set(user, Date.now());
+      if (isMounted.current) setCappedUserIds([...capped.keys()]);
+      await writeJson(SYNC_CAP_REACHED_STORAGE_KEY, Object.fromEntries(capped));
+    },
+    [loadCapped],
+  );
+
+  const forgetCapped = useCallback(
+    async (user: string): Promise<void> => {
+      const capped = await loadCapped();
+      if (!capped.delete(user)) return;
+      if (isMounted.current) setCappedUserIds([...capped.keys()]);
+      await writeJson(SYNC_CAP_REACHED_STORAGE_KEY, Object.fromEntries(capped));
     },
     [loadCapped],
   );
@@ -83,14 +101,20 @@ export function useSyncQueue(userId: string | null): SyncQueue {
     const pass: RunningPass = { generation: passGeneration, promise: Promise.resolve(false), userId: user };
     const executePass = async (): Promise<boolean> => {
       setIsSyncing(true);
-      // A capped user posts nothing, but still downloads.
-      const isCapped = (await loadCapped()).has(user);
+      // A capped user posts nothing inside the retry window, then one probe batch; both still download.
+      const cappedAt = (await loadCapped()).get(user);
+      const isCapProbe = cappedAt !== undefined && Date.now() - cappedAt >= SYNC_CAP_RETRY_MS;
+      let isProbeStored = false;
       const result = await runSyncPass({
-        eventLog: isCapped ? [] : current.eventLog,
+        eventLog: cappedAt !== undefined && !isCapProbe ? [] : current.eventLog,
+        isCapProbe,
         isCurrent,
         markHeld: (ids, reason) => latest.current.stats.markEventsHeld(ids, user, reason),
         markReleased: (ids) => latest.current.stats.markEventsReleased(ids, user),
-        markSynced: (ids) => latest.current.stats.markEventsSynced(ids, user),
+        markSynced: (ids) => {
+          isProbeStored = true;
+          return latest.current.stats.markEventsSynced(ids, user);
+        },
         mergeDownloaded: (events, cursor) => latest.current.stats.mergeDownloadedEvents(events, cursor, user),
         request: apiFetch,
         syncCursor: current.readSyncCursor(user),
@@ -98,6 +122,7 @@ export function useSyncQueue(userId: string | null): SyncQueue {
       });
       const { isOk, isUploadCapReached } = result;
       if (isUploadCapReached) await rememberCapped(user);
+      else if (isCapProbe && isProbeStored) await forgetCapped(user);
       if (running.current === pass) {
         running.current = null;
         if (isMounted.current) setIsSyncing(false);
@@ -120,7 +145,7 @@ export function useSyncQueue(userId: string | null): SyncQueue {
     pass.promise = executePass();
     running.current = pass;
     return pass.promise;
-  }, [clearRetry, loadCapped, rememberCapped]);
+  }, [clearRetry, forgetCapped, loadCapped, rememberCapped]);
 
   // Sync now: a pass already in flight began before the caller's latest
   // writes, so one follow-up pass runs after it and its result is returned.
@@ -145,10 +170,18 @@ export function useSyncQueue(userId: string | null): SyncQueue {
     };
   }, [clearRetry, userId]);
 
+  // Signing out (the user goes to none) clears that user's cap flag.
+  const previousUserId = useRef<string | null>(userId);
+  useEffect(() => {
+    const previous = previousUserId.current;
+    previousUserId.current = userId;
+    if (previous !== null && userId === null) void forgetCapped(previous);
+  }, [forgetCapped, userId]);
+
   useEffect(() => {
     isMounted.current = true;
     void loadCapped().then((capped) => {
-      if (isMounted.current) setCappedUserIds([...capped]);
+      if (isMounted.current) setCappedUserIds([...capped.keys()]);
     });
     return () => {
       isMounted.current = false;

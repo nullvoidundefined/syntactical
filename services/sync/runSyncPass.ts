@@ -25,6 +25,8 @@ type SyncPassInput = {
   eventLog: LoggedAnswerEvent[];
   syncCursor: string | null;
   now?: () => Date;
+  // A capped user's probe: post one batch, whole, with no halving.
+  isCapProbe?: boolean;
   request: typeof apiFetch;
   isCurrent(): boolean;
   markSynced(ids: string[]): void | Promise<void>;
@@ -32,6 +34,8 @@ type SyncPassInput = {
   markReleased?(ids: string[]): void | Promise<void>;
   mergeDownloaded(events: AnswerEvent[], cursor: string | null): void | Promise<void>;
 };
+
+const HALVES = 2;
 
 type UploadOutcome = 'cap' | 'failed' | 'ok' | 'stop';
 
@@ -92,7 +96,8 @@ async function holdNamed(input: SyncPassInput, pending: AnswerEvent[], body: unk
 }
 
 // Posts one batch. 'stop' ends the pass at once; 'failed' (a rejected upload)
-// and 'cap' (the stored-event cap) still let the download run.
+// and 'cap' (the stored-event cap, confirmed by a refused 1-event batch, or by
+// any refused batch on a probe) still let the download run.
 async function uploadBatch(input: SyncPassInput, batch: AnswerEvent[]): Promise<UploadOutcome> {
   let pending = batch;
   while (pending.length > 0) {
@@ -108,7 +113,10 @@ async function uploadBatch(input: SyncPassInput, batch: AnswerEvent[]): Promise<
       return 'ok';
     }
     const code = readErrorCode(body);
-    if (status === HTTP_STATUS_UNPROCESSABLE && code === 'SYNC_EVENT_CAP_REACHED') return 'cap';
+    if (status === HTTP_STATUS_UNPROCESSABLE && code === 'SYNC_EVENT_CAP_REACHED') {
+      if (pending.length === 1 || input.isCapProbe) return 'cap';
+      return uploadHalves(input, pending);
+    }
     if (
       (status === HTTP_STATUS_BAD_REQUEST && code === 'INPUT_INVALID_BODY') ||
       (status === HTTP_STATUS_PAYLOAD_TOO_LARGE && code === 'INPUT_PAYLOAD_TOO_LARGE')
@@ -123,6 +131,17 @@ async function uploadBatch(input: SyncPassInput, batch: AnswerEvent[]): Promise<
     // A 422 naming nothing in this batch is not understood: hold nothing and stop.
     if (rest === null) return 'failed';
     pending = rest;
+  }
+  return 'ok';
+}
+
+// Retries a batch the cap refused in two halves; each half that is refused is
+// split again. The first refused 1-event batch ends the upload.
+async function uploadHalves(input: SyncPassInput, pending: AnswerEvent[]): Promise<UploadOutcome> {
+  const middle = Math.ceil(pending.length / HALVES);
+  for (const half of [pending.slice(0, middle), pending.slice(middle)]) {
+    const outcome = await uploadBatch(input, half);
+    if (outcome !== 'ok') return outcome;
   }
   return 'ok';
 }
@@ -152,11 +171,12 @@ async function downloadAll(input: SyncPassInput): Promise<boolean> {
 }
 
 export async function runSyncPass(input: SyncPassInput): Promise<{ isOk: boolean; isUploadCapReached?: true }> {
-  const { now = () => new Date(), userId } = input;
+  const { eventLog: log, isCapProbe, now = () => new Date(), userId } = input;
   try {
-    const { eventLog, releasedIds } = releaseHeldEvents(input.eventLog, userId, now());
+    const { eventLog, releasedIds } = releaseHeldEvents(log, userId, now());
     if (releasedIds.length > 0) await input.markReleased?.(releasedIds);
-    for (const batch of buildUploadBatches(eventLog, userId)) {
+    const batches = buildUploadBatches(eventLog, userId);
+    for (const batch of isCapProbe ? batches.slice(0, 1) : batches) {
       const outcome = await uploadBatch(input, batch);
       if (outcome === 'ok') continue;
       // A rejected upload does not starve the download.

@@ -155,7 +155,8 @@ describe('useSyncQueue at the stored-event cap', () => {
     await seedEventLog(buildOwnedLog(3, userA));
     await mountThenSignIn(userA);
 
-    expect(server.postRequests()).toHaveLength(1);
+    const postsAfterFirstPass = server.postRequests().length;
+    expect(postsAfterFirstPass).toBeGreaterThanOrEqual(1);
     expect(latest.queue?.isUploadCapReached).toBe(true);
     const stored = await readStoredLog();
     for (const id of idsOf(remote)) expect(entryIn(stored, id)).toMatchObject({ isSynced: true, ownerUserId: userA });
@@ -169,7 +170,7 @@ describe('useSyncQueue at the stored-event cap', () => {
     });
     await flush();
 
-    expect(server.postRequests()).toHaveLength(1);
+    expect(server.postRequests()).toHaveLength(postsAfterFirstPass);
     expect(server.getRequests().length).toBeGreaterThan(downloadsAfterFirstPass);
     expect(latest.queue?.isUploadCapReached).toBe(true);
   });
@@ -179,7 +180,8 @@ describe('useSyncQueue at the stored-event cap', () => {
     mockApi.servers.set(userA, server);
     await seedEventLog(buildOwnedLog(3, userA));
     const view = await mountThenSignIn(userA);
-    expect(server.postRequests()).toHaveLength(1);
+    const postsBeforeRemount = server.postRequests().length;
+    expect(latest.queue?.isUploadCapReached).toBe(true);
     const downloadsBeforeRemount = server.getRequests().length;
 
     await view.unmount();
@@ -189,7 +191,7 @@ describe('useSyncQueue at the stored-event cap', () => {
     await recordNewAnswer();
     await bringToForeground();
 
-    expect(server.postRequests()).toHaveLength(1);
+    expect(server.postRequests()).toHaveLength(postsBeforeRemount);
     expect(server.getRequests().length).toBeGreaterThan(downloadsBeforeRemount);
     // Re-read through the declared type: the null reset above narrows `latest.queue` for tsc.
     expect((latest.queue as QueueValue | null)?.isUploadCapReached).toBe(true);
@@ -205,6 +207,7 @@ describe('useSyncQueue at the stored-event cap', () => {
     await seedEventLog([...ownedByA, ...ownedByB]);
     const view = await mountThenSignIn(userA);
     expect(latest.queue?.isUploadCapReached).toBe(true);
+    const postsByA = serverA.postRequests().length;
 
     await signIn(view, userB);
 
@@ -216,7 +219,7 @@ describe('useSyncQueue at the stored-event cap', () => {
     await signIn(view, userA);
     await bringToForeground();
 
-    expect(serverA.postRequests()).toHaveLength(1);
+    expect(serverA.postRequests()).toHaveLength(postsByA);
     expect(latest.queue?.isUploadCapReached).toBe(true);
   });
 });

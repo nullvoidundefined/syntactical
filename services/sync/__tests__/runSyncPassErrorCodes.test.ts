@@ -2,8 +2,8 @@
 // 422 SYNC_INVALID_EVENTS and 422 SYNC_TIMESTAMP_OUT_OF_RANGE hold exactly the
 // named ids, re-post the rest, and continue; 400 INPUT_INVALID_BODY and 413
 // INPUT_PAYLOAD_TOO_LARGE hold the whole batch and continue with later
-// batches; 422 SYNC_EVENT_CAP_REACHED stops uploading, still downloads, and
-// resolves { isOk: false, isUploadCapReached: true }. Each held event records
+// batches; 422 SYNC_EVENT_CAP_REACHED fills the cap in halves, then stops
+// uploading, still downloads, and resolves { isOk: false, isUploadCapReached: true }. Each held event records
 // why (heldReason), and a held batch is never posted on a later pass.
 import { randomUUID } from 'node:crypto';
 
@@ -206,7 +206,7 @@ describe('runSyncPass holds a whole batch the server refuses as a body error', (
 });
 
 describe('runSyncPass stops uploading at the stored-event cap', () => {
-  it('posts no later batch after 422 SYNC_EVENT_CAP_REACHED, still downloads, holds nothing, and resolves isUploadCapReached true', async () => {
+  it('fills the cap from the refused batch in halves, posts no later batch, still downloads, holds nothing, and resolves isUploadCapReached true', async () => {
     const userId = randomUUID();
     const log = buildOwnedLog(600, userId);
     const device = createDevice(userId, log);
@@ -217,12 +217,18 @@ describe('runSyncPass stops uploading at the stored-event cap', () => {
     const result = await runPass(device, server);
 
     expect(result).toEqual({ isOk: false, isUploadCapReached: true });
-    expect(server.postRequests().map(postedIds)).toEqual([idsOf(log.slice(0, 200)), idsOf(log.slice(200, 400))]);
+    const posts = server.postRequests().map(postedIds);
+    expect(posts[0]).toEqual(idsOf(log.slice(0, 200)));
+    expect(posts[posts.length - 1]).toHaveLength(1);
+    const laterBatch = new Set(idsOf(log.slice(400)));
+    expect(posts.flat().some((id) => laterBatch.has(id))).toBe(false);
+    expect(server.storedIds().size).toBe(300);
     expect(server.getRequests()).toHaveLength(1);
     for (const id of idsOf(remote)) expect(device.mergedIds).toContain(id);
     expect(device.heldCalls).toEqual([]);
-    for (const entry of log.slice(200)) {
-      expect(entryOf(device, entry.eventId)).toMatchObject({ isHeld: false, isSynced: false });
+    const stored = server.storedIds();
+    for (const entry of log) {
+      expect(entryOf(device, entry.eventId)).toMatchObject({ isHeld: false, isSynced: stored.has(entry.eventId) });
     }
     for (const entry of log.slice(0, 200)) expect(entryOf(device, entry.eventId)?.isSynced).toBe(true);
   });
