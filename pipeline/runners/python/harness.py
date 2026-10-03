@@ -18,6 +18,8 @@ import time
 OUTPUT_CAP_BYTES = 64 * 1024
 STDERR_CAP_BYTES = 64 * 1024
 MEMORY_LIMIT_BYTES = 200 * 1024 * 1024
+# Exit status of a process killed by SIGKILL (128 + 9), as the OOM killer does.
+SIGKILL_EXIT_STATUS = 137
 VERSION = "Python " + platform.python_version()
 EXCEPTION_MARKER = "\x00oracle-exception:"
 SYNTAX_MARKER = "\x00oracle-syntax-error"
@@ -76,7 +78,7 @@ def classify(child, out, err):
         for line in reversed(stderr_text.splitlines()):
             if line.startswith(EXCEPTION_MARKER):
                 return {"outcome": "exception", "exceptionType": line[len(EXCEPTION_MARKER):]}
-    if child.returncode < 0 or child.returncode == 137:
+    if child.returncode < 0 or child.returncode == SIGKILL_EXIT_STATUS:
         return {"outcome": "resource-limit"}
     if child.returncode != 0:
         return {"outcome": "exception", "exceptionType": "RunnerFailure"}
