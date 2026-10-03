@@ -7,6 +7,8 @@ export PATH="/usr/lib/postgresql/17/bin:$PATH"
 WORK=/tmp/work
 PGDATA_DIR=/pgdata/data
 VALUE_CAP_BYTES=65536
+STARTUP_LIMIT_TICKS=1200
+READ_GRACE_S=3600
 mkdir -p "$WORK"
 
 input=$(cat)
@@ -42,10 +44,18 @@ work() {
 -c unix_socket_directories=/tmp -c shared_buffers=16MB -c max_connections=8 -c fsync=off \
 -c wal_level=minimal -c max_wal_senders=0 -c max_wal_size=32MB -c min_wal_size=2MB" \
         > "$WORK/pgctl.log" 2>&1 || { emit_other exception RunnerFailure; return; }
-    local psql_base=(psql -X -q -At -h /tmp -U runner -d postgres -v ON_ERROR_STOP=1 -v VERBOSITY=sqlstate)
+    local psql_admin=(psql -X -q -At -h /tmp -U runner -d postgres -v ON_ERROR_STOP=1)
     local version
-    version=$("${psql_base[@]}" -c 'SHOW server_version') || { emit_other exception RunnerFailure; return; }
+    version=$("${psql_admin[@]}" -c 'SHOW server_version') || { emit_other exception RunnerFailure; return; }
     VERSION="PostgreSQL ${version%% *}"
+    # The oracle never gets the bootstrap superuser: its own role, in its own database, with no
+    # membership in the pg_*_server_* roles, so it cannot write, read, or run anything on the host.
+    "${psql_admin[@]}" -c 'CREATE ROLE oracle LOGIN NOSUPERUSER NOCREATEROLE NOCREATEDB' \
+        -c 'CREATE DATABASE oracle OWNER oracle' \
+        -c 'REVOKE CONNECT ON DATABASE postgres FROM PUBLIC' > /dev/null 2>&1 \
+        || { emit_other exception RunnerFailure; return; }
+    touch "$WORK/ready"
+    local psql_base=(psql -X -q -At -h /tmp -U oracle -d oracle -v ON_ERROR_STOP=1 -v VERBOSITY=sqlstate)
 
     if [ -s "$WORK/setup.sql" ]; then
         "${psql_base[@]}" -f "$WORK/setup.sql" > /dev/null 2> "$WORK/err.txt" || { report_error; return; }
@@ -67,15 +77,30 @@ work() {
 
 trap 'emit_other timeout; exit 0' TERM
 
-work > "$WORK/result.json" &
+# The verdict travels only over a pipe this process reads, never through a file the server can write.
+exec 4< <(work)
 worker=$!
-( sleep "$timeout_s"; touch "$WORK/timed-out"; kill -9 "$worker" 2> /dev/null ) &
+# The clock starts once the server is ready, so initdb and pg_ctl do not eat the oracle's budget.
+(
+    waited=0
+    until [ -e "$WORK/ready" ] || [ "$waited" -ge "$STARTUP_LIMIT_TICKS" ]; do
+        sleep 0.1
+        waited=$((waited + 1))
+    done
+    sleep "$timeout_s"
+    touch "$WORK/timed-out"
+    kill -9 "$worker" 2> /dev/null
+) &
 timer=$!
-wait "$worker"
+result=""
+IFS= read -r -t "$READ_GRACE_S" result <&4
+if [ -z "$result" ]; then
+    wait "$worker" 2> /dev/null
+fi
 kill "$timer" 2> /dev/null
 
-if [ -s "$WORK/result.json" ]; then
-    cat "$WORK/result.json"
+if [ -n "$result" ]; then
+    printf '%s\n' "$result"
 elif [ -e "$WORK/timed-out" ]; then
     emit_other timeout
 else
