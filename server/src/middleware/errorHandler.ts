@@ -34,7 +34,19 @@ function createErrorHandler(logger: Logger) {
       return;
     }
 
-    logger.error({ err, requestId }, 'unhandled error');
+    // Never log the error object: pg errors carry user data in message and detail.
+    const { code, constraint } = (err ?? {}) as { code?: unknown; constraint?: unknown };
+    const errorName = err instanceof Error ? err.name : typeof err;
+    const requestLog = (res.locals.logger as Logger | undefined) ?? logger.child({ requestId });
+    requestLog.error(
+      {
+        constraint: typeof constraint === 'string' ? constraint : undefined,
+        errorName,
+        pgCode: typeof code === 'string' ? code : undefined,
+        requestId,
+      },
+      'unhandled error',
+    );
     res
       .status(STATUS.INTERNAL_SERVER_ERROR)
       .json(createErrorResponse(ERROR_CODES.SERVER.INTERNAL_ERROR, 'Internal server error', requestId));
