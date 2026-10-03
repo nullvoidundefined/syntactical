@@ -1,6 +1,6 @@
 // The pipeline CLI's command dispatch, with every side effect injected so the real
 // entry path can be tested: `validate`, `draft-oracles [--api]`, or
-// `classify [--api] [--content-root <path>]`.
+// `classify [--api] [--content-root <path>]`, or `enrich [--api] [--content-root <path>]`.
 import { randomUUID } from 'node:crypto';
 
 import { readContentRootFlag } from '../services/classify/readContentRootFlag.js';
@@ -12,6 +12,7 @@ import type { ModelProvider } from '../types/ModelProvider.js';
 import type { classify } from './classify.js';
 import type { draftOracles } from './draftOracles.js';
 import type { draftTaxonomy } from './draftTaxonomy.js';
+import type { enrich } from './enrich.js';
 import type { validateContent } from './validate.js';
 
 export interface CliDeps {
@@ -22,6 +23,7 @@ export interface CliDeps {
     createProvider: (kind: 'api' | 'cli') => ModelProvider;
     draft: typeof draftOracles;
     draftTaxonomy: typeof draftTaxonomy;
+    enrich: typeof enrich;
     pipelineDir: string;
     stderr: (text: string) => void;
     stdout: (text: string) => void;
@@ -31,22 +33,48 @@ export interface CliDeps {
 const FIRST_COMMAND_ARG = 2;
 
 // The content root: `--content-root` beats `SYNTACTICAL_CONTENT_ROOT`, which beats the default.
-async function runClassify(argv: string[], deps: CliDeps): Promise<number> {
-    const { classify: run, contentDir, createProvider, defaultContentRoot, env, pipelineDir, stderr, stdout } = deps;
-    let flagRoot: string | undefined;
+// A flag typo returns null after reporting it, so it never silently falls back.
+function resolveContentRoot(argv: string[], deps: CliDeps): string | null {
+    const { defaultContentRoot, env, stderr } = deps;
     try {
-        flagRoot = readContentRootFlag(argv);
+        return readContentRootFlag(argv) ?? (env.SYNTACTICAL_CONTENT_ROOT || defaultContentRoot);
     } catch (error) {
         stderr(`${(error as Error).message}\n`);
+        return null;
+    }
+}
+
+async function runClassify(argv: string[], deps: CliDeps): Promise<number> {
+    const { classify: run, contentDir, createProvider, pipelineDir, stdout } = deps;
+    const contentRoot = resolveContentRoot(argv, deps);
+    if (contentRoot === null) {
         return 1;
     }
-    const contentRoot = flagRoot ?? (env.SYNTACTICAL_CONTENT_ROOT || defaultContentRoot);
     await run({
         contentDir,
         contentRoot,
         log: (line) => stdout(`${line}\n`),
         newRunId: randomUUID,
         now: () => new Date().toISOString(),
+        pipelineDir,
+        provider: createProvider(pickProviderKind(argv)),
+    });
+    return 0;
+}
+
+async function runEnrich(argv: string[], deps: CliDeps): Promise<number> {
+    const { contentDir, createProvider, enrich: run, pipelineDir, stdout } = deps;
+    const contentRoot = resolveContentRoot(argv, deps);
+    if (contentRoot === null) {
+        return 1;
+    }
+    await run({
+        contentDir,
+        contentRoot,
+        log: (line) => stdout(`${line}\n`),
+        newRunId: randomUUID,
+        now: () => new Date().toISOString(),
+        oracleSource: createOracleSource(`${pipelineDir}oracles`),
         pipelineDir,
         provider: createProvider(pickProviderKind(argv)),
     });
@@ -84,8 +112,11 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
     if (command === 'classify') {
         return runClassify(argv, deps);
     }
+    if (command === 'enrich') {
+        return runEnrich(argv, deps);
+    }
     if (command !== 'validate') {
-        stderr('Usage: pipeline validate | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>]\n');
+        stderr('Usage: pipeline validate | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | enrich [--api] [--content-root <path>]\n');
         return 1;
     }
     const report = await validate({
