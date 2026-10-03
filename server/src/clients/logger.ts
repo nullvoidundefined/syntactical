@@ -19,5 +19,4 @@ function createLogger({ destination }: { destination: LoggerDestination }): Logg
   return pino({ redact: { censor: '[REDACTED]', paths: REDACT_PATHS } }, destination);
 }
 
-export { createLogger, REDACT_PATHS };
-export type { LoggerDestination };
+export { createLogger };

@@ -20,16 +20,17 @@ function createErrorHandler(logger: Logger) {
   return function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction): void {
     const { requestId } = res.locals as { requestId: string };
     const { type } = (err ?? {}) as { type?: string };
+    const { BAD_REQUEST, INTERNAL_SERVER_ERROR, PAYLOAD_TOO_LARGE } = STATUS;
 
     if (type === 'entity.too.large') {
       res
-        .status(STATUS.PAYLOAD_TOO_LARGE)
+        .status(PAYLOAD_TOO_LARGE)
         .json(createErrorResponse(ERROR_CODES.INPUT.PAYLOAD_TOO_LARGE, 'Request body too large', requestId));
       return;
     }
     if (type === 'entity.parse.failed') {
       res
-        .status(STATUS.BAD_REQUEST)
+        .status(BAD_REQUEST)
         .json(createErrorResponse(ERROR_CODES.INPUT.MALFORMED_JSON, 'Malformed JSON body', requestId));
       return;
     }
@@ -48,7 +49,7 @@ function createErrorHandler(logger: Logger) {
       'unhandled error',
     );
     res
-      .status(STATUS.INTERNAL_SERVER_ERROR)
+      .status(INTERNAL_SERVER_ERROR)
       .json(createErrorResponse(ERROR_CODES.SERVER.INTERNAL_ERROR, 'Internal server error', requestId));
   };
 }

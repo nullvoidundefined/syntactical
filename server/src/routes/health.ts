@@ -3,7 +3,9 @@ import type { Logger } from 'pino';
 
 import { HTTP } from '../constants/http.js';
 
-const { STATUS } = HTTP;
+const {
+  STATUS: { OK, SERVICE_UNAVAILABLE },
+} = HTTP;
 
 interface HealthDb {
   query(sql: string): Promise<unknown>;
@@ -13,13 +15,13 @@ function createHealthRouter(db: HealthDb, logger: Logger): Router {
   const router = Router();
 
   router.get('/', (_req, res) => {
-    res.status(STATUS.OK).json({ status: 'ok' });
+    res.status(OK).json({ status: 'ok' });
   });
 
   router.get('/ready', async (_req, res) => {
     try {
       await db.query('SELECT 1');
-      res.status(STATUS.OK).json({ database: 'ok', status: 'ok' });
+      res.status(OK).json({ database: 'ok', status: 'ok' });
     } catch (err) {
       // Log the failure by class and pg code only: a driver message or detail can
       // carry connection strings, role names, or emails, so neither is logged.
@@ -28,7 +30,7 @@ function createHealthRouter(db: HealthDb, logger: Logger): Router {
         { errorName: err instanceof Error ? err.name : 'unknown', pgCode: typeof code === 'string' ? code : undefined },
         'readiness check failed',
       );
-      res.status(STATUS.SERVICE_UNAVAILABLE).json({ database: 'unavailable', status: 'degraded' });
+      res.status(SERVICE_UNAVAILABLE).json({ database: 'unavailable', status: 'degraded' });
     }
   });
 

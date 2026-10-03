@@ -7,6 +7,7 @@ function createRequestLogger(logger: Logger) {
   return function requestLogger(req: Request, res: Response, next: NextFunction): void {
     const { requestId } = res.locals as { requestId: string };
     const requestLog = logger.child({ requestId });
+    const { method, path } = req;
     const startedAt = Date.now();
     res.locals.logger = requestLog;
 
@@ -14,7 +15,7 @@ function createRequestLogger(logger: Logger) {
       requestLog.info(
         {
           durationMs: Date.now() - startedAt,
-          req: { method: req.method, url: req.path },
+          req: { method, url: path },
           res: { statusCode: res.statusCode },
         },
         'request completed',

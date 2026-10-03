@@ -14,11 +14,11 @@ type Env = z.infer<typeof envSchema>;
 
 // Fails closed. The error names each offending variable and never includes a value.
 function loadEnv(source: NodeJS.ProcessEnv): Env {
-  const result = envSchema.safeParse(source);
-  if (result.success) {
-    return result.data;
+  const { data, error, success } = envSchema.safeParse(source);
+  if (success) {
+    return data;
   }
-  const names = [...new Set(result.error.issues.map((issue) => issue.path.join('.')))];
+  const names = [...new Set(error.issues.map((issue) => issue.path.join('.')))];
   throw new Error(`Invalid environment: ${names.join(', ')}`);
 }
 
