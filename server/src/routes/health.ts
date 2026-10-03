@@ -19,6 +19,7 @@ function createHealthRouter(db: HealthDb, logger: Logger): Router {
   });
 
   router.get('/ready', async (_req, res) => {
+    const requestLog = (res.locals.logger as Logger | undefined) ?? logger;
     try {
       await db.query('SELECT 1');
       res.status(OK).json({ database: 'ok', status: 'ok' });
@@ -26,7 +27,7 @@ function createHealthRouter(db: HealthDb, logger: Logger): Router {
       // Log the failure by class and pg code only: a driver message or detail can
       // carry connection strings, role names, or emails, so neither is logged.
       const { code } = (err ?? {}) as { code?: unknown };
-      logger.error(
+      requestLog.error(
         { errorName: err instanceof Error ? err.name : 'unknown', pgCode: typeof code === 'string' ? code : undefined },
         'readiness check failed',
       );

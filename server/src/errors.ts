@@ -1,6 +1,7 @@
 // Machine-readable error codes; clients switch on these, never on messages.
 const ERROR_CODES = {
   INPUT: {
+    CLIENT_ERROR: 'INPUT_CLIENT_ERROR',
     MALFORMED_JSON: 'INPUT_MALFORMED_JSON',
     PAYLOAD_TOO_LARGE: 'INPUT_PAYLOAD_TOO_LARGE',
   },

@@ -1,6 +1,8 @@
 import { pino } from 'pino';
 import type { Logger } from 'pino';
 
+import { redactDeep } from './redactDeep.js';
+
 // Paths whose values never reach a log line: auth headers, cookies, and one-level email/code/token fields.
 const REDACT_PATHS = [
   'req.headers.cookie',
@@ -16,7 +18,7 @@ interface LoggerDestination {
 }
 
 function createLogger({ destination }: { destination: LoggerDestination }): Logger {
-  return pino({ redact: { censor: '[REDACTED]', paths: REDACT_PATHS } }, destination);
+  return pino({ formatters: { log: redactDeep }, redact: { censor: '[REDACTED]', paths: REDACT_PATHS } }, destination);
 }
 
 export { createLogger };

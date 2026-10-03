@@ -26,6 +26,7 @@ function createApp(deps: AppDeps) {
   const { allowedOrigins = [], db, extraRoutes, logger = createLogger({ destination: process.stdout }) } = deps;
   const app = express();
 
+  app.set('trust proxy', 1);
   app.use(helmet());
   app.use(requestId);
   app.use(cors(createCorsOptions(allowedOrigins)));
