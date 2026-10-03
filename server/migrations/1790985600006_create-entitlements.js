@@ -18,7 +18,7 @@ export const up = (pgm) => {
         { constraints: { unique: [['user_id', 'product_id']] } },
     );
     pgm.sql(`
-        CREATE TRIGGER set_updated_at BEFORE UPDATE ON entitlements
+        CREATE TRIGGER set_entitlements_updated_at BEFORE UPDATE ON entitlements
         FOR EACH ROW EXECUTE FUNCTION set_updated_at();
     `);
 };

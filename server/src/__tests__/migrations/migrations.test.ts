@@ -400,4 +400,33 @@ describe.skipIf(SKIP_DATABASE_TESTS)('migrations', () => {
         },
         MIGRATION_TIMEOUT_MS,
     );
+
+    it(
+        'stamp entitlements.updated_at on update through the set_entitlements_updated_at trigger',
+        async () => {
+            migrateUp();
+            const { pool } = scratch;
+            const learner = await insertUser(pool);
+            const { rows: triggers } = await pool.query(
+                `SELECT tgname FROM pg_trigger
+                 WHERE tgrelid = 'entitlements'::regclass AND NOT tgisinternal`,
+            );
+            expect(triggers).toEqual([{ tgname: 'set_entitlements_updated_at' }]);
+
+            const { rows: inserted } = await pool.query<{ id: string }>(
+                `INSERT INTO entitlements (user_id, product_id, status, source, updated_at)
+                 VALUES ($1, 'syntactical.python.medium', 'granted', 'app_store', '2026-01-01T00:00:00Z')
+                 RETURNING id`,
+                [learner],
+            );
+            const [{ id }] = inserted;
+            const { rows: updated } = await pool.query<{ is_stamped: boolean }>(
+                `UPDATE entitlements SET status = 'revoked' WHERE id = $1
+                 RETURNING updated_at > '2026-01-01T00:00:00Z' AS is_stamped`,
+                [id],
+            );
+            expect(updated).toEqual([{ is_stamped: true }]);
+        },
+        MIGRATION_TIMEOUT_MS,
+    );
 });
