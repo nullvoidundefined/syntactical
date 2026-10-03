@@ -10,18 +10,21 @@ import type { Logger } from 'pino';
 import { createLogger } from './clients/logger.js';
 import { createCorsOptions } from './config/cors.js';
 import { HTTP } from './constants/http.js';
+import { SYNC } from './constants/sync.js';
 import { createCsrfGuard } from './middleware/csrfGuard.js';
 import { dropForwardedHeaders } from './middleware/dropForwardedHeaders.js';
 import { createErrorHandler, createNotFoundHandler } from './middleware/errorHandler.js';
 import { requestId } from './middleware/requestId.js';
 import { createRequestLogger } from './middleware/requestLogger.js';
 import { requireJson } from './middleware/requireJson.js';
+import { createAnswerEventsRouter } from './routes/answerEvents.js';
 import { createAuthCodesRouter } from './routes/authCodes.js';
 import type { AuthDeps, ResolvedAuthDeps } from './routes/authDeps.js';
 import { createAuthSessionsRouter } from './routes/authSessions.js';
 import { createHealthRouter } from './routes/health.js';
 import type { HealthDb } from './routes/health.js';
 import { createSignOutRouter } from './routes/signOut.js';
+import type { SyncDeps } from './routes/syncDeps.js';
 
 interface AppDeps {
   allowedOrigins?: string[];
@@ -30,11 +33,13 @@ interface AppDeps {
   db: HealthDb;
   extraRoutes?: (router: Router) => void;
   logger?: Logger;
+  // The /v1 answer event routes; omitted, they are not mounted.
+  sync?: SyncDeps;
 }
 
 // Builds the Express app without listening or reading env; callers inject everything.
 function createApp(deps: AppDeps) {
-  const { allowedOrigins = [], auth, db, extraRoutes, logger = createLogger({ destination: process.stdout }) } = deps;
+  const { allowedOrigins = [], auth, db, extraRoutes, logger = createLogger({ destination: process.stdout }), sync } = deps;
   const app = express();
 
   app.set('trust proxy', 1);
@@ -44,7 +49,17 @@ function createApp(deps: AppDeps) {
   app.use(cors(createCorsOptions(allowedOrigins)));
   app.use(createRequestLogger(logger));
   app.use(requireJson);
-  app.use(express.json({ limit: HTTP.JSON_BODY_SIZE_LIMIT }));
+  // The upload route reads its larger body in its own router, after authentication; only
+  // when the sync routes are mounted does the global parser skip it.
+  const defaultJson = express.json({ limit: HTTP.JSON_BODY_SIZE_LIMIT });
+  app.use((req, res, next) => {
+    const { method, path } = req;
+    if (sync && method === 'POST' && path === SYNC.UPLOAD_PATH) {
+      next();
+      return;
+    }
+    defaultJson(req, res, next);
+  });
   app.use(cookieParser());
   app.use(createCsrfGuard(allowedOrigins));
 
@@ -59,6 +74,11 @@ function createApp(deps: AppDeps) {
       createAuthSessionsRouter(resolved),
       createSignOutRouter(resolved),
     );
+  }
+
+  if (sync) {
+    const { now = () => new Date() } = sync;
+    app.use('/v1', createAnswerEventsRouter({ ...sync, now }));
   }
 
   if (extraRoutes) {
