@@ -40,7 +40,7 @@ type QuestionCardProps = {
 };
 
 function QuestionCard({ answerState, difficultyLabel, languageLabel, onAnswer, onOpenQuery, question }: QuestionCardProps) {
-  const labels = { difficultyLabel, languageLabel, onOpenQuery };
+  const labels = { difficultyLabel, languageLabel, onOpenQuery, provenance: question.provenance };
   return question.type === 'mc' ? (
     <QuestionCardFrame {...labels} type="mc">
       <MultipleChoiceCard question={question} {...answerState} onSelect={onAnswer} />

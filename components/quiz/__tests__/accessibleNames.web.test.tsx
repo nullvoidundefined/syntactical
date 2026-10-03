@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { Text } from 'react-native';
 
+import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/contentFixtures';
 import { QueryDrawer } from '../../query/QueryDrawer';
 import { CodeBlock } from '../CodeBlock';
 import { ProgressBar } from '../ProgressBar';
@@ -35,7 +36,7 @@ describe('quiz screens on the web expose accessible names and headings', () => {
 
   it('gives a question card a level-one heading naming the language, difficulty, and type', () => {
     render(
-      <QuestionCardFrame languageLabel="Python" difficultyLabel="Easy" type="mc" onOpenQuery={jest.fn()}>
+      <QuestionCardFrame languageLabel="Python" difficultyLabel="Easy" type="mc" onOpenQuery={jest.fn()} provenance={TEST_PROVENANCE}>
         <Text>body</Text>
       </QuestionCardFrame>,
     );
