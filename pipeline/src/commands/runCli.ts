@@ -1,6 +1,6 @@
 // The pipeline CLI's command dispatch, with every side effect injected so the real
 // entry path can be tested: `validate`, `draft-oracles [--api]`, or
-// `classify` or `gap-fill [--api] [--content-root <path>]`, or `review [--content-root <path>]`.
+// `classify`, `gap-fill`, or `enrich [--api] [--content-root <path>]`, or `review [--content-root <path>]`.
 import { randomUUID } from 'node:crypto';
 
 import { readContentRootFlag } from '../services/classify/readContentRootFlag.js';
@@ -13,6 +13,7 @@ import type { ModelProvider } from '../types/ModelProvider.js';
 import type { classify } from './classify.js';
 import type { draftOracles } from './draftOracles.js';
 import type { draftTaxonomy } from './draftTaxonomy.js';
+import type { enrich } from './enrich.js';
 import type { gapFill } from './gapFill.js';
 import type { review } from './review.js';
 import type { validateContent } from './validate.js';
@@ -26,6 +27,7 @@ export interface CliDeps {
     draft: typeof draftOracles;
     gapFill: typeof gapFill;
     draftTaxonomy: typeof draftTaxonomy;
+    enrich: typeof enrich;
     pipelineDir: string;
     review: typeof review;
     stderr: (text: string) => void;
@@ -88,6 +90,25 @@ async function runReview(argv: string[], deps: CliDeps): Promise<number> {
     return result.problems > 0 ? 1 : 0;
 }
 
+async function runEnrich(argv: string[], deps: CliDeps): Promise<number> {
+    const { contentDir, createProvider, enrich: run, pipelineDir, stdout } = deps;
+    const contentRoot = resolveContentRoot(argv, deps);
+    if (contentRoot === undefined) {
+        return 1;
+    }
+    await run({
+        contentDir,
+        contentRoot,
+        log: (line) => stdout(`${line}\n`),
+        newRunId: randomUUID,
+        now: () => new Date().toISOString(),
+        oracleSource: createOracleSource(`${pipelineDir}oracles`),
+        pipelineDir,
+        provider: createProvider(pickProviderKind(argv)),
+    });
+    return 0;
+}
+
 export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
     const { contentDir, createProvider, draft, draftTaxonomy: draftTaxonomyList, pipelineDir, stderr, stdout, validate } =
         deps;
@@ -119,12 +140,15 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
     if (command === 'classify' || command === 'gap-fill') {
         return runContentRootCommand(command, argv, deps);
     }
+    if (command === 'enrich') {
+        return runEnrich(argv, deps);
+    }
     if (command === 'review') {
         return runReview(argv, deps);
     }
     if (command !== 'validate') {
         stderr(
-            'Usage: pipeline validate | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | gap-fill [--api] [--content-root <path>] | review [--content-root <path>]\n',
+            'Usage: pipeline validate | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | gap-fill [--api] [--content-root <path>] | enrich [--api] [--content-root <path>] | review [--content-root <path>]\n',
         );
         return 1;
     }

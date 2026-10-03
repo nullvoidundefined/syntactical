@@ -570,11 +570,11 @@ it.each([
 
 **Risk:** standard. **Behaviors:** B-20, B-21.
 
-**Files:** Create `pipeline/src/commands/enrich.ts`, `pipeline/src/services/writeRationales.ts`, `pipeline/src/services/judgeRationale.ts`, `pipeline/prompts/{writeRationales,judgeRationale}.md`; tests under `pipeline/src/__tests__/services/`.
+**Files:** Create `pipeline/src/commands/enrich.ts`, `pipeline/src/services/enrich/writeRationales.ts`, `pipeline/src/services/enrich/judgeRationale.ts`, `pipeline/prompts/{writeRationales,judgeRationale}.md`; tests under `pipeline/src/__tests__/services/enrich/` and `pipeline/src/__tests__/commands/enrich.test.ts`.
 
 **Interfaces:** `writeRationales(question, observed: string, taxonomy, provider): Promise<{ choiceIndex: number; rationale: string; misconceptionId: string }[]>`; `judgeRationale(question, observed, rationale, provider): Promise<{ isConsistent: boolean; reason: string }>`.
 
-- [ ] **Step 1:** tests with fakes: one rationale per wrong choice, none for the correct one; over 280 characters fails the zod schema; a `misconceptionId` outside the taxonomy fails the schema enum; `isConsistent: false` drops that rationale and reports `rationale-contradicts-oracle`; the prompt contains the observed output; two tagging runs report `agreement.misconception`.
+- [ ] **Step 1:** tests with fakes: one rationale per wrong choice, none for the correct one; over 280 characters fails the zod schema; a `misconceptionId` outside the taxonomy fails the schema enum; `isConsistent: false` drops that rationale and reports `rationale-contradicts-oracle`; the prompt contains the observed output; two tagging runs report `agreement.enrich` (the quality build accepts only stage names as agreement keys).
 - [ ] **Steps 2–4:** implement; pass. **Step 5:** commit `feat(pipeline): per-choice rationales and misconception tags, judged against oracle output`.
 
 ### Task 2.5: review stage
