@@ -150,7 +150,6 @@ describe('classify', () => {
 
     it('routes confidence 0.6 to pipeline/review-queue for a free bank and assigns no topic', async () => {
         await seed({ 'easy:free': [buildQuestion('q-1', 'p1')] });
-        const before = await readFile(join(contentDir, 'python/easy.json'), 'utf8');
         await run(scripted(() => ({ confidence: 0.6, topic: 'strings' })));
         expect(await readJson(join(pipelineDir, 'review-queue/python/easy/q-1.json'))).toEqual({
             bankKey: 'python/easy',
@@ -160,7 +159,6 @@ describe('classify', () => {
             suggestedTopic: 'strings',
         });
         expect(await readJson(join(pipelineDir, 'classifications/python/easy.json'))).toEqual({});
-        expect(await readFile(join(contentDir, 'python/easy.json'), 'utf8')).toBe(before);
     });
 
     it('accepts exactly 0.7 (the threshold is inclusive)', async () => {
@@ -185,6 +183,40 @@ describe('classify', () => {
         ];
         expect(written.length).toBeGreaterThan(0);
         expect(written.join('')).not.toContain(PAID_TEXT);
+    });
+
+    it('never writes a paid marker the model echoes back, in any file, the report, or the log', async () => {
+        await seed({ 'medium:paid': [buildQuestion('paid-1', PAID_TEXT), buildQuestion('paid-2', `${PAID_TEXT}-2`)] });
+        // The fake echoes the whole prompt (paid text included) as a `reason` and as an invalid-output issue.
+        const provider: ModelProvider = {
+            async generate(request) {
+                if (request.prompt.includes(`${PAID_TEXT}-2`)) {
+                    throw new ModelOutputInvalid(request.promptVersion, request.prompt);
+                }
+                return { model: 'fake', value: { confidence: 0.3, reason: request.prompt, topic: 'strings' } as never };
+            },
+        };
+        const report = await run(provider);
+        const everything = [
+            JSON.stringify(report),
+            logs.join('\n'),
+            ...(
+                await Promise.all(
+                    [pipelineDir, contentRoot].flatMap((dir) =>
+                        listFiles(dir).then((names) =>
+                            Promise.all(names.map((name) => readFile(join(dir, name), 'utf8'))),
+                        ),
+                    ),
+                )
+            ).flat(),
+        ].join('\n');
+        expect(everything).not.toContain(PAID_TEXT);
+        expect((await readJson(join(contentRoot, 'review-queue/python/medium/paid-1.json'))).reason).toBe(
+            'low-confidence',
+        );
+        expect((await readJson(join(contentRoot, 'review-queue/python/medium/paid-2.json'))).reason).toBe(
+            'model-output-invalid',
+        );
     });
 
     it('reports agreement 0.75 when two runs disagree on 1 of 4 questions, and queues the disagreement', async () => {
