@@ -16,10 +16,10 @@ const ALLOWED_ORIGIN = 'https://syntactical.dev';
 const SESSION_COOKIE = 'syntactical_session=opaque-session-value';
 const CSRF_CODE = 'CSRF_HEADER_MISSING';
 
-function createProbeApp() {
+function createProbeApp(allowedOrigins = [ALLOWED_ORIGIN]) {
   const db = { query: async (_sql: string): Promise<unknown> => ({ rows: [] }) };
   return createApp({
-    allowedOrigins: [ALLOWED_ORIGIN],
+    allowedOrigins,
     db,
     extraRoutes(router: Router) {
       router.post(PROBE_ROUTE, (_req, res) => {
@@ -30,8 +30,8 @@ function createProbeApp() {
   });
 }
 
-function cookiePost(origin?: string) {
-  const pending = request(createProbeApp())
+function cookiePost(origin?: string, allowedOrigins?: string[]) {
+  const pending = request(createProbeApp(allowedOrigins))
     .post(PROBE_ROUTE)
     .set('Cookie', SESSION_COOKIE)
     .set('X-Requested-With', 'XMLHttpRequest');
@@ -61,5 +61,19 @@ describe('csrfGuard origin check', () => {
       .send({});
 
     expect([allowed.status, noOrigin.status, bearer.status]).toEqual([HTTP_OK, HTTP_OK, HTTP_OK]);
+  });
+
+  it('never treats a listed null or * as an allowed Origin', async () => {
+    const allowList = [ALLOWED_ORIGIN, 'null', '*'];
+
+    const nullOrigin = await cookiePost('null', allowList);
+    const wildcardOrigin = await cookiePost('*', allowList);
+    const allowed = await cookiePost(ALLOWED_ORIGIN, allowList);
+
+    for (const response of [nullOrigin, wildcardOrigin]) {
+      expect(response.status).toBe(HTTP_FORBIDDEN);
+      expect(response.body.error.code).toBe(CSRF_CODE);
+    }
+    expect(allowed.status).toBe(HTTP_OK);
   });
 });
