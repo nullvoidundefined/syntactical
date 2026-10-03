@@ -1,39 +1,35 @@
 // Rebuilds a user's daily_progress rows from every stored answer event, inside the caller's
 // transaction, with the shared @syntactical/progress functions (no XP or due-review logic
 // lives here). Returns the totals the upload response carries.
-import { computeDailyProgress, computeDayStreak, findDueReviewEventIds, toLocalDate } from '@syntactical/progress';
+import { computeDailyProgress, computeDayStreak, computeXp, findDueReviewEventIds, toLocalDate } from '@syntactical/progress';
 import type { AnswerEvent, DailyProgress, GoalChange } from '@syntactical/progress';
 import type pg from 'pg';
 
 import { PROGRESS_DEFAULTS } from '../constants/progressDefaults.js';
+import type { AnswerEventRow } from '../types/AnswerEventRow.js';
 import type { ProgressTotals } from '../types/ProgressTotals.js';
 
-interface EventRow {
-  answered_at: Date;
-  bank_key: string;
-  choice_index: number;
-  event_id: string;
-  is_correct: boolean;
-  question_id: string;
-  round_kind: AnswerEvent['roundKind'];
-}
+import { toAnswerEvent } from './toAnswerEvent.js';
 
 async function loadEvents(client: pg.PoolClient, userId: string): Promise<AnswerEvent[]> {
-  const { rows } = await client.query<EventRow>(
-    `SELECT event_id, bank_key, question_id, choice_index, answered_at, round_kind, is_correct
+  const { rows } = await client.query<AnswerEventRow>(
+    `SELECT event_id, bank_key, question_id, choice_index, answered_at, round_kind, is_correct, xp
      FROM answer_events WHERE user_id = $1 ORDER BY answered_at, event_id`,
     [userId],
   );
-  return rows.map(
-    ({ answered_at, bank_key, choice_index, event_id, is_correct, question_id, round_kind }) => ({
-      answeredAt: answered_at.toISOString(),
-      bankKey: bank_key,
-      choiceIndex: choice_index,
-      eventId: event_id,
-      isCorrect: is_correct,
-      questionId: question_id,
-      roundKind: round_kind,
-    }),
+  return rows.map(toAnswerEvent);
+}
+
+// Stores every event's awarded XP so the incremental upload path sums the same numbers.
+async function storeEventXp(client: pg.PoolClient, userId: string, events: AnswerEvent[], dueIds: Set<string>): Promise<void> {
+  if (events.length === 0) {
+    return;
+  }
+  await client.query(
+    `UPDATE answer_events AS e SET xp = t.xp
+     FROM unnest($2::uuid[], $3::int[]) AS t(event_id, xp)
+     WHERE e.user_id = $1 AND e.event_id = t.event_id AND e.xp <> t.xp`,
+    [userId, events.map((event) => event.eventId), events.map((event) => computeXp(event, dueIds.has(event.eventId)))],
   );
 }
 
@@ -78,6 +74,7 @@ async function recomputeDailyProgress(
   const localDates = events.map((event) => toLocalDate(event.answeredAt, zone));
   const goals = await loadGoalHistory(client, userId, [today, ...localDates].sort()[0]);
   const dueIds = findDueReviewEventIds(events);
+  await storeEventXp(client, userId, events, dueIds);
   const dailyProgress = computeDailyProgress(events, zone, goals, (event) => dueIds.has(event.eventId));
   await replaceDailyProgress(client, userId, dailyProgress);
   const xpTotal = dailyProgress.reduce((sum, day) => sum + day.xp, 0);

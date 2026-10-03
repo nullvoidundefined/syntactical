@@ -2,7 +2,7 @@
 // write; then, in one transaction, the user's row is locked without waiting (a concurrent upload for the user
 // is answered busy), the timestamps are bounded, the per-user stored-event cap is enforced (a batch
 // that would exceed it is refused whole; already-stored ids do not count), the events are inserted once by (user_id, event_id)
-// with is_correct derived from the answer key, and daily progress is recomputed.
+// with is_correct derived from the answer key, and daily progress is updated for the affected questions and dates only.
 import type { Database } from '../clients/database.js';
 import { withBoundedTransaction } from '../clients/withBoundedTransaction.js';
 import { SYNC } from '../constants/sync.js';
@@ -11,7 +11,8 @@ import type { AnswerKey } from '../types/AnswerKey.js';
 import type { IngestResult } from '../types/IngestResult.js';
 
 import { lockUserRow } from './lockUserRow.js';
-import { recomputeDailyProgress } from './recomputeDailyProgress.js';
+import { readStoredProgress } from './readStoredProgress.js';
+import { updateDailyProgressForQuestions } from './updateDailyProgressForQuestions.js';
 
 const MINUTE_MS = 60_000;
 const DAY_MS = 86_400_000;
@@ -70,13 +71,14 @@ async function ingestAnswerEvents(
     if (Number(stored[0]?.count ?? 0) + newCount > MAX_EVENTS_PER_USER) {
       return { kind: 'event-cap-reached' };
     }
-    const { rowCount } = await client.query(
+    const { rows: insertedRows } = await client.query<{ event_id: string; question_id: string }>(
       `INSERT INTO answer_events
          (user_id, event_id, bank_key, question_id, choice_index, answered_at, round_kind, is_correct, received_at)
        SELECT $1, event_id, bank_key, question_id, choice_index, answered_at, round_kind, is_correct, clock_timestamp()
        FROM unnest($2::uuid[], $3::text[], $4::text[], $5::int[], $6::timestamptz[], $7::text[], $8::boolean[])
          AS t(event_id, bank_key, question_id, choice_index, answered_at, round_kind, is_correct)
-       ON CONFLICT (user_id, event_id) DO NOTHING`,
+       ON CONFLICT (user_id, event_id) DO NOTHING
+       RETURNING event_id, question_id`,
       [
         userId,
         ids(events),
@@ -88,8 +90,17 @@ async function ingestAnswerEvents(
         events.map(({ bankKey, choiceIndex, questionId }) => choiceIndex === answerKey.get(bankKey)?.get(questionId)?.answerIndex),
       ],
     );
-    const totals = await recomputeDailyProgress(client, userId, user.timezone, now);
-    return { kind: 'stored', totals: { ...totals, insertedCount: rowCount ?? 0 } };
+    if (insertedRows.length > 0) {
+      await updateDailyProgressForQuestions(
+        client,
+        userId,
+        user.timezone,
+        [...new Set(insertedRows.map((row) => row.question_id))],
+        insertedRows.map((row) => row.event_id),
+      );
+    }
+    const totals = await readStoredProgress(client, userId, user.timezone, now);
+    return { kind: 'stored', totals: { ...totals, insertedCount: insertedRows.length } };
   });
 }
 
