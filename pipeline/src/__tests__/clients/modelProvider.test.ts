@@ -7,8 +7,9 @@ import { tmpdir } from 'node:os';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import { buildCliEnv, type ExecOptions } from '../../clients/claudeCliProvider.js';
+import { buildCliEnv } from '../../clients/claudeCliProvider.js';
 import { createModelProvider } from '../../clients/modelProvider.js';
+import type { ExecOptions } from '../../types/ExecFn.js';
 import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
 
 const schema = z.object({ topic: z.string() });
@@ -102,7 +103,7 @@ describe('ModelProvider', () => {
         });
     });
 
-    it('runs the CLI with no tools, no MCP servers, and the system prompt bound to its flag', async () => {
+    it('runs the CLI with no tools, no MCP servers, no settings files, and the system prompt bound to its flag', async () => {
         const exec = vi.fn().mockResolvedValue(cliAnswer('{"topic":"a"}'));
         const system = 'sys; rm -rf / "quoted" $(whoami)';
         await createModelProvider('cli', { exec }).generate({ ...REQUEST, system });
@@ -114,6 +115,8 @@ describe('ModelProvider', () => {
             '--tools',
             '',
             '--strict-mcp-config',
+            '--setting-sources',
+            '',
             '--no-session-persistence',
             `--system-prompt=${system}`,
         ]);

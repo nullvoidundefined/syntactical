@@ -3,7 +3,7 @@ import type { ModelProvider } from '../types/ModelProvider.js';
 import { createAnthropicApiProvider } from './anthropicApiProvider.js';
 import type { MessagesClient } from './anthropicApiProvider.js';
 import { createClaudeCliProvider } from './claudeCliProvider.js';
-import type { ExecFn } from './claudeCliProvider.js';
+import type { ExecFn } from '../types/ExecFn.js';
 
 export interface ModelProviderDeps {
     exec?: ExecFn;
