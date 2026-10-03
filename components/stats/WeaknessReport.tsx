@@ -12,6 +12,7 @@ import type { Manifest } from '@syntactical/content-schema';
 import { buildWeaknessReport } from '../../services/progress/buildWeaknessReport';
 import type { WeakSpot } from '../../services/progress/types/WeaknessReport';
 import { useQuizStats } from '../../state/StatsProvider';
+import { useCoarseNow } from '../../state/useCoarseNow';
 import { useLanguageManifest } from '../../state/useLanguageManifest';
 import { useReviewQueue } from '../../state/useReviewQueue';
 
@@ -43,9 +44,10 @@ export function WeaknessReport() {
   const { eventLog } = useQuizStats();
   const { questionIndex } = useReviewQueue();
   const manifest = useLanguageManifest();
+  const now = useCoarseNow();
   const { remaining, spots, status } = useMemo(
-    () => buildWeaknessReport(eventLog, questionIndex, buildDescriptions(manifest), new Date()),
-    [eventLog, manifest, questionIndex],
+    () => buildWeaknessReport(eventLog, questionIndex, buildDescriptions(manifest), new Date(now)),
+    [eventLog, manifest, now, questionIndex],
   );
   return (
     <View role="region" aria-label="Weak spots this week" className="mt-6">
