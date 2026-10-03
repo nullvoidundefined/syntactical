@@ -1,7 +1,10 @@
 // The Python pre-filter runs the real host python3 checker (no Docker). It is defense in
 // depth in front of the Docker runner sandbox, which is the enforced control.
+import { fileURLToPath } from 'node:url';
+
 import { describe, expect, it } from 'vitest';
 
+import { createSpawnExec } from '../../clients/createSpawnExec.js';
 import { checkPythonOracle } from '../../services/checkPythonOracle.js';
 
 const REFUSED: string[] = [
@@ -26,6 +29,33 @@ const REFUSED: string[] = [
     'import json\nprint(json._default_encoder)',
     'import collections\nprint(collections._sys)',
     'import collections.abc as _c',
+    'import collections.abc\nprint(1)',
+    // Module attributes outside each module's allow-list, and chains through a module
+    "import enum\nb = enum.bltns\nc = b.compile('import os', 'x', 'exec')\nb.type(lambda: 0)(c, {})()",
+    'from enum import bltns',
+    'import re\nprint(re.enum.bltns)',
+    'from re import enum',
+    'import enum\nprint(enum.Enum)',
+    'from typing import List',
+    'import typing\nprint(typing.List)',
+    'import dataclasses\nprint(dataclasses.field)',
+    'import math\nprint(math.os)',
+    'import math as m\nprint(m.sys)',
+    'import json\nprint(json.JSONDecoder)',
+    'import json\nprint(json.decoder)',
+    'import functools\nprint(functools.update_wrapper)',
+    'import string\nprint(string.Template)',
+    'import re\nprint(re.sre_compile)',
+    'from math import sqrt as _s',
+    'import math\nx = math\nprint(x.sqrt(4))',
+    'import math\nprint(math)',
+    'import math\nprint(list(map(math.sqrt, [1])), [math][0].sqrt(4))',
+    'import math\nmath = 1',
+    // Attribute names that are banned as bare names are banned as attributes too
+    'x = 1\nprint(x.type)',
+    'import re\nprint(re.compile("a").compile("b"))',
+    'print(print.object)',
+    'x = 1\nprint(x.hasattr, x.dir, x.super)',
     'import json.tool',
     'import pickle',
     'if True: import os',
@@ -106,7 +136,12 @@ const ACCEPTED: string[] = [
     'import json\nprint(json.dumps({"a": [1, 2]}, sort_keys=True))',
     'import re\nprint(re.sub(r"\\d", "#", "a1b2"), re.compile("a+").match("aa").group())',
     'import math\nprint(math.floor(-1.5), math.sqrt(16))',
-    'import collections.abc\nfrom collections import Counter, OrderedDict\nprint(Counter("aab"))',
+    'from collections import Counter, OrderedDict, defaultdict, deque\nprint(Counter("aab"), deque([1]))',
+    'import decimal\ndecimal.getcontext().prec = 5\nprint(decimal.Decimal(1) / decimal.Decimal(3), decimal.ROUND_HALF_UP)',
+    'import math as m\nprint(m.sqrt(16), m.pi, m.floor(2.5))',
+    'import datetime\nprint(datetime.datetime(2020, 1, 1).year, datetime.timedelta(days=1))',
+    'import string\nprint(string.ascii_lowercase[:3], string.digits)',
+    'import statistics, operator\nprint(statistics.mean([1, 2]), operator.add(1, 2))',
     'from itertools import chain\nimport functools\nprint(list(chain([1], [2])), functools.reduce(lambda a, b: a + b, [1, 2, 3]))',
     'from functools import reduce\nprint(reduce(lambda a, b: a + b, map(lambda x: x * 2, filter(lambda x: x > 1, [1, 2, 3]))))',
     'x = 5\nprint(f"{x} and {x!r:>5} and {[1, 2][0]} and {x + 1:03d}")',
@@ -136,6 +171,29 @@ describe('checkPythonOracle (real python3; defense in depth, the runner sandbox 
         expect(await checkPythonOracle('import json, pickle')).toBe('import pickle');
         expect(await checkPythonOracle('\uFF45\uFF58\uFF45\uFF43("1")')).toBe('name exec');
         expect(await checkPythonOracle('print(random._os)')).toBe('attribute _os');
+    });
+
+    it('refuses every banned name as an attribute, not only as a bare name', async () => {
+        const exec = createSpawnExec({ maxStdoutBytes: 65_536, timeoutMs: 10_000 });
+        const script = fileURLToPath(new URL('../../../checkers/python_oracle_check.py', import.meta.url));
+        const run = (args: string[], input: string) =>
+            exec('python3', ['-I', '-B', script, ...args], { cwd: process.cwd(), env: { PATH: process.env.PATH ?? '' }, input });
+        const banned = JSON.parse((await run(['--banned'], '')).stdout) as string[];
+        expect(banned).toEqual(expect.arrayContaining(['type', 'compile', 'object', 'hasattr', 'dir', 'super', 'bltns', 'exec', 'format']));
+        const verdicts = await Promise.all(banned.map((name) => checkPythonOracle(`x = 1\nprint(x.${name})`)));
+        const accepted = banned.filter((_name, index) => verdicts[index] === null);
+        expect(accepted).toEqual([]);
+    });
+
+    it('reports the Python version the checker ran under', async () => {
+        const exec = createSpawnExec({ maxStdoutBytes: 4096, timeoutMs: 10_000 });
+        const script = fileURLToPath(new URL('../../../checkers/python_oracle_check.py', import.meta.url));
+        const { stdout } = await exec('python3', ['-I', '-B', script], {
+            cwd: process.cwd(),
+            env: { PATH: process.env.PATH ?? '' },
+            input: 'print(1)',
+        });
+        expect((JSON.parse(stdout) as { python: string }).python).toMatch(/^3\.\d+\.\d+/);
     });
 
     it('fails closed when the checker cannot run', async () => {

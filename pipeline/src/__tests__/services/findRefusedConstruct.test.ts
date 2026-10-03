@@ -125,7 +125,7 @@ const ACCEPTED: Form[] = [
     ['python', "from decimal import Decimal\nprint(Decimal('0.1') + Decimal('0.2'))"],
     ['python', 'from decimal import Decimal; print(Decimal("0.1") + Decimal("0.2"))'],
     ['python', 'import math\nprint(math.floor(-1.5))'],
-    ['python', 'import collections.abc\nfrom collections import Counter\nprint(Counter("aab"))'],
+    ['python', 'from collections import Counter\nprint(Counter("aab"))'],
     ['python', 'from itertools import chain\nimport functools, json\nprint(json.dumps(list(chain([1], [2]))))'],
     ['python', 'import re\nprint(re.sub(r"\\d", "#", "a1b2"))'],
     ['python', 'x = [3, 1, 2]\nx.sort()\nprint(x, "the program copies a list")'],
