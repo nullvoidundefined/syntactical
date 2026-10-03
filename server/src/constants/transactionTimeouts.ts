@@ -5,6 +5,8 @@ const TRANSACTION_TIMEOUTS = {
   BUSY_RETRY_AFTER_SECONDS: 1,
   // Bounds a transaction left open by a stalled handler.
   IDLE_IN_TRANSACTION_SESSION: '10s',
+  // Postgres SQLSTATE idle_in_transaction_session_timeout, raised when the backend ends an idle transaction.
+  IDLE_IN_TRANSACTION_TIMEOUT_CODE: '25P03',
   // Bounds waiting on a row or table lock, which a healthy request never holds that long.
   LOCK: '2s',
   // Postgres SQLSTATE lock_not_available, raised when lock_timeout expires or a NOWAIT lock is held.

@@ -68,8 +68,12 @@ function createErrorHandler(logger: Logger) {
 
     logUnhandled(err, locals.logger as Logger | undefined, logger, requestId);
     const { code } = (err ?? {}) as { code?: unknown };
-    const { LOCK_TIMEOUT_CODE, STATEMENT_TIMEOUT_CODE } = TRANSACTION_TIMEOUTS;
-    if (code === STATEMENT_TIMEOUT_CODE || code === LOCK_TIMEOUT_CODE) {
+    const { IDLE_IN_TRANSACTION_TIMEOUT_CODE, LOCK_TIMEOUT_CODE, STATEMENT_TIMEOUT_CODE } = TRANSACTION_TIMEOUTS;
+    if (
+      code === STATEMENT_TIMEOUT_CODE ||
+      code === LOCK_TIMEOUT_CODE ||
+      code === IDLE_IN_TRANSACTION_TIMEOUT_CODE
+    ) {
       res
         .status(STATUS.SERVICE_UNAVAILABLE)
         .set('Retry-After', String(TRANSACTION_TIMEOUTS.BUSY_RETRY_AFTER_SECONDS))
