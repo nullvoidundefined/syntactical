@@ -76,10 +76,11 @@ export async function draftOracles(options: DraftOraclesOptions): Promise<void> 
     // joined into file paths below, so nothing is read or written before it validates
     // (id charset, known difficulties, safe bank paths).
     const checked = validateManifest(await readJson(join(contentDir, 'manifest.json')));
-    if (!checked.isValid) {
+    if ('rule' in checked) {
         throw new Error(`Manifest rejected: ${checked.rule}`);
     }
-    for (const { banks, id: languageId } of checked.manifest.languages) {
+    const { manifest } = checked;
+    for (const { banks, id: languageId } of manifest.languages) {
         const language = Object.hasOwn(ORACLE_LANGUAGES, languageId) ? ORACLE_LANGUAGES[languageId] : undefined;
         for (const [difficulty, { access, path }] of Object.entries(banks)) {
             const bankKey = `${languageId}/${difficulty}`;
