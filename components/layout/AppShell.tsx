@@ -12,7 +12,7 @@ import { DownloadIndicator } from './DownloadIndicator';
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { stats } = useQuizStats();
-  const { best, current } = stats.streak;
+  const { best, current } = stats.answerStreak;
   return (
     <SafeAreaView className="flex-1 bg-obsidian">
       <View role="banner" className="flex-row items-center justify-between border-b border-line px-4 py-3">

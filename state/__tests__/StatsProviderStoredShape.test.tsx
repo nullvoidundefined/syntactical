@@ -11,10 +11,10 @@ function StatsProbe() {
     <>
       <Text testID="hydrated">{String(isHydrated)}</Text>
       <Text testID="attempted">{stats.totals.attempted}</Text>
-      <Text testID="best">{stats.streak.best}</Text>
+      <Text testID="best">{stats.answerStreak.best}</Text>
       <Pressable
         testID="answer"
-        onPress={() => recordAnswer({ difficulty: 'easy', language: 'python', wasCorrect: true })}
+        onPress={() => recordAnswer({ choiceIndex: 0, difficulty: 'easy', language: 'python', questionId: 'py-easy-01', roundKind: 'bank', wasCorrect: true })}
       />
     </>
   );

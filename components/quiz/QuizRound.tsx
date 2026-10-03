@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import { toChoiceIndex } from '../../services/quiz/toChoiceIndex';
 import { useQuizStats } from '../../state/StatsProvider';
 import { useQuizEngine, type PlayableQuestion } from '../../state/useQuizEngine';
 import { useRoundCompletion } from '../../state/useRoundCompletion';
@@ -92,7 +93,9 @@ export function QuizRound(props: QuizRoundProps) {
   function handleAnswer(value: number | boolean) {
     if (isQueryOpen) return;
     const isCorrect = submitAnswer(value);
-    if (isCorrect !== null) recordAnswer({ difficulty, language, wasCorrect: isCorrect });
+    if (isCorrect === null || !currentQuestion) return;
+    const { id: questionId } = currentQuestion;
+    recordAnswer({ choiceIndex: toChoiceIndex(value), difficulty, language, questionId, roundKind: 'bank', wasCorrect: isCorrect });
   }
 
   function handleAdvance() {

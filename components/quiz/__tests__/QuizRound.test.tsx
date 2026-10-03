@@ -61,6 +61,13 @@ describe('QuizRound', () => {
     expect(mockRecordAnswer).not.toHaveBeenCalled();
   });
 
+  it('records a False answer to a true/false question as choice index 1, the order the card shows it', async () => {
+    await renderRound();
+    await fireEvent.press(screen.getByText('False'));
+    expect(screen.queryByRole('button', { name: 'Explain' })).not.toBeNull();
+    expect(mockRecordAnswer).toHaveBeenCalledWith(expect.objectContaining({ choiceIndex: 1, questionId: 'q-1', wasCorrect: false }));
+  });
+
   it('does not offer Explain after a correct answer', async () => {
     await renderRound();
     await fireEvent.press(screen.getByText('True'));
@@ -76,7 +83,14 @@ describe('QuizRound', () => {
     expect(screen.queryByText('100%')).not.toBeNull();
     expect(screen.queryByText('1 of 1 correct')).not.toBeNull();
     expect(mockRecordCompletion).toHaveBeenCalledTimes(1);
-    expect(mockRecordAnswer).toHaveBeenCalledWith({ difficulty: 'easy', language: 'python', wasCorrect: true });
+    expect(mockRecordAnswer).toHaveBeenCalledWith({
+      choiceIndex: 0,
+      difficulty: 'easy',
+      language: 'python',
+      questionId: 'q-1',
+      roundKind: 'bank',
+      wasCorrect: true,
+    });
   });
 
   it('records no completion when leaving early', async () => {

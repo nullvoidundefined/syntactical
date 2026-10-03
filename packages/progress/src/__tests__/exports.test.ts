@@ -8,6 +8,7 @@ it('exports the progress functions and constants', () => {
         'computeDailyProgress',
         'computeDayStreak',
         'toLocalDate',
+        'isLocalDate',
         'XP_BY_DIFFICULTY',
         'REVIEW_BONUS_XP',
         'DAILY_GOALS',

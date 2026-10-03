@@ -4,14 +4,17 @@ import { StatsPanel } from '../StatsPanel';
 
 jest.mock('../../../state/StatsProvider', () => ({
   useQuizStats: () => ({
+    eventLog: [],
     stats: {
-      streak: { best: 0, current: 0 },
+      answerStreak: { best: 0, current: 0 },
+      goalHistory: [],
+      isSignUpPromptDismissed: false,
       totals: { attempted: 4, correct: 3 },
       tracks: {
         'cobol:hard': { attempted: 2, completions: 0, correct: 2 },
         'python:easy': { attempted: 4, completions: 1, correct: 3 },
       },
-      version: 1,
+      version: 2,
     },
   }),
 }));

@@ -4,7 +4,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AppShell } from '../AppShell';
 
-jest.mock('../../../state/StatsProvider', () => ({ useQuizStats: () => ({ stats: { streak: { best: 3, current: 1 } } }) }));
+jest.mock('../../../state/StatsProvider', () => ({ useQuizStats: () => ({ eventLog: [], stats: { answerStreak: { best: 3, current: 1 } } }) }));
 jest.mock('../DownloadIndicator', () => ({ DownloadIndicator: () => null }));
 
 describe('AppShell on the web', () => {

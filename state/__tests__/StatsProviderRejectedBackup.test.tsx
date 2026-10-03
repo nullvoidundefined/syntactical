@@ -11,7 +11,7 @@ function AnswerProbe() {
     <>
       <Text testID="hydrated">{String(isHydrated)}</Text>
       <Text testID="attempted">{stats.totals.attempted}</Text>
-      <Pressable testID="answer" onPress={() => recordAnswer({ difficulty: 'easy', language: 'python', wasCorrect: true })} />
+      <Pressable testID="answer" onPress={() => recordAnswer({ choiceIndex: 0, difficulty: 'easy', language: 'python', questionId: 'py-easy-01', roundKind: 'bank', wasCorrect: true })} />
     </>
   );
 }
