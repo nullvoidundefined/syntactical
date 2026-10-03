@@ -1,8 +1,8 @@
-// Drives one round. The shuffled question list is a snapshot taken when
-// the round mounts, so a bank refresh that lands mid-round changes
-// nothing until the next round. An answer that does not fit the current
-// question (a choice index it does not have, or the wrong kind of answer)
-// is ignored rather than recorded as wrong.
+// Drives one round over every question type. The shuffled question list is a
+// snapshot taken when the round mounts, so a bank refresh that lands mid-round
+// changes nothing until the next round. An answer that does not fit the
+// current question (a choice index it does not have, or the wrong kind of
+// answer) is ignored rather than recorded as wrong.
 import type { Question } from '@syntactical/content-schema';
 import { useState } from 'react';
 
@@ -12,15 +12,8 @@ import { shuffleQuestions } from '../services/quiz/shuffleQuestions';
 
 type SubmittedAnswer = number | boolean | null;
 
-export type PlayableQuestion = Exclude<Question, { type: 'ab' }>;
-
-function isPlayable(question: Question): question is PlayableQuestion {
-  // A/B questions stay out of the round until the A/B card exists (Stage 5).
-  return question.type !== 'ab';
-}
-
 export function useQuizEngine(bankQuestions: readonly Question[]) {
-  const [questions] = useState(() => shuffleQuestions(bankQuestions.filter(isPlayable)));
+  const [questions] = useState(() => shuffleQuestions(bankQuestions));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [submittedAnswer, setSubmittedAnswer] = useState<SubmittedAnswer>(null);
   const [correctCount, setCorrectCount] = useState(0);
@@ -30,7 +23,7 @@ export function useQuizEngine(bankQuestions: readonly Question[]) {
   const isAnswered = submittedAnswer !== null;
   const wasCorrect = isAnswered && currentQuestion !== null && isAnswerCorrect(currentQuestion, submittedAnswer);
 
-  function fitsCurrentQuestion(question: PlayableQuestion, value: number | boolean): boolean {
+  function fitsCurrentQuestion(question: Question, value: number | boolean): boolean {
     if (question.type === 'bool') return typeof value === 'boolean';
     return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value < question.choices.length;
   }
