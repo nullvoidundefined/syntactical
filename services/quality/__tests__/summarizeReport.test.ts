@@ -51,6 +51,13 @@ describe('summarizeReport', () => {
     expect(summarizeReport({ ...REPORT, questions: questions.slice(0, 2) }).humanReviewRate).toBe(0);
   });
 
+  it.each(['constructor', '__proto__', 'toString', 'hasOwnProperty'])('counts a reason named %s as plain data', (reason) => {
+    const { rejectedByReason } = summarizeReport({ ...REPORT, questions: [{ bankKey: 'a/b', id: '1', reason, status: 'failed' }] });
+    expect(Object.keys(rejectedByReason)).toEqual([reason]);
+    expect(Object.getOwnPropertyDescriptor(rejectedByReason, reason)?.value).toBe(1);
+    expect(JSON.parse(JSON.stringify(rejectedByReason))).toEqual(JSON.parse(`{"${reason}":1}`));
+  });
+
   it('files a failure with no recorded reason under unspecified', () => {
     const { rejectedByReason } = summarizeReport({ ...REPORT, questions: [{ bankKey: 'a/b', id: '1', status: 'failed' }] });
     expect(rejectedByReason).toEqual({ unspecified: 1 });

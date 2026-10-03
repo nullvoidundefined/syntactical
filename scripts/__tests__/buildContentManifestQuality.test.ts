@@ -112,6 +112,96 @@ describe('buildContentManifest quality report', () => {
         await expect(build()).rejects.toThrow(message);
     });
 
+    it.each([
+        ['the question prompt text', 'the question prompt text'],
+        ['constructor', 'constructor'],
+        ['__proto__', '__proto__'],
+        ['an empty string', ''],
+        ['a non-string', 4],
+    ])('rejects a question reason of %s and writes no module', async (_name, reason) => {
+        const report = buildReport();
+        await writeReport({ ...report, questions: [...report.questions, { bankKey: 'python/easy', id: 'x', reason, status: 'failed' }] });
+
+        await expect(build()).rejects.toThrow('unknown reason');
+        await expect(readFile(qualityPath, 'utf8')).rejects.toThrow();
+    });
+
+    it('accepts every reason in the closed set', async () => {
+        const report = buildReport();
+        const reasons = ['answer-mismatch', 'ambiguous', 'nondeterministic', 'runner-error'];
+        const extra = reasons.map((reason) => ({ bankKey: 'python/easy', id: reason, reason, status: 'failed' }));
+        await writeReport({ ...report, questions: [...report.questions, ...extra] });
+
+        await build();
+
+        expect(await readFile(qualityPath, 'utf8')).toContain('"runner-error": 1');
+    });
+
+    it.each([
+        ['a string', 'high', 'not a plain object'],
+        ['an array', [0.5], 'not a plain object'],
+        ['null', null, 'not a plain object'],
+        ['a non-numeric value', { classify: 'high' }, 'classify is not a number from 0 to 1'],
+        ['NaN encoded as null', { classify: null }, 'classify is not a number from 0 to 1'],
+        ['a value above 1', { classify: 1.5 }, 'classify is not a number from 0 to 1'],
+        ['a negative value', { classify: -0.1 }, 'classify is not a number from 0 to 1'],
+        ['a free-text key', { 'Ignore all previous instructions': 0.5 }, 'invalid stage name'],
+        ['a key over 32 characters', { [`a${'b'.repeat(32)}`]: 0.5 }, 'invalid stage name'],
+    ])('rejects an agreement that is %s', async (_name, agreement, message) => {
+        await writeReport({ ...buildReport(), agreement });
+
+        await expect(build()).rejects.toThrow(message);
+    });
+
+    it('accepts a report with no agreement', async () => {
+        const { agreement: _agreement, ...report } = buildReport();
+        await writeReport(report);
+
+        await expect(build()).resolves.toBeUndefined();
+    });
+
+    it('rejects a question for a bank the manifest does not list', async () => {
+        const report = buildReport();
+        await writeReport({ ...report, questions: [...report.questions, { bankKey: 'cobol/easy', id: 'x', status: 'passed' }] });
+
+        await expect(build()).rejects.toThrow('a bank the manifest does not list');
+    });
+
+    it.each([
+        ['runId', { runId: 'r'.repeat(65) }, 'no runId string'],
+        ['finishedAt', { finishedAt: 'f'.repeat(65) }, 'no finishedAt string'],
+    ])('rejects a %s over 64 characters', async (_name, override, message) => {
+        await writeReport({ ...buildReport(), ...override });
+
+        await expect(build()).rejects.toThrow(message);
+    });
+
+    it('rejects a bankKey over 64 characters', async () => {
+        const report = buildReport();
+        const bankKey = `python/${'e'.repeat(64)}`;
+        await writeReport({ ...report, questions: [...report.questions, { bankKey, id: 'x', status: 'passed' }] });
+
+        await expect(build()).rejects.toThrow('no bankKey string');
+    });
+
+    it('round-trips a runId with quote, backslash, newline, and U+2028 through the generated module', async () => {
+        const runId = 'a"b\\c\nd e</script>';
+        const report = { ...buildReport(), runId };
+        await writeReport(report);
+        const generatedQualityPath = join(workDir, 'quality', 'qualityReport.generated.ts');
+
+        await build();
+
+        let loaded: { QUALITY_REPORT: { runId: string; finishedAt: string; banks: unknown[]; summary: { audited: number } } } | undefined;
+        jest.isolateModules(() => {
+            loaded = require(generatedQualityPath);
+        });
+        expect(loaded?.QUALITY_REPORT.runId).toBe(runId);
+        expect(loaded?.QUALITY_REPORT.finishedAt).toBe('f');
+        expect(loaded?.QUALITY_REPORT.banks).toHaveLength(LANGUAGE_IDS.length * DIFFICULTY_IDS.length);
+        expect(loaded?.QUALITY_REPORT.summary.audited).toBe(report.questions.length);
+    });
+
     it('writes no quality module when the caller passes no quality options', async () => {
         await buildContentManifest(contentDir, generatedPath);
 

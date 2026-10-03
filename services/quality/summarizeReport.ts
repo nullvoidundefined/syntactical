@@ -9,7 +9,7 @@ import type { QualityReportSummary } from './types/QualityReportSummary';
 const NO_REASON = 'unspecified';
 
 function countBy<Item>(items: readonly Item[], keyOf: (item: Item) => string): Record<string, number> {
-  const counts: Record<string, number> = {};
+  const counts: Record<string, number> = Object.create(null);
   for (const item of items) {
     const key = keyOf(item);
     counts[key] = (counts[key] ?? 0) + 1;

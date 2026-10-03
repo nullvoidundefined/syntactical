@@ -158,23 +158,53 @@ async function readPipelineReport(reportPath) {
 // The closed set of verdicts in pipeline/src/types/ValidationResult.ts.
 const REPORT_STATUSES = ['passed', 'failed', 'not-executable'];
 
-function assertValidReport(report) {
-  if (typeof report?.runId !== 'string') throw new Error('pipeline report has no runId string');
-  if (typeof report.finishedAt !== 'string') throw new Error('pipeline report has no finishedAt string');
-  if (!Array.isArray(report.questions)) throw new Error('pipeline report has no questions list');
-  for (const question of report.questions) {
-    if (typeof question?.bankKey !== 'string') throw new Error('pipeline report has a question with no bankKey string');
-    if (!REPORT_STATUSES.includes(question.status)) {
-      throw new Error(`pipeline report has a question with an unknown status: ${String(question.status)}`);
+// The closed set of failure reasons in pipeline/src/types/ValidationResult.ts.
+// Free text never reaches the public bundle through `reason`.
+const REPORT_REASONS = ['answer-mismatch', 'ambiguous', 'nondeterministic', 'runner-error'];
+const REPORT_STRING_MAX_LENGTH = 64;
+const AGREEMENT_STAGE_PATTERN = /^[a-z-]{1,32}$/;
+
+function isBoundedString(value) {
+  return typeof value === 'string' && value.length <= REPORT_STRING_MAX_LENGTH;
+}
+
+function assertValidAgreement(agreement) {
+  if (agreement === undefined) return;
+  if (typeof agreement !== 'object' || agreement === null || Array.isArray(agreement)) {
+    throw new Error('pipeline report agreement is not a plain object');
+  }
+  for (const [stage, rate] of Object.entries(agreement)) {
+    if (!AGREEMENT_STAGE_PATTERN.test(stage)) throw new Error(`pipeline report agreement has an invalid stage name: ${stage.slice(0, 40)}`);
+    if (typeof rate !== 'number' || !Number.isFinite(rate) || rate < 0 || rate > 1) {
+      throw new Error(`pipeline report agreement for ${stage} is not a number from 0 to 1`);
     }
   }
 }
 
+function assertValidQuestion(question, manifestBankKeys) {
+  if (!isBoundedString(question?.bankKey)) throw new Error('pipeline report has a question with no bankKey string');
+  if (!manifestBankKeys.has(question.bankKey)) throw new Error('pipeline report has a question for a bank the manifest does not list');
+  if (!REPORT_STATUSES.includes(question.status)) {
+    throw new Error(`pipeline report has a question with an unknown status: ${String(question.status).slice(0, 40)}`);
+  }
+  if (question.reason !== undefined && !REPORT_REASONS.includes(question.reason)) {
+    throw new Error('pipeline report has a question with an unknown reason');
+  }
+}
+
+function assertValidReport(report, manifestBankKeys) {
+  if (!isBoundedString(report?.runId)) throw new Error('pipeline report has no runId string');
+  if (!isBoundedString(report.finishedAt)) throw new Error('pipeline report has no finishedAt string');
+  if (!Array.isArray(report.questions)) throw new Error('pipeline report has no questions list');
+  assertValidAgreement(report.agreement);
+  for (const question of report.questions) assertValidQuestion(question, manifestBankKeys);
+}
+
 function assertEveryBankReported(manifest, report) {
-  assertValidReport(report);
+  const manifestBankKeys = new Set(listBankEntries(manifest).map(({ language, difficulty }) => `${language.id}/${difficulty}`));
+  assertValidReport(report, manifestBankKeys);
   const reported = new Set(report.questions.map(({ bankKey }) => bankKey));
-  for (const { language, difficulty } of listBankEntries(manifest)) {
-    const bankKey = `${language.id}/${difficulty}`;
+  for (const bankKey of manifestBankKeys) {
     if (!reported.has(bankKey)) throw new Error(`missing report for ${bankKey}`);
   }
 }
