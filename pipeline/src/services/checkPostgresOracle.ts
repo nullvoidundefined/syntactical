@@ -14,7 +14,7 @@ interface Rule {
 const RULES: Rule[] = [
     { name: 'unicode escape', pattern: /\bU&/i },
     { name: 'backslash', pattern: /\\/ },
-    { name: 'dollar quote', pattern: /\$[^\d\s$]*\$/u },
+    { name: 'dollar quote', pattern: /\$[^\s$]*\$/u },
     { name: 'program', pattern: /\bprogram\b/i },
     { name: 'copy', pattern: /\bcopy\b/i },
     { name: 'large object', pattern: /\blo_\w+/i },

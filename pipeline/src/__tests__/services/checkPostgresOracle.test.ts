@@ -16,6 +16,9 @@ const REFUSED: string[] = [
     'DO/**/$$ BEGIN PERFORM 1; END $$;',
     'DO $tag$ BEGIN PERFORM 1; END $tag$;',
     'SELECT $$text$$;',
+    'SELECT $a1$x$a1$;',
+    'SELECT $_1$x$_1$;',
+    'SELECT $1x$x$1x$;',
     "DO 'BEGIN PERFORM 1; END';",
     // Keywords split by comments
     'SET/**/ROLE postgres;',
