@@ -33,8 +33,10 @@ async function issueOneTimeCode(input: IssueOneTimeCodeInput): Promise<boolean> 
   try {
     await withTransaction(database, async (client) => {
       // Serializes issues for one email until commit: under READ COMMITTED two concurrent issues
-      // would each find no committed live code to invalidate and both leave one live.
-      await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [email]);
+      // would each find no committed live code to invalidate and both leave one live. The key is
+      // a 64-bit hash: a 32-bit hashtext collision is cheap to find offline and would let one
+      // email's issues stall another's.
+      await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [email]);
       await client.query(
         `UPDATE one_time_codes SET invalidated_at = $2
          WHERE email = $1 AND used_at IS NULL AND invalidated_at IS NULL`,
