@@ -16,15 +16,33 @@ function createNotFoundHandler() {
   };
 }
 
+// Never log the error object: pg errors carry user data in message and detail.
+function logUnhandled(err: unknown, requestLogger: Logger | undefined, logger: Logger, requestId: string): void {
+  const { code, constraint } = (err ?? {}) as { code?: unknown; constraint?: unknown };
+  const errorName = err instanceof Error ? err.name : typeof err;
+  (requestLogger ?? logger.child({ requestId })).error(
+    {
+      constraint: typeof constraint === 'string' ? constraint : undefined,
+      errorName,
+      pgCode: typeof code === 'string' ? code : undefined,
+      requestId,
+    },
+    'unhandled error',
+  );
+}
+
 function createErrorHandler(logger: Logger) {
   // Express identifies an error handler by its four-argument arity.
-  return function errorHandler(err: unknown, _req: Request, res: Response, next: NextFunction): void {
+  return function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction): void {
     const { headersSent, locals } = res;
+    const { requestId } = locals as { requestId: string };
     if (headersSent) {
-      next(err);
+      // The response already started, so no error body can follow. Log the error safely
+      // and drop the connection; next(err) would let Express print the raw error to stderr.
+      logUnhandled(err, locals.logger as Logger | undefined, logger, requestId);
+      res.destroy();
       return;
     }
-    const { requestId } = locals as { requestId: string };
     const { type } = (err ?? {}) as { type?: string };
     const { BAD_REQUEST, INTERNAL_SERVER_ERROR, PAYLOAD_TOO_LARGE } = STATUS;
 
@@ -47,19 +65,7 @@ function createErrorHandler(logger: Logger) {
       return;
     }
 
-    // Never log the error object: pg errors carry user data in message and detail.
-    const { code, constraint } = (err ?? {}) as { code?: unknown; constraint?: unknown };
-    const errorName = err instanceof Error ? err.name : typeof err;
-    const requestLog = (locals.logger as Logger | undefined) ?? logger.child({ requestId });
-    requestLog.error(
-      {
-        constraint: typeof constraint === 'string' ? constraint : undefined,
-        errorName,
-        pgCode: typeof code === 'string' ? code : undefined,
-        requestId,
-      },
-      'unhandled error',
-    );
+    logUnhandled(err, locals.logger as Logger | undefined, logger, requestId);
     res
       .status(INTERNAL_SERVER_ERROR)
       .json(createErrorResponse(ERROR_CODES.SERVER.INTERNAL_ERROR, 'Internal server error', requestId));

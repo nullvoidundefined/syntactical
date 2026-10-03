@@ -1,11 +1,28 @@
 const CENSOR = '[REDACTED]';
 const TRUNCATED = '[Truncated]';
 const MAX_DEPTH = 8;
-const SENSITIVE_KEYS = new Set(['authorization', 'code', 'cookie', 'email', 'password', 'secret', 'set-cookie', 'token']);
+// Any key containing one of these words is censored, so userEmail and otpCode cannot slip past.
+const SENSITIVE_WORDS = ['authorization', 'cookie', 'email', 'otp', 'password', 'secret', 'token'];
+// Keys ending in "code" are one-time codes unless they are one of these readable codes.
+const READABLE_CODE_KEYS = new Set(['pgcode', 'statuscode']);
 
 function isSensitiveKey(key: string): boolean {
   const lowered = key.toLowerCase();
-  return SENSITIVE_KEYS.has(lowered) || lowered.endsWith('token');
+  if (SENSITIVE_WORDS.some((word) => lowered.includes(word))) {
+    return true;
+  }
+  return lowered.endsWith('code') && !READABLE_CODE_KEYS.has(lowered);
+}
+
+// An Error is logged by name, pg code, and constraint only: its message, detail, and
+// stack can carry user data such as an email from a unique violation.
+function summarizeError(error: Error): Record<string, unknown> {
+  const { code, constraint } = error as Error & { code?: unknown; constraint?: unknown };
+  return {
+    constraint: typeof constraint === 'string' ? constraint : undefined,
+    pgCode: typeof code === 'string' ? code : undefined,
+    type: error.name,
+  };
 }
 
 function isWalkable(value: unknown): value is object {
@@ -20,6 +37,9 @@ function isWalkable(value: unknown): value is object {
 }
 
 function walk(value: unknown, depth: number, seen: WeakSet<object>): unknown {
+  if (value instanceof Error) {
+    return summarizeError(value);
+  }
   if (!isWalkable(value)) {
     return value;
   }
@@ -38,6 +58,9 @@ function walk(value: unknown, depth: number, seen: WeakSet<object>): unknown {
 
 // Replaces the value of every sensitive key at any depth, so a renamed parent cannot hide a secret.
 function redactDeep(value: Record<string, unknown>): Record<string, unknown> {
+  if (value instanceof Error) {
+    return { err: summarizeError(value) };
+  }
   return walk(value, 0, new WeakSet()) as Record<string, unknown>;
 }
 
