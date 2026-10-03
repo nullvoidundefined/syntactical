@@ -1,16 +1,24 @@
 // Takes the user's row lock without waiting (FOR UPDATE NOWAIT), so a second upload or profile
-// update for the same user is refused at once instead of queueing. Returns the locked row,
-// 'missing' when the user is gone, or 'busy' when Postgres raises lock_not_available (55P03)
-// for this statement; any other error is rethrown. Busy is tied to this statement alone, so a
-// later lock_timeout elsewhere is never mistaken for it.
+// update for the same user is refused at once instead of queueing. Returns the locked row or
+// 'missing' when the user is gone. Throws UserBusyError only for the NOWAIT refusal (55P03 with
+// the "could not obtain lock on row" message); a lock_timeout (also 55P03, "canceling statement
+// due to lock timeout") and every other error are rethrown unchanged.
 import type pg from 'pg';
 
 import { TRANSACTION_TIMEOUTS } from '../constants/transactionTimeouts.js';
+import { UserBusyError } from '../errors/UserBusyError.js';
 import type { LockedUser } from '../types/LockedUser.js';
 import type { UserLockResult } from '../types/UserLockResult.js';
 
-function isLockNotAvailable(error: unknown): boolean {
-  return typeof error === 'object' && error !== null && (error as { code?: unknown }).code === TRANSACTION_TIMEOUTS.LOCK_TIMEOUT_CODE;
+const NOWAIT_MESSAGE_PREFIX = 'could not obtain lock on row';
+
+function isNowaitRefusal(error: unknown): boolean {
+  const { code, message } = (error ?? {}) as { code?: unknown; message?: unknown };
+  return (
+    code === TRANSACTION_TIMEOUTS.LOCK_TIMEOUT_CODE &&
+    typeof message === 'string' &&
+    message.startsWith(NOWAIT_MESSAGE_PREFIX)
+  );
 }
 
 async function lockUserRow(client: pg.PoolClient, userId: string): Promise<UserLockResult> {
@@ -22,8 +30,8 @@ async function lockUserRow(client: pg.PoolClient, userId: string): Promise<UserL
     const [user] = rows;
     return user ? { kind: 'locked', user } : { kind: 'missing' };
   } catch (error) {
-    if (isLockNotAvailable(error)) {
-      return { kind: 'busy' };
+    if (isNowaitRefusal(error)) {
+      throw new UserBusyError();
     }
     throw error;
   }

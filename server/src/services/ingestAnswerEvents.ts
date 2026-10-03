@@ -7,6 +7,7 @@
 import type { Database } from '../clients/database.js';
 import { withBoundedTransaction } from '../clients/withBoundedTransaction.js';
 import { SYNC } from '../constants/sync.js';
+import { UserBusyError } from '../errors/UserBusyError.js';
 import type { AnswerEventInput } from '../schemas/answerEventSchemas.js';
 import type { AnswerKey } from '../types/AnswerKey.js';
 import type { IngestResult } from '../types/IngestResult.js';
@@ -26,6 +27,11 @@ function isAnswerable(answerKey: AnswerKey, { bankKey, choiceIndex, questionId }
   return entry !== undefined && choiceIndex < entry.choiceCount;
 }
 
+function isOutside(answeredAt: string, earliest: number, latest: number): boolean {
+  const time = Date.parse(answeredAt);
+  return time > latest || time < earliest;
+}
+
 function ids(events: readonly AnswerEventInput[]): string[] {
   return events.map((event) => event.eventId);
 }
@@ -41,21 +47,32 @@ async function ingestAnswerEvents(
   if (invalid.length > 0) {
     return { eventIds: ids(invalid), kind: 'invalid-events' };
   }
-  return withBoundedTransaction(database, async (client): Promise<IngestResult> => {
-    const lock = await lockUserRow(client, userId);
-    if (lock.kind === 'busy') {
+  try {
+    return await storeEvents(database, answerKey, userId, events, now);
+  } catch (error) {
+    if (error instanceof UserBusyError) {
       return { kind: 'busy' };
     }
+    throw error;
+  }
+}
+
+async function storeEvents(
+  database: Database,
+  answerKey: AnswerKey,
+  userId: string,
+  events: readonly AnswerEventInput[],
+  now: Date,
+): Promise<IngestResult> {
+  return withBoundedTransaction(database, async (client): Promise<IngestResult> => {
+    const lock = await lockUserRow(client, userId);
     if (lock.kind === 'missing') {
       return { eventIds: ids(events), kind: 'invalid-events' };
     }
     const { user } = lock;
     const latest = now.getTime() + FUTURE_TOLERANCE_MS;
     const earliest = user.created_at.getTime() - PAST_TOLERANCE_MS;
-    const outOfRange = events.filter((event) => {
-      const answeredAt = Date.parse(event.answeredAt);
-      return answeredAt > latest || answeredAt < earliest;
-    });
+    const outOfRange = events.filter((event) => isOutside(event.answeredAt, earliest, latest));
     if (outOfRange.length > 0) {
       return { eventIds: ids(outOfRange), kind: 'timestamp-out-of-range' };
     }
