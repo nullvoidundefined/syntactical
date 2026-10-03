@@ -203,11 +203,30 @@ describe('draftOracles', () => {
             expect(await readdir(root)).toEqual(['content']);
         });
 
-        it('refuses to overwrite an existing file it cannot parse', async () => {
+        it.each([
+            ['not JSON', '{ not json', /is not valid: not JSON/],
+            ['not an object', '[1, 2]', /is not valid: expected an object/],
+            ['an entry that is not an oracle', '{"p-1": {"code": 5}}', /is not valid: entry "p-1" is not an oracle/],
+            ['an entry with a language it does not know', '{"p-1": {"code": "x", "language": "ruby"}}', /entry "p-1"/],
+        ])('fails fast, before any model call, on an existing file that is %s', async (_name, text, message) => {
             await mkdir(join(oraclesDir, 'python'), { recursive: true });
-            await writeFile(join(oraclesDir, PYTHON_FILE), '{ not json');
-            await expect(draftOracles({ contentDir, log, oraclesDir, provider: scripted() })).rejects.toThrow();
-            expect(await readFile(join(oraclesDir, PYTHON_FILE), 'utf8')).toBe('{ not json');
+            await writeFile(join(oraclesDir, PYTHON_FILE), text);
+            const provider = scripted();
+            await expect(draftOracles({ contentDir, log, oraclesDir, provider })).rejects.toThrow(message);
+            expect(provider.prompts).toEqual([]);
+            expect(await readFile(join(oraclesDir, PYTHON_FILE), 'utf8')).toBe(text);
+        });
+
+        it('drops a saved oracle the current check refuses and logs it, even when nothing new is drafted', async () => {
+            await seed({ 'old-1': KEPT, 'p-9': { code: 'import os\nprint(os.getcwd())', language: 'python' } });
+            const nothing: ModelProvider = {
+                async generate(request) {
+                    return { model: 'fake', value: request.schema.parse({ isExecutable: false, reason: 'no' }) };
+                },
+            };
+            await draftOracles({ contentDir, log, oraclesDir, provider: nothing });
+            expect(JSON.parse(await readFile(join(oraclesDir, PYTHON_FILE), 'utf8'))).toEqual({ 'old-1': KEPT });
+            expect(logs.some((line) => line.includes('p-9') && line.includes('dropped') && line.includes('refused'))).toBe(true);
         });
     });
 

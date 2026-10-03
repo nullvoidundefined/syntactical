@@ -7,6 +7,8 @@ import { dirname, join } from 'node:path';
 import { type Question, validateManifest } from '@syntactical/content-schema';
 
 import { draftOracle } from '../services/draftOracle.js';
+import { findRefusedConstruct } from '../services/findRefusedConstruct.js';
+import { readExistingOracles } from '../services/readExistingOracles.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
 import { ModelOutputInvalid } from '../types/ModelOutputInvalid.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
@@ -32,40 +34,42 @@ async function readJson(path: string): Promise<unknown> {
     return JSON.parse(await readFile(path, 'utf8'));
 }
 
-// An existing oracle file is data worth keeping: a rerun adds to it, and a file
-// that cannot be parsed stops the run instead of being overwritten.
-async function readExistingOracles(file: string): Promise<Map<string, Oracle>> {
-    try {
-        return new Map(Object.entries((await readJson(file)) as Record<string, Oracle>));
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return new Map();
-        }
-        throw error;
-    }
-}
-
 interface SaveBankArgs {
     bankKey: string;
+    dropped: number;
     file: string;
+    kept: Map<string, Oracle>;
     log: (line: string) => void;
     oracles: Map<string, Oracle>;
     total: number;
 }
 
 async function saveBank(args: SaveBankArgs): Promise<void> {
-    const { bankKey, file, log, oracles, total } = args;
-    const draftedCount = oracles.size;
-    if (draftedCount === 0) {
+    const { bankKey, dropped, file, kept, log, oracles, total } = args;
+    if (oracles.size === 0 && dropped === 0) {
         log(`${bankKey}: nothing drafted, existing file left as is`);
         return;
     }
     // Merge into what is already there: a rerun never deletes an oracle it did not redraft.
     // Maps keep a question id such as `__proto__` as a plain key; Object.fromEntries defines own properties.
-    const merged = new Map([...(await readExistingOracles(file)), ...oracles]);
+    const merged = new Map([...kept, ...oracles]);
     await mkdir(dirname(file), { recursive: true });
     await writeFile(file, `${JSON.stringify(Object.fromEntries(merged), null, JSON_INDENT)}\n`);
-    log(`${bankKey}: ${draftedCount} of ${total} oracles drafted, ${merged.size} in file`);
+    log(`${bankKey}: ${oracles.size} of ${total} oracles drafted, ${merged.size} in file`);
+}
+
+// Entries already on disk went through an older check; run the current one and drop what fails.
+function dropRefused(saved: Map<string, Oracle>, bankKey: string, log: (line: string) => void): number {
+    let dropped = 0;
+    for (const [id, oracle] of saved) {
+        const refused = findRefusedConstruct(oracle);
+        if (refused) {
+            saved.delete(id);
+            dropped += 1;
+            log(`${bankKey} ${id}: dropped saved oracle (refused: ${refused})`);
+        }
+    }
+    return dropped;
 }
 
 export async function draftOracles(options: DraftOraclesOptions): Promise<void> {
@@ -94,6 +98,9 @@ export async function draftOracles(options: DraftOraclesOptions): Promise<void> 
             }
             const bank = (await readJson(join(contentDir, path))) as { questions: Question[] };
             const file = join(oraclesDir, `${bankKey}.json`);
+            // Read the saved file before drafting anything, so a bad file fails fast.
+            const kept = await readExistingOracles(file);
+            const dropped = dropRefused(kept, bankKey, log);
             const oracles = new Map<string, Oracle>();
             try {
                 for (const question of bank.questions) {
@@ -113,7 +120,7 @@ export async function draftOracles(options: DraftOraclesOptions): Promise<void> 
                 }
             } finally {
                 // An error that stops the run still saves what this bank drafted so far.
-                await saveBank({ bankKey, file, log, oracles, total: bank.questions.length });
+                await saveBank({ bankKey, dropped, file, kept, log, oracles, total: bank.questions.length });
             }
         }
     }
