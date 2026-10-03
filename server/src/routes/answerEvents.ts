@@ -2,7 +2,8 @@
 // POST /v1/answer-events (B-32, B-33): uploads a batch of answer events. Session required and
 // rate limited per user; its 256 KB body is read only after the session check. More than
 // 200 events is 413; any other schema failure is 400; an event the answer key rejects, or a
-// timestamp out of range, is 422 for the whole batch with the offending event ids. Event
+// timestamp out of range, is 422 for the whole batch with the offending event ids; a batch
+// that would take the user past the stored-event cap is 422 SYNC_EVENT_CAP_REACHED. Event
 // contents are never logged.
 import express, { Router } from 'express';
 import type { Request, Response } from 'express';
@@ -91,6 +92,12 @@ function createAnswerEventsRouter(deps: ResolvedSyncDeps): Router {
     if (result.kind === 'stored') {
       const { totals } = result;
       res.status(OK).json({ data: totals });
+      return;
+    }
+    if (result.kind === 'event-cap-reached') {
+      res
+        .status(UNPROCESSABLE_ENTITY)
+        .json(createErrorResponse(ERROR_CODES.SYNC.EVENT_CAP_REACHED, 'Stored event limit reached', requestId));
       return;
     }
     const { eventIds, kind } = result;

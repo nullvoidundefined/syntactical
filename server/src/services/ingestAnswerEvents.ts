@@ -1,6 +1,7 @@
 // Stores one upload batch (B-32, B-33). Events are checked against the answer key before any
 // write; then, in one transaction, the user's row is locked (concurrent uploads for a user
-// serialize), the timestamps are bounded, the events are inserted once by (user_id, event_id)
+// serialize), the timestamps are bounded, the per-user stored-event cap is enforced (a batch
+// that would exceed it is refused whole; already-stored ids do not count), the events are inserted once by (user_id, event_id)
 // with is_correct derived from the answer key, and daily progress is recomputed.
 import type { Database } from '../clients/database.js';
 import { withTransaction } from '../clients/withTransaction.js';
@@ -13,7 +14,7 @@ import { recomputeDailyProgress } from './recomputeDailyProgress.js';
 
 const MINUTE_MS = 60_000;
 const DAY_MS = 86_400_000;
-const { FUTURE_TOLERANCE_MINUTES, PAST_TOLERANCE_DAYS } = SYNC;
+const { FUTURE_TOLERANCE_MINUTES, MAX_EVENTS_PER_USER, PAST_TOLERANCE_DAYS } = SYNC;
 const FUTURE_TOLERANCE_MS = FUTURE_TOLERANCE_MINUTES * MINUTE_MS;
 const PAST_TOLERANCE_MS = PAST_TOLERANCE_DAYS * DAY_MS;
 
@@ -54,6 +55,19 @@ async function ingestAnswerEvents(
     });
     if (outOfRange.length > 0) {
       return { eventIds: ids(outOfRange), kind: 'timestamp-out-of-range' };
+    }
+    const batchIds = [...new Set(ids(events))];
+    const { rows: stored } = await client.query<{ count: string }>(
+      'SELECT count(*) FROM answer_events WHERE user_id = $1',
+      [userId],
+    );
+    const { rows: known } = await client.query<{ count: string }>(
+      'SELECT count(*) FROM answer_events WHERE user_id = $1 AND event_id = ANY($2::uuid[])',
+      [userId, batchIds],
+    );
+    const newCount = batchIds.length - Number(known[0]?.count ?? 0);
+    if (Number(stored[0]?.count ?? 0) + newCount > MAX_EVENTS_PER_USER) {
+      return { kind: 'event-cap-reached' };
     }
     const { rowCount } = await client.query(
       `INSERT INTO answer_events
