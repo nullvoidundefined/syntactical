@@ -5,8 +5,9 @@
 // The affected local dates are the dates of the events of those questions whose xp changed
 // (the new events start at 0, so they count when they earn anything) plus the dates of the
 // newly inserted events; each such date's XP is the sum of stored xp over the user's events on
-// that local date, read through a bounded UTC window, and its row is upserted with the goal in
-// force on that date.
+// that local date, summed for all dates in one statement with one bounded UTC window per date, and the rows are
+// upserted in one statement with the goal in force on each date. The statement count does not grow
+// with the number of affected dates.
 import { computeXp, findDueReviewEventIds, toLocalDate } from '@syntactical/progress';
 import type { GoalChange } from '@syntactical/progress';
 import type pg from 'pg';
@@ -41,15 +42,55 @@ function findGoal(changes: readonly GoalChange[], localDate: string): number {
   return inForce?.goal ?? PROGRESS_DEFAULTS.DAILY_GOAL;
 }
 
-async function sumDateXp(client: pg.PoolClient, userId: string, localDate: string, zone: string): Promise<number> {
-  const dayStart = Date.parse(`${localDate}T00:00:00Z`);
-  const { rows } = await client.query<{ answered_at: Date; xp: number }>(
-    'SELECT answered_at, xp FROM answer_events WHERE user_id = $1 AND answered_at >= $2 AND answered_at < $3',
-    [userId, new Date(dayStart - WINDOW_BEFORE_MS), new Date(dayStart + WINDOW_AFTER_MS)],
+// One statement sums the stored xp of every given local date (0 for a date with no events), grouped
+// by local date, each date joined to its own bounded UTC window (an index range per date).
+async function sumDatesXp(
+  client: pg.PoolClient,
+  userId: string,
+  localDates: readonly string[],
+  zone: string,
+): Promise<number[]> {
+  const starts = localDates.map((localDate) => Date.parse(`${localDate}T00:00:00Z`));
+  const { rows } = await client.query<{ local_date: string; xp: number }>(
+    `SELECT to_char(d.local_date, 'YYYY-MM-DD') AS local_date, coalesce(sum(e.xp), 0)::int AS xp
+     FROM unnest($2::date[], $3::timestamptz[], $4::timestamptz[]) AS d(local_date, lo, hi)
+     LEFT JOIN answer_events e
+       ON e.user_id = $1
+      AND e.answered_at >= d.lo AND e.answered_at < d.hi
+      AND (e.answered_at AT TIME ZONE $5)::date = d.local_date
+     GROUP BY d.local_date`,
+    [
+      userId,
+      localDates,
+      starts.map((start) => new Date(start - WINDOW_BEFORE_MS)),
+      starts.map((start) => new Date(start + WINDOW_AFTER_MS)),
+      zone,
+    ],
   );
-  return rows
-    .filter((row) => toLocalDate(row.answered_at.toISOString(), zone) === localDate)
-    .reduce((sum, row) => sum + row.xp, 0);
+  const byDate = new Map(rows.map(({ local_date, xp }) => [local_date, xp]));
+  return localDates.map((localDate) => byDate.get(localDate) ?? 0);
+}
+
+// One statement upserts the rows of all affected dates.
+async function upsertDates(
+  client: pg.PoolClient,
+  userId: string,
+  localDates: readonly string[],
+  totals: readonly number[],
+  goals: readonly GoalChange[],
+): Promise<void> {
+  await client.query(
+    `INSERT INTO daily_progress (user_id, local_date, xp, is_goal_met)
+     SELECT $1, local_date, xp, is_goal_met
+     FROM unnest($2::date[], $3::int[], $4::boolean[]) AS t(local_date, xp, is_goal_met)
+     ON CONFLICT (user_id, local_date) DO UPDATE SET xp = EXCLUDED.xp, is_goal_met = EXCLUDED.is_goal_met`,
+    [
+      userId,
+      localDates,
+      totals,
+      localDates.map((localDate, index) => (totals[index] ?? 0) >= findGoal(goals, localDate)),
+    ],
+  );
 }
 
 async function updateDailyProgressForQuestions(
@@ -99,22 +140,8 @@ async function updateDailyProgressForQuestions(
     return;
   }
   const goals = await loadGoalChanges(client, userId);
-  const totals: number[] = [];
-  for (const localDate of localDates) {
-    totals.push(await sumDateXp(client, userId, localDate, zone));
-  }
-  await client.query(
-    `INSERT INTO daily_progress (user_id, local_date, xp, is_goal_met)
-     SELECT $1, local_date, xp, is_goal_met
-     FROM unnest($2::date[], $3::int[], $4::boolean[]) AS t(local_date, xp, is_goal_met)
-     ON CONFLICT (user_id, local_date) DO UPDATE SET xp = EXCLUDED.xp, is_goal_met = EXCLUDED.is_goal_met`,
-    [
-      userId,
-      localDates,
-      totals,
-      localDates.map((localDate, index) => (totals[index] ?? 0) >= findGoal(goals, localDate)),
-    ],
-  );
+  const totals = await sumDatesXp(client, userId, localDates, zone);
+  await upsertDates(client, userId, localDates, totals, goals);
 }
 
 export { updateDailyProgressForQuestions };
