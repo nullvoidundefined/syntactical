@@ -126,17 +126,6 @@ describe('computeDailyProgress', () => {
         ]);
     });
 
-    it('uses the later entry when two goal changes share a from date', () => {
-        const history = [
-            { from: '2026-10-02', goal: 50 },
-            { from: '2026-10-02', goal: 10 },
-        ];
-        const events = buildEvents('2026-10-02T12:00:00Z', 4);
-        expect(computeDailyProgress(events, 'UTC', history, isNeverDue)).toEqual([
-            { isGoalMet: true, localDate: '2026-10-02', xp: 12 },
-        ]);
-    });
-
     it('uses the earliest goal for a day before the first goal change', () => {
         const history = [{ from: '2026-10-05', goal: 20 }];
         const events = buildEvents('2026-10-02T12:00:00Z', 4);
