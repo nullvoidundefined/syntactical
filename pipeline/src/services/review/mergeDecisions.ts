@@ -1,8 +1,9 @@
 // Decides which decision stands for each current item. The review file the owner just
 // edited is authoritative for an item whose fingerprint still matches and whose section
 // parsed cleanly (so unticking a box revokes a decision). Otherwise the stored decision
-// stands, if its fingerprint still matches. A decision whose item changed is dropped: the
-// item is pending again. Problems found in the file are returned for the caller to report.
+// stands, if its fingerprint still matches. A decision whose listed item changed is dropped
+// (pending again); one whose item is no longer listed is kept. Problems found in the file
+// are returned for the caller to report.
 import type { ReviewDecision } from '../../types/review/ReviewDecision.js';
 import type { StoredDecision } from '../../types/review/StoredDecision.js';
 
@@ -44,6 +45,13 @@ export function mergeDecisions(
         }
         const earlier = Object.hasOwn(stored, id) ? stored[id] : undefined;
         if (earlier?.fingerprint === fingerprint) {
+            kept.set(id, earlier);
+        }
+    }
+    // An item no longer listed (left the sample, stopped being pending) keeps its decision:
+    // only a change to the judged content of a listed item prunes one.
+    for (const [id, earlier] of Object.entries(stored)) {
+        if (!fingerprints.has(id)) {
             kept.set(id, earlier);
         }
     }

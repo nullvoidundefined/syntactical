@@ -1,5 +1,6 @@
 // `pipeline review` against real temp files and a fake oracle observer: what is listed,
 // the sample, where free and paid output goes, decisions, reruns, and untouched banks.
+import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -7,6 +8,7 @@ import { dirname, join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { review } from '../../commands/review.js';
+import { pickSample } from '../../services/review/pickSample.js';
 
 const HASH = '0123456789abcdef'.repeat(4);
 const PAID_TEXT = 'PAID-SECRET-PROMPT';
@@ -37,6 +39,22 @@ async function writeJson(file: string, value: unknown): Promise<void> {
 async function listFiles(dir: string): Promise<string[]> {
     const entries = await readdir(dir, { recursive: true, withFileTypes: true }).catch(() => []);
     return entries.filter((entry) => entry.isFile()).map((entry) => join(entry.parentPath, entry.name));
+}
+
+// The sample ranks ids by this hash, lowest first; tests use it to push an id out of the sample.
+function rankOf(id: string): string {
+    return createHash('sha256').update(`python/easy:${id}`).digest('hex');
+}
+
+// `count` new ids that all rank ahead of `target`, so the sample can no longer include it.
+function outrank(target: string, count: number): string[] {
+    const ahead: string[] = [];
+    for (let index = 0; ahead.length < count && index < 10_000; index += 1) {
+        if (rankOf(`extra-${index}`) < rankOf(target)) {
+            ahead.push(`extra-${index}`);
+        }
+    }
+    return ahead;
 }
 
 function headingsOf(markdown: string): string[] {
@@ -272,6 +290,54 @@ describe('review', () => {
         expect(await readDecisions()).toEqual({});
         const section = (await freeReview()).split(/^## q-3 /m)[1]?.split(/^## /m)[0] ?? '';
         expect(section).toContain('- [ ] approve');
+    });
+
+    // Rewrites the free bank: `passing` ids pass validation, `failing` ids fail it.
+    async function reseed(passing: string[], failing: string[]): Promise<void> {
+        await writeJson(join(contentDir, 'python/easy.json'), {
+            questions: [...passing, ...failing].map((id) => buildQuestion(id)),
+        });
+        await writeJson(join(pipelineDir, 'reports/latest.json'), {
+            counts: {},
+            finishedAt: 't',
+            questions: [
+                ...passing.map((id) => ({ bankKey: 'python/easy', id, status: 'passed' })),
+                ...failing.map((id) => ({ bankKey: 'python/easy', id, status: 'failed' })),
+            ],
+            runId: 'r',
+            stage: 'validate',
+            startedAt: 't',
+        });
+    }
+
+    it('keeps an approval when its item drops out of the sample', async () => {
+        await run();
+        const sampled = pickSample('python/easy', FREE_IDS).filter((id) => !['q-3', 'q-5'].includes(id));
+        // The sampled id with the highest rank hash, so enough new ids can outrank it.
+        const target = sampled.sort((left, right) => (rankOf(left) < rankOf(right) ? 1 : -1))[0] as string;
+        await tick(target, 'approve');
+        await run();
+        const grown = [...FREE_IDS, ...outrank(target, 5)];
+        expect(pickSample('python/easy', grown)).not.toContain(target);
+        await reseed(grown, ['q-bad']);
+        await run();
+        expect(headingsOf(await freeReview())).not.toContain(target);
+        expect(await readDecisions()).toHaveProperty([target, 'provenance', 'isHumanReviewed'], true);
+        await run();
+        expect(Object.keys(await readDecisions())).toContain(target);
+    });
+
+    it('keeps an approval when its item stops being pending', async () => {
+        await run();
+        await tick('q-bad', 'approve');
+        await run();
+        // The oracle now passes q-bad, so it is no longer pending; grow the bank until it is not sampled.
+        const passing = [...FREE_IDS, 'q-bad', ...outrank('q-bad', 5)];
+        expect(pickSample('python/easy', passing)).not.toContain('q-bad');
+        await reseed(passing, []);
+        await run();
+        expect(headingsOf(await freeReview())).not.toContain('q-bad');
+        expect(await readDecisions()).toHaveProperty(['q-bad', 'decision'], 'approve');
     });
 
     it('lets the owner revoke an approval by unticking it', async () => {
