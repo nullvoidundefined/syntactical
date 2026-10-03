@@ -134,12 +134,12 @@ describe('runSyncPass holds the events a 422 names, by error code', () => {
     await expectNextPassPostsOnly(device, server, rejectedIds);
   });
 
-  it('holds exactly the ids a 422 SYNC_TIMESTAMP_OUT_OF_RANGE names, as timestamp-future when more than 5 minutes ahead of the device clock and timestamp-past otherwise', async () => {
+  it('holds exactly the ids a 422 SYNC_TIMESTAMP_OUT_OF_RANGE names, as timestamp-past when more than 365 days before the device clock and timestamp-future otherwise', async () => {
     const userId = randomUUID();
     const log = buildOwnedLog(250, userId);
     const nowMs = NOW.getTime();
     log[3] = withAnsweredAt(3, userId, nowMs + 10 * MINUTE_MS);
-    log[5] = withAnsweredAt(5, userId, nowMs + 5 * MINUTE_MS);
+    log[5] = withAnsweredAt(5, userId, nowMs - 366 * DAY_MS);
     log[7] = withAnsweredAt(7, userId, nowMs + 5 * MINUTE_MS + 1000);
     log[210] = withAnsweredAt(210, userId, nowMs - 400 * DAY_MS);
     const expectedReasons = new Map<string, HeldReason>([

@@ -11,8 +11,8 @@ import {
   HTTP_STATUS_OK,
   HTTP_STATUS_PAYLOAD_TOO_LARGE,
   HTTP_STATUS_UNPROCESSABLE,
-  SYNC_FUTURE_TOLERANCE_MS,
   SYNC_MAX_PAGES_PER_PASS,
+  SYNC_PAST_BOUND_MS,
 } from '../../constants/appConfig';
 import { isAnswerEvent } from '../stats/isAnswerEvent';
 import type { HeldReason, LoggedAnswerEvent } from '../stats/types/LoggedAnswerEvent';
@@ -66,9 +66,10 @@ function readDownloadPage(body: unknown): DownloadPage | null {
 }
 
 // Why an event the server refused for its timestamp is held: answered more
-// than 5 minutes ahead of the device clock, or too long ago.
+// than 365 days before the device clock is past; every other named event is
+// future, so the release check uploads it once it is within 5 minutes.
 function readTimestampReason(event: AnswerEvent, nowMs: number): HeldReason {
-  return Date.parse(event.answeredAt) > nowMs + SYNC_FUTURE_TOLERANCE_MS ? 'timestamp-future' : 'timestamp-past';
+  return Date.parse(event.answeredAt) < nowMs - SYNC_PAST_BOUND_MS ? 'timestamp-past' : 'timestamp-future';
 }
 
 // Holds the events a 422 names and returns the rest, or null when it names none of this batch.
