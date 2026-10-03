@@ -18,11 +18,11 @@ import { toAnswerEvent } from './toAnswerEvent.js';
 
 const HOUR_MS = 3_600_000;
 const DAY_MS = 86_400_000;
-const MAX_OFFSET_WEST_HOURS = 14;
-const MAX_OFFSET_EAST_HOURS = 12;
+const MAX_OFFSET_EAST_HOURS = 14;
+const MAX_OFFSET_WEST_HOURS = 12;
 // UTC offsets run from -12:00 to +14:00, so local date D lies within this window around UTC date D.
-const WINDOW_BEFORE_MS = MAX_OFFSET_WEST_HOURS * HOUR_MS;
-const WINDOW_AFTER_MS = DAY_MS + MAX_OFFSET_EAST_HOURS * HOUR_MS;
+const WINDOW_BEFORE_MS = MAX_OFFSET_EAST_HOURS * HOUR_MS;
+const WINDOW_AFTER_MS = DAY_MS + MAX_OFFSET_WEST_HOURS * HOUR_MS;
 
 async function loadGoalChanges(client: pg.PoolClient, userId: string): Promise<GoalChange[]> {
   const { rows } = await client.query<{ from_date: string; goal: number }>(

@@ -1,6 +1,7 @@
 // Rebuilds a user's daily_progress rows from every stored answer event, inside the caller's
 // transaction, with the shared @syntactical/progress functions (no XP or due-review logic
-// lives here). Returns the totals the upload response carries.
+// lives here), and records the zone it built in on the user row (the caller holds the row lock).
+// Returns the totals the upload response carries.
 import { computeDailyProgress, computeDayStreak, computeXp, findDueReviewEventIds, toLocalDate } from '@syntactical/progress';
 import type { AnswerEvent, DailyProgress, GoalChange } from '@syntactical/progress';
 import type pg from 'pg';
@@ -77,6 +78,7 @@ async function recomputeDailyProgress(
   await storeEventXp(client, userId, events, dueIds);
   const dailyProgress = computeDailyProgress(events, zone, goals, (event) => dueIds.has(event.eventId));
   await replaceDailyProgress(client, userId, dailyProgress);
+  await client.query('UPDATE users SET progress_timezone = $2 WHERE id = $1', [userId, zone]);
   const xpTotal = dailyProgress.reduce((sum, day) => sum + day.xp, 0);
   const xpToday = dailyProgress.find((day) => day.localDate === today)?.xp ?? 0;
   return { dailyProgress, dayStreak: computeDayStreak(dailyProgress, today), xpToday, xpTotal };

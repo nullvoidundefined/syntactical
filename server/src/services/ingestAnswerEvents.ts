@@ -2,7 +2,8 @@
 // write; then, in one transaction, the user's row is locked without waiting (a concurrent upload for the user
 // is answered busy), the timestamps are bounded, the per-user stored-event cap is enforced (a batch
 // that would exceed it is refused whole; already-stored ids do not count), the events are inserted once by (user_id, event_id)
-// with is_correct derived from the answer key, and daily progress is updated for the affected questions and dates only.
+// with is_correct derived from the answer key, and daily progress is refreshed (refreshDailyProgress: incremental, or a full replay when the zone
+// changed since it was built).
 import type { Database } from '../clients/database.js';
 import { withBoundedTransaction } from '../clients/withBoundedTransaction.js';
 import { SYNC } from '../constants/sync.js';
@@ -12,7 +13,7 @@ import type { IngestResult } from '../types/IngestResult.js';
 
 import { lockUserRow } from './lockUserRow.js';
 import { readStoredProgress } from './readStoredProgress.js';
-import { updateDailyProgressForQuestions } from './updateDailyProgressForQuestions.js';
+import { refreshDailyProgress } from './refreshDailyProgress.js';
 
 const MINUTE_MS = 60_000;
 const DAY_MS = 86_400_000;
@@ -91,13 +92,7 @@ async function ingestAnswerEvents(
       ],
     );
     if (insertedRows.length > 0) {
-      await updateDailyProgressForQuestions(
-        client,
-        userId,
-        user.timezone,
-        [...new Set(insertedRows.map((row) => row.question_id))],
-        insertedRows.map((row) => row.event_id),
-      );
+      await refreshDailyProgress(client, userId, user, insertedRows, now);
     }
     const totals = await readStoredProgress(client, userId, user.timezone, now);
     return { kind: 'stored', totals: { ...totals, insertedCount: insertedRows.length } };

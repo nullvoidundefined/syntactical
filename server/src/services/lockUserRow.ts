@@ -16,7 +16,7 @@ function isLockNotAvailable(error: unknown): boolean {
 async function lockUserRow(client: pg.PoolClient, userId: string): Promise<UserLockResult> {
   try {
     const { rows } = await client.query<LockedUser>(
-      'SELECT created_at, timezone FROM users WHERE id = $1 FOR UPDATE NOWAIT',
+      'SELECT created_at, timezone, progress_timezone FROM users WHERE id = $1 FOR UPDATE NOWAIT',
       [userId],
     );
     const [user] = rows;
