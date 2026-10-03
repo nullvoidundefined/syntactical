@@ -137,7 +137,7 @@ const ACCEPTED: Form[] = [
     ['node', 'const s = new Set([1, 1, 2]);\nconsole.log(s.size, new Map([[1, "a"]]).get(1));'],
     ['node', 'Promise.resolve(1).then(console.log);\nconsole.log("sync");'],
     ['node', 'console.log(new Date(0).toISOString(), Number("12"), String(5).padStart(3, "0"));'],
-    ['node', 'function f() { return this === undefined; }\nconsole.log(f());'],
+    ['node', 'class A { get() { return this; } }\nconsole.log(typeof new A().get());'],
     ['postgres', 'SELECT 1 + 1'],
     ['postgres', "SELECT 'abc' ~ '^a' AS starts, 'programming' AS word"],
     ['postgres', 'SELECT a, count(*) FROM t GROUP BY a ORDER BY a'],

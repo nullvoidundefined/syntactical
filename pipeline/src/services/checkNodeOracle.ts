@@ -19,6 +19,7 @@ interface AstNode {
     kind?: string;
     left?: AstNode;
     name?: string;
+    object?: AstNode;
     operator?: string;
     param?: AstNode | null;
     params?: AstNode[];
@@ -95,6 +96,10 @@ const REFUSED_NODE_TYPES = new Set([
     'TaggedTemplateExpression',
     'WithStatement',
 ]);
+
+// Object statics that enumerate or copy an object's keys; refused so nothing can search an
+// object (such as the runner's global `this`) for a name built at run time.
+const OBJECT_ENUMERATION = new Set(['assign', 'entries', 'fromEntries', 'keys', 'values']);
 
 const LENIENT_ONLY_OPERATORS = new Set(['-', '*', '/', '%']);
 const SIGN_OPERATORS = new Set(['-', '+']);
@@ -281,11 +286,15 @@ function isArithmetic(node: AstNode, counters: Set<string>): boolean {
 }
 
 function findRefusedMember(node: AstNode, counters: Set<string>): string | null {
-    const { computed, property } = node;
+    const { computed, object, property } = node;
     if (computed) {
         return property && isStrictNumber(property, counters) ? null : 'computed member access';
     }
     const { name, type } = property ?? NO_NODE;
+    const { name: objectName, type: objectType } = object ?? NO_NODE;
+    if (objectType === 'Identifier' && objectName === 'Object' && name !== undefined && OBJECT_ENUMERATION.has(name)) {
+        return `Object.${name}`;
+    }
     if (type === 'Identifier' && name !== undefined && (BANNED_MEMBERS.has(name) || name.startsWith('_'))) {
         return `member ${name}`;
     }
@@ -305,7 +314,7 @@ function findRefusedPatternKey(property: AstNode): string | null {
     return BANNED_MEMBERS.has(keyName) || keyName.startsWith('_') ? `destructured key ${keyName}` : null;
 }
 
-function findRefusedNode(node: AstNode, counters: Set<string>): string | null {
+function findRefusedNode(node: AstNode, counters: Set<string>, inClass: boolean): string | null {
     const { name, properties, type } = node;
     if (REFUSED_NODE_TYPES.has(type)) {
         return `syntax ${type}`;
@@ -315,6 +324,10 @@ function findRefusedNode(node: AstNode, counters: Set<string>): string | null {
             return name !== undefined && BANNED_IDENTIFIERS.has(name) ? `identifier ${name}` : null;
         case 'MemberExpression':
             return findRefusedMember(node, counters);
+        // The runner calls the program with no receiver, so `this` is the global object there.
+        // Inside a class body it is strict-mode code and `this` is the instance or undefined.
+        case 'ThisExpression':
+            return inClass ? null : 'this outside a class';
         case 'ObjectPattern':
             for (const property of properties ?? []) {
                 const refused = findRefusedPatternKey(property);
@@ -328,11 +341,11 @@ function findRefusedNode(node: AstNode, counters: Set<string>): string | null {
     }
 }
 
-function findRefusedIn(node: AstNode, counters: Set<string>): string | null {
+function findRefusedIn(node: AstNode, counters: Set<string>, inClass = false): string | null {
     const { computed, key, kind, type } = node;
     // A class constructor is written `constructor(...) {}`; its own key is the one allowed use of that name.
     const skipped = type === 'MethodDefinition' && kind === 'constructor' && !computed ? key : undefined;
-    const refused = findRefusedNode(node, counters);
+    const refused = findRefusedNode(node, counters, inClass);
     if (refused) {
         return refused;
     }
@@ -340,7 +353,9 @@ function findRefusedIn(node: AstNode, counters: Set<string>): string | null {
         if (child === skipped) {
             continue;
         }
-        const found = findRefusedIn(child, counters);
+        // A computed member key is evaluated outside the class, where `this` is still the outer one.
+        const childInClass = (inClass || type === 'ClassBody') && !(computed && child === key);
+        const found = findRefusedIn(child, counters, childInClass);
         if (found) {
             return found;
         }
