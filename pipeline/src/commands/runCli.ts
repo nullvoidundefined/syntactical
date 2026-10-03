@@ -1,17 +1,23 @@
 // The pipeline CLI's command dispatch, with every side effect injected so the real
-// entry path can be tested: `validate` or `draft-oracles [--api]`.
+// entry path can be tested: `validate`, `draft-oracles [--api]`, or
+// `classify [--api] [--content-root <path>]`.
 import { randomUUID } from 'node:crypto';
 
+import { readContentRootFlag } from '../services/classify/readContentRootFlag.js';
 import { createOracleSource } from '../services/createOracleSource.js';
 import { exitCodeFor } from '../services/exitCodeFor.js';
 import { pickProviderKind } from '../services/pickProviderKind.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 
+import type { classify } from './classify.js';
 import type { draftOracles } from './draftOracles.js';
 import type { validateContent } from './validate.js';
 
 export interface CliDeps {
+    classify: typeof classify;
     contentDir: string;
+    defaultContentRoot: string;
+    env: Record<string, string | undefined>;
     createProvider: (kind: 'api' | 'cli') => ModelProvider;
     draft: typeof draftOracles;
     pipelineDir: string;
@@ -21,6 +27,29 @@ export interface CliDeps {
 }
 
 const FIRST_COMMAND_ARG = 2;
+
+// The content root: `--content-root` beats `SYNTACTICAL_CONTENT_ROOT`, which beats the default.
+async function runClassify(argv: string[], deps: CliDeps): Promise<number> {
+    const { classify: run, contentDir, createProvider, defaultContentRoot, env, pipelineDir, stderr, stdout } = deps;
+    let flagRoot: string | undefined;
+    try {
+        flagRoot = readContentRootFlag(argv);
+    } catch (error) {
+        stderr(`${(error as Error).message}\n`);
+        return 1;
+    }
+    const contentRoot = flagRoot ?? (env.SYNTACTICAL_CONTENT_ROOT || defaultContentRoot);
+    await run({
+        contentDir,
+        contentRoot,
+        log: (line) => stdout(`${line}\n`),
+        newRunId: randomUUID,
+        now: () => new Date().toISOString(),
+        pipelineDir,
+        provider: createProvider(pickProviderKind(argv)),
+    });
+    return 0;
+}
 
 export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
     const { contentDir, createProvider, draft, pipelineDir, stderr, stdout, validate } = deps;
@@ -34,8 +63,11 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
         });
         return 0;
     }
+    if (command === 'classify') {
+        return runClassify(argv, deps);
+    }
     if (command !== 'validate') {
-        stderr('Usage: pipeline validate | draft-oracles [--api]\n');
+        stderr('Usage: pipeline validate | draft-oracles [--api] | classify [--api] [--content-root <path>]\n');
         return 1;
     }
     const report = await validate({
