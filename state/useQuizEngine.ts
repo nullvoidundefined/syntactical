@@ -3,7 +3,8 @@
 // changes nothing until the next round. A topic round keeps only that topic's
 // questions, filtered before the shuffle. An answer that does not fit the
 // current question (a choice index it does not have, or the wrong kind of
-// answer) is ignored rather than recorded as wrong.
+// answer) is ignored rather than recorded as wrong. A bank round shuffles its
+// questions; a review round keeps the queue's order, most overdue first.
 import { useState } from 'react';
 
 import type { Question } from '@syntactical/content-schema';
@@ -14,11 +15,16 @@ import { shuffleQuestions } from '../services/quiz/shuffleQuestions';
 
 type SubmittedAnswer = number | boolean | null;
 
-export function useQuizEngine(bankQuestions: readonly Question[], options: { topic?: string } = {}) {
-  const { topic } = options;
-  const [questions] = useState(() =>
-    shuffleQuestions(bankQuestions.filter((question) => topic === undefined || question.topic === topic)),
-  );
+export type RoundKind = 'bank' | 'review';
+
+type EngineOptions = { roundKind?: RoundKind; topic?: string };
+
+export function useQuizEngine(bankQuestions: readonly Question[], options: EngineOptions = {}) {
+  const { roundKind = 'bank', topic } = options;
+  const [questions] = useState(() => {
+    const inTopic = bankQuestions.filter((question) => topic === undefined || question.topic === topic);
+    return roundKind === 'review' ? inTopic : shuffleQuestions(inTopic);
+  });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [submittedAnswer, setSubmittedAnswer] = useState<SubmittedAnswer>(null);
   const [correctCount, setCorrectCount] = useState(0);

@@ -1,0 +1,33 @@
+{
+  "reviewer": "security-reviewer subagent",
+  "model": "claude-fable-5-1",
+  "range": "baffac6..aa69d1c",
+  "rounds": [
+    { "round": 1, "range": "baffac6..5170383", "findings": 4 },
+    { "round": 2, "range": "56ea917..033546b", "findings": 1 },
+    { "round": 3, "range": "033546b..aa69d1c", "findings": 0 }
+  ],
+  "ownerDecisions": [
+    "2026-10-03: range flagged by the security-surface path rule (constants/appConfig.ts); on-device learner data, no network, auth, or secrets",
+    "2026-10-03: event log bound, 'Cap unsynced, drop oldest' (finding 1)",
+    "2026-10-03: finding 3 waived under the standing LOW waiver (no sign-in path until Task 3.10), tracked in IAN-616"
+  ],
+  "findings": [
+    { "id": 1, "severity": "LOW", "control": "answer event log unbounded while unsynced", "status": "fixed 9254b44" },
+    { "id": 2, "severity": "LOW", "control": "whole-log rejection on one malformed entry and a single overwritten backup", "status": "fixed 1a04473" },
+    { "id": 3, "severity": "LOW", "control": "ownerUserId stamped on write but ignored on read", "status": "waived by owner 2026-10-03 (IAN-616)" },
+    { "id": 4, "severity": "LOW", "control": "event id generated after the stats fold", "status": "fixed 474cdf7" },
+    { "id": 5, "severity": "LOW", "control": "same rejected entries re-appended to the backup on every launch", "status": "fixed aa69d1c" }
+  ],
+  "nothingFound": [
+    "stored v2 stats guard and v1 migration: null, {}, v1 under v2, negative and non-finite counts, goal outside DAILY_GOALS, bad dates, throwing reads, unresolvable timezone; no data loss and idempotent reruns",
+    "stored event entry guard: bad eventId, isSynced, answeredAt, choiceIndex, roundKind, ownerUserId, non-list and non-JSON values",
+    "stored bankKey lookup: path, prototype, empty, and oversized keys reach no file path or prototype",
+    "event id source: expo-crypto randomUUID, throwing generator, duplicate ids",
+    "misconception deep-link parameter: empty, array, unknown, script and path characters",
+    "review scheduler replay determinism: exact ts-fsrs pin, fuzz off, order independence, missed-only rule",
+    "logging: no email, code, token, or secret in any context",
+    "content rendering: markup and script strings render as literal text",
+    "backup-before-rewrite ordering and failure handling of both writes"
+  ]
+}

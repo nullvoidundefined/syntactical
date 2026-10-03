@@ -7,7 +7,7 @@ import RoundScreen from '../[language]/[difficulty]/play';
 
 jest.mock('../../state/StatsProvider', () => ({
   ...jest.requireActual('../../state/StatsProvider'),
-  useQuizStats: () => ({ isHydrated: true, recordAnswer: jest.fn(), recordCompletion: jest.fn(), stats: { streak: { best: 0, current: 0 } } }),
+  useQuizStats: () => ({ isHydrated: true, recordAnswer: jest.fn(), recordCompletion: jest.fn(), eventLog: [], stats: { answerStreak: { best: 0, current: 0 } } }),
 }));
 jest.mock('../../state/useLanguageManifest', () => ({
   useLanguageManifest: () => ({

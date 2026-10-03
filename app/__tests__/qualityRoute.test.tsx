@@ -15,12 +15,13 @@ jest.mock('../../services/quality/qualityReport.generated', () => ({
 }));
 jest.mock('../../state/useLanguageManifest', () => ({
   useLanguageManifest: () => ({
-    languages: [{ banks: {}, glyph: 'PY', grammar: 'python', id: 'python', label: 'Python', tagline: 't' }],
+    languages: [{ banks: {}, glyph: 'PY', grammar: 'python', id: 'python', label: 'Python', misconceptions: [], tagline: 't', topics: [] }],
     schemaVersion: 2,
   }),
 }));
+jest.mock('../../state/useReviewQueue', () => ({ useReviewQueue: () => ({ dueQuestions: [], nextDueAt: null, questionIndex: new Map() }) }));
 jest.mock('../../state/StatsProvider', () => ({
-  useQuizStats: () => ({ stats: { streak: { best: 0, current: 0 }, totals: { attempted: 0, correct: 0 }, tracks: {}, version: 1 } }),
+  useQuizStats: () => ({ eventLog: [], stats: { answerStreak: { best: 0, current: 0 }, goalHistory: [], isSignUpPromptDismissed: false, totals: { attempted: 0, correct: 0 }, tracks: {}, version: 2 } }),
 }));
 
 const REPORT = {

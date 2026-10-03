@@ -61,6 +61,23 @@ describe('QuizRound', () => {
     expect(mockRecordAnswer).not.toHaveBeenCalled();
   });
 
+  it('records a False answer to a true/false question as choice index 1, the order the card shows it', async () => {
+    await renderRound();
+    await fireEvent.press(screen.getByText('False'));
+    expect(screen.queryByRole('button', { name: 'Explain' })).not.toBeNull();
+    expect(mockRecordAnswer).toHaveBeenCalledWith(expect.objectContaining({ choiceIndex: 1, questionId: 'q-1', wasCorrect: false }));
+  });
+
+  it('records a topic round answer with the topic round kind and the bank key of its bank', async () => {
+    const topical: Question[] = [{ ...questions[0], topic: 'numbers' }];
+    await render(
+      <QuizRound language="python" languageLabel="Python" difficulty="easy" difficultyLabel="Easy" grammar="python" questions={topical} topic="numbers" onExit={jest.fn()} onRetry={jest.fn()} />,
+    );
+    await fireEvent.press(screen.getByText('True'));
+    expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeNull();
+    expect(mockRecordAnswer).toHaveBeenCalledWith(expect.objectContaining({ difficulty: 'easy', language: 'python', roundKind: 'topic' }));
+  });
+
   it('does not offer Explain after a correct answer', async () => {
     await renderRound();
     await fireEvent.press(screen.getByText('True'));
@@ -76,7 +93,14 @@ describe('QuizRound', () => {
     expect(screen.queryByText('100%')).not.toBeNull();
     expect(screen.queryByText('1 of 1 correct')).not.toBeNull();
     expect(mockRecordCompletion).toHaveBeenCalledTimes(1);
-    expect(mockRecordAnswer).toHaveBeenCalledWith({ difficulty: 'easy', language: 'python', wasCorrect: true });
+    expect(mockRecordAnswer).toHaveBeenCalledWith({
+      choiceIndex: 0,
+      difficulty: 'easy',
+      language: 'python',
+      questionId: 'q-1',
+      roundKind: 'bank',
+      wasCorrect: true,
+    });
   });
 
   it('records no completion when leaving early', async () => {

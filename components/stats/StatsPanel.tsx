@@ -1,5 +1,5 @@
 // Lifetime accuracy and a per-language, per-difficulty breakdown for the
-// languages the manifest currently lists.
+// languages the manifest currently lists, then the weekly weakness report.
 import { DIFFICULTIES } from '@syntactical/content-schema';
 import type { Manifest } from '@syntactical/content-schema';
 import { Text, View } from 'react-native';
@@ -9,6 +9,8 @@ import { buildStatsKey } from '../../services/stats/buildStatsKey';
 import type { Stats } from '../../services/stats/types/Stats';
 import { useQuizStats } from '../../state/StatsProvider';
 import { useLanguageManifest } from '../../state/useLanguageManifest';
+
+import { WeaknessReport } from './WeaknessReport';
 
 type BreakdownEntry = { accuracy: number; key: string; label: string };
 
@@ -45,6 +47,7 @@ export function StatsPanel() {
           ))}
         </View>
       ) : null}
+      <WeaknessReport />
     </View>
   );
 }
