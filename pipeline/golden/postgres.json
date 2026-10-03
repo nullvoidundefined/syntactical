@@ -1,0 +1,451 @@
+[
+    {
+        "id": "pg-golden-01",
+        "note": "integer division truncates",
+        "question": {
+            "id": "pg-golden-01",
+            "type": "mc",
+            "prompt": "What does this return?",
+            "code": "SELECT 7 / 2",
+            "query": {
+                "title": "integer division truncates",
+                "explanation": "integer division truncates"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "3"
+                },
+                {
+                    "text": "3.5"
+                },
+                {
+                    "text": "4"
+                }
+            ],
+            "answerIndex": 0
+        },
+        "oracle": {
+            "language": "postgres",
+            "code": "SELECT 7 / 2"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "3",
+            "runtimeVersion": "PostgreSQL 17.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "pg-golden-02",
+        "note": "wrong: claims numeric division",
+        "question": {
+            "id": "pg-golden-02",
+            "type": "mc",
+            "prompt": "What does this return?",
+            "code": "SELECT 7 / 2",
+            "query": {
+                "title": "wrong: claims numeric division",
+                "explanation": "wrong: claims numeric division"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "3"
+                },
+                {
+                    "text": "3.5"
+                },
+                {
+                    "text": "4"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "postgres",
+            "code": "SELECT 7 / 2"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "3",
+            "runtimeVersion": "PostgreSQL 17.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "pg-golden-03",
+        "note": "division by zero raises 22012",
+        "question": {
+            "id": "pg-golden-03",
+            "type": "mc",
+            "prompt": "What happens?",
+            "code": "SELECT 1 / 0",
+            "query": {
+                "title": "division by zero raises 22012",
+                "explanation": "division by zero raises 22012"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "NULL"
+                },
+                {
+                    "text": "0"
+                },
+                {
+                    "text": "Raises error 22012 (division_by_zero)"
+                }
+            ],
+            "answerIndex": 2
+        },
+        "oracle": {
+            "language": "postgres",
+            "code": "SELECT 1 / 0"
+        },
+        "fakeRun": {
+            "outcome": "exception",
+            "exceptionType": "22012",
+            "runtimeVersion": "PostgreSQL 17.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "pg-golden-04",
+        "note": "wrong: claims division by zero returns NULL",
+        "question": {
+            "id": "pg-golden-04",
+            "type": "mc",
+            "prompt": "What happens?",
+            "code": "SELECT 1 / 0",
+            "query": {
+                "title": "wrong: claims division by zero returns NULL",
+                "explanation": "wrong: claims division by zero returns NULL"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "NULL"
+                },
+                {
+                    "text": "0"
+                },
+                {
+                    "text": "Raises error 22012 (division_by_zero)"
+                }
+            ],
+            "answerIndex": 0
+        },
+        "oracle": {
+            "language": "postgres",
+            "code": "SELECT 1 / 0"
+        },
+        "fakeRun": {
+            "outcome": "exception",
+            "exceptionType": "22012",
+            "runtimeVersion": "PostgreSQL 17.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "pg-golden-05",
+        "note": "LIKE prefix match",
+        "question": {
+            "id": "pg-golden-05",
+            "type": "bool",
+            "prompt": "This returns true.",
+            "code": "SELECT ('abc' LIKE 'a%')::text",
+            "query": {
+                "title": "LIKE prefix match",
+                "explanation": "LIKE prefix match"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "answer": true
+        },
+        "oracle": {
+            "language": "postgres",
+            "code": "SELECT ('abc' LIKE 'a%')::text"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "true",
+            "runtimeVersion": "PostgreSQL 17.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "pg-golden-06",
+        "note": "wrong: NULL IS NULL is true",
+        "question": {
+            "id": "pg-golden-06",
+            "type": "bool",
+            "prompt": "This returns true.",
+            "code": "SELECT (NULL IS NULL)::text",
+            "query": {
+                "title": "wrong: NULL IS NULL is true",
+                "explanation": "wrong: NULL IS NULL is true"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "answer": false
+        },
+        "oracle": {
+            "language": "postgres",
+            "code": "SELECT (NULL IS NULL)::text"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "true",
+            "runtimeVersion": "PostgreSQL 17.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "pg-golden-07",
+        "note": "count(column) skips NULLs",
+        "question": {
+            "id": "pg-golden-07",
+            "type": "mc",
+            "prompt": "What does this return?",
+            "code": "SELECT count(x) FROM t",
+            "query": {
+                "title": "count(column) skips NULLs",
+                "explanation": "count(column) skips NULLs"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "3"
+                },
+                {
+                    "text": "2"
+                },
+                {
+                    "text": "1"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "postgres",
+            "code": "SELECT count(x) FROM t",
+            "setupSql": "CREATE TABLE t (x int); INSERT INTO t VALUES (1), (NULL), (3);"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "2",
+            "runtimeVersion": "PostgreSQL 17.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "pg-golden-08",
+        "note": "wrong: count(*) counts NULL rows",
+        "question": {
+            "id": "pg-golden-08",
+            "type": "mc",
+            "prompt": "What does this return?",
+            "code": "SELECT count(*) FROM t",
+            "query": {
+                "title": "wrong: count(*) counts NULL rows",
+                "explanation": "wrong: count(*) counts NULL rows"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "3"
+                },
+                {
+                    "text": "2"
+                },
+                {
+                    "text": "1"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "postgres",
+            "code": "SELECT count(*) FROM t",
+            "setupSql": "CREATE TABLE t (x int); INSERT INTO t VALUES (1), (NULL), (3);"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "3",
+            "runtimeVersion": "PostgreSQL 17.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "pg-golden-09",
+        "note": "length() counts characters",
+        "question": {
+            "id": "pg-golden-09",
+            "type": "ab",
+            "prompt": "Which does this return?",
+            "code": "SELECT length('héllo')",
+            "query": {
+                "title": "length() counts characters",
+                "explanation": "length() counts characters"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "5"
+                },
+                {
+                    "text": "6"
+                }
+            ],
+            "answerIndex": 0,
+            "criterion": {
+                "type": "correctness",
+                "statement": "The output decides.",
+                "evidence": "Executed output."
+            }
+        },
+        "oracle": {
+            "language": "postgres",
+            "code": "SELECT length('héllo')"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "5",
+            "runtimeVersion": "PostgreSQL 17.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "pg-golden-10",
+        "note": "wrong: octet_length() counts bytes",
+        "question": {
+            "id": "pg-golden-10",
+            "type": "ab",
+            "prompt": "Which does this return?",
+            "code": "SELECT octet_length('héllo')",
+            "query": {
+                "title": "wrong: octet_length() counts bytes",
+                "explanation": "wrong: octet_length() counts bytes"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "5"
+                },
+                {
+                    "text": "6"
+                }
+            ],
+            "answerIndex": 0,
+            "criterion": {
+                "type": "correctness",
+                "statement": "The output decides.",
+                "evidence": "Executed output."
+            }
+        },
+        "oracle": {
+            "language": "postgres",
+            "code": "SELECT octet_length('héllo')"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "6",
+            "runtimeVersion": "PostgreSQL 17.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    }
+]
