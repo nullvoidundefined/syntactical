@@ -212,6 +212,30 @@ describe('gapFill', () => {
         expect(latest.stage).toBe('gap-fill');
     });
 
+    it('reports a draft equal to an existing bank prompt as a duplicate, not a failure, and stages nothing', async () => {
+        await seed({ 'easy:free': [...Array(9).fill('strings'), ...Array(10).fill('lists')] });
+        const duplicating: ModelProvider = {
+            async generate(request) {
+                const draft = {
+                    question: {
+                        answer: true,
+                        oracle: { code: 'print(True)' },
+                        prompt: '  existing EASY-0!! ',
+                        query: { explanation: 'e', title: 't' },
+                        type: 'bool',
+                    },
+                };
+                return { model: 'fake-model', value: request.schema.parse(draft) };
+            },
+        };
+        const report = await run(duplicating);
+        expect(report.counts['gap-fill-duplicate']).toBe(1);
+        expect(report.counts['gap-fill-failed']).toBe(0);
+        expect(report.counts['gap-fill-generated']).toBe(0);
+        expect(ranOracles).toHaveLength(0);
+        expect(await listFiles(join(pipelineDir, 'generated'))).toEqual([]);
+    });
+
     it('reports dropped questions in counts without staging them', async () => {
         await seed({ 'easy:free': [...Array(9).fill('strings'), ...Array(10).fill('lists')] });
         const failing: ModelProvider = {
