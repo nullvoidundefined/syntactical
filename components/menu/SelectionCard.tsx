@@ -5,7 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 type SelectionCardProps = {
   ariaLabel?: string;
   isDisabled?: boolean;
-  keyHint: number;
+  keyHint?: number;
   onSelect: () => void;
   statusLabel?: string;
   subtitle: string;
@@ -23,9 +23,11 @@ export function SelectionCard({ ariaLabel, isDisabled = false, keyHint, onSelect
     >
       <View className="flex-row items-center justify-between">
         <Text className="font-mono text-lg text-ink">{title}</Text>
-        <Text aria-hidden className="rounded border border-line px-2 py-0.5 font-mono text-xs text-muted">
-          {keyHint}
-        </Text>
+        {keyHint === undefined ? null : (
+          <Text aria-hidden className="rounded border border-line px-2 py-0.5 font-mono text-xs text-muted">
+            {keyHint}
+          </Text>
+        )}
       </View>
       <Text className="mt-2 text-sm text-muted">{subtitle}</Text>
       {statusLabel ? <Text className="mt-2 font-mono text-xs text-amber">{statusLabel}</Text> : null}
