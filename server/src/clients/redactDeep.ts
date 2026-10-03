@@ -5,8 +5,8 @@ const MAX_DEPTH = 8;
 const SENSITIVE_WORDS = ['authorization', 'cookie', 'email', 'otp', 'password', 'secret', 'token'];
 // pg error payload fields, which can quote row values such as an email.
 const PG_PAYLOAD_KEYS = new Set(['column', 'datatype', 'detail', 'hint', 'internalposition', 'internalquery', 'routine', 'stack', 'where']);
-// On an object shaped like an error, its message is censored too.
-const ERROR_SHAPE_KEYS = ['detail', 'hint', 'stack', 'where'];
+// On an object carrying any error or pg metadata key, its message is censored too.
+const ERROR_SHAPE_KEYS = ['code', 'constraint', 'detail', 'hint', 'routine', 'severity', 'stack', 'where'];
 // Keys ending in "code" are one-time codes unless they are one of these readable codes.
 const READABLE_CODE_KEYS = new Set(['pgcode', 'statuscode']);
 

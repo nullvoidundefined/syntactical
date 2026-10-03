@@ -6,7 +6,18 @@ const SECRET_MIN_LENGTH = 32;
 const strongSecret = z.string().refine((value) => value.trim().length >= SECRET_MIN_LENGTH);
 
 // The one source for absolute URLs (sign-in links, webhooks), never the request's Host.
-const httpsUrl = z.string().refine((value) => URL.canParse(value) && new URL(value).protocol === 'https:');
+// Refuses credentials, a query, or a fragment, and stores a normalized base with no trailing slash.
+const httpsUrl = z
+  .string()
+  .transform((value) => value.trim())
+  .refine((value) => {
+    if (!URL.canParse(value)) {
+      return false;
+    }
+    const { hash, password, protocol, search, username } = new URL(value);
+    return protocol === 'https:' && !username && !password && !search && !hash;
+  })
+  .transform((value) => new URL(value).href.replace(/\/$/, ''));
 
 const envSchema = z.object({
   ALLOWED_ORIGINS: z.string().min(1),
