@@ -78,7 +78,38 @@ describe('buildContentManifest quality report', () => {
         await mkdir(dirname(reportPath), { recursive: true });
         await writeFile(reportPath, '{not json');
 
-        await expect(build()).rejects.toThrow();
+        await expect(build()).rejects.toThrow(SyntaxError);
+        await expect(build()).rejects.not.toThrow(/missing report/);
+    });
+
+    it('names the first published bank as missing when the report has an empty questions list', async () => {
+        await writeReport({ ...buildReport(), questions: [] });
+
+        await expect(build()).rejects.toThrow('missing report for python/easy');
+    });
+
+    it.each([
+        ['a non-string runId', { runId: 7 }, 'pipeline report has no runId string'],
+        ['a missing runId', { runId: undefined }, 'pipeline report has no runId string'],
+        ['a non-string finishedAt', { finishedAt: 1 }, 'pipeline report has no finishedAt string'],
+        ['a missing questions list', { questions: undefined }, 'pipeline report has no questions list'],
+        ['a null report', null, 'pipeline report has no runId string'],
+    ])('rejects a report with %s', async (_name, override, message) => {
+        await writeReport(override === null ? null : { ...buildReport(), ...override });
+
+        await expect(build()).rejects.toThrow(message);
+    });
+
+    it.each([
+        ['a question with a non-string bankKey', { bankKey: 3, id: 'x', status: 'passed' }, 'no bankKey string'],
+        ['a question with an unknown status', { bankKey: 'python/easy', id: 'x', status: 'skipped' }, 'unknown status: skipped'],
+        ['a question with no status', { bankKey: 'python/easy', id: 'x' }, 'unknown status: undefined'],
+        ['a null question', null, 'no bankKey string'],
+    ])('rejects a report with %s', async (_name, question, message) => {
+        const report = buildReport();
+        await writeReport({ ...report, questions: [...report.questions, question] });
+
+        await expect(build()).rejects.toThrow(message);
     });
 
     it('writes no quality module when the caller passes no quality options', async () => {

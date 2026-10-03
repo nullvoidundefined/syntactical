@@ -150,13 +150,28 @@ async function readPipelineReport(reportPath) {
     return JSON.parse(await readFile(reportPath, 'utf8'));
   } catch (err) {
     // No committed report yet: the quality page shows its "not audited yet" state.
-    if (err?.code === 'ENOENT') return null;
+    if (err?.code === 'ENOENT') return undefined;
     throw err;
   }
 }
 
+// The closed set of verdicts in pipeline/src/types/ValidationResult.ts.
+const REPORT_STATUSES = ['passed', 'failed', 'not-executable'];
+
+function assertValidReport(report) {
+  if (typeof report?.runId !== 'string') throw new Error('pipeline report has no runId string');
+  if (typeof report.finishedAt !== 'string') throw new Error('pipeline report has no finishedAt string');
+  if (!Array.isArray(report.questions)) throw new Error('pipeline report has no questions list');
+  for (const question of report.questions) {
+    if (typeof question?.bankKey !== 'string') throw new Error('pipeline report has a question with no bankKey string');
+    if (!REPORT_STATUSES.includes(question.status)) {
+      throw new Error(`pipeline report has a question with an unknown status: ${String(question.status)}`);
+    }
+  }
+}
+
 function assertEveryBankReported(manifest, report) {
-  if (!Array.isArray(report?.questions)) throw new Error('pipeline report has no questions list');
+  assertValidReport(report);
   const reported = new Set(report.questions.map(({ bankKey }) => bankKey));
   for (const { language, difficulty } of listBankEntries(manifest)) {
     const bankKey = `${language.id}/${difficulty}`;
@@ -169,9 +184,9 @@ function assertEveryBankReported(manifest, report) {
 // published bank it fails.
 async function writeQualityModule({ outputPath, reportPath }, manifest) {
   const report = await readPipelineReport(reportPath);
-  if (report !== null) assertEveryBankReported(manifest, report);
+  if (report !== undefined) assertEveryBankReported(manifest, report);
   const quality =
-    report === null
+    report === undefined
       ? null
       : { banks: summarizeBanks(report), finishedAt: report.finishedAt, runId: report.runId, summary: summarizeReport(report) };
   await mkdir(dirname(outputPath), { recursive: true });
