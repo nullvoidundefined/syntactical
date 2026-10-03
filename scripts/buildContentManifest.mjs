@@ -25,9 +25,9 @@ function listBankEntries(manifest) {
   );
 }
 
-async function readBankBytes(contentDir, bankPath) {
+async function readBankBytes(baseDir, bankPath) {
   if (!isSafeBankPath(bankPath)) throw new Error(`${bankPath} is not a safe bank path`);
-  const bytes = await readFile(join(contentDir, bankPath));
+  const bytes = await readFile(join(baseDir, bankPath));
   if (bytes.length > CONTENT_LIMITS.bankBytes) {
     throw new Error(`${bankPath} is over the ${CONTENT_LIMITS.bankBytes} byte limit`);
   }
@@ -50,16 +50,32 @@ function assertValidBank(bankPath, bytes, language) {
   }
 }
 
-async function hashBank(contentDir, bank, language) {
-  const bytes = await readBankBytes(contentDir, bank.path);
-  assertValidBank(bank.path, bytes, language);
-  return createHash('sha256').update(bytes).digest('hex');
+// Counts a bank's questions per topic; a question with no topic is not counted.
+function countTopics(bytes) {
+  const counts = {};
+  for (const question of JSON.parse(bytes.toString('utf8')).questions) {
+    if (typeof question?.topic === 'string') counts[question.topic] = (counts[question.topic] ?? 0) + 1;
+  }
+  return counts;
 }
 
-async function hashAllBanks(contentDir, manifest) {
+// A paid bank is read from the private content root when one is given; every other bank
+// is read from the public content directory.
+function pickBankDir(contentDir, contentRoot, bank) {
+  return contentRoot && bank.access === 'paid' ? contentRoot : contentDir;
+}
+
+// Recomputes the bank's hash and topic counts, and bumps its content version only when the
+// hash changed, so a rebuild with no content change is a no-op.
+async function hashAllBanks(contentDir, manifest, contentRoot) {
   await Promise.all(
     listBankEntries(manifest).map(async ({ bank, language }) => {
-      bank.hash = await hashBank(contentDir, bank, language);
+      const bytes = await readBankBytes(pickBankDir(contentDir, contentRoot, bank), bank.path);
+      assertValidBank(bank.path, bytes, language);
+      const hash = createHash('sha256').update(bytes).digest('hex');
+      if (hash !== bank.hash) bank.contentVersion += 1;
+      bank.hash = hash;
+      bank.topicCounts = countTopics(bytes);
     }),
   );
 }
@@ -116,8 +132,10 @@ ${bankLines.join('\n')}
 `;
 }
 
-function listBankLines(contentDir, banksPath, manifest) {
+// With a private content root, paid banks are not bundled: their files live outside this repo.
+function listBankLines(contentDir, banksPath, manifest, contentRoot) {
   return listBankEntries(manifest)
+    .filter(({ bank }) => !contentRoot || bank.access !== 'paid')
     .map(({ language, difficulty, bank }) => ({
       key: `${language.id}/${difficulty}`,
       requirePath: toRequirePath(banksPath, join(contentDir, bank.path)),
@@ -128,12 +146,12 @@ function listBankLines(contentDir, banksPath, manifest) {
 
 // `outputs` is either one module path (a single module exporting both the
 // manifest and the banks) or { banksPath, manifestPath } (one export per file).
-async function writeGeneratedModules(contentDir, outputs, manifest) {
+async function writeGeneratedModules(contentDir, outputs, manifest, contentRoot) {
   const isSplit = typeof outputs !== 'string';
   const banksPath = isSplit ? outputs.banksPath : outputs;
   const manifestPath = isSplit ? outputs.manifestPath : outputs;
   const manifestRequirePath = toRequirePath(manifestPath, join(contentDir, 'manifest.json'));
-  const bankLines = listBankLines(contentDir, banksPath, manifest);
+  const bankLines = listBankLines(contentDir, banksPath, manifest, contentRoot);
   await mkdir(dirname(manifestPath), { recursive: true });
   await mkdir(dirname(banksPath), { recursive: true });
   if (!isSplit) {
@@ -258,33 +276,45 @@ async function applyApprovedTaxonomies(taxonomyDir, manifest) {
 
 // `quality` is optional: { reportPath, outputPath } also writes the quality module.
 // `taxonomyDir` is optional: the folder of approved `<language>.json` misconception lists.
-export async function buildContentManifest(contentDir, outputs, quality, taxonomyDir) {
+// `contentRoot` is optional: the private content repo that holds paid banks.
+export async function buildContentManifest(contentDir, outputs, quality, taxonomyDir, contentRoot) {
   const manifestPath = join(contentDir, 'manifest.json');
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   assertSafeBankPaths(manifest);
   assertValidManifest(withPlaceholderHashes(manifest));
   if (taxonomyDir) await applyApprovedTaxonomies(taxonomyDir, manifest);
-  await hashAllBanks(contentDir, manifest);
+  await hashAllBanks(contentDir, manifest, contentRoot);
   assertValidManifest(manifest);
   const manifestText = `${JSON.stringify(manifest, null, 2)}\n`;
   if (Buffer.byteLength(manifestText, 'utf8') > CONTENT_LIMITS.manifestBytes) {
     throw new Error(`manifest.json is over the ${CONTENT_LIMITS.manifestBytes} byte limit`);
   }
   await writeFile(manifestPath, manifestText);
-  await writeGeneratedModules(contentDir, outputs, manifest);
+  await writeGeneratedModules(contentDir, outputs, manifest, contentRoot);
   if (quality) await writeQualityModule(quality, manifest);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  buildContentManifest(
-    'content',
+// The repository's own build: its content, generated modules, quality report, and taxonomy
+// paths, resolved against `repoDir` so it runs from any working directory. The pipeline's
+// `publish` calls it with the private content root.
+export function buildRepoContent(repoDir, contentRoot) {
+  return buildContentManifest(
+    join(repoDir, 'content'),
     {
-      banksPath: 'services/content/bundledBanks.generated.ts',
-      manifestPath: 'services/content/bundledManifest.generated.ts',
+      banksPath: join(repoDir, 'services/content/bundledBanks.generated.ts'),
+      manifestPath: join(repoDir, 'services/content/bundledManifest.generated.ts'),
     },
-    { outputPath: 'services/quality/qualityReport.generated.ts', reportPath: 'pipeline/reports/latest.json' },
-    'pipeline/taxonomy',
-  ).catch((err) => {
+    {
+      outputPath: join(repoDir, 'services/quality/qualityReport.generated.ts'),
+      reportPath: join(repoDir, 'pipeline/reports/latest.json'),
+    },
+    join(repoDir, 'pipeline/taxonomy'),
+    contentRoot,
+  );
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  buildRepoContent('.').catch((err) => {
     console.error(err);
     process.exitCode = 1;
   });

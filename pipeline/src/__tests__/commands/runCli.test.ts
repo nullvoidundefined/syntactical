@@ -16,9 +16,11 @@ function buildDeps(
     err: string[];
     gapRoots: string[];
     languages: string[];
+    publishedBanks: Record<string, { isWritten: boolean }>;
     roots: string[];
 } {
     const deps = {
+        buildManifest: async () => undefined,
         classify: async (options: { contentRoot: string }) => {
             deps.roots.push(options.contentRoot);
             return {} as never;
@@ -51,6 +53,11 @@ function buildDeps(
         err: [] as string[],
         kinds: [] as string[],
         pipelineDir: '/pipeline/',
+        publish: async (options: { contentRoot: string }) => {
+            deps.roots.push(options.contentRoot);
+            return { banks: deps.publishedBanks } as never;
+        },
+        publishedBanks: {} as Record<string, { isWritten: boolean }>,
         review: async (options: { contentRoot: string }) => {
             deps.roots.push(options.contentRoot);
             return { approved: 0, items: 0, pending: 0, problems: deps.reviewProblems, rejected: 0 };
@@ -176,6 +183,18 @@ describe('runCli', () => {
         broken.reviewProblems = 2;
         expect(await runCli(argv, broken)).toBe(1);
         expect([clean.roots, fromEnv.roots, broken.roots]).toEqual([['/flag-root'], ['/env-root'], ['/default-root']]);
+        expect(clean.kinds).toEqual([]);
+    });
+
+    it('publish runs with the content root and exits 1 when any bank was refused', async () => {
+        const clean = buildDeps();
+        clean.publishedBanks = { 'python/easy': { isWritten: true } };
+        expect(await runCli(['node', 'cli.ts', 'publish', '--content-root', '/flag-root'], clean)).toBe(0);
+        const refused = buildDeps();
+        refused.publishedBanks = { 'python/easy': { isWritten: true }, 'python/hard': { isWritten: false } };
+        expect(await runCli(['node', 'cli.ts', 'publish'], refused)).toBe(1);
+        expect([clean.roots, refused.roots]).toEqual([['/flag-root'], ['/default-root']]);
+        expect(refused.err.join('')).toContain('bank refused: python/hard');
         expect(clean.kinds).toEqual([]);
     });
 });
