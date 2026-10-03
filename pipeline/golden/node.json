@@ -1,0 +1,449 @@
+[
+    {
+        "id": "js-golden-01",
+        "note": "typeof null is object",
+        "question": {
+            "id": "js-golden-01",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "console.log(typeof null)",
+            "query": {
+                "title": "typeof null is object",
+                "explanation": "typeof null is object"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "null"
+                },
+                {
+                    "text": "object"
+                },
+                {
+                    "text": "undefined"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "node",
+            "code": "console.log(typeof null)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "object",
+            "runtimeVersion": "Node v22.0.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "js-golden-02",
+        "note": "wrong: claims typeof null is null",
+        "question": {
+            "id": "js-golden-02",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "console.log(typeof null)",
+            "query": {
+                "title": "wrong: claims typeof null is null",
+                "explanation": "wrong: claims typeof null is null"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "null"
+                },
+                {
+                    "text": "object"
+                },
+                {
+                    "text": "undefined"
+                }
+            ],
+            "answerIndex": 0
+        },
+        "oracle": {
+            "language": "node",
+            "code": "console.log(typeof null)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "object",
+            "runtimeVersion": "Node v22.0.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "js-golden-03",
+        "note": "property access on null throws TypeError",
+        "question": {
+            "id": "js-golden-03",
+            "type": "mc",
+            "prompt": "What happens?",
+            "code": "null.x",
+            "query": {
+                "title": "property access on null throws TypeError",
+                "explanation": "property access on null throws TypeError"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "undefined"
+                },
+                {
+                    "text": "Throws a TypeError"
+                },
+                {
+                    "text": "Throws a ReferenceError"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "node",
+            "code": "null.x"
+        },
+        "fakeRun": {
+            "outcome": "exception",
+            "exceptionType": "TypeError",
+            "runtimeVersion": "Node v22.0.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "js-golden-04",
+        "note": "wrong: undeclared name throws ReferenceError, not TypeError",
+        "question": {
+            "id": "js-golden-04",
+            "type": "mc",
+            "prompt": "What happens?",
+            "code": "console.log(notDeclared)",
+            "query": {
+                "title": "wrong: undeclared name throws ReferenceError, not TypeError",
+                "explanation": "wrong: undeclared name throws ReferenceError, not TypeError"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "undefined"
+                },
+                {
+                    "text": "Throws a TypeError"
+                },
+                {
+                    "text": "Throws a ReferenceError"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "node",
+            "code": "console.log(notDeclared)"
+        },
+        "fakeRun": {
+            "outcome": "exception",
+            "exceptionType": "ReferenceError",
+            "runtimeVersion": "Node v22.0.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "js-golden-05",
+        "note": "float addition is inexact",
+        "question": {
+            "id": "js-golden-05",
+            "type": "bool",
+            "prompt": "This logs true.",
+            "code": "console.log(0.1 + 0.2 === 0.3)",
+            "query": {
+                "title": "float addition is inexact",
+                "explanation": "float addition is inexact"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "answer": false
+        },
+        "oracle": {
+            "language": "node",
+            "code": "console.log(0.1 + 0.2 === 0.3)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "false",
+            "runtimeVersion": "Node v22.0.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "js-golden-06",
+        "note": "wrong: NaN never equals itself",
+        "question": {
+            "id": "js-golden-06",
+            "type": "bool",
+            "prompt": "This logs true.",
+            "code": "console.log(NaN === NaN)",
+            "query": {
+                "title": "wrong: NaN never equals itself",
+                "explanation": "wrong: NaN never equals itself"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "answer": true
+        },
+        "oracle": {
+            "language": "node",
+            "code": "console.log(NaN === NaN)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "false",
+            "runtimeVersion": "Node v22.0.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "js-golden-07",
+        "note": "array plus array concatenates strings",
+        "question": {
+            "id": "js-golden-07",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "console.log([1, 2, 3] + [4])",
+            "query": {
+                "title": "array plus array concatenates strings",
+                "explanation": "array plus array concatenates strings"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "1,2,3,4"
+                },
+                {
+                    "text": "1,2,34"
+                },
+                {
+                    "text": "[1, 2, 3, 4]"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "node",
+            "code": "console.log([1, 2, 3] + [4])"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "1,2,34",
+            "runtimeVersion": "Node v22.0.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "js-golden-08",
+        "note": "wrong: default sort compares strings",
+        "question": {
+            "id": "js-golden-08",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "console.log([10, 9, 1].sort().join(','))",
+            "query": {
+                "title": "wrong: default sort compares strings",
+                "explanation": "wrong: default sort compares strings"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "1,9,10"
+                },
+                {
+                    "text": "1,10,9"
+                },
+                {
+                    "text": "10,9,1"
+                }
+            ],
+            "answerIndex": 0
+        },
+        "oracle": {
+            "language": "node",
+            "code": "console.log([10, 9, 1].sort().join(','))"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "1,10,9",
+            "runtimeVersion": "Node v22.0.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "js-golden-09",
+        "note": "Math.max() with no arguments",
+        "question": {
+            "id": "js-golden-09",
+            "type": "ab",
+            "prompt": "Which is logged?",
+            "code": "console.log(Math.max())",
+            "query": {
+                "title": "Math.max() with no arguments",
+                "explanation": "Math.max() with no arguments"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "-Infinity"
+                },
+                {
+                    "text": "Infinity"
+                }
+            ],
+            "answerIndex": 0,
+            "criterion": {
+                "type": "correctness",
+                "statement": "The output decides.",
+                "evidence": "Executed output."
+            }
+        },
+        "oracle": {
+            "language": "node",
+            "code": "console.log(Math.max())"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "-Infinity",
+            "runtimeVersion": "Node v22.0.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "js-golden-10",
+        "note": "wrong: Math.min() with no arguments is Infinity",
+        "question": {
+            "id": "js-golden-10",
+            "type": "ab",
+            "prompt": "Which is logged?",
+            "code": "console.log(Math.min())",
+            "query": {
+                "title": "wrong: Math.min() with no arguments is Infinity",
+                "explanation": "wrong: Math.min() with no arguments is Infinity"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "-Infinity"
+                },
+                {
+                    "text": "Infinity"
+                }
+            ],
+            "answerIndex": 0,
+            "criterion": {
+                "type": "correctness",
+                "statement": "The output decides.",
+                "evidence": "Executed output."
+            }
+        },
+        "oracle": {
+            "language": "node",
+            "code": "console.log(Math.min())"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "Infinity",
+            "runtimeVersion": "Node v22.0.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    }
+]
