@@ -18,7 +18,7 @@ const RULES: Rule[] = [
     { name: 'program', pattern: /\bprogram\b/i },
     { name: 'copy', pattern: /\bcopy\b/i },
     { name: 'large object', pattern: /\blo_\w+/i },
-    { name: 'server file function', pattern: /\bpg_(?:read|ls|stat)_\w+/i },
+    { name: 'server file function', pattern: /\bpg_(?:(?:read|ls|stat|file)_\w+|logdir_ls|current_logfile|relation_filepath)\b/i },
     { name: 'dblink', pattern: /dblink/i },
     { name: 'create extension', pattern: /\bcreate\s+extension\b/i },
     { name: 'foreign data wrapper', pattern: /_fdw\b/i },
