@@ -1,9 +1,13 @@
 // B-14: ModelProvider returns schema-checked structured output from either the
 // `claude -p` path or the API path. Malformed JSON or a schema failure is a
 // failed attempt; three failed attempts in all raise ModelOutputInvalid.
+import { existsSync, readdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
+import { buildCliEnv, type ExecOptions } from '../../clients/claudeCliProvider.js';
 import { createModelProvider } from '../../clients/modelProvider.js';
 import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
 
@@ -98,33 +102,84 @@ describe('ModelProvider', () => {
         });
     });
 
-    it('passes the CLI system and prompt as separate argv elements, never a shell string', async () => {
+    it('runs the CLI with no tools, no MCP servers, and the system prompt bound to its flag', async () => {
         const exec = vi.fn().mockResolvedValue(cliAnswer('{"topic":"a"}'));
         const system = 'sys; rm -rf / "quoted" $(whoami)';
-        const prompt = 'line one\nline two `tick`';
-        await createModelProvider('cli', { exec }).generate({ ...REQUEST, prompt, system });
-        expect(exec).toHaveBeenCalledWith('claude', [
+        await createModelProvider('cli', { exec }).generate({ ...REQUEST, system });
+        expect(exec.mock.calls[0]?.[0]).toBe('claude');
+        expect(exec.mock.calls[0]?.[1]).toEqual([
             '-p',
             '--output-format',
             'json',
+            '--tools',
+            '',
+            '--strict-mcp-config',
+            '--no-session-persistence',
             `--system-prompt=${system}`,
-            '--',
-            prompt,
         ]);
     });
 
-    it('keeps a prompt or system prompt that starts with a dash from reading as a CLI flag', async () => {
+    it('sends the prompt on stdin, never in argv, so it cannot read as a flag or subcommand', async () => {
         const exec = vi.fn().mockResolvedValue(cliAnswer('{"topic":"a"}'));
-        const prompt = '--mcp-config /tmp/evil.json';
-        const system = '--allowedTools Bash';
-        await createModelProvider('cli', { exec }).generate({ ...REQUEST, prompt, system });
-        const args = exec.mock.calls[0]?.[1] as string[];
-        const terminator = args.indexOf('--');
-        expect(terminator).toBeGreaterThan(-1);
-        expect(args.slice(terminator + 1)).toEqual([prompt]);
-        expect(args.slice(0, terminator)).not.toContain(prompt);
-        expect(args.slice(0, terminator)).not.toContain(system);
-        expect(args).toContain(`--system-prompt=${system}`);
+        for (const prompt of ['--mcp-config /tmp/evil.json', 'agents', 'mcp add evil']) {
+            exec.mockClear();
+            await createModelProvider('cli', { exec }).generate({ ...REQUEST, prompt });
+            const [, args, options] = exec.mock.calls[0] as [string, string[], ExecOptions];
+            expect(args).not.toContain(prompt);
+            expect(options.input).toBe(prompt);
+        }
+    });
+
+    it('runs the CLI in an empty scratch directory outside the repo and removes it afterwards', async () => {
+        let seenCwd = '';
+        let entriesAtCall: string[] = [];
+        const exec = vi.fn(async (_file: string, _args: string[], options: ExecOptions) => {
+            seenCwd = options.cwd;
+            entriesAtCall = readdirSync(options.cwd);
+            return cliAnswer('{"topic":"a"}');
+        });
+        await createModelProvider('cli', { exec }).generate(REQUEST);
+        expect(seenCwd.startsWith(tmpdir())).toBe(true);
+        expect(seenCwd.startsWith(process.cwd())).toBe(false);
+        expect(entriesAtCall).toEqual([]);
+        expect(existsSync(seenCwd)).toBe(false);
+    });
+
+    it('passes only PATH, HOME, locale, temp, user, and Claude or Anthropic variables to the CLI', () => {
+        const source = {
+            ANTHROPIC_BASE_URL: 'https://example.invalid',
+            AWS_PROFILE: 'prod',
+            CLAUDE_CONFIG_DIR: '/c',
+            DATABASE_URL: 'postgres-url-placeholder',
+            HOME: '/h',
+            PATH: '/bin',
+            npm_config_registry: 'r',
+        };
+        expect(buildCliEnv(source)).toEqual({
+            ANTHROPIC_BASE_URL: 'https://example.invalid',
+            CLAUDE_CONFIG_DIR: '/c',
+            HOME: '/h',
+            PATH: '/bin',
+        });
+    });
+
+    it('hands the CLI the filtered environment, not the full process environment', async () => {
+        vi.stubEnv('DATABASE_URL', 'postgres-url-placeholder');
+        const exec = vi.fn().mockResolvedValue(cliAnswer('{"topic":"a"}'));
+        await createModelProvider('cli', { exec }).generate(REQUEST);
+        const [, , options] = exec.mock.calls[0] as [string, string[], ExecOptions];
+        expect(options.env.DATABASE_URL).toBeUndefined();
+        expect(options.env.PATH).toBe(process.env.PATH);
+    });
+
+    it('reads the model name from modelUsage when the envelope has no top-level model', async () => {
+        const exec = vi.fn().mockResolvedValue({
+            stdout: JSON.stringify({ modelUsage: { 'claude-opus-5-5': {} }, result: '{"topic":"a"}' }),
+        });
+        await expect(createModelProvider('cli', { exec }).generate(REQUEST)).resolves.toEqual({
+            model: 'claude-opus-5-5',
+            value: { topic: 'a' },
+        });
     });
 
     it('fails fast on a CLI error envelope instead of retrying it as model text', async () => {
