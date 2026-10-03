@@ -48,6 +48,8 @@ export const SYNC_BATCH_SIZE = 200;
 // The user ids whose uploads the server stopped at the stored-event cap; they
 // post nothing until the cap clears, but still download.
 export const SYNC_CAP_REACHED_STORAGE_KEY = 'syntactical.sync.cap-reached.v1';
+// Marks a guest stats fold in progress or done, until the guest reset lands.
+export const GUEST_CLAIM_STORAGE_KEY = 'syntactical.stats.guest-claim.v1';
 
 // The most download pages one sync pass requests; the next pass resumes from the stored cursor.
 export const SYNC_MAX_PAGES_PER_PASS = 100;
