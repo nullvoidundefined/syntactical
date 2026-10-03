@@ -1,8 +1,9 @@
 // Daily progress from answer events: XP summed per local date in the user's
 // timezone, each day marked met against the goal in force on that date. The
-// result is sorted by date and does not depend on event order. A goal applies
-// from its `from` date on, and a date before the first change uses the
-// earliest goal. The goal history must hold only daily goals on distinct YYYY-MM-DD
+// result is sorted by date and does not depend on event order. Events are
+// deduplicated by eventId, keeping the first occurrence. A goal applies from
+// its `from` date on, and a date before the first change uses the earliest
+// goal. The goal history must hold only daily goals on distinct YYYY-MM-DD
 // dates; anything else throws rather than being resolved by array order.
 import { computeXp } from './computeXp.js';
 import { DAILY_GOALS } from './constants.js';
@@ -62,9 +63,15 @@ export function computeDailyProgress(
     isDueReview: (event: AnswerEvent) => boolean,
 ): DailyProgress[] {
     const sortedGoals = sortGoalHistory(goalHistory);
+    const seenEventIds = new Set<string>();
     const xpByDate = new Map<string, number>();
     for (const event of events) {
-        const localDate = toLocalDate(event.answeredAt, timezone);
+        const { answeredAt, eventId } = event;
+        if (seenEventIds.has(eventId)) {
+            continue;
+        }
+        seenEventIds.add(eventId);
+        const localDate = toLocalDate(answeredAt, timezone);
         const xp = computeXp(event, isDueReview(event));
         xpByDate.set(localDate, (xpByDate.get(localDate) ?? 0) + xp);
     }
