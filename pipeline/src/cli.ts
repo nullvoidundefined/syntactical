@@ -5,6 +5,8 @@ import { createModelProvider } from './clients/modelProvider.js';
 import { classify } from './commands/classify.js';
 import { draftOracles } from './commands/draftOracles.js';
 import { draftTaxonomy } from './commands/draftTaxonomy.js';
+import { enrich } from './commands/enrich.js';
+import { gapFill } from './commands/gapFill.js';
 import { runCli } from './commands/runCli.js';
 import { validateContent } from './commands/validate.js';
 
@@ -17,7 +19,9 @@ process.exitCode = await runCli(argv, {
     defaultContentRoot: fileURLToPath(new URL('../../../syntactical-content', import.meta.url)),
     draft: draftOracles,
     draftTaxonomy,
+    enrich,
     env,
+    gapFill,
     pipelineDir: fileURLToPath(new URL('../', import.meta.url)),
     stderr: (text) => stderr.write(text),
     stdout: (text) => stdout.write(text),

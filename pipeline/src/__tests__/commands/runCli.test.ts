@@ -9,7 +9,14 @@ const PROVIDER = { generate: async () => ({ model: 'm', value: {} }) } as unknow
 
 function buildDeps(
     env: Record<string, string | undefined> = {},
-): CliDeps & { kinds: string[]; drafted: number; err: string[]; languages: string[]; roots: string[] } {
+): CliDeps & {
+    kinds: string[];
+    drafted: number;
+    err: string[];
+    gapRoots: string[];
+    languages: string[];
+    roots: string[];
+} {
     const deps = {
         classify: async (options: { contentRoot: string }) => {
             deps.roots.push(options.contentRoot);
@@ -24,12 +31,21 @@ function buildDeps(
         draft: async () => {
             deps.drafted += 1;
         },
+        gapFill: async (options: { contentRoot: string }) => {
+            deps.gapRoots.push(options.contentRoot);
+            return {} as never;
+        },
+        gapRoots: [] as string[],
         drafted: 0,
         draftTaxonomy: async (options: { language: string }) => {
             deps.languages.push(options.language);
             return '/x';
         },
         languages: [] as string[],
+        enrich: async (options: { contentRoot: string }) => {
+            deps.roots.push(options.contentRoot);
+            return {} as never;
+        },
         env,
         err: [] as string[],
         kinds: [] as string[],
@@ -109,5 +125,38 @@ describe('runCli', () => {
         expect(deps.err.join('')).toContain('--content-root needs a path');
         expect(deps.roots).toEqual([]);
         expect(deps.kinds).toEqual([]);
+    });
+
+    it('enrich runs the enrich stage with the content root and the provider the flags name', async () => {
+        const withFlag = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
+        expect(await runCli(['node', 'cli.ts', 'enrich', '--api', '--content-root', '/flag-root'], withFlag)).toBe(0);
+        const withEnv = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
+        await runCli(['node', 'cli.ts', 'enrich'], withEnv);
+        expect([withFlag.roots, withEnv.roots]).toEqual([['/flag-root'], ['/env-root']]);
+        expect([withFlag.kinds, withEnv.kinds]).toEqual([['api'], ['cli']]);
+    });
+
+    it('enrich with --content-root and no value exits 1 without enriching', async () => {
+        const deps = buildDeps();
+        expect(await runCli(['node', 'cli.ts', 'enrich', '--content-root'], deps)).toBe(1);
+        expect(deps.roots).toEqual([]);
+        expect(deps.kinds).toEqual([]);
+    });
+
+    it('gap-fill uses the --api provider and the content root flag, then env, then default', async () => {
+        const argv = ['node', 'cli.ts', 'gap-fill'];
+        const withFlag = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
+        await runCli([...argv, '--api', '--content-root', '/flag-root'], withFlag);
+        const withEnv = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
+        await runCli(argv, withEnv);
+        const withDefault = buildDeps();
+        await runCli(argv, withDefault);
+        expect([withFlag.gapRoots, withEnv.gapRoots, withDefault.gapRoots]).toEqual([
+            ['/flag-root'],
+            ['/env-root'],
+            ['/default-root'],
+        ]);
+        expect(withFlag.kinds).toEqual(['api']);
+        expect(withFlag.roots).toEqual([]);
     });
 });

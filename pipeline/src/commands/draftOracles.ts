@@ -6,6 +6,7 @@ import { dirname, join } from 'node:path';
 
 import { type Question, validateManifest } from '@syntactical/content-schema';
 
+import { ORACLE_LANGUAGES } from '../services/ORACLE_LANGUAGES.js';
 import { draftOracle } from '../services/draftOracle.js';
 import { findRefusedConstruct } from '../services/findRefusedConstruct.js';
 import { readCheckerPythonVersion } from '../services/readCheckerPythonVersion.js';
@@ -15,7 +16,6 @@ import { writeFileAtomic } from '../services/writeFileAtomic.js';
 import { ModelOutputInvalid } from '../types/ModelOutputInvalid.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 import type { Oracle } from '../types/Oracle.js';
-import type { OracleLanguage } from '../types/OracleLanguage.js';
 
 export interface DraftOraclesOptions {
     contentDir: string;
@@ -23,12 +23,6 @@ export interface DraftOraclesOptions {
     provider: ModelProvider;
     log: (line: string) => void;
 }
-
-const ORACLE_LANGUAGES: Record<string, OracleLanguage> = {
-    javascript: 'node',
-    postgres: 'postgres',
-    python: 'python',
-};
 
 const JSON_INDENT = 2;
 
