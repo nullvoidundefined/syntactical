@@ -7,6 +7,6 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     globalSetup: ['src/__tests__/integration/globalSetup.ts'],
-    include: ['src/__tests__/migrations/**/*.test.ts'],
+    include: ['src/__tests__/migrations/**/*.test.ts', 'src/**/*.integration.test.ts'],
   },
 });

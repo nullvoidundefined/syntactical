@@ -27,6 +27,8 @@ function buildValidSource(): NodeJS.ProcessEnv {
     RATE_LIMIT_KEY_SECRET: randomBytes(RANDOM_SECRET_BYTES).toString('hex'),
     ALLOWED_ORIGINS: 'https://syntactical.dev',
     PUBLIC_BASE_URL: 'https://api.syntactical.dev',
+    RESEND_API_KEY: randomBytes(RANDOM_SECRET_BYTES).toString('hex'),
+    EMAIL_FROM: 'Syntactical <sign-in@syntactical.dev>',
   };
 }
 
@@ -73,6 +75,18 @@ describe('loadEnv', () => {
     const source = { ...buildValidSource(), REVENUECAT_WEBHOOK_AUTH: '' };
 
     expect(() => loadEnv(source)).toThrow(/REVENUECAT_WEBHOOK_AUTH/);
+  });
+
+  it('fails when the rate-limit key secret is one character short or empty, without echoing it', () => {
+    const shortSecret = randomText(WEBHOOK_AUTH_MIN_LENGTH - 1);
+    const short = { ...buildValidSource(), RATE_LIMIT_KEY_SECRET: shortSecret };
+    const empty = { ...buildValidSource(), RATE_LIMIT_KEY_SECRET: '' };
+
+    const error = captureError(() => loadEnv(short));
+
+    expect(error.message).toContain('RATE_LIMIT_KEY_SECRET');
+    expect(errorText(error)).not.toContain(shortSecret);
+    expect(() => loadEnv(empty)).toThrow(/RATE_LIMIT_KEY_SECRET/);
   });
 
   it.each(REQUIRED_VARIABLES)('fails when %s is missing, naming it and echoing no provided value', (missingVariable) => {

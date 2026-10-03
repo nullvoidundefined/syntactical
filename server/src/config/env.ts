@@ -22,9 +22,12 @@ const httpsUrl = z
 const envSchema = z.object({
   ALLOWED_ORIGINS: z.string().min(1),
   DATABASE_URL: z.string().min(1),
+  // The sign-in email's sender, for example `Syntactical <sign-in@syntactical.dev>`.
+  EMAIL_FROM: z.string().trim().min(1),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PUBLIC_BASE_URL: httpsUrl,
   RATE_LIMIT_KEY_SECRET: strongSecret,
+  RESEND_API_KEY: z.string().trim().min(1),
   REVENUECAT_WEBHOOK_AUTH: strongSecret,
 });
 
