@@ -7,6 +7,7 @@ import { draftOracles } from './commands/draftOracles.js';
 import { validateContent } from './commands/validate.js';
 import { createOracleSource } from './services/createOracleSource.js';
 import { exitCodeFor } from './services/exitCodeFor.js';
+import { pickProviderKind } from './services/pickProviderKind.js';
 
 const PIPELINE_DIR = fileURLToPath(new URL('../', import.meta.url));
 const FIRST_COMMAND_ARG = 2;
@@ -19,7 +20,7 @@ async function main(argv: string[]): Promise<number> {
             contentDir,
             log: (line) => process.stdout.write(`${line}\n`),
             oraclesDir: `${PIPELINE_DIR}oracles`,
-            provider: createModelProvider(argv.includes('--api') ? 'api' : 'cli'),
+            provider: createModelProvider(pickProviderKind(argv)),
         });
         return 0;
     }
