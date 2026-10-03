@@ -22,7 +22,7 @@ export function buildReviewQueue(events: readonly AnswerEvent[], readLocalBank: 
   const questionIndex = buildQuestionIndex(events, readLocalBank);
   const reviewState = buildReviewState(events, (questionId, choiceIndex) => readMisconception(questionIndex, questionId, choiceIndex));
   const playable = Object.values(reviewState.questions)
-    .filter(({ id }) => questionIndex.get(id)?.question.type !== 'ab' && questionIndex.has(id))
+    .filter(({ id }) => questionIndex.has(id))
     .sort(compareDue);
   const nowMs = now.getTime();
   const due = playable.filter(({ card }) => card.due.getTime() <= nowMs);

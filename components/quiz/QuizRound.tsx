@@ -11,11 +11,12 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { toChoiceIndex } from '../../services/quiz/toChoiceIndex';
 import { useQuizStats } from '../../state/StatsProvider';
-import { useQuizEngine, type PlayableQuestion, type RoundKind } from '../../state/useQuizEngine';
+import { useQuizEngine, type RoundKind } from '../../state/useQuizEngine';
 import { useRoundCompletion } from '../../state/useRoundCompletion';
 import { useRoundKeyboard } from '../../state/useRoundKeyboard';
 import { QueryDrawer } from '../query/QueryDrawer';
 
+import { AbCard } from './AbCard';
 import { BooleanCard } from './BooleanCard';
 import { KeyboardHintBar } from './KeyboardHintBar';
 import { MultipleChoiceCard } from './MultipleChoiceCard';
@@ -32,7 +33,7 @@ export type QuestionSource = {
 };
 
 type QuizRoundProps = QuestionSource & {
-  describeQuestion?: (question: PlayableQuestion) => QuestionSource;
+  describeQuestion?: (question: Question) => QuestionSource;
   onExit: () => void;
   onRetry: () => void;
   questions: readonly Question[];
@@ -45,18 +46,22 @@ type QuestionCardProps = {
   languageLabel: string;
   onAnswer: (value: number | boolean) => void;
   onOpenQuery: () => void;
-  question: PlayableQuestion;
+  question: Question;
 };
 
+type CardBodyProps = Pick<QuestionCardProps, 'answerState' | 'onAnswer' | 'question'>;
+
+function CardBody({ answerState, onAnswer, question }: CardBodyProps) {
+  if (question.type === 'mc') return <MultipleChoiceCard question={question} {...answerState} onSelect={onAnswer} />;
+  if (question.type === 'ab') return <AbCard question={question} {...answerState} onSelect={onAnswer} />;
+  return <BooleanCard question={question} {...answerState} onSelect={onAnswer} />;
+}
+
 function QuestionCard({ answerState, difficultyLabel, languageLabel, onAnswer, onOpenQuery, question }: QuestionCardProps) {
-  const labels = { difficultyLabel, languageLabel, onOpenQuery, provenance: question.provenance };
-  return question.type === 'mc' ? (
-    <QuestionCardFrame {...labels} type="mc">
-      <MultipleChoiceCard question={question} {...answerState} onSelect={onAnswer} />
-    </QuestionCardFrame>
-  ) : (
-    <QuestionCardFrame {...labels} type="bool">
-      <BooleanCard question={question} {...answerState} onSelect={onAnswer} />
+  const { provenance, type } = question;
+  return (
+    <QuestionCardFrame difficultyLabel={difficultyLabel} languageLabel={languageLabel} onOpenQuery={onOpenQuery} provenance={provenance} type={type}>
+      <CardBody answerState={answerState} onAnswer={onAnswer} question={question} />
     </QuestionCardFrame>
   );
 }
@@ -95,7 +100,7 @@ export function QuizRound(props: QuizRoundProps) {
   const { advanceQuestion, currentQuestion, isAnswered, isComplete, submitAnswer, submittedAnswer, wasCorrect } = engine;
   const { recordAnswer } = useQuizStats();
   const [isQueryOpen, setIsQueryOpen] = useState(false);
-  // A round with no playable questions (an A/B-only bank before Stage 5) is not a completion.
+  // A round with no questions is not a completion; a review round is not a bank completion.
   useRoundCompletion(isComplete && engine.totalQuestions > 0 && roundKind === 'bank', { difficulty, language });
   const roundSource = { difficulty, difficultyLabel, grammar, language, languageLabel };
   const source = currentQuestion && describeQuestion ? describeQuestion(currentQuestion) : roundSource;

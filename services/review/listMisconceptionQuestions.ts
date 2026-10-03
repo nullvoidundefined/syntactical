@@ -1,4 +1,4 @@
-// The playable questions, in locally available banks the learner has
+// The questions, in locally available banks the learner has
 // answered from, that can reveal one misconception: the questions of a
 // misconception review round, ordered by id so a retry replays them alike.
 import { listQuestionMisconceptions } from './listQuestionMisconceptions';
@@ -9,6 +9,6 @@ export function listMisconceptionQuestions(
   misconceptionId: string,
 ): ReviewQuestion[] {
   return [...questionIndex.values()]
-    .filter(({ question }) => question.type !== 'ab' && listQuestionMisconceptions(question).includes(misconceptionId))
+    .filter(({ question }) => listQuestionMisconceptions(question).includes(misconceptionId))
     .sort((left, right) => (left.question.id < right.question.id ? -1 : 1));
 }

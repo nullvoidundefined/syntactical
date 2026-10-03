@@ -49,6 +49,33 @@ jobs:
         env:
           SKIP_DOCKER_TESTS: '1'
 
+  server-integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          # Reachable only from this job's runner, so trust auth needs no password.
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Run the server integration tests against the Postgres service
+        run: npm run test:integration -w server
+        env:
+          TEST_DATABASE_URL: postgres://postgres@localhost:5432/postgres
+
   oracle-runners:
     runs-on: ubuntu-latest
     steps:
