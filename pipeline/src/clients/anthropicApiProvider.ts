@@ -14,7 +14,7 @@ export interface MessagesClient {
         messages: { content: string; role: 'user' }[];
         model: string;
         system: string;
-    }): Promise<{ content: { text?: string; type: string }[]; model: string }>;
+    }): Promise<{ content: { text?: string; type: string }[]; model: string; stop_reason?: string | null }>;
 }
 
 export function createAnthropicApiProvider(messages?: MessagesClient): ModelProvider {
@@ -29,6 +29,9 @@ export function createAnthropicApiProvider(messages?: MessagesClient): ModelProv
                     model: process.env.PIPELINE_MODEL || DEFAULT_MODEL,
                     system,
                 });
+                if (response.stop_reason === 'max_tokens') {
+                    throw new Error(`model output truncated at max_tokens (${MAX_OUTPUT_TOKENS})`);
+                }
                 const text = response.content.map((block) => (block.type === 'text' ? (block.text ?? '') : '')).join('');
                 return { model: response.model, text };
             });

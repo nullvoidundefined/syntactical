@@ -9,6 +9,8 @@ import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
 
 const schema = z.object({ topic: z.string() });
 const MAX_ATTEMPTS = 3;
+const LONG_OUTPUT_LENGTH = 5000;
+const MAX_MESSAGE_LENGTH = 500;
 const REQUEST = { prompt: 'p', promptVersion: 'v1', schema, system: 's' };
 
 function cliAnswer(result: string) {
@@ -72,17 +74,19 @@ describe('ModelProvider', () => {
     });
 
     it('never puts the raw model output in the error beyond a short excerpt', async () => {
-        const longOutput = 'z'.repeat(5000);
-        const create = vi.fn().mockResolvedValue(apiAnswer(JSON.stringify({ topic: 1, extra: longOutput })));
+        const longOutput = `{ not json ${'z'.repeat(LONG_OUTPUT_LENGTH)}`;
+        const create = vi.fn().mockResolvedValue(apiAnswer(longOutput));
         const failure = (await createModelProvider('api', { messages: { create } })
             .generate(REQUEST)
             .catch((error: unknown) => error)) as ModelOutputInvalid;
+        expect(failure).toBeInstanceOf(ModelOutputInvalid);
         expect(failure.message).not.toContain(longOutput);
-        expect(failure.message.length).toBeLessThan(500);
+        expect(failure.message.length).toBeLessThan(MAX_MESSAGE_LENGTH);
     });
 
     it('sends PIPELINE_MODEL to messages.create, defaulting to claude-opus-5-5', async () => {
         const create = vi.fn().mockResolvedValue(apiAnswer('{"topic":"a"}'));
+        vi.stubEnv('PIPELINE_MODEL', '');
         const provider = createModelProvider('api', { messages: { create } });
         await provider.generate(REQUEST);
         expect(create.mock.calls[0]?.[0]).toMatchObject({ model: 'claude-opus-5-5', system: 's' });
@@ -103,9 +107,59 @@ describe('ModelProvider', () => {
             '-p',
             '--output-format',
             'json',
-            '--system-prompt',
-            system,
+            `--system-prompt=${system}`,
+            '--',
             prompt,
         ]);
+    });
+
+    it('keeps a prompt or system prompt that starts with a dash from reading as a CLI flag', async () => {
+        const exec = vi.fn().mockResolvedValue(cliAnswer('{"topic":"a"}'));
+        const prompt = '--mcp-config /tmp/evil.json';
+        const system = '--allowedTools Bash';
+        await createModelProvider('cli', { exec }).generate({ ...REQUEST, prompt, system });
+        const args = exec.mock.calls[0]?.[1] as string[];
+        const terminator = args.indexOf('--');
+        expect(terminator).toBeGreaterThan(-1);
+        expect(args.slice(terminator + 1)).toEqual([prompt]);
+        expect(args.slice(0, terminator)).not.toContain(prompt);
+        expect(args.slice(0, terminator)).not.toContain(system);
+        expect(args).toContain(`--system-prompt=${system}`);
+    });
+
+    it('fails fast on a CLI error envelope instead of retrying it as model text', async () => {
+        const exec = vi.fn().mockResolvedValue({
+            stdout: JSON.stringify({ is_error: true, result: 'Credit balance too low', subtype: 'error' }),
+        });
+        await expect(createModelProvider('cli', { exec }).generate(REQUEST)).rejects.toThrow(
+            /claude CLI reported an error/,
+        );
+        expect(exec).toHaveBeenCalledTimes(1);
+    });
+
+    it('reports a model name of unknown when the CLI envelope omits it', async () => {
+        const exec = vi.fn().mockResolvedValue({ stdout: JSON.stringify({ result: '{"topic":"a"}' }) });
+        await expect(createModelProvider('cli', { exec }).generate(REQUEST)).resolves.toEqual({
+            model: 'unknown',
+            value: { topic: 'a' },
+        });
+    });
+
+    it('fails fast when the API stops at max_tokens instead of retrying the same request', async () => {
+        const create = vi.fn().mockResolvedValue({ ...apiAnswer('{"topic":'), stop_reason: 'max_tokens' });
+        await expect(createModelProvider('api', { messages: { create } }).generate(REQUEST)).rejects.toThrow(
+            /max_tokens/,
+        );
+        expect(create).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('ModelOutputInvalid', () => {
+    it('truncates a long issue to a short excerpt', () => {
+        const longIssue = 'y'.repeat(LONG_OUTPUT_LENGTH);
+        const failure = new ModelOutputInvalid('v1', longIssue);
+        expect(failure.message).not.toContain(longIssue);
+        expect(failure.issue.length).toBeLessThan(MAX_MESSAGE_LENGTH);
+        expect(failure.message.length).toBeLessThan(MAX_MESSAGE_LENGTH);
     });
 });

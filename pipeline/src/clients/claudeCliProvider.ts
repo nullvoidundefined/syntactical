@@ -1,13 +1,14 @@
 // ModelProvider over `claude -p`. The command runs as an argument vector (never
-// a shell string), so the system and user prompts reach the CLI as single
-// arguments whatever characters they hold.
+// a shell string). The system prompt is bound to its flag with `=` and the user
+// prompt follows a `--` terminator, so neither can be parsed as a CLI option even
+// when it starts with a dash.
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
 import type { ModelProvider } from '../types/ModelProvider.js';
 import { generateWithRetries } from './generateWithRetries.js';
 
-const FALLBACK_MODEL = 'claude-cli';
+const UNKNOWN_MODEL = 'unknown';
 const MAX_STDOUT_BYTES = 32 * 1024 * 1024;
 
 export type ExecFn = (file: string, args: string[]) => Promise<{ stdout: string }>;
@@ -22,17 +23,20 @@ function readEnvelope(stdout: string): { model: string; text: string } {
     let envelope: unknown;
     try {
         envelope = JSON.parse(stdout);
-    } catch {
-        return { model: FALLBACK_MODEL, text: stdout };
+    } catch (error) {
+        throw new Error('claude CLI printed output that is not a JSON envelope', { cause: error });
     }
     if (typeof envelope !== 'object' || envelope === null) {
-        return { model: FALLBACK_MODEL, text: stdout };
+        throw new Error('claude CLI printed output that is not a JSON envelope');
     }
-    const { model, result } = envelope as { model?: unknown; result?: unknown };
-    return {
-        model: typeof model === 'string' ? model : FALLBACK_MODEL,
-        text: typeof result === 'string' ? result : stdout,
-    };
+    const { is_error: isError, model, result, subtype } = envelope as Record<string, unknown>;
+    if (isError === true) {
+        throw new Error(`claude CLI reported an error (${typeof subtype === 'string' ? subtype : 'unknown'})`);
+    }
+    if (typeof result !== 'string') {
+        throw new Error('claude CLI envelope has no result text');
+    }
+    return { model: typeof model === 'string' ? model : UNKNOWN_MODEL, text: result };
 }
 
 export function createClaudeCliProvider(exec: ExecFn = defaultExec): ModelProvider {
@@ -44,8 +48,8 @@ export function createClaudeCliProvider(exec: ExecFn = defaultExec): ModelProvid
                     '-p',
                     '--output-format',
                     'json',
-                    '--system-prompt',
-                    system,
+                    `--system-prompt=${system}`,
+                    '--',
                     prompt,
                 ]);
                 return readEnvelope(stdout);
