@@ -9,7 +9,7 @@ const PROVIDER = { generate: async () => ({ model: 'm', value: {} }) } as unknow
 
 function buildDeps(
     env: Record<string, string | undefined> = {},
-): CliDeps & { kinds: string[]; drafted: number; err: string[]; roots: string[] } {
+): CliDeps & { kinds: string[]; drafted: number; err: string[]; languages: string[]; roots: string[] } {
     const deps = {
         classify: async (options: { contentRoot: string }) => {
             deps.roots.push(options.contentRoot);
@@ -25,6 +25,11 @@ function buildDeps(
             deps.drafted += 1;
         },
         drafted: 0,
+        draftTaxonomy: async (options: { language: string }) => {
+            deps.languages.push(options.language);
+            return '/x';
+        },
+        languages: [] as string[],
         env,
         err: [] as string[],
         kinds: [] as string[],
@@ -57,6 +62,20 @@ describe('runCli', () => {
             expect(deps.kinds).toEqual(['cli']);
         },
     );
+
+    it('draft-taxonomy passes the language through and builds the provider the flag names', async () => {
+        const deps = buildDeps();
+        expect(await runCli(['node', 'cli.ts', 'draft-taxonomy', 'python', '--api'], deps)).toBe(0);
+        expect(deps.languages).toEqual(['python']);
+        expect(deps.kinds).toEqual(['api']);
+    });
+
+    it('draft-taxonomy with no language exits 1 without building a provider', async () => {
+        const deps = buildDeps();
+        expect(await runCli(['node', 'cli.ts', 'draft-taxonomy', '--api'], deps)).toBe(1);
+        expect(deps.err.join('')).toContain('needs a language');
+        expect(deps.kinds).toEqual([]);
+    });
 
     it('prints usage and exits 1 for an unknown command, without building a provider', async () => {
         const deps = buildDeps();

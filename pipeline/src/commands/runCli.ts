@@ -11,6 +11,7 @@ import type { ModelProvider } from '../types/ModelProvider.js';
 
 import type { classify } from './classify.js';
 import type { draftOracles } from './draftOracles.js';
+import type { draftTaxonomy } from './draftTaxonomy.js';
 import type { validateContent } from './validate.js';
 
 export interface CliDeps {
@@ -20,6 +21,7 @@ export interface CliDeps {
     env: Record<string, string | undefined>;
     createProvider: (kind: 'api' | 'cli') => ModelProvider;
     draft: typeof draftOracles;
+    draftTaxonomy: typeof draftTaxonomy;
     pipelineDir: string;
     stderr: (text: string) => void;
     stdout: (text: string) => void;
@@ -52,7 +54,8 @@ async function runClassify(argv: string[], deps: CliDeps): Promise<number> {
 }
 
 export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
-    const { contentDir, createProvider, draft, pipelineDir, stderr, stdout, validate } = deps;
+    const { contentDir, createProvider, draft, draftTaxonomy: draftTaxonomyList, pipelineDir, stderr, stdout, validate } =
+        deps;
     const [command] = argv.slice(FIRST_COMMAND_ARG);
     if (command === 'draft-oracles') {
         await draft({
@@ -63,11 +66,26 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
         });
         return 0;
     }
+    if (command === 'draft-taxonomy') {
+        const [language] = argv.slice(FIRST_COMMAND_ARG + 1).filter((arg) => !arg.startsWith('--'));
+        if (language === undefined) {
+            stderr('draft-taxonomy needs a language\n');
+            return 1;
+        }
+        await draftTaxonomyList({
+            contentDir,
+            language,
+            log: (line) => stdout(`${line}\n`),
+            pipelineDir,
+            provider: createProvider(pickProviderKind(argv)),
+        });
+        return 0;
+    }
     if (command === 'classify') {
         return runClassify(argv, deps);
     }
     if (command !== 'validate') {
-        stderr('Usage: pipeline validate | draft-oracles [--api] | classify [--api] [--content-root <path>]\n');
+        stderr('Usage: pipeline validate | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>]\n');
         return 1;
     }
     const report = await validate({
