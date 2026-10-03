@@ -13,6 +13,7 @@ import { createEmptyStats } from '../../services/stats/createEmptyStats';
 import type { LoggedAnswerEvent } from '../../services/stats/types/LoggedAnswerEvent';
 import type { Stats } from '../../services/stats/types/Stats';
 import { createFakeSyncServer, type FakeSyncServer } from '../../services/sync/__tests__/fakeSyncServer';
+import { buildErrorResponse, SERVER_ERROR_CODES } from '../../services/sync/__tests__/syncServerResponses';
 
 type RequestInit = { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown };
 type Response = { status: number; body: unknown };
@@ -22,7 +23,8 @@ export type SentRequest = { method: string; path: string; sessionUserId: string 
 
 export type Hold = { isReached: () => boolean; release: () => void };
 
-const FAILURE = { status: 503, body: { error: { code: 'UNAVAILABLE', message: 'unavailable', requestId: 'req' } } };
+// The server's own failure: 500 SERVER_INTERNAL_ERROR in the error envelope.
+const FAILURE = buildErrorResponse(SERVER_ERROR_CODES.INTERNAL_ERROR);
 
 export function createApiRouter(options: { pageSize?: number } = {}) {
   const servers = new Map<string, FakeSyncServer>();
@@ -89,7 +91,7 @@ export function createApiRouter(options: { pageSize?: number } = {}) {
       }
       if (!path.startsWith('answer-events')) return answerAuth(path, method);
       // No session: the server refuses, as the real one would.
-      if (sessionUserId === null) return { status: 401, body: { error: { code: 'AUTH_SESSION_REQUIRED' } } };
+      if (sessionUserId === null) return buildErrorResponse(SERVER_ERROR_CODES.SESSION_REQUIRED);
       return await serverFor(sessionUserId).request(path, init);
     } finally {
       state.inFlight -= 1;

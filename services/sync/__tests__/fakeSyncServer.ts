@@ -1,6 +1,10 @@
 // Test support for the sync services: answer event builders and a fake
 // idempotent answer-events server reached through a request function shaped
-// like apiFetch.
+// like apiFetch. Every response the fake builds copies the real server
+// (server/src/routes/answerEvents.ts) through syncServerResponses.ts: the
+// POST 200 totals body, the GET page body, and the error envelope with its
+// codes, in the server's check order (rate limit, batch size, body schema,
+// answer key, timestamps, event cap).
 import { randomUUID } from 'node:crypto';
 
 import type { AnswerEvent } from '@syntactical/progress';
@@ -8,8 +12,17 @@ import type { AnswerEvent } from '@syntactical/progress';
 import { ApiUnavailable } from '../../../clients/ApiUnavailable';
 import type { LoggedAnswerEvent } from '../../stats/types/LoggedAnswerEvent';
 
+import {
+  buildDownloadPage,
+  buildErrorResponse,
+  buildRejectedEvents,
+  buildUploadSuccess,
+  SERVER_ERROR_CODES,
+} from './syncServerResponses';
+import type { ServerResponse } from './syncServerResponses';
+
 export type FakeRequestInit = { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown };
-export type FakeResponse = { status: number; body: unknown };
+export type FakeResponse = ServerResponse;
 export type RecordedRequest = { body: unknown; method: string; path: string };
 
 // A POST override: a response returned without storing anything, 'throw' to
@@ -18,16 +31,29 @@ export type RecordedRequest = { body: unknown; method: string; path: string };
 type PostOverride = FakeResponse | 'throw' | 'store-then-throw' | undefined;
 
 type FakeServerOptions = {
+  // Requests allowed per route before the server answers 429 RATE_LIMIT_EXCEEDED.
+  downloadLimit?: number;
+  // The stored-event cap: a batch that would pass it is 422 SYNC_EVENT_CAP_REACHED.
+  maxStoredEvents?: number;
   onGet?: (path: string, getNumber: number) => FakeResponse | undefined;
   onPost?: (events: AnswerEvent[], postNumber: number) => PostOverride;
+  // Events the answer key rejects: 422 SYNC_TIMESTAMP_OUT_OF_RANGE for the whole batch.
+  outOfRangeEventIds?: ReadonlySet<string>;
   pageSize?: number;
+  // Events the answer key rejects: 422 SYNC_INVALID_EVENTS for the whole batch.
   rejectedEventIds?: ReadonlySet<string>;
+  uploadLimit?: number;
 };
 
 const BANK_KEYS = ['python/easy', 'python/medium', 'typescript/hard'];
 const ANSWER_EVENT_KEYS = ['answeredAt', 'bankKey', 'choiceIndex', 'eventId', 'isCorrect', 'questionId', 'roundKind'];
+const ROUND_KINDS = new Set(['bank', 'topic', 'review']);
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CURSOR_PATTERN = /^[A-Za-z0-9_-]+$/;
+const MAX_CURSOR_LENGTH = 200;
 const MAX_BATCH = 200;
 const DEFAULT_PAGE_SIZE = 500;
+const RECEIVED_BASE_MS = Date.UTC(2026, 9, 2);
 
 export function buildAnswerEvent(index: number): AnswerEvent {
   return {
@@ -53,6 +79,8 @@ export function buildOwnedLog(count: number, ownerUserId: string | null, startIn
   return Array.from({ length: count }, (_unused, offset) => toLogged(buildAnswerEvent(startIndex + offset), ownerUserId));
 }
 
+// True when the object carries exactly the server's answer event field set
+// (listAnswerEvents.ts), isCorrect included.
 export function hasOnlyAnswerEventKeys(event: object): boolean {
   return JSON.stringify(Object.keys(event).sort()) === JSON.stringify(ANSWER_EVENT_KEYS);
 }
@@ -66,10 +94,41 @@ function waitForTurn(): Promise<void> {
   return new Promise((resolve) => setImmediate(resolve));
 }
 
-function readPostedEvents(body: unknown): AnswerEvent[] | null {
-  if (typeof body !== 'object' || body === null) return null;
-  const { events } = body as { events?: unknown };
-  return Array.isArray(events) ? (events as AnswerEvent[]) : null;
+function isRecordValue(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function readEventsArray(body: unknown): unknown[] | null {
+  if (!isRecordValue(body)) return null;
+  return Array.isArray(body.events) ? body.events : null;
+}
+
+// The upload schema (answerEventSchemas.ts): isCorrect is not in it and is ignored.
+function isUploadEvent(value: unknown): value is AnswerEvent {
+  if (!isRecordValue(value)) return false;
+  const { answeredAt, bankKey, choiceIndex, eventId, questionId, roundKind } = value;
+  return (
+    typeof answeredAt === 'string' &&
+    !Number.isNaN(Date.parse(answeredAt)) &&
+    typeof bankKey === 'string' &&
+    Number.isInteger(choiceIndex) &&
+    (choiceIndex as number) >= 0 &&
+    typeof eventId === 'string' &&
+    UUID_PATTERN.test(eventId) &&
+    typeof questionId === 'string' &&
+    typeof roundKind === 'string' &&
+    ROUND_KINDS.has(roundKind)
+  );
+}
+
+function decodeCursor(raw: string): boolean {
+  if (raw.length > MAX_CURSOR_LENGTH || !CURSOR_PATTERN.test(raw)) return false;
+  try {
+    const value = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8')) as unknown;
+    return isRecordValue(value) && typeof value.e === 'string' && typeof value.r === 'string';
+  } catch {
+    return false;
+  }
 }
 
 export function createFakeSyncServer(options: FakeServerOptions = {}) {
@@ -80,9 +139,12 @@ export function createFakeSyncServer(options: FakeServerOptions = {}) {
   let postCount = 0;
   let getCount = 0;
 
+  // A cursor shaped like the server's: base64url of {"e": event id, "r": received_at text}
+  // for the last event before the offset.
   function issueCursor(offset: number): string {
-    // Characters that must be URL-encoded, so an unencoded cursor is unknown.
-    const cursor = `cursor/${offset}+&=`;
+    const lastId = [...stored.keys()][offset - 1] ?? randomUUID();
+    const receivedKey = new Date(RECEIVED_BASE_MS + offset).toISOString().replace('Z', '000Z');
+    const cursor = Buffer.from(JSON.stringify({ e: lastId, r: receivedKey })).toString('base64url');
     issuedCursors.set(cursor, offset);
     return cursor;
   }
@@ -91,19 +153,28 @@ export function createFakeSyncServer(options: FakeServerOptions = {}) {
     let inserted = 0;
     for (const event of events) {
       if (!stored.has(event.eventId)) {
-        stored.set(event.eventId, { ...event });
+        stored.set(event.eventId, stripToAnswerEvent(toLogged(event, null)));
         inserted += 1;
       }
     }
     return inserted;
   }
 
+  function namedIn(events: AnswerEvent[], ids: ReadonlySet<string> | undefined): string[] {
+    return events.filter(({ eventId }) => ids?.has(eventId)).map(({ eventId }) => eventId);
+  }
+
   function handlePost(body: unknown): FakeResponse {
-    const events = readPostedEvents(body);
     postCount += 1;
-    if (events === null || events.length === 0 || events.length > MAX_BATCH) {
-      return { status: 400, body: { error: { code: 'VALIDATION_FAILED', message: 'bad batch', requestId: 'req' } } };
+    if (options.uploadLimit !== undefined && postCount > options.uploadLimit) {
+      return buildErrorResponse(SERVER_ERROR_CODES.RATE_LIMIT_EXCEEDED);
     }
+    const posted = readEventsArray(body);
+    if (posted !== null && posted.length > MAX_BATCH) return buildErrorResponse(SERVER_ERROR_CODES.PAYLOAD_TOO_LARGE);
+    if (posted === null || posted.length === 0 || !posted.every(isUploadEvent)) {
+      return buildErrorResponse(SERVER_ERROR_CODES.INVALID_BODY);
+    }
+    const events = posted;
     const override = options.onPost?.(events, postCount);
     if (override === 'throw') throw new ApiUnavailable('network failed');
     if (override === 'store-then-throw') {
@@ -111,34 +182,40 @@ export function createFakeSyncServer(options: FakeServerOptions = {}) {
       throw new ApiUnavailable('response lost');
     }
     if (override) return override;
-    const rejected = events.filter(({ eventId }) => options.rejectedEventIds?.has(eventId)).map(({ eventId }) => eventId);
-    if (rejected.length > 0) {
-      return {
-        status: 422,
-        body: { error: { code: 'EVENT_OUT_OF_BOUNDS', message: 'out of bounds', requestId: 'req', eventIds: rejected } },
-      };
+    const invalid = namedIn(events, options.rejectedEventIds);
+    if (invalid.length > 0) return buildRejectedEvents(SERVER_ERROR_CODES.INVALID_EVENTS, invalid);
+    const outOfRange = namedIn(events, options.outOfRangeEventIds);
+    if (outOfRange.length > 0) return buildRejectedEvents(SERVER_ERROR_CODES.TIMESTAMP_OUT_OF_RANGE, outOfRange);
+    const fresh = new Set(events.map(({ eventId }) => eventId).filter((id) => !stored.has(id)));
+    if (options.maxStoredEvents !== undefined && stored.size + fresh.size > options.maxStoredEvents) {
+      return buildErrorResponse(SERVER_ERROR_CODES.EVENT_CAP_REACHED);
     }
-    return { status: 200, body: { data: { inserted: store(events) } } };
+    return buildUploadSuccess(store(events));
   }
 
   function handleGet(path: string): FakeResponse {
     getCount += 1;
+    if (options.downloadLimit !== undefined && getCount > options.downloadLimit) {
+      return buildErrorResponse(SERVER_ERROR_CODES.RATE_LIMIT_EXCEEDED);
+    }
     const override = options.onGet?.(path, getCount);
     if (override) return override;
     let offset = 0;
     if (path !== 'answer-events') {
       const prefix = 'answer-events?after=';
-      if (!path.startsWith(prefix)) return { status: 404, body: null };
+      if (!path.startsWith(prefix)) return buildErrorResponse(SERVER_ERROR_CODES.INVALID_QUERY);
       const cursor = decodeURIComponent(path.slice(prefix.length));
       const known = issuedCursors.get(cursor);
-      if (known === undefined) return { status: 400, body: { error: { code: 'BAD_CURSOR', message: 'bad', requestId: 'req' } } };
+      // A cursor this fake never issued cannot be paged from; the real server
+      // answers a malformed one with the same 400.
+      if (!decodeCursor(cursor) || known === undefined) return buildErrorResponse(SERVER_ERROR_CODES.INVALID_QUERY);
       offset = known;
     }
     const all = [...stored.values()];
     const events = all.slice(offset, offset + pageSize).map((event) => ({ ...event }));
     const nextOffset = offset + pageSize;
     const nextCursor = nextOffset < all.length ? issueCursor(nextOffset) : null;
-    return { status: 200, body: { data: { events, nextCursor } } };
+    return buildDownloadPage(events, nextCursor);
   }
 
   async function request(path: string, init: FakeRequestInit = {}): Promise<FakeResponse> {
@@ -151,7 +228,7 @@ export function createFakeSyncServer(options: FakeServerOptions = {}) {
       return response;
     }
     if (method === 'GET' && path.startsWith('answer-events')) return handleGet(path);
-    return { status: 404, body: null };
+    return buildErrorResponse(SERVER_ERROR_CODES.NOT_FOUND);
   }
 
   return {

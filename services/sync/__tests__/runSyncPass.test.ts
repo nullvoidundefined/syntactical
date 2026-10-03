@@ -15,6 +15,7 @@ import {
   toLogged,
 } from './fakeSyncServer';
 import type { FakeSyncServer } from './fakeSyncServer';
+import { buildFailure } from './syncServerResponses';
 
 // One device: its event log and stored sync cursor, with the callbacks
 // runSyncPass expects wired to mutate them the way StatsProvider would.
@@ -70,8 +71,8 @@ function postedIds(post: { body: unknown }): string[] {
   return (post.body as { events: AnswerEvent[] }).events.map(({ eventId }) => eventId);
 }
 
-function serverError(status: number, extra: Record<string, unknown> = {}) {
-  return { status, body: { error: { code: 'FAILED', message: 'failed', requestId: 'req', ...extra } } };
+function serverError(status: number) {
+  return buildFailure(status);
 }
 
 function ownedEntries(device: FakeDevice): LoggedAnswerEvent[] {

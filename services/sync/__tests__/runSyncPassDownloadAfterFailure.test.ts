@@ -10,6 +10,7 @@ import { mergeDownloadedEvents } from '../mergeDownloadedEvents';
 import { runSyncPass } from '../runSyncPass';
 import { buildAnswerEvent, buildOwnedLog, createFakeSyncServer } from './fakeSyncServer';
 import type { FakeResponse, FakeSyncServer } from './fakeSyncServer';
+import { buildFailure, buildRejectedEvents, SERVER_ERROR_CODES } from './syncServerResponses';
 
 function createDevice(userId: string, initialLog: LoggedAnswerEvent[]) {
   const device = {
@@ -53,8 +54,10 @@ function runPass(device: Device, server: FakeSyncServer, isCurrent: () => boolea
   });
 }
 
-function failure(status: number, extra: Record<string, unknown> = {}): FakeResponse {
-  return { status, body: { error: { code: 'FAILED', message: 'failed', requestId: 'req', ...extra } } };
+// The server's body for the status; a 422 naming ids is SYNC_INVALID_EVENTS.
+function failure(status: number, extra: { eventIds?: string[] } = {}): FakeResponse {
+  if (extra.eventIds) return buildRejectedEvents(SERVER_ERROR_CODES.INVALID_EVENTS, extra.eventIds);
+  return buildFailure(status);
 }
 
 function idsOf(entries: { eventId: string }[]): string[] {

@@ -33,8 +33,8 @@ function isSuccess(status: number): boolean {
   return status >= HTTP_STATUS_OK && status < HTTP_STATUS_MULTIPLE_CHOICES;
 }
 
-function readInserted(body: unknown): boolean {
-  return isRecord(body) && isRecord(body.data) && typeof body.data.inserted === 'number';
+function isStoredBody(body: unknown): boolean {
+  return isRecord(body) && isRecord(body.data);
 }
 
 function readRejectedIds(body: unknown): string[] {
@@ -64,7 +64,7 @@ async function uploadBatch(input: SyncPassInput, batch: AnswerEvent[]): Promise<
     });
     if (!input.isCurrent()) return 'stop';
     if (isSuccess(status)) {
-      if (!readInserted(body)) return 'stop';
+      if (!isStoredBody(body)) return 'stop';
       await input.markSynced(pending.map(({ eventId }) => eventId));
       return 'ok';
     }

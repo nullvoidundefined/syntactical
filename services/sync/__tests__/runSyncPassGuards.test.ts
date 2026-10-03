@@ -7,6 +7,13 @@ import { mergeDownloadedEvents } from '../mergeDownloadedEvents';
 import { runSyncPass } from '../runSyncPass';
 import { buildAnswerEvent, buildOwnedLog, createFakeSyncServer } from './fakeSyncServer';
 import type { FakeResponse, FakeSyncServer } from './fakeSyncServer';
+import {
+  buildDownloadPage,
+  buildFailure,
+  buildRejectedEvents,
+  buildUploadSuccess,
+  SERVER_ERROR_CODES,
+} from './syncServerResponses';
 
 // The spec's per-pass page limit (SYNC_MAX_PAGES_PER_PASS in constants/appConfig.ts).
 const MAX_PAGES_PER_PASS = 100;
@@ -74,19 +81,16 @@ function postedIds(post: { body: unknown }): string[] {
   return idsOf((post.body as { events: AnswerEvent[] }).events);
 }
 
-function unprocessable(eventIds: unknown) {
-  return {
-    status: 422,
-    body: { error: { code: 'EVENT_OUT_OF_BOUNDS', message: 'out of bounds', requestId: 'req', eventIds } },
-  };
+function unprocessable(eventIds: unknown): FakeResponse {
+  return buildRejectedEvents(SERVER_ERROR_CODES.INVALID_EVENTS, eventIds);
 }
 
 function serverError(status: number): FakeResponse {
-  return { status, body: { error: { code: 'FAILED', message: 'failed', requestId: 'req' } } };
+  return buildFailure(status);
 }
 
 function page(events: AnswerEvent[], nextCursor: string | null): FakeResponse {
-  return { status: 200, body: { data: { events, nextCursor } } };
+  return buildDownloadPage(events, nextCursor);
 }
 
 // A rejected Promise already marked handled, so an implementation that does
@@ -258,9 +262,9 @@ describe('runSyncPass upload response shape', () => {
   it.each([
     ['a 200 with a null body', { status: 200, body: null }],
     ['a 204 with an empty body', { status: 204, body: null }],
-    ['a 200 with no data', { status: 200, body: { inserted: 3 } }],
-    ['a 200 with no inserted count', { status: 200, body: { data: {} } }],
-    ['a 200 with a string inserted count', { status: 200, body: { data: { inserted: '3' } } }],
+    ['a 200 with no data', { status: 200, body: { insertedCount: 3 } }],
+    ['a 200 with a null data', { status: 200, body: { data: null } }],
+    ['a 200 with an array data', { status: 200, body: { data: [] } }],
   ])('marks nothing synced and stops for %s', async (_label, response) => {
     const userId = randomUUID();
     const device = createDevice(userId, buildOwnedLog(250, userId));
@@ -275,10 +279,10 @@ describe('runSyncPass upload response shape', () => {
     expect(server.getRequests()).toEqual([]);
   });
 
-  it('accepts a 2xx whose inserted count is zero (an idempotent re-post)', async () => {
+  it('accepts a 2xx whose insertedCount is zero (an idempotent re-post)', async () => {
     const userId = randomUUID();
     const device = createDevice(userId, buildOwnedLog(5, userId));
-    const server = createFakeSyncServer({ onPost: () => ({ status: 200, body: { data: { inserted: 0 } } }) });
+    const server = createFakeSyncServer({ onPost: () => buildUploadSuccess(0) });
 
     const result = await runPass(device, server);
 
