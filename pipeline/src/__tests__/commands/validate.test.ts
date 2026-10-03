@@ -7,7 +7,7 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { validateContent } from '../../commands/validate.js';
+import { type QuestionValidator, validateContent } from '../../commands/validate.js';
 import type { Oracle } from '../../types/Oracle.js';
 import type { PipelineReport } from '../../types/PipelineReport.js';
 import type { ValidationResult } from '../../types/ValidationResult.js';
@@ -96,9 +96,10 @@ describe('validateContent', () => {
         await rm(root, { force: true, recursive: true });
     });
 
-    const seenOracles = new Map<string, Oracle | null>();
-
-    async function run(oracleFor: (id: string) => Oracle | null): Promise<PipelineReport> {
+    async function run(
+        oracleFor: (id: string) => Oracle | null,
+        validator?: QuestionValidator,
+    ): Promise<PipelineReport> {
         const times = ['2026-10-03T10:00:00.000Z', '2026-10-03T10:00:05.000Z'];
         return validateContent({
             contentDir,
@@ -106,15 +107,20 @@ describe('validateContent', () => {
             now: () => times.shift() ?? 'exhausted',
             oracleSource: async (_bankKey, id) => oracleFor(id),
             reportsDir,
-            validate: async (question, oracle) => {
-                seenOracles.set(question.id, oracle);
-                return RESULTS[question.id] as ValidationResult;
-            },
+            ...(validator === undefined ? {} : { validate: validator }),
         });
     }
 
+    function recordingValidator(seen: Map<string, Oracle | null>): QuestionValidator {
+        return async (question, oracle) => {
+            seen.set(question.id, oracle);
+            return RESULTS[question.id] as ValidationResult;
+        };
+    }
+
     it('reports each status with its reason and counts them', async () => {
-        const report = await run((id) => (id === 'p-3' ? null : ORACLE));
+        const seenOracles = new Map<string, Oracle | null>();
+        const report = await run((id) => (id === 'p-3' ? null : ORACLE), recordingValidator(seenOracles));
 
         expect(seenOracles.get('p-3')).toBeNull();
         expect(seenOracles.get('p-1')).toEqual(ORACLE);
@@ -128,8 +134,26 @@ describe('validateContent', () => {
         ]);
     });
 
+    it('marks every question not-executable through the real validator when no oracle exists', async () => {
+        const report = await run(() => null);
+
+        expect(report.questions.map(({ status }) => status)).toEqual([
+            'not-executable',
+            'not-executable',
+            'not-executable',
+            'not-executable',
+        ]);
+        expect(report.counts).toEqual({ failed: 0, 'not-executable': 4, passed: 0 });
+    });
+
+    it('zero-fills counts for statuses with no questions', async () => {
+        const report = await run(() => ORACLE, async () => ({ status: 'passed' }));
+
+        expect(report.counts).toEqual({ failed: 0, 'not-executable': 0, passed: 4 });
+    });
+
     it('takes runId and timestamps from the injected functions', async () => {
-        const report = await run(() => ORACLE);
+        const report = await run(() => ORACLE, recordingValidator(new Map()));
 
         expect(report).toMatchObject({
             finishedAt: '2026-10-03T10:00:05.000Z',
@@ -142,20 +166,20 @@ describe('validateContent', () => {
     it('leaves every content file byte-identical', async () => {
         const before = await snapshot(contentDir);
 
-        await run(() => ORACLE);
+        await run(() => ORACLE, recordingValidator(new Map()));
 
         expect(await snapshot(contentDir)).toEqual(before);
     });
 
     it('writes the stage file and an identical latest.json', async () => {
-        await run(() => ORACLE);
+        await run(() => ORACLE, recordingValidator(new Map()));
 
         const stage = await readFile(join(reportsDir, 'validate-run-1.json'), 'utf8');
         expect(await readFile(join(reportsDir, 'latest.json'), 'utf8')).toBe(stage);
     });
 
     it('never copies prompts, code, or choice text, paid bank included', async () => {
-        await run(() => ORACLE);
+        await run(() => ORACLE, recordingValidator(new Map()));
 
         const text = await readFile(join(reportsDir, 'latest.json'), 'utf8');
         for (const secret of [SECRET_PROMPT, SECRET_CODE, SECRET_CHOICE, PAID_PROMPT]) {

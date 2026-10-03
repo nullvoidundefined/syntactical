@@ -13,7 +13,7 @@ import type { PipelineReport } from '../types/PipelineReport.js';
 import type { PipelineReportQuestion } from '../types/PipelineReportQuestion.js';
 import type { ValidationResult, ValidationStatus } from '../types/ValidationResult.js';
 
-type QuestionValidator = (question: Question, oracle: Oracle | null) => Promise<ValidationResult>;
+export type QuestionValidator = (question: Question, oracle: Oracle | null) => Promise<ValidationResult>;
 
 export interface ValidateOptions {
     contentDir: string;
