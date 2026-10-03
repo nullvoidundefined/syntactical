@@ -1,9 +1,9 @@
-// Why an A/B card was not validated. `unstable` and `no-clear-winner` are the benchmark's
-// refusals to name a winner from noisy or small gaps; `judged-only` is never a failure of a
-// card but the reason a readability card cannot carry an executed result.
+// Why an A/B card was not validated. `unstable` and `no-clear-winner` are the refusals to
+// name a winner from runs or judgments that disagree or whose gap is too small to trust.
 export type AbFailureReason =
     | 'answer-mismatch'
     | 'missing-code'
+    | 'model-output-invalid'
     | 'neither-correct'
     | 'no-clear-winner'
     | 'no-distinguishing-case'
