@@ -18,6 +18,7 @@ import { isAnswerEvent } from '../stats/isAnswerEvent';
 import type { HeldReason, LoggedAnswerEvent } from '../stats/types/LoggedAnswerEvent';
 
 import { buildUploadBatches } from './buildUploadBatches';
+import { releaseHeldEvents } from './releaseHeldEvents';
 
 type SyncPassInput = {
   userId: string;
@@ -28,7 +29,6 @@ type SyncPassInput = {
   isCurrent(): boolean;
   markSynced(ids: string[]): void | Promise<void>;
   markHeld(ids: string[], reason: HeldReason): void | Promise<void>;
-  // Reserved for releasing timestamp-future holds; this pass does not call it yet.
   markReleased?(ids: string[]): void | Promise<void>;
   mergeDownloaded(events: AnswerEvent[], cursor: string | null): void | Promise<void>;
 };
@@ -151,8 +151,10 @@ async function downloadAll(input: SyncPassInput): Promise<boolean> {
 }
 
 export async function runSyncPass(input: SyncPassInput): Promise<{ isOk: boolean; isUploadCapReached?: true }> {
-  const { eventLog, userId } = input;
+  const { now = () => new Date(), userId } = input;
   try {
+    const { eventLog, releasedIds } = releaseHeldEvents(input.eventLog, userId, now());
+    if (releasedIds.length > 0) await input.markReleased?.(releasedIds);
     for (const batch of buildUploadBatches(eventLog, userId)) {
       const outcome = await uploadBatch(input, batch);
       if (outcome === 'ok') continue;

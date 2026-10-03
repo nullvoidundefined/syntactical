@@ -36,6 +36,7 @@ import { markEvents } from '../services/stats/markEvents';
 import { mergeGuestStats } from '../services/stats/mergeGuestStats';
 import { recordAnswer as foldAnswer } from '../services/stats/recordAnswer';
 import { recordCompletion as foldCompletion } from '../services/stats/recordCompletion';
+import { releaseEvents } from '../services/stats/releaseEvents';
 import { resolveStoredEventLog } from '../services/stats/resolveStoredEventLog';
 import { resolveStoredStats } from '../services/stats/resolveStoredStats';
 import type { HeldReason, LoggedAnswerEvent } from '../services/stats/types/LoggedAnswerEvent';
@@ -51,6 +52,7 @@ type StatsContextValue = {
   eventLog: LoggedAnswerEvent[];
   isHydrated: boolean;
   markEventsHeld: (eventIds: string[], ownerUserId: string, reason?: HeldReason) => Promise<void>;
+  markEventsReleased: (eventIds: string[], ownerUserId: string) => Promise<void>;
   markEventsSynced: (eventIds: string[], ownerUserId: string) => Promise<void>;
   mergeDownloadedEvents: (events: AnswerEvent[], cursor: string | null, ownerUserId: string) => Promise<void>;
   recordAnswer: (answer: RecordedAnswer) => void;
@@ -223,6 +225,15 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
   const markEventsSynced = useMemo(() => markEventsAs('isSynced'), [markEventsAs]);
   const markEventsHeld = useMemo(() => markEventsAs('isHeld'), [markEventsAs]);
 
+  const markEventsReleased = useCallback(
+    async (eventIds: string[], expectedOwner: string) => {
+      assertOwner(expectedOwner);
+      if (!isHydrated) return;
+      await requirePersisted(changeSlot(eventLogSlot, (current) => releaseEvents(current, eventIds)));
+    },
+    [assertOwner, eventLogSlot, isHydrated],
+  );
+
   const mergeDownloadedEvents = useCallback(
     async (events: AnswerEvent[], cursor: string | null, expectedOwner: string) => {
       assertOwner(expectedOwner);
@@ -264,6 +275,7 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
       eventLog: visibleEventLog,
       isHydrated,
       markEventsHeld,
+      markEventsReleased,
       markEventsSynced,
       mergeDownloadedEvents,
       readSyncCursor,
@@ -277,6 +289,7 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
       discardUnsyncedEvents,
       isHydrated,
       markEventsHeld,
+      markEventsReleased,
       markEventsSynced,
       mergeDownloadedEvents,
       readSyncCursor,

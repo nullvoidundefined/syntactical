@@ -89,6 +89,7 @@ export function useSyncQueue(userId: string | null): SyncQueue {
         eventLog: isCapped ? [] : current.eventLog,
         isCurrent,
         markHeld: (ids, reason) => latest.current.stats.markEventsHeld(ids, user, reason),
+        markReleased: (ids) => latest.current.stats.markEventsReleased(ids, user),
         markSynced: (ids) => latest.current.stats.markEventsSynced(ids, user),
         mergeDownloaded: (events, cursor) => latest.current.stats.mergeDownloadedEvents(events, cursor, user),
         request: apiFetch,
