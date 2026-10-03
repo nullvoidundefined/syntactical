@@ -23,6 +23,7 @@ import type { AuthDeps, ResolvedAuthDeps } from './routes/authDeps.js';
 import { createAuthSessionsRouter } from './routes/authSessions.js';
 import { createHealthRouter } from './routes/health.js';
 import type { HealthDb } from './routes/health.js';
+import { createMeRouter } from './routes/me.js';
 import { createSignOutRouter } from './routes/signOut.js';
 import type { SyncDeps } from './routes/syncDeps.js';
 
@@ -33,7 +34,7 @@ interface AppDeps {
   db: HealthDb;
   extraRoutes?: (router: Router) => void;
   logger?: Logger;
-  // The /v1 answer event routes; omitted, they are not mounted.
+  // The /v1 answer event and profile routes; omitted, they are not mounted.
   sync?: SyncDeps;
 }
 
@@ -78,7 +79,8 @@ function createApp(deps: AppDeps) {
 
   if (sync) {
     const { now = () => new Date() } = sync;
-    app.use('/v1', createAnswerEventsRouter({ ...sync, now }));
+    const resolvedSync = { ...sync, now };
+    app.use('/v1', createAnswerEventsRouter(resolvedSync), createMeRouter(resolvedSync));
   }
 
   if (extraRoutes) {
