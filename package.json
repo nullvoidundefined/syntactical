@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "expo start",
     "pipeline": "npm run cli -w pipeline --",
-    "build": "npm run content:build && expo export --platform web --output-dir dist && cp -R content dist/content && node scripts/copySpaFallback.mjs dist",
+    "build": "npm run content:build && npm run build -w @syntactical/progress && expo export --platform web --output-dir dist && cp -R content dist/content && node scripts/copySpaFallback.mjs dist",
     "content:build": "npm run build -w @syntactical/content-schema && tsx scripts/buildContentManifest.mjs",
     "lint": "oxlint",
     "test": "jest",
