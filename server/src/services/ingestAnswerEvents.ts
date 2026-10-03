@@ -108,9 +108,7 @@ async function storeEvents(
         events.map(({ bankKey, choiceIndex, questionId }) => choiceIndex === answerKey.get(bankKey)?.get(questionId)?.answerIndex),
       ],
     );
-    if (insertedRows.length > 0) {
-      await refreshDailyProgress(client, userId, user, insertedRows, now);
-    }
+    await refreshDailyProgress(client, userId, user, insertedRows, now);
     const totals = await readStoredProgress(client, userId, user.timezone, now);
     return { kind: 'stored', totals: { ...totals, insertedCount: insertedRows.length } };
   });

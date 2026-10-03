@@ -1,7 +1,7 @@
 // Brings daily_progress up to date after an upload inserted events, inside the caller's
-// transaction. When the zone the rows were built in (progress_timezone) differs from the user's
+// transaction, also when the upload inserted nothing. When the zone the rows were built in (progress_timezone) differs from the user's
 // effective zone, or they were never fully built (null), the full replay runs; otherwise only
-// the affected questions and dates are updated.
+// the affected questions and dates are updated (nothing, when nothing was inserted).
 import type pg from 'pg';
 
 import { PROGRESS_DEFAULTS } from '../constants/progressDefaults.js';
@@ -19,6 +19,9 @@ async function refreshDailyProgress(
 ): Promise<void> {
   if (progressTimezone !== (timezone ?? PROGRESS_DEFAULTS.TIMEZONE)) {
     await recomputeDailyProgress(client, userId, timezone, now);
+    return;
+  }
+  if (inserted.length === 0) {
     return;
   }
   await updateDailyProgressForQuestions(
