@@ -1,10 +1,12 @@
 // Drives one round over every question type. The shuffled question list is a
 // snapshot taken when the round mounts, so a bank refresh that lands mid-round
-// changes nothing until the next round. An answer that does not fit the
+// changes nothing until the next round. A topic round keeps only that topic's
+// questions, filtered before the shuffle. An answer that does not fit the
 // current question (a choice index it does not have, or the wrong kind of
 // answer) is ignored rather than recorded as wrong.
-import type { Question } from '@syntactical/content-schema';
 import { useState } from 'react';
+
+import type { Question } from '@syntactical/content-schema';
 
 import { calculateAccuracy } from '../services/quiz/calculateAccuracy';
 import { isAnswerCorrect } from '../services/quiz/isAnswerCorrect';
@@ -12,8 +14,11 @@ import { shuffleQuestions } from '../services/quiz/shuffleQuestions';
 
 type SubmittedAnswer = number | boolean | null;
 
-export function useQuizEngine(bankQuestions: readonly Question[]) {
-  const [questions] = useState(() => shuffleQuestions(bankQuestions));
+export function useQuizEngine(bankQuestions: readonly Question[], options: { topic?: string } = {}) {
+  const { topic } = options;
+  const [questions] = useState(() =>
+    shuffleQuestions(bankQuestions.filter((question) => topic === undefined || question.topic === topic)),
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [submittedAnswer, setSubmittedAnswer] = useState<SubmittedAnswer>(null);
   const [correctCount, setCorrectCount] = useState(0);

@@ -29,6 +29,7 @@ type QuizRoundProps = {
   onExit: () => void;
   onRetry: () => void;
   questions: readonly Question[];
+  topic?: string;
 };
 
 type QuestionCardProps = {
@@ -86,8 +87,8 @@ function RoundHeader({ currentIndex, onExit, totalQuestions }: { currentIndex: n
 }
 
 export function QuizRound(props: QuizRoundProps) {
-  const { difficulty, difficultyLabel, grammar, language, languageLabel, onExit, onRetry, questions } = props;
-  const engine = useQuizEngine(questions);
+  const { difficulty, difficultyLabel, grammar, language, languageLabel, onExit, onRetry, questions, topic } = props;
+  const engine = useQuizEngine(questions, { topic });
   const { advanceQuestion, currentQuestion, isAnswered, isComplete, submitAnswer, submittedAnswer, wasCorrect } = engine;
   const { recordAnswer } = useQuizStats();
   const [isQueryOpen, setIsQueryOpen] = useState(false);

@@ -3,6 +3,7 @@
 import { Pressable, Text, View } from 'react-native';
 
 type SelectionCardProps = {
+  ariaLabel?: string;
   isDisabled?: boolean;
   keyHint: number;
   onSelect: () => void;
@@ -11,10 +12,11 @@ type SelectionCardProps = {
   title: string;
 };
 
-export function SelectionCard({ isDisabled = false, keyHint, onSelect, statusLabel, subtitle, title }: SelectionCardProps) {
+export function SelectionCard({ ariaLabel, isDisabled = false, keyHint, onSelect, statusLabel, subtitle, title }: SelectionCardProps) {
   return (
     <Pressable
       role="button"
+      aria-label={ariaLabel}
       disabled={isDisabled}
       onPress={onSelect}
       className={`w-full rounded-lg border border-line bg-surface px-5 py-4 ${isDisabled ? 'opacity-50' : 'active:border-signal'}`}

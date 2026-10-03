@@ -1,6 +1,6 @@
 import { fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
 
-import RoundScreen from '../[language]/[difficulty]';
+import RoundScreen from '../[language]/[difficulty]/play';
 
 jest.mock('../../state/StatsProvider', () => ({
   useQuizStats: () => ({ isHydrated: true, recordAnswer: jest.fn(), recordCompletion: jest.fn() }),
@@ -20,7 +20,7 @@ jest.mock('../../state/useQuestionBank', () => ({
 
 describe('round route', () => {
   it('resets every piece of round state on Retry', async () => {
-    await renderRouter({ '[language]/[difficulty]': RoundScreen }, { initialUrl: '/python/easy' });
+    await renderRouter({ '[language]/[difficulty]/play': RoundScreen }, { initialUrl: '/python/easy/play' });
     await waitFor(() => expect(screen.queryByText('True')).not.toBeNull());
     await fireEvent.press(screen.getByText('True'));
     await fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
@@ -30,7 +30,7 @@ describe('round route', () => {
   });
 
   it('renders the not-found screen for a difficulty outside the registry', async () => {
-    await renderRouter({ '[language]/[difficulty]': RoundScreen }, { initialUrl: '/python/expert' });
+    await renderRouter({ '[language]/[difficulty]/play': RoundScreen }, { initialUrl: '/python/expert/play' });
     await waitFor(() => expect(screen.queryByText('Not found')).not.toBeNull());
   });
 });
