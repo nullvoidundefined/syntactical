@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 import type { Oracle } from '../types/Oracle.js';
 import type { OracleOutcome, OracleRun } from '../types/OracleRun.js';
 import type { RunLimits } from '../types/RunLimits.js';
+
 import { buildDockerArgs } from './buildDockerArgs.js';
 import { ensureRunnerImage } from './ensureRunnerImage.js';
 import { runnerImageTag } from './runnerImageTag.js';
@@ -10,8 +11,11 @@ import { runnerImageTag } from './runnerImageTag.js';
 const DEFAULT_TIMEOUT_MS = 5000;
 const MAX_TIMEOUT_MS = 6000;
 const KILL_GRACE_MS = 1000;
-const VALUE_CAP_BYTES = 64 * 1024;
-const RAW_OUTPUT_CAP_BYTES = 512 * 1024;
+const KIBIBYTE = 1024;
+const VALUE_CAP_KIBIBYTES = 64;
+const RAW_OUTPUT_CAP_KIBIBYTES = 512;
+const VALUE_CAP_BYTES = VALUE_CAP_KIBIBYTES * KIBIBYTE;
+const RAW_OUTPUT_CAP_BYTES = RAW_OUTPUT_CAP_KIBIBYTES * KIBIBYTE;
 const OOM_EXIT_CODE = 137;
 
 const OUTCOMES: OracleOutcome[] = [
@@ -34,35 +38,40 @@ function parseResult(stdout: string): OracleRun | undefined {
             return undefined;
         }
         const record = parsed as Record<string, unknown>;
+        const { exceptionType, runtimeVersion, value } = record;
         const outcome = OUTCOMES.find((candidate) => candidate === record.outcome);
         if (!outcome) {
             return undefined;
         }
         const run: OracleRun = { outcome };
-        if (typeof record.value === 'string') run.value = record.value;
-        if (typeof record.exceptionType === 'string') run.exceptionType = record.exceptionType;
-        if (typeof record.runtimeVersion === 'string') run.runtimeVersion = record.runtimeVersion;
+        if (typeof value === 'string') run.value = value;
+        if (typeof exceptionType === 'string') run.exceptionType = exceptionType;
+        if (typeof runtimeVersion === 'string') run.runtimeVersion = runtimeVersion;
         return run;
-    } catch {
+    } catch (err) {
+        // Unparseable runner output is the documented "no result" case; the caller maps it.
+        console.warn('oracle runner output was not valid JSON', err);
         return undefined;
     }
 }
 
 function applyValueCap(run: OracleRun): OracleRun {
-    if (run.outcome === 'value' && Buffer.byteLength(run.value ?? '') > VALUE_CAP_BYTES) {
-        return { outcome: 'resource-limit', runtimeVersion: run.runtimeVersion };
+    const { outcome, runtimeVersion, value } = run;
+    if (outcome === 'value' && Buffer.byteLength(value ?? '') > VALUE_CAP_BYTES) {
+        return { outcome: 'resource-limit', runtimeVersion };
     }
     return run;
 }
 
 export async function runOracle(oracle: Oracle, limits: RunLimits = {}): Promise<OracleRun> {
-    await ensureRunnerImage(oracle.language);
+    const { code: oracleCode, language, setupSql } = oracle;
+    await ensureRunnerImage(language);
     const timeoutMs = Math.min(limits.timeoutMs ?? DEFAULT_TIMEOUT_MS, MAX_TIMEOUT_MS);
-    const args = buildDockerArgs(oracle, runnerImageTag(oracle.language));
+    const args = buildDockerArgs(oracle, runnerImageTag(language));
     const payload = JSON.stringify({
-        language: oracle.language,
-        code: oracle.code,
-        setupSql: oracle.setupSql,
+        code: oracleCode,
+        language,
+        setupSql,
         timeoutMs,
     });
 
@@ -98,7 +107,7 @@ export async function runOracle(oracle: Oracle, limits: RunLimits = {}): Promise
 
         child.on('error', () => {
             timers.forEach(clearTimeout);
-            resolve({ outcome: 'exception', exceptionType: 'RunnerFailure' });
+            resolve({ exceptionType: 'RunnerFailure', outcome: 'exception' });
         });
 
         child.on('close', (code) => {
@@ -115,7 +124,7 @@ export async function runOracle(oracle: Oracle, limits: RunLimits = {}): Promise
             } else if (code === OOM_EXIT_CODE) {
                 resolve({ outcome: 'resource-limit' });
             } else {
-                resolve({ outcome: 'exception', exceptionType: 'RunnerFailure' });
+                resolve({ exceptionType: 'RunnerFailure', outcome: 'exception' });
             }
         });
     });
