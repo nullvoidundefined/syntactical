@@ -1,0 +1,37 @@
+{
+  "reviewer": "security-reviewer subagent",
+  "model": "claude-fable-5-1",
+  "range": "6c2e099..a98d4c6",
+  "rounds": [
+    { "round": 1, "range": "6c2e099..4a43a1c", "findings": 4 },
+    { "round": 2, "range": "6c2e099..6029e32", "findings": 4 },
+    { "round": 3, "range": "6c2e099..d6787c6", "findings": 3 },
+    { "round": 4, "range": "6c2e099..fc6c412", "findings": 2 },
+    { "round": 5, "range": "6c2e099..15c167d", "findings": 1 },
+    { "round": 6, "range": "6c2e099..73c041e", "findings": 1 },
+    { "round": 7, "range": "6c2e099..a98d4c6", "findings": 0, "scope": "merge 3546ee7 lock resolution and clean merge a98d4c6: branch content preserved byte for byte, only main's content added, every lock entry from one parent at its version, all resolved URLs on registry.npmjs.org" }
+  ],
+  "ownerDecisions": [
+    "2026-10-03: standing waiver for LOW findings contained within the control's acceptance boundary; log redaction covers the spec's named fields at any depth"
+  ],
+  "findings": [
+    { "id": 1, "severity": "MEDIUM", "control": "redaction by fixed pino paths only", "status": "fixed 6029e32" },
+    { "id": 2, "severity": "LOW", "control": "RATE_LIMIT_KEY_SECRET length floor", "status": "fixed 6029e32" },
+    { "id": 3, "severity": "LOW", "control": "REVENUECAT_WEBHOOK_AUTH whitespace padding", "status": "fixed 6029e32" },
+    { "id": 4, "severity": "LOW", "control": "concrete request path logged", "status": "fixed 6029e32" },
+    { "id": 5, "severity": "MEDIUM", "control": "Error instances expanded in logs", "status": "fixed d6787c6" },
+    { "id": 6, "severity": "MEDIUM", "control": "headersSent branch leaked the raw error to stderr", "status": "fixed d6787c6" },
+    { "id": 7, "severity": "LOW", "control": "key variants and child bindings", "status": "fixed d6787c6" },
+    { "id": 8, "severity": "LOW", "control": "X-Forwarded-Host trusted", "status": "fixed d6787c6" },
+    { "id": 9, "severity": "MEDIUM", "control": "grandchild logger threw", "status": "fixed fc6c412" },
+    { "id": 10, "severity": "LOW", "control": "pg payload fields on plain objects", "status": "fixed fc6c412" },
+    { "id": 11, "severity": "LOW", "control": "Host and X-Forwarded-Proto; no PUBLIC_BASE_URL", "status": "fixed fc6c412" },
+    { "id": 12, "severity": "LOW", "control": "spread pg error without detail", "status": "fixed 15c167d" },
+    { "id": 13, "severity": "LOW", "control": "PUBLIC_BASE_URL shape", "status": "fixed 15c167d" },
+    { "id": 14, "severity": "LOW", "control": "message beside other error keys or capitalized", "status": "fixed 73c041e" },
+    { "id": 15, "severity": "LOW", "control": "message-like key variants (errorMessage, messages, nested msg)", "status": "waived by owner 2026-10-03 (IAN-609)" }
+  ],
+  "nothingFound": [
+    "message key censoring, error-shape removal, PUBLIC_BASE_URL normalization, child-binding override, pg payload keys, forwarded-header drop, Error summarization, headersSent branch, key variants, CORS allowlist, fail-closed env secrets, request id, error handler response paths, depth cap and cycle guard, route-template request log, trust proxy for req.ip, JSON body limit, helmet headers, readiness check, cookie-parser"
+  ]
+}

@@ -11,6 +11,7 @@ export { SUPPORTED_SCHEMA_VERSION } from './supportedSchemaVersion.js';
 export { SHA256_HEX } from './SHA256_HEX.js';
 export { isRecord } from './isRecord.js';
 export { isSafeBankPath } from './isSafeBankPath.js';
+export { findMisconceptionsProblem } from './findMisconceptionsProblem.js';
 export { buildBankContext } from './buildBankContext.js';
 export { validateManifest } from './validateManifest.js';
 export { validateBankForPublish } from './validateBankForPublish.js';

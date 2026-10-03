@@ -2,7 +2,7 @@
 // content/manifest.json, validates banks and manifest with the app's own
 // validators, and generates the TypeScript modules that bundle them offline:
 // one exporting the manifest and one exporting the bank require map.
-import { CONTENT_LIMITS, buildBankContext, isSafeBankPath, validateManifest, validateQuestionBank } from '@syntactical/content-schema';
+import { CONTENT_LIMITS, buildBankContext, findMisconceptionsProblem, isSafeBankPath, validateManifest, validateQuestionBank } from '@syntactical/content-schema';
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, sep } from 'node:path';
@@ -232,12 +232,38 @@ export const QUALITY_REPORT: QualityReport | null = ${JSON.stringify(quality, nu
   );
 }
 
+async function readApprovedTaxonomy(taxonomyPath) {
+  try {
+    return JSON.parse(await readFile(taxonomyPath, 'utf8'));
+  } catch (err) {
+    // No approved file yet: the language keeps the misconceptions its manifest entry lists.
+    if (err?.code === 'ENOENT') return undefined;
+    throw err;
+  }
+}
+
+// Copies each language's owner-approved `<language>.json` into its manifest entry. The
+// `<language>.draft.json` the pipeline writes is never read. Language ids are already
+// validated (they are joined into the path), and a malformed approved file fails the build.
+async function applyApprovedTaxonomies(taxonomyDir, manifest) {
+  for (const language of manifest.languages) {
+    const approvedName = `${language.id}.json`;
+    const misconceptions = await readApprovedTaxonomy(join(taxonomyDir, approvedName));
+    if (misconceptions === undefined) continue;
+    const problem = findMisconceptionsProblem(misconceptions, language.id);
+    if (problem !== null) throw new Error(`taxonomy ${approvedName} is invalid: ${problem}`);
+    language.misconceptions = misconceptions;
+  }
+}
+
 // `quality` is optional: { reportPath, outputPath } also writes the quality module.
-export async function buildContentManifest(contentDir, outputs, quality) {
+// `taxonomyDir` is optional: the folder of approved `<language>.json` misconception lists.
+export async function buildContentManifest(contentDir, outputs, quality, taxonomyDir) {
   const manifestPath = join(contentDir, 'manifest.json');
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   assertSafeBankPaths(manifest);
   assertValidManifest(withPlaceholderHashes(manifest));
+  if (taxonomyDir) await applyApprovedTaxonomies(taxonomyDir, manifest);
   await hashAllBanks(contentDir, manifest);
   assertValidManifest(manifest);
   const manifestText = `${JSON.stringify(manifest, null, 2)}\n`;
@@ -257,6 +283,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       manifestPath: 'services/content/bundledManifest.generated.ts',
     },
     { outputPath: 'services/quality/qualityReport.generated.ts', reportPath: 'pipeline/reports/latest.json' },
+    'pipeline/taxonomy',
   ).catch((err) => {
     console.error(err);
     process.exitCode = 1;

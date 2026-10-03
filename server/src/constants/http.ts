@@ -1,0 +1,15 @@
+const HTTP = {
+  JSON_BODY_SIZE_LIMIT: '10kb',
+  STATUS: {
+    BAD_REQUEST: 400,
+    CLIENT_ERROR_MAX: 499,
+    CLIENT_ERROR_MIN: 400,
+    INTERNAL_SERVER_ERROR: 500,
+    NOT_FOUND: 404,
+    OK: 200,
+    PAYLOAD_TOO_LARGE: 413,
+    SERVICE_UNAVAILABLE: 503,
+  },
+} as const;
+
+export { HTTP };
