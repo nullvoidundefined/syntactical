@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { createModelProvider } from './clients/modelProvider.js';
 import { classify } from './commands/classify.js';
 import { draftOracles } from './commands/draftOracles.js';
+import { draftTaxonomy } from './commands/draftTaxonomy.js';
 import { runCli } from './commands/runCli.js';
 import { validateContent } from './commands/validate.js';
 
@@ -15,6 +16,7 @@ process.exitCode = await runCli(argv, {
     createProvider: createModelProvider,
     defaultContentRoot: fileURLToPath(new URL('../../../syntactical-content', import.meta.url)),
     draft: draftOracles,
+    draftTaxonomy,
     env,
     pipelineDir: fileURLToPath(new URL('../', import.meta.url)),
     stderr: (text) => stderr.write(text),
