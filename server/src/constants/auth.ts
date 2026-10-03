@@ -12,6 +12,11 @@ const AUTH = {
     // crypto.randomInt's exclusive upper bound: every 6-digit code, 000000 to 999999.
     UPPER_BOUND: 1_000_000,
   },
+  EMAIL: {
+    // The sign-in email is sent inside the issue transaction, so a stalled send must not hold
+    // its pooled client and row locks for longer than this.
+    SEND_TIMEOUT_MS: 8_000,
+  },
   RATE_LIMIT: {
     ISSUE_PER_EMAIL: 5,
     ISSUE_PER_IP: 20,

@@ -1,6 +1,7 @@
 // B-3.3 (B-25): the Resend email client sends the sign-in code to the address and never logs
 // the address or the code, on success or on failure.
 import { randomBytes } from 'node:crypto';
+import { setTimeout as delay } from 'node:timers/promises';
 
 import { describe, expect, it } from 'vitest';
 
@@ -11,6 +12,8 @@ const EMAIL_BYTES = 6;
 const SENDER = 'Syntactical <sign-in@syntactical.dev>';
 const CODE = '804613';
 const MESSAGE_ID = 'resend-message-id';
+const STALL_DEADLINE_MS = 50;
+const STALL_SLACK_FACTOR = 20;
 
 interface SentPayload {
   from: string;
@@ -128,6 +131,34 @@ describe('createEmailClient', () => {
 
     expect(failure).toBeInstanceOf(Error);
     expect(String((failure as Error).message)).not.toContain(email);
+    expectNoLineContains(lines, [email, CODE]);
+  });
+
+  it('hands Resend an abort signal and rejects once a stalled send passes the deadline', async () => {
+    const { lines, logger } = createCapturedLogger();
+    const signals: unknown[] = [];
+    const resend = {
+      emails: {
+        send(_payload: SentPayload, options?: { signal?: AbortSignal }): Promise<SendResult> {
+          signals.push(options?.signal);
+          return new Promise<SendResult>(() => undefined);
+        },
+      },
+    };
+    const email = buildEmail();
+    const failure = await Promise.race([
+      createEmailClient({ from: SENDER, logger, resend, sendTimeoutMs: STALL_DEADLINE_MS })
+        .sendSignInCode(email, CODE)
+        .then(
+          () => undefined,
+          (error: unknown) => error,
+        ),
+      delay(STALL_DEADLINE_MS * STALL_SLACK_FACTOR).then(() => 'still pending'),
+    ]);
+
+    expect(failure).toBeInstanceOf(Error);
+    expect(signals).toHaveLength(1);
+    expect(signals[0]).toBeInstanceOf(AbortSignal);
     expectNoLineContains(lines, [email, CODE]);
   });
 });

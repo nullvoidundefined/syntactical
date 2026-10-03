@@ -10,16 +10,16 @@ const SUCCESS = 0;
 
 export async function createMigratedDatabase(
     adminUrl: string,
-): Promise<{ drop: () => Promise<void>; pool: pg.Pool; reset: () => Promise<void> }> {
+): Promise<{ databaseUrl: string; drop: () => Promise<void>; pool: pg.Pool; reset: () => Promise<void> }> {
     const scratch = await createScratchDatabase(adminUrl);
     const { output, status } = runMigrations(scratch.databaseUrl, 'up');
     if (status !== SUCCESS) {
         await scratch.drop();
         throw new Error(`migrations failed: ${output}`);
     }
-    const { drop, pool } = scratch;
+    const { databaseUrl, drop, pool } = scratch;
     async function reset(): Promise<void> {
         await pool.query('TRUNCATE users, one_time_codes, sessions, rate_limit_counters CASCADE');
     }
-    return { drop, pool, reset };
+    return { databaseUrl, drop, pool, reset };
 }
