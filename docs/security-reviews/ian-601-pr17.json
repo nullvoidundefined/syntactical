@@ -1,0 +1,26 @@
+{
+  "reviewer": "security-reviewer subagent",
+  "model": "claude-fable-5-1",
+  "range": "96d27d4..f7ff37b",
+  "rounds": [
+    { "round": 1, "range": "96d27d4..70b51eb", "findings": 5 },
+    { "round": 2, "range": "96d27d4..bddccad", "findings": 1 },
+    { "round": 3, "range": "96d27d4..f7ff37b", "findings": 0 }
+  ],
+  "findings": [
+    { "id": 1, "severity": "MEDIUM", "control": "free-text report reason could carry question text into the public bundle", "status": "fixed 06c8bb7" },
+    { "id": 2, "severity": "MEDIUM", "control": "agreement field reached the bundle unvalidated", "status": "fixed 06c8bb7" },
+    { "id": 3, "severity": "LOW", "control": "report bank keys not checked against the manifest", "status": "fixed 06c8bb7" },
+    { "id": 4, "severity": "LOW", "control": "generated TS literal never round-tripped; string lengths unbounded", "status": "fixed 06c8bb7" },
+    { "id": 5, "severity": "LOW", "control": "CI workflow token had no permissions block", "status": "fixed bddccad" },
+    { "id": 6, "severity": "LOW", "control": "agreement key names and count unbounded", "status": "fixed f7ff37b" }
+  ],
+  "nothingFound": [
+    "report read: tried missing file, malformed JSON, null and string bodies, empty array, directory, unreadable file",
+    "field validation: tried wrong types, missing fields, over-long strings, unknown bank, unknown status, unknown reason, prototype names, out-of-range and non-numeric agreement values, 7 and 100,000 agreement keys",
+    "output encoding: tried script tags, img onerror, template braces, line separators; rendered only as React Native Text",
+    "navigation: only code-constant routes in the changed lines",
+    "bank path safety: unchanged; isSafeBankPath still precedes any read",
+    "CI drift gate and token scope: tried hand-edited generated module, deleted report, default read-write token, pull_request_target and expression injection (none present)"
+  ]
+}
