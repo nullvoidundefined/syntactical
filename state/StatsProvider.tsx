@@ -1,6 +1,7 @@
 // Owns lifetime stats and the answer event log for the whole app: reads
 // both once at startup, migrates v1 stats to v2 in memory (written with the
 // first change), backs up any malformed stored value before replacing it,
+// keeps a key whose read failed untouched (its changes stay in memory),
 // refuses changes until that read completes, and keeps changes in memory
 // only when a backup or the migration failed, so a stored value is never
 // destroyed unseen. Each recorded answer folds into the stats and appends
@@ -19,7 +20,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import { readJson } from '../clients/readJson';
+import { readStoredJson } from '../clients/readStoredJson';
 import { generateUuid } from '../clients/uuidClient';
 import { writeJson } from '../clients/writeJson';
 import { EVENT_LOG_STORAGE_KEY, STORAGE_KEY } from '../constants/appConfig';
@@ -90,12 +91,9 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
   useEffect(() => {
     let isCancelled = false;
     async function hydrate() {
-      const [rawStats, rawEventLog] = await Promise.all([
-        readJson<unknown>(STORAGE_KEY, null),
-        readJson<unknown>(EVENT_LOG_STORAGE_KEY, null),
-      ]);
-      const { isPersistenceBlocked: isStatsBlocked, stats: storedStats } = await resolveStoredStats(rawStats, readLocalToday());
-      const { eventLog: storedEventLog, isPersistenceBlocked: isEventLogBlocked } = await resolveStoredEventLog(rawEventLog);
+      const [statsRead, eventLogRead] = await Promise.all([readStoredJson(STORAGE_KEY), readStoredJson(EVENT_LOG_STORAGE_KEY)]);
+      const { isPersistenceBlocked: isStatsBlocked, stats: storedStats } = await resolveStoredStats(statsRead, readLocalToday());
+      const { eventLog: storedEventLog, isPersistenceBlocked: isEventLogBlocked } = await resolveStoredEventLog(eventLogRead);
       if (isCancelled) return;
       loadSlot(statsSlot, storedStats, isStatsBlocked);
       loadSlot(eventLogSlot, storedEventLog, isEventLogBlocked);

@@ -1,10 +1,13 @@
-// Turns the raw stored stats into the stats to start from. Valid v2 stats
+// Turns the stored stats read into the stats to start from. A read that
+// failed starts empty with changes kept in memory, so a transient storage
+// error never overwrites what is stored. Valid v2 stats
 // load as they are; v1 stats migrate in memory and are written as v2 with
 // the first change, so rerunning the migration is harmless. A migration
 // that throws backs the v1 value up, leaves it in place, and keeps changes
 // in memory. Any other value is backed up and replaced by empty stats, with
 // changes kept in memory when that backup cannot be written.
 import { logWarning } from '../../clients/logClient';
+import type { StoredRead } from '../../clients/types/StoredRead';
 import { writeJson } from '../../clients/writeJson';
 import { REJECTED_STORAGE_KEY, STORAGE_KEY } from '../../constants/appConfig';
 
@@ -29,7 +32,9 @@ async function migrateOrKeepV1(stored: StatsV1, today: string): Promise<Resolved
   }
 }
 
-export async function resolveStoredStats(raw: unknown, today: string): Promise<ResolvedStats> {
+export async function resolveStoredStats(read: StoredRead, today: string): Promise<ResolvedStats> {
+  const { isReadFailed, value: raw } = read;
+  if (isReadFailed) return { isPersistenceBlocked: true, stats: createEmptyStats(today) };
   if (raw === null) return { isPersistenceBlocked: false, stats: createEmptyStats(today) };
   if (isStoredStats(raw)) return { isPersistenceBlocked: false, stats: raw };
   if (isStoredStatsV1(raw)) return migrateOrKeepV1(raw, today);
