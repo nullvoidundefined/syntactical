@@ -3,6 +3,7 @@
 // secret generated at run time.
 import { randomBytes } from 'node:crypto';
 
+import type { Router } from 'express';
 import type pg from 'pg';
 import { pino } from 'pino';
 import type { Logger } from 'pino';
@@ -17,7 +18,14 @@ interface SentCode {
     email: string;
 }
 
+interface TestClock {
+    advance(milliseconds: number): void;
+    now(): Date;
+}
+
 interface AuthTestAppOptions {
+    // Probe routes for one test, mounted after the auth routes; they get the test's clock.
+    extraRoutes?: (router: Router, clock: TestClock) => void;
     isCookieSecure?: boolean;
     logger?: Logger;
     pool: pg.Pool;
@@ -26,9 +34,16 @@ interface AuthTestAppOptions {
 }
 
 export function createAuthTestApp(options: AuthTestAppOptions) {
-    const { isCookieSecure = true, logger = pino({ level: 'silent' }), pool, randomInt, sendSignInCode } = options;
+    const {
+        extraRoutes,
+        isCookieSecure = true,
+        logger = pino({ level: 'silent' }),
+        pool,
+        randomInt,
+        sendSignInCode,
+    } = options;
     let currentTime = Date.now();
-    const clock = {
+    const clock: TestClock = {
         advance(milliseconds: number): void {
             currentTime += milliseconds;
         },
@@ -50,6 +65,7 @@ export function createAuthTestApp(options: AuthTestAppOptions) {
         allowedOrigins: [ALLOWED_ORIGIN],
         auth: { database: pool, emailClient, isCookieSecure, now: clock.now, randomInt, rateLimitKeySecret },
         db: pool,
+        extraRoutes: extraRoutes ? (router: Router) => extraRoutes(router, clock) : undefined,
         logger,
     });
     return { app, clock, rateLimitKeySecret, sentCodes };

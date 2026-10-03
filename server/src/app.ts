@@ -10,6 +10,7 @@ import type { Logger } from 'pino';
 import { createLogger } from './clients/logger.js';
 import { createCorsOptions } from './config/cors.js';
 import { HTTP } from './constants/http.js';
+import { csrfGuard } from './middleware/csrfGuard.js';
 import { dropForwardedHeaders } from './middleware/dropForwardedHeaders.js';
 import { createErrorHandler, createNotFoundHandler } from './middleware/errorHandler.js';
 import { requestId } from './middleware/requestId.js';
@@ -20,6 +21,7 @@ import type { AuthDeps, ResolvedAuthDeps } from './routes/authDeps.js';
 import { createAuthSessionsRouter } from './routes/authSessions.js';
 import { createHealthRouter } from './routes/health.js';
 import type { HealthDb } from './routes/health.js';
+import { createSignOutRouter } from './routes/signOut.js';
 
 interface AppDeps {
   allowedOrigins?: string[];
@@ -44,13 +46,19 @@ function createApp(deps: AppDeps) {
   app.use(requireJson);
   app.use(express.json({ limit: HTTP.JSON_BODY_SIZE_LIMIT }));
   app.use(cookieParser());
+  app.use(csrfGuard);
 
   app.use('/health', createHealthRouter(db, logger));
 
   if (auth) {
     const { now = () => new Date(), randomInt: codeGenerator = randomInt } = auth;
     const resolved: ResolvedAuthDeps = { ...auth, now, randomInt: codeGenerator };
-    app.use('/v1/auth', createAuthCodesRouter(resolved, logger), createAuthSessionsRouter(resolved));
+    app.use(
+      '/v1/auth',
+      createAuthCodesRouter(resolved, logger),
+      createAuthSessionsRouter(resolved),
+      createSignOutRouter(resolved),
+    );
   }
 
   if (extraRoutes) {
