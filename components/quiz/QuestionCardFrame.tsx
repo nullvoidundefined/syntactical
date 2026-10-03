@@ -9,7 +9,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { VerifiedBadge } from './VerifiedBadge';
 
-const TYPE_LABEL = { bool: 'True / False', mc: 'Multiple choice' } as const;
+const TYPE_LABEL = { ab: 'Which is optimal', bool: 'True / False', mc: 'Multiple choice' } as const;
 
 type QuestionCardFrameProps = {
   children: ReactNode;
@@ -17,7 +17,7 @@ type QuestionCardFrameProps = {
   languageLabel: string;
   onOpenQuery: () => void;
   provenance: Provenance;
-  type: 'mc' | 'bool';
+  type: 'ab' | 'bool' | 'mc';
 };
 
 export function QuestionCardFrame({ children, difficultyLabel, languageLabel, onOpenQuery, provenance, type }: QuestionCardFrameProps) {

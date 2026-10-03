@@ -1,6 +1,8 @@
 // The strict publish check: every question needs a topic, every wrong
 // answer (or a true/false question) needs a rationale within the length cap,
-// and validation must not have failed or be pending without human review.
+// and validation must not have failed or be pending without human review. A
+// readability A/B question is judged, never executed, so it also needs a
+// recorded human approval.
 // The client validator stays lenient; this runs in the content build.
 import { collectMisconceptionIds } from './collectMisconceptionIds.js';
 import { CONTENT_LIMITS } from './contentLimits.js';
@@ -31,6 +33,10 @@ function findValidationRule(question: Question): string | null {
   return validation.status === 'pending' && !isHumanReviewed ? 'validation-pending' : null;
 }
 
+function isUnreviewedReadability(question: Question): boolean {
+  return question.type === 'ab' && question.criterion.type === 'readability' && !question.provenance.isHumanReviewed;
+}
+
 function findReferenceRules(question: Question, context: BankContext): string[] {
   const rules: string[] = [];
   if (hasText(question.topic) && !context.topicIds.includes(question.topic as string)) rules.push('unknown-topic');
@@ -51,6 +57,7 @@ function findProblems(question: Question, context: BankContext): PublishProblem[
   rules.push(...findReferenceRules(question, context));
   const validationRule = findValidationRule(question);
   if (validationRule !== null) rules.push(validationRule);
+  if (isUnreviewedReadability(question)) rules.push('readability-unreviewed');
   return rules.map((rule) => ({ id: question.id, rule }));
 }
 

@@ -7,12 +7,24 @@ import { draftOracles } from './commands/draftOracles.js';
 import { draftTaxonomy } from './commands/draftTaxonomy.js';
 import { enrich } from './commands/enrich.js';
 import { gapFill } from './commands/gapFill.js';
+import { publish } from './commands/publish.js';
+import { review } from './commands/review.js';
 import { runCli } from './commands/runCli.js';
 import { validateContent } from './commands/validate.js';
 
 const { argv, env, stderr, stdout } = process;
 
+const repoDir = fileURLToPath(new URL('../../', import.meta.url));
+const buildScript = new URL('../../scripts/buildContentManifest.mjs', import.meta.url).href;
+
 process.exitCode = await runCli(argv, {
+    // The build script is plain JS outside this package; load it by URL so tsc does not follow it.
+    buildManifest: async (contentRoot) => {
+        const { buildRepoContent } = (await import(buildScript)) as {
+            buildRepoContent: (repoDir: string, contentRoot: string) => Promise<void>;
+        };
+        await buildRepoContent(repoDir, contentRoot);
+    },
     classify,
     contentDir: fileURLToPath(new URL('../../content', import.meta.url)),
     createProvider: createModelProvider,
@@ -23,6 +35,8 @@ process.exitCode = await runCli(argv, {
     env,
     gapFill,
     pipelineDir: fileURLToPath(new URL('../', import.meta.url)),
+    publish,
+    review,
     stderr: (text) => stderr.write(text),
     stdout: (text) => stdout.write(text),
     validate: validateContent,

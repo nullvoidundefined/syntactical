@@ -5,6 +5,7 @@ import { Text } from 'react-native';
 
 import { DifficultyStep } from '../DifficultyStep';
 import { LanguageStep } from '../LanguageStep';
+import { TopicStep } from '../TopicStep';
 
 const mockBankStates: Record<string, Record<string, unknown>> = {};
 
@@ -12,12 +13,16 @@ jest.mock('../../../state/useLanguageManifest', () => ({
   useLanguageManifest: () => ({
     languages: [
       {
-        banks: { easy: { hash: 'a'.repeat(64), path: 'python/easy.json' }, hard: { hash: 'b'.repeat(64), path: 'python/hard.json' } },
+        banks: { easy: { hash: 'a'.repeat(64), path: 'python/easy.json', topicCounts: { numbers: 4, strings: 6 } }, hard: { hash: 'b'.repeat(64), path: 'python/hard.json' } },
         glyph: 'PY',
         grammar: 'python',
         id: 'python',
         label: 'Python',
         tagline: 'Snakes.',
+        topics: [
+          { id: 'strings', label: 'Strings' },
+          { id: 'numbers', label: 'Numbers' },
+        ],
       },
     ],
     schemaVersion: 2,
@@ -52,6 +57,21 @@ function DifficultyHarness() {
         language="python"
         onSelectDifficulty={(id) => setSelection(`difficulty ${id}`)}
         onBack={() => setSelection('back to languages')}
+      />
+    </>
+  );
+}
+
+function TopicHarness() {
+  const [selection, setSelection] = useState('nothing selected');
+  return (
+    <>
+      <Text>{selection}</Text>
+      <TopicStep
+        language="python"
+        difficulty="easy"
+        onSelectTopic={(topic) => setSelection(`topic ${topic ?? 'whole bank'}`)}
+        onBack={() => setSelection('back to difficulties')}
       />
     </>
   );
@@ -101,5 +121,23 @@ describe('web keyboard navigation in the menus', () => {
     render(<DifficultyHarness />);
     pressKey('Escape');
     expect(screen.queryByText('back to languages')).not.toBeNull();
+  });
+
+  it('on the topic step, 1 picks the whole bank and 2 the first topic', () => {
+    render(<TopicHarness />);
+    pressKey('1');
+    expect(screen.queryByText('topic whole bank')).not.toBeNull();
+    pressKey('2');
+    expect(screen.queryByText('topic strings')).not.toBeNull();
+    pressKey('3');
+    expect(screen.queryByText('topic numbers')).not.toBeNull();
+  });
+
+  it('on the topic step, a key past the list selects nothing and Escape goes back', () => {
+    render(<TopicHarness />);
+    pressKey('4');
+    expect(screen.queryByText('nothing selected')).not.toBeNull();
+    pressKey('Escape');
+    expect(screen.queryByText('back to difficulties')).not.toBeNull();
   });
 });

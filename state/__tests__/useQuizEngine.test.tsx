@@ -68,7 +68,7 @@ describe('useQuizEngine', () => {
     expect(result.current.isAnswered).toBe(true);
   });
 
-  it('never presents an A/B question and counts only the playable ones', async () => {
+  it('presents an A/B question, counts it, and scores it by its answer index', async () => {
     const abQuestion = {
       answerIndex: 0,
       choices: [{ text: 'fast' }, { text: 'slow' }],
@@ -79,21 +79,50 @@ describe('useQuizEngine', () => {
       query,
       type: 'ab',
     } as Question;
-    const { result } = await renderHook(() => useQuizEngine([abQuestion, ...questions]));
-    const seenIds: string[] = [];
-    while (!result.current.isComplete) {
-      seenIds.push(result.current.currentQuestion!.id);
-      await act(async () => { result.current.submitAnswer(true); });
-      await act(async () => { result.current.advanceQuestion(); });
-    }
-    expect(seenIds.sort()).toEqual(['q-1', 'q-2']);
-    expect(result.current.totalQuestions).toBe(2);
+    const { result } = await renderHook(() => useQuizEngine([abQuestion]));
+    expect(result.current.currentQuestion?.id).toBe('q-ab');
+    expect(result.current.totalQuestions).toBe(1);
+    let outOfRange: boolean | null = true;
+    let wrongKind: boolean | null = true;
+    let verdict: boolean | null = null;
+    await act(async () => { outOfRange = result.current.submitAnswer(2); });
+    await act(async () => { wrongKind = result.current.submitAnswer(true); });
+    expect([outOfRange, wrongKind]).toEqual([null, null]);
+    await act(async () => { verdict = result.current.submitAnswer(1); });
+    expect(verdict).toBe(false);
+    expect(result.current.wasCorrect).toBe(false);
   });
 
-  it('completes immediately when a bank holds only A/B questions', async () => {
-    const onlyAb = [{ answerIndex: 0, choices: [{ text: 'a' }, { text: 'b' }], criterion: { evidence: 'e', statement: 's', type: 'performance' }, id: 'q-ab', prompt: 'p', provenance: TEST_PROVENANCE, query, type: 'ab' }] as Question[];
-    const { result } = await renderHook(() => useQuizEngine(onlyAb));
+  it('completes immediately when the bank holds no questions', async () => {
+    const { result } = await renderHook(() => useQuizEngine([]));
     expect(result.current.currentQuestion).toBeNull();
     expect(result.current.totalQuestions).toBe(0);
+  });
+
+  it('starts a round of only the chosen topic', async () => {
+    const bankWithTopics: Question[] = [
+      ...['one', 'two'].map((id): Question => ({ answer: true, id: `s-${id}`, prompt: id, query, provenance: TEST_PROVENANCE, topic: 'strings', type: 'bool' })),
+      ...['one', 'two', 'three'].map((id): Question => ({ answer: true, id: `n-${id}`, prompt: id, query, provenance: TEST_PROVENANCE, topic: 'numbers-and-math', type: 'bool' })),
+      { answer: true, id: 'untopiced', prompt: 'none', query, provenance: TEST_PROVENANCE, type: 'bool' },
+    ];
+    const { result } = await renderHook(() => useQuizEngine(bankWithTopics, { topic: 'strings' }));
+    expect(result.current.totalQuestions).toBe(2);
+    const seen: string[] = [];
+    for (let step = 0; step < 2; step += 1) {
+      seen.push(result.current.currentQuestion?.id ?? '');
+      await act(async () => { result.current.submitAnswer(true); });
+      await act(async () => result.current.advanceQuestion());
+    }
+    expect(seen.sort()).toEqual(['s-one', 's-two']);
+    expect(result.current.isComplete).toBe(true);
+  });
+
+  it('plays the whole bank when no topic is given', async () => {
+    const bank: Question[] = [
+      { answer: true, id: 'a', prompt: 'a', query, provenance: TEST_PROVENANCE, topic: 'strings', type: 'bool' },
+      { answer: true, id: 'b', prompt: 'b', query, provenance: TEST_PROVENANCE, type: 'bool' },
+    ];
+    const { result } = await renderHook(() => useQuizEngine(bank));
+    expect(result.current.totalQuestions).toBe(2);
   });
 });

@@ -136,6 +136,44 @@ describe('web keyboard navigation in a round', () => {
   });
 });
 
+const abQuestion: Question = {
+  answerIndex: 1,
+  choices: [{ code: 'x = 1', text: 'first' }, { code: 'y = 2', text: 'second' }],
+  criterion: { evidence: 'B is faster', statement: 'Lower runtime wins', type: 'performance' },
+  id: 'q-ab',
+  prompt: 'Pick the faster',
+  provenance: TEST_PROVENANCE,
+  query,
+  type: 'ab',
+};
+
+describe('web keyboard navigation on an A/B card', () => {
+  it.each([
+    ['A', 'Option A, incorrect'],
+    ['1', 'Option A, incorrect'],
+    ['b', 'Option B, correct'],
+    ['2', 'Option B, correct'],
+  ])('key %p selects an option', (key, label) => {
+    render(<RoundHarness question={abQuestion} />);
+    pressKey(key);
+    expect(screen.queryByLabelText(label)).not.toBeNull();
+  });
+
+  it.each(['3', '4', 'C', 'D', 't', 'F'])('key %p does nothing', (key) => {
+    render(<RoundHarness question={abQuestion} />);
+    pressKey(key);
+    expect(screen.queryByText('Continue')).toBeNull();
+    expect(screen.queryByLabelText('Choose Option A')).not.toBeNull();
+    expect(screen.queryByLabelText('Choose Option B')).not.toBeNull();
+  });
+
+  it('shows the evidence after answering', () => {
+    render(<RoundHarness question={abQuestion} />);
+    pressKey('2');
+    expect(screen.queryByText('B is faster')).not.toBeNull();
+  });
+});
+
 describe('web keyboard navigation ignores keys meant for something else', () => {
   const threeChoiceQuestion: Question = { answerIndex: 2, choices: [{ text: 'a' }, { text: 'b' }, { text: 'c' }], id: 'q-3', prompt: 'Pick', query, provenance: TEST_PROVENANCE, type: 'mc' };
 
