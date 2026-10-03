@@ -55,9 +55,11 @@ describe('computeDayStreak', () => {
         expect(computeDayStreak(leap, '2028-03-01')).toBe(3);
     });
 
-    it('ignores progress dated after today', () => {
-        const progress = [met('2026-10-02'), met('2026-10-03'), met('2026-10-04')];
-        expect(computeDayStreak(progress, '2026-10-03')).toBe(2);
+    it('ignores met days dated after today', () => {
+        // Counting back from the latest met date instead of from today would give 2.
+        expect(computeDayStreak([met('2026-10-04'), met('2026-10-05')], '2026-10-03')).toBe(0);
+        const progress = [met('2026-10-02'), met('2026-10-04'), met('2026-10-05')];
+        expect(computeDayStreak(progress, '2026-10-03')).toBe(1);
     });
 
     it('throws on a today that is not a YYYY-MM-DD calendar date', () => {
