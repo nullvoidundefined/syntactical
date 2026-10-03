@@ -1,0 +1,17 @@
+{
+  "reviewer": "security-reviewer subagent",
+  "model": "claude-fable-5-1",
+  "range": "dc3d2d1..213e9b9",
+  "rounds": [
+    { "round": 1, "range": "dc3d2d1..213e9b9", "findings": 0 }
+  ],
+  "findings": [],
+  "nothingFound": [
+    "language id to file path: tried ../evil, ../../etc/passwd, empty, mixed case, embedded newline, 33 characters, a flag as the language",
+    "bank path and access gate: tried traversal and absolute paths, case variants, access Free, null, missing, *",
+    "prompt data boundary: tried a closing data tag with injected instructions, template placeholders, newlines, U+2028, $& patterns",
+    "model output validation: tried 41 entries, 281-character and empty descriptions, wrong-language and malformed ids, duplicates, extra keys, null",
+    "draft never shipped: tried draft only, wrong-language ids, non-JSON, null, [], a directory, traversal ids",
+    "log and error text: tried newline and bidi override in the language argument, a 5000-character argument"
+  ]
+}
