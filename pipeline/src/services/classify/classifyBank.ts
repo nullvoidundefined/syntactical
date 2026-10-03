@@ -26,15 +26,22 @@ export async function classifyBank(args: ClassifyBankArgs): Promise<BankResult> 
         isWtfOveruse: false,
         queued: 0,
     };
+    const seenIds = new Set<string>();
     for (const question of questions) {
         const { id } = question;
         if (typeof id !== 'string' || !SAFE_QUESTION_ID.test(id)) {
             log(`${bankKey}: skipped a question with an unsafe id`);
             continue;
         }
+        // Ids are file names; compare case-insensitively so `Q-1` and `q-1` cannot share a file.
+        if (seenIds.has(id.toLowerCase())) {
+            log(`${bankKey}: skipped a duplicate question id`);
+            continue;
+        }
+        seenIds.add(id.toLowerCase());
         const outcome = await classifyTwice(question, topics, provider);
         const { confidence, isAgreed, reason, topic } = outcome;
-        const queueFile = join(outRoot, 'review-queue', `${id}.json`);
+        const queueFile = join(outRoot, 'review-queue', languageId, difficulty, `${id}.json`);
         if (isAgreed !== undefined) {
             result.compared += 1;
             result.agreed += isAgreed ? 1 : 0;

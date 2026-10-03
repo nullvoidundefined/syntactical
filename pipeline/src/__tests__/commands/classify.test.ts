@@ -152,7 +152,7 @@ describe('classify', () => {
         await seed({ 'easy:free': [buildQuestion('q-1', 'p1')] });
         const before = await readFile(join(contentDir, 'python/easy.json'), 'utf8');
         await run(scripted(() => ({ confidence: 0.6, topic: 'strings' })));
-        expect(await readJson(join(pipelineDir, 'review-queue/q-1.json'))).toEqual({
+        expect(await readJson(join(pipelineDir, 'review-queue/python/easy/q-1.json'))).toEqual({
             bankKey: 'python/easy',
             confidence: 0.6,
             id: 'q-1',
@@ -172,7 +172,7 @@ describe('classify', () => {
     it('routes a paid-bank question to the content root and never writes paid text under pipeline/', async () => {
         await seed({ 'medium:paid': [buildQuestion('paid-1', PAID_TEXT)] });
         await run(scripted(() => ({ confidence: 0.6, topic: 'wtf' })));
-        expect((await readJson(join(contentRoot, 'review-queue/paid-1.json'))).id).toBe('paid-1');
+        expect((await readJson(join(contentRoot, 'review-queue/python/medium/paid-1.json'))).id).toBe('paid-1');
         expect(await listFiles(join(pipelineDir, 'review-queue'))).toEqual([]);
         expect(await listFiles(join(pipelineDir, 'classifications'))).toEqual([]);
         const written = [
@@ -203,7 +203,7 @@ describe('classify', () => {
             'q-2',
             'q-4',
         ]);
-        expect((await readJson(join(pipelineDir, 'review-queue/q-3.json'))).reason).toBe('disagreement');
+        expect((await readJson(join(pipelineDir, 'review-queue/python/easy/q-3.json'))).reason).toBe('disagreement');
         expect((await readJson(join(pipelineDir, 'reports/latest.json'))).agreement).toEqual({ classify: 0.75 });
     });
 
@@ -214,7 +214,9 @@ describe('classify', () => {
         const report = await run(
             scripted((prompt) => (prompt.includes('"b"') ? 'invalid' : { confidence: 0.9, topic: 'strings' })),
         );
-        expect((await readJson(join(pipelineDir, 'review-queue/q-2.json'))).reason).toBe('model-output-invalid');
+        expect((await readJson(join(pipelineDir, 'review-queue/python/easy/q-2.json'))).reason).toBe(
+            'model-output-invalid',
+        );
         expect(report.agreement).toEqual({ classify: 1 });
     });
 
@@ -305,5 +307,24 @@ describe('classify', () => {
         const provider = scripted(() => ({ confidence: 0.9, topic: 'strings' }));
         await expect(run(provider, { contentRoot: join(root, 'missing') })).rejects.toThrow('content root not found');
         expect(provider.prompts).toEqual([]);
+    });
+
+    it('keys review-queue files by bank, so a shared id in two banks cannot overwrite each other', async () => {
+        await seed({
+            'easy:free': [buildQuestion('q-1', 'easy prompt')],
+            'hard:free': [buildQuestion('q-1', 'hard prompt')],
+        });
+        await run(scripted((prompt) => ({ confidence: prompt.includes('easy prompt') ? 0.9 : 0.3, topic: 'strings' })));
+        expect((await readJson(join(pipelineDir, 'review-queue/python/hard/q-1.json'))).reason).toBe('low-confidence');
+        expect(Object.keys(await readJson(join(pipelineDir, 'classifications/python/easy.json')))).toEqual(['q-1']);
+    });
+
+    it('refuses duplicate ids within a bank, case-insensitively', async () => {
+        await seed({ 'easy:free': [buildQuestion('Q-1', 'first'), buildQuestion('q-1', 'second')] });
+        const provider = scripted(() => ({ confidence: 0.9, topic: 'strings' }));
+        await run(provider);
+        expect(provider.prompts).toHaveLength(2);
+        expect(Object.keys(await readJson(join(pipelineDir, 'classifications/python/easy.json')))).toEqual(['Q-1']);
+        expect(logs.some((line) => line.includes('duplicate question id'))).toBe(true);
     });
 });
