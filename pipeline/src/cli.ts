@@ -7,6 +7,7 @@ import { draftOracles } from './commands/draftOracles.js';
 import { draftTaxonomy } from './commands/draftTaxonomy.js';
 import { enrich } from './commands/enrich.js';
 import { gapFill } from './commands/gapFill.js';
+import { review } from './commands/review.js';
 import { runCli } from './commands/runCli.js';
 import { validateContent } from './commands/validate.js';
 
@@ -23,6 +24,7 @@ process.exitCode = await runCli(argv, {
     env,
     gapFill,
     pipelineDir: fileURLToPath(new URL('../', import.meta.url)),
+    review,
     stderr: (text) => stderr.write(text),
     stdout: (text) => stdout.write(text),
     validate: validateContent,
