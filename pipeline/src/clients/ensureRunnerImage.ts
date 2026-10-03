@@ -40,10 +40,8 @@ export function ensureRunnerImage(language: OracleLanguage): Promise<void> {
     if (!build) {
         build = buildIfMissing(language);
         builds.set(language, build);
-        build.catch((err: unknown) => {
-            console.warn(`runner image build for ${language} failed`, err);
-            builds.delete(language);
-        });
+        // The rejection still reaches the caller; here a failed build only stops being cached.
+        build.catch(() => builds.delete(language));
     }
     return build;
 }
