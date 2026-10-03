@@ -1,7 +1,8 @@
 // Quality route: the numbers from the latest committed pipeline report, or an
 // explicit "not audited yet" state until a report has been committed.
-import { router } from 'expo-router';
 import type { ReactNode } from 'react';
+
+import { router } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { QualityStat } from '../components/quality/QualityStat';

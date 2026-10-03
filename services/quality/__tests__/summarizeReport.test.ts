@@ -1,4 +1,5 @@
-import { summarizeBanks, summarizeReport } from '../summarizeReport';
+import { summarizeBanks } from '../summarizeBanks';
+import { summarizeReport } from '../summarizeReport';
 import type { PipelineReportInput } from '../types/PipelineReportInput';
 
 const REPORT: PipelineReportInput = {
