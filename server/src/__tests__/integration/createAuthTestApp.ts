@@ -24,6 +24,8 @@ interface TestClock {
 }
 
 interface AuthTestAppOptions {
+    // The deletion transaction's statement_timeout; production default when omitted.
+    deletionStatementTimeoutMs?: number;
     // Probe routes for one test, mounted after the auth routes; they get the test's clock.
     extraRoutes?: (router: Router, clock: TestClock) => void;
     isCookieSecure?: boolean;
@@ -35,6 +37,7 @@ interface AuthTestAppOptions {
 
 export function createAuthTestApp(options: AuthTestAppOptions) {
     const {
+        deletionStatementTimeoutMs,
         extraRoutes,
         isCookieSecure = true,
         logger = pino({ level: 'silent' }),
@@ -63,7 +66,15 @@ export function createAuthTestApp(options: AuthTestAppOptions) {
     };
     const app = createApp({
         allowedOrigins: [ALLOWED_ORIGIN],
-        auth: { database: pool, emailClient, isCookieSecure, now: clock.now, randomInt, rateLimitKeySecret },
+        auth: {
+            database: pool,
+            deletionStatementTimeoutMs,
+            emailClient,
+            isCookieSecure,
+            now: clock.now,
+            randomInt,
+            rateLimitKeySecret,
+        },
         db: pool,
         extraRoutes: extraRoutes ? (router: Router) => extraRoutes(router, clock) : undefined,
         logger,

@@ -23,6 +23,8 @@ import { scrubPurchasePayload } from './scrubPurchasePayload.js';
 
 interface DeleteUserInput {
   rateLimitKeySecret: string;
+  // The transaction's statement_timeout in milliseconds; defaults to AUTH.DELETION.STATEMENT_TIMEOUT_MS.
+  statementTimeoutMs?: number;
   userId: string;
 }
 
@@ -96,10 +98,12 @@ async function scrubPurchaseEvents(client: pg.PoolClient, identity: { email: str
 }
 
 async function deleteUser(client: pg.PoolClient, input: DeleteUserInput): Promise<boolean> {
-  const { rateLimitKeySecret, userId } = input;
-  // SET LOCAL takes no bind parameters; both values are constants from AUTH.DELETION.
-  await client.query(`SET LOCAL lock_timeout = '${AUTH.DELETION.LOCK_TIMEOUT}'`);
-  await client.query(`SET LOCAL statement_timeout = '${AUTH.DELETION.STATEMENT_TIMEOUT}'`);
+  const { rateLimitKeySecret, statementTimeoutMs = AUTH.DELETION.STATEMENT_TIMEOUT_MS, userId } = input;
+  // set_config(..., true) is SET LOCAL with bind parameters; a bare number is read as milliseconds.
+  await client.query("SELECT set_config('lock_timeout', $1, true), set_config('statement_timeout', $2, true)", [
+    String(AUTH.DELETION.LOCK_TIMEOUT_MS),
+    String(statementTimeoutMs),
+  ]);
   const found = await client.query<{ email: string }>('SELECT email FROM users WHERE id = $1', [userId]);
   const [row] = found.rows;
   if (!row) {

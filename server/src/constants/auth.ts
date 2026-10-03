@@ -15,9 +15,9 @@ const AUTH = {
   DELETION: {
     // Postgres lock_timeout for the deletion transaction: how long it waits on the email's
     // advisory lock or a row lock before failing (and rolling back).
-    LOCK_TIMEOUT: '5s',
+    LOCK_TIMEOUT_MS: 5_000,
     // Postgres statement_timeout for the deletion transaction: the cap on any one statement.
-    STATEMENT_TIMEOUT: '15s',
+    STATEMENT_TIMEOUT_MS: 15_000,
   },
   EMAIL: {
     // The sign-in email is sent inside the issue transaction, so a stalled send must not hold

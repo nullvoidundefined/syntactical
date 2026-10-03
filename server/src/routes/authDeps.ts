@@ -6,6 +6,9 @@ import type { EmailClient } from '../clients/emailTypes.js';
 
 interface AuthDeps {
   database: Database;
+  // The account deletion transaction's statement_timeout; tests inject a short one. Defaults to
+  // AUTH.DELETION.STATEMENT_TIMEOUT_MS.
+  deletionStatementTimeoutMs?: number;
   emailClient: EmailClient;
   // Secure on the session cookie; false only under NODE_ENV=test.
   isCookieSecure: boolean;

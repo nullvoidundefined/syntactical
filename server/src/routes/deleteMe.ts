@@ -20,7 +20,7 @@ const {
 } = AUTH;
 
 function createDeleteMeRouter(deps: ResolvedAuthDeps): Router {
-  const { database, isCookieSecure, now, rateLimitKeySecret } = deps;
+  const { database, deletionStatementTimeoutMs, isCookieSecure, now, rateLimitKeySecret } = deps;
   const router = Router();
 
   router.delete('/me', createRequireSession({ database, now }), async (_req, res) => {
@@ -28,7 +28,9 @@ function createDeleteMeRouter(deps: ResolvedAuthDeps): Router {
       logger,
       session: { userId },
     } = res.locals as { logger?: Logger; session: { userId: string } };
-    const deleted = await withTransaction(database, (client) => deleteUser(client, { rateLimitKeySecret, userId }));
+    const deleted = await withTransaction(database, (client) =>
+      deleteUser(client, { rateLimitKeySecret, statementTimeoutMs: deletionStatementTimeoutMs, userId }),
+    );
     if (deleted) {
       logger?.info({ event: 'account_deleted' }, 'account deleted');
     }

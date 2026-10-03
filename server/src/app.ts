@@ -9,6 +9,7 @@ import type { Logger } from 'pino';
 
 import { createLogger } from './clients/logger.js';
 import { createCorsOptions } from './config/cors.js';
+import { AUTH } from './constants/auth.js';
 import { HTTP } from './constants/http.js';
 import { createCsrfGuard } from './middleware/csrfGuard.js';
 import { dropForwardedHeaders } from './middleware/dropForwardedHeaders.js';
@@ -52,8 +53,12 @@ function createApp(deps: AppDeps) {
   app.use('/health', createHealthRouter(db, logger));
 
   if (auth) {
-    const { now = () => new Date(), randomInt: codeGenerator = randomInt } = auth;
-    const resolved: ResolvedAuthDeps = { ...auth, now, randomInt: codeGenerator };
+    const {
+      deletionStatementTimeoutMs = AUTH.DELETION.STATEMENT_TIMEOUT_MS,
+      now = () => new Date(),
+      randomInt: codeGenerator = randomInt,
+    } = auth;
+    const resolved: ResolvedAuthDeps = { ...auth, deletionStatementTimeoutMs, now, randomInt: codeGenerator };
     app.use(
       '/v1/auth',
       createAuthCodesRouter(resolved, logger),
