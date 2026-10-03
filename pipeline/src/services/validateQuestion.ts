@@ -42,21 +42,31 @@ function choiceMatchesRun(text: string, run: OracleRun): boolean {
     return new RegExp(`\\b${escapeRegExp(observedOf(run))}\\b`).test(text);
 }
 
+type SnippetMatches = { matches: number[] } | { reason: ValidationFailureReason };
+
 async function findSnippetMatches(
     oracle: Oracle,
     snippets: string[],
     reference: OracleRun,
     run: OracleRunner,
-): Promise<number[]> {
+): Promise<SnippetMatches> {
     const { language, setupSql } = oracle;
     const matches: number[] = [];
     for (const [index, code] of snippets.entries()) {
-        const snippetRun = await run({ code, language, ...(setupSql === undefined ? {} : { setupSql }) });
-        if (runKey(snippetRun) === runKey(reference)) {
+        const snippetOracle: Oracle = { code, language, ...(setupSql === undefined ? {} : { setupSql }) };
+        const snippetRuns: OracleRun[] = [];
+        for (let attempt = 0; attempt < ORACLE_RUN_COUNT; attempt += 1) {
+            snippetRuns.push(await run(snippetOracle));
+        }
+        const [first] = snippetRuns as [OracleRun];
+        if (snippetRuns.some((each) => runKey(each) !== runKey(first))) {
+            return { reason: 'nondeterministic' };
+        }
+        if (runKey(first) === runKey(reference)) {
             matches.push(index);
         }
     }
-    return matches;
+    return { matches };
 }
 
 function toBoolean(text: string): boolean | undefined {
@@ -72,13 +82,16 @@ async function findMatches(
     oracle: Oracle,
     reference: OracleRun,
     run: OracleRunner,
-): Promise<number[]> {
+): Promise<SnippetMatches> {
     if (!('choices' in question)) {
         const { outcome, value } = reference;
         const observed = outcome === 'value' ? toBoolean(value ?? '') : undefined;
-        return observed === question.answer ? [0] : [];
+        return { matches: observed === question.answer ? [0] : [] };
     }
     if (oracle.choiceCode) {
+        if (oracle.choiceCode.length !== question.choices.length) {
+            return { reason: 'answer-mismatch' };
+        }
         return findSnippetMatches(oracle, oracle.choiceCode, reference, run);
     }
     const matches: number[] = [];
@@ -87,7 +100,7 @@ async function findMatches(
             matches.push(index);
         }
     }
-    return matches;
+    return { matches };
 }
 
 export async function validateQuestion(
@@ -109,7 +122,11 @@ export async function validateQuestion(
     if (runs.some((each) => runKey(each) !== runKey(reference))) {
         return fail('nondeterministic');
     }
-    const matches = await findMatches(question, oracle, reference, run);
+    const found = await findMatches(question, oracle, reference, run);
+    if ('reason' in found) {
+        return fail(found.reason);
+    }
+    const { matches } = found;
     if (matches.length > 1) {
         return fail('ambiguous');
     }

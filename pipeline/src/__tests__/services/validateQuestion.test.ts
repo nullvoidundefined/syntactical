@@ -507,6 +507,54 @@ describe('validateQuestion', () => {
             expect(result).toMatchObject({ status: 'failed', reason: 'answer-mismatch' });
         });
 
+        it('runs each choice snippet three times', async () => {
+            const run = codeRunner({
+                [MAIN]: value('[1, 2, 3]'),
+                'print([1, 2, 3])': value('[1, 2, 3]'),
+                'print([3, 2, 1])': value('[3, 2, 1]'),
+            });
+
+            await validateQuestion(
+                buildAb(['Ascending', 'Descending'], 0),
+                buildOracle({ code: MAIN, choiceCode: ['print([1, 2, 3])', 'print([3, 2, 1])'] }),
+                run,
+            );
+
+            expect(run.calls.filter((called) => called.code === 'print([3, 2, 1])')).toHaveLength(3);
+        });
+
+        it('fails as nondeterministic when a choice snippet changes between runs', async () => {
+            const seen: Record<string, number> = {};
+            const run = async (oracle: Oracle): Promise<OracleRun> => {
+                seen[oracle.code] = (seen[oracle.code] ?? 0) + 1;
+                if (oracle.code === 'print(random())') {
+                    return value(seen[oracle.code] === 1 ? '[1, 2, 3]' : '[3, 2, 1]');
+                }
+                return value('[1, 2, 3]');
+            };
+
+            const result = await validateQuestion(
+                buildAb(['Ascending', 'Random'], 0),
+                buildOracle({ code: MAIN, choiceCode: ['print([1, 2, 3])', 'print(random())'] }),
+                run,
+            );
+
+            expect(result).toMatchObject({ status: 'failed', reason: 'nondeterministic' });
+        });
+
+        it.each([
+            ['fewer snippets than choices', ['print([1, 2, 3])']],
+            ['more snippets than choices', ['print([1, 2, 3])', 'print([3, 2, 1])', 'print(0)']],
+        ])('fails as answer-mismatch with %s', async (_label, choiceCode) => {
+            const result = await validateQuestion(
+                buildAb(['Ascending', 'Descending'], 0),
+                buildOracle({ code: MAIN, choiceCode }),
+                fixedRunner(value('[1, 2, 3]')),
+            );
+
+            expect(result).toMatchObject({ status: 'failed', reason: 'answer-mismatch' });
+        });
+
         it('runs each choice snippet in the oracle language with its setup SQL', async () => {
             const setupSql = 'CREATE TABLE t (x int); INSERT INTO t VALUES (1), (NULL), (3);';
             const run = codeRunner({
