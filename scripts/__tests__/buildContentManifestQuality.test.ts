@@ -153,6 +153,26 @@ describe('buildContentManifest quality report', () => {
         await expect(build()).rejects.toThrow(message);
     });
 
+    it('rejects an agreement key that fits the old pattern but is not a pipeline stage', async () => {
+        await writeReport({ ...buildReport(), agreement: { 'secret-note': 0.5 } });
+
+        await expect(build()).rejects.toThrow('invalid stage name: secret-note');
+    });
+
+    it('rejects an agreement with more keys than there are pipeline stages', async () => {
+        const agreement = Object.fromEntries(['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((stage) => [stage, 0.5]));
+        await writeReport({ ...buildReport(), agreement });
+
+        await expect(build()).rejects.toThrow('too many keys');
+    });
+
+    it('accepts an agreement keyed by every pipeline stage', async () => {
+        const agreement = Object.fromEntries(['classify', 'validate', 'review', 'enrich', 'gap-fill', 'publish'].map((stage) => [stage, 1]));
+        await writeReport({ ...buildReport(), agreement });
+
+        await expect(build()).resolves.toBeUndefined();
+    });
+
     it('accepts a report with no agreement', async () => {
         const { agreement: _agreement, ...report } = buildReport();
         await writeReport(report);

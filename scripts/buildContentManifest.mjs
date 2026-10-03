@@ -162,7 +162,8 @@ const REPORT_STATUSES = ['passed', 'failed', 'not-executable'];
 // Free text never reaches the public bundle through `reason`.
 const REPORT_REASONS = ['answer-mismatch', 'ambiguous', 'nondeterministic', 'runner-error'];
 const REPORT_STRING_MAX_LENGTH = 64;
-const AGREEMENT_STAGE_PATTERN = /^[a-z-]{1,32}$/;
+// Only the pipeline stage names (the lexicon's stage list) may key agreement.
+const AGREEMENT_STAGES = ['classify', 'validate', 'review', 'enrich', 'gap-fill', 'publish'];
 
 function isBoundedString(value) {
   return typeof value === 'string' && value.length <= REPORT_STRING_MAX_LENGTH;
@@ -173,8 +174,9 @@ function assertValidAgreement(agreement) {
   if (typeof agreement !== 'object' || agreement === null || Array.isArray(agreement)) {
     throw new Error('pipeline report agreement is not a plain object');
   }
+  if (Object.keys(agreement).length > AGREEMENT_STAGES.length) throw new Error('pipeline report agreement has too many keys');
   for (const [stage, rate] of Object.entries(agreement)) {
-    if (!AGREEMENT_STAGE_PATTERN.test(stage)) throw new Error(`pipeline report agreement has an invalid stage name: ${stage.slice(0, 40)}`);
+    if (!AGREEMENT_STAGES.includes(stage)) throw new Error(`pipeline report agreement has an invalid stage name: ${stage.slice(0, 40)}`);
     if (typeof rate !== 'number' || !Number.isFinite(rate) || rate < 0 || rate > 1) {
       throw new Error(`pipeline report agreement for ${stage} is not a number from 0 to 1`);
     }
