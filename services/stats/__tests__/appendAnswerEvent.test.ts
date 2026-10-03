@@ -49,10 +49,21 @@ describe('appendAnswerEvent', () => {
     expect(ids.slice(0, 4)).toEqual(['event-0', 'event-1', 'event-2', 'event-4']);
   });
 
-  it('never trims an unsynced entry, even past the cap', () => {
+  it('drops the oldest unsynced entry once no synced entry is left to trim, so the log never exceeds the cap', () => {
     const log = buildLog(EVENT_LOG_CAP, () => false);
     const next = appendAnswerEvent(log, buildLogged(EVENT_LOG_CAP, false));
-    expect(next).toHaveLength(EVENT_LOG_CAP + 1);
-    expect(next.every(({ isSynced }) => !isSynced)).toBe(true);
+    expect(next).toHaveLength(EVENT_LOG_CAP);
+    expect(next[0].eventId).toBe('event-1');
+    expect(next[next.length - 1].eventId).toBe(`event-${EVENT_LOG_CAP}`);
+  });
+
+  it('trims synced entries before any unsynced one when both are needed', () => {
+    const log = buildLog(EVENT_LOG_CAP + 1, (index) => index === 2);
+    const next = appendAnswerEvent(log, buildLogged(EVENT_LOG_CAP + 1, false));
+    const ids = next.map(({ eventId }) => eventId);
+    expect(next).toHaveLength(EVENT_LOG_CAP);
+    expect(ids).not.toContain('event-2');
+    expect(ids.slice(0, 2)).toEqual(['event-1', 'event-3']);
+    expect(ids[ids.length - 1]).toBe(`event-${EVENT_LOG_CAP + 1}`);
   });
 });

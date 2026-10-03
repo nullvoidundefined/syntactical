@@ -14,8 +14,8 @@ export const STATS_V1_SCHEMA_VERSION = 1;
 export const DEFAULT_DAILY_GOAL = 20;
 
 // The append-only answer event log, stored apart from stats so a large log
-// never slows the stats write. Entries past the cap are trimmed oldest
-// first, synced entries only; an unsynced entry is never trimmed.
+// never slows the stats write. It never exceeds the cap: the oldest synced
+// entries are trimmed first, then the oldest unsynced ones.
 export const EVENT_LOG_STORAGE_KEY = 'syntactical.events.v1';
 export const REJECTED_EVENT_LOG_STORAGE_KEY = 'syntactical.events.v1.rejected';
 export const EVENT_LOG_CAP = 5000;
