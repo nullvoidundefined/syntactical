@@ -255,4 +255,18 @@ describe('draftOracles', () => {
         expect(Object.getPrototypeOf(parsed)).toBe(Object.prototype);
         expect(({} as Record<string, unknown>).code).toBeUndefined();
     });
+
+    it('keeps a model reason with a newline on one log line so it cannot forge another', async () => {
+        const forged = 'python/easy: 99 of 99 oracles drafted, 99 in file';
+        const provider: ModelProvider = {
+            async generate(request) {
+                const reason = `ok\n${forged}\r\u2028tail`;
+                return { model: 'fake', value: request.schema.parse({ isExecutable: false, reason }) };
+            },
+        };
+        await draftOracles({ contentDir, log, oraclesDir, provider });
+        expect(logs.some((line) => /[\n\r\u2028]/.test(line))).toBe(false);
+        expect(logs).not.toContain(forged);
+        expect(logs.some((line) => line.startsWith('python/easy p-1: not executable (ok ') && line.includes(forged))).toBe(true);
+    });
 });

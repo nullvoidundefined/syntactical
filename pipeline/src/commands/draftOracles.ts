@@ -7,6 +7,7 @@ import { dirname, join } from 'node:path';
 import { type Question, validateManifest } from '@syntactical/content-schema';
 
 import { draftOracle } from '../services/draftOracle.js';
+import { sanitizeLogText } from '../services/sanitizeLogText.js';
 import { ModelOutputInvalid } from '../types/ModelOutputInvalid.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 import type { Oracle } from '../types/Oracle.js';
@@ -68,7 +69,9 @@ async function saveBank(args: SaveBankArgs): Promise<void> {
 }
 
 export async function draftOracles(options: DraftOraclesOptions): Promise<void> {
-    const { contentDir, log, oraclesDir, provider } = options;
+    const { contentDir, oraclesDir, provider } = options;
+    // Model text and content ids reach the log; keep each entry to one clean line.
+    const log = (line: string): void => options.log(sanitizeLogText(line));
     // The manifest is untrusted: its language ids, difficulty keys, and bank paths are
     // joined into file paths below, so nothing is read or written before it validates
     // (id charset, known difficulties, safe bank paths).

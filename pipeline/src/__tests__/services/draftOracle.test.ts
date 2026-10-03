@@ -190,3 +190,13 @@ describe('draftOracle static floor (defense in depth; the runner sandbox is the 
         });
     });
 });
+
+describe('draftOracle model text limits', () => {
+    const KIBIBYTES = 100;
+    const BYTES_PER_KIBIBYTE = 1024;
+
+    it('refuses a 100 KB reason instead of passing it on', async () => {
+        const reason = 'x'.repeat(KIBIBYTES * BYTES_PER_KIBIBYTE);
+        await expect(draftOracle(buildBool('q'), 'python', fakeProvider({ isExecutable: false, reason }))).rejects.toThrow();
+    });
+});
