@@ -244,4 +244,15 @@ describe('draftOracles', () => {
             expect(await readdir(oraclesDir)).toEqual(['python']);
         });
     });
+
+    it('keeps a question id like __proto__ as a plain own key without touching the prototype', async () => {
+        await writeContent(contentDir, { 'python/easy.json': { questions: [buildQuestion('__proto__'), buildQuestion('p-1')] } });
+        await draftOracles({ contentDir, log, oraclesDir, provider: scripted() });
+        const text = await readFile(join(oraclesDir, 'python', 'easy.json'), 'utf8');
+        const parsed = JSON.parse(text) as Record<string, unknown>;
+        expect(Object.keys(parsed).sort()).toEqual(['__proto__', 'p-1']);
+        expect(Object.hasOwn(parsed, '__proto__')).toBe(true);
+        expect(Object.getPrototypeOf(parsed)).toBe(Object.prototype);
+        expect(({} as Record<string, unknown>).code).toBeUndefined();
+    });
 });

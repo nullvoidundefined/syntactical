@@ -33,12 +33,12 @@ async function readJson(path: string): Promise<unknown> {
 
 // An existing oracle file is data worth keeping: a rerun adds to it, and a file
 // that cannot be parsed stops the run instead of being overwritten.
-async function readExistingOracles(file: string): Promise<Record<string, Oracle>> {
+async function readExistingOracles(file: string): Promise<Map<string, Oracle>> {
     try {
-        return (await readJson(file)) as Record<string, Oracle>;
+        return new Map(Object.entries((await readJson(file)) as Record<string, Oracle>));
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return {};
+            return new Map();
         }
         throw error;
     }
@@ -48,22 +48,23 @@ interface SaveBankArgs {
     bankKey: string;
     file: string;
     log: (line: string) => void;
-    oracles: Record<string, Oracle>;
+    oracles: Map<string, Oracle>;
     total: number;
 }
 
 async function saveBank(args: SaveBankArgs): Promise<void> {
     const { bankKey, file, log, oracles, total } = args;
-    const draftedCount = Object.keys(oracles).length;
+    const draftedCount = oracles.size;
     if (draftedCount === 0) {
         log(`${bankKey}: nothing drafted, existing file left as is`);
         return;
     }
     // Merge into what is already there: a rerun never deletes an oracle it did not redraft.
-    const merged = { ...(await readExistingOracles(file)), ...oracles };
+    // Maps keep a question id such as `__proto__` as a plain key; Object.fromEntries defines own properties.
+    const merged = new Map([...(await readExistingOracles(file)), ...oracles]);
     await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, `${JSON.stringify(merged, null, JSON_INDENT)}\n`);
-    log(`${bankKey}: ${draftedCount} of ${total} oracles drafted, ${Object.keys(merged).length} in file`);
+    await writeFile(file, `${JSON.stringify(Object.fromEntries(merged), null, JSON_INDENT)}\n`);
+    log(`${bankKey}: ${draftedCount} of ${total} oracles drafted, ${merged.size} in file`);
 }
 
 export async function draftOracles(options: DraftOraclesOptions): Promise<void> {
@@ -89,7 +90,7 @@ export async function draftOracles(options: DraftOraclesOptions): Promise<void> 
             }
             const bank = (await readJson(join(contentDir, path))) as { questions: Question[] };
             const file = join(oraclesDir, `${bankKey}.json`);
-            const oracles: Record<string, Oracle> = {};
+            const oracles = new Map<string, Oracle>();
             try {
                 for (const question of bank.questions) {
                     try {
@@ -97,7 +98,7 @@ export async function draftOracles(options: DraftOraclesOptions): Promise<void> 
                         if ('isExecutable' in drafted) {
                             log(`${bankKey} ${question.id}: not executable (${drafted.reason})`);
                         } else {
-                            oracles[question.id] = drafted;
+                            oracles.set(question.id, drafted);
                         }
                     } catch (error) {
                         if (!(error instanceof ModelOutputInvalid)) {
