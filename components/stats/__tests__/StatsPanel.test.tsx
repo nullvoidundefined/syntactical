@@ -18,6 +18,7 @@ jest.mock('../../../state/StatsProvider', () => ({
     },
   }),
 }));
+jest.mock('../WeaknessReport', () => ({ WeaknessReport: () => null }));
 jest.mock('../../../state/useLanguageManifest', () => ({
   useLanguageManifest: () => ({
     languages: [{ banks: {}, glyph: 'PY', grammar: 'python', id: 'python', label: 'Python', tagline: 't' }],
