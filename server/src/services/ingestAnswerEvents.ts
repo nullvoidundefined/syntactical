@@ -1,6 +1,6 @@
 // Stores one upload batch (B-32, B-33). Events are checked against the answer key before any
-// write; then, in one transaction, the user's row is locked (concurrent uploads for a user
-// serialize), the timestamps are bounded, the per-user stored-event cap is enforced (a batch
+// write; then, in one transaction, the user's row is locked without waiting (a concurrent upload for the user
+// is answered busy), the timestamps are bounded, the per-user stored-event cap is enforced (a batch
 // that would exceed it is refused whole; already-stored ids do not count), the events are inserted once by (user_id, event_id)
 // with is_correct derived from the answer key, and daily progress is recomputed.
 import type { Database } from '../clients/database.js';
@@ -10,6 +10,7 @@ import type { AnswerEventInput } from '../schemas/answerEventSchemas.js';
 import type { AnswerKey } from '../types/AnswerKey.js';
 import type { IngestResult } from '../types/IngestResult.js';
 
+import { lockUserRow } from './lockUserRow.js';
 import { recomputeDailyProgress } from './recomputeDailyProgress.js';
 
 const MINUTE_MS = 60_000;
@@ -39,14 +40,14 @@ async function ingestAnswerEvents(
     return { eventIds: ids(invalid), kind: 'invalid-events' };
   }
   return withTransaction(database, async (client): Promise<IngestResult> => {
-    const { rows: users } = await client.query<{ created_at: Date; timezone: string | null }>(
-      'SELECT created_at, timezone FROM users WHERE id = $1 FOR UPDATE',
-      [userId],
-    );
-    const [user] = users;
-    if (!user) {
+    const lock = await lockUserRow(client, userId);
+    if (lock.kind === 'busy') {
+      return { kind: 'busy' };
+    }
+    if (lock.kind === 'missing') {
       return { eventIds: ids(events), kind: 'invalid-events' };
     }
+    const { user } = lock;
     const latest = now.getTime() + FUTURE_TOLERANCE_MS;
     const earliest = user.created_at.getTime() - PAST_TOLERANCE_MS;
     const outOfRange = events.filter((event) => {

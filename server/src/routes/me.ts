@@ -1,7 +1,8 @@
 // GET /v1/me and PATCH /v1/me (B-35): the signed-in user's profile with progress computed from
 // stored data, and changes to the timezone and the daily goal. Both need a session; PATCH is
 // rate limited per user and refuses an unknown zone, a goal outside 10, 20, and 50, unknown
-// fields, or an empty body with 400. Both answer with the profile.
+// fields, or an empty body with 400. Both answer with the profile; PATCH answers 429 SYNC_USER_BUSY with Retry-After while another
+// upload or update holds the user's row lock.
 import { Router } from 'express';
 
 import { HTTP } from '../constants/http.js';
@@ -16,7 +17,7 @@ import { updateProfile } from '../services/updateProfile.js';
 import type { ResolvedSyncDeps } from './syncDeps.js';
 
 const {
-  STATUS: { BAD_REQUEST, OK, UNAUTHORIZED },
+  STATUS: { BAD_REQUEST, OK, TOO_MANY_REQUESTS, UNAUTHORIZED },
 } = HTTP;
 
 function createMeRouter(deps: ResolvedSyncDeps): Router {
@@ -50,11 +51,19 @@ function createMeRouter(deps: ResolvedSyncDeps): Router {
       res.status(BAD_REQUEST).json(createErrorResponse(ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body', requestId));
       return;
     }
-    const profile = await updateProfile(database, session.userId, data, now());
-    if (!profile) {
+    const result = await updateProfile(database, session.userId, data, now());
+    if (result.kind === 'busy') {
+      res
+        .status(TOO_MANY_REQUESTS)
+        .set('Retry-After', String(SYNC.BUSY_RETRY_AFTER_SECONDS))
+        .json(createErrorResponse(ERROR_CODES.SYNC.USER_BUSY, 'Another sync is in progress; retry shortly', requestId));
+      return;
+    }
+    if (result.kind !== 'updated') {
       res.status(UNAUTHORIZED).json(createErrorResponse(ERROR_CODES.AUTH.SESSION_REQUIRED, 'Sign-in required', requestId));
       return;
     }
+    const { profile } = result;
     res.status(OK).json({ data: profile });
   });
 

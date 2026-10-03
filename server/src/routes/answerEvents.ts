@@ -3,7 +3,9 @@
 // rate limited per user; its 256 KB body is read only after the session check. More than
 // 200 events is 413; any other schema failure is 400; an event the answer key rejects, or a
 // timestamp out of range, is 422 for the whole batch with the offending event ids; a batch
-// that would take the user past the stored-event cap is 422 SYNC_EVENT_CAP_REACHED. Event
+// that would take the user past the stored-event cap is 422 SYNC_EVENT_CAP_REACHED; while
+// another upload or profile update holds the user's row lock it is 429 SYNC_USER_BUSY with
+// Retry-After. Event
 // contents are never logged.
 import express, { Router } from 'express';
 import type { Request, Response } from 'express';
@@ -20,7 +22,7 @@ import { listAnswerEvents } from '../services/listAnswerEvents.js';
 import type { ResolvedSyncDeps } from './syncDeps.js';
 
 const {
-  STATUS: { BAD_REQUEST, OK, PAYLOAD_TOO_LARGE, UNPROCESSABLE_ENTITY },
+  STATUS: { BAD_REQUEST, OK, PAYLOAD_TOO_LARGE, TOO_MANY_REQUESTS, UNPROCESSABLE_ENTITY },
 } = HTTP;
 
 function isOverBatchLimit(body: unknown): boolean {
@@ -92,6 +94,13 @@ function createAnswerEventsRouter(deps: ResolvedSyncDeps): Router {
     if (result.kind === 'stored') {
       const { totals } = result;
       res.status(OK).json({ data: totals });
+      return;
+    }
+    if (result.kind === 'busy') {
+      res
+        .status(TOO_MANY_REQUESTS)
+        .set('Retry-After', String(SYNC.BUSY_RETRY_AFTER_SECONDS))
+        .json(createErrorResponse(ERROR_CODES.SYNC.USER_BUSY, 'Another sync is in progress; retry shortly', requestId));
       return;
     }
     if (result.kind === 'event-cap-reached') {

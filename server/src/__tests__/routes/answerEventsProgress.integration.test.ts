@@ -3,8 +3,8 @@
 // rejects a whole batch (422 SYNC_TIMESTAMP_OUT_OF_RANGE, nothing stored) when an answeredAt is
 // more than 5 minutes after the server clock or before the user's created_at minus 365 days;
 // it recomputes daily_progress with @syntactical/progress in the same transaction (user
-// timezone, goal history, due-review bonus); concurrent overlapping uploads store each event
-// once and leave the totals the package computes; a rejected batch leaves daily_progress as it was.
+// timezone, goal history, due-review bonus); concurrent overlapping uploads, a busy 429 retried,
+// store each event once and leave the totals the package computes; a rejected batch leaves daily_progress as it was.
 import { randomUUID } from 'node:crypto';
 
 import {
@@ -30,6 +30,7 @@ const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.en
 const ROUTE = '/v1/answer-events';
 const HTTP_OK = 200;
 const HTTP_UNPROCESSABLE = 422;
+const HTTP_TOO_MANY_REQUESTS = 429;
 const SETUP_TIMEOUT_MS = 120_000;
 const SECOND_MS = 1000;
 const MINUTE_MS = 60_000;
@@ -425,14 +426,32 @@ describe.skipIf(SKIP_DATABASE_TESTS)('POST /v1/answer-events timestamps and dail
                 const firstBatch = [...distinct.slice(0, 10), ...shared];
                 const secondBatch = [...shared, ...distinct.slice(20)];
 
-                const [first, second] = await Promise.all([
-                    request(app).post(ROUTE).set('Authorization', authorization).send({ events: firstBatch }),
-                    request(app).post(ROUTE).set('Authorization', authorization).send({ events: secondBatch }),
-                ]);
+                const batches = [firstBatch, secondBatch];
+                const concurrent = await Promise.all(
+                    batches.map((events) => request(app).post(ROUTE).set('Authorization', authorization).send({ events })),
+                );
+                // One upload per user is in flight at a time (R1c): the loser of the race may be
+                // answered 429 SYNC_USER_BUSY, and the client retries it once the other is done.
+                const accepted: request.Response[] = [];
+                for (const [index, response] of concurrent.entries()) {
+                    expect([HTTP_OK, HTTP_TOO_MANY_REQUESTS]).toContain(response.status);
+                    if (response.status === HTTP_OK) {
+                        accepted.push(response);
+                        continue;
+                    }
+                    expect(response.body.error.code).toBe('SYNC_USER_BUSY');
+                    const retry = await request(app)
+                        .post(ROUTE)
+                        .set('Authorization', authorization)
+                        .send({ events: batches[index] });
+                    expect(retry.status).toBe(HTTP_OK);
+                    accepted.push(retry);
+                }
 
-                expect(first.status).toBe(HTTP_OK);
-                expect(second.status).toBe(HTTP_OK);
-                expect(first.body.data.insertedCount + second.body.data.insertedCount).toBe(distinct.length);
+                expect(accepted).toHaveLength(batches.length);
+                expect(accepted.reduce((sum, response) => sum + response.body.data.insertedCount, 0)).toBe(
+                    distinct.length,
+                );
                 const { rows } = await database.pool.query<{
                     copies: string;
                     event_id: string;
@@ -446,7 +465,7 @@ describe.skipIf(SKIP_DATABASE_TESTS)('POST /v1/answer-events timestamps and dail
                 expect(dueIds.size).toBeGreaterThan(0);
                 const expectedXp = stored.reduce((sum, event) => sum + computeXp(event, dueIds.has(event.eventId)), 0);
                 expect(await storedXpTotal(userId)).toBe(expectedXp);
-                expect(Math.max(first.body.data.xpTotal, second.body.data.xpTotal)).toBe(expectedXp);
+                expect(Math.max(...accepted.map((response) => response.body.data.xpTotal))).toBe(expectedXp);
             }
         });
     });
