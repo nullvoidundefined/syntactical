@@ -57,7 +57,7 @@ describe('quality route', () => {
     for (const label of [
       'Questions audited: 5',
       'Audit failures in the original banks: 2',
-      'Share needing human review: 60%',
+      'Share needing human review (not executable): 60%',
       'answer-mismatch: 2',
       'executed: 4',
       'judged: 1',
@@ -115,8 +115,8 @@ describe('quality route', () => {
     expect(within(audited).getByText('4', { includeHiddenElements: true })).toBeTruthy();
     const failures = screen.getByLabelText('Audit failures in the original banks: 2');
     expect(within(failures).getByText('2', { includeHiddenElements: true })).toBeTruthy();
-    const review = screen.getByLabelText('Share needing human review: 75%');
-    expect(within(review).getByText('75%', { includeHiddenElements: true })).toBeTruthy();
+    const review = screen.getByLabelText('Share needing human review (not executable): 25%');
+    expect(within(review).getByText('25%', { includeHiddenElements: true })).toBeTruthy();
     expect(screen.getByLabelText('python/hard: 1 not executable')).toBeTruthy();
     expect(screen.getByLabelText('ambiguous: 1')).toBeTruthy();
   });

@@ -39,7 +39,7 @@ function Report({ report }: { report: NonNullable<typeof QUALITY_REPORT> }) {
       <Section title="Summary">
         <QualityStat label="Questions audited" value={String(audited)} />
         <QualityStat label="Audit failures in the original banks" value={String(auditFailuresInOriginal)} />
-        <QualityStat label="Share needing human review" value={formatPercent(humanReviewRate)} />
+        <QualityStat label="Share needing human review (not executable)" value={formatPercent(humanReviewRate)} />
       </Section>
       <Section title="Rejected by reason" isEmpty={Object.keys(rejectedByReason).length === 0}>
         {toEntries(rejectedByReason).map(([reason, count]) => (

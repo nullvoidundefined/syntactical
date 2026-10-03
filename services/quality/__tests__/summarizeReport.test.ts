@@ -22,7 +22,7 @@ describe('summarizeReport', () => {
       agreement: { classify: 0.75 },
       audited: 6,
       auditFailuresInOriginal: 3,
-      humanReviewRate: 4 / 6,
+      humanReviewRate: 1 / 6,
       methodMix: { executed: 5, judged: 1 },
       rejectedByReason: { ambiguous: 1, 'answer-mismatch': 2 },
     });
@@ -38,6 +38,17 @@ describe('summarizeReport', () => {
     });
     expect(auditFailuresInOriginal).toBe(0);
     expect(rejectedByReason).toEqual({});
+  });
+
+  it('counts only not-executable questions toward the human review rate, never failed ones', () => {
+    const questions = [
+      { bankKey: 'a/b', id: '1', reason: 'ambiguous', status: 'failed' },
+      { bankKey: 'a/b', id: '2', reason: 'ambiguous', status: 'failed' },
+      { bankKey: 'a/b', id: '3', status: 'not-executable' },
+      { bankKey: 'a/b', id: '4', status: 'passed' },
+    ];
+    expect(summarizeReport({ ...REPORT, questions }).humanReviewRate).toBe(1 / 4);
+    expect(summarizeReport({ ...REPORT, questions: questions.slice(0, 2) }).humanReviewRate).toBe(0);
   });
 
   it('files a failure with no recorded reason under unspecified', () => {

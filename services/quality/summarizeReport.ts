@@ -1,7 +1,8 @@
 // Reduces a pipeline report to the numbers the quality page shows. A failed
-// verdict is an audit failure in the original bank; a question with no
-// executable oracle was judged rather than executed; every question that did
-// not pass execution needs a human review before it can be published.
+// verdict is an audit failure in the original bank. A question with no
+// executable oracle was judged rather than executed, and only those need a
+// human review: publish refuses a failed question even when human-reviewed
+// (B-22), so failed questions never enter review.
 import type { PipelineReportInput } from './types/PipelineReportInput';
 import type { QualityReportSummary } from './types/QualityReportSummary';
 
@@ -19,7 +20,7 @@ function countBy<Item>(items: readonly Item[], keyOf: (item: Item) => string): R
 export function summarizeReport(report: PipelineReportInput): QualityReportSummary {
   const { agreement = {}, questions } = report;
   const failed = questions.filter(({ status }) => status === 'failed');
-  const needReview = questions.filter(({ status }) => status !== 'passed');
+  const needReview = questions.filter(({ status }) => status === 'not-executable');
   return {
     agreement: { ...agreement },
     auditFailuresInOriginal: failed.length,
