@@ -25,7 +25,7 @@ import type { AnswerEvent } from '@syntactical/progress';
 import { readStoredJson } from '../clients/readStoredJson';
 import { generateUuid } from '../clients/uuidClient';
 import { writeJson } from '../clients/writeJson';
-import { EVENT_LOG_STORAGE_KEY, STORAGE_KEY } from '../constants/appConfig';
+import { buildUserStatsKey, EVENT_LOG_STORAGE_KEY, STORAGE_KEY } from '../constants/appConfig';
 import { readLocalToday } from '../services/progress/readLocalToday';
 import { appendAnswerEvent } from '../services/stats/appendAnswerEvent';
 import { buildLoggedAnswerEvent } from '../services/stats/buildLoggedAnswerEvent';
@@ -33,6 +33,7 @@ import { claimGuestEvents as claimGuest } from '../services/stats/claimGuestEven
 import { createEmptyStats } from '../services/stats/createEmptyStats';
 import { discardUnsyncedEvents as discardUnsynced } from '../services/stats/discardUnsyncedEvents';
 import { markEvents } from '../services/stats/markEvents';
+import { mergeGuestStats } from '../services/stats/mergeGuestStats';
 import { recordAnswer as foldAnswer } from '../services/stats/recordAnswer';
 import { recordCompletion as foldCompletion } from '../services/stats/recordCompletion';
 import { resolveStoredEventLog } from '../services/stats/resolveStoredEventLog';
@@ -84,6 +85,12 @@ function loadSlot<T>(slot: PersistedSlot<T>, value: T, isBlocked: boolean): void
   slot.setValue(value);
 }
 
+async function mergeIntoStoredUser(userId: string, guestStats: Stats): Promise<Stats> {
+  const read = await readStoredJson(buildUserStatsKey(userId));
+  const { stats: userStats } = await resolveStoredStats(read, readLocalToday());
+  return mergeGuestStats(guestStats, userStats);
+}
+
 // Applies the change in memory at once and queues its write; the result says
 // whether the value reached storage (false when blocked or the write failed).
 function changeSlot<T>(slot: PersistedSlot<T>, fold: (current: T) => T): Promise<boolean> {
@@ -101,9 +108,15 @@ async function requirePersisted(isPersisted: Promise<boolean>): Promise<void> {
 }
 
 export function StatsProvider({ children, ownerUserId = null }: { children: ReactNode; ownerUserId?: string | null }) {
-  const [stats, statsSlot] = usePersistedSlot<Stats>(STORAGE_KEY, () => createEmptyStats(readLocalToday()));
+  const statsKey = ownerUserId === null ? STORAGE_KEY : buildUserStatsKey(ownerUserId);
+  const [loadedStats, statsSlot] = usePersistedSlot<Stats>(statsKey, () => createEmptyStats(readLocalToday()));
   const [eventLog, eventLogSlot] = usePersistedSlot<LoggedAnswerEvent[]>(EVENT_LOG_STORAGE_KEY, () => []);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [isEventLogLoaded, setIsEventLogLoaded] = useState(false);
+  const [loadedStatsKey, setLoadedStatsKey] = useState<string | null>(null);
+  // Stats of the previous owner stay hidden and unwritable until the new owner's load finishes.
+  const isStatsLoaded = loadedStatsKey === statsKey;
+  const isHydrated = isEventLogLoaded && isStatsLoaded;
+  const stats = useMemo(() => (isStatsLoaded ? loadedStats : createEmptyStats(readLocalToday())), [isStatsLoaded, loadedStats]);
   const ownerRef = useRef(ownerUserId);
   useEffect(() => {
     ownerRef.current = ownerUserId;
@@ -112,19 +125,32 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
   useEffect(() => {
     let isCancelled = false;
     async function hydrate() {
-      const [statsRead, eventLogRead] = await Promise.all([readStoredJson(STORAGE_KEY), readStoredJson(EVENT_LOG_STORAGE_KEY)]);
-      const { isPersistenceBlocked: isStatsBlocked, stats: storedStats } = await resolveStoredStats(statsRead, readLocalToday());
-      const { eventLog: storedEventLog, isPersistenceBlocked: isEventLogBlocked } = await resolveStoredEventLog(eventLogRead);
+      const statsRead = await readStoredJson(statsSlot.key);
+      const { isPersistenceBlocked, stats: storedStats } = await resolveStoredStats(statsRead, readLocalToday());
       if (isCancelled) return;
-      loadSlot(statsSlot, storedStats, isStatsBlocked);
-      loadSlot(eventLogSlot, storedEventLog, isEventLogBlocked);
-      setIsHydrated(true);
+      loadSlot(statsSlot, storedStats, isPersistenceBlocked);
+      setLoadedStatsKey(statsSlot.key);
     }
     void hydrate();
     return () => {
       isCancelled = true;
     };
-  }, [eventLogSlot, statsSlot]);
+  }, [statsSlot]);
+
+  useEffect(() => {
+    let isCancelled = false;
+    async function hydrate() {
+      const eventLogRead = await readStoredJson(EVENT_LOG_STORAGE_KEY);
+      const { eventLog: storedEventLog, isPersistenceBlocked: isEventLogBlocked } = await resolveStoredEventLog(eventLogRead);
+      if (isCancelled) return;
+      loadSlot(eventLogSlot, storedEventLog, isEventLogBlocked);
+      setIsEventLogLoaded(true);
+    }
+    void hydrate();
+    return () => {
+      isCancelled = true;
+    };
+  }, [eventLogSlot]);
 
   const recordAnswer = useCallback(
     (answer: RecordedAnswer) => {
@@ -139,12 +165,33 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
     [eventLogSlot, isHydrated, statsSlot],
   );
 
+  // The guest's stats go to the user first and the guest's reset follows,
+  // so a failed first write leaves the guest's stats where they were.
+  const claimGuestStats = useCallback(
+    async (userId: string) => {
+      const isGuestLoaded = ownerRef.current === null;
+      const guestStats = isGuestLoaded
+        ? statsSlot.ref.current
+        : (await resolveStoredStats(await readStoredJson(STORAGE_KEY), readLocalToday())).stats;
+      const isUserLoaded = ownerRef.current === userId;
+      const isPersisted = isUserLoaded
+        ? await changeSlot(statsSlot, (current) => mergeGuestStats(guestStats, current))
+        : await writeJson(buildUserStatsKey(userId), await mergeIntoStoredUser(userId, guestStats));
+      if (!isPersisted) throw new Error('guest stats claim was not persisted');
+      const empty = createEmptyStats(readLocalToday());
+      if (isGuestLoaded) await changeSlot(statsSlot, () => empty);
+      else await writeJson(STORAGE_KEY, empty);
+    },
+    [statsSlot],
+  );
+
   const claimGuestEvents = useCallback(
     async (userId: string) => {
       if (!isHydrated) return;
       await requirePersisted(changeSlot(eventLogSlot, (current) => claimGuest(current, userId)));
+      await claimGuestStats(userId);
     },
-    [eventLogSlot, isHydrated],
+    [claimGuestStats, eventLogSlot, isHydrated],
   );
 
   const discardUnsyncedEvents = useCallback(

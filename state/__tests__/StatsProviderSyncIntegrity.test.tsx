@@ -8,7 +8,7 @@ import type { AnswerEvent } from '@syntactical/progress';
 import { act, render, screen, waitFor } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
-import { EVENT_LOG_STORAGE_KEY, STORAGE_KEY } from '../../constants/appConfig';
+import { buildUserStatsKey, EVENT_LOG_STORAGE_KEY, STORAGE_KEY } from '../../constants/appConfig';
 import { readLocalToday } from '../../services/progress/readLocalToday';
 import { createEmptyStats } from '../../services/stats/createEmptyStats';
 import type { LoggedAnswerEvent } from '../../services/stats/types/LoggedAnswerEvent';
@@ -54,16 +54,22 @@ async function seedLog(log: LoggedAnswerEvent[]): Promise<void> {
   await AsyncStorage.setItem(EVENT_LOG_STORAGE_KEY, JSON.stringify(log));
 }
 
-async function seedStats(stats: Stats): Promise<void> {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
+// The guest's stats keep the original key; each signed-in user's stats, sync
+// cursor included, live under that user's key.
+function statsKeyFor(ownerUserId: string | null): string {
+  return ownerUserId === null ? STORAGE_KEY : buildUserStatsKey(ownerUserId);
+}
+
+async function seedStats(stats: Stats, ownerUserId: string | null): Promise<void> {
+  await AsyncStorage.setItem(statsKeyFor(ownerUserId), JSON.stringify(stats));
 }
 
 async function readStoredLog(): Promise<LoggedAnswerEvent[]> {
   return JSON.parse((await AsyncStorage.getItem(EVENT_LOG_STORAGE_KEY)) ?? '[]');
 }
 
-async function readStoredStats(): Promise<Stats | null> {
-  return JSON.parse((await AsyncStorage.getItem(STORAGE_KEY)) ?? 'null');
+async function readStoredStats(ownerUserId: string | null): Promise<Stats | null> {
+  return JSON.parse((await AsyncStorage.getItem(statsKeyFor(ownerUserId))) ?? 'null');
 }
 
 function renderProvider(ownerUserId: string | null) {
@@ -158,7 +164,7 @@ describe('StatsProvider sync cursor ownership', () => {
     await view.unmount();
     await renderHydrated(userA);
     expect(latest.readSyncCursor(userA)).toBe(cursor);
-    expect((await readStoredStats())?.syncCursor).toBe(cursor);
+    expect((await readStoredStats(userA))?.syncCursor).toBe(cursor);
   });
 
   it('gives B no cursor after the owner changes from A to B without clearSyncCursor (sign-out)', async () => {
@@ -181,11 +187,11 @@ describe('StatsProvider sync cursor ownership', () => {
 
   it('treats a stored cursor saved without an owner as no cursor and still loads the rest of the stats', async () => {
     const seeded: Stats = { ...createEmptyStats(readLocalToday()), syncCursor: buildCursor(), totals: { attempted: 7, correct: 5 } };
-    await seedStats(seeded);
+    await seedStats(seeded, userA);
     await renderHydrated(userA);
     expect(latest.stats.totals).toEqual({ attempted: 7, correct: 5 });
     expect(latest.readSyncCursor(userA)).toBeNull();
-    expect(await readStoredStats()).toEqual(seeded);
+    expect(await readStoredStats(userA)).toEqual(seeded);
   });
 
   it('writes no cursor when the owner changes while the event-log write is pending', async () => {
@@ -201,7 +207,8 @@ describe('StatsProvider sync cursor ownership', () => {
     await act(async () => hold.release());
     await waitFor(() => expect(merge?.isSettled).toBe(true));
     await flushTurns();
-    expect((await readStoredStats())?.syncCursor).toBeUndefined();
+    expect((await readStoredStats(userA))?.syncCursor).toBeUndefined();
+    expect((await readStoredStats(userB))?.syncCursor).toBeUndefined();
     expect(latest.stats.syncCursor).toBeUndefined();
     expect(latest.readSyncCursor(userB)).toBeNull();
     expect(latest.readSyncCursor(userA)).toBeNull();
@@ -221,7 +228,7 @@ describe('StatsProvider sync actions require their owner', () => {
     const seededLog = [own, other];
     const seededStats = createEmptyStats(readLocalToday());
     await seedLog(seededLog);
-    await seedStats(seededStats);
+    await seedStats(seededStats, providerOwner);
     await renderHydrated(providerOwner);
     const visibleBefore = latest.eventLog;
     setItemMock.mockClear();
@@ -236,7 +243,7 @@ describe('StatsProvider sync actions require their owner', () => {
     expect(outcome?.isRejected).toBe(true);
     expect(setItemMock).not.toHaveBeenCalled();
     expect(await readStoredLog()).toEqual(seededLog);
-    expect(await readStoredStats()).toEqual(seededStats);
+    expect(await readStoredStats(providerOwner)).toEqual(seededStats);
     expect(latest.eventLog).toEqual(visibleBefore);
     expect(latest.stats.syncCursor).toBeUndefined();
   }
@@ -287,7 +294,7 @@ describe('StatsProvider sync actions report a failed event-log write', () => {
     await waitFor(() => expect(outcome?.isSettled).toBe(true));
     await flushTurns();
     expect(outcome?.isRejected).toBe(true);
-    expect((await readStoredStats())?.syncCursor).toBeUndefined();
+    expect((await readStoredStats(userA))?.syncCursor).toBeUndefined();
     expect(latest.stats.syncCursor).toBeUndefined();
   });
 });

@@ -5,7 +5,7 @@ import type { AnswerEvent } from '@syntactical/progress';
 import { act, render, screen, waitFor } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
-import { EVENT_LOG_STORAGE_KEY, STORAGE_KEY } from '../../constants/appConfig';
+import { buildUserStatsKey, EVENT_LOG_STORAGE_KEY } from '../../constants/appConfig';
 import { readLocalToday } from '../../services/progress/readLocalToday';
 import { createEmptyStats } from '../../services/stats/createEmptyStats';
 import type { LoggedAnswerEvent } from '../../services/stats/types/LoggedAnswerEvent';
@@ -62,8 +62,9 @@ async function readStoredLog(): Promise<LoggedAnswerEvent[]> {
   return JSON.parse((await AsyncStorage.getItem(EVENT_LOG_STORAGE_KEY)) ?? '[]');
 }
 
-async function readStoredStats(): Promise<Stats | null> {
-  return JSON.parse((await AsyncStorage.getItem(STORAGE_KEY)) ?? 'null');
+// A signed-in user's stats, sync cursor included, live under that user's key.
+async function readStoredStats(userId: string): Promise<Stats | null> {
+  return JSON.parse((await AsyncStorage.getItem(buildUserStatsKey(userId))) ?? 'null');
 }
 
 function findEntry(log: LoggedAnswerEvent[], eventId: string): LoggedAnswerEvent | undefined {
@@ -134,7 +135,7 @@ describe('StatsProvider sync actions', () => {
     expect(findEntry(stored, newTwo.eventId)).toEqual({ ...newTwo, isHeld: false, isSynced: true, ownerUserId: userA });
     expect(findEntry(stored, existing.eventId)).toMatchObject({ ownerUserId: userA, isSynced: true });
     expect(findEntry(stored, ownedByB.eventId)).toEqual(ownedByB);
-    await waitFor(async () => expect((await readStoredStats())?.syncCursor).toBe(cursor));
+    await waitFor(async () => expect((await readStoredStats(userA))?.syncCursor).toBe(cursor));
     expect(latest.stats.syncCursor).toBe(cursor);
     expect(latest.eventLog).toHaveLength(3);
   });
@@ -155,13 +156,13 @@ describe('StatsProvider sync actions', () => {
 
   it('clearSyncCursor removes the stored cursor and keeps the rest of the stats', async () => {
     const seeded: Stats = { ...createEmptyStats(readLocalToday()), syncCursor: buildCursor() };
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+    await AsyncStorage.setItem(buildUserStatsKey(userA), JSON.stringify(seeded));
     await renderHydrated(userA);
     expect(latest.stats.syncCursor).toBe(seeded.syncCursor);
     await act(async () => latest.clearSyncCursor());
-    await waitFor(async () => expect(await readStoredStats()).not.toHaveProperty('syncCursor'));
+    await waitFor(async () => expect(await readStoredStats(userA)).not.toHaveProperty('syncCursor'));
     const { syncCursor: _dropped, ...rest } = seeded;
-    expect(await readStoredStats()).toEqual(rest);
+    expect(await readStoredStats(userA)).toEqual(rest);
     expect(latest.stats.syncCursor).toBeUndefined();
   });
 
@@ -171,10 +172,10 @@ describe('StatsProvider sync actions', () => {
     const seededLog = [guest, unsyncedA];
     const seededStats: Stats = { ...createEmptyStats(readLocalToday()), syncCursor: buildCursor() };
     await seedLog(seededLog);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(seededStats));
+    await AsyncStorage.setItem(buildUserStatsKey(userA), JSON.stringify(seededStats));
     const storedText = new Map([
       [EVENT_LOG_STORAGE_KEY, JSON.stringify(seededLog)],
-      [STORAGE_KEY, JSON.stringify(seededStats)],
+      [buildUserStatsKey(userA), JSON.stringify(seededStats)],
     ]);
     let releaseReads: () => void = () => undefined;
     const gate = new Promise<void>((resolve) => {
@@ -184,7 +185,12 @@ describe('StatsProvider sync actions', () => {
       await gate;
       return storedText.get(key) ?? null;
     };
-    jest.spyOn(AsyncStorage, 'getItem').mockImplementationOnce(gatedRead).mockImplementationOnce(gatedRead);
+    // Every hydration read waits on the gate, however many keys the provider
+    // reads. getItem is the shared mock's jest.fn, so its own implementation is
+    // put back afterwards rather than restored to none.
+    const getItem = AsyncStorage.getItem as unknown as jest.Mock;
+    const originalGetItem = getItem.getMockImplementation();
+    getItem.mockImplementation(gatedRead);
     // The spy wraps the shared mock, which already holds the two seed writes.
     const setItem = jest.spyOn(AsyncStorage, 'setItem');
     setItem.mockClear();
@@ -200,6 +206,7 @@ describe('StatsProvider sync actions', () => {
     });
     await act(async () => releaseReads());
     await waitFor(() => expect(screen.getByTestId('hydrated')).toHaveTextContent('true'));
+    getItem.mockImplementation(originalGetItem);
     expect(setItem).not.toHaveBeenCalled();
     expect(latest.eventLog).toEqual([unsyncedA]);
     expect(latest.stats.syncCursor).toBe(seededStats.syncCursor);
@@ -223,7 +230,7 @@ describe('StatsProvider sync actions', () => {
     ]);
     expect(stored[2]).toMatchObject({ isSynced: false, ownerUserId: userA, questionId: 'py-easy-01' });
     expect(latest.eventLog).toHaveLength(3);
-    expect((await readStoredStats())?.totals.attempted).toBe(1);
+    expect((await readStoredStats(userA))?.totals.attempted).toBe(1);
   });
 
   it('keeps an answer recorded between mergeDownloadedEvents and discardUnsyncedEvents only until the discard', async () => {
@@ -238,6 +245,6 @@ describe('StatsProvider sync actions', () => {
     await act(async () => latest.discardUnsyncedEvents(userA));
     await waitFor(async () => expect(await readStoredLog()).toHaveLength(1));
     expect(await readStoredLog()).toEqual([{ ...downloaded, isHeld: false, isSynced: true, ownerUserId: userA }]);
-    expect((await readStoredStats())?.syncCursor).toBe(cursor);
+    expect((await readStoredStats(userA))?.syncCursor).toBe(cursor);
   });
 });

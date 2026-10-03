@@ -4,6 +4,10 @@
 // The stats key keeps its v1 name: it is already shipped, and the stored
 // value's own `version` field says which shape it holds.
 export const STORAGE_KEY = 'syntactical.stats.v1';
+// Each signed-in user's stats persist under their own key; the guest keeps STORAGE_KEY.
+export function buildUserStatsKey(userId: string): string {
+  return `syntactical.stats.v2.user.${userId}`;
+}
 // Holds the last stored stats value that failed validation, so a schema
 // mismatch or corruption never destroys a player's history silently.
 export const REJECTED_STORAGE_KEY = 'syntactical.stats.v1.rejected';

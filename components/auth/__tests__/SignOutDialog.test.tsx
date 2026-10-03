@@ -12,8 +12,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
-import { AUTH_STORAGE_KEY } from '../../../constants/appConfig';
+import { AUTH_STORAGE_KEY, buildUserStatsKey } from '../../../constants/appConfig';
+import { readLocalToday } from '../../../services/progress/readLocalToday';
+import { createEmptyStats } from '../../../services/stats/createEmptyStats';
 import type { LoggedAnswerEvent } from '../../../services/stats/types/LoggedAnswerEvent';
+import type { Stats } from '../../../services/stats/types/Stats';
 import { buildOwnedLog } from '../../../services/sync/__tests__/fakeSyncServer';
 import { AuthProvider, useAuth } from '../../../state/AuthProvider';
 import { StatsProvider, useQuizStats } from '../../../state/StatsProvider';
@@ -23,9 +26,7 @@ import {
   flush,
   idsOf,
   readStoredLog,
-  readStoredStats,
   seedEventLog,
-  seedStats,
   type ApiRouter,
 } from '../../../state/__tests__/syncTestSupport';
 import { SignOutDialog } from '../SignOutDialog';
@@ -104,6 +105,15 @@ function sessionDeletes(router: ApiRouter) {
   return router.sent.filter(({ method, path }) => method === 'DELETE' && path === 'auth/sessions/current');
 }
 
+// A signed-in user's stats, sync cursor included, live under that user's key.
+async function seedUserStats(userId: string, change: Partial<Stats>): Promise<void> {
+  await AsyncStorage.setItem(buildUserStatsKey(userId), JSON.stringify({ ...createEmptyStats(readLocalToday()), ...change }));
+}
+
+async function readUserStats(userId: string): Promise<Stats | null> {
+  return JSON.parse((await AsyncStorage.getItem(buildUserStatsKey(userId))) ?? 'null');
+}
+
 function entryIn(log: LoggedAnswerEvent[], eventId: string): LoggedAnswerEvent | undefined {
   return log.find((entry) => entry.eventId === eventId);
 }
@@ -114,7 +124,7 @@ async function mountSignedIn(router: ApiRouter, userId: string, log: LoggedAnswe
   await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ knownUserIds: [userId], userId }));
   router.state.activeUserId = userId;
   await seedEventLog(log);
-  await seedStats({ syncCursor: router.serverFor(userId).issueCursor(0) });
+  await seedUserStats(userId, { syncCursor: router.serverFor(userId).issueCursor(0) });
   await render(<App />);
   await waitFor(() => {
     expect(latest.auth?.user).toEqual({ id: userId });
@@ -198,7 +208,7 @@ describe('SignOutDialog', () => {
     expect(signOutAt).toBeGreaterThan(lastUpload);
     const stored = await readStoredLog();
     for (const entry of unsynced) expect(entryIn(stored, entry.eventId)?.isSynced).toBe(true);
-    expect((await readStoredStats())?.syncCursor).toBeUndefined();
+    expect((await readUserStats(userId))?.syncCursor).toBeUndefined();
     expect(latest.stats?.eventLog).toEqual([]);
     expect(queryDialog()).toBeNull();
   });
@@ -216,7 +226,7 @@ describe('SignOutDialog', () => {
     expect(sessionDeletes(router)).toEqual([]);
     const stored = await readStoredLog();
     for (const entry of unsynced) expect(entryIn(stored, entry.eventId)).toEqual(entry);
-    expect((await readStoredStats())?.syncCursor).toBeDefined();
+    expect((await readUserStats(userId))?.syncCursor).toBeDefined();
   });
 
   it('Discard removes the user\'s unsynced events without uploading them, signs out, and clears the sync cursor', async () => {
@@ -233,7 +243,7 @@ describe('SignOutDialog', () => {
     expect(stored.filter(({ eventId }) => unsyncedIds.has(eventId))).toEqual([]);
     for (const entry of synced) expect(entryIn(stored, entry.eventId)).toEqual(entry);
     expect(sessionDeletes(router)).toHaveLength(1);
-    expect((await readStoredStats())?.syncCursor).toBeUndefined();
+    expect((await readUserStats(userId))?.syncCursor).toBeUndefined();
     expect(latest.stats?.eventLog).toEqual([]);
     expect(queryDialog()).toBeNull();
   });
@@ -259,7 +269,7 @@ describe('SignOutDialog', () => {
     await flush();
     expect(queryDialog()).toBeNull();
     expect(sessionDeletes(router)).toHaveLength(1);
-    expect((await readStoredStats())?.syncCursor).toBeUndefined();
+    expect((await readUserStats(userId))?.syncCursor).toBeUndefined();
     expect(latest.stats?.eventLog).toEqual([]);
     expect(idsOf(await readStoredLog()).sort()).toEqual(idsOf(synced).sort());
   });

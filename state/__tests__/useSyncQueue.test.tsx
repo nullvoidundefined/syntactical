@@ -10,7 +10,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, render } from '@testing-library/react-native';
 import { AppState } from 'react-native';
 
+import { buildUserStatsKey } from '../../constants/appConfig';
 import type { LoggedAnswerEvent } from '../../services/stats/types/LoggedAnswerEvent';
+import type { Stats } from '../../services/stats/types/Stats';
 import { buildAnswerEvent, buildOwnedLog } from '../../services/sync/__tests__/fakeSyncServer';
 import { StatsProvider, useQuizStats } from '../StatsProvider';
 import { useSyncQueue } from '../useSyncQueue';
@@ -19,7 +21,6 @@ import {
   flush,
   idsOf,
   readStoredLog,
-  readStoredStats,
   seedEventLog,
   type ApiRouter,
 } from './syncTestSupport';
@@ -126,6 +127,11 @@ async function recordNewAnswer(): Promise<string> {
 
 function entryIn(log: LoggedAnswerEvent[], eventId: string): LoggedAnswerEvent | undefined {
   return log.find((entry) => entry.eventId === eventId);
+}
+
+// A signed-in user's stats, sync cursor included, live under that user's key.
+async function readUserStats(userId: string): Promise<Stats | null> {
+  return JSON.parse((await AsyncStorage.getItem(buildUserStatsKey(userId))) ?? 'null');
 }
 
 describe('useSyncQueue', () => {
@@ -341,7 +347,8 @@ describe('useSyncQueue', () => {
     const stored = await readStoredLog();
     expect(stored.filter(({ eventId }) => downloadedIds.has(eventId))).toEqual([]);
     expect(idsOf(latest.stats?.eventLog ?? []).filter((id) => downloadedIds.has(id))).toEqual([]);
-    expect((await readStoredStats())?.syncCursor).toBeUndefined();
+    expect((await readUserStats(userA))?.syncCursor).toBeUndefined();
+    expect((await readUserStats(userB))?.syncCursor).toBeUndefined();
   });
 
   it('stops a pass when the user signs out mid-upload: nothing more is sent', async () => {
