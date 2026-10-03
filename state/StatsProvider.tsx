@@ -109,6 +109,10 @@ async function requirePersisted(isPersisted: Promise<boolean>): Promise<void> {
   if (!(await isPersisted)) throw new Error('event log change was not persisted');
 }
 
+function requireOwner(currentOwner: string | null, userId: string): void {
+  if (currentOwner !== userId) throw new Error('guest stats claim refused: owner changed');
+}
+
 export function StatsProvider({ children, ownerUserId = null }: { children: ReactNode; ownerUserId?: string | null }) {
   const statsKey = ownerUserId === null ? STORAGE_KEY : buildUserStatsKey(ownerUserId);
   const [loadedStats, statsSlot] = usePersistedSlot<Stats>(statsKey, () => createEmptyStats(readLocalToday()));
@@ -175,14 +179,18 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
       const guestStats = isGuestLoaded
         ? statsSlot.ref.current
         : (await resolveStoredStats(await readStoredJson(STORAGE_KEY), readLocalToday())).stats;
-      const isUserLoaded = ownerRef.current === userId;
-      const isPersisted = isUserLoaded
-        ? await changeSlot(statsSlot, (current) => mergeGuestStats(guestStats, current))
-        : await writeJson(buildUserStatsKey(userId), await mergeIntoStoredUser(userId, guestStats));
+      const userKey = buildUserStatsKey(userId);
+      const mergedStored = ownerRef.current === userId ? null : await mergeIntoStoredUser(userId, guestStats);
+      // Checked right before each write: a changed owner means no write at all.
+      requireOwner(ownerRef.current, userId);
+      const isPersisted =
+        mergedStored === null
+          ? await changeSlot(statsSlot, (current) => mergeGuestStats(guestStats, current))
+          : await writeJson(userKey, mergedStored);
       if (!isPersisted) throw new Error('guest stats claim was not persisted');
       const empty = createEmptyStats(readLocalToday());
-      if (isGuestLoaded) await changeSlot(statsSlot, () => empty);
-      else await writeJson(STORAGE_KEY, empty);
+      requireOwner(ownerRef.current, userId);
+      await writeJson(STORAGE_KEY, empty);
     },
     [statsSlot],
   );
