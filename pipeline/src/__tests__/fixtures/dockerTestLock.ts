@@ -8,6 +8,9 @@ import { mkdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { runnerImageTag } from '../../clients/runnerImageTag.js';
+import type { OracleLanguage } from '../../types/OracleLanguage.js';
+
 const LOCK_DIR = join(tmpdir(), 'syntactical-docker-tests.lock');
 const POLL_MS = 200;
 const STALE_MS = 10 * 60 * 1000;
@@ -41,10 +44,10 @@ export function releaseDockerTestLock(): void {
     rmSync(LOCK_DIR, { recursive: true, force: true });
 }
 
-export function runningRunnerContainers(language: 'python' | 'node' | 'postgres'): string {
+export function runningRunnerContainers(language: OracleLanguage): string {
     return execFileSync(
         'docker',
-        ['ps', '-q', '--filter', `ancestor=syntactical-runner-${language}:1`],
+        ['ps', '-q', '--filter', `ancestor=${runnerImageTag(language)}`],
         { encoding: 'utf8' },
     ).trim();
 }
