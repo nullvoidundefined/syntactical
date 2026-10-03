@@ -121,8 +121,11 @@ export function useSyncQueue(userId: string | null): SyncQueue {
         userId: user,
       });
       const { isOk, isUploadCapReached } = result;
-      if (isUploadCapReached) await rememberCapped(user);
-      else if (isCapProbe && isProbeStored) await forgetCapped(user);
+      // A pass that is no longer current (sign-out, user switch) must not touch cap state.
+      if (isCurrent()) {
+        if (isUploadCapReached) await rememberCapped(user);
+        else if (isCapProbe && isProbeStored) await forgetCapped(user);
+      }
       if (running.current === pass) {
         running.current = null;
         if (isMounted.current) setIsSyncing(false);
