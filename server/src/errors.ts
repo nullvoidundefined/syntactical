@@ -10,6 +10,7 @@ const ERROR_CODES = {
   INPUT: {
     CLIENT_ERROR: 'INPUT_CLIENT_ERROR',
     INVALID_BODY: 'INPUT_INVALID_BODY',
+    INVALID_QUERY: 'INPUT_INVALID_QUERY',
     MALFORMED_JSON: 'INPUT_MALFORMED_JSON',
     PAYLOAD_TOO_LARGE: 'INPUT_PAYLOAD_TOO_LARGE',
     UNSUPPORTED_MEDIA_TYPE: 'INPUT_UNSUPPORTED_MEDIA_TYPE',
@@ -24,6 +25,10 @@ const ERROR_CODES = {
     EMAIL_UNAVAILABLE: 'SERVER_EMAIL_UNAVAILABLE',
     INTERNAL_ERROR: 'SERVER_INTERNAL_ERROR',
   },
+  SYNC: {
+    INVALID_EVENTS: 'SYNC_INVALID_EVENTS',
+    TIMESTAMP_OUT_OF_RANGE: 'SYNC_TIMESTAMP_OUT_OF_RANGE',
+  },
 } as const;
 
 type NestedValues<T> = T extends Record<string, infer V> ? (V extends string ? V : NestedValues<V>) : never;
@@ -31,11 +36,17 @@ type NestedValues<T> = T extends Record<string, infer V> ? (V extends string ? V
 type ErrorCode = NestedValues<typeof ERROR_CODES>;
 
 interface ErrorResponse {
-  error: { code: ErrorCode; message: string; requestId: string };
+  error: { code: ErrorCode; message: string; requestId: string } & Record<string, unknown>;
 }
 
-function createErrorResponse(code: ErrorCode, message: string, requestId: string): ErrorResponse {
-  return { error: { code, message, requestId } };
+// details adds fields to the error body, such as the eventIds a batch rejection names.
+function createErrorResponse(
+  code: ErrorCode,
+  message: string,
+  requestId: string,
+  details: Record<string, unknown> = {},
+): ErrorResponse {
+  return { error: { ...details, code, message, requestId } };
 }
 
 export { createErrorResponse, ERROR_CODES };
