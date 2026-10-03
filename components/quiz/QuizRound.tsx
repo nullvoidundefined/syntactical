@@ -1,12 +1,13 @@
 // One round: wires the engine to the cards, the query drawer, and stats,
 // and switches to the results screen when the round completes. Answers
 // are refused while the drawer is open, and advancing closes it.
-import type { Grammar, Question } from '@syntactical/content-schema';
-import { useState } from 'react';
-
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import type { Grammar, Question } from '@syntactical/content-schema';
+
+import { readChosenRationale } from '../../services/quiz/readChosenRationale';
 import { useQuizStats } from '../../state/StatsProvider';
+import { useQueryDrawer } from '../../state/useQueryDrawer';
 import { useQuizEngine } from '../../state/useQuizEngine';
 import { useRoundCompletion } from '../../state/useRoundCompletion';
 import { useRoundKeyboard } from '../../state/useRoundKeyboard';
@@ -29,6 +30,7 @@ type QuizRoundProps = {
   onExit: () => void;
   onRetry: () => void;
   questions: readonly Question[];
+  topic?: string;
 };
 
 type QuestionCardProps = {
@@ -86,11 +88,16 @@ function RoundHeader({ currentIndex, onExit, totalQuestions }: { currentIndex: n
 }
 
 export function QuizRound(props: QuizRoundProps) {
-  const { difficulty, difficultyLabel, grammar, language, languageLabel, onExit, onRetry, questions } = props;
-  const engine = useQuizEngine(questions);
+  const { difficulty, difficultyLabel, grammar, language, languageLabel, onExit, onRetry, questions, topic } = props;
+  const engine = useQuizEngine(questions, { topic });
   const { advanceQuestion, currentQuestion, isAnswered, isComplete, submitAnswer, submittedAnswer, wasCorrect } = engine;
   const { recordAnswer } = useQuizStats();
-  const [isQueryOpen, setIsQueryOpen] = useState(false);
+  const { explain, isOpen: isQueryOpen, rationale: explainRationale, setOpen: updateQueryOpen } = useQueryDrawer();
+
+  function handleExplain() {
+    if (currentQuestion) explain(readChosenRationale(currentQuestion, submittedAnswer));
+  }
+
   // A round with no questions is not a completion.
   useRoundCompletion(isComplete && engine.totalQuestions > 0, { difficulty, language });
 
@@ -101,7 +108,7 @@ export function QuizRound(props: QuizRoundProps) {
   }
 
   function handleAdvance() {
-    setIsQueryOpen(false);
+    updateQueryOpen(false);
     advanceQuestion();
   }
 
@@ -113,7 +120,7 @@ export function QuizRound(props: QuizRoundProps) {
     onAdvance: handleAdvance,
     onAnswer: handleAnswer,
     onExit,
-    setIsQueryOpen,
+    setIsQueryOpen: updateQueryOpen,
   });
 
   if (isComplete || !currentQuestion) {
@@ -135,14 +142,14 @@ export function QuizRound(props: QuizRoundProps) {
             difficultyLabel={difficultyLabel}
             languageLabel={languageLabel}
             onAnswer={handleAnswer}
-            onOpenQuery={() => setIsQueryOpen(true)}
+            onOpenQuery={() => updateQueryOpen(true)}
             question={currentQuestion}
           />
-          {isAnswered ? <AnswerActions onAdvance={handleAdvance} onExplain={() => setIsQueryOpen(true)} wasCorrect={wasCorrect} /> : null}
+          {isAnswered ? <AnswerActions onAdvance={handleAdvance} onExplain={handleExplain} wasCorrect={wasCorrect} /> : null}
         </View>
       </ScrollView>
       <KeyboardHintBar questionType={type} isAnswered={isAnswered} />
-      <QueryDrawer isOpen={isQueryOpen} query={query} grammar={grammar} onClose={() => setIsQueryOpen(false)} />
+      <QueryDrawer chosenRationale={explainRationale} isOpen={isQueryOpen} query={query} grammar={grammar} onClose={() => updateQueryOpen(false)} />
     </View>
   );
 }

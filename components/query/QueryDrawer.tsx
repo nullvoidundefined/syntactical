@@ -1,15 +1,17 @@
 // The Query panel: the syntax, method, and context behind the current
 // question, in a modal that closes by its control, the backdrop, or the
-// platform back action. Slides in unless reduced motion is requested.
-import type { Grammar, Query } from '@syntactical/content-schema';
+// platform back action. Slides in unless reduced motion is requested. After
+// a wrong answer it shows that choice's rationale first, above the query.
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+
+import type { Grammar, Query } from '@syntactical/content-schema';
 
 import { useIsReducedMotion } from '../../state/useIsReducedMotion';
 import { CodeBlock } from '../quiz/CodeBlock';
 
-type QueryDrawerProps = { grammar: Grammar; isOpen: boolean; onClose: () => void; query: Query };
+type QueryDrawerProps = { chosenRationale?: string; grammar: Grammar; isOpen: boolean; onClose: () => void; query: Query };
 
-export function QueryDrawer({ grammar, isOpen, onClose, query }: QueryDrawerProps) {
+export function QueryDrawer({ chosenRationale, grammar, isOpen, onClose, query }: QueryDrawerProps) {
   const isReducedMotion = useIsReducedMotion();
   const { explanation, syntax, tags, title } = query;
   return (
@@ -23,6 +25,14 @@ export function QueryDrawer({ grammar, isOpen, onClose, query }: QueryDrawerProp
               <Text className="font-mono text-xs text-muted">close</Text>
             </Pressable>
           </View>
+          {chosenRationale ? (
+            <View className="mb-6">
+              <Text role="heading" aria-level={2} className="mb-2 font-mono text-sm uppercase tracking-widest text-amber">
+                Why that answer is tempting
+              </Text>
+              <Text className="text-sm leading-relaxed text-ink">{chosenRationale}</Text>
+            </View>
+          ) : null}
           <Text role="heading" aria-level={2} className="mb-4 font-mono text-lg text-ink">
             {title}
           </Text>

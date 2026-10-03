@@ -98,4 +98,31 @@ describe('useQuizEngine', () => {
     expect(result.current.currentQuestion).toBeNull();
     expect(result.current.totalQuestions).toBe(0);
   });
+
+  it('starts a round of only the chosen topic', async () => {
+    const bankWithTopics: Question[] = [
+      ...['one', 'two'].map((id): Question => ({ answer: true, id: `s-${id}`, prompt: id, query, provenance: TEST_PROVENANCE, topic: 'strings', type: 'bool' })),
+      ...['one', 'two', 'three'].map((id): Question => ({ answer: true, id: `n-${id}`, prompt: id, query, provenance: TEST_PROVENANCE, topic: 'numbers-and-math', type: 'bool' })),
+      { answer: true, id: 'untopiced', prompt: 'none', query, provenance: TEST_PROVENANCE, type: 'bool' },
+    ];
+    const { result } = await renderHook(() => useQuizEngine(bankWithTopics, { topic: 'strings' }));
+    expect(result.current.totalQuestions).toBe(2);
+    const seen: string[] = [];
+    for (let step = 0; step < 2; step += 1) {
+      seen.push(result.current.currentQuestion?.id ?? '');
+      await act(async () => { result.current.submitAnswer(true); });
+      await act(async () => result.current.advanceQuestion());
+    }
+    expect(seen.sort()).toEqual(['s-one', 's-two']);
+    expect(result.current.isComplete).toBe(true);
+  });
+
+  it('plays the whole bank when no topic is given', async () => {
+    const bank: Question[] = [
+      { answer: true, id: 'a', prompt: 'a', query, provenance: TEST_PROVENANCE, topic: 'strings', type: 'bool' },
+      { answer: true, id: 'b', prompt: 'b', query, provenance: TEST_PROVENANCE, type: 'bool' },
+    ];
+    const { result } = await renderHook(() => useQuizEngine(bank));
+    expect(result.current.totalQuestions).toBe(2);
+  });
 });

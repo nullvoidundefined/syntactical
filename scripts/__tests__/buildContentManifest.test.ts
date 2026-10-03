@@ -10,7 +10,7 @@ const DIFFICULTY_IDS = ['easy', 'medium', 'hard'];
 const STALE_HASH = 'a'.repeat(64);
 const UTF8_BYTE_ORDER_MARK = Buffer.from([0xef, 0xbb, 0xbf]);
 
-type BankEntry = { path: string; hash: string };
+type BankEntry = { path: string; hash: string; contentVersion: number };
 type ManifestLanguage = { id: string; banks: Record<string, BankEntry> } & Record<string, unknown>;
 type ManifestDocument = { schemaVersion: number; languages: ManifestLanguage[] };
 type GeneratedModule = { BUNDLED_MANIFEST: ManifestDocument; BUNDLED_BANKS: Record<string, unknown> };
@@ -65,7 +65,12 @@ describe('buildContentManifest', () => {
                 const bankEntries = await Promise.all(
                     Object.entries(language.banks).map(async ([difficulty, bank]) => [
                         difficulty,
-                        { ...bank, hash: await hashFileBytes(join(contentDir, bank.path)) },
+                        {
+                            ...bank,
+                            // Only the bank whose recorded hash was stale changed, so only it bumps.
+                            contentVersion: bank.hash === STALE_HASH ? bank.contentVersion + 1 : bank.contentVersion,
+                            hash: await hashFileBytes(join(contentDir, bank.path)),
+                        },
                     ]),
                 );
                 return { ...language, banks: Object.fromEntries(bankEntries) };
