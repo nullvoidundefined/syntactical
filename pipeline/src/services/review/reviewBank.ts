@@ -58,7 +58,7 @@ export async function reviewBank(args: ReviewBankArgs): Promise<ReviewResult> {
     const items = await buildReviewItems({
         bank,
         bankKey,
-        inputs: await readBankInputs(outRoot, languageId, difficulty),
+        inputs: await readBankInputs(outRoot, languageId, difficulty, log),
         log,
         observe,
         statuses,

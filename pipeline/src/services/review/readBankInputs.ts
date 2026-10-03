@@ -42,6 +42,7 @@ export async function readBankInputs(
     outRoot: string,
     languageId: string,
     difficulty: string,
+    log: (line: string) => void,
 ): Promise<ReviewBankInputs> {
     const bankFile = `${difficulty}.json`;
     const rawClassifications = await readOptionalJson(join(outRoot, 'classifications', languageId, bankFile));
@@ -58,13 +59,26 @@ export async function readBankInputs(
             ...(suggestedTopic === undefined ? {} : { suggestedTopic }),
         });
     }
+    const keepSafe = <T>(entries: T[], idOf: (entry: T) => string, what: string): T[] => {
+        const safe = entries.filter((entry) => isSafeItemId(idOf(entry)));
+        if (safe.length < entries.length) {
+            log(`${languageId}/${difficulty}: skipped ${entries.length - safe.length} ${what} with an unsafe id`);
+        }
+        return safe;
+    };
+    const enrichment =
+        rawEnrichment === undefined
+            ? {}
+            : Object.fromEntries(
+                  keepSafe(Object.entries(enrichmentSchema.parse(rawEnrichment)), ([id]) => id, 'enrichment entries'),
+              );
     return {
         classifications: rawClassifications === undefined ? {} : classificationsSchema.parse(rawClassifications),
-        enrichment: rawEnrichment === undefined ? {} : enrichmentSchema.parse(rawEnrichment),
+        enrichment,
         generated:
             rawGenerated === undefined
                 ? []
-                : (generatedSchema.parse(rawGenerated).questions.filter(({ id }) => isSafeItemId(id)) as Question[]),
-        queue: queue.filter(({ id }) => isSafeItemId(id)),
+                : (keepSafe(generatedSchema.parse(rawGenerated).questions, ({ id }) => id, 'generated questions') as Question[]),
+        queue: keepSafe(queue, ({ id }) => id, 'review-queue entries'),
     };
 }

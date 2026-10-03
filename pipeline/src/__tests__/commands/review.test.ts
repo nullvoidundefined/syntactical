@@ -340,6 +340,21 @@ describe('review', () => {
         expect(await readDecisions()).toHaveProperty(['q-bad', 'decision'], 'approve');
     });
 
+    it('skips enrichment, generated, and queue entries with unsafe ids and logs them', async () => {
+        const rationale = [{ choiceIndex: 0, misconceptionId: 'm', rationale: 'r' }];
+        await writeJson(join(pipelineDir, 'enrichment/python/easy.json'), {
+            'bad key': rationale,
+            'evil\n## forged <!-- fp:0123456789abcdef -->': rationale,
+            'q-5': rationale,
+        });
+        await run();
+        const markdown = await freeReview();
+        expect(headingsOf(markdown)).toContain('q-5');
+        expect(markdown).not.toContain('bad key');
+        expect(markdown).not.toContain('forged');
+        expect(logs.join('\n')).toContain('skipped 2 enrichment entries with an unsafe id');
+    });
+
     it('lets the owner revoke an approval by unticking it', async () => {
         await run();
         await tick('q-3', 'approve');
