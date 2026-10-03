@@ -9,13 +9,14 @@
 // Free-bank output goes under the public `pipelineDir`. Paid-bank output goes under
 // `contentRoot` (the private content repo) and carries ids and topics only; no paid
 // question text is written anywhere, and nothing paid is ever written under `pipelineDir`.
-import { realpathSync } from 'node:fs';
-import { readFile, stat } from 'node:fs/promises';
-import { isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import { type Question, validateManifest } from '@syntactical/content-schema';
 
+import { assertContentRootUsable } from '../services/classify/assertContentRootUsable.js';
 import { classifyBank } from '../services/classify/classifyBank.js';
+import { pickTopics } from '../services/classify/pickTopics.js';
 import { readFallbackTopics } from '../services/classify/readFallbackTopics.js';
 import { readLatestReport } from '../services/classify/readLatestReport.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
@@ -44,35 +45,6 @@ const STAGE = 'classify';
 
 async function readJson(path: string): Promise<unknown> {
     return JSON.parse(await readFile(path, 'utf8'));
-}
-
-// True when `path` is `base` or lies under it (separator-aware, so `..private` is not `..`).
-function isAtOrUnder(path: string, base: string): boolean {
-    const rel = relative(base, path);
-    return rel === '' || !(rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel));
-}
-
-// Paid output must never land in the public tree: refuse a content root at or under the
-// pipeline dir, the repo root, or the content dir, comparing real paths so a symlink
-// cannot smuggle it in.
-async function assertContentRootUsable(contentRoot: string, pipelineDir: string, contentDir: string): Promise<void> {
-    const info = await stat(contentRoot).catch(() => null);
-    if (!info?.isDirectory()) {
-        throw new Error(`content root not found: ${sanitizeLogText(contentRoot)}`);
-    }
-    const realRoot = realpathSync.native(contentRoot);
-    const publicPlaces = [pipelineDir, resolve(pipelineDir, '..'), contentDir];
-    for (const place of publicPlaces) {
-        if (isAtOrUnder(realRoot, realpathSync.native(place))) {
-            throw new Error('content root must be outside the pipeline directory, the repo, and the content directory');
-        }
-    }
-}
-
-// The manifest's topic list wins; pipeline/topics.json covers a language whose manifest lists none.
-function pickTopics(manifestTopics: { id: string }[], fallback: string[] | undefined): string[] {
-    const fromManifest = manifestTopics.map(({ id }) => id);
-    return fromManifest.length > 0 ? fromManifest : (fallback ?? []);
 }
 
 function buildReport(
