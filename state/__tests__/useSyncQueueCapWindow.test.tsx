@@ -160,7 +160,7 @@ async function mountCappedUser(userId: string) {
   return view;
 }
 
-function useFakeClock(): void {
+function installFakeClock(): void {
   jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate'] });
   jest.setSystemTime(new Date(Date.UTC(2026, 9, 2, 12)));
 }
@@ -172,7 +172,7 @@ function stubAppState(): void {
 }
 
 async function resetAll(): Promise<void> {
-  useFakeClock();
+  installFakeClock();
   await AsyncStorage.clear();
   mockApi.activeUserId = null;
   mockApi.signInUserId = null;
