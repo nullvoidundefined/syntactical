@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { Text } from 'react-native';
 
+import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/contentFixtures';
 import { QueryDrawer } from '../../query/QueryDrawer';
 import { CodeBlock } from '../CodeBlock';
 import { ProgressBar } from '../ProgressBar';
@@ -35,11 +36,22 @@ describe('quiz screens on the web expose accessible names and headings', () => {
 
   it('gives a question card a level-one heading naming the language, difficulty, and type', () => {
     render(
-      <QuestionCardFrame languageLabel="Python" difficultyLabel="Easy" type="mc" onOpenQuery={jest.fn()}>
+      <QuestionCardFrame languageLabel="Python" difficultyLabel="Easy" type="mc" onOpenQuery={jest.fn()} provenance={TEST_PROVENANCE}>
         <Text>body</Text>
       </QuestionCardFrame>,
     );
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Python / Easy / Multiple choice');
+  });
+
+  it('keeps one level-one heading when the verified badge is shown', () => {
+    const verified = { ...TEST_PROVENANCE, runtimeVersion: 'Python 3.13.2', validation: { method: 'executed', status: 'passed' } } as const;
+    render(
+      <QuestionCardFrame languageLabel="Python" difficultyLabel="Easy" type="mc" onOpenQuery={jest.fn()} provenance={verified}>
+        <Text>body</Text>
+      </QuestionCardFrame>,
+    );
+    expect(screen.getByText('Output verified on Python 3.13.2')).toBeTruthy();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   });
 
   it('gives the results screen a level-one heading', () => {
