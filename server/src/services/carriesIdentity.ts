@@ -1,7 +1,9 @@
 // Whether one string carries the identity (B-59.1c): the user id anywhere inside it, the email only
 // as a whole address (no letter, digit, `_`, `+`, `-`, or `.` before it, no domain continuation after it), checked
-// on the normalized text; any one bounded occurrence is enough. Needles are already normalized.
+// on the normalized text; any one bounded occurrence is enough. The raw string and each of its percent-decoded
+// forms (B-59.1e) are checked. Needles are already normalized.
 import { normalizeEmail } from './normalizeEmail.js';
+import { percentDecodeForms } from './percentDecodeForms.js';
 import type { PurchaseIdentity } from './purchaseIdentity.js';
 
 const LOCAL_PART_CHARACTER = /[\p{L}\p{N}_+.-]/u;
@@ -24,10 +26,15 @@ function containsWholeAddress(text: string, email: string): boolean {
   return false;
 }
 
-function carriesIdentity(text: string, needles: PurchaseIdentity): boolean {
-  const { email, userId } = needles;
+function carriesIdentityAsIs(text: string, { email, userId }: PurchaseIdentity): boolean {
   const normalized = normalizeEmail(text);
   return normalized.includes(userId) || containsWholeAddress(normalized, email);
+}
+
+function carriesIdentity(text: string, needles: PurchaseIdentity): boolean {
+  return (
+    carriesIdentityAsIs(text, needles) || percentDecodeForms(text).some((form) => carriesIdentityAsIs(form, needles))
+  );
 }
 
 export { carriesIdentity };

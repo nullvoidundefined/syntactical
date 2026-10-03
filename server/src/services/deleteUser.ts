@@ -35,12 +35,14 @@ function containsPattern(value: string): string {
 
 async function scrubPurchaseEvents(client: pg.PoolClient, identity: { email: string; userId: string }): Promise<void> {
   const { email, userId } = identity;
-  // The SQL is a superset (it also folds NFKC forms); the JS predicate decides which rows change.
+  // The SQL is a superset (it also folds NFKC forms and takes every payload holding a `%`, which may carry the
+  // email or id percent-encoded); the JS predicate decides which rows change.
   const { rows } = await client.query<PurchaseEventRow>(
     `SELECT provider, provider_event_id, payload, user_id FROM purchase_events
      WHERE user_id = $1
         OR lower(normalize(payload::text, NFKC)) LIKE $2 ESCAPE '\\'
         OR lower(normalize(payload::text, NFKC)) LIKE $3 ESCAPE '\\'
+        OR payload::text LIKE '%\\%%' ESCAPE '\\'
      FOR UPDATE`,
     [userId, containsPattern(email), containsPattern(userId)],
   );
