@@ -9,7 +9,7 @@ import type { Oracle } from '../types/Oracle.js';
 import type { OracleLanguage } from '../types/OracleLanguage.js';
 
 import { buildDraftPrompt } from './buildDraftPrompt.js';
-import { findDeniedPrimitive } from './findDeniedPrimitive.js';
+import { findRefusedConstruct } from './findRefusedConstruct.js';
 
 const PROMPT_VERSION = 'draft-oracle-v1';
 
@@ -51,6 +51,6 @@ export async function draftOracle(
         ...(setupSql ? { setupSql } : {}),
         ...(choiceCode && choiceCode.length > 0 ? { choiceCode } : {}),
     };
-    const denied = findDeniedPrimitive(oracle);
+    const denied = findRefusedConstruct(oracle);
     return denied ? { isExecutable: false, reason: `refused: ${denied}` } : oracle;
 }
