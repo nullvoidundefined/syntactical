@@ -40,6 +40,7 @@ import { recordCompletion as foldCompletion } from '../services/stats/recordComp
 import { releaseEvents } from '../services/stats/releaseEvents';
 import { resolveStoredEventLog } from '../services/stats/resolveStoredEventLog';
 import { resolveStoredStats } from '../services/stats/resolveStoredStats';
+import type { GuestClaimMarker } from '../services/stats/types/GuestClaimMarker';
 import type { HeldReason, LoggedAnswerEvent } from '../services/stats/types/LoggedAnswerEvent';
 import type { RecordedAnswer } from '../services/stats/types/RecordedAnswer';
 import type { RoundKey } from '../services/stats/types/RoundKey';
@@ -129,6 +130,27 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
     ownerRef.current = ownerUserId;
   }, [ownerUserId]);
 
+  const readGuestStats = useCallback(
+    async () =>
+      statsSlot.key === STORAGE_KEY
+        ? statsSlot.ref.current
+        : (await resolveStoredStats(await readStoredJson(STORAGE_KEY), readLocalToday())).stats,
+    [statsSlot],
+  );
+
+  // True for a folded marker whose recorded guest stats are still the stored ones.
+  const isFoldPendingReset = useCallback(
+    async (marker: GuestClaimMarker | null) => {
+      if (marker === null) return false;
+      const { folded, snapshot } = marker;
+      if (!folded || snapshot === undefined) return false;
+      const { attempted, correct } = (await readGuestStats()).totals;
+      const { attempted: foldedAttempted, correct: foldedCorrect } = snapshot;
+      return attempted === foldedAttempted && correct === foldedCorrect;
+    },
+    [readGuestStats],
+  );
+
   const finishGuestReset = useCallback(async () => {
     const empty = createEmptyStats(readLocalToday());
     const isReset =
@@ -146,13 +168,17 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
       loadSlot(statsSlot, storedStats, isPersistenceBlocked);
       setLoadedStatsKey(statsSlot.key);
       // A fold that finished but whose guest reset failed: only the reset is left.
-      if ((await readGuestClaimMarker())?.folded === true && !isCancelled) await finishGuestReset();
+      // A marker whose guest stats changed since the fold is stale: it is only cleared.
+      const marker = await readGuestClaimMarker();
+      if (isCancelled) return;
+      if ((await isFoldPendingReset(marker))) await finishGuestReset();
+      else if ((await readStoredJson(GUEST_CLAIM_STORAGE_KEY)).value !== null) await writeJson(GUEST_CLAIM_STORAGE_KEY, null);
     }
     void hydrate();
     return () => {
       isCancelled = true;
     };
-  }, [finishGuestReset, statsSlot]);
+  }, [finishGuestReset, isFoldPendingReset, statsSlot]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -187,10 +213,7 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
   // the marker for the next claim or mount to finish without folding again.
   const foldGuestStats = useCallback(
     async (userId: string) => {
-      const isGuestLoaded = ownerRef.current === null;
-      const guestStats = isGuestLoaded
-        ? statsSlot.ref.current
-        : (await resolveStoredStats(await readStoredJson(STORAGE_KEY), readLocalToday())).stats;
+      const guestStats = await readGuestStats();
       const userKey = buildUserStatsKey(userId);
       const mergedStored = ownerRef.current === userId ? null : await mergeIntoStoredUser(userId, guestStats);
       // Checked right before each write: a changed owner means no write at all.
@@ -200,26 +223,29 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
           ? await changeSlot(statsSlot, (current) => mergeGuestStats(guestStats, current))
           : await writeJson(userKey, mergedStored);
       if (!isPersisted) throw new Error('guest stats claim was not persisted');
+      return { attempted: guestStats.totals.attempted, correct: guestStats.totals.correct };
     },
-    [statsSlot],
+    [readGuestStats, statsSlot],
   );
 
   const claimGuestStats = useCallback(
     async (userId: string) => {
       const marker = await readGuestClaimMarker();
-      if (marker?.folded !== true) {
+      // A stale folded marker is overwritten by the normal claim below.
+      const isFoldPending = await isFoldPendingReset(marker);
+      if (!isFoldPending) {
         if (!(await writeJson(GUEST_CLAIM_STORAGE_KEY, { folded: false, userId }))) {
           throw new Error('guest stats claim marker was not persisted');
         }
-        await foldGuestStats(userId);
-        if (!(await writeJson(GUEST_CLAIM_STORAGE_KEY, { folded: true, userId }))) {
+        const snapshot = await foldGuestStats(userId);
+        if (!(await writeJson(GUEST_CLAIM_STORAGE_KEY, { folded: true, snapshot, userId }))) {
           throw new Error('guest stats claim marker was not persisted');
         }
       }
       requireOwner(ownerRef.current, userId);
       if (!(await finishGuestReset())) throw new Error('guest stats reset was not persisted');
     },
-    [finishGuestReset, foldGuestStats],
+    [finishGuestReset, foldGuestStats, isFoldPendingReset],
   );
 
   const claimGuestEvents = useCallback(
