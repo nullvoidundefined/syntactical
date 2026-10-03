@@ -1,6 +1,7 @@
 // DELETE /v1/me (B-59.2): deletes the caller's account in one transaction (see deleteUser) and
 // clears the session cookie for every caller. Any failure rolls back and surfaces as a 500
-// through the error handler. After the commit it writes one `account deleted` info line through
+// through the error handler. After the commit, when this request deleted the user (B-59.6: a duplicate
+// concurrent deletion changes nothing and logs nothing, still 204), it writes one `account deleted` info line through
 // the request logger (B-59.3); neither the email nor the user id is logged here.
 import { Router } from 'express';
 import type { Logger } from 'pino';
@@ -27,8 +28,10 @@ function createDeleteMeRouter(deps: ResolvedAuthDeps): Router {
       logger,
       session: { userId },
     } = res.locals as { logger?: Logger; session: { userId: string } };
-    await withTransaction(database, (client) => deleteUser(client, { rateLimitKeySecret, userId }));
-    logger?.info({ event: 'account_deleted' }, 'account deleted');
+    const deleted = await withTransaction(database, (client) => deleteUser(client, { rateLimitKeySecret, userId }));
+    if (deleted) {
+      logger?.info({ event: 'account_deleted' }, 'account deleted');
+    }
     res.clearCookie(COOKIE_NAME, sessionCookieOptions(isCookieSecure));
     res.status(HTTP.STATUS.NO_CONTENT).end();
   });

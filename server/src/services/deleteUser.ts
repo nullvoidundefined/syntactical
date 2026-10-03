@@ -7,7 +7,10 @@
 // address or the id; a row linked to another user is scrubbed match-only; candidates are read
 // without a row lock, and only the chosen rows are locked, in key order, and re-read), the email's
 // rate-limit counters go, then the user row is deleted (sessions, answer events, progress, and goal
-// changes cascade; entitlements and purchase_events user_id go null by foreign key). Resolves false when no such user exists. Nothing here logs the email or id.
+// changes cascade; entitlements and purchase_events user_id go null by foreign key). Resolves false, having
+// changed nothing, when no such user exists, including when a concurrent deletion of the same user won the
+// email's advisory lock first (B-59.6: the user row is re-checked after the lock, before the codes go, and the
+// row lock's result is checked too). Nothing here logs the email or id.
 import type pg from 'pg';
 
 import { AUTH } from '../constants/auth.js';
@@ -103,8 +106,17 @@ async function deleteUser(client: pg.PoolClient, input: DeleteUserInput): Promis
   }
   const email = normalizeEmail(row.email);
   await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [email]);
+  // A concurrent deletion of the same user committed before it released this lock: re-read without a row lock
+  // (the users FOR UPDATE must stay after the codes delete, or it deadlocks with sign-in verify).
+  const stillThere = await client.query('SELECT 1 FROM users WHERE id = $1', [userId]);
+  if (stillThere.rows.length === 0) {
+    return false;
+  }
   await client.query('DELETE FROM one_time_codes WHERE email = $1', [email]);
-  await client.query('SELECT id FROM users WHERE id = $1 FOR UPDATE', [userId]);
+  const locked = await client.query('SELECT id FROM users WHERE id = $1 FOR UPDATE', [userId]);
+  if (locked.rows.length === 0) {
+    return false;
+  }
   await scrubPurchaseEvents(client, { email, userId });
   await deleteRateLimitCountersForEmail(client, rateLimitKeySecret, email);
   await client.query('DELETE FROM users WHERE id = $1', [userId]);
