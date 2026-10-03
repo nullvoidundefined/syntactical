@@ -17,7 +17,7 @@ import { StatsProvider, useQuizStats } from '../StatsProvider';
 
 type StatsValue = ReturnType<typeof useQuizStats>;
 type SetItem = (key: string, value: string) => Promise<void>;
-type SyncAction = 'markEventsHeld' | 'markEventsSynced' | 'mergeDownloadedEvents';
+type SyncAction = 'markEventsHeld' | 'markEventsReleased' | 'markEventsSynced' | 'mergeDownloadedEvents';
 
 let latest: StatsValue;
 
@@ -218,13 +218,16 @@ describe('StatsProvider sync cursor ownership', () => {
 describe('StatsProvider sync actions require their owner', () => {
   const userA = randomUUID();
   const userB = randomUUID();
-  const actions: SyncAction[] = ['markEventsSynced', 'markEventsHeld', 'mergeDownloadedEvents'];
+  const actions: SyncAction[] = ['markEventsSynced', 'markEventsHeld', 'markEventsReleased', 'mergeDownloadedEvents'];
 
   beforeEach(() => AsyncStorage.clear());
 
   async function expectRefusedAndUnchanged(providerOwner: string | null, action: SyncAction, owner: string | null | undefined) {
-    const own = buildEntry(providerOwner);
-    const other = buildEntry(providerOwner === null ? userB : null);
+    // Release only changes a held entry, so its entries start held and a
+    // write that slipped past the owner check would show in the stored log.
+    const flags = action === 'markEventsReleased' ? { isHeld: true } : {};
+    const own = buildEntry(providerOwner, flags);
+    const other = buildEntry(providerOwner === null ? userB : null, flags);
     const seededLog = [own, other];
     const seededStats = createEmptyStats(readLocalToday());
     await seedLog(seededLog);
