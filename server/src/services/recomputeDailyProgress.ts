@@ -5,10 +5,8 @@ import { computeDailyProgress, computeDayStreak, findDueReviewEventIds, toLocalD
 import type { AnswerEvent, DailyProgress, GoalChange } from '@syntactical/progress';
 import type pg from 'pg';
 
+import { PROGRESS_DEFAULTS } from '../constants/progressDefaults.js';
 import type { ProgressTotals } from '../types/ProgressTotals.js';
-
-const DEFAULT_TIMEZONE = 'UTC';
-const DEFAULT_GOAL = 20;
 
 interface EventRow {
   answered_at: Date;
@@ -52,7 +50,7 @@ async function loadGoalHistory(
   const changes = rows.map(({ from_date, goal }) => ({ from: from_date, goal }));
   // Days before the first recorded change kept the default goal: a change applies from its date on.
   const isBaselineMissing = changes.every((change) => change.from > fallbackFrom);
-  return isBaselineMissing ? [{ from: fallbackFrom, goal: DEFAULT_GOAL }, ...changes] : changes;
+  return isBaselineMissing ? [{ from: fallbackFrom, goal: PROGRESS_DEFAULTS.DAILY_GOAL }, ...changes] : changes;
 }
 
 async function replaceDailyProgress(client: pg.PoolClient, userId: string, progress: DailyProgress[]): Promise<void> {
@@ -74,7 +72,7 @@ async function recomputeDailyProgress(
   timezone: string | null,
   now: Date,
 ): Promise<ProgressTotals> {
-  const zone = timezone ?? DEFAULT_TIMEZONE;
+  const zone = timezone ?? PROGRESS_DEFAULTS.TIMEZONE;
   const events = await loadEvents(client, userId);
   const today = toLocalDate(now.toISOString(), zone);
   const localDates = events.map((event) => toLocalDate(event.answeredAt, zone));

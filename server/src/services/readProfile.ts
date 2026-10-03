@@ -7,10 +7,8 @@ import type { DailyProgress } from '@syntactical/progress';
 import type pg from 'pg';
 
 import type { Database } from '../clients/database.js';
+import { PROGRESS_DEFAULTS } from '../constants/progressDefaults.js';
 import type { Profile } from '../types/Profile.js';
-
-const DEFAULT_TIMEZONE = 'UTC';
-const DEFAULT_GOAL = 20;
 
 type Queryable = Database | pg.PoolClient;
 
@@ -21,7 +19,7 @@ async function readGoal(queryable: Queryable, userId: string, today: string): Pr
     [userId, today],
   );
   const [row] = rows;
-  return row ? row.goal : DEFAULT_GOAL;
+  return row ? row.goal : PROGRESS_DEFAULTS.DAILY_GOAL;
 }
 
 async function readProgress(queryable: Queryable, userId: string): Promise<DailyProgress[]> {
@@ -52,7 +50,7 @@ async function readProfile(queryable: Queryable, userId: string, now: Date): Pro
     return undefined;
   }
   const { email, timezone } = user;
-  const today = toLocalDate(now.toISOString(), timezone ?? DEFAULT_TIMEZONE);
+  const today = toLocalDate(now.toISOString(), timezone ?? PROGRESS_DEFAULTS.TIMEZONE);
   const [dailyGoal, progress, entitlements] = [
     await readGoal(queryable, userId, today),
     await readProgress(queryable, userId),

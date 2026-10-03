@@ -6,13 +6,12 @@ import { toLocalDate } from '@syntactical/progress';
 
 import type { Database } from '../clients/database.js';
 import { withTransaction } from '../clients/withTransaction.js';
+import { PROGRESS_DEFAULTS } from '../constants/progressDefaults.js';
 import type { MeUpdate } from '../schemas/meSchemas.js';
 import type { Profile } from '../types/Profile.js';
 
 import { readProfile } from './readProfile.js';
 import { recomputeDailyProgress } from './recomputeDailyProgress.js';
-
-const DEFAULT_TIMEZONE = 'UTC';
 
 async function updateProfile(
   database: Database,
@@ -35,7 +34,7 @@ async function updateProfile(
     }
     const timezone = newTimezone ?? user.timezone;
     if (dailyGoal !== undefined) {
-      const today = toLocalDate(now.toISOString(), timezone ?? DEFAULT_TIMEZONE);
+      const today = toLocalDate(now.toISOString(), timezone ?? PROGRESS_DEFAULTS.TIMEZONE);
       await client.query(
         `INSERT INTO daily_goal_changes (user_id, from_date, goal) VALUES ($1, $2::date, $3)
          ON CONFLICT (user_id, from_date) DO UPDATE SET goal = EXCLUDED.goal`,
