@@ -2,7 +2,8 @@
 // the round mounts, so a bank refresh that lands mid-round changes
 // nothing until the next round. An answer that does not fit the current
 // question (a choice index it does not have, or the wrong kind of answer)
-// is ignored rather than recorded as wrong.
+// is ignored rather than recorded as wrong. A bank round shuffles its
+// questions; a review round keeps the queue's order, most overdue first.
 import type { Question } from '@syntactical/content-schema';
 import { useState } from 'react';
 
@@ -19,8 +20,13 @@ function isPlayable(question: Question): question is PlayableQuestion {
   return question.type !== 'ab';
 }
 
-export function useQuizEngine(bankQuestions: readonly Question[]) {
-  const [questions] = useState(() => shuffleQuestions(bankQuestions.filter(isPlayable)));
+export type RoundKind = 'bank' | 'review';
+
+export function useQuizEngine(bankQuestions: readonly Question[], roundKind: RoundKind = 'bank') {
+  const [questions] = useState(() => {
+    const playable = bankQuestions.filter(isPlayable);
+    return roundKind === 'review' ? playable : shuffleQuestions(playable);
+  });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [submittedAnswer, setSubmittedAnswer] = useState<SubmittedAnswer>(null);
   const [correctCount, setCorrectCount] = useState(0);

@@ -6,6 +6,7 @@ import { AppShell } from '../AppShell';
 
 jest.mock('../../../state/StatsProvider', () => ({ useQuizStats: () => ({ eventLog: [], stats: { answerStreak: { best: 3, current: 1 } } }) }));
 jest.mock('../DownloadIndicator', () => ({ DownloadIndicator: () => null }));
+jest.mock('../ReviewDueLink', () => ({ ReviewDueLink: () => null }));
 
 describe('AppShell on the web', () => {
   it('wraps the brand bar in a banner landmark and the route content in the main landmark', () => {
