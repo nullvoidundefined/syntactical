@@ -1,0 +1,37 @@
+{
+  "reviewer": "security-reviewer subagent",
+  "model": "claude-fable-5-1",
+  "range": "4d7d4ec..5ba19e6",
+  "rounds": [
+    { "round": 1, "range": "4d7d4ec..70b9766", "findings": 7 },
+    { "round": 2, "range": "4d7d4ec..6738013", "findings": 2 },
+    { "round": 3, "range": "4d7d4ec..5ba19e6", "findings": 0 }
+  ],
+  "ownerDecisions": [
+    "2026-10-03: standing waiver for LOW findings contained by another control; r1-3 to r1-7 waived (verify timing, no __Host- prefix, fixed window, revoke not delete, isCookieSecure not wired at the root), tracked in IAN-615",
+    "2026-10-03: acceptance boundaries: 6-digit SHA-256 codes, 10 min TTL, single use, attempt cap, no email-existence oracle; fixed-window HMAC-keyed limits with 429 and no mail; 32-byte SHA-256 session tokens, HttpOnly SameSite Secure cookie (Secure off only under NODE_ENV=test), bearer for native, sign-out sets revoked_at; CORS allow-list only; cookie state changes need X-Requested-With and, when present, an allowed Origin; bearer exempt; logs carry no email, code, token, cookie, or authorization"
+  ],
+  "findings": [
+    { "id": 1, "severity": "MEDIUM", "control": "sign-in email send inside the issue transaction had no deadline", "status": "fixed 089a0c6" },
+    { "id": 2, "severity": "LOW", "control": "concurrent issues for one email left two live codes", "status": "fixed df9718e" },
+    { "id": 3, "severity": "LOW", "control": "one-time code verify timing", "status": "waived by owner 2026-10-03 (IAN-615)" },
+    { "id": 4, "severity": "LOW", "control": "session cookie carries no __Host- prefix", "status": "waived by owner 2026-10-03 (IAN-615)" },
+    { "id": 5, "severity": "LOW", "control": "rate limits are fixed-window", "status": "waived by owner 2026-10-03 (IAN-615)" },
+    { "id": 6, "severity": "LOW", "control": "sign-out revokes the row rather than deleting it", "status": "waived by owner 2026-10-03 (IAN-615)" },
+    { "id": 7, "severity": "LOW", "control": "isCookieSecure not wired at the root", "status": "waived by owner 2026-10-03 (IAN-615)" },
+    { "id": 8, "severity": "MEDIUM", "control": "CSRF guard filtering of a listed null or * had no test", "status": "fixed 1d6874c" },
+    { "id": 9, "severity": "LOW", "control": "per-email issue lock keyed by 32-bit hashtext", "status": "fixed 5ba19e6" }
+  ],
+  "nothingFound": [
+    "CORS allow-list: listed * and null, empty list, suffix, scheme, and port look-alikes get no grant",
+    "CSRF guard: missing or wrong X-Requested-With, disallowed, null, *, suffix look-alike, and empty Origin refused; bearer exempt; webhook prefix exact",
+    "requireJson: text/plain, urlencoded, multipart, missing Content-Type, chunked without type refused",
+    "requireSession: unknown, revoked, expired, idle-expired, Basic, empty bearer, cookie fallback under a failing bearer all one 401",
+    "rate limits: 20 concurrent issues send 5, spoofed X-Forwarded-For, IPv6 /64 rotation, mapped IPv4, missing IP, HMAC keys",
+    "one-time codes: SHA-256 only, 10 minute expiry, single use, attempt cap under 50 concurrent guesses, timingSafeEqual, no plaintext in tables or logs",
+    "sessions: 32 random bytes, SHA-256 stored, HttpOnly Secure SameSite=Lax host-only cookie, native token in body only",
+    "per-email issue lock: one 64-bit key across casing and whitespace variants, released at the 8 s send deadline",
+    "email send deadline and redaction: never-settling and abort-ignoring sends answer 503 and free the client; logs carry error name and message id only",
+    "input validation, SQL parameterization, env validation without echoing values, transaction rollback and client release"
+  ]
+}
