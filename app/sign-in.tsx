@@ -19,6 +19,11 @@ const ERROR_MESSAGES: Record<FailureReason, string> = {
   unavailable: 'Sign-in is unavailable right now. Try again later.',
 };
 
+// The announcement for a failed result; null for a success.
+function readFailureMessage(result: AuthResult): string | null {
+  return 'reason' in result ? ERROR_MESSAGES[result.reason] : null;
+}
+
 export default function SignInScreen() {
   const { requestCode, verifyCode } = useAuth();
   const [email, setEmail] = useState<string | null>(null);
@@ -35,8 +40,9 @@ export default function SignInScreen() {
     try {
       const result = await requestCode(address);
       if (isResend) setCooldownRestartKey((key) => key + 1);
-      if (!result.isOk) {
-        setErrorMessage(ERROR_MESSAGES[result.reason]);
+      const failureMessage = readFailureMessage(result);
+      if (failureMessage !== null) {
+        setErrorMessage(failureMessage);
         return;
       }
       setEmail(address);
@@ -53,8 +59,9 @@ export default function SignInScreen() {
     setErrorMessage(null);
     try {
       const result = await verifyCode(email, code);
-      if (!result.isOk) {
-        setErrorMessage(ERROR_MESSAGES[result.reason]);
+      const failureMessage = readFailureMessage(result);
+      if (failureMessage !== null) {
+        setErrorMessage(failureMessage);
         return;
       }
       router.replace('/');

@@ -19,6 +19,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+
 import { Platform } from 'react-native';
 
 import { apiFetch, getLatestRequestSeq, onUnauthorized } from '../clients/apiClient';
@@ -26,7 +27,13 @@ import { logWarning } from '../clients/logClient';
 import { readStoredJson } from '../clients/readStoredJson';
 import { clearSessionToken, writeSessionToken } from '../clients/sessionTokenStore';
 import { writeJson } from '../clients/writeJson';
-import { AUTH_STORAGE_KEY } from '../constants/appConfig';
+import {
+  AUTH_STORAGE_KEY,
+  HTTP_STATUS_ACCEPTED,
+  HTTP_STATUS_BAD_REQUEST,
+  HTTP_STATUS_CREATED,
+  HTTP_STATUS_TOO_MANY_REQUESTS,
+} from '../constants/appConfig';
 import { resolveStoredAuth } from '../services/auth/resolveStoredAuth';
 
 const PENDING_CLAIMS_STORAGE_KEY = 'syntactical.auth.pending-claims.v1';
@@ -55,9 +62,10 @@ function resolvePendingClaims(value: unknown): string[] {
 
 function readSessionResponse(body: unknown): { sessionValue: string | null; userId: string | null } {
   const data = (body as { data?: { token?: unknown; userId?: unknown } } | null)?.data;
+  const { token, userId } = data ?? {};
   return {
-    sessionValue: typeof data?.token === 'string' ? data.token : null,
-    userId: typeof data?.userId === 'string' ? data.userId : null,
+    sessionValue: typeof token === 'string' ? token : null,
+    userId: typeof userId === 'string' ? userId : null,
   };
 }
 
@@ -101,9 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const persist = useCallback((nextUserId: string | null) => {
     const memoryKnown = [...knownRef.current];
     writeQueue.current = writeQueue.current.then(async () => {
-      const read = await readStoredJson(AUTH_STORAGE_KEY);
-      if (read.isReadFailed) return;
-      const stored = resolveStoredAuth(read.value);
+      const { isReadFailed, value } = await readStoredJson(AUTH_STORAGE_KEY);
+      if (isReadFailed) return;
+      const stored = resolveStoredAuth(value);
       const merged = Array.from(new Set([...(stored?.knownUserIds ?? []), ...memoryKnown]));
       await writeJson(AUTH_STORAGE_KEY, { knownUserIds: merged, userId: nextUserId });
     });
@@ -113,9 +121,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // holds now; skipped when storage cannot be read.
   const persistPending = useCallback((change: { add?: string; remove?: string }) => {
     writeQueue.current = writeQueue.current.then(async () => {
-      const read = await readStoredJson(PENDING_CLAIMS_STORAGE_KEY);
-      if (read.isReadFailed) return;
-      const next = resolvePendingClaims(read.value).filter((id) => id !== change.remove);
+      const { isReadFailed, value } = await readStoredJson(PENDING_CLAIMS_STORAGE_KEY);
+      if (isReadFailed) return;
+      const next = resolvePendingClaims(value).filter((id) => id !== change.remove);
       if (change.add !== undefined && !next.includes(change.add)) next.push(change.add);
       await writeJson(PENDING_CLAIMS_STORAGE_KEY, next);
     });
@@ -142,8 +150,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!isActive) return;
       const stored = resolveStoredAuth(read.value);
       if (stored) {
-        setKnownUserIds(stored.knownUserIds);
-        setUserId(stored.userId);
+        const { knownUserIds, userId: storedUserId } = stored;
+        setKnownUserIds(knownUserIds);
+        setUserId(storedUserId);
       }
       setPendingClaims(resolvePendingClaims(pendingRead.value));
       setIsHydrated(true);
@@ -166,9 +175,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const requestCode = useCallback(async (email: string): Promise<AuthResult> => {
     try {
       const { status } = await apiFetch('auth/codes', { body: { email }, method: 'POST' });
-      if (status === 202) return { isOk: true };
-      if (status === 400) return { isOk: false, reason: 'invalid-email' };
-      if (status === 429) return { isOk: false, reason: 'rate-limited' };
+      if (status === HTTP_STATUS_ACCEPTED) return { isOk: true };
+      if (status === HTTP_STATUS_BAD_REQUEST) return { isOk: false, reason: 'invalid-email' };
+      if (status === HTTP_STATUS_TOO_MANY_REQUESTS) return { isOk: false, reason: 'rate-limited' };
       return { isOk: false, reason: 'unavailable' };
     } catch {
       return { isOk: false, reason: 'unavailable' };
@@ -184,28 +193,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           body: { code, email, timezone },
           method: 'POST',
         });
-        if (status === 400) return { isOk: false, reason: 'invalid-code' };
-        if (status === 429) return { isOk: false, reason: 'rate-limited' };
-        const session = readSessionResponse(body);
+        if (status === HTTP_STATUS_BAD_REQUEST) return { isOk: false, reason: 'invalid-code' };
+        if (status === HTTP_STATUS_TOO_MANY_REQUESTS) return { isOk: false, reason: 'rate-limited' };
+        const { sessionValue, userId: sessionUserId } = readSessionResponse(body);
         const isNative = Platform.OS !== 'web';
-        if (status !== 201 || session.userId === null) {
+        if (status !== HTTP_STATUS_CREATED || sessionUserId === null) {
           return { isOk: false, reason: 'unavailable' };
         }
-        if (isNative && session.sessionValue === null) {
+        if (isNative && sessionValue === null) {
           return { isOk: false, reason: 'unavailable' };
         }
-        if (isNative && session.sessionValue !== null) {
-          await writeSessionToken(session.sessionValue);
+        if (isNative && sessionValue !== null) {
+          await writeSessionToken(sessionValue);
         }
         signInSeq.current = getLatestRequestSeq();
         signInCount.current += 1;
-        if (!knownRef.current.includes(session.userId)) {
-          setKnownUserIds([...knownRef.current, session.userId]);
-          setPendingClaims([...pendingRef.current, session.userId]);
-          persistPending({ add: session.userId });
+        if (!knownRef.current.includes(sessionUserId)) {
+          setKnownUserIds([...knownRef.current, sessionUserId]);
+          setPendingClaims([...pendingRef.current, sessionUserId]);
+          persistPending({ add: sessionUserId });
         }
-        setUserId(session.userId);
-        persist(session.userId);
+        setUserId(sessionUserId);
+        persist(sessionUserId);
         return { isOk: true };
       } catch {
         return { isOk: false, reason: 'unavailable' };

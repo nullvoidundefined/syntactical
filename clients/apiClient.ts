@@ -5,18 +5,19 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
-import { API_FETCH_TIMEOUT_MS } from '../constants/appConfig';
+import { API_FETCH_TIMEOUT_MS, HTTP_STATUS_UNAUTHORIZED } from '../constants/appConfig';
 import { validateApiBaseUrl } from '../services/content/validateApiBaseUrl';
+
 import { ApiUnavailable } from './ApiUnavailable';
 import { clearSessionToken, readSessionToken } from './sessionTokenStore';
 
-export type ApiResponse = { status: number; body: unknown };
+type ApiResponse = { status: number; body: unknown };
 
 type ApiRequestInit = { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown };
 
 // requestSeq numbers every request in the order it started, so a handler can
 // tell a 401 for a request sent before some event (a sign-in) from a later one.
-export type UnauthorizedInfo = { requestSeq: number };
+type UnauthorizedInfo = { requestSeq: number };
 
 type UnauthorizedHandler = (info: UnauthorizedInfo) => void;
 
@@ -112,10 +113,11 @@ async function requestAndRead(
   } catch (cause) {
     throw new ApiUnavailable('API request failed', { cause });
   }
-  if (response.redirected || isOffBase(response.url, url)) {
+  const { redirected, status, url: responseUrl } = response;
+  if (redirected || isOffBase(responseUrl, url)) {
     throw new ApiUnavailable('API response was redirected');
   }
-  return { body: await parseBody(response), status: response.status };
+  return { body: await parseBody(response), status };
 }
 
 function createTimeoutRace(controller: AbortController): {
@@ -152,7 +154,8 @@ async function handleUnauthorized(sentSession: string | null, requestSeq: number
 export async function apiFetch(path: string, init: ApiRequestInit = {}): Promise<ApiResponse> {
   const requestSeq = (latestRequestSeq += 1);
   const url = resolveRequestUrl(path);
-  const hasBody = init.body !== undefined;
+  const { body, method } = init;
+  const hasBody = body !== undefined;
   const { headers, sentSession } = await buildRequest(hasBody);
   const controller = new AbortController();
   const timeout = createTimeoutRace(controller);
@@ -162,10 +165,10 @@ export async function apiFetch(path: string, init: ApiRequestInit = {}): Promise
       requestAndRead(
         url,
         {
-          body: hasBody ? JSON.stringify(init.body) : undefined,
+          body: hasBody ? JSON.stringify(body) : undefined,
           credentials: Platform.OS === 'web' ? 'include' : 'omit',
           headers,
-          method: init.method ?? 'GET',
+          method: method ?? 'GET',
         },
         controller.signal,
       ),
@@ -174,7 +177,7 @@ export async function apiFetch(path: string, init: ApiRequestInit = {}): Promise
   } finally {
     timeout.clear();
   }
-  if (result.status === 401) {
+  if (result.status === HTTP_STATUS_UNAUTHORIZED) {
     await handleUnauthorized(sentSession, requestSeq);
   }
   return result;

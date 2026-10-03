@@ -44,9 +44,27 @@ export const SYNC_BATCH_SIZE = 200;
 // The most download pages one sync pass requests; the next pass resumes from the stored cursor.
 export const SYNC_MAX_PAGES_PER_PASS = 100;
 
+const MS_PER_SECOND = 1000;
+const SECONDS_PER_MINUTE = 60;
+const MS_PER_MINUTE = SECONDS_PER_MINUTE * MS_PER_SECOND;
+const SYNC_INTERVAL_MINUTES = 5;
+const SYNC_BACKOFF_START_SECONDS = 30;
+const SYNC_BACKOFF_CAP_MINUTES = 15;
+
 // How often a signed-in, online client runs a sync pass.
-export const SYNC_INTERVAL_MS = 5 * 60 * 1000;
+export const SYNC_INTERVAL_MS = SYNC_INTERVAL_MINUTES * MS_PER_MINUTE;
 
 // A failed pass is retried after this long, doubling each time up to the cap.
-export const SYNC_BACKOFF_START_MS = 30 * 1000;
-export const SYNC_BACKOFF_CAP_MS = 15 * 60 * 1000;
+export const SYNC_BACKOFF_START_MS = SYNC_BACKOFF_START_SECONDS * MS_PER_SECOND;
+export const SYNC_BACKOFF_FACTOR = 2;
+export const SYNC_BACKOFF_CAP_MS = SYNC_BACKOFF_CAP_MINUTES * MS_PER_MINUTE;
+
+// HTTP status codes the client branches on.
+export const HTTP_STATUS_OK = 200;
+export const HTTP_STATUS_CREATED = 201;
+export const HTTP_STATUS_ACCEPTED = 202;
+export const HTTP_STATUS_MULTIPLE_CHOICES = 300;
+export const HTTP_STATUS_BAD_REQUEST = 400;
+export const HTTP_STATUS_UNAUTHORIZED = 401;
+export const HTTP_STATUS_UNPROCESSABLE = 422;
+export const HTTP_STATUS_TOO_MANY_REQUESTS = 429;

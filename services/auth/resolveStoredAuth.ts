@@ -1,7 +1,7 @@
 // Validates the stored identity: an object with a string-or-null userId and
 // an array of string user ids. Anything else resolves to null so the caller
 // starts signed out.
-export type StoredAuth = { knownUserIds: string[]; userId: string | null };
+type StoredAuth = { knownUserIds: string[]; userId: string | null };
 
 export function resolveStoredAuth(value: unknown): StoredAuth | null {
   if (typeof value !== 'object' || value === null) {

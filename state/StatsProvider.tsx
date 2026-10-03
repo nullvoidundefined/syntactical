@@ -20,6 +20,8 @@ import {
   type ReactNode,
 } from 'react';
 
+import type { AnswerEvent } from '@syntactical/progress';
+
 import { readStoredJson } from '../clients/readStoredJson';
 import { generateUuid } from '../clients/uuidClient';
 import { writeJson } from '../clients/writeJson';
@@ -27,7 +29,10 @@ import { EVENT_LOG_STORAGE_KEY, STORAGE_KEY } from '../constants/appConfig';
 import { readLocalToday } from '../services/progress/readLocalToday';
 import { appendAnswerEvent } from '../services/stats/appendAnswerEvent';
 import { buildLoggedAnswerEvent } from '../services/stats/buildLoggedAnswerEvent';
+import { claimGuestEvents as claimGuest } from '../services/stats/claimGuestEvents';
 import { createEmptyStats } from '../services/stats/createEmptyStats';
+import { discardUnsyncedEvents as discardUnsynced } from '../services/stats/discardUnsyncedEvents';
+import { markEvents } from '../services/stats/markEvents';
 import { recordAnswer as foldAnswer } from '../services/stats/recordAnswer';
 import { recordCompletion as foldCompletion } from '../services/stats/recordCompletion';
 import { resolveStoredEventLog } from '../services/stats/resolveStoredEventLog';
@@ -36,11 +41,19 @@ import type { LoggedAnswerEvent } from '../services/stats/types/LoggedAnswerEven
 import type { RecordedAnswer } from '../services/stats/types/RecordedAnswer';
 import type { RoundKey } from '../services/stats/types/RoundKey';
 import type { Stats } from '../services/stats/types/Stats';
+import { mergeDownloadedEvents as mergeDownloaded } from '../services/sync/mergeDownloadedEvents';
 
 type StatsContextValue = {
+  claimGuestEvents: (userId: string) => Promise<void>;
+  clearSyncCursor: () => void;
+  discardUnsyncedEvents: (userId: string) => Promise<void>;
   eventLog: LoggedAnswerEvent[];
   isHydrated: boolean;
+  markEventsHeld: (eventIds: string[], ownerUserId: string) => Promise<void>;
+  markEventsSynced: (eventIds: string[], ownerUserId: string) => Promise<void>;
+  mergeDownloadedEvents: (events: AnswerEvent[], cursor: string | null, ownerUserId: string) => Promise<void>;
   recordAnswer: (answer: RecordedAnswer) => void;
+  readSyncCursor: (userId: string) => string | null;
   recordCompletion: (event: RoundKey) => void;
   stats: Stats;
 };
@@ -71,12 +84,20 @@ function loadSlot<T>(slot: PersistedSlot<T>, value: T, isBlocked: boolean): void
   slot.setValue(value);
 }
 
-function changeSlot<T>(slot: PersistedSlot<T>, fold: (current: T) => T): void {
+// Applies the change in memory at once and queues its write; the result says
+// whether the value reached storage (false when blocked or the write failed).
+function changeSlot<T>(slot: PersistedSlot<T>, fold: (current: T) => T): Promise<boolean> {
   const next = fold(slot.ref.current);
   slot.ref.current = next;
   slot.setValue(next);
-  if (slot.isBlocked.current) return;
-  slot.queue.current = slot.queue.current.then(() => writeJson(slot.key, next));
+  if (slot.isBlocked.current) return Promise.resolve(false);
+  const write = slot.queue.current.then(() => writeJson(slot.key, next));
+  slot.queue.current = write;
+  return write;
+}
+
+async function requirePersisted(isPersisted: Promise<boolean>): Promise<void> {
+  if (!(await isPersisted)) throw new Error('event log change was not persisted');
 }
 
 export function StatsProvider({ children, ownerUserId = null }: { children: ReactNode; ownerUserId?: string | null }) {
@@ -118,6 +139,68 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
     [eventLogSlot, isHydrated, statsSlot],
   );
 
+  const claimGuestEvents = useCallback(
+    async (userId: string) => {
+      if (!isHydrated) return;
+      await requirePersisted(changeSlot(eventLogSlot, (current) => claimGuest(current, userId)));
+    },
+    [eventLogSlot, isHydrated],
+  );
+
+  const discardUnsyncedEvents = useCallback(
+    async (userId: string) => {
+      if (!isHydrated) return;
+      await requirePersisted(changeSlot(eventLogSlot, (current) => discardUnsynced(current, userId)));
+    },
+    [eventLogSlot, isHydrated],
+  );
+
+  const clearSyncCursor = useCallback(() => {
+    if (!isHydrated) return;
+    void changeSlot(statsSlot, ({ syncCursor: _cursor, syncCursorOwner: _owner, ...rest }) => rest);
+  }, [isHydrated, statsSlot]);
+
+  // A sync pass that outlives a sign-out names its owner; a mismatch writes nothing.
+  const assertOwner = useCallback((expectedOwner: string | null | undefined) => {
+    if (typeof expectedOwner !== 'string' || expectedOwner !== ownerRef.current) throw new Error('sync change refused: owner changed');
+  }, []);
+
+  const markEventsAs = useCallback(
+    (flag: 'isHeld' | 'isSynced') => async (eventIds: string[], expectedOwner: string) => {
+      assertOwner(expectedOwner);
+      if (!isHydrated) return;
+      await requirePersisted(changeSlot(eventLogSlot, (current) => markEvents(current, eventIds, flag)));
+    },
+    [assertOwner, eventLogSlot, isHydrated],
+  );
+  const markEventsSynced = useMemo(() => markEventsAs('isSynced'), [markEventsAs]);
+  const markEventsHeld = useMemo(() => markEventsAs('isHeld'), [markEventsAs]);
+
+  const mergeDownloadedEvents = useCallback(
+    async (events: AnswerEvent[], cursor: string | null, expectedOwner: string) => {
+      assertOwner(expectedOwner);
+      if (!isHydrated) return;
+      await requirePersisted(changeSlot(eventLogSlot, (current) => mergeDownloaded(current, events, expectedOwner)));
+      if (cursor === null) return;
+      // The owner may have changed while the event-log write was pending.
+      assertOwner(expectedOwner);
+      await requirePersisted(
+        changeSlot(statsSlot, (current) => ({ ...current, syncCursor: cursor, syncCursorOwner: expectedOwner })),
+      );
+    },
+    [assertOwner, eventLogSlot, isHydrated, statsSlot],
+  );
+
+  const readSyncCursor = useCallback(
+    (userId: string) => {
+      const { syncCursor, syncCursorOwner } = stats;
+      return syncCursor !== undefined && syncCursorOwner === userId ? syncCursor : null;
+    },
+    [stats],
+  );
+
+  const visibleEventLog = useMemo(() => eventLog.filter((entry) => entry.ownerUserId === ownerUserId), [eventLog, ownerUserId]);
+
   const recordCompletion = useCallback(
     (event: RoundKey) => {
       if (!isHydrated) return;
@@ -127,8 +210,34 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
   );
 
   const value = useMemo<StatsContextValue>(
-    () => ({ eventLog, isHydrated, recordAnswer, recordCompletion, stats }),
-    [eventLog, isHydrated, recordAnswer, recordCompletion, stats],
+    () => ({
+      claimGuestEvents,
+      clearSyncCursor,
+      discardUnsyncedEvents,
+      eventLog: visibleEventLog,
+      isHydrated,
+      markEventsHeld,
+      markEventsSynced,
+      mergeDownloadedEvents,
+      readSyncCursor,
+      recordAnswer,
+      recordCompletion,
+      stats,
+    }),
+    [
+      claimGuestEvents,
+      clearSyncCursor,
+      discardUnsyncedEvents,
+      isHydrated,
+      markEventsHeld,
+      markEventsSynced,
+      mergeDownloadedEvents,
+      readSyncCursor,
+      recordAnswer,
+      recordCompletion,
+      stats,
+      visibleEventLog,
+    ],
   );
 
   return <StatsContext.Provider value={value}>{children}</StatsContext.Provider>;
