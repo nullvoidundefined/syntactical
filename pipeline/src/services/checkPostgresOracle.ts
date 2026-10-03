@@ -25,7 +25,12 @@ const RULES: Rule[] = [
     { name: 'set role', pattern: /\bset\s+(?:local\s+|session\s+)?role\b/i },
     { name: 'set session authorization', pattern: /\bset\s+(?:(?:local|session)\s+)?session\s+authorization\b/i },
     { name: 'alter system', pattern: /\balter\s+system\b/i },
-    { name: 'do block', pattern: /\bdo\s*(?:\$|')/i },
+    // Oracles never need a DO block (E'...', U&'...', $$...$$ and '...' all start one).
+    { name: 'do block', pattern: /\bdo\b/i },
+    { name: 'set_config', pattern: /\bset_config\b/i },
+    // Functions that run a SQL string, build one from fragments, or reach the server process.
+    { name: 'dynamic sql function', pattern: /\b(?:query|cursor|table|schema|database)_to_xml\w*|\bxpath_table\b|\bexecute\b/i },
+    { name: 'server admin function', pattern: /\bpg_(?:reload_conf|terminate_backend|cancel_backend|rotate_logfile|switch_wal|create_restore_point|promote)\b/i },
     { name: 'create function', pattern: /\bcreate\s+(?:or\s+replace\s+)?(?:function|procedure)\b/i },
     { name: 'language', pattern: /\blanguage\b/i },
     { name: 'load', pattern: /\bload\b/i },

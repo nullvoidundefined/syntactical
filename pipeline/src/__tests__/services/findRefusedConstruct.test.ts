@@ -94,6 +94,10 @@ const NODE_REFUSED: string[] = [
 ];
 
 const POSTGRES_REFUSED: string[] = [
+    "DO E'BEGIN PERFORM 1; END';",
+    "SELECT set_config('role', 'postgres', false);",
+    "SELECT set_config('session_authorization', 'postgres', false);",
+    "SELECT query_to_xml('SEL' || 'ECT 1', true, false, '');",
     '\\! id',
     'SELECT 1;\n\\i /etc/passwd',
     '   \\o /tmp/out\nSELECT 1;',
