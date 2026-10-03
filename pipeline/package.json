@@ -13,6 +13,8 @@
     "vitest": "^3.2.7"
   },
   "dependencies": {
-    "@syntactical/content-schema": "*"
+    "@anthropic-ai/sdk": "^0.131.0",
+    "@syntactical/content-schema": "*",
+    "zod": "^4.6.5"
   }
 }
