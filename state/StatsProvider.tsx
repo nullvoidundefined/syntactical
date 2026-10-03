@@ -108,9 +108,11 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
   const recordAnswer = useCallback(
     (answer: RecordedAnswer) => {
       if (!isHydrated) return;
-      changeSlot(statsSlot, (current) => foldAnswer(current, answer));
+      // The event, id included, is built before either slot changes, so a
+      // failure there (no secure random source) leaves both untouched.
       const stamp = { answeredAt: new Date().toISOString(), eventId: generateUuid(), ownerUserId: ownerRef.current };
       const event = buildLoggedAnswerEvent(answer, stamp);
+      changeSlot(statsSlot, (current) => foldAnswer(current, answer));
       changeSlot(eventLogSlot, (current) => appendAnswerEvent(current, event));
     },
     [eventLogSlot, isHydrated, statsSlot],
