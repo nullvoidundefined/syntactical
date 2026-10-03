@@ -9,32 +9,13 @@ import { API_FETCH_TIMEOUT_MS, HTTP_STATUS_UNAUTHORIZED } from '../constants/app
 import { validateApiBaseUrl } from '../services/content/validateApiBaseUrl';
 
 import { ApiUnavailable } from './ApiUnavailable';
-import { clearSessionToken, readSessionToken } from './sessionTokenStore';
+import { apiRequestState } from './apiRequestState';
+import { clearSessionToken } from './clearSessionToken';
+import { readSessionToken } from './readSessionToken';
 
 type ApiResponse = { status: number; body: unknown };
 
 type ApiRequestInit = { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown };
-
-// requestSeq numbers every request in the order it started, so a handler can
-// tell a 401 for a request sent before some event (a sign-in) from a later one.
-type UnauthorizedInfo = { requestSeq: number };
-
-type UnauthorizedHandler = (info: UnauthorizedInfo) => void;
-
-let latestRequestSeq = 0;
-
-export function getLatestRequestSeq(): number {
-  return latestRequestSeq;
-}
-
-const unauthorizedHandlers = new Set<UnauthorizedHandler>();
-
-export function onUnauthorized(handler: UnauthorizedHandler): () => void {
-  unauthorizedHandlers.add(handler);
-  return () => {
-    unauthorizedHandlers.delete(handler);
-  };
-}
 
 function resolveRequestUrl(path: string): string {
   const base = validateApiBaseUrl(Constants.expoConfig?.extra?.apiBaseUrl);
@@ -142,7 +123,7 @@ async function handleUnauthorized(sentSession: string | null, requestSeq: number
   } catch {
     // The stored value could not be cleared; the handlers still run below.
   }
-  unauthorizedHandlers.forEach((handler) => {
+  apiRequestState.unauthorizedHandlers.forEach((handler) => {
     try {
       handler({ requestSeq });
     } catch {
@@ -152,7 +133,7 @@ async function handleUnauthorized(sentSession: string | null, requestSeq: number
 }
 
 export async function apiFetch(path: string, init: ApiRequestInit = {}): Promise<ApiResponse> {
-  const requestSeq = (latestRequestSeq += 1);
+  const requestSeq = (apiRequestState.latestRequestSeq += 1);
   const url = resolveRequestUrl(path);
   const { body, method } = init;
   const hasBody = body !== undefined;

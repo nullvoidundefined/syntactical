@@ -25,12 +25,26 @@ const mockSecureStore = {
 
 jest.mock("expo-secure-store", () => mockSecureStore);
 
-type SessionTokenStoreModule = typeof import("../sessionTokenStore");
+type SessionTokenStoreModule = {
+  readSessionToken: typeof import("../readSessionToken")["readSessionToken"];
+  writeSessionToken: typeof import("../writeSessionToken")["writeSessionToken"];
+  clearSessionToken: typeof import("../clearSessionToken")["clearSessionToken"];
+};
 
 function loadStore(): SessionTokenStoreModule {
   let loaded: SessionTokenStoreModule | undefined;
   jest.isolateModules(() => {
-    loaded = require("../sessionTokenStore") as SessionTokenStoreModule;
+    loaded = {
+      readSessionToken: (
+        require("../readSessionToken") as typeof import("../readSessionToken")
+      ).readSessionToken,
+      writeSessionToken: (
+        require("../writeSessionToken") as typeof import("../writeSessionToken")
+      ).writeSessionToken,
+      clearSessionToken: (
+        require("../clearSessionToken") as typeof import("../clearSessionToken")
+      ).clearSessionToken,
+    };
   });
   if (!loaded) {
     throw new Error("expected the session store to load");

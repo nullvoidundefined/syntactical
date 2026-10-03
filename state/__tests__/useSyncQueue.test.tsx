@@ -31,9 +31,9 @@ jest.mock('../../clients/apiClient', () => ({
     if (!mockApi.router) throw new Error('no router installed');
     return mockApi.router.request(path, init);
   },
-  getLatestRequestSeq: () => 0,
-  onUnauthorized: () => () => undefined,
 }));
+jest.mock('../../clients/getLatestRequestSeq', () => ({ getLatestRequestSeq: () => 0 }));
+jest.mock('../../clients/onUnauthorized', () => ({ onUnauthorized: () => () => undefined }));
 
 type NetListener = (state: { isConnected: boolean | null; isInternetReachable: boolean | null }) => void;
 const mockNet = { isConnected: true, listeners: new Set<NetListener>() };

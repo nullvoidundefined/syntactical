@@ -39,6 +39,7 @@ const CODE_LABEL = 'Sign-in code';
 const SEND_BUTTON = 'Send code';
 const VERIFY_BUTTON = 'Verify code';
 const RESEND_BUTTON = 'Resend code';
+const INVALID_CODE_MESSAGE = 'That code did not work. Check the newest email and try again.';
 const INVALID_EMAIL_MESSAGE = 'That email address does not look right. Check it and try again.';
 const RATE_LIMITED_MESSAGE = 'Too many attempts. Wait a few minutes, then try again.';
 const UNAVAILABLE_MESSAGE = 'Sign-in is unavailable right now. Try again later.';
@@ -63,7 +64,17 @@ function expectAlertOmits(alert: ReturnType<typeof screen.getByRole>, values: st
   }
 }
 
-type Deferred = { promise: Promise<AuthResult>; resolve: (result: AuthResult) => void };
+// After the one verification settles as invalid: a single alert with the
+// invalid-code message, the typed code kept, and Verify usable again.
+function expectOneInvalidCodeAlert(code: string): void {
+  const alerts = screen.getAllByRole('alert');
+  expect(alerts).toHaveLength(1);
+  expect(within(alerts[0]).getByText(INVALID_CODE_MESSAGE)).toBeTruthy();
+  expect(screen.getByLabelText(CODE_LABEL).props.value).toBe(code);
+  expect(screen.getByRole('button', { name: VERIFY_BUTTON })).toBeEnabled();
+}
+
+type Deferred ={ promise: Promise<AuthResult>; resolve: (result: AuthResult) => void };
 
 function buildDeferred(): Deferred {
   let resolve: (result: AuthResult) => void = () => undefined;
@@ -154,10 +165,14 @@ describe('sign-in route flow fixes', () => {
       const emailInput = screen.getByLabelText(EMAIL_LABEL);
       await fireEvent.changeText(emailInput, buildEmail());
       await fireEvent(emailInput, 'submitEditing');
+      // The in-flight request disables the send button until it settles.
+      expect(screen.getByRole('button', { name: SEND_BUTTON })).toBeDisabled();
       await fireEvent(screen.getByLabelText(EMAIL_LABEL), 'submitEditing');
       expect(mockRequestCode).toHaveBeenCalledTimes(1);
       await act(async () => pending.resolve({ isOk: true }));
       expect(mockRequestCode).toHaveBeenCalledTimes(1);
+      expect(screen.getByLabelText(CODE_LABEL)).toBeTruthy();
+      expect(screen.queryByRole('alert')).toBeNull();
     });
 
     it('sends one request when Enter is pressed twice in the email field before React re-renders', async () => {
@@ -171,8 +186,11 @@ describe('sign-in route flow fixes', () => {
         emailInput.props.onSubmitEditing();
       });
       expect(mockRequestCode).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole('button', { name: SEND_BUTTON })).toBeDisabled();
       await act(async () => pending.resolve({ isOk: true }));
       expect(mockRequestCode).toHaveBeenCalledTimes(1);
+      expect(screen.getByLabelText(CODE_LABEL)).toBeTruthy();
+      expect(screen.queryByRole('alert')).toBeNull();
     });
 
     it('verifies once when "Verify code" is pressed again during an in-flight verification', async () => {
@@ -183,11 +201,13 @@ describe('sign-in route flow fixes', () => {
       mockVerifyCode.mockReturnValue(pending.promise);
       await fireEvent.changeText(screen.getByLabelText(CODE_LABEL), code);
       await fireEvent.press(screen.getByRole('button', { name: VERIFY_BUTTON }));
+      expect(screen.getByRole('button', { name: VERIFY_BUTTON })).toBeDisabled();
       await fireEvent.press(screen.getByRole('button', { name: VERIFY_BUTTON }));
       expect(mockVerifyCode).toHaveBeenCalledTimes(1);
       expect(mockVerifyCode).toHaveBeenCalledWith(email, code);
       await act(async () => pending.resolve({ isOk: false, reason: 'invalid-code' }));
       expect(mockVerifyCode).toHaveBeenCalledTimes(1);
+      expectOneInvalidCodeAlert(code);
     });
 
     it('verifies once when the code is submitted twice before React re-renders', async () => {
@@ -204,8 +224,10 @@ describe('sign-in route flow fixes', () => {
       });
       expect(mockVerifyCode).toHaveBeenCalledTimes(1);
       expect(mockVerifyCode).toHaveBeenCalledWith(email, code);
+      expect(screen.getByRole('button', { name: VERIFY_BUTTON })).toBeDisabled();
       await act(async () => pending.resolve({ isOk: false, reason: 'invalid-code' }));
       expect(mockVerifyCode).toHaveBeenCalledTimes(1);
+      expectOneInvalidCodeAlert(code);
     });
   });
 });

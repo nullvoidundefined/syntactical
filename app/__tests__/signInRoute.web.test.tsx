@@ -9,10 +9,12 @@ import SignInScreen from '../sign-in';
 // text inputs, Enter submits each step, keys typed into either field never
 // reach the quiz key bindings, and no CSS animation runs under reduced motion.
 
+// Every route the screen replaces to, in order.
+const mockReplacedRoutes: unknown[] = [];
 jest.mock('expo-router', () => ({
   ...jest.requireActual('expo-router'),
-  router: { replace: () => undefined },
-  useRouter: () => ({ replace: () => undefined }),
+  router: { replace: (route: unknown) => mockReplacedRoutes.push(route) },
+  useRouter: () => ({ replace: (route: unknown) => mockReplacedRoutes.push(route) }),
 }));
 jest.mock('react-native-reanimated', () => ({
   ...jest.requireActual('react-native-reanimated'),
@@ -96,6 +98,10 @@ async function reachCodeStep(email: string): Promise<HTMLElement> {
 }
 
 describe('sign-in route on the web', () => {
+  beforeEach(() => {
+    mockReplacedRoutes.length = 0;
+  });
+
   it('renders exactly one h1 element reading "Sign in" and a labeled email text field', () => {
     render(<SignInScreen />);
     const headings = document.querySelectorAll('h1');
@@ -114,22 +120,31 @@ describe('sign-in route on the web', () => {
   });
 
   it('verifies the code when Enter is pressed in the code field', async () => {
-    mockVerifyCode.mockResolvedValue({ isOk: true });
-    render(<SignInScreen />);
     const email = buildEmail();
     const code = buildCode();
+    // Only the typed pair verifies; any other pair renders the invalid-code alert.
+    mockVerifyCode.mockImplementation(async (sentEmail, sentCode) =>
+      sentEmail === email && sentCode === code ? { isOk: true } : { isOk: false, reason: 'invalid-code' },
+    );
+    render(<SignInScreen />);
     const codeInput = await reachCodeStep(email);
     typeInto(codeInput, code);
     await act(async () => {
       fireEvent.keyDown(codeInput, { key: 'Enter' });
     });
     expect(mockVerifyCode).toHaveBeenCalledWith(email, code);
+    // The verified screen navigates home once and announces no failure.
+    expect(mockReplacedRoutes).toEqual(['/']);
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 
   it('keeps the quiz key bindings live outside the form (control for the cases below)', () => {
     renderWithQuizKeys();
     pressKeyOn(document.body, 'q');
     expect(keyHandlers.onToggleQuery).toHaveBeenCalledTimes(1);
+    // The key was pressed outside the form, and none of it reached the email field.
+    expect(document.activeElement).toBe(document.body);
+    expect((screen.getByRole('textbox', { name: EMAIL_LABEL }) as HTMLInputElement).value).toBe('');
   });
 
   it.each(['a', 't', 'q', '1', 'Escape'])('typing %p into the email field fires no quiz key binding', (key) => {

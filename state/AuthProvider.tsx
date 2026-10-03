@@ -22,11 +22,14 @@ import {
 
 import { Platform } from 'react-native';
 
-import { apiFetch, getLatestRequestSeq, onUnauthorized } from '../clients/apiClient';
+import { apiFetch } from '../clients/apiClient';
+import { clearSessionToken } from '../clients/clearSessionToken';
+import { getLatestRequestSeq } from '../clients/getLatestRequestSeq';
 import { logWarning } from '../clients/logClient';
+import { onUnauthorized } from '../clients/onUnauthorized';
 import { readStoredJson } from '../clients/readStoredJson';
-import { clearSessionToken, writeSessionToken } from '../clients/sessionTokenStore';
 import { writeJson } from '../clients/writeJson';
+import { writeSessionToken } from '../clients/writeSessionToken';
 import {
   AUTH_STORAGE_KEY,
   HTTP_STATUS_ACCEPTED,

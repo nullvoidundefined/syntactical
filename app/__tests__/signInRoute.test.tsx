@@ -128,12 +128,17 @@ describe('sign-in route', () => {
   it('submits the code step from the keyboard return key with the email and the code', async () => {
     const email = buildEmail();
     const code = buildCode();
-    mockVerifyCode.mockResolvedValue({ isOk: true });
+    // Only the typed pair verifies; any other pair renders the invalid-code alert.
+    mockVerifyCode.mockImplementation(async (sentEmail, sentCode) =>
+      sentEmail === email && sentCode === code ? { isOk: true } : { isOk: false, reason: 'invalid-code' },
+    );
     await reachCodeStep(email);
     const codeInput = screen.getByLabelText(CODE_LABEL);
     await fireEvent.changeText(codeInput, code);
     await fireEvent(codeInput, 'submitEditing');
     expect(mockVerifyCode).toHaveBeenCalledWith(email, code);
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(mockReplace).toHaveBeenCalledWith('/');
   });
 
   it('replaces the route with home after a successful verification', async () => {
@@ -222,8 +227,12 @@ describe('sign-in route', () => {
     it('ignores a press on "Resend code" during the cooldown', async () => {
       await reachCodeStep(buildEmail());
       await advanceSeconds(10);
-      await fireEvent.press(screen.getByRole('button', { name: new RegExp(RESEND_BUTTON) }));
+      const resendButton = () => screen.getByRole('button', { name: new RegExp(RESEND_BUTTON) });
+      await fireEvent.press(resendButton());
       expect(mockRequestCode).toHaveBeenCalledTimes(1);
+      // The countdown runs on from 50 and was not restarted by the press.
+      expect(resendButton()).toBeDisabled();
+      expect(screen.getByText(new RegExp(`\\b${RESEND_COOLDOWN_SECONDS - 10} seconds\\b`))).toBeTruthy();
     });
 
     it('requests a new code for the same email after the cooldown and restarts it', async () => {

@@ -39,12 +39,17 @@ jest.mock('expo-secure-store', () => mockSecureStore);
 const EXPECTED_TIMEOUT_MS = 10000;
 
 type ApiClientModule = typeof import('../apiClient');
+type OnUnauthorizedModule = typeof import('../onUnauthorized');
 type ApiUnavailableModule = typeof import('../ApiUnavailable');
-type SessionStoreModule = typeof import('../sessionTokenStore');
+type SessionStoreModule = {
+    readSessionToken: typeof import('../readSessionToken')['readSessionToken'];
+    writeSessionToken: typeof import('../writeSessionToken')['writeSessionToken'];
+    clearSessionToken: typeof import('../clearSessionToken')['clearSessionToken'];
+};
 
 type LoadedClient = {
     apiFetch: ApiClientModule['apiFetch'];
-    onUnauthorized: ApiClientModule['onUnauthorized'];
+    onUnauthorized: OnUnauthorizedModule['onUnauthorized'];
     ApiUnavailable: ApiUnavailableModule['ApiUnavailable'];
     store: SessionStoreModule;
 };
@@ -53,11 +58,16 @@ function loadClient(): LoadedClient {
     let loaded: LoadedClient | undefined;
     jest.isolateModules(() => {
         const client = require('../apiClient') as ApiClientModule;
+        const unauthorized = require('../onUnauthorized') as OnUnauthorizedModule;
         const errors = require('../ApiUnavailable') as ApiUnavailableModule;
-        const store = require('../sessionTokenStore') as SessionStoreModule;
+        const store: SessionStoreModule = {
+            readSessionToken: (require('../readSessionToken') as typeof import('../readSessionToken')).readSessionToken,
+            writeSessionToken: (require('../writeSessionToken') as typeof import('../writeSessionToken')).writeSessionToken,
+            clearSessionToken: (require('../clearSessionToken') as typeof import('../clearSessionToken')).clearSessionToken,
+        };
         loaded = {
             apiFetch: client.apiFetch,
-            onUnauthorized: client.onUnauthorized,
+            onUnauthorized: unauthorized.onUnauthorized,
             ApiUnavailable: errors.ApiUnavailable,
             store,
         };

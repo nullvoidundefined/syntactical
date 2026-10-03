@@ -38,11 +38,12 @@ const mockSecureStore = {
 jest.mock("expo-secure-store", () => mockSecureStore);
 
 type ApiClientModule = typeof import("../apiClient");
+type OnUnauthorizedModule = typeof import("../onUnauthorized");
 type ApiUnavailableModule = typeof import("../ApiUnavailable");
 
 type LoadedClient = {
   apiFetch: ApiClientModule["apiFetch"];
-  onUnauthorized: ApiClientModule["onUnauthorized"];
+  onUnauthorized: OnUnauthorizedModule["onUnauthorized"];
   ApiUnavailable: ApiUnavailableModule["ApiUnavailable"];
 };
 
@@ -50,10 +51,11 @@ function loadClient(): LoadedClient {
   let loaded: LoadedClient | undefined;
   jest.isolateModules(() => {
     const client = require("../apiClient") as ApiClientModule;
+    const unauthorized = require("../onUnauthorized") as OnUnauthorizedModule;
     const errors = require("../ApiUnavailable") as ApiUnavailableModule;
     loaded = {
       apiFetch: client.apiFetch,
-      onUnauthorized: client.onUnauthorized,
+      onUnauthorized: unauthorized.onUnauthorized,
       ApiUnavailable: errors.ApiUnavailable,
     };
   });
@@ -141,7 +143,8 @@ describe("apiFetch on web", () => {
   });
 
   it("calls onUnauthorized handlers on a 401 without touching session storage", async () => {
-    mockSecureValues.set(SESSION_TOKEN_KEY, buildSessionValue());
+    const sessionValue = buildSessionValue();
+    mockSecureValues.set(SESSION_TOKEN_KEY, sessionValue);
     installFetch({ status: 401, text: '{"error":"unauthorized"}' });
     const { apiFetch, onUnauthorized } = loadClient();
     const handler = jest.fn();
@@ -151,6 +154,8 @@ describe("apiFetch on web", () => {
 
     expect(handler).toHaveBeenCalled();
     expectNoSessionStorageTouched();
+    // The web build never clears a stored value: the cookie is the session.
+    expect(mockSecureValues.get(SESSION_TOKEN_KEY)).toBe(sessionValue);
   });
 
   it("calls no onUnauthorized handler on a 403", async () => {
@@ -159,8 +164,10 @@ describe("apiFetch on web", () => {
     const handler = jest.fn();
     onUnauthorized(handler);
 
-    await settle(apiFetch("answer-events"));
+    const outcome = await settle(apiFetch("answer-events"));
 
     expect(handler).not.toHaveBeenCalled();
+    // A 403 reaches the caller as an ordinary response.
+    expect(outcome).toEqual({ value: { status: 403, body: {} } });
   });
 });

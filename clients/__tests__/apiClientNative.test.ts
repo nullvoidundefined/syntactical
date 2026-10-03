@@ -39,11 +39,12 @@ const mockSecureStore = {
 jest.mock("expo-secure-store", () => mockSecureStore);
 
 type ApiClientModule = typeof import("../apiClient");
+type OnUnauthorizedModule = typeof import("../onUnauthorized");
 type ApiUnavailableModule = typeof import("../ApiUnavailable");
 
 type LoadedClient = {
   apiFetch: ApiClientModule["apiFetch"];
-  onUnauthorized: ApiClientModule["onUnauthorized"];
+  onUnauthorized: OnUnauthorizedModule["onUnauthorized"];
   ApiUnavailable: ApiUnavailableModule["ApiUnavailable"];
 };
 
@@ -51,10 +52,11 @@ function loadClient(): LoadedClient {
   let loaded: LoadedClient | undefined;
   jest.isolateModules(() => {
     const client = require("../apiClient") as ApiClientModule;
+    const unauthorized = require("../onUnauthorized") as OnUnauthorizedModule;
     const errors = require("../ApiUnavailable") as ApiUnavailableModule;
     loaded = {
       apiFetch: client.apiFetch,
-      onUnauthorized: client.onUnauthorized,
+      onUnauthorized: unauthorized.onUnauthorized,
       ApiUnavailable: errors.ApiUnavailable,
     };
   });
@@ -211,7 +213,10 @@ describe("apiFetch on native", () => {
     installFetch({ status: 401, text: "" });
     const { apiFetch, onUnauthorized } = loadClient();
     const removedHandler = jest.fn();
-    const keptHandler = jest.fn();
+    const keptNotices: unknown[] = [];
+    const keptHandler = jest.fn((info: unknown) => {
+      keptNotices.push(info);
+    });
     const unsubscribe = onUnauthorized(removedHandler);
     onUnauthorized(keptHandler);
     unsubscribe();
@@ -220,6 +225,8 @@ describe("apiFetch on native", () => {
 
     expect(removedHandler).not.toHaveBeenCalled();
     expect(keptHandler).toHaveBeenCalled();
+    // The kept handler receives exactly one notice, naming the first request.
+    expect(keptNotices).toEqual([{ requestSeq: 1 }]);
   });
 
   it.each([200, 403, 500])(

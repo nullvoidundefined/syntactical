@@ -36,9 +36,9 @@ jest.mock('../../../clients/apiClient', () => ({
     if (!mockApi.router) throw new Error('no router installed');
     return mockApi.router.request(path, init);
   },
-  getLatestRequestSeq: () => 0,
-  onUnauthorized: () => () => undefined,
 }));
+jest.mock('../../../clients/getLatestRequestSeq', () => ({ getLatestRequestSeq: () => 0 }));
+jest.mock('../../../clients/onUnauthorized', () => ({ onUnauthorized: () => () => undefined }));
 
 jest.mock('expo-secure-store', () => {
   const values = new Map<string, string>();
