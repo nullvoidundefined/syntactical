@@ -102,4 +102,71 @@ describe('QuizRound', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Menu' }));
     expect(screen.queryByText('menu screen')).not.toBeNull();
   });
+
+  describe('rationale first in the query drawer', () => {
+    const mcQuestions: Question[] = [
+      {
+        answerIndex: 1,
+        choices: [{ rationale: 'You think the first one wins.', text: 'First' }, { text: 'Second' }, { text: 'Third' }],
+        id: 'q-mc',
+        prompt: 'Which?',
+        provenance: TEST_PROVENANCE,
+        query,
+        type: 'mc',
+      },
+    ];
+
+    async function renderMcRound(round: Question[] = mcQuestions) {
+      await render(
+        <QuizRound language="python" languageLabel="Python" difficulty="easy" difficultyLabel="Easy" grammar="python" questions={round} onExit={jest.fn()} onRetry={jest.fn()} />,
+      );
+    }
+
+    it('opens Explain with the chosen wrong choice rationale above the query title', async () => {
+      await renderMcRound();
+      await fireEvent.press(screen.getByText('First'));
+      await fireEvent.press(screen.getByRole('button', { name: 'Explain' }));
+      const headings = screen.getAllByRole('heading').map((heading) => heading.props.children);
+      expect(headings.indexOf('Why that answer is tempting')).toBeLessThan(headings.indexOf('Why'));
+      expect(screen.getByText('You think the first one wins.')).toBeTruthy();
+    });
+
+    it('shows only the query when the Query button is used before answering', async () => {
+      await renderMcRound();
+      await fireEvent.press(screen.getByRole('button', { name: 'Query' }));
+      expect(screen.queryByText('Why that answer is tempting')).toBeNull();
+      expect(screen.getByText('Because')).toBeTruthy();
+    });
+
+    it('shows only the query when the Query button is used after a wrong answer', async () => {
+      await renderMcRound();
+      await fireEvent.press(screen.getByText('First'));
+      await fireEvent.press(screen.getByRole('button', { name: 'Query' }));
+      expect(screen.queryByText('Why that answer is tempting')).toBeNull();
+    });
+
+    it('shows only the query when the wrong choice has no rationale', async () => {
+      await renderMcRound();
+      await fireEvent.press(screen.getByText('Third'));
+      await fireEvent.press(screen.getByRole('button', { name: 'Explain' }));
+      expect(screen.queryByText('Why that answer is tempting')).toBeNull();
+      expect(screen.getByText('Because')).toBeTruthy();
+    });
+
+    it('shows a true/false question rationale after the wrong value is chosen', async () => {
+      await renderMcRound([{ ...questions[0], rationale: 'Booleans are not strings.' } as Question]);
+      await fireEvent.press(screen.getByText('False'));
+      await fireEvent.press(screen.getByRole('button', { name: 'Explain' }));
+      expect(screen.getByText('Booleans are not strings.')).toBeTruthy();
+    });
+
+    it('does not carry the rationale into the Query button after the drawer closes', async () => {
+      await renderMcRound();
+      await fireEvent.press(screen.getByText('First'));
+      await fireEvent.press(screen.getByRole('button', { name: 'Explain' }));
+      await fireEvent.press(screen.getByRole('button', { name: 'Close query' }));
+      await fireEvent.press(screen.getByRole('button', { name: 'Query' }));
+      expect(screen.queryByText('Why that answer is tempting')).toBeNull();
+    });
+  });
 });

@@ -43,4 +43,23 @@ describe('QueryDrawer', () => {
     await render(<QueryDrawer isOpen={false} query={query} grammar="python" onClose={jest.fn()} />);
     expect(screen.queryByText('NaN is never equal')).toBeNull();
   });
+
+  it('shows the chosen rationale under its own heading above the query title', async () => {
+    await render(<QueryDrawer isOpen query={query} grammar="python" chosenRationale="You treated NaN as a normal number." onClose={jest.fn()} />);
+    const headings = screen.getAllByRole('heading');
+    expect(headings.map((heading) => heading.props.children)).toEqual(['Why that answer is tempting', 'NaN is never equal']);
+    expect(screen.getByText('You treated NaN as a normal number.')).toBeTruthy();
+  });
+
+  it('keeps heading levels from skipping when the rationale is shown', async () => {
+    await render(<QueryDrawer isOpen query={query} grammar="python" chosenRationale="Because." onClose={jest.fn()} />);
+    const levels = screen.getAllByRole('heading').map((heading) => heading.props['aria-level']);
+    expect(levels).toEqual([2, 2]);
+  });
+
+  it('shows only the query when there is no rationale', async () => {
+    await render(<QueryDrawer isOpen query={query} grammar="python" onClose={jest.fn()} />);
+    expect(screen.queryByText('Why that answer is tempting')).toBeNull();
+    expect(screen.getAllByRole('heading')).toHaveLength(1);
+  });
 });
