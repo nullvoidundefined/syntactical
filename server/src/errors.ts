@@ -1,5 +1,8 @@
 // Machine-readable error codes; clients switch on these, never on messages.
 const ERROR_CODES = {
+  AUTH: {
+    INVALID_CODE: 'AUTH_INVALID_CODE',
+  },
   INPUT: {
     CLIENT_ERROR: 'INPUT_CLIENT_ERROR',
     INVALID_BODY: 'INPUT_INVALID_BODY',

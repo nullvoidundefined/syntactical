@@ -17,6 +17,7 @@ import { createRequestLogger } from './middleware/requestLogger.js';
 import { requireJson } from './middleware/requireJson.js';
 import { createAuthCodesRouter } from './routes/authCodes.js';
 import type { AuthDeps, ResolvedAuthDeps } from './routes/authDeps.js';
+import { createAuthSessionsRouter } from './routes/authSessions.js';
 import { createHealthRouter } from './routes/health.js';
 import type { HealthDb } from './routes/health.js';
 
@@ -49,7 +50,7 @@ function createApp(deps: AppDeps) {
   if (auth) {
     const { now = () => new Date(), randomInt: codeGenerator = randomInt } = auth;
     const resolved: ResolvedAuthDeps = { ...auth, now, randomInt: codeGenerator };
-    app.use('/v1/auth', createAuthCodesRouter(resolved, logger));
+    app.use('/v1/auth', createAuthCodesRouter(resolved, logger), createAuthSessionsRouter(resolved));
   }
 
   if (extraRoutes) {
