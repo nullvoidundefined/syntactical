@@ -103,6 +103,9 @@ child.stderr.on('data', (chunk) => {
     }
 });
 child.on('error', () => finish({ outcome: 'exception', exceptionType: 'RunnerFailure' }));
+// A grandchild can inherit the pipes and keep them open after the child exits, so 'close'
+// alone would wait for the timeout. Killing the group on 'exit' closes the pipes.
+child.on('exit', killGroup);
 child.on('close', (code, signal) => {
     killGroup();
     finish(

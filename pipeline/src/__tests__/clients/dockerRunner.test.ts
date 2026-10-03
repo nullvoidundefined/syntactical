@@ -81,6 +81,30 @@ describe.skipIf(SKIP_DOCKER)('runOracle (docker)', () => {
         }, RUN_TIMEOUT_MS);
     });
 
+    describe('grandchildren holding the output pipe', () => {
+        const PROMPT_RESULT_MS = 3000;
+        const GRANDCHILD_SLEEP_SECONDS = '30';
+
+        it('reports the value once the Node oracle exits, not at the timeout', async () => {
+            const startedAt = Date.now();
+            const run = await runOracle(
+                {
+                    language: 'node',
+                    code: [
+                        "const { spawn } = await import('node:child_process');",
+                        `spawn('sleep', ['${GRANDCHILD_SLEEP_SECONDS}'], { stdio: 'inherit' }).unref();`,
+                        'console.log(1);',
+                    ].join('\n'),
+                },
+                { timeoutMs: 6000 },
+            );
+            const elapsedMs = Date.now() - startedAt;
+
+            expect(run).toMatchObject({ outcome: 'value', value: '1' });
+            expect(elapsedMs).toBeLessThan(PROMPT_RESULT_MS);
+        }, RUN_TIMEOUT_MS);
+    });
+
     describe('large oracle source', () => {
         const LARGE_COMMENT_CHARS = 200_000;
 
