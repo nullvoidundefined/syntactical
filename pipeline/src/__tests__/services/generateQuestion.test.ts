@@ -154,8 +154,14 @@ describe('generateQuestion', () => {
         const draft = buildDraft({ oracle: { choiceCode: ['print(1)', 'print(2)', 'print(3)'], code: 'print(3)', setupSql: 'select 1' } });
         const { calls, run } = fakeRun();
         await generateQuestion(baseArgs(scripted(() => draft), run));
+        expect(calls.length).toBeGreaterThan(0);
         for (const { oracle } of calls) {
             expect(Object.keys(oracle).sort()).toEqual(['code', 'language', 'setupSql']);
+            expect(oracle).not.toHaveProperty('choiceCode');
+        }
+        const codes = calls.map(({ oracle }) => oracle.code);
+        for (const snippet of ['print(1)', 'print(2)', 'print(3)']) {
+            expect(codes).toContain(snippet);
         }
     });
 
