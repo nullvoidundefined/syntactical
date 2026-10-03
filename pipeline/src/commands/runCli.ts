@@ -1,6 +1,6 @@
 // The pipeline CLI's command dispatch, with every side effect injected so the real
 // entry path can be tested: `validate`, `draft-oracles [--api]`, or
-// `classify [--api] [--content-root <path>]`, or `review [--content-root <path>]`.
+// `classify` or `gap-fill [--api] [--content-root <path>]`, or `review [--content-root <path>]`.
 import { randomUUID } from 'node:crypto';
 
 import { readContentRootFlag } from '../services/classify/readContentRootFlag.js';
@@ -13,6 +13,7 @@ import type { ModelProvider } from '../types/ModelProvider.js';
 import type { classify } from './classify.js';
 import type { draftOracles } from './draftOracles.js';
 import type { draftTaxonomy } from './draftTaxonomy.js';
+import type { gapFill } from './gapFill.js';
 import type { review } from './review.js';
 import type { validateContent } from './validate.js';
 
@@ -23,6 +24,7 @@ export interface CliDeps {
     env: Record<string, string | undefined>;
     createProvider: (kind: 'api' | 'cli') => ModelProvider;
     draft: typeof draftOracles;
+    gapFill: typeof gapFill;
     draftTaxonomy: typeof draftTaxonomy;
     pipelineDir: string;
     review: typeof review;
@@ -34,16 +36,24 @@ export interface CliDeps {
 const FIRST_COMMAND_ARG = 2;
 
 // The content root: `--content-root` beats `SYNTACTICAL_CONTENT_ROOT`, which beats the default.
-async function runClassify(argv: string[], deps: CliDeps): Promise<number> {
-    const { classify: run, contentDir, createProvider, defaultContentRoot, env, pipelineDir, stderr, stdout } = deps;
-    let flagRoot: string | undefined;
+// A bad flag is reported on stderr and returns undefined.
+function resolveContentRoot(argv: string[], deps: CliDeps): string | undefined {
+    const { defaultContentRoot, env, stderr } = deps;
     try {
-        flagRoot = readContentRootFlag(argv);
+        return readContentRootFlag(argv) ?? (env.SYNTACTICAL_CONTENT_ROOT || defaultContentRoot);
     } catch (error) {
         stderr(`${(error as Error).message}\n`);
+        return undefined;
+    }
+}
+
+async function runContentRootCommand(command: 'classify' | 'gap-fill', argv: string[], deps: CliDeps): Promise<number> {
+    const { classify: runClassify, contentDir, createProvider, gapFill: runGapFill, pipelineDir, stdout } = deps;
+    const contentRoot = resolveContentRoot(argv, deps);
+    if (contentRoot === undefined) {
         return 1;
     }
-    const contentRoot = flagRoot ?? (env.SYNTACTICAL_CONTENT_ROOT || defaultContentRoot);
+    const run = command === 'classify' ? runClassify : runGapFill;
     await run({
         contentDir,
         contentRoot,
@@ -106,14 +116,16 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
         });
         return 0;
     }
-    if (command === 'classify') {
-        return runClassify(argv, deps);
+    if (command === 'classify' || command === 'gap-fill') {
+        return runContentRootCommand(command, argv, deps);
     }
     if (command === 'review') {
         return runReview(argv, deps);
     }
     if (command !== 'validate') {
-        stderr('Usage: pipeline validate | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | review [--content-root <path>]\n');
+        stderr(
+            'Usage: pipeline validate | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | gap-fill [--api] [--content-root <path>] | review [--content-root <path>]\n',
+        );
         return 1;
     }
     const report = await validate({
