@@ -5,7 +5,7 @@ import { join, relative, sep } from 'node:path';
 function listFiles(directory: string): string[] {
     return readdirSync(directory, { recursive: true, withFileTypes: true })
         .filter((entry) => entry.isFile())
-        .map((entry) => join(entry.parentPath, entry.name));
+        .map(({ name, parentPath }) => join(parentPath, name));
 }
 
 /**
