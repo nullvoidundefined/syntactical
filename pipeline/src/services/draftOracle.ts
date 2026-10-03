@@ -51,6 +51,6 @@ export async function draftOracle(
         ...(setupSql ? { setupSql } : {}),
         ...(choiceCode && choiceCode.length > 0 ? { choiceCode } : {}),
     };
-    const denied = findRefusedConstruct(oracle);
+    const denied = await findRefusedConstruct(oracle);
     return denied ? { isExecutable: false, reason: `refused: ${denied}` } : oracle;
 }

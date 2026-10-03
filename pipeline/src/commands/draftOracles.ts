@@ -59,10 +59,10 @@ async function saveBank(args: SaveBankArgs): Promise<void> {
 }
 
 // Entries already on disk went through an older check; run the current one and drop what fails.
-function dropRefused(saved: Map<string, Oracle>, bankKey: string, log: (line: string) => void): number {
+async function dropRefused(saved: Map<string, Oracle>, bankKey: string, log: (line: string) => void): Promise<number> {
     let dropped = 0;
     for (const [id, oracle] of saved) {
-        const refused = findRefusedConstruct(oracle);
+        const refused = await findRefusedConstruct(oracle);
         if (refused) {
             saved.delete(id);
             dropped += 1;
@@ -101,7 +101,7 @@ export async function draftOracles(options: DraftOraclesOptions): Promise<void> 
             const file = join(oraclesDir, `${bankKey}.json`);
             // Read the saved file before drafting anything, so a bad file fails fast.
             const kept = await readExistingOracles(file);
-            const dropped = dropRefused(kept, bankKey, log);
+            const dropped = await dropRefused(kept, bankKey, log);
             const oracles = new Map<string, Oracle>();
             try {
                 for (const question of bank.questions) {

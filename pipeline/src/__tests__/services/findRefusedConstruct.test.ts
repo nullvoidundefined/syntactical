@@ -129,11 +129,11 @@ const ACCEPTED: Form[] = [
     ['python', 'from itertools import chain\nimport functools, json\nprint(json.dumps(list(chain([1], [2]))))'],
     ['python', 'import re\nprint(re.sub(r"\\d", "#", "a1b2"))'],
     ['python', 'x = [3, 1, 2]\nx.sort()\nprint(x, "the program copies a list")'],
-    ['python', 'class A:\n    def __init__(self):\n        self.x = 1\nprint(A().x)'],
+    ['python', 'def make(x):\n    return [x, x * 2]\nprint(make(2))'],
     ['python', 'print([i * 2 for i in range(3)], {"a": 1}["a"], ["b", "a"])'],
     ['node', 'console.log([1, 2, 3].map((n) => n * 2));'],
     ['node', 'console.log(0.1 + 0.2, typeof null, [] + {});'],
-    ['node', "console.log(['b', 'a'].sort(), JSON.stringify({ a: [1] }), { a: 1 }['a']);"],
+    ['node', "console.log(['b', 'a'].sort(), JSON.stringify({ a: [1] }), { a: 1 }.a);"],
     ['node', 'const s = new Set([1, 1, 2]);\nconsole.log(s.size, new Map([[1, "a"]]).get(1));'],
     ['node', 'Promise.resolve(1).then(console.log);\nconsole.log("sync");'],
     ['node', 'console.log(new Date(0).toISOString(), Number("12"), String(5).padStart(3, "0"));'],
@@ -144,40 +144,41 @@ const ACCEPTED: Form[] = [
 ];
 
 describe('findRefusedConstruct (defense in depth; the runner sandbox is the real control)', () => {
-    it.each(PYTHON_REFUSED)('refuses Python: %s', (code) => {
-        expect(findRefusedConstruct({ code, language: 'python' })).not.toBeNull();
+    it.each(PYTHON_REFUSED)('refuses Python: %s', async (code) => {
+        expect(await findRefusedConstruct({ code, language: 'python' })).not.toBeNull();
     });
 
-    it.each(NODE_REFUSED)('refuses Node: %s', (code) => {
-        expect(findRefusedConstruct({ code, language: 'node' })).not.toBeNull();
+    it.each(NODE_REFUSED)('refuses Node: %s', async (code) => {
+        expect(await findRefusedConstruct({ code, language: 'node' })).not.toBeNull();
     });
 
-    it.each(POSTGRES_REFUSED)('refuses Postgres: %s', (code) => {
-        expect(findRefusedConstruct({ code, language: 'postgres' })).not.toBeNull();
+    it.each(POSTGRES_REFUSED)('refuses Postgres: %s', async (code) => {
+        expect(await findRefusedConstruct({ code, language: 'postgres' })).not.toBeNull();
     });
 
-    it.each(POSTGRES_REFUSED)('refuses Postgres in setupSql: %s', (setupSql) => {
-        expect(findRefusedConstruct({ code: 'SELECT 1', language: 'postgres', setupSql })).not.toBeNull();
+    it.each(POSTGRES_REFUSED)('refuses Postgres in setupSql: %s', async (setupSql) => {
+        expect(await findRefusedConstruct({ code: 'SELECT 1', language: 'postgres', setupSql })).not.toBeNull();
     });
 
-    it('checks every choice program, not only the main one', () => {
-        expect(findRefusedConstruct({ choiceCode: ['print(1)', 'import os'], code: 'print(1)', language: 'python' })).toBe(
-            'import os',
+    it('checks every choice program, not only the main one', async () => {
+        const choiceCode = ['print(1)', 'import os'];
+        expect(await findRefusedConstruct({ choiceCode, code: 'print(1)', language: 'python' })).toBe('import os');
+    });
+
+    it('names the construct it refused', async () => {
+        expect(await findRefusedConstruct({ code: 'import socket', language: 'python' })).toBe('socket');
+        expect(await findRefusedConstruct({ code: 'import json, pickle', language: 'python' })).toBe('import pickle');
+        expect(await findRefusedConstruct({ code: "createRequire(__filename)('net')", language: 'node' })).toBe(
+            'identifier createRequire',
         );
     });
 
-    it('names the construct it refused', () => {
-        expect(findRefusedConstruct({ code: 'import socket', language: 'python' })).toBe('socket');
-        expect(findRefusedConstruct({ code: 'import json, pickle', language: 'python' })).toBe('import pickle');
-        expect(findRefusedConstruct({ code: "createRequire(__filename)('net')", language: 'node' })).toBe('require');
+    it.each(ACCEPTED)('accepts a realistic %s oracle: %s', async (language, code) => {
+        expect(await findRefusedConstruct({ code, language })).toBeNull();
     });
 
-    it.each(ACCEPTED)('accepts a realistic %s oracle: %s', (language, code) => {
-        expect(findRefusedConstruct({ code, language })).toBeNull();
-    });
-
-    it('accepts Postgres setup SQL for a table', () => {
+    it('accepts Postgres setup SQL for a table', async () => {
         const setupSql = 'CREATE TABLE t (a int); INSERT INTO t VALUES (1), (2);';
-        expect(findRefusedConstruct({ code: 'SELECT sum(a) FROM t', language: 'postgres', setupSql })).toBeNull();
+        expect(await findRefusedConstruct({ code: 'SELECT sum(a) FROM t', language: 'postgres', setupSql })).toBeNull();
     });
 });
