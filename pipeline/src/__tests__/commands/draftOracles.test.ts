@@ -151,6 +151,20 @@ describe('draftOracles', () => {
             expect(await snapshot(root)).toEqual(before);
         });
 
+        it('keeps the rejection message on one line when a manifest key carries a newline', async () => {
+            const forged = 'FORGED: all banks validated';
+            const { run } = await runWith(
+                buildManifest([buildLanguage('python', { [`easy\n${forged}‮`]: buildEntry('python/easy.json', 'free') })]),
+            );
+            const error = await run.then(
+                () => new Error('expected a rejection'),
+                (caught: unknown) => caught as Error,
+            );
+            expect(error.message).toMatch(/^Manifest rejected: languages\[0\]\.banks\.easy /);
+            expect(error.message).toContain(forged);
+            expect(error.message).not.toMatch(/[\n\r‮]/);
+        });
+
         it('skips a language id that merely names an Object.prototype member', async () => {
             const { provider, run } = await runWith(
                 buildManifest([buildLanguage('constructor', { easy: buildEntry('python/easy.json', 'free') })]),

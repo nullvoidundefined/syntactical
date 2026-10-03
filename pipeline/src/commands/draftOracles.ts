@@ -81,7 +81,8 @@ export async function draftOracles(options: DraftOraclesOptions): Promise<void> 
     // (id charset, known difficulties, safe bank paths).
     const checked = validateManifest(await readJson(join(contentDir, 'manifest.json')));
     if ('rule' in checked) {
-        throw new Error(`Manifest rejected: ${checked.rule}`);
+        // The rule text can quote manifest keys; keep it to one clean line.
+        throw new Error(`Manifest rejected: ${sanitizeLogText(checked.rule)}`);
     }
     const { manifest } = checked;
     for (const { banks, id: languageId } of manifest.languages) {
