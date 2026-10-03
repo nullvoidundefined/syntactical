@@ -48,3 +48,22 @@ it('points latest.json at the newest run while keeping older stage files', async
     expect(latest.runId).toBe('run-8');
     expect(await readdir(reportsDir)).toContain('validate-run-7.json');
 });
+
+it('rejects a runId containing a path separator or dot-dot, writing nothing', async () => {
+    for (const runId of ['../escape', 'a/b', 'a\\b', '..']) {
+        await expect(writePipelineReport(reportsDir, { ...REPORT, runId })).rejects.toThrow(/runId/);
+    }
+    await expect(readdir(reportsDir)).rejects.toThrow();
+});
+
+it('rejects a stage containing a path separator or dot-dot', async () => {
+    for (const stage of ['../x', 'a/b', 'a\\b', '..']) {
+        await expect(writePipelineReport(reportsDir, { ...REPORT, stage })).rejects.toThrow(/stage/);
+    }
+});
+
+it('leaves no temp files behind after a write', async () => {
+    await writePipelineReport(reportsDir, REPORT);
+
+    expect((await readdir(reportsDir)).filter((name) => name.includes('.tmp'))).toEqual([]);
+});
