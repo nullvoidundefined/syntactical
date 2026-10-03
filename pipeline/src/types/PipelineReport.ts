@@ -10,4 +10,6 @@ export interface PipelineReport {
     questions: PipelineReportQuestion[];
     counts: Record<string, number>;
     agreement?: Record<string, number>;
+    // Per-bank flags such as `python/easy: wtf-overuse`; ids and flag names only.
+    flags?: string[];
 }

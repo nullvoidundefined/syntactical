@@ -1,0 +1,20 @@
+{
+  "reviewer": "security-reviewer subagent",
+  "model": "claude-fable-5-1",
+  "range": "3a23e9a..96fea3b",
+  "rounds": [
+    { "round": 1, "range": "3a23e9a..63b43ae", "findings": 3 },
+    { "round": 2, "range": "3a23e9a..96fea3b", "findings": 0 }
+  ],
+  "findings": [
+    { "id": 1, "severity": "LOW", "control": "content root containment used lexical paths (symlink, case variant)", "status": "fixed 871e1bf" },
+    { "id": 2, "severity": "LOW", "control": "content root could be the repo root or the public content dir", "status": "fixed 871e1bf" },
+    { "id": 3, "severity": "LOW", "control": "review-queue files keyed by id alone", "status": "fixed 2bb1f24" }
+  ],
+  "nothingFound": [
+    "real-path content root guard: symlink, case variant, ..private inside and beside, repo root, content dir, repo parent, missing path, regular file",
+    "paid text through model echo: extra reason field and invalid-output issue carrying the whole prompt never reach a file, report, or log",
+    "duplicate ids: case variants and exact duplicates within a bank, the same id across banks",
+    "manifest-derived paths, question id file names, prompt data boundary, model output schema, content-root flag and env parsing, log sanitization, report file names, report carry-forward, model provider env filter"
+  ]
+}

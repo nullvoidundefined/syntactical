@@ -7,19 +7,13 @@ import type { Question } from '@syntactical/content-schema';
 
 import type { OracleLanguage } from '../types/OracleLanguage.js';
 
+import { serializeQuestionData } from './serializeQuestionData.js';
+
 const TEMPLATE_URL = new URL('../../prompts/draftOracle.md', import.meta.url);
-
-const JSON_INDENT = 2;
-
-function toQuestionData(question: Question): string {
-    const { code, prompt } = question;
-    const choices = 'choices' in question ? question.choices : undefined;
-    return JSON.stringify({ choices, code, prompt }, null, JSON_INDENT).replaceAll('<', '\\u003c');
-}
 
 export async function buildDraftPrompt(question: Question, language: OracleLanguage): Promise<string> {
     const template = await readFile(TEMPLATE_URL, 'utf8');
     return template
         .replaceAll('{{LANGUAGE}}', language)
-        .replace('{{QUESTION_DATA}}', () => toQuestionData(question));
+        .replace('{{QUESTION_DATA}}', () => serializeQuestionData(question));
 }

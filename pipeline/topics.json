@@ -1,0 +1,39 @@
+{
+    "javascript": [
+        "operators-and-types",
+        "numbers-and-math",
+        "strings",
+        "iterables",
+        "data-structures",
+        "functions-and-scope",
+        "errors-and-control-flow",
+        "async-and-concurrency",
+        "optimization",
+        "wtf"
+    ],
+    "postgres": [
+        "operators-and-types",
+        "numbers-and-math",
+        "strings",
+        "iterables",
+        "data-structures",
+        "functions-and-scope",
+        "errors-and-control-flow",
+        "async-and-concurrency",
+        "optimization",
+        "wtf",
+        "security"
+    ],
+    "python": [
+        "operators-and-types",
+        "numbers-and-math",
+        "strings",
+        "iterables",
+        "data-structures",
+        "functions-and-scope",
+        "errors-and-control-flow",
+        "async-and-concurrency",
+        "optimization",
+        "wtf"
+    ]
+}
