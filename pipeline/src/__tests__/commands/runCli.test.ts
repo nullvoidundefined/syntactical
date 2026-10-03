@@ -9,7 +9,14 @@ const PROVIDER = { generate: async () => ({ model: 'm', value: {} }) } as unknow
 
 function buildDeps(
     env: Record<string, string | undefined> = {},
-): CliDeps & { kinds: string[]; drafted: number; err: string[]; languages: string[]; roots: string[] } {
+): CliDeps & {
+    kinds: string[];
+    drafted: number;
+    err: string[];
+    gapRoots: string[];
+    languages: string[];
+    roots: string[];
+} {
     const deps = {
         classify: async (options: { contentRoot: string }) => {
             deps.roots.push(options.contentRoot);
@@ -24,6 +31,11 @@ function buildDeps(
         draft: async () => {
             deps.drafted += 1;
         },
+        gapFill: async (options: { contentRoot: string }) => {
+            deps.gapRoots.push(options.contentRoot);
+            return {} as never;
+        },
+        gapRoots: [] as string[],
         drafted: 0,
         draftTaxonomy: async (options: { language: string }) => {
             deps.languages.push(options.language);
@@ -109,5 +121,22 @@ describe('runCli', () => {
         expect(deps.err.join('')).toContain('--content-root needs a path');
         expect(deps.roots).toEqual([]);
         expect(deps.kinds).toEqual([]);
+    });
+
+    it('gap-fill uses the --api provider and the content root flag, then env, then default', async () => {
+        const argv = ['node', 'cli.ts', 'gap-fill'];
+        const withFlag = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
+        await runCli([...argv, '--api', '--content-root', '/flag-root'], withFlag);
+        const withEnv = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
+        await runCli(argv, withEnv);
+        const withDefault = buildDeps();
+        await runCli(argv, withDefault);
+        expect([withFlag.gapRoots, withEnv.gapRoots, withDefault.gapRoots]).toEqual([
+            ['/flag-root'],
+            ['/env-root'],
+            ['/default-root'],
+        ]);
+        expect(withFlag.kinds).toEqual(['api']);
+        expect(withFlag.roots).toEqual([]);
     });
 });

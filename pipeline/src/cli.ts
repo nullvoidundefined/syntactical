@@ -5,6 +5,7 @@ import { createModelProvider } from './clients/modelProvider.js';
 import { classify } from './commands/classify.js';
 import { draftOracles } from './commands/draftOracles.js';
 import { draftTaxonomy } from './commands/draftTaxonomy.js';
+import { gapFill } from './commands/gapFill.js';
 import { runCli } from './commands/runCli.js';
 import { validateContent } from './commands/validate.js';
 
@@ -18,6 +19,7 @@ process.exitCode = await runCli(argv, {
     draft: draftOracles,
     draftTaxonomy,
     env,
+    gapFill,
     pipelineDir: fileURLToPath(new URL('../', import.meta.url)),
     stderr: (text) => stderr.write(text),
     stdout: (text) => stdout.write(text),
