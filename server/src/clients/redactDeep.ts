@@ -5,13 +5,16 @@ const MAX_DEPTH = 8;
 const SENSITIVE_WORDS = ['authorization', 'cookie', 'email', 'otp', 'password', 'secret', 'token'];
 // pg error payload fields, which can quote row values such as an email.
 const PG_PAYLOAD_KEYS = new Set(['column', 'datatype', 'detail', 'hint', 'internalposition', 'internalquery', 'routine', 'stack', 'where']);
-// On an object carrying any error or pg metadata key, its message is censored too.
-const ERROR_SHAPE_KEYS = ['code', 'constraint', 'detail', 'hint', 'routine', 'severity', 'stack', 'where'];
 // Keys ending in "code" are one-time codes unless they are one of these readable codes.
 const READABLE_CODE_KEYS = new Set(['pgcode', 'statuscode']);
 
 function isSensitiveKey(key: string): boolean {
   const lowered = key.toLowerCase();
+  // Every key named message is censored in any case, whatever its siblings: guessing an error
+  // shape from sibling keys kept missing shapes. Log text belongs in the logger's msg instead.
+  if (lowered === 'message') {
+    return true;
+  }
   if (PG_PAYLOAD_KEYS.has(lowered) || SENSITIVE_WORDS.some((word) => lowered.includes(word))) {
     return true;
   }
@@ -41,11 +44,9 @@ function isWalkable(value: unknown): value is object {
 }
 
 function walkObject(value: Record<string, unknown>, depth: number, seen: WeakSet<object>): Record<string, unknown> {
-  const isErrorShaped = ERROR_SHAPE_KEYS.some((key) => key in value);
   return Object.fromEntries(
     Object.entries(value).map(([key, item]) => {
-      const isCensored = isSensitiveKey(key) || (isErrorShaped && key === 'message');
-      return [key, isCensored ? CENSOR : walk(item, depth + 1, seen)];
+      return [key, isSensitiveKey(key) ? CENSOR : walk(item, depth + 1, seen)];
     }),
   );
 }
