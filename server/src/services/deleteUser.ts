@@ -4,9 +4,10 @@
 // Lock order matches sign-in (email advisory lock, then rows) so the two cannot deadlock: the
 // email's one-time codes go, the user row is locked, purchase payloads naming the email or id are
 // scrubbed in place (rows linked to the user, plus rows whose payload carries the email as a whole
-// address or the id; a row linked to another user is scrubbed match-only), the email's rate-limit counters go, then the user row is deleted (sessions,
-// answer events, progress, and goal changes cascade; entitlements and purchase_events user_id go
-// null by foreign key). Resolves false when no such user exists. Nothing here logs the email or id.
+// address or the id; a row linked to another user is scrubbed match-only; candidates are read
+// without a row lock, and only the chosen rows are locked, in key order, and re-read), the email's
+// rate-limit counters go, then the user row is deleted (sessions, answer events, progress, and goal
+// changes cascade; entitlements and purchase_events user_id go null by foreign key). Resolves false when no such user exists. Nothing here logs the email or id.
 import type pg from 'pg';
 
 import { AUTH } from '../constants/auth.js';
@@ -36,15 +37,30 @@ function containsPattern(value: string): string {
 async function scrubPurchaseEvents(client: pg.PoolClient, identity: { email: string; userId: string }): Promise<void> {
   const { email, userId } = identity;
   // The SQL is a superset (it also folds NFKC forms and takes every payload holding a `%`, which may carry the
-  // email or id percent-encoded); the JS predicate decides which rows change.
-  const { rows } = await client.query<PurchaseEventRow>(
+  // email or id percent-encoded); it takes no row lock. The JS predicate chooses the rows, and only those are locked.
+  const { rows: candidates } = await client.query<PurchaseEventRow>(
     `SELECT provider, provider_event_id, payload, user_id FROM purchase_events
      WHERE user_id = $1
         OR lower(normalize(payload::text, NFKC)) LIKE $2 ESCAPE '\\'
         OR lower(normalize(payload::text, NFKC)) LIKE $3 ESCAPE '\\'
-        OR payload::text LIKE '%\\%%' ESCAPE '\\'
-     FOR UPDATE`,
+        OR payload::text LIKE '%\\%%' ESCAPE '\\'`,
     [userId, containsPattern(email), containsPattern(userId)],
+  );
+  const chosen = candidates.filter(
+    ({ payload, user_id: rowUserId }) => rowUserId === userId || carriesPurchaseIdentity(payload, identity),
+  );
+  if (chosen.length === 0) {
+    return;
+  }
+  // The locked read is authoritative: a row that changed since the candidate read is judged from this version.
+  const { rows } = await client.query<PurchaseEventRow>(
+    `SELECT target.provider, target.provider_event_id, target.payload, target.user_id
+     FROM purchase_events AS target
+     JOIN unnest($1::text[], $2::text[]) AS chosen(provider, provider_event_id)
+       ON target.provider = chosen.provider AND target.provider_event_id = chosen.provider_event_id
+     ORDER BY target.provider, target.provider_event_id
+     FOR UPDATE OF target`,
+    [chosen.map(({ provider }) => provider), chosen.map(({ provider_event_id: providerEventId }) => providerEventId)],
   );
   const changed = rows
     .filter(({ payload, user_id: rowUserId }) => rowUserId === userId || carriesPurchaseIdentity(payload, identity))
