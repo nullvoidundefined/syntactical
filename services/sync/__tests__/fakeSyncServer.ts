@@ -4,7 +4,7 @@
 // (server/src/routes/answerEvents.ts) through syncServerResponses.ts: the
 // POST 200 totals body, the GET page body, and the error envelope with its
 // codes, in the server's check order (rate limit, batch size, body schema,
-// answer key, timestamps, event cap).
+// answer key, user row lock, timestamps, event cap).
 import { randomUUID } from 'node:crypto';
 
 import type { AnswerEvent } from '@syntactical/progress';
@@ -17,6 +17,7 @@ import {
   buildErrorResponse,
   buildRejectedEvents,
   buildUploadSuccess,
+  buildUserBusy,
   SERVER_ERROR_CODES,
 } from './syncServerResponses';
 import type { ServerResponse } from './syncServerResponses';
@@ -31,6 +32,9 @@ export type RecordedRequest = { body: unknown; method: string; path: string };
 type PostOverride = FakeResponse | 'throw' | 'store-then-throw' | undefined;
 
 type FakeServerOptions = {
+  // POST numbers (1-based) answered 429 SYNC_USER_BUSY with Retry-After, storing nothing,
+  // as when another upload holds the user's row lock.
+  busyPostNumbers?: ReadonlySet<number>;
   // Requests allowed per route before the server answers 429 RATE_LIMIT_EXCEEDED.
   downloadLimit?: number;
   // The stored-event cap: a batch that would pass it is 422 SYNC_EVENT_CAP_REACHED.
@@ -184,6 +188,7 @@ export function createFakeSyncServer(options: FakeServerOptions = {}) {
     if (override) return override;
     const invalid = namedIn(events, options.rejectedEventIds);
     if (invalid.length > 0) return buildRejectedEvents(SERVER_ERROR_CODES.INVALID_EVENTS, invalid);
+    if (options.busyPostNumbers?.has(postCount)) return buildUserBusy();
     const outOfRange = namedIn(events, options.outOfRangeEventIds);
     if (outOfRange.length > 0) return buildRejectedEvents(SERVER_ERROR_CODES.TIMESTAMP_OUT_OF_RANGE, outOfRange);
     const fresh = new Set(events.map(({ eventId }) => eventId).filter((id) => !stored.has(id)));

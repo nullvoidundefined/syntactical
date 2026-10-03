@@ -4,7 +4,8 @@
 // middleware/requireSession.ts) so client tests never hand-write a body.
 import type { AnswerEvent, DailyProgress } from '@syntactical/progress';
 
-export type ServerResponse = { status: number; body: unknown };
+// headers carries the response headers the server sets, such as Retry-After.
+export type ServerResponse = { status: number; body: unknown; headers?: Record<string, string> };
 
 export const SERVER_ERROR_CODES = {
   EVENT_CAP_REACHED: 'SYNC_EVENT_CAP_REACHED',
@@ -17,6 +18,7 @@ export const SERVER_ERROR_CODES = {
   RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
   SESSION_REQUIRED: 'AUTH_SESSION_REQUIRED',
   TIMESTAMP_OUT_OF_RANGE: 'SYNC_TIMESTAMP_OUT_OF_RANGE',
+  USER_BUSY: 'SYNC_USER_BUSY',
 } as const;
 
 export type ServerErrorCode = (typeof SERVER_ERROR_CODES)[keyof typeof SERVER_ERROR_CODES];
@@ -44,6 +46,7 @@ const ERROR_DETAILS: Record<ServerErrorCode, { message: string; status: number }
   SYNC_EVENT_CAP_REACHED: { message: 'Stored event limit reached', status: SERVER_STATUS.UNPROCESSABLE },
   SYNC_INVALID_EVENTS: { message: 'Events do not match the answer key', status: SERVER_STATUS.UNPROCESSABLE },
   SYNC_TIMESTAMP_OUT_OF_RANGE: { message: 'Event timestamps out of range', status: SERVER_STATUS.UNPROCESSABLE },
+  SYNC_USER_BUSY: { message: 'Another sync is in progress; retry shortly', status: SERVER_STATUS.TOO_MANY_REQUESTS },
 };
 
 // The 422 codes whose body names the offending events.
@@ -53,6 +56,9 @@ export const CODES_WITH_EVENT_IDS: readonly ServerErrorCode[] = [
 ];
 
 export const FAKE_REQUEST_ID = 'req-fake-0001';
+
+// SYNC.BUSY_RETRY_AFTER_SECONDS in server/src/constants/sync.ts.
+export const BUSY_RETRY_AFTER_SECONDS = 1;
 
 // The upload totals after a stored batch; the client reads none of the numbers,
 // so they are fixed and only insertedCount varies.
@@ -89,6 +95,13 @@ export function buildErrorResponse(
   status: number = ERROR_DETAILS[code].status,
 ): ServerResponse {
   return { status, body: { error: { ...details, code, message: ERROR_DETAILS[code].message, requestId: FAKE_REQUEST_ID } } };
+}
+
+// POST /v1/answer-events 429 while another upload or profile update holds the
+// user's row lock (routes/answerEvents.ts): SYNC_USER_BUSY with Retry-After in
+// seconds; nothing is stored.
+export function buildUserBusy(): ServerResponse {
+  return { ...buildErrorResponse(SERVER_ERROR_CODES.USER_BUSY), headers: { 'Retry-After': String(BUSY_RETRY_AFTER_SECONDS) } };
 }
 
 // A 422 naming the offending events, as SYNC_INVALID_EVENTS or SYNC_TIMESTAMP_OUT_OF_RANGE.
