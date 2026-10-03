@@ -1,14 +1,15 @@
 {
   "reviewer": "security-reviewer subagent",
   "model": "claude-fable-5-1",
-  "range": "6c2e099..73c041e",
+  "range": "6c2e099..a98d4c6",
   "rounds": [
     { "round": 1, "range": "6c2e099..4a43a1c", "findings": 4 },
     { "round": 2, "range": "6c2e099..6029e32", "findings": 4 },
     { "round": 3, "range": "6c2e099..d6787c6", "findings": 3 },
     { "round": 4, "range": "6c2e099..fc6c412", "findings": 2 },
     { "round": 5, "range": "6c2e099..15c167d", "findings": 1 },
-    { "round": 6, "range": "6c2e099..73c041e", "findings": 1 }
+    { "round": 6, "range": "6c2e099..73c041e", "findings": 1 },
+    { "round": 7, "range": "6c2e099..a98d4c6", "findings": 0, "scope": "merge 3546ee7 lock resolution and clean merge a98d4c6: branch content preserved byte for byte, only main's content added, every lock entry from one parent at its version, all resolved URLs on registry.npmjs.org" }
   ],
   "ownerDecisions": [
     "2026-10-03: standing waiver for LOW findings contained within the control's acceptance boundary; log redaction covers the spec's named fields at any depth"
