@@ -9,6 +9,7 @@ import { serializeQuestionData } from '../serializeQuestionData.js';
 
 import { describeCorrectAnswer } from './describeCorrectAnswer.js';
 import { escapeForPrompt } from './escapeForPrompt.js';
+import { fillTemplate } from './fillTemplate.js';
 import { wrongChoiceIndexes } from './wrongChoiceIndexes.js';
 
 const TEMPLATE_URL = new URL('../../../prompts/writeRationales.md', import.meta.url);
@@ -19,11 +20,12 @@ export async function buildRationalesPrompt(
     taxonomy: readonly TaxonomyEntry[],
 ): Promise<string> {
     const template = await readFile(TEMPLATE_URL, 'utf8');
-    return template
-        .replace('{{CORRECT}}', () => describeCorrectAnswer(question))
-        .replace('{{LENGTH}}', () => String(CONTENT_LIMITS.rationaleLength))
-        .replace('{{OBSERVED}}', () => escapeForPrompt(observed))
-        .replace('{{QUESTION_DATA}}', () => serializeQuestionData(question))
-        .replace('{{TAXONOMY}}', () => taxonomy.map(({ description, id }) => `- ${id}: ${description}`).join('\n'))
-        .replace('{{WRONG}}', () => wrongChoiceIndexes(question).join(', '));
+    return fillTemplate(template, {
+        CORRECT: describeCorrectAnswer(question),
+        LENGTH: String(CONTENT_LIMITS.rationaleLength),
+        OBSERVED: escapeForPrompt(observed),
+        QUESTION_DATA: serializeQuestionData(question),
+        TAXONOMY: taxonomy.map(({ description, id }) => `- ${id}: ${description}`).join('\n'),
+        WRONG: wrongChoiceIndexes(question).join(', '),
+    });
 }

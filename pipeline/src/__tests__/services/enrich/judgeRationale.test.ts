@@ -39,6 +39,15 @@ describe('judgeRationale', () => {
         expect(provider.prompts[0]).toContain('RATIONALE-TEXT-5543');
     });
 
+    it('keeps a placeholder inside the question literal instead of filling it with the rationale', async () => {
+        const provider = reply({ isConsistent: true, reason: 'ok' });
+        const hostile: Question = { ...QUESTION, prompt: 'see {{RATIONALE}}' };
+        await judgeRationale(hostile, 'o', 'RATIONALE-TEXT-5543', provider);
+        const [prompt] = provider.prompts as [string];
+        expect(prompt).toContain('see {{RATIONALE}}');
+        expect(prompt.split('RATIONALE-TEXT-5543')).toHaveLength(2);
+    });
+
     it('rejects a verdict that is not a boolean', async () => {
         await expect(judgeRationale(QUESTION, 'o', 'r', reply({ isConsistent: 'yes', reason: 'x' }))).rejects.toThrow();
     });
