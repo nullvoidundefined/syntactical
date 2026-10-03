@@ -64,6 +64,13 @@ const REFUSED: string[] = [
     "console.log([][({ length: 'constr' }).length + ({ length: 'uctor' }).length]);",
     'console.log([][1 + {}.x]);',
     'const i = 0;\nconsole.log([][i]);',
+    // Unicode escapes, built names, and string timers
+    "console.log([]['\\u0063onstructor']);",
+    'console.log([][String.fromCharCode(99, 111, 110)]);',
+    'console.log(String.fromCharCode(99, 111, 110));',
+    'console.log(String.fromCodePoint(99));',
+    "setTimeout('console.log(1)', 0);",
+    'const fn = function () {};\nconsole.log(Object.getPrototypeOf(fn));',
     // Reflection without a computed key
     "console.log(Object.getOwnPropertyDescriptor(Object.getPrototypeOf(function () {}), 'constr' + 'uctor').value('return proc' + 'ess')());",
     'console.log(Object.getPrototypeOf(async function () {}));',

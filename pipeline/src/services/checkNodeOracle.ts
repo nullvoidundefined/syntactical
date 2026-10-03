@@ -55,6 +55,8 @@ const BANNED_MEMBERS = new Set([
     'callee',
     'caller',
     'defineProperties',
+    'fromCharCode',
+    'fromCodePoint',
     'defineProperty',
     'getOwnPropertyDescriptor',
     'getOwnPropertyDescriptors',
