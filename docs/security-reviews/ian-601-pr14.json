@@ -1,0 +1,25 @@
+{
+  "reviewer": "security-reviewer subagent",
+  "model": "claude-fable-5-1",
+  "range": "609a3a0..b500f53",
+  "rounds": [
+    { "round": 1, "range": "609a3a0..b41184d", "findings": 2 },
+    { "round": 2, "range": "609a3a0..af89615", "findings": 2 },
+    { "round": 3, "range": "609a3a0..b500f53", "findings": 0 }
+  ],
+  "findings": [
+    { "id": 1, "severity": "HIGH", "control": "Postgres oracle ran as superuser; COPY TO forged result.json, COPY TO PROGRAM and pg_read_file worked", "status": "fixed 90559a6" },
+    { "id": 2, "severity": "MEDIUM", "control": "runner image tag never changed, so an edited harness reused a stale image", "status": "fixed e3edfd5" },
+    { "id": 3, "severity": "LOW", "control": "oracle language not checked against the closed union before path building", "status": "fixed 12f1e97" },
+    { "id": 4, "severity": "MEDIUM", "control": "no test fed SET ROLE runner, SET SESSION AUTHORIZATION, CREATE EXTENSION dblink, lo_export to the oracle role", "status": "fixed b500f53" },
+    { "id": 5, "severity": "MEDIUM", "control": "container-leak assertions filtered on the stale :1 tag and passed vacuously", "status": "fixed b500f53" }
+  ],
+  "nothingFound": [
+    "Runner sandbox flags: tried --privileged, -v /:/host, --network host, --user 0:0, --cap-add ALL injected via code, setupSql, choiceCode; none reaches argv",
+    "Oracle language validation: tried ../../etc, ruby, empty string, python/../node; all refused before Docker",
+    "Result-line forgery: tried forged JSON on fd 1 then os._exit, sys.__stdout__, closing fd 1, Postgres COPY to result.json, padded forged line",
+    "Postgres superuser-only capabilities: tried COPY TO PROGRAM, pg_read_file, lo_export, COPY to harness files, CREATE EXTENSION dblink and file_fdw, SET ROLE, SET SESSION AUTHORIZATION; all 42501",
+    "Image tag integrity: tried edited, renamed, moved context files; each changes the tag",
+    "Timeout and kill: tried timeoutMs above the 6000 ms clamp, SIGTERM-ignoring loop, grandchild holding the pipe, pg_sleep(30), fork bomb; killed with no container left"
+  ]
+}
