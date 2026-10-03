@@ -7,6 +7,7 @@ import { dirname, join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { draftOracles } from '../../commands/draftOracles.js';
+import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 
 const HASH = '0123456789abcdef'.repeat(4);
@@ -207,6 +208,40 @@ describe('draftOracles', () => {
             await writeFile(join(oraclesDir, PYTHON_FILE), '{ not json');
             await expect(draftOracles({ contentDir, log, oraclesDir, provider: scripted() })).rejects.toThrow();
             expect(await readFile(join(oraclesDir, PYTHON_FILE), 'utf8')).toBe('{ not json');
+        });
+    });
+
+    describe('model failures', () => {
+        function failingOn(questionId: string, error: Error): ModelProvider {
+            const inner = scripted();
+            return {
+                async generate(request) {
+                    if (request.prompt.includes(`prompt ${questionId}`)) {
+                        throw error;
+                    }
+                    return inner.generate(request);
+                },
+            };
+        }
+
+        it('omits a question whose model output is invalid, still writes the rest, and logs it', async () => {
+            const provider = failingOn('p-1', new ModelOutputInvalid('v1', 'not json'));
+            await draftOracles({ contentDir, log, oraclesDir, provider });
+            expect(await snapshot(oraclesDir)).toEqual({
+                'javascript/easy.json': `${JSON.stringify({ 'j-1': { code: 'print(1)', language: 'node' } }, null, 2)}\n`,
+            });
+            expect(logs.some((line) => line.includes('p-1') && line.includes('model output invalid'))).toBe(true);
+        });
+
+        it('propagates any other error, after saving what the bank drafted so far', async () => {
+            await writeContent(contentDir, {
+                'python/easy.json': { questions: [buildQuestion('p-0'), buildQuestion('p-1'), buildQuestion('p-2')] },
+            });
+            const provider = failingOn('p-1', new Error('network down'));
+            await expect(draftOracles({ contentDir, log, oraclesDir, provider })).rejects.toThrow('network down');
+            const saved = JSON.parse(await readFile(join(oraclesDir, 'python', 'easy.json'), 'utf8')) as object;
+            expect(Object.keys(saved)).toEqual(['p-0']);
+            expect(await readdir(oraclesDir)).toEqual(['python']);
         });
     });
 });

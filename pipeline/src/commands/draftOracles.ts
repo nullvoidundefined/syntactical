@@ -44,6 +44,28 @@ async function readExistingOracles(file: string): Promise<Record<string, Oracle>
     }
 }
 
+interface SaveBankArgs {
+    bankKey: string;
+    file: string;
+    log: (line: string) => void;
+    oracles: Record<string, Oracle>;
+    total: number;
+}
+
+async function saveBank(args: SaveBankArgs): Promise<void> {
+    const { bankKey, file, log, oracles, total } = args;
+    const draftedCount = Object.keys(oracles).length;
+    if (draftedCount === 0) {
+        log(`${bankKey}: nothing drafted, existing file left as is`);
+        return;
+    }
+    // Merge into what is already there: a rerun never deletes an oracle it did not redraft.
+    const merged = { ...(await readExistingOracles(file)), ...oracles };
+    await mkdir(dirname(file), { recursive: true });
+    await writeFile(file, `${JSON.stringify(merged, null, JSON_INDENT)}\n`);
+    log(`${bankKey}: ${draftedCount} of ${total} oracles drafted, ${Object.keys(merged).length} in file`);
+}
+
 export async function draftOracles(options: DraftOraclesOptions): Promise<void> {
     const { contentDir, log, oraclesDir, provider } = options;
     // The manifest is untrusted: its language ids, difficulty keys, and bank paths are
@@ -68,31 +90,26 @@ export async function draftOracles(options: DraftOraclesOptions): Promise<void> 
             const bank = (await readJson(join(contentDir, path))) as { questions: Question[] };
             const file = join(oraclesDir, `${bankKey}.json`);
             const oracles: Record<string, Oracle> = {};
-            for (const question of bank.questions) {
-                try {
-                    const drafted = await draftOracle(question, language, provider);
-                    if ('isExecutable' in drafted) {
-                        log(`${bankKey} ${question.id}: not executable (${drafted.reason})`);
-                    } else {
-                        oracles[question.id] = drafted;
+            try {
+                for (const question of bank.questions) {
+                    try {
+                        const drafted = await draftOracle(question, language, provider);
+                        if ('isExecutable' in drafted) {
+                            log(`${bankKey} ${question.id}: not executable (${drafted.reason})`);
+                        } else {
+                            oracles[question.id] = drafted;
+                        }
+                    } catch (error) {
+                        if (!(error instanceof ModelOutputInvalid)) {
+                            throw error;
+                        }
+                        log(`${bankKey} ${question.id}: model output invalid (${error.message})`);
                     }
-                } catch (error) {
-                    if (!(error instanceof ModelOutputInvalid)) {
-                        throw error;
-                    }
-                    log(`${bankKey} ${question.id}: model output invalid (${error.message})`);
                 }
+            } finally {
+                // An error that stops the run still saves what this bank drafted so far.
+                await saveBank({ bankKey, file, log, oracles, total: bank.questions.length });
             }
-            const draftedCount = Object.keys(oracles).length;
-            if (draftedCount === 0) {
-                log(`${bankKey}: nothing drafted, existing file left as is`);
-                continue;
-            }
-            // Merge into what is already there: a rerun never deletes an oracle it did not redraft.
-            const merged = { ...(await readExistingOracles(file)), ...oracles };
-            await mkdir(dirname(file), { recursive: true });
-            await writeFile(file, `${JSON.stringify(merged, null, JSON_INDENT)}\n`);
-            log(`${bankKey}: ${draftedCount} of ${bank.questions.length} oracles drafted, ${Object.keys(merged).length} in file`);
         }
     }
 }
