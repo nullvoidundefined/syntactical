@@ -50,15 +50,13 @@ describe('QuizRound with the real stats provider', () => {
     expect(screen.getByTestId('completions').props.children).toBe('1');
   });
 
-  it('records no completion for a round with no playable questions (A/B only until Stage 5)', async () => {
-    const abOnly = [
-      { answerIndex: 0, choices: [{ text: 'a' }, { text: 'b' }], criterion: { evidence: 'e', statement: 's', type: 'performance' }, id: 'q-ab', prompt: 'p', provenance: questions[0].provenance, query: questions[0].query, type: 'ab' },
-    ] as unknown as Question[];
+  it('records no completion for a round with no questions', async () => {
+    const noQuestions: Question[] = [];
     await render(
       <StatsProvider>
         <CompletionsProbe />
         <AfterHydration>
-          <QuizRound language="python" languageLabel="Python" difficulty="easy" difficultyLabel="Easy" grammar="python" questions={abOnly} onExit={() => undefined} onRetry={() => undefined} />
+          <QuizRound language="python" languageLabel="Python" difficulty="easy" difficultyLabel="Easy" grammar="python" questions={noQuestions} onExit={() => undefined} onRetry={() => undefined} />
         </AfterHydration>
       </StatsProvider>,
     );

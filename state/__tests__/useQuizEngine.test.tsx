@@ -68,7 +68,7 @@ describe('useQuizEngine', () => {
     expect(result.current.isAnswered).toBe(true);
   });
 
-  it('never presents an A/B question and counts only the playable ones', async () => {
+  it('presents an A/B question, counts it, and scores it by its answer index', async () => {
     const abQuestion = {
       answerIndex: 0,
       choices: [{ text: 'fast' }, { text: 'slow' }],
@@ -79,20 +79,22 @@ describe('useQuizEngine', () => {
       query,
       type: 'ab',
     } as Question;
-    const { result } = await renderHook(() => useQuizEngine([abQuestion, ...questions]));
-    const seenIds: string[] = [];
-    while (!result.current.isComplete) {
-      seenIds.push(result.current.currentQuestion!.id);
-      await act(async () => { result.current.submitAnswer(true); });
-      await act(async () => { result.current.advanceQuestion(); });
-    }
-    expect(seenIds.sort()).toEqual(['q-1', 'q-2']);
-    expect(result.current.totalQuestions).toBe(2);
+    const { result } = await renderHook(() => useQuizEngine([abQuestion]));
+    expect(result.current.currentQuestion?.id).toBe('q-ab');
+    expect(result.current.totalQuestions).toBe(1);
+    let outOfRange: boolean | null = true;
+    let wrongKind: boolean | null = true;
+    let verdict: boolean | null = null;
+    await act(async () => { outOfRange = result.current.submitAnswer(2); });
+    await act(async () => { wrongKind = result.current.submitAnswer(true); });
+    expect([outOfRange, wrongKind]).toEqual([null, null]);
+    await act(async () => { verdict = result.current.submitAnswer(1); });
+    expect(verdict).toBe(false);
+    expect(result.current.wasCorrect).toBe(false);
   });
 
-  it('completes immediately when a bank holds only A/B questions', async () => {
-    const onlyAb = [{ answerIndex: 0, choices: [{ text: 'a' }, { text: 'b' }], criterion: { evidence: 'e', statement: 's', type: 'performance' }, id: 'q-ab', prompt: 'p', provenance: TEST_PROVENANCE, query, type: 'ab' }] as Question[];
-    const { result } = await renderHook(() => useQuizEngine(onlyAb));
+  it('completes immediately when the bank holds no questions', async () => {
+    const { result } = await renderHook(() => useQuizEngine([]));
     expect(result.current.currentQuestion).toBeNull();
     expect(result.current.totalQuestions).toBe(0);
   });

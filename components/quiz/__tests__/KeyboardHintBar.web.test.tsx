@@ -9,6 +9,12 @@ describe('KeyboardHintBar on the web', () => {
     expect(screen.queryByText('ENTER')).toBeNull();
   });
 
+  it('lists only A and B (and 1 and 2) for an unanswered A/B question', () => {
+    render(<KeyboardHintBar questionType="ab" isAnswered={false} />);
+    expect(screen.queryByText('1-2 / A-B')).not.toBeNull();
+    expect(screen.queryByText('1-4 / A-D')).toBeNull();
+  });
+
   it('lists T and F for an unanswered boolean question', () => {
     render(<KeyboardHintBar questionType="bool" isAnswered={false} />);
     expect(screen.queryByText('T / F')).not.toBeNull();

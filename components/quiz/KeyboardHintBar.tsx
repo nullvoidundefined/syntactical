@@ -2,7 +2,7 @@
 // nothing on native, where there is no keyboard to hint at.
 import { Platform, Text, View } from 'react-native';
 
-type KeyboardHintBarProps = { isAnswered: boolean; questionType: 'bool' | 'mc' };
+type KeyboardHintBarProps = { isAnswered: boolean; questionType: 'ab' | 'bool' | 'mc' };
 
 function Hint({ keys, label }: { keys: string; label: string }) {
   return (
@@ -14,6 +14,7 @@ function Hint({ keys, label }: { keys: string; label: string }) {
 }
 
 function readAnswerHint(questionType: KeyboardHintBarProps['questionType']): string {
+  if (questionType === 'ab') return '1-2 / A-B';
   return questionType === 'mc' ? '1-4 / A-D' : 'T / F';
 }
 
