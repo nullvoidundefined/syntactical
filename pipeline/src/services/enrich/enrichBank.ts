@@ -7,15 +7,18 @@ import { join } from 'node:path';
 
 import type { EnrichBankArgs } from '../../types/EnrichBankArgs.js';
 import type { EnrichBankResult } from '../../types/EnrichBankResult.js';
-import type { EnrichedRationale } from '../../types/EnrichedRationale.js';
 import { writeJsonAtomic } from '../classify/writeJsonAtomic.js';
 
 import { enrichQuestion } from './enrichQuestion.js';
+import { readEnrichment } from './readEnrichment.js';
 
 export async function enrichBank(args: EnrichBankArgs): Promise<EnrichBankResult> {
     const { bankKey, difficulty, languageId, log, observe, outRoot, provider, questions, taxonomy } = args;
     const result: EnrichBankResult = { accepted: 0, agreed: 0, compared: 0, contradicted: 0, dropped: 0 };
-    const enriched = new Map<string, EnrichedRationale[]>();
+    const file = join(outRoot, 'enrichment', languageId, `${difficulty}.json`);
+    // Merge into the earlier file: a question skipped or fully dropped now keeps what it had.
+    const enriched = await readEnrichment(file);
+    let freshCount = 0;
     for (const question of questions) {
         const { id } = question;
         const observed = await observe(question);
@@ -38,12 +41,13 @@ export async function enrichBank(args: EnrichBankArgs): Promise<EnrichBankResult
         }
         if (accepted.length > 0) {
             enriched.set(id, accepted);
+            freshCount += 1;
         }
     }
-    await writeJsonAtomic(
-        join(outRoot, 'enrichment', languageId, `${difficulty}.json`),
-        Object.fromEntries(enriched),
-    );
-    log(`${bankKey}: ${result.accepted} rationales written for ${enriched.size} of ${questions.length} questions`);
+    // A run that enriched nothing leaves the file alone (no `{}` over earlier results).
+    if (freshCount > 0) {
+        await writeJsonAtomic(file, Object.fromEntries(enriched));
+    }
+    log(`${bankKey}: ${result.accepted} rationales written for ${freshCount} of ${questions.length} questions`);
     return result;
 }

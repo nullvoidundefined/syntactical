@@ -235,9 +235,32 @@ describe('enrich', () => {
     it('skips a question whose model output the schema rejects', async () => {
         await seed({ 'easy:free': [buildBool('q-1', 'p1')] });
         const report = await run(scripted({ tag: () => 'python.not-in-taxonomy' }));
-        expect(await readJson(join(pipelineDir, 'enrichment/python/easy.json'))).toEqual({});
+        expect(await listFiles(join(pipelineDir, 'enrichment'))).toEqual([]);
         expect(report.counts['enrich-accepted']).toBe(0);
         expect(logs.some((line) => line.includes('model-output-invalid'))).toBe(true);
+    });
+
+    describe('rerun over an existing staging file', () => {
+        const earlier = { choiceIndex: 0, misconceptionId: SECOND_TAG, rationale: 'earlier' };
+
+        it('keeps earlier rationales for a question this run skipped, and replaces one it re-enriched', async () => {
+            await seed({ 'easy:free': [buildBool('q-1', 'p1'), buildBool('q-2', 'p2')] });
+            await writeTree(pipelineDir, {
+                'enrichment/python/easy.json': { 'q-1': [earlier], 'q-2': [earlier] },
+            });
+            await run(scripted({ tag: () => FIRST_TAG }), ['q-2']);
+            expect(await readJson(join(pipelineDir, 'enrichment/python/easy.json'))).toEqual({
+                'q-1': [{ choiceIndex: 0, misconceptionId: FIRST_TAG, rationale: 'rationale-0' }],
+                'q-2': [earlier],
+            });
+        });
+
+        it('keeps earlier rationales for a question fully dropped now, and does not write {} when nothing was enriched', async () => {
+            await seed({ 'easy:free': [buildBool('q-1', 'p1')] });
+            await writeTree(pipelineDir, { 'enrichment/python/easy.json': { 'q-1': [earlier] } });
+            await run(scripted({ isConsistent: () => false, tag: () => FIRST_TAG }));
+            expect(await readJson(join(pipelineDir, 'enrichment/python/easy.json'))).toEqual({ 'q-1': [earlier] });
+        });
     });
 
     it('writes paid output only under the content root, never under pipeline/ or content/', async () => {
