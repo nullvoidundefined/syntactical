@@ -1,5 +1,7 @@
 // Rebuilds review state by replaying answer events through the scheduler
-// in replay order. Every answered question gets an item. A wrong answer
+// in replay order. A question enters review state only after a miss (owner
+// decision 2026-10-03); once in, every answer to it is scheduled, and a
+// correct answer to a never-missed question leaves no item. A wrong answer
 // whose choice carries a misconception schedules that misconception as a
 // miss and links the question to it; from then on a correct answer to a
 // linked question counts as a correct review of each linked misconception,
@@ -13,7 +15,11 @@ import type { ReviewState } from './types/ReviewState.js';
 type MisconceptionOf = (questionId: string, choiceIndex: number) => string | undefined;
 
 function reviewItem(items: Record<string, ReviewItem>, id: string, isCorrect: boolean, at: string): void {
-    items[id] = scheduleReview(items[id] ?? newReviewItem(id, at), isCorrect, at);
+    const existing = items[id];
+    if (!existing && isCorrect) {
+        return;
+    }
+    items[id] = scheduleReview(existing ?? newReviewItem(id, at), isCorrect, at);
 }
 
 function readLinked(links: Map<string, Set<string>>, questionId: string): Set<string> {

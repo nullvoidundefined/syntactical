@@ -18,11 +18,12 @@ describe('buildReviewState', () => {
         }
     });
 
-    it('gives every answered question an item counting its answers and misses', () => {
+    it('gives every missed question an item counting its answers from the first miss on', () => {
         const { questions } = buildReviewState(fixtureEvents, fixtureMisconceptionOf);
         expect(Object.keys(questions).sort()).toEqual(['py-easy-01', 'py-easy-02']);
         expect(questions['py-easy-01'].card.reps).toBe(3);
-        expect(questions['py-easy-02'].card.reps).toBe(2);
+        // py-easy-02 was correct before its miss, so its item starts at the miss.
+        expect(questions['py-easy-02'].card.reps).toBe(1);
     });
 
     it('creates a misconception item only from a miss on a tagged choice, and aggregates its questions after that', () => {
