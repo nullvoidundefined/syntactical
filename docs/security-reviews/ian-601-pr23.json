@@ -1,0 +1,26 @@
+{
+  "reviewer": "security-reviewer subagent",
+  "model": "claude-fable-5-1",
+  "range": "bc13d35..939e652",
+  "rounds": [
+    { "round": 1, "range": "bc13d35..894921a", "findings": 3 },
+    { "round": 2, "range": "bc13d35..939e652", "findings": 0 }
+  ],
+  "ownerDecisions": [
+    "2026-10-03: standing waiver for LOW findings contained by another control; the account deletion task owns the PII scrub"
+  ],
+  "findings": [
+    { "id": 1, "severity": "MEDIUM", "control": "test-harness local-only database URL guard had no test", "status": "fixed 8d4782f" },
+    { "id": 2, "severity": "MEDIUM", "control": "no test fed negative attempt and rate-limit counters", "status": "fixed b47da6f" },
+    { "id": 3, "severity": "LOW", "control": "account deletion must also scrub one_time_codes and purchase_events.payload", "status": "waived by owner 2026-10-03 (IAN-612)" }
+  ],
+  "nothingFound": [
+    "session and one-time-code hash-only storage: raw, short, long, empty, null, and text-typed values refused",
+    "citext unique email: mixed-case duplicates refused",
+    "answer event, goal, purchase event, entitlement, and rate-limit keys and checks: duplicates, negatives, out-of-range goals, invalid statuses refused",
+    "user deletion cascades and set-null behaviour",
+    "clean down: no function or extension left",
+    "test harness: scratch database names, container passphrase handling, labeled orphan cleanup, SKIP_DOCKER_TESTS gate, CI trust-auth service, migrate:down never run by automation",
+    "test-only modules under server/src/testing: not imported by the app; exclude from the future build (build hygiene, not a finding)"
+  ]
+}
