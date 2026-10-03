@@ -1,18 +1,20 @@
 // Round route: resolves the language and difficulty against the manifest
 // and the difficulty registry, waits for stats hydration and a ready
 // bank, and remounts the round under a new key on Retry so every piece
-// of round state resets.
-import { DIFFICULTIES } from '@syntactical/content-schema';
+// of round state resets. `?topic=<id>` plays one topic of the bank; a topic
+// the bank has no questions for falls back to the whole bank.
 import { useState } from 'react';
 
 import { router, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
-import NotFoundScreen from '../+not-found';
-import { QuizRound } from '../../components/quiz/QuizRound';
-import { useQuizStats } from '../../state/StatsProvider';
-import { useLanguageManifest } from '../../state/useLanguageManifest';
-import { useQuestionBank } from '../../state/useQuestionBank';
+import { DIFFICULTIES } from '@syntactical/content-schema';
+
+import NotFoundScreen from '../../+not-found';
+import { QuizRound } from '../../../components/quiz/QuizRound';
+import { useQuizStats } from '../../../state/StatsProvider';
+import { useLanguageManifest } from '../../../state/useLanguageManifest';
+import { useQuestionBank } from '../../../state/useQuestionBank';
 
 function DownloadFailed({ onRetry }: { onRetry: () => void }) {
   return (
@@ -26,7 +28,7 @@ function DownloadFailed({ onRetry }: { onRetry: () => void }) {
 }
 
 export default function RoundScreen() {
-  const { difficulty, language } = useLocalSearchParams<{ difficulty: string; language: string }>();
+  const { difficulty, language, topic } = useLocalSearchParams<{ difficulty: string; language: string; topic?: string }>();
   const [roundKey, setRoundKey] = useState(0);
   const { isHydrated } = useQuizStats();
   const { languages } = useLanguageManifest();
@@ -36,9 +38,16 @@ export default function RoundScreen() {
 
   const { status } = bankState;
   if (!languageEntry || !difficultyEntry || status === 'unknown') return <NotFoundScreen />;
-  if ('retry' in bankState) return <DownloadFailed onRetry={bankState.retry} />;
+  if ('retry' in bankState) {
+    const { retry } = bankState;
+    return <DownloadFailed onRetry={retry} />;
+  }
   if (!isHydrated || !('bank' in bankState)) return <ActivityIndicator className="flex-1" />;
   const { grammar, label: languageLabel } = languageEntry;
+  const {
+    bank: { questions },
+  } = bankState;
+  const playedTopic = questions.some((question) => question.topic === topic) ? topic : undefined;
   return (
     <QuizRound
       key={roundKey}
@@ -49,7 +58,8 @@ export default function RoundScreen() {
       languageLabel={languageLabel}
       onExit={() => router.replace('/')}
       onRetry={() => setRoundKey((key) => key + 1)}
-      questions={bankState.bank.questions}
+      questions={questions}
+      topic={playedTopic}
     />
   );
 }
