@@ -1,7 +1,8 @@
 // Issues a one-time sign-in code (B-25): draws 6 digits from the injected randomInt
 // (crypto.randomInt in production), invalidates the email's earlier unused codes, stores only
 // the code's SHA-256 with a 10-minute expiry, and emails the code. The email is sent inside
-// the transaction, so a failed send rolls the new row back and leaves no usable code.
+// the transaction, so a failed send rolls the new row back and leaves no usable code. A
+// transaction-scoped advisory lock on the email serializes concurrent issues for it.
 import type { Database } from '../clients/database.js';
 import { withTransaction } from '../clients/withTransaction.js';
 import { AUTH } from '../constants/auth.js';
@@ -31,6 +32,9 @@ async function issueOneTimeCode(input: IssueOneTimeCodeInput): Promise<boolean> 
   const expiresAt = new Date(now.getTime() + TTL_MS);
   try {
     await withTransaction(database, async (client) => {
+      // Serializes issues for one email until commit: under READ COMMITTED two concurrent issues
+      // would each find no committed live code to invalidate and both leave one live.
+      await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [email]);
       await client.query(
         `UPDATE one_time_codes SET invalidated_at = $2
          WHERE email = $1 AND used_at IS NULL AND invalidated_at IS NULL`,
