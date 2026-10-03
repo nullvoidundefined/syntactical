@@ -114,6 +114,11 @@ describe.skipIf(SKIP_DATABASE_TESTS)('migrations', () => {
             const down = runMigrations(scratch.databaseUrl, 'down', [ALL_MIGRATIONS]);
             expect(down.status, down.output).toBe(SUCCESS);
             expect(await tableNames(scratch.pool)).toEqual([]);
+            const { rows: leftovers } = await scratch.pool.query(
+                `SELECT 'function' AS kind FROM pg_proc WHERE proname = 'set_updated_at'
+                 UNION ALL SELECT 'extension' FROM pg_extension WHERE extname = 'citext'`,
+            );
+            expect(leftovers).toEqual([]);
 
             const secondUp = runMigrations(scratch.databaseUrl, 'up');
             expect(secondUp.status, secondUp.output).toBe(SUCCESS);
@@ -336,6 +341,62 @@ describe.skipIf(SKIP_DATABASE_TESTS)('migrations', () => {
                 `${local.toUpperCase()}@Example.Test`,
             ]);
             expect(rows).toEqual([{ id: learner }]);
+        },
+        MIGRATION_TIMEOUT_MS,
+    );
+    it(
+        'refuse a negative attempt count, rate-limit count, XP, or choice index',
+        async () => {
+            migrateUp();
+            const { pool } = scratch;
+            const learner = await insertUser(pool);
+
+            await expect(
+                pool.query(
+                    `INSERT INTO one_time_codes (email, code_hash, expires_at, attempts)
+                     VALUES ('learner@example.test', $1, now() + interval '10 minutes', -1)`,
+                    [randomBytes(SHA256_BYTES)],
+                ),
+            ).rejects.toMatchObject({ code: CHECK_VIOLATION });
+            await expect(
+                pool.query(
+                    `INSERT INTO rate_limit_counters (key, window_start, count)
+                     VALUES ('codes:email:learner', '2026-10-03T10:00:00Z', -1)`,
+                ),
+            ).rejects.toMatchObject({ code: CHECK_VIOLATION });
+            await expect(
+                pool.query(
+                    `INSERT INTO daily_progress (user_id, local_date, xp, is_goal_met) VALUES ($1, '2026-10-03', -1, false)`,
+                    [learner],
+                ),
+            ).rejects.toMatchObject({ code: CHECK_VIOLATION });
+            await expect(
+                pool.query(
+                    `INSERT INTO answer_events
+                       (user_id, event_id, question_id, bank_key, choice_index, is_correct, answered_at, round_kind)
+                     VALUES ($1, $2, 'py-easy-01', 'python/easy', -1, true, now(), 'bank')`,
+                    [learner, randomUUID()],
+                ),
+            ).rejects.toMatchObject({ code: CHECK_VIOLATION });
+        },
+        MIGRATION_TIMEOUT_MS,
+    );
+
+    it(
+        'keep one entitlement per user and product',
+        async () => {
+            migrateUp();
+            const { pool } = scratch;
+            const learner = await insertUser(pool);
+            const grant = () =>
+                pool.query(
+                    `INSERT INTO entitlements (user_id, product_id, status, source)
+                     VALUES ($1, 'syntactical.python.medium', 'granted', 'app_store')`,
+                    [learner],
+                );
+
+            await expect(grant()).resolves.toMatchObject({ rowCount: 1 });
+            await expect(grant()).rejects.toMatchObject({ code: UNIQUE_VIOLATION });
         },
         MIGRATION_TIMEOUT_MS,
     );
