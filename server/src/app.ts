@@ -3,9 +3,9 @@ import cors from 'cors';
 import express from 'express';
 import type { Router } from 'express';
 import helmet from 'helmet';
-import { pino } from 'pino';
 import type { Logger } from 'pino';
 
+import { createLogger } from './clients/logger.js';
 import { createCorsOptions } from './config/cors.js';
 import { HTTP } from './constants/http.js';
 import { createErrorHandler, createNotFoundHandler } from './middleware/errorHandler.js';
@@ -23,7 +23,7 @@ interface AppDeps {
 
 // Builds the Express app without listening or reading env; callers inject everything.
 function createApp(deps: AppDeps) {
-  const { allowedOrigins = [], db, extraRoutes, logger = pino() } = deps;
+  const { allowedOrigins = [], db, extraRoutes, logger = createLogger({ destination: process.stdout }) } = deps;
   const app = express();
 
   app.use(helmet());
