@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "questions": [
     {
       "id": "js-easy-01",
@@ -7,10 +7,18 @@
       "prompt": "What does `typeof null` evaluate to?",
       "code": "typeof null",
       "choices": [
-        "\"null\"",
-        "\"object\"",
-        "\"undefined\"",
-        "Throws a TypeError"
+        {
+          "text": "\"null\""
+        },
+        {
+          "text": "\"object\""
+        },
+        {
+          "text": "\"undefined\""
+        },
+        {
+          "text": "Throws a TypeError"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -21,6 +29,14 @@
           "typeof",
           "null"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -29,10 +45,18 @@
       "prompt": "What does `typeof undefined` evaluate to?",
       "code": "typeof undefined",
       "choices": [
-        "\"undefined\"",
-        "\"object\"",
-        "\"null\"",
-        "Throws a ReferenceError"
+        {
+          "text": "\"undefined\""
+        },
+        {
+          "text": "\"object\""
+        },
+        {
+          "text": "\"null\""
+        },
+        {
+          "text": "Throws a ReferenceError"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -43,6 +67,14 @@
           "typeof",
           "undefined"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -51,10 +83,18 @@
       "prompt": "What does `typeof` report for a function?",
       "code": "typeof function () {}",
       "choices": [
-        "\"object\"",
-        "\"undefined\"",
-        "\"function\"",
-        "\"callable\""
+        {
+          "text": "\"object\""
+        },
+        {
+          "text": "\"undefined\""
+        },
+        {
+          "text": "\"function\""
+        },
+        {
+          "text": "\"callable\""
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -65,6 +105,14 @@
           "typeof",
           "functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -73,10 +121,18 @@
       "prompt": "What does `typeof []` evaluate to?",
       "code": "typeof []",
       "choices": [
-        "\"array\"",
-        "\"object\"",
-        "\"undefined\"",
-        "\"list\""
+        {
+          "text": "\"array\""
+        },
+        {
+          "text": "\"object\""
+        },
+        {
+          "text": "\"undefined\""
+        },
+        {
+          "text": "\"list\""
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -87,6 +143,14 @@
           "typeof",
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -95,10 +159,18 @@
       "prompt": "What does `typeof NaN` evaluate to?",
       "code": "typeof NaN",
       "choices": [
-        "\"number\"",
-        "\"nan\"",
-        "\"undefined\"",
-        "\"object\""
+        {
+          "text": "\"number\""
+        },
+        {
+          "text": "\"nan\""
+        },
+        {
+          "text": "\"undefined\""
+        },
+        {
+          "text": "\"object\""
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -109,6 +181,14 @@
           "typeof",
           "nan"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -117,10 +197,18 @@
       "prompt": "What does `typeof` do with an identifier that was never declared?",
       "code": "typeof notDeclared",
       "choices": [
-        "Throws a ReferenceError",
-        "\"object\"",
-        "\"null\"",
-        "\"undefined\""
+        {
+          "text": "Throws a ReferenceError"
+        },
+        {
+          "text": "\"object\""
+        },
+        {
+          "text": "\"null\""
+        },
+        {
+          "text": "\"undefined\""
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -131,6 +219,14 @@
           "typeof",
           "scope"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -139,10 +235,18 @@
       "prompt": "What does `1 == \"1\"` evaluate to?",
       "code": "1 == \"1\"",
       "choices": [
-        "true",
-        "false",
-        "Throws a TypeError",
-        "\"1\""
+        {
+          "text": "true"
+        },
+        {
+          "text": "false"
+        },
+        {
+          "text": "Throws a TypeError"
+        },
+        {
+          "text": "\"1\""
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -153,6 +257,14 @@
           "equality",
           "coercion"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -161,10 +273,18 @@
       "prompt": "What does `1 === \"1\"` evaluate to?",
       "code": "1 === \"1\"",
       "choices": [
-        "true",
-        "false",
-        "Throws a TypeError",
-        "\"1\""
+        {
+          "text": "true"
+        },
+        {
+          "text": "false"
+        },
+        {
+          "text": "Throws a TypeError"
+        },
+        {
+          "text": "\"1\""
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -175,6 +295,14 @@
           "equality",
           "coercion"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -183,10 +311,18 @@
       "prompt": "What does `null == undefined` evaluate to?",
       "code": "null == undefined",
       "choices": [
-        "false",
-        "Throws a TypeError",
-        "true",
-        "undefined"
+        {
+          "text": "false"
+        },
+        {
+          "text": "Throws a TypeError"
+        },
+        {
+          "text": "true"
+        },
+        {
+          "text": "undefined"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -197,6 +333,14 @@
           "equality",
           "null"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -205,10 +349,18 @@
       "prompt": "What does `null === undefined` evaluate to?",
       "code": "null === undefined",
       "choices": [
-        "false",
-        "true",
-        "undefined",
-        "Throws a TypeError"
+        {
+          "text": "false"
+        },
+        {
+          "text": "true"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "Throws a TypeError"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -219,6 +371,14 @@
           "equality",
           "null"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -227,10 +387,18 @@
       "prompt": "What does `true == 1` evaluate to?",
       "code": "true == 1",
       "choices": [
-        "false",
-        "1",
-        "\"true\"",
-        "true"
+        {
+          "text": "false"
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "\"true\""
+        },
+        {
+          "text": "true"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -241,6 +409,14 @@
           "equality",
           "coercion"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -249,10 +425,18 @@
       "prompt": "What does `false == 0` evaluate to?",
       "code": "false == 0",
       "choices": [
-        "false",
-        "true",
-        "0",
-        "\"\""
+        {
+          "text": "false"
+        },
+        {
+          "text": "true"
+        },
+        {
+          "text": "0"
+        },
+        {
+          "text": "\"\""
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -263,6 +447,14 @@
           "equality",
           "coercion"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -271,10 +463,18 @@
       "prompt": "What does `false == \"\"` evaluate to?",
       "code": "false == \"\"",
       "choices": [
-        "true",
-        "false",
-        "\"\"",
-        "Throws a TypeError"
+        {
+          "text": "true"
+        },
+        {
+          "text": "false"
+        },
+        {
+          "text": "\"\""
+        },
+        {
+          "text": "Throws a TypeError"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -285,6 +485,14 @@
           "equality",
           "coercion"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -293,10 +501,18 @@
       "prompt": "What does `[] == false` evaluate to?",
       "code": "[] == false",
       "choices": [
-        "false",
-        "undefined",
-        "true",
-        "Throws a TypeError"
+        {
+          "text": "false"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "true"
+        },
+        {
+          "text": "Throws a TypeError"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -307,6 +523,14 @@
           "equality",
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -315,10 +539,18 @@
       "prompt": "What does `NaN === NaN` evaluate to?",
       "code": "NaN === NaN",
       "choices": [
-        "true",
-        "false",
-        "undefined",
-        "Throws a TypeError"
+        {
+          "text": "true"
+        },
+        {
+          "text": "false"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "Throws a TypeError"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -329,6 +561,14 @@
           "nan",
           "equality"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -337,10 +577,18 @@
       "prompt": "What do `Number.isNaN(\"foo\")` and `isNaN(\"foo\")` return?",
       "code": "Number.isNaN(\"foo\")\nisNaN(\"foo\")",
       "choices": [
-        "Both return false",
-        "Both return true",
-        "Number.isNaN returns true and isNaN returns false",
-        "Number.isNaN returns false and isNaN returns true"
+        {
+          "text": "Both return false"
+        },
+        {
+          "text": "Both return true"
+        },
+        {
+          "text": "Number.isNaN returns true and isNaN returns false"
+        },
+        {
+          "text": "Number.isNaN returns false and isNaN returns true"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -351,6 +599,14 @@
           "nan",
           "coercion"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -359,10 +615,18 @@
       "prompt": "What does `Object.is(NaN, NaN)` evaluate to?",
       "code": "Object.is(NaN, NaN)",
       "choices": [
-        "true",
-        "false",
-        "undefined",
-        "Throws a TypeError"
+        {
+          "text": "true"
+        },
+        {
+          "text": "false"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "Throws a TypeError"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -373,6 +637,14 @@
           "nan",
           "equality"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -381,10 +653,18 @@
       "prompt": "How do `Object.is(+0, -0)` and `+0 === -0` compare?",
       "code": "Object.is(+0, -0)\n+0 === -0",
       "choices": [
-        "Both are true",
-        "Both are false",
-        "Object.is is false and === is true",
-        "Object.is is true and === is false"
+        {
+          "text": "Both are true"
+        },
+        {
+          "text": "Both are false"
+        },
+        {
+          "text": "Object.is is false and === is true"
+        },
+        {
+          "text": "Object.is is true and === is false"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -395,6 +675,14 @@
           "equality",
           "numbers"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -403,10 +691,18 @@
       "prompt": "What does `0.1 + 0.2 === 0.3` evaluate to?",
       "code": "0.1 + 0.2 === 0.3",
       "choices": [
-        "true",
-        "false",
-        "undefined",
-        "Throws a RangeError"
+        {
+          "text": "true"
+        },
+        {
+          "text": "false"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "Throws a RangeError"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -417,6 +713,14 @@
           "numbers",
           "equality"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -425,10 +729,18 @@
       "prompt": "What does `Number(\"\")` evaluate to?",
       "code": "Number(\"\")",
       "choices": [
-        "0",
-        "NaN",
-        "\"\"",
-        "undefined"
+        {
+          "text": "0"
+        },
+        {
+          "text": "NaN"
+        },
+        {
+          "text": "\"\""
+        },
+        {
+          "text": "undefined"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -439,6 +751,14 @@
           "coercion",
           "numbers"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -447,10 +767,18 @@
       "prompt": "What does `Number(\"10px\")` evaluate to?",
       "code": "Number(\"10px\")",
       "choices": [
-        "10",
-        "0",
-        "\"10px\"",
-        "NaN"
+        {
+          "text": "10"
+        },
+        {
+          "text": "0"
+        },
+        {
+          "text": "\"10px\""
+        },
+        {
+          "text": "NaN"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -461,6 +789,14 @@
           "coercion",
           "numbers"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -469,10 +805,18 @@
       "prompt": "What does `parseInt(\"10px\", 10)` evaluate to?",
       "code": "parseInt(\"10px\", 10)",
       "choices": [
-        "NaN",
-        "10",
-        "\"10px\"",
-        "Throws a SyntaxError"
+        {
+          "text": "NaN"
+        },
+        {
+          "text": "10"
+        },
+        {
+          "text": "\"10px\""
+        },
+        {
+          "text": "Throws a SyntaxError"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -483,6 +827,14 @@
           "parseint",
           "coercion"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -491,10 +843,18 @@
       "prompt": "What does `parseInt(\"08\", 10)` evaluate to?",
       "code": "parseInt(\"08\", 10)",
       "choices": [
-        "0",
-        "NaN",
-        "8",
-        "10"
+        {
+          "text": "0"
+        },
+        {
+          "text": "NaN"
+        },
+        {
+          "text": "8"
+        },
+        {
+          "text": "10"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -505,6 +865,14 @@
           "parseint",
           "numbers"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -513,10 +881,18 @@
       "prompt": "What does `parseFloat(\"3.14abc\")` evaluate to?",
       "code": "parseFloat(\"3.14abc\")",
       "choices": [
-        "3.14",
-        "NaN",
-        "\"3.14abc\"",
-        "3"
+        {
+          "text": "3.14"
+        },
+        {
+          "text": "NaN"
+        },
+        {
+          "text": "\"3.14abc\""
+        },
+        {
+          "text": "3"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -527,6 +903,14 @@
           "parsefloat",
           "coercion"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -535,10 +919,18 @@
       "prompt": "What does `+[]` evaluate to?",
       "code": "+[]",
       "choices": [
-        "NaN",
-        "0",
-        "\"\"",
-        "[]"
+        {
+          "text": "NaN"
+        },
+        {
+          "text": "0"
+        },
+        {
+          "text": "\"\""
+        },
+        {
+          "text": "[]"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -549,6 +941,14 @@
           "coercion",
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -557,10 +957,18 @@
       "prompt": "What does `+{}` evaluate to?",
       "code": "+{}",
       "choices": [
-        "0",
-        "\"[object Object]\"",
-        "{}",
-        "NaN"
+        {
+          "text": "0"
+        },
+        {
+          "text": "\"[object Object]\""
+        },
+        {
+          "text": "{}"
+        },
+        {
+          "text": "NaN"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -571,6 +979,14 @@
           "coercion",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -579,10 +995,18 @@
       "prompt": "What does `String(null)` evaluate to?",
       "code": "String(null)",
       "choices": [
-        "\"null\"",
-        "\"\"",
-        "\"undefined\"",
-        "Throws a TypeError"
+        {
+          "text": "\"null\""
+        },
+        {
+          "text": "\"\""
+        },
+        {
+          "text": "\"undefined\""
+        },
+        {
+          "text": "Throws a TypeError"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -593,6 +1017,14 @@
           "coercion",
           "null"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -601,10 +1033,18 @@
       "prompt": "What does `String(undefined)` evaluate to?",
       "code": "String(undefined)",
       "choices": [
-        "\"null\"",
-        "\"\"",
-        "\"undefined\"",
-        "Throws a TypeError"
+        {
+          "text": "\"null\""
+        },
+        {
+          "text": "\"\""
+        },
+        {
+          "text": "\"undefined\""
+        },
+        {
+          "text": "Throws a TypeError"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -615,6 +1055,14 @@
           "coercion",
           "undefined"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -623,10 +1071,18 @@
       "prompt": "What does `Boolean(\"\")` evaluate to?",
       "code": "Boolean(\"\")",
       "choices": [
-        "true",
-        "false",
-        "\"\"",
-        "undefined"
+        {
+          "text": "true"
+        },
+        {
+          "text": "false"
+        },
+        {
+          "text": "\"\""
+        },
+        {
+          "text": "undefined"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -637,6 +1093,14 @@
           "boolean",
           "coercion"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -645,10 +1109,18 @@
       "prompt": "What does `Boolean(\"false\")` evaluate to?",
       "code": "Boolean(\"false\")",
       "choices": [
-        "true",
-        "false",
-        "Throws a SyntaxError",
-        "undefined"
+        {
+          "text": "true"
+        },
+        {
+          "text": "false"
+        },
+        {
+          "text": "Throws a SyntaxError"
+        },
+        {
+          "text": "undefined"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -659,6 +1131,14 @@
           "boolean",
           "coercion"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -667,10 +1147,18 @@
       "prompt": "What does `Boolean([])` evaluate to?",
       "code": "Boolean([])",
       "choices": [
-        "false",
-        "0",
-        "\"\"",
-        "true"
+        {
+          "text": "false"
+        },
+        {
+          "text": "0"
+        },
+        {
+          "text": "\"\""
+        },
+        {
+          "text": "true"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -681,6 +1169,14 @@
           "boolean",
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -689,10 +1185,18 @@
       "prompt": "What does `Boolean(0)` evaluate to?",
       "code": "Boolean(0)",
       "choices": [
-        "true",
-        "false",
-        "0",
-        "undefined"
+        {
+          "text": "true"
+        },
+        {
+          "text": "false"
+        },
+        {
+          "text": "0"
+        },
+        {
+          "text": "undefined"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -703,6 +1207,14 @@
           "boolean",
           "numbers"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -711,10 +1223,18 @@
       "prompt": "What does `Boolean({})` evaluate to?",
       "code": "Boolean({})",
       "choices": [
-        "false",
-        "NaN",
-        "true",
-        "undefined"
+        {
+          "text": "false"
+        },
+        {
+          "text": "NaN"
+        },
+        {
+          "text": "true"
+        },
+        {
+          "text": "undefined"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -725,6 +1245,14 @@
           "boolean",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -733,10 +1261,18 @@
       "prompt": "What does `null ?? \"x\"` evaluate to?",
       "code": "null ?? \"x\"",
       "choices": [
-        "\"x\"",
-        "null",
-        "undefined",
-        "Throws a TypeError"
+        {
+          "text": "\"x\""
+        },
+        {
+          "text": "null"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "Throws a TypeError"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -747,6 +1283,14 @@
           "nullish-coalescing",
           "null"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -755,10 +1299,18 @@
       "prompt": "What does `0 ?? \"x\"` evaluate to?",
       "code": "0 ?? \"x\"",
       "choices": [
-        "\"x\"",
-        "0",
-        "null",
-        "false"
+        {
+          "text": "\"x\""
+        },
+        {
+          "text": "0"
+        },
+        {
+          "text": "null"
+        },
+        {
+          "text": "false"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -769,6 +1321,14 @@
           "nullish-coalescing",
           "numbers"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -777,10 +1337,18 @@
       "prompt": "What does `\"\" ?? \"x\"` evaluate to?",
       "code": "\"\" ?? \"x\"",
       "choices": [
-        "\"x\"",
-        "null",
-        "undefined",
-        "\"\""
+        {
+          "text": "\"x\""
+        },
+        {
+          "text": "null"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "\"\""
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -791,6 +1359,14 @@
           "nullish-coalescing",
           "coercion"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -799,10 +1375,18 @@
       "prompt": "What does `undefined ?? \"x\"` evaluate to?",
       "code": "undefined ?? \"x\"",
       "choices": [
-        "null",
-        "undefined",
-        "\"x\"",
-        "Throws a TypeError"
+        {
+          "text": "null"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "\"x\""
+        },
+        {
+          "text": "Throws a TypeError"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -813,6 +1397,14 @@
           "nullish-coalescing",
           "undefined"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -821,10 +1413,18 @@
       "prompt": "What does `null?.prop` do?",
       "code": "null?.prop",
       "choices": [
-        "undefined, and it does not throw",
-        "null",
-        "Throws a TypeError",
-        "\"undefined\""
+        {
+          "text": "undefined, and it does not throw"
+        },
+        {
+          "text": "null"
+        },
+        {
+          "text": "Throws a TypeError"
+        },
+        {
+          "text": "\"undefined\""
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -835,6 +1435,14 @@
           "optional-chaining",
           "null"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -843,10 +1451,18 @@
       "prompt": "What does an optional call on `null` do?",
       "code": "const fn = null;\nfn?.();",
       "choices": [
-        "Throws a TypeError",
-        "undefined, and it does not call anything",
-        "null",
-        "false"
+        {
+          "text": "Throws a TypeError"
+        },
+        {
+          "text": "undefined, and it does not call anything"
+        },
+        {
+          "text": "null"
+        },
+        {
+          "text": "false"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -857,6 +1473,14 @@
           "optional-chaining",
           "functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -865,10 +1489,18 @@
       "prompt": "What does `0 || \"fallback\"` evaluate to?",
       "code": "0 || \"fallback\"",
       "choices": [
-        "0",
-        "false",
-        "\"fallback\"",
-        "undefined"
+        {
+          "text": "0"
+        },
+        {
+          "text": "false"
+        },
+        {
+          "text": "\"fallback\""
+        },
+        {
+          "text": "undefined"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -879,6 +1511,14 @@
           "operators",
           "coercion"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -887,10 +1527,18 @@
       "prompt": "What does `0 && \"value\"` evaluate to?",
       "code": "0 && \"value\"",
       "choices": [
-        "0",
-        "\"value\"",
-        "false",
-        "null"
+        {
+          "text": "0"
+        },
+        {
+          "text": "\"value\""
+        },
+        {
+          "text": "false"
+        },
+        {
+          "text": "null"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -901,6 +1549,14 @@
           "operators",
           "coercion"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -909,10 +1565,18 @@
       "prompt": "What does `\"\" || \"fallback\"` evaluate to?",
       "code": "\"\" || \"fallback\"",
       "choices": [
-        "\"\"",
-        "false",
-        "null",
-        "\"fallback\""
+        {
+          "text": "\"\""
+        },
+        {
+          "text": "false"
+        },
+        {
+          "text": "null"
+        },
+        {
+          "text": "\"fallback\""
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -923,6 +1587,14 @@
           "operators",
           "coercion"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -931,10 +1603,18 @@
       "prompt": "What happens if you assign a new value to a `const` binding?",
       "code": "const n = 1;\nn = 2;",
       "choices": [
-        "n becomes 2",
-        "Throws a TypeError",
-        "Throws a SyntaxError",
-        "n stays 1 and the assignment is ignored"
+        {
+          "text": "n becomes 2"
+        },
+        {
+          "text": "Throws a TypeError"
+        },
+        {
+          "text": "Throws a SyntaxError"
+        },
+        {
+          "text": "n stays 1 and the assignment is ignored"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -945,6 +1625,14 @@
           "const",
           "scope"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -953,10 +1641,18 @@
       "prompt": "What happens when you change a property of an object held by `const`?",
       "code": "const obj = { a: 1 };\nobj.a = 2;",
       "choices": [
-        "Throws a TypeError",
-        "obj.a stays 1",
-        "obj.a becomes 2",
-        "The binding obj becomes undefined"
+        {
+          "text": "Throws a TypeError"
+        },
+        {
+          "text": "obj.a stays 1"
+        },
+        {
+          "text": "obj.a becomes 2"
+        },
+        {
+          "text": "The binding obj becomes undefined"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -967,6 +1663,14 @@
           "const",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -975,10 +1679,18 @@
       "prompt": "What happens when you read a `let` before its declaration line?",
       "code": "console.log(value);\nlet value = 1;",
       "choices": [
-        "Throws a ReferenceError",
-        "undefined",
-        "1",
-        "Throws a SyntaxError"
+        {
+          "text": "Throws a ReferenceError"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "Throws a SyntaxError"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -989,6 +1701,14 @@
           "let",
           "scope"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -997,10 +1717,18 @@
       "prompt": "What does reading a `var` before its declaration line produce?",
       "code": "console.log(value);\nvar value = 1;",
       "choices": [
-        "Throws a ReferenceError",
-        "1",
-        "Throws a TypeError",
-        "undefined"
+        {
+          "text": "Throws a ReferenceError"
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "Throws a TypeError"
+        },
+        {
+          "text": "undefined"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -1011,6 +1739,14 @@
           "var",
           "scope"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1019,10 +1755,18 @@
       "prompt": "How do `var` and `let` differ when both are declared inside an `if` block?",
       "code": "function demo() {\n  if (true) {\n    var a = 1;\n    let b = 2;\n  }\n}",
       "choices": [
-        "Both names are visible only inside the block",
-        "var is visible throughout the function; let is visible only inside the block",
-        "Both names are visible throughout the function",
-        "let is visible throughout the function; var is visible only inside the block"
+        {
+          "text": "Both names are visible only inside the block"
+        },
+        {
+          "text": "var is visible throughout the function; let is visible only inside the block"
+        },
+        {
+          "text": "Both names are visible throughout the function"
+        },
+        {
+          "text": "let is visible throughout the function; var is visible only inside the block"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1034,6 +1778,14 @@
           "let",
           "scope"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1042,10 +1794,18 @@
       "prompt": "What does this template literal evaluate to?",
       "code": "`Hello, ${\"Ada\"}`",
       "choices": [
-        "The characters ${\"Ada\"} left as text",
-        "\"Hello, Ada\"",
-        "\"Hello, \"",
-        "Throws a SyntaxError"
+        {
+          "text": "The characters ${\"Ada\"} left as text"
+        },
+        {
+          "text": "\"Hello, Ada\""
+        },
+        {
+          "text": "\"Hello, \""
+        },
+        {
+          "text": "Throws a SyntaxError"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1055,6 +1815,14 @@
         "tags": [
           "template-literals"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1063,10 +1831,18 @@
       "prompt": "What does a template nested inside another template evaluate to?",
       "code": "const n = 2;\n`a ${`b ${n}`}`",
       "choices": [
-        "\"a b 2\"",
-        "\"a ${`b ${n}`}\"",
-        "Throws a SyntaxError",
-        "\"a b \""
+        {
+          "text": "\"a b 2\""
+        },
+        {
+          "text": "\"a ${`b ${n}`}\""
+        },
+        {
+          "text": "Throws a SyntaxError"
+        },
+        {
+          "text": "\"a b \""
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1076,6 +1852,14 @@
         "tags": [
           "template-literals"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1084,10 +1868,18 @@
       "prompt": "What does `String.raw` do with `\\n` in the template?",
       "code": "String.raw`\\n`",
       "choices": [
-        "A string of one newline character",
-        "undefined",
-        "Throws a SyntaxError",
-        "A two-character string: backslash, then n"
+        {
+          "text": "A string of one newline character"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "Throws a SyntaxError"
+        },
+        {
+          "text": "A two-character string: backslash, then n"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -1098,6 +1890,14 @@
           "template-literals",
           "string-raw"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1106,10 +1906,18 @@
       "prompt": "What does `map` do to the array it is called on?",
       "code": "const items = [1, 2];\nconst doubled = items.map((n) => n * 2);",
       "choices": [
-        "It mutates items and returns that same array",
-        "It returns a new array and leaves items unchanged",
-        "It returns the length of items",
-        "It returns undefined"
+        {
+          "text": "It mutates items and returns that same array"
+        },
+        {
+          "text": "It returns a new array and leaves items unchanged"
+        },
+        {
+          "text": "It returns the length of items"
+        },
+        {
+          "text": "It returns undefined"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1120,6 +1928,14 @@
           "arrays",
           "map"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1128,10 +1944,18 @@
       "prompt": "Which elements does `filter` keep?",
       "code": "[0, 1, \"\", 2].filter(Boolean)",
       "choices": [
-        "[1, 2]",
-        "[0, 1, \"\", 2]",
-        "[0, \"\"]",
-        "[]"
+        {
+          "text": "[1, 2]"
+        },
+        {
+          "text": "[0, 1, \"\", 2]"
+        },
+        {
+          "text": "[0, \"\"]"
+        },
+        {
+          "text": "[]"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1142,6 +1966,14 @@
           "arrays",
           "filter"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1150,10 +1982,18 @@
       "prompt": "What does `find` return?",
       "code": "[1, 2, 3].find((n) => n > 9)",
       "choices": [
-        "The index, or -1 when nothing matches",
-        "A new array of every match",
-        "The first matching element, or undefined when nothing matches",
-        "true when something matches, otherwise false"
+        {
+          "text": "The index, or -1 when nothing matches"
+        },
+        {
+          "text": "A new array of every match"
+        },
+        {
+          "text": "The first matching element, or undefined when nothing matches"
+        },
+        {
+          "text": "true when something matches, otherwise false"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -1164,6 +2004,14 @@
           "arrays",
           "find"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1172,10 +2020,18 @@
       "prompt": "What does `findIndex` return when nothing matches?",
       "code": "[1, 2, 3].findIndex((n) => n > 9)",
       "choices": [
-        "undefined",
-        "null",
-        "false",
-        "-1"
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "null"
+        },
+        {
+          "text": "false"
+        },
+        {
+          "text": "-1"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -1186,6 +2042,14 @@
           "arrays",
           "findindex"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1194,10 +2058,18 @@
       "prompt": "What does `includes` return?",
       "code": "[\"a\", \"b\"].includes(\"b\")",
       "choices": [
-        "1",
-        "true",
-        "\"b\"",
-        "0"
+        {
+          "text": "1"
+        },
+        {
+          "text": "true"
+        },
+        {
+          "text": "\"b\""
+        },
+        {
+          "text": "0"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1208,6 +2080,14 @@
           "arrays",
           "includes"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1216,10 +2096,18 @@
       "prompt": "What does `indexOf` return when the value is absent?",
       "code": "[\"a\", \"b\"].indexOf(\"z\")",
       "choices": [
-        "-1",
-        "undefined",
-        "false",
-        "null"
+        {
+          "text": "-1"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "false"
+        },
+        {
+          "text": "null"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1230,6 +2118,14 @@
           "arrays",
           "indexof"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1238,10 +2134,18 @@
       "prompt": "What does `push` return?",
       "code": "const items = [1];\nitems.push(2);",
       "choices": [
-        "The array [1, 2]",
-        "The pushed element, 2",
-        "The new length, 2",
-        "undefined"
+        {
+          "text": "The array [1, 2]"
+        },
+        {
+          "text": "The pushed element, 2"
+        },
+        {
+          "text": "The new length, 2"
+        },
+        {
+          "text": "undefined"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -1252,6 +2156,14 @@
           "arrays",
           "push"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1260,10 +2172,18 @@
       "prompt": "What does `pop` return?",
       "code": "const items = [1, 2];\nitems.pop();",
       "choices": [
-        "[1]",
-        "2",
-        "1",
-        "undefined"
+        {
+          "text": "[1]"
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "undefined"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1274,6 +2194,14 @@
           "arrays",
           "pop"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1282,10 +2210,18 @@
       "prompt": "What does `shift` return?",
       "code": "const items = [1, 2];\nitems.shift();",
       "choices": [
-        "[2]",
-        "2",
-        "undefined",
-        "1"
+        {
+          "text": "[2]"
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "1"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -1296,6 +2232,14 @@
           "arrays",
           "shift"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1304,10 +2248,18 @@
       "prompt": "What does `unshift` return?",
       "code": "const items = [1];\nitems.unshift(0);",
       "choices": [
-        "The new length, 2",
-        "The array [0, 1]",
-        "0",
-        "undefined"
+        {
+          "text": "The new length, 2"
+        },
+        {
+          "text": "The array [0, 1]"
+        },
+        {
+          "text": "0"
+        },
+        {
+          "text": "undefined"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1318,6 +2270,14 @@
           "arrays",
           "unshift"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1326,10 +2286,18 @@
       "prompt": "After `items.slice(1)`, what is `items`?",
       "code": "const items = [1, 2, 3];\nconst part = items.slice(1);",
       "choices": [
-        "[2, 3]",
-        "[1]",
-        "[1, 2, 3]",
-        "undefined"
+        {
+          "text": "[2, 3]"
+        },
+        {
+          "text": "[1]"
+        },
+        {
+          "text": "[1, 2, 3]"
+        },
+        {
+          "text": "undefined"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -1340,6 +2308,14 @@
           "arrays",
           "slice"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1348,10 +2324,18 @@
       "prompt": "What do `removed` and `items` hold after this `splice`?",
       "code": "const items = [1, 2, 3];\nconst removed = items.splice(1, 1);",
       "choices": [
-        "removed is 2 and items is [1, 3]",
-        "removed is [2] and items is [1, 3]",
-        "removed is [2] and items is still [1, 2, 3]",
-        "removed is 2 and items is still [1, 2, 3]"
+        {
+          "text": "removed is 2 and items is [1, 3]"
+        },
+        {
+          "text": "removed is [2] and items is [1, 3]"
+        },
+        {
+          "text": "removed is [2] and items is still [1, 2, 3]"
+        },
+        {
+          "text": "removed is 2 and items is still [1, 2, 3]"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1362,6 +2346,14 @@
           "arrays",
           "splice"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1370,10 +2362,18 @@
       "prompt": "What do `next` and `items` hold after `concat`?",
       "code": "const items = [1];\nconst next = items.concat([2]);",
       "choices": [
-        "next is [1, 2] and items is still [1]",
-        "next is [1, 2] and items is [1, 2]",
-        "next is 2 and items is [1]",
-        "next and items are the same array"
+        {
+          "text": "next is [1, 2] and items is still [1]"
+        },
+        {
+          "text": "next is [1, 2] and items is [1, 2]"
+        },
+        {
+          "text": "next is 2 and items is [1]"
+        },
+        {
+          "text": "next and items are the same array"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1384,6 +2384,14 @@
           "arrays",
           "concat"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1392,10 +2400,18 @@
       "prompt": "After this spread copy, what is `inner.n`?",
       "code": "const inner = { n: 1 };\nconst copy = [...[inner]];\ncopy[0].n = 9;",
       "choices": [
-        "1",
-        "undefined",
-        "Throws a TypeError",
-        "9"
+        {
+          "text": "1"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "Throws a TypeError"
+        },
+        {
+          "text": "9"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -1406,6 +2422,14 @@
           "arrays",
           "spread"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1414,10 +2438,18 @@
       "prompt": "What is `merged.b`?",
       "code": "const merged = { ...{ a: 1, b: 2 }, ...{ b: 3 } };",
       "choices": [
-        "1",
-        "2",
-        "3",
-        "undefined"
+        {
+          "text": "1"
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "undefined"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -1428,6 +2460,14 @@
           "objects",
           "spread"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1436,10 +2476,18 @@
       "prompt": "What are `a` and `b` after these destructuring defaults?",
       "code": "const [a = 1] = [undefined];\nconst [b = 1] = [null];",
       "choices": [
-        "a is null and b is null",
-        "a is 1 and b is null",
-        "a is 1 and b is 1",
-        "a is undefined and b is null"
+        {
+          "text": "a is null and b is null"
+        },
+        {
+          "text": "a is 1 and b is null"
+        },
+        {
+          "text": "a is 1 and b is 1"
+        },
+        {
+          "text": "a is undefined and b is null"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1450,6 +2498,14 @@
           "destructuring",
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1458,10 +2514,18 @@
       "prompt": "What are `a` and `b` in this pattern?",
       "code": "const [a, , b] = [1, 2, 3];",
       "choices": [
-        "a is 1 and b is 3",
-        "a is 1 and b is 2",
-        "Throws a SyntaxError",
-        "a is 2 and b is 3"
+        {
+          "text": "a is 1 and b is 3"
+        },
+        {
+          "text": "a is 1 and b is 2"
+        },
+        {
+          "text": "Throws a SyntaxError"
+        },
+        {
+          "text": "a is 2 and b is 3"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1472,6 +2536,14 @@
           "destructuring",
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1480,10 +2552,18 @@
       "prompt": "What is `tail`?",
       "code": "const [head, ...tail] = [1, 2, 3];",
       "choices": [
-        "2",
-        "undefined",
-        "[3]",
-        "[2, 3]"
+        {
+          "text": "2"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "[3]"
+        },
+        {
+          "text": "[2, 3]"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -1494,6 +2574,14 @@
           "destructuring",
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1502,10 +2590,18 @@
       "prompt": "Which binding does `const { a: b } = { a: 1 }` create?",
       "code": "const { a: b } = { a: 1 };",
       "choices": [
-        "Both a and b, each equal to 1",
-        "a equal to 1, and no b",
-        "b equal to 1, and this pattern does not declare a",
-        "Throws a SyntaxError"
+        {
+          "text": "Both a and b, each equal to 1"
+        },
+        {
+          "text": "a equal to 1, and no b"
+        },
+        {
+          "text": "b equal to 1, and this pattern does not declare a"
+        },
+        {
+          "text": "Throws a SyntaxError"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -1516,6 +2612,14 @@
           "destructuring",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1524,10 +2628,18 @@
       "prompt": "What are `a` and `b` after these object defaults?",
       "code": "const { a = 1 } = { a: null };\nconst { b = 1 } = {};",
       "choices": [
-        "a is 1 and b is 1",
-        "a is null and b is 1",
-        "a is null and b is undefined",
-        "a is 1 and b is undefined"
+        {
+          "text": "a is 1 and b is 1"
+        },
+        {
+          "text": "a is null and b is 1"
+        },
+        {
+          "text": "a is null and b is undefined"
+        },
+        {
+          "text": "a is 1 and b is undefined"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1538,6 +2650,14 @@
           "destructuring",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1554,6 +2674,14 @@
           "destructuring",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1570,6 +2698,14 @@
           "destructuring",
           "null"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1585,6 +2721,14 @@
         "tags": [
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1600,6 +2744,14 @@
         "tags": [
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1616,6 +2768,14 @@
           "for-of",
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1632,6 +2792,14 @@
           "for-in",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1648,6 +2816,14 @@
           "for-in",
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1663,6 +2839,14 @@
         "tags": [
           "json"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1679,6 +2863,14 @@
           "json",
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1695,6 +2887,14 @@
           "json",
           "functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1710,6 +2910,14 @@
         "tags": [
           "json"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1725,6 +2933,14 @@
         "tags": [
           "arrow-functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1740,6 +2956,14 @@
         "tags": [
           "arrow-functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1756,6 +2980,14 @@
           "functions",
           "hoisting"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1772,6 +3004,14 @@
           "functions",
           "hoisting"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1788,6 +3028,14 @@
           "functions",
           "default-parameters"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1804,6 +3052,14 @@
           "functions",
           "default-parameters"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1820,6 +3076,14 @@
           "switch",
           "equality"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1835,6 +3099,14 @@
         "tags": [
           "switch"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1851,6 +3123,14 @@
           "operators",
           "void"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1867,6 +3147,14 @@
           "delete",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1883,6 +3171,14 @@
           "delete",
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1899,6 +3195,14 @@
           "in-operator",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1914,6 +3218,14 @@
         "tags": [
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1930,6 +3242,14 @@
           "objects",
           "object-keys"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1946,6 +3266,14 @@
           "math",
           "numbers"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1962,6 +3290,14 @@
           "math",
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1978,6 +3314,14 @@
           "coercion",
           "operators"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1994,6 +3338,14 @@
           "coercion",
           "operators"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -2010,6 +3362,14 @@
           "coercion",
           "boolean"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     }
   ]

@@ -1,8 +1,9 @@
 // One bank's load state. A local copy (cached or bundled) whose hash
 // matches the manifest is used directly; otherwise the bank downloads,
 // keyed by its hash so overlapping requests share one fetch.
-import type { CachedBank } from '@syntactical/content-schema';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+
+import type { BankEntry, CachedBank } from '@syntactical/content-schema';
 
 import { buildBankQuery } from '../services/content/buildBankQuery';
 import { findBankEntry } from '../services/content/findBankEntry';
@@ -16,7 +17,13 @@ export type QuestionBankState =
   | { retry: () => void; status: 'error' }
   | { status: 'unknown' };
 
-const PLACEHOLDER_ENTRY = { hash: 'none', path: '' };
+const PLACEHOLDER_ENTRY: BankEntry = {
+  access: 'free',
+  contentVersion: 0,
+  hash: 'none',
+  path: '',
+  topicCounts: {},
+};
 
 export function useQuestionBank(language: string, difficulty: string): QuestionBankState {
   const queryClient = useQueryClient();

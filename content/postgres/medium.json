@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "questions": [
     {
       "id": "pg-med-01",
@@ -14,6 +14,14 @@
           "schema",
           "sequences"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -22,10 +30,18 @@
       "prompt": "What does the `RETURNING` clause let you do?",
       "code": "INSERT INTO users (email) VALUES ($1) RETURNING id, created_at;",
       "choices": [
-        "Return the query execution plan instead of running it",
-        "Return rows affected by an INSERT, UPDATE, or DELETE without a separate SELECT",
-        "Roll back the statement after showing a preview",
-        "Return only the count of affected rows"
+        {
+          "text": "Return the query execution plan instead of running it"
+        },
+        {
+          "text": "Return rows affected by an INSERT, UPDATE, or DELETE without a separate SELECT"
+        },
+        {
+          "text": "Roll back the statement after showing a preview"
+        },
+        {
+          "text": "Return only the count of affected rows"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -36,6 +52,14 @@
           "dml",
           "postgres-extension"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -43,10 +67,18 @@
       "type": "mc",
       "prompt": "Which index type does Postgres choose by default when you write `CREATE INDEX ON t (col)` with no method specified?",
       "choices": [
-        "GIN",
-        "GiST",
-        "B-tree",
-        "BRIN"
+        {
+          "text": "GIN"
+        },
+        {
+          "text": "GiST"
+        },
+        {
+          "text": "B-tree"
+        },
+        {
+          "text": "BRIN"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -56,6 +88,14 @@
         "tags": [
           "indexes"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -71,6 +111,14 @@
           "triggers",
           "ddl"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -78,10 +126,18 @@
       "type": "mc",
       "prompt": "What does `EXPLAIN ANALYZE` do that plain `EXPLAIN` does not?",
       "choices": [
-        "Shows only the planner’s cost estimates",
-        "Actually executes the query and reports real timings alongside the plan",
-        "Works only on SELECT statements",
-        "Forces the planner to avoid using indexes"
+        {
+          "text": "Shows only the planner’s cost estimates"
+        },
+        {
+          "text": "Actually executes the query and reports real timings alongside the plan"
+        },
+        {
+          "text": "Works only on SELECT statements"
+        },
+        {
+          "text": "Forces the planner to avoid using indexes"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -92,6 +148,14 @@
           "explain",
           "performance"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -107,6 +171,14 @@
           "constraints",
           "null"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -114,10 +186,18 @@
       "type": "mc",
       "prompt": "What is the primary purpose of running `VACUUM` on a table?",
       "choices": [
-        "Rebuild all indexes from scratch",
-        "Reclaim storage occupied by dead row versions from updates and deletes",
-        "Change a column’s data type",
-        "Encrypt table contents at rest"
+        {
+          "text": "Rebuild all indexes from scratch"
+        },
+        {
+          "text": "Reclaim storage occupied by dead row versions from updates and deletes"
+        },
+        {
+          "text": "Change a column’s data type"
+        },
+        {
+          "text": "Encrypt table contents at rest"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -129,6 +209,14 @@
           "mvcc",
           "maintenance"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -136,10 +224,18 @@
       "type": "mc",
       "prompt": "Which data type would you use to store a JSON document while keeping fast containment queries (`@>`) and indexing support?",
       "choices": [
-        "TEXT",
-        "JSON",
-        "JSONB",
-        "BYTEA"
+        {
+          "text": "TEXT"
+        },
+        {
+          "text": "JSON"
+        },
+        {
+          "text": "JSONB"
+        },
+        {
+          "text": "BYTEA"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -150,6 +246,14 @@
           "json",
           "data-types"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -157,10 +261,18 @@
       "type": "mc",
       "prompt": "What does the psql meta-command `\\d tablename` do?",
       "choices": [
-        "Deletes the table",
-        "Describes the table: columns, types, indexes, and constraints",
-        "Dumps the table’s contents to a file",
-        "Disables triggers on the table"
+        {
+          "text": "Deletes the table"
+        },
+        {
+          "text": "Describes the table: columns, types, indexes, and constraints"
+        },
+        {
+          "text": "Dumps the table’s contents to a file"
+        },
+        {
+          "text": "Disables triggers on the table"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -171,6 +283,14 @@
           "psql",
           "tooling"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -179,10 +299,18 @@
       "prompt": "Which Postgres-specific clause lets you upsert a row when a unique constraint would otherwise be violated?",
       "code": "INSERT INTO t (id, val) VALUES (1, 'x')\nON CONFLICT (id) DO UPDATE SET val = EXCLUDED.val;",
       "choices": [
-        "ON DUPLICATE KEY UPDATE",
-        "MERGE INTO",
-        "ON CONFLICT DO UPDATE",
-        "REPLACE INTO"
+        {
+          "text": "ON DUPLICATE KEY UPDATE"
+        },
+        {
+          "text": "MERGE INTO"
+        },
+        {
+          "text": "ON CONFLICT DO UPDATE"
+        },
+        {
+          "text": "REPLACE INTO"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -193,6 +321,14 @@
           "upsert",
           "postgres-extension"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -201,10 +337,18 @@
       "prompt": "What does `PARTITION BY` do inside a window function’s `OVER` clause?",
       "code": "SELECT dept, salary,\n  AVG(salary) OVER (PARTITION BY dept) AS dept_avg\nFROM employees;",
       "choices": [
-        "Splits the table into separate physical partitions",
-        "Divides the result rows into groups so the window function is computed independently within each group",
-        "Removes duplicate rows within each department",
-        "Filters out rows where salary is null"
+        {
+          "text": "Splits the table into separate physical partitions"
+        },
+        {
+          "text": "Divides the result rows into groups so the window function is computed independently within each group"
+        },
+        {
+          "text": "Removes duplicate rows within each department"
+        },
+        {
+          "text": "Filters out rows where salary is null"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -214,6 +358,14 @@
         "tags": [
           "window-functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -228,6 +380,14 @@
         "tags": [
           "window-functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -235,10 +395,18 @@
       "type": "mc",
       "prompt": "What do `LAG()` and `LEAD()` let a window function access?",
       "choices": [
-        "The minimum and maximum value in the whole table",
-        "A value from a preceding or following row within the same window ordering",
-        "The current row repeated twice",
-        "Only aggregate totals, never individual row values"
+        {
+          "text": "The minimum and maximum value in the whole table"
+        },
+        {
+          "text": "A value from a preceding or following row within the same window ordering"
+        },
+        {
+          "text": "The current row repeated twice"
+        },
+        {
+          "text": "Only aggregate totals, never individual row values"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -248,6 +416,14 @@
         "tags": [
           "window-functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -262,6 +438,14 @@
         "tags": [
           "aggregates"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -269,10 +453,18 @@
       "type": "mc",
       "prompt": "What does `ARRAY_AGG(name ORDER BY name)` return for a group of rows?",
       "choices": [
-        "A single concatenated string of names",
-        "A Postgres array value containing each name, ordered as specified",
-        "The count of distinct names",
-        "A JSON object mapping row id to name"
+        {
+          "text": "A single concatenated string of names"
+        },
+        {
+          "text": "A Postgres array value containing each name, ordered as specified"
+        },
+        {
+          "text": "The count of distinct names"
+        },
+        {
+          "text": "A JSON object mapping row id to name"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -283,6 +475,14 @@
           "aggregates",
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -290,10 +490,18 @@
       "type": "mc",
       "prompt": "What does `STRING_AGG(tag, ', ')` produce compared to `ARRAY_AGG(tag)`?",
       "choices": [
-        "The exact same array value",
-        "A single delimited text string joining the grouped values instead of an array",
-        "A JSONB array of tags",
-        "It fails because STRING_AGG requires numeric input"
+        {
+          "text": "The exact same array value"
+        },
+        {
+          "text": "A single delimited text string joining the grouped values instead of an array"
+        },
+        {
+          "text": "A JSONB array of tags"
+        },
+        {
+          "text": "It fails because STRING_AGG requires numeric input"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -304,6 +512,14 @@
           "aggregates",
           "strings"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -318,6 +534,14 @@
         "tags": [
           "pagination"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -326,10 +550,18 @@
       "prompt": "What is the basic form of a Common Table Expression used for?",
       "code": "WITH recent_orders AS (\n  SELECT * FROM orders WHERE created_at > now() - interval '7 days'\n)\nSELECT customer_id, count(*) FROM recent_orders GROUP BY customer_id;",
       "choices": [
-        "Permanently storing a subquery’s result as a table",
-        "Naming a subquery so it can be referenced, possibly more than once, in the statement that follows it",
-        "Replacing all JOINs in a query",
-        "Creating a database-level view"
+        {
+          "text": "Permanently storing a subquery’s result as a table"
+        },
+        {
+          "text": "Naming a subquery so it can be referenced, possibly more than once, in the statement that follows it"
+        },
+        {
+          "text": "Replacing all JOINs in a query"
+        },
+        {
+          "text": "Creating a database-level view"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -339,6 +571,14 @@
         "tags": [
           "cte"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -354,6 +594,14 @@
           "cte",
           "recursion"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -369,6 +617,14 @@
           "cte",
           "planner"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -377,10 +633,18 @@
       "prompt": "Why does a `LATERAL` join let a subquery reference columns from a preceding table in the `FROM` clause?",
       "code": "SELECT c.name, top.*\nFROM customers c\nCROSS JOIN LATERAL (\n  SELECT * FROM orders o WHERE o.customer_id = c.id ORDER BY o.total DESC LIMIT 3\n) AS top;",
       "choices": [
-        "It doesn’t; LATERAL is only cosmetic and changes nothing",
-        "It evaluates the subquery once per row of the preceding table, with that row’s values in scope",
-        "It forces the subquery to run before any WHERE clause filtering",
-        "It converts the subquery into a materialized view automatically"
+        {
+          "text": "It doesn’t; LATERAL is only cosmetic and changes nothing"
+        },
+        {
+          "text": "It evaluates the subquery once per row of the preceding table, with that row’s values in scope"
+        },
+        {
+          "text": "It forces the subquery to run before any WHERE clause filtering"
+        },
+        {
+          "text": "It converts the subquery into a materialized view automatically"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -391,6 +655,14 @@
           "joins",
           "lateral"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -399,10 +671,18 @@
       "prompt": "What does the array operator `ANY` let you do in a `WHERE` clause?",
       "code": "SELECT * FROM products WHERE 42 = ANY (tag_ids);",
       "choices": [
-        "Compare a scalar against every element of an array, matching if any element equals it",
-        "Check whether an array is empty",
-        "Sort the array elements",
-        "Cast the array to text"
+        {
+          "text": "Compare a scalar against every element of an array, matching if any element equals it"
+        },
+        {
+          "text": "Check whether an array is empty"
+        },
+        {
+          "text": "Sort the array elements"
+        },
+        {
+          "text": "Cast the array to text"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -412,6 +692,14 @@
         "tags": [
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -426,6 +714,14 @@
         "tags": [
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -434,10 +730,18 @@
       "prompt": "What does the `&&` operator check between two array columns?",
       "code": "SELECT * FROM posts WHERE tags && ARRAY['sql', 'nosql'];",
       "choices": [
-        "Whether both arrays are identical",
-        "Whether the arrays share at least one common element (overlap)",
-        "A logical AND on boolean array elements only",
-        "Whether the first array is longer than the second"
+        {
+          "text": "Whether both arrays are identical"
+        },
+        {
+          "text": "Whether the arrays share at least one common element (overlap)"
+        },
+        {
+          "text": "A logical AND on boolean array elements only"
+        },
+        {
+          "text": "Whether the first array is longer than the second"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -447,6 +751,14 @@
         "tags": [
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -461,6 +773,14 @@
         "tags": [
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -469,10 +789,18 @@
       "prompt": "What does `unnest(tag_ids)` do when used in a `SELECT` list or `FROM` clause?",
       "code": "SELECT unnest(tag_ids) AS tag_id FROM products WHERE id = 1;",
       "choices": [
-        "Sorts the array in place",
-        "Expands an array into one row per element",
-        "Removes duplicate elements from the array",
-        "Converts the array to a JSON string"
+        {
+          "text": "Sorts the array in place"
+        },
+        {
+          "text": "Expands an array into one row per element"
+        },
+        {
+          "text": "Removes duplicate elements from the array"
+        },
+        {
+          "text": "Converts the array to a JSON string"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -483,6 +811,14 @@
           "arrays",
           "set-returning-functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -498,6 +834,14 @@
           "arrays",
           "set-returning-functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -505,10 +849,18 @@
       "type": "mc",
       "prompt": "What does `cardinality(my_array)` return?",
       "choices": [
-        "The data type of the array elements",
-        "The total number of elements in the array",
-        "The maximum possible size of the array",
-        "A boolean for whether the array is empty"
+        {
+          "text": "The data type of the array elements"
+        },
+        {
+          "text": "The total number of elements in the array"
+        },
+        {
+          "text": "The maximum possible size of the array"
+        },
+        {
+          "text": "A boolean for whether the array is empty"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -518,6 +870,14 @@
         "tags": [
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -526,10 +886,18 @@
       "prompt": "What makes `DISTINCT ON (customer_id)` different from a plain `DISTINCT`?",
       "code": "SELECT DISTINCT ON (customer_id) customer_id, order_date, total\nFROM orders\nORDER BY customer_id, order_date DESC;",
       "choices": [
-        "They are exact synonyms in Postgres",
-        "DISTINCT ON keeps only the first row per group of the given expression(s), determined by ORDER BY, while plain DISTINCT deduplicates whole rows",
-        "DISTINCT ON requires an index and plain DISTINCT does not",
-        "DISTINCT ON removes NULL values automatically"
+        {
+          "text": "They are exact synonyms in Postgres"
+        },
+        {
+          "text": "DISTINCT ON keeps only the first row per group of the given expression(s), determined by ORDER BY, while plain DISTINCT deduplicates whole rows"
+        },
+        {
+          "text": "DISTINCT ON requires an index and plain DISTINCT does not"
+        },
+        {
+          "text": "DISTINCT ON removes NULL values automatically"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -539,6 +907,14 @@
         "tags": [
           "postgres-extension"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -554,6 +930,14 @@
           "constraints",
           "foreign-keys"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -561,10 +945,18 @@
       "type": "mc",
       "prompt": "What happens to `orders.customer_id` for existing rows when a referenced customer is deleted and the foreign key was declared `ON DELETE SET NULL`?",
       "choices": [
-        "The order rows are deleted along with the customer",
-        "The delete is blocked with a constraint violation",
-        "customer_id is set to NULL on those order rows, and the orders remain",
-        "customer_id is set to the customer’s old id string"
+        {
+          "text": "The order rows are deleted along with the customer"
+        },
+        {
+          "text": "The delete is blocked with a constraint violation"
+        },
+        {
+          "text": "customer_id is set to NULL on those order rows, and the orders remain"
+        },
+        {
+          "text": "customer_id is set to the customer’s old id string"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -575,6 +967,14 @@
           "constraints",
           "foreign-keys"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -583,10 +983,18 @@
       "prompt": "What does `SAVEPOINT` let you do inside a transaction?",
       "code": "BEGIN;\nINSERT INTO logs (msg) VALUES ('step 1');\nSAVEPOINT before_risky;\nINSERT INTO logs (msg) VALUES ('step 2');\nROLLBACK TO before_risky;\nCOMMIT;",
       "choices": [
-        "Commit part of the transaction early",
-        "Mark a point you can roll back to without discarding the whole transaction",
-        "Create a backup of the entire database",
-        "Pause the transaction and resume it later from another session"
+        {
+          "text": "Commit part of the transaction early"
+        },
+        {
+          "text": "Mark a point you can roll back to without discarding the whole transaction"
+        },
+        {
+          "text": "Create a backup of the entire database"
+        },
+        {
+          "text": "Pause the transaction and resume it later from another session"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -596,6 +1004,14 @@
         "tags": [
           "transactions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -611,6 +1027,14 @@
           "transactions",
           "isolation"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -618,10 +1042,18 @@
       "type": "mc",
       "prompt": "What is the difference between `SELECT ... FOR UPDATE` and `SELECT ... FOR SHARE`?",
       "choices": [
-        "They are identical; FOR SHARE is just deprecated syntax",
-        "FOR UPDATE takes an exclusive row lock blocking other writers and lockers; FOR SHARE takes a shared lock that still blocks writers but allows other FOR SHARE readers",
-        "FOR SHARE locks the whole table, FOR UPDATE locks only one row",
-        "FOR UPDATE only works inside stored procedures"
+        {
+          "text": "They are identical; FOR SHARE is just deprecated syntax"
+        },
+        {
+          "text": "FOR UPDATE takes an exclusive row lock blocking other writers and lockers; FOR SHARE takes a shared lock that still blocks writers but allows other FOR SHARE readers"
+        },
+        {
+          "text": "FOR SHARE locks the whole table, FOR UPDATE locks only one row"
+        },
+        {
+          "text": "FOR UPDATE only works inside stored procedures"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -631,6 +1063,14 @@
         "tags": [
           "locking"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -638,10 +1078,18 @@
       "type": "mc",
       "prompt": "What is the main practical benefit of adding a partial index like `CREATE INDEX idx ON orders (customer_id) WHERE status = 'pending'`?",
       "choices": [
-        "It indexes every row in the table, just with a smaller key",
-        "It keeps the index small and fast by only covering the subset of rows the application actually queries by that filter",
-        "It automatically deletes rows not matching the WHERE clause",
-        "It replaces the need for a primary key"
+        {
+          "text": "It indexes every row in the table, just with a smaller key"
+        },
+        {
+          "text": "It keeps the index small and fast by only covering the subset of rows the application actually queries by that filter"
+        },
+        {
+          "text": "It automatically deletes rows not matching the WHERE clause"
+        },
+        {
+          "text": "It replaces the need for a primary key"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -651,6 +1099,14 @@
         "tags": [
           "indexes"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -665,6 +1121,14 @@
         "tags": [
           "indexes"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -673,10 +1137,18 @@
       "prompt": "What access methods can an `EXCLUDE` constraint use, since it cannot rely on plain B-tree equality checks alone?",
       "code": "ALTER TABLE reservations ADD EXCLUDE USING gist (room_id WITH =, during WITH &&);",
       "choices": [
-        "Only hash indexes",
-        "GiST or SP-GiST, which support operators beyond simple equality",
-        "Only BRIN indexes",
-        "It reuses the primary key’s B-tree index directly"
+        {
+          "text": "Only hash indexes"
+        },
+        {
+          "text": "GiST or SP-GiST, which support operators beyond simple equality"
+        },
+        {
+          "text": "Only BRIN indexes"
+        },
+        {
+          "text": "It reuses the primary key’s B-tree index directly"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -686,6 +1158,14 @@
         "tags": [
           "constraints"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -700,6 +1180,14 @@
         "tags": [
           "constraints"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -708,10 +1196,18 @@
       "prompt": "What does declaring a constraint `DEFERRABLE INITIALLY DEFERRED` change about when it is checked?",
       "code": "ALTER TABLE t ADD CONSTRAINT fk_x FOREIGN KEY (x) REFERENCES y (id)\n  DEFERRABLE INITIALLY DEFERRED;",
       "choices": [
-        "The constraint is never checked",
-        "The constraint check is postponed until COMMIT time instead of running after each statement",
-        "The constraint only applies to SELECT statements",
-        "The constraint is checked twice per statement"
+        {
+          "text": "The constraint is never checked"
+        },
+        {
+          "text": "The constraint check is postponed until COMMIT time instead of running after each statement"
+        },
+        {
+          "text": "The constraint only applies to SELECT statements"
+        },
+        {
+          "text": "The constraint is checked twice per statement"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -722,6 +1218,14 @@
           "constraints",
           "transactions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -730,10 +1234,18 @@
       "prompt": "What is a `DOMAIN` in Postgres?",
       "code": "CREATE DOMAIN positive_int AS integer CHECK (VALUE > 0);\nCREATE TABLE t (qty positive_int);",
       "choices": [
-        "A network hostname setting for the server",
-        "A user-defined data type based on an existing type, with optional constraints attached, reusable across many columns",
-        "A synonym for SCHEMA",
-        "A special kind of foreign key"
+        {
+          "text": "A network hostname setting for the server"
+        },
+        {
+          "text": "A user-defined data type based on an existing type, with optional constraints attached, reusable across many columns"
+        },
+        {
+          "text": "A synonym for SCHEMA"
+        },
+        {
+          "text": "A special kind of foreign key"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -743,6 +1255,14 @@
         "tags": [
           "data-types"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -751,10 +1271,18 @@
       "prompt": "How does declarative range partitioning divide a table’s rows?",
       "code": "CREATE TABLE events (\n  id bigint, occurred_at timestamptz\n) PARTITION BY RANGE (occurred_at);\n\nCREATE TABLE events_2024 PARTITION OF events\n  FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');",
       "choices": [
-        "Rows are split randomly across partitions for load balancing",
-        "Each partition holds rows whose partition key falls within a defined, non-overlapping range",
-        "Every partition holds an identical full copy of the data",
-        "Partitioning only works on primary key columns"
+        {
+          "text": "Rows are split randomly across partitions for load balancing"
+        },
+        {
+          "text": "Each partition holds rows whose partition key falls within a defined, non-overlapping range"
+        },
+        {
+          "text": "Every partition holds an identical full copy of the data"
+        },
+        {
+          "text": "Partitioning only works on primary key columns"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -764,6 +1292,14 @@
         "tags": [
           "partitioning"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -778,6 +1314,14 @@
         "tags": [
           "partitioning"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -786,10 +1330,18 @@
       "prompt": "In the older table-inheritance style of partitioning (`INHERITS`), what does querying the parent table without `ONLY` return?",
       "code": "CREATE TABLE measurement_y2024 (...) INHERITS (measurement);\nSELECT * FROM measurement;        -- includes children\nSELECT * FROM ONLY measurement;   -- parent rows only",
       "choices": [
-        "Only rows physically stored in the parent table itself",
-        "Rows from the parent table plus rows from every child table that inherits from it",
-        "An error, because inherited tables cannot be queried together",
-        "Only the schema definition, no rows"
+        {
+          "text": "Only rows physically stored in the parent table itself"
+        },
+        {
+          "text": "Rows from the parent table plus rows from every child table that inherits from it"
+        },
+        {
+          "text": "An error, because inherited tables cannot be queried together"
+        },
+        {
+          "text": "Only the schema definition, no rows"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -800,6 +1352,14 @@
           "partitioning",
           "inheritance"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -807,10 +1367,18 @@
       "type": "mc",
       "prompt": "What is `pg_stat_activity` used for?",
       "choices": [
-        "Listing every table and its column definitions",
-        "Showing currently running backend connections and the queries they are executing",
-        "Storing query result caches",
-        "Tracking historical index usage over the last year"
+        {
+          "text": "Listing every table and its column definitions"
+        },
+        {
+          "text": "Showing currently running backend connections and the queries they are executing"
+        },
+        {
+          "text": "Storing query result caches"
+        },
+        {
+          "text": "Tracking historical index usage over the last year"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -820,6 +1388,14 @@
         "tags": [
           "monitoring"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -827,10 +1403,18 @@
       "type": "mc",
       "prompt": "What is the difference between `pg_cancel_backend(pid)` and `pg_terminate_backend(pid)`?",
       "choices": [
-        "They are exact aliases for the same function",
-        "pg_cancel_backend asks the target process to abort its current query while keeping the connection open; pg_terminate_backend kills the whole backend process and connection",
-        "pg_cancel_backend requires superuser and pg_terminate_backend does not",
-        "pg_terminate_backend only works on the current session"
+        {
+          "text": "They are exact aliases for the same function"
+        },
+        {
+          "text": "pg_cancel_backend asks the target process to abort its current query while keeping the connection open; pg_terminate_backend kills the whole backend process and connection"
+        },
+        {
+          "text": "pg_cancel_backend requires superuser and pg_terminate_backend does not"
+        },
+        {
+          "text": "pg_terminate_backend only works on the current session"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -841,6 +1425,14 @@
           "monitoring",
           "session-management"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -855,6 +1447,14 @@
         "tags": [
           "configuration"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -862,10 +1462,18 @@
       "type": "mc",
       "prompt": "What does `ALTER SYSTEM SET work_mem = '64MB';` do differently from `SET work_mem = '64MB';`?",
       "choices": [
-        "ALTER SYSTEM only affects the current session; SET affects every connection",
-        "ALTER SYSTEM writes the setting to postgresql.auto.conf so it persists across restarts and applies server-wide (after a reload for most params); SET only changes the current session",
-        "They are identical in every respect",
-        "ALTER SYSTEM requires stopping the whole cluster first"
+        {
+          "text": "ALTER SYSTEM only affects the current session; SET affects every connection"
+        },
+        {
+          "text": "ALTER SYSTEM writes the setting to postgresql.auto.conf so it persists across restarts and applies server-wide (after a reload for most params); SET only changes the current session"
+        },
+        {
+          "text": "They are identical in every respect"
+        },
+        {
+          "text": "ALTER SYSTEM requires stopping the whole cluster first"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -875,6 +1483,14 @@
         "tags": [
           "configuration"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -890,6 +1506,14 @@
           "monitoring",
           "storage"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -898,10 +1522,18 @@
       "prompt": "What does the `COPY` command do that a series of individual `INSERT` statements does not?",
       "code": "COPY products (id, name, price) FROM '/data/products.csv' WITH (FORMAT csv, HEADER true);",
       "choices": [
-        "Nothing extra, it is just shorthand for INSERT",
-        "Streams rows in bulk between a file (or stdin) and a table using a much faster binary/text protocol path, bypassing per-row statement overhead",
-        "Automatically deduplicates rows on load",
-        "Only works for exporting data, never importing"
+        {
+          "text": "Nothing extra, it is just shorthand for INSERT"
+        },
+        {
+          "text": "Streams rows in bulk between a file (or stdin) and a table using a much faster binary/text protocol path, bypassing per-row statement overhead"
+        },
+        {
+          "text": "Automatically deduplicates rows on load"
+        },
+        {
+          "text": "Only works for exporting data, never importing"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -911,6 +1543,14 @@
         "tags": [
           "bulk-operations"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -918,10 +1558,18 @@
       "type": "mc",
       "prompt": "What is the difference between `\\copy` (in psql) and the SQL `COPY` command?",
       "choices": [
-        "There is no difference at all",
-        "\\copy reads/writes the file on the psql client’s machine and works with the client’s local filesystem permissions; COPY reads/writes on the server and needs server-side filesystem access",
-        "\\copy only works with CSV, COPY only works with binary format",
-        "\\copy is deprecated and no longer works in modern Postgres"
+        {
+          "text": "There is no difference at all"
+        },
+        {
+          "text": "\\copy reads/writes the file on the psql client’s machine and works with the client’s local filesystem permissions; COPY reads/writes on the server and needs server-side filesystem access"
+        },
+        {
+          "text": "\\copy only works with CSV, COPY only works with binary format"
+        },
+        {
+          "text": "\\copy is deprecated and no longer works in modern Postgres"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -932,6 +1580,14 @@
           "bulk-operations",
           "psql"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -939,10 +1595,18 @@
       "type": "mc",
       "prompt": "What does calling `nextval('orders_id_seq')` do?",
       "choices": [
-        "Returns the current value of the sequence without changing it",
-        "Advances the sequence and returns the new, incremented value",
-        "Resets the sequence back to 1",
-        "Deletes the sequence object"
+        {
+          "text": "Returns the current value of the sequence without changing it"
+        },
+        {
+          "text": "Advances the sequence and returns the new, incremented value"
+        },
+        {
+          "text": "Resets the sequence back to 1"
+        },
+        {
+          "text": "Deletes the sequence object"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -952,6 +1616,14 @@
         "tags": [
           "sequences"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -966,6 +1638,14 @@
         "tags": [
           "sequences"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -974,10 +1654,18 @@
       "prompt": "What does marking a sequence `OWNED BY orders.id` accomplish?",
       "code": "ALTER SEQUENCE orders_id_seq OWNED BY orders.id;",
       "choices": [
-        "It gives a specific database role ownership permissions on the sequence",
-        "It ties the sequence’s lifecycle to that column, so dropping the column or table automatically drops the sequence too",
-        "It makes the sequence read-only",
-        "It shares the sequence’s current value with every other sequence in the database"
+        {
+          "text": "It gives a specific database role ownership permissions on the sequence"
+        },
+        {
+          "text": "It ties the sequence’s lifecycle to that column, so dropping the column or table automatically drops the sequence too"
+        },
+        {
+          "text": "It makes the sequence read-only"
+        },
+        {
+          "text": "It shares the sequence’s current value with every other sequence in the database"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -987,6 +1675,14 @@
         "tags": [
           "sequences"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -994,10 +1690,18 @@
       "type": "mc",
       "prompt": "What is the main practical difference between querying `information_schema.columns` and `pg_catalog.pg_attribute`?",
       "choices": [
-        "They return completely unrelated data",
-        "information_schema is a SQL-standard, cross-database-portable view with a simplified/stable shape; pg_catalog exposes Postgres’s actual internal system catalog with more detail and Postgres-specific columns",
-        "pg_catalog only works for superusers",
-        "information_schema is faster because it is precomputed nightly"
+        {
+          "text": "They return completely unrelated data"
+        },
+        {
+          "text": "information_schema is a SQL-standard, cross-database-portable view with a simplified/stable shape; pg_catalog exposes Postgres’s actual internal system catalog with more detail and Postgres-specific columns"
+        },
+        {
+          "text": "pg_catalog only works for superusers"
+        },
+        {
+          "text": "information_schema is faster because it is precomputed nightly"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1007,6 +1711,14 @@
         "tags": [
           "catalogs"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1014,10 +1726,18 @@
       "type": "mc",
       "prompt": "What does `to_regclass('orders')` return if the table exists, versus if it does not?",
       "choices": [
-        "It always raises an error either way",
-        "It returns the table’s OID cast to a regclass (printing as the table name) if it exists, and NULL if it does not, instead of erroring",
-        "It returns a boolean true/false",
-        "It returns the table’s row count"
+        {
+          "text": "It always raises an error either way"
+        },
+        {
+          "text": "It returns the table’s OID cast to a regclass (printing as the table name) if it exists, and NULL if it does not, instead of erroring"
+        },
+        {
+          "text": "It returns a boolean true/false"
+        },
+        {
+          "text": "It returns the table’s row count"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1027,6 +1747,14 @@
         "tags": [
           "catalogs"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1042,6 +1770,14 @@
           "storage",
           "system-columns"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1050,10 +1786,18 @@
       "prompt": "What is `to_tsvector('english', body)` used for?",
       "code": "SELECT to_tsvector('english', 'The quick brown foxes are running');",
       "choices": [
-        "Converting text to a JSON array of words",
-        "Producing a normalized, stemmed, stop-word-filtered representation of the text for full-text search",
-        "Sorting the words in the input string alphabetically",
-        "Encrypting the text column"
+        {
+          "text": "Converting text to a JSON array of words"
+        },
+        {
+          "text": "Producing a normalized, stemmed, stop-word-filtered representation of the text for full-text search"
+        },
+        {
+          "text": "Sorting the words in the input string alphabetically"
+        },
+        {
+          "text": "Encrypting the text column"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1063,6 +1807,14 @@
         "tags": [
           "full-text-search"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1071,10 +1823,18 @@
       "prompt": "How does `to_tsquery` combine with `@@` to perform a full-text search match?",
       "code": "SELECT * FROM articles WHERE to_tsvector('english', body) @@ to_tsquery('english', 'fox & quick');",
       "choices": [
-        "to_tsquery parses the search terms into the same lexeme format, and @@ tests whether the tsvector satisfies that query, respecting AND/OR/NOT operators",
-        "@@ performs a plain LIKE substring match",
-        "to_tsquery ignores boolean operators entirely and just ORs every term",
-        "The two functions are unrelated to each other"
+        {
+          "text": "to_tsquery parses the search terms into the same lexeme format, and @@ tests whether the tsvector satisfies that query, respecting AND/OR/NOT operators"
+        },
+        {
+          "text": "@@ performs a plain LIKE substring match"
+        },
+        {
+          "text": "to_tsquery ignores boolean operators entirely and just ORs every term"
+        },
+        {
+          "text": "The two functions are unrelated to each other"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1084,6 +1844,14 @@
         "tags": [
           "full-text-search"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1091,10 +1859,18 @@
       "type": "mc",
       "prompt": "What does the range type `int4range(1, 10)` represent by default?",
       "choices": [
-        "The two separate integers 1 and 10, nothing else",
-        "A single value covering integers from 1 inclusive up to but not including 10",
-        "A random integer between 1 and 10",
-        "An array of every integer from 1 to 10"
+        {
+          "text": "The two separate integers 1 and 10, nothing else"
+        },
+        {
+          "text": "A single value covering integers from 1 inclusive up to but not including 10"
+        },
+        {
+          "text": "A random integer between 1 and 10"
+        },
+        {
+          "text": "An array of every integer from 1 to 10"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1104,6 +1880,14 @@
         "tags": [
           "range-types"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1118,6 +1902,14 @@
         "tags": [
           "range-types"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1126,10 +1918,18 @@
       "prompt": "What does `jsonb_set(doc, '{address,city}', '\"Austin\"')` do?",
       "code": "SELECT jsonb_set('{\"address\": {\"city\": \"Dallas\"}}'::jsonb, '{address,city}', '\"Austin\"');",
       "choices": [
-        "Returns an error because JSONB is immutable",
-        "Returns a new jsonb value with the value at that nested path replaced, leaving the original untouched",
-        "Deletes the address key entirely",
-        "Appends \"Austin\" as a new array element"
+        {
+          "text": "Returns an error because JSONB is immutable"
+        },
+        {
+          "text": "Returns a new jsonb value with the value at that nested path replaced, leaving the original untouched"
+        },
+        {
+          "text": "Deletes the address key entirely"
+        },
+        {
+          "text": "Appends \"Austin\" as a new array element"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1139,6 +1939,14 @@
         "tags": [
           "json"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1147,10 +1955,18 @@
       "prompt": "What is the difference between the `->` and `->>` operators on a jsonb column?",
       "code": "SELECT doc -> 'age', doc ->> 'age' FROM users;",
       "choices": [
-        "There is no difference, they are aliases",
-        "-> returns the value as jsonb; ->> returns the same value cast to text",
-        "-> only works on arrays, ->> only works on objects",
-        "-> is for reading, ->> is for writing"
+        {
+          "text": "There is no difference, they are aliases"
+        },
+        {
+          "text": "-> returns the value as jsonb; ->> returns the same value cast to text"
+        },
+        {
+          "text": "-> only works on arrays, ->> only works on objects"
+        },
+        {
+          "text": "-> is for reading, ->> is for writing"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1160,6 +1976,14 @@
         "tags": [
           "json"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1174,6 +1998,14 @@
         "tags": [
           "json"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1182,10 +2014,18 @@
       "prompt": "What is a Postgres composite type, created with `CREATE TYPE`?",
       "code": "CREATE TYPE address AS (street text, city text, zip text);\nCREATE TABLE users (id int, home address);",
       "choices": [
-        "A type that can only hold a single scalar value",
-        "A structured type combining multiple named fields, usable as a column type, function return type, or parameter",
-        "A synonym for creating a new table",
-        "A special constraint type"
+        {
+          "text": "A type that can only hold a single scalar value"
+        },
+        {
+          "text": "A structured type combining multiple named fields, usable as a column type, function return type, or parameter"
+        },
+        {
+          "text": "A synonym for creating a new table"
+        },
+        {
+          "text": "A special constraint type"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1195,6 +2035,14 @@
         "tags": [
           "data-types"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1202,10 +2050,18 @@
       "type": "mc",
       "prompt": "What does `CREATE TYPE status AS ENUM ('pending', 'shipped', 'delivered')` give you that a plain text column with a CHECK constraint does not?",
       "choices": [
-        "Nothing extra, they behave identically in every way",
-        "A type with a fixed, ordered set of labels that sorts by declared order rather than alphabetically, and is compact to store",
-        "Automatic translation of the enum values into multiple languages",
-        "The ability to add new values without any DDL at all"
+        {
+          "text": "Nothing extra, they behave identically in every way"
+        },
+        {
+          "text": "A type with a fixed, ordered set of labels that sorts by declared order rather than alphabetically, and is compact to store"
+        },
+        {
+          "text": "Automatic translation of the enum values into multiple languages"
+        },
+        {
+          "text": "The ability to add new values without any DDL at all"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1215,6 +2071,14 @@
         "tags": [
           "data-types"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1230,6 +2094,14 @@
           "data-types",
           "uuid"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1238,10 +2110,18 @@
       "prompt": "What is the practical benefit of `GENERATED ALWAYS AS IDENTITY` over the older `SERIAL` for a primary key column?",
       "code": "CREATE TABLE t (id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY);",
       "choices": [
-        "It performs noticeably faster at insert time",
-        "It is SQL-standard syntax, and with ALWAYS it prevents an explicit INSERT from silently overriding the generated value unless OVERRIDING SYSTEM VALUE is used",
-        "It removes the need for a backing sequence entirely",
-        "It supports non-integer identity values"
+        {
+          "text": "It performs noticeably faster at insert time"
+        },
+        {
+          "text": "It is SQL-standard syntax, and with ALWAYS it prevents an explicit INSERT from silently overriding the generated value unless OVERRIDING SYSTEM VALUE is used"
+        },
+        {
+          "text": "It removes the need for a backing sequence entirely"
+        },
+        {
+          "text": "It supports non-integer identity values"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1252,6 +2132,14 @@
           "schema",
           "sequences"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1260,10 +2148,18 @@
       "prompt": "What does `GENERATED ALWAYS AS (price * quantity) STORED` create?",
       "code": "CREATE TABLE line_items (\n  price numeric, quantity int,\n  total numeric GENERATED ALWAYS AS (price * quantity) STORED\n);",
       "choices": [
-        "A virtual column computed on every SELECT, never written to disk",
-        "A column whose value is computed from other columns and physically stored on disk, recomputed automatically whenever the row changes",
-        "A trigger that must be manually invoked",
-        "A column that can be directly written to in an INSERT"
+        {
+          "text": "A virtual column computed on every SELECT, never written to disk"
+        },
+        {
+          "text": "A column whose value is computed from other columns and physically stored on disk, recomputed automatically whenever the row changes"
+        },
+        {
+          "text": "A trigger that must be manually invoked"
+        },
+        {
+          "text": "A column that can be directly written to in an INSERT"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1273,6 +2169,14 @@
         "tags": [
           "schema"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1280,10 +2184,18 @@
       "type": "mc",
       "prompt": "What is the difference between `SIMILAR TO` and the `~` operator for pattern matching?",
       "choices": [
-        "They are exact synonyms",
-        "SIMILAR TO uses SQL-standard regex-like wildcards (%, _), while ~ uses full POSIX regular expression syntax",
-        "SIMILAR TO is case-insensitive by default and ~ is not",
-        "~ only works on numeric columns"
+        {
+          "text": "They are exact synonyms"
+        },
+        {
+          "text": "SIMILAR TO uses SQL-standard regex-like wildcards (%, _), while ~ uses full POSIX regular expression syntax"
+        },
+        {
+          "text": "SIMILAR TO is case-insensitive by default and ~ is not"
+        },
+        {
+          "text": "~ only works on numeric columns"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1294,6 +2206,14 @@
           "strings",
           "pattern-matching"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1309,6 +2229,14 @@
           "strings",
           "postgres-extension"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1316,10 +2244,18 @@
       "type": "mc",
       "prompt": "What is the practical difference between `now()`, `CURRENT_TIMESTAMP`, and `clock_timestamp()`?",
       "choices": [
-        "They all return exactly the same value under every circumstance",
-        "now() and CURRENT_TIMESTAMP are fixed at transaction start and stay constant for the whole transaction; clock_timestamp() advances on every call, even mid-transaction",
-        "CURRENT_TIMESTAMP is deprecated and no longer works",
-        "clock_timestamp() only returns the date, not the time"
+        {
+          "text": "They all return exactly the same value under every circumstance"
+        },
+        {
+          "text": "now() and CURRENT_TIMESTAMP are fixed at transaction start and stay constant for the whole transaction; clock_timestamp() advances on every call, even mid-transaction"
+        },
+        {
+          "text": "CURRENT_TIMESTAMP is deprecated and no longer works"
+        },
+        {
+          "text": "clock_timestamp() only returns the date, not the time"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1329,6 +2265,14 @@
         "tags": [
           "datetime"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1336,10 +2280,18 @@
       "type": "mc",
       "prompt": "What does `interval '1 month' + timestamp '2024-01-31'` evaluate to?",
       "choices": [
-        "An error, because January has 31 days and February does not",
-        "2024-02-29 (or the last valid day of the following month), because Postgres clamps month arithmetic to a valid calendar date",
-        "2024-03-02, treating a month as exactly 30 days",
-        "2024-02-31, an invalid date stored as-is"
+        {
+          "text": "An error, because January has 31 days and February does not"
+        },
+        {
+          "text": "2024-02-29 (or the last valid day of the following month), because Postgres clamps month arithmetic to a valid calendar date"
+        },
+        {
+          "text": "2024-03-02, treating a month as exactly 30 days"
+        },
+        {
+          "text": "2024-02-31, an invalid date stored as-is"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1349,6 +2301,14 @@
         "tags": [
           "datetime"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1357,10 +2317,18 @@
       "prompt": "What does `date_trunc('week', timestamp_col)` do?",
       "code": "SELECT date_trunc('week', '2024-06-13 15:42:00'::timestamp);",
       "choices": [
-        "Removes the timestamp entirely, returning NULL",
-        "Rounds the timestamp down to the start of its containing week (Monday 00:00 by default)",
-        "Returns just the ISO week number as an integer",
-        "Deletes rows older than one week"
+        {
+          "text": "Removes the timestamp entirely, returning NULL"
+        },
+        {
+          "text": "Rounds the timestamp down to the start of its containing week (Monday 00:00 by default)"
+        },
+        {
+          "text": "Returns just the ISO week number as an integer"
+        },
+        {
+          "text": "Deletes rows older than one week"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1370,6 +2338,14 @@
         "tags": [
           "datetime"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1384,6 +2360,14 @@
         "tags": [
           "datetime"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1391,10 +2375,18 @@
       "type": "mc",
       "prompt": "What does `CREATE EXTENSION pg_trgm;` add to a database?",
       "choices": [
-        "A new authentication method",
-        "Trigram-based text similarity functions and operators, enabling fast fuzzy/similarity search and typo-tolerant matching",
-        "A backup and restore tool",
-        "Support for storing binary large objects"
+        {
+          "text": "A new authentication method"
+        },
+        {
+          "text": "Trigram-based text similarity functions and operators, enabling fast fuzzy/similarity search and typo-tolerant matching"
+        },
+        {
+          "text": "A backup and restore tool"
+        },
+        {
+          "text": "Support for storing binary large objects"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1405,6 +2397,14 @@
           "extensions",
           "full-text-search"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1419,6 +2419,14 @@
         "tags": [
           "extensions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1426,10 +2434,18 @@
       "type": "mc",
       "prompt": "What does `postgres_fdw` let you do?",
       "choices": [
-        "Compress a database to save disk space",
-        "Query tables that live on a different, remote Postgres server as if they were local tables",
-        "Convert a Postgres database to a different file format",
-        "Automatically shard a table across nodes"
+        {
+          "text": "Compress a database to save disk space"
+        },
+        {
+          "text": "Query tables that live on a different, remote Postgres server as if they were local tables"
+        },
+        {
+          "text": "Convert a Postgres database to a different file format"
+        },
+        {
+          "text": "Automatically shard a table across nodes"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1440,6 +2456,14 @@
           "extensions",
           "foreign-data"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1448,10 +2472,18 @@
       "prompt": "What is a materialized view, created with `CREATE MATERIALIZED VIEW`?",
       "code": "CREATE MATERIALIZED VIEW sales_summary AS\n  SELECT region, sum(total) FROM orders GROUP BY region;\nREFRESH MATERIALIZED VIEW sales_summary;",
       "choices": [
-        "A view whose query is re-run live on every SELECT, exactly like a normal view",
-        "A view whose query result is computed once and physically stored, only updating when explicitly REFRESHed",
-        "A temporary in-memory cache that disappears on server restart, unlike a table",
-        "A synonym for a partitioned table"
+        {
+          "text": "A view whose query is re-run live on every SELECT, exactly like a normal view"
+        },
+        {
+          "text": "A view whose query result is computed once and physically stored, only updating when explicitly REFRESHed"
+        },
+        {
+          "text": "A temporary in-memory cache that disappears on server restart, unlike a table"
+        },
+        {
+          "text": "A synonym for a partitioned table"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1461,6 +2493,14 @@
         "tags": [
           "views"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1475,6 +2515,14 @@
         "tags": [
           "views"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1483,10 +2531,18 @@
       "prompt": "What do `LISTEN` and `NOTIFY` provide?",
       "code": "-- session A:\nLISTEN new_order;\n-- session B:\nNOTIFY new_order, '{\"id\": 42}';",
       "choices": [
-        "A way to log every query run against the database",
-        "A lightweight publish/subscribe messaging channel between sessions, without polling a table",
-        "A replacement for foreign key constraints",
-        "A method for renaming database objects safely"
+        {
+          "text": "A way to log every query run against the database"
+        },
+        {
+          "text": "A lightweight publish/subscribe messaging channel between sessions, without polling a table"
+        },
+        {
+          "text": "A replacement for foreign key constraints"
+        },
+        {
+          "text": "A method for renaming database objects safely"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1496,6 +2552,14 @@
         "tags": [
           "pubsub"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1503,10 +2567,18 @@
       "type": "mc",
       "prompt": "What does `GRANT SELECT, INSERT ON orders TO app_user;` do?",
       "choices": [
-        "Creates a new database called app_user",
-        "Gives the role app_user permission to read from and insert into the orders table",
-        "Deletes the orders table and gives ownership to app_user",
-        "Makes app_user a superuser"
+        {
+          "text": "Creates a new database called app_user"
+        },
+        {
+          "text": "Gives the role app_user permission to read from and insert into the orders table"
+        },
+        {
+          "text": "Deletes the orders table and gives ownership to app_user"
+        },
+        {
+          "text": "Makes app_user a superuser"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1516,6 +2588,14 @@
         "tags": [
           "privileges"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1530,6 +2610,14 @@
         "tags": [
           "roles"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1538,10 +2626,18 @@
       "prompt": "What does `search_path` control?",
       "code": "SET search_path TO app, public;\nSELECT * FROM orders;  -- resolves to app.orders if it exists, else public.orders",
       "choices": [
-        "Which columns are indexed by default",
-        "The ordered list of schemas Postgres checks, in order, when a query references an unqualified table name",
-        "The list of allowed database connections",
-        "The default sort order for all queries"
+        {
+          "text": "Which columns are indexed by default"
+        },
+        {
+          "text": "The ordered list of schemas Postgres checks, in order, when a query references an unqualified table name"
+        },
+        {
+          "text": "The list of allowed database connections"
+        },
+        {
+          "text": "The default sort order for all queries"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1551,6 +2647,14 @@
         "tags": [
           "schemas"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1559,10 +2663,18 @@
       "prompt": "What does `TABLESAMPLE SYSTEM (10)` do in a `SELECT`?",
       "code": "SELECT * FROM large_table TABLESAMPLE SYSTEM (10);",
       "choices": [
-        "Returns exactly the first 10 rows",
-        "Returns an approximate random sample of about 10% of the table’s rows, sampled by physical block for speed",
-        "Returns 10 random columns instead of rows",
-        "Limits the query to 10 seconds of runtime"
+        {
+          "text": "Returns exactly the first 10 rows"
+        },
+        {
+          "text": "Returns an approximate random sample of about 10% of the table’s rows, sampled by physical block for speed"
+        },
+        {
+          "text": "Returns 10 random columns instead of rows"
+        },
+        {
+          "text": "Limits the query to 10 seconds of runtime"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1572,6 +2684,14 @@
         "tags": [
           "sampling"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1587,6 +2707,14 @@
           "null",
           "operators"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1594,10 +2722,18 @@
       "type": "mc",
       "prompt": "What does `generate_series(1, 10, 2)` produce?",
       "choices": [
-        "A single value, 10",
-        "The set of rows: 1, 3, 5, 7, 9",
-        "An array literal [1,3,5,7,9]",
-        "An error, because the step argument is invalid"
+        {
+          "text": "A single value, 10"
+        },
+        {
+          "text": "The set of rows: 1, 3, 5, 7, 9"
+        },
+        {
+          "text": "An array literal [1,3,5,7,9]"
+        },
+        {
+          "text": "An error, because the step argument is invalid"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1607,6 +2743,14 @@
         "tags": [
           "set-returning-functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1615,10 +2759,18 @@
       "prompt": "What does the row constructor `ROW(1, 'a') = ROW(1, 'a')` let you do that comparing individual columns cannot as concisely?",
       "code": "SELECT * FROM t WHERE (a, b) = (1, 'a');",
       "choices": [
-        "It performs a JOIN between two tables",
-        "It compares multiple column values as a single composite unit in one expression, useful for equality checks or ordered comparisons across several columns at once",
-        "It creates a new row in the table",
-        "It sorts the table by every column simultaneously"
+        {
+          "text": "It performs a JOIN between two tables"
+        },
+        {
+          "text": "It compares multiple column values as a single composite unit in one expression, useful for equality checks or ordered comparisons across several columns at once"
+        },
+        {
+          "text": "It creates a new row in the table"
+        },
+        {
+          "text": "It sorts the table by every column simultaneously"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1628,6 +2780,14 @@
         "tags": [
           "operators"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1642,6 +2802,14 @@
         "tags": [
           "set-returning-functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1649,10 +2817,18 @@
       "type": "mc",
       "prompt": "What does `format('Hello, %s! You have %s items.', name, count)` do?",
       "choices": [
-        "Executes name and count as dynamic SQL",
-        "Safely substitutes the arguments into the template string, with %I and %L variants for safely quoting identifiers and literals",
-        "Converts the string to uppercase",
-        "Only works inside PL/pgSQL, never in a plain SELECT"
+        {
+          "text": "Executes name and count as dynamic SQL"
+        },
+        {
+          "text": "Safely substitutes the arguments into the template string, with %I and %L variants for safely quoting identifiers and literals"
+        },
+        {
+          "text": "Converts the string to uppercase"
+        },
+        {
+          "text": "Only works inside PL/pgSQL, never in a plain SELECT"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1662,6 +2838,14 @@
         "tags": [
           "strings"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1669,10 +2853,18 @@
       "type": "mc",
       "prompt": "What is the purpose of `CLUSTER orders USING idx_orders_created_at;`?",
       "choices": [
-        "It sets up multi-server replication for the table",
-        "It physically reorders the table’s rows on disk to match the order of the given index, one-time, which can speed up range scans that follow that order",
-        "It creates the index if it does not already exist",
-        "It partitions the table across multiple clusters"
+        {
+          "text": "It sets up multi-server replication for the table"
+        },
+        {
+          "text": "It physically reorders the table’s rows on disk to match the order of the given index, one-time, which can speed up range scans that follow that order"
+        },
+        {
+          "text": "It creates the index if it does not already exist"
+        },
+        {
+          "text": "It partitions the table across multiple clusters"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1683,6 +2875,14 @@
           "storage",
           "maintenance"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1698,6 +2898,14 @@
           "ddl",
           "performance"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1705,10 +2913,18 @@
       "type": "mc",
       "prompt": "What does `DROP TABLE parent CASCADE;` do that a plain `DROP TABLE parent;` would refuse to do?",
       "choices": [
-        "Nothing different; CASCADE is ignored on DROP TABLE",
-        "It also drops dependent objects, like views or foreign keys referencing that table, instead of erroring out because they still depend on it",
-        "It cascades the drop to every table in the database",
-        "It only drops the table’s indexes, not the table itself"
+        {
+          "text": "Nothing different; CASCADE is ignored on DROP TABLE"
+        },
+        {
+          "text": "It also drops dependent objects, like views or foreign keys referencing that table, instead of erroring out because they still depend on it"
+        },
+        {
+          "text": "It cascades the drop to every table in the database"
+        },
+        {
+          "text": "It only drops the table’s indexes, not the table itself"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1718,6 +2934,14 @@
         "tags": [
           "ddl"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1725,10 +2949,18 @@
       "type": "mc",
       "prompt": "What does `TRUNCATE orders RESTART IDENTITY;` do differently from a plain `TRUNCATE orders;`?",
       "choices": [
-        "Nothing, RESTART IDENTITY is not valid syntax",
-        "It also resets any identity/serial sequence backing the table’s columns back to its starting value, in addition to removing all rows",
-        "It restarts the whole Postgres server",
-        "It re-creates the table from scratch with new column definitions"
+        {
+          "text": "Nothing, RESTART IDENTITY is not valid syntax"
+        },
+        {
+          "text": "It also resets any identity/serial sequence backing the table’s columns back to its starting value, in addition to removing all rows"
+        },
+        {
+          "text": "It restarts the whole Postgres server"
+        },
+        {
+          "text": "It re-creates the table from scratch with new column definitions"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1739,6 +2971,14 @@
           "ddl",
           "sequences"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1746,10 +2986,18 @@
       "type": "mc",
       "prompt": "What is `pg_locks` used for?",
       "choices": [
-        "Listing every password hash stored in the database",
-        "Showing currently held and awaited locks across the server, including which backend holds or waits on each one",
-        "Locking the entire database against all connections",
-        "Storing a history of every lock ever taken, indefinitely"
+        {
+          "text": "Listing every password hash stored in the database"
+        },
+        {
+          "text": "Showing currently held and awaited locks across the server, including which backend holds or waits on each one"
+        },
+        {
+          "text": "Locking the entire database against all connections"
+        },
+        {
+          "text": "Storing a history of every lock ever taken, indefinitely"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1760,6 +3008,14 @@
           "monitoring",
           "locking"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1774,6 +3030,14 @@
         "tags": [
           "transactions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1781,10 +3045,18 @@
       "type": "mc",
       "prompt": "What is the main difference between `current_database()` and `current_user`?",
       "choices": [
-        "They both return the same value, the connected role name",
-        "current_database() returns the name of the database this connection is attached to; current_user returns the role name the current session is running as",
-        "current_database() is deprecated in favor of current_user",
-        "current_user returns the operating system username, not a database role"
+        {
+          "text": "They both return the same value, the connected role name"
+        },
+        {
+          "text": "current_database() returns the name of the database this connection is attached to; current_user returns the role name the current session is running as"
+        },
+        {
+          "text": "current_database() is deprecated in favor of current_user"
+        },
+        {
+          "text": "current_user returns the operating system username, not a database role"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1794,6 +3066,14 @@
         "tags": [
           "session-management"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1808,6 +3088,14 @@
         "tags": [
           "schemas"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1815,10 +3103,18 @@
       "type": "mc",
       "prompt": "What is the difference between `pg_dump` and `pg_dumpall`?",
       "choices": [
-        "They produce identical output for a single database",
-        "pg_dump exports the contents of one database; pg_dumpall additionally captures cluster-wide objects like roles and tablespaces that live outside any single database",
-        "pg_dumpall only works on the postgres superuser database",
-        "pg_dump is for backups, pg_dumpall is for restoring backups"
+        {
+          "text": "They produce identical output for a single database"
+        },
+        {
+          "text": "pg_dump exports the contents of one database; pg_dumpall additionally captures cluster-wide objects like roles and tablespaces that live outside any single database"
+        },
+        {
+          "text": "pg_dumpall only works on the postgres superuser database"
+        },
+        {
+          "text": "pg_dump is for backups, pg_dumpall is for restoring backups"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1828,6 +3124,14 @@
         "tags": [
           "backup"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1835,10 +3139,18 @@
       "type": "mc",
       "prompt": "What is the effect of `pg_restore -j 4` when restoring a custom-format dump?",
       "choices": [
-        "It limits the restore to only 4 tables",
-        "It restores independent items (like separate tables and indexes) using 4 parallel worker jobs instead of one sequential stream",
-        "It repeats the restore process 4 times for redundancy",
-        "It sets the connection timeout to 4 seconds"
+        {
+          "text": "It limits the restore to only 4 tables"
+        },
+        {
+          "text": "It restores independent items (like separate tables and indexes) using 4 parallel worker jobs instead of one sequential stream"
+        },
+        {
+          "text": "It repeats the restore process 4 times for redundancy"
+        },
+        {
+          "text": "It sets the connection timeout to 4 seconds"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1848,6 +3160,14 @@
         "tags": [
           "backup"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1863,6 +3183,14 @@
           "ddl",
           "documentation"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     }
   ]

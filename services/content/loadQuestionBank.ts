@@ -2,7 +2,8 @@
 // validates it, and caches it only if that hash is still the current one.
 // Throws on any failure so TanStack Query reports the error state.
 import { CONTENT_LIMITS, validateQuestionBank } from '@syntactical/content-schema';
-import type { BankEntry, CachedBank } from '@syntactical/content-schema';
+import type { BankContext, BankEntry, CachedBank } from '@syntactical/content-schema';
+
 import { ContentFetchError } from '../../clients/ContentFetchError';
 import { fetchContentText } from '../../clients/fetchContentText';
 import { logWarning } from '../../clients/logClient';
@@ -12,6 +13,7 @@ import { verifyBankHash } from './verifyBankHash';
 import { writeCachedBank } from './writeCachedBank';
 
 type LoadQuestionBankArgs = {
+  context: BankContext;
   language: string;
   difficulty: string;
   entry: BankEntry;
@@ -56,10 +58,10 @@ async function fetchVerifiedText(args: LoadQuestionBankArgs): Promise<string> {
 }
 
 export async function loadQuestionBank(args: LoadQuestionBankArgs): Promise<CachedBank> {
-  const { difficulty, entry, isHashCurrent, language } = args;
+  const { context, difficulty, entry, isHashCurrent, language } = args;
   const { hash, path } = entry;
   const text = await fetchVerifiedText(args);
-  const result = validateQuestionBank(parseBankJson(text, path));
+  const result = validateQuestionBank(parseBankJson(text, path), context);
   const { isValid } = result;
   if (!isValid) return rejectBank(path, result.rule);
   const { droppedQuestionIds, questions } = result;

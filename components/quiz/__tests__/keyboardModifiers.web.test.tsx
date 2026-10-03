@@ -2,6 +2,7 @@ import type { Question } from '@syntactical/content-schema';
 import { act, render, screen } from '@testing-library/react';
 
 import { QuizRound } from '../QuizRound';
+import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/contentFixtures';
 
 jest.mock('react-native-reanimated', () => ({ useReducedMotion: () => true }));
 jest.mock('../../../state/StatsProvider', () => ({
@@ -10,8 +11,8 @@ jest.mock('../../../state/StatsProvider', () => ({
 
 const query = { explanation: 'Because', title: 'Why' };
 const questions: Question[] = [
-  { answerIndex: 2, choices: ['a', 'b', 'c', 'd'], id: 'q-1', prompt: 'First', query, type: 'mc' },
-  { answerIndex: 0, choices: ['w', 'x', 'y', 'z'], id: 'q-2', prompt: 'Second', query, type: 'mc' },
+  { answerIndex: 2, choices: [{ text: 'a' }, { text: 'b' }, { text: 'c' }, { text: 'd' }], id: 'q-1', prompt: 'First', query, provenance: TEST_PROVENANCE, type: 'mc' },
+  { answerIndex: 0, choices: [{ text: 'w' }, { text: 'x' }, { text: 'y' }, { text: 'z' }], id: 'q-2', prompt: 'Second', query, provenance: TEST_PROVENANCE, type: 'mc' },
 ];
 
 function renderRound() {

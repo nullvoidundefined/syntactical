@@ -15,18 +15,18 @@ async function hashTextWithNodeUppercase(text: string): Promise<string> {
 }
 
 const CURRENT_BANK_TEXT = JSON.stringify({
-    schemaVersion: 1,
-    questions: [{ id: 'q1', prompt: 'Which keyword declares a constant?', choices: ['let', 'const'] }],
+    schemaVersion: 2,
+    questions: [{ id: 'q1', prompt: 'Which keyword declares a constant?', choices: [{ text: 'let' }, { text: 'const' }] }],
 });
 
 const STALE_BANK_TEXT = JSON.stringify({
-    schemaVersion: 1,
-    questions: [{ id: 'q1', prompt: 'Which keyword declares a variable?', choices: ['let', 'const'] }],
+    schemaVersion: 2,
+    questions: [{ id: 'q1', prompt: 'Which keyword declares a variable?', choices: [{ text: 'let' }, { text: 'const' }] }],
 });
 
 const MULTIBYTE_BANK_TEXT = JSON.stringify({
-    schemaVersion: 1,
-    questions: [{ id: 'q1', prompt: 'Qué devuelve café.length en Python? ñ, ü, é', choices: ['4', '5'] }],
+    schemaVersion: 2,
+    questions: [{ id: 'q1', prompt: 'Qué devuelve café.length en Python? ñ, ü, é', choices: [{ text: '4' }, { text: '5' }] }],
 });
 
 describe('verifyBankHash', () => {

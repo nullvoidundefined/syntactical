@@ -7,6 +7,7 @@ import { loadLanguageManifest } from '../loadLanguageManifest';
 import {
     CONTENT_BASE_URL,
     MANIFEST_URL,
+    buildBankEntry,
     buildGoLanguage,
     cloneBundledManifest,
     countFetchesFor,
@@ -53,7 +54,7 @@ describe('loadLanguageManifest', () => {
 
     it('returns null for a manifest with a newer schemaVersion, keeps the previous copy, and logs one warning naming it', async () => {
         await writeCachedManifest(cloneBundledManifest());
-        stubManifestBody(JSON.stringify({ ...buildManifestWithGo(), schemaVersion: 2 }));
+        stubManifestBody(JSON.stringify({ ...buildManifestWithGo(), schemaVersion: 3 }));
 
         expect(await loadLanguageManifest(CONTENT_BASE_URL)).toBeNull();
 
@@ -68,7 +69,7 @@ describe('loadLanguageManifest', () => {
     it('returns null for a manifest with an unsafe bank path and keeps the previous copy', async () => {
         await writeCachedManifest(cloneBundledManifest());
         const hostileManifest = buildManifestWithGo();
-        hostileManifest.languages[3].banks.easy = { path: '../../etc/passwd.json', hash: hashUtf8Hex('x') };
+        hostileManifest.languages[3].banks.easy = buildBankEntry('../../etc/passwd.json', hashUtf8Hex('x'));
         stubManifestBody(JSON.stringify(hostileManifest));
 
         expect(await loadLanguageManifest(CONTENT_BASE_URL)).toBeNull();

@@ -7,6 +7,8 @@ import { writeCachedBank } from '../writeCachedBank';
 import { loadQuestionBank } from '../loadQuestionBank';
 import {
     CONTENT_BASE_URL,
+    EMPTY_BANK_CONTEXT,
+    buildBankEntry,
     buildBankText,
     buildBoolQuestion,
     countFetchesFor,
@@ -26,9 +28,10 @@ const PREVIOUS_QUESTIONS = [buildBoolQuestion('q-previous')] as Question[];
 
 function loadPythonEasy(bankHash: string, overrides: { path?: string; isHashCurrent?: (hash: string) => boolean } = {}) {
     return loadQuestionBank({
+        context: EMPTY_BANK_CONTEXT,
         language: 'python',
         difficulty: 'easy',
-        entry: { path: overrides.path ?? BANK_PATH, hash: bankHash },
+        entry: buildBankEntry(overrides.path ?? BANK_PATH, bankHash),
         contentBaseUrl: CONTENT_BASE_URL,
         isHashCurrent: overrides.isHashCurrent ?? (() => true),
         hashText: hashTextWithNode,
@@ -44,7 +47,7 @@ async function cachePreviousBank(): Promise<void> {
 }
 
 async function expectPreviousBankStillCached(): Promise<void> {
-    const cachedBank = await readCachedBank('python', 'easy');
+    const cachedBank = await readCachedBank('python', 'easy', EMPTY_BANK_CONTEXT);
     expect(cachedBank?.hash).toBe(PREVIOUS_HASH);
     expect(cachedBank?.questions.map((question) => question.id)).toEqual(['q-previous']);
 }
@@ -70,7 +73,7 @@ describe('loadQuestionBank', () => {
         expect(loadedBank.hash).toBe(NEW_BANK_HASH);
         expect(loadedBank.questions.map((question) => question.id)).toEqual(['q-new-1', 'q-new-2']);
         expect(countFetchesFor(BANK_URL)).toBe(1);
-        const cachedBank = await readCachedBank('python', 'easy');
+        const cachedBank = await readCachedBank('python', 'easy', EMPTY_BANK_CONTEXT);
         expect(cachedBank?.hash).toBe(NEW_BANK_HASH);
         expect(cachedBank?.questions.map((question) => question.id)).toEqual(['q-new-1', 'q-new-2']);
     });
@@ -86,7 +89,7 @@ describe('loadQuestionBank', () => {
 
     it('rejects a bank with a newer schemaVersion, keeps the previous copy, and logs one warning naming it', async () => {
         await cachePreviousBank();
-        const newerBankText = buildBankText(['q-new-1'], 2);
+        const newerBankText = buildBankText(['q-new-1'], 3);
         stubBankBody(newerBankText);
 
         await expect(loadPythonEasy(hashUtf8Hex(newerBankText))).rejects.toThrow();
@@ -101,7 +104,7 @@ describe('loadQuestionBank', () => {
 
     it('rejects a bank with zero valid questions, keeps the previous copy, and logs one warning naming the rule', async () => {
         await cachePreviousBank();
-        const invalidQuestionsText = JSON.stringify({ schemaVersion: 1, questions: [{ id: 'BAD ID', type: 'bool' }] });
+        const invalidQuestionsText = JSON.stringify({ schemaVersion: 2, questions: [{ id: 'BAD ID', type: 'bool' }] });
         stubBankBody(invalidQuestionsText);
 
         await expect(loadPythonEasy(hashUtf8Hex(invalidQuestionsText))).rejects.toThrow();
@@ -165,7 +168,7 @@ describe('loadQuestionBank', () => {
         await expect(loadPythonEasy(NEW_BANK_HASH, { path: 'https://elsewhere.test/python/easy.json' })).rejects.toThrow();
 
         expect((global.fetch as unknown as jest.Mock).mock.calls).toHaveLength(0);
-        expect(await readCachedBank('python', 'easy')).toBeNull();
+        expect(await readCachedBank('python', 'easy', EMPTY_BANK_CONTEXT)).toBeNull();
     });
 
     it('returns a bank whose manifest hash is no longer current without caching it', async () => {
@@ -184,6 +187,6 @@ describe('loadQuestionBank', () => {
 
         await loadPythonEasy(NEW_BANK_HASH, { isHashCurrent: (hash) => currentHashes.has(hash) });
 
-        expect(await readCachedBank('python', 'easy')).toBeNull();
+        expect(await readCachedBank('python', 'easy', EMPTY_BANK_CONTEXT)).toBeNull();
     });
 });

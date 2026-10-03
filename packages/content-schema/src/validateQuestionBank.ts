@@ -1,16 +1,21 @@
 // Validates a fetched question bank. A malformed question is dropped and
 // the rest kept; a malformed root, an unsupported schema, too many
 // questions, or no valid questions rejects the bank as a whole.
+import { collectMisconceptionIds } from './collectMisconceptionIds.js';
 import { CONTENT_LIMITS } from './contentLimits.js';
-import { SUPPORTED_SCHEMA_VERSION } from './supportedSchemaVersion.js';
-
 import { isRecord } from './isRecord.js';
+import { isValidProvenance } from './isValidProvenance.js';
+import { SUPPORTED_SCHEMA_VERSION } from './supportedSchemaVersion.js';
+import type { BankContext } from './types/BankContext.js';
 import type { Question } from './types/Question.js';
 
+const AB_CHOICE_COUNT = 2;
 const QUESTION_ID = /^[a-z0-9-]{1,64}$/;
 
+type DroppedQuestion = { id: string; rule: string };
+
 type BankResult =
-  | { droppedQuestionIds: string[]; isValid: true; questions: Question[] }
+  | { dropped: DroppedQuestion[]; droppedQuestionIds: string[]; isValid: true; questions: Question[] }
   | { isValid: false; rule: string };
 
 function isText(value: unknown, maxLength: number): boolean {
@@ -19,6 +24,10 @@ function isText(value: unknown, maxLength: number): boolean {
 
 function isOptionalText(value: unknown, maxLength: number): boolean {
   return value === undefined || (typeof value === 'string' && value.length <= maxLength);
+}
+
+function isOptionalDisplayText(value: unknown): boolean {
+  return value === undefined || isText(value, CONTENT_LIMITS.displayFieldLength);
 }
 
 function areValidTags(tags: unknown): boolean {
@@ -39,11 +48,21 @@ function isValidQuery(query: unknown): boolean {
   );
 }
 
-function hasValidChoices(choices: unknown[]): boolean {
-  const { minChoices, maxChoices, choiceLength } = CONTENT_LIMITS;
+function isValidChoice(choice: unknown): boolean {
+  if (!isRecord(choice)) return false;
+  const { code, misconceptionId, rationale, text } = choice;
+  const { choiceLength, longTextLength } = CONTENT_LIMITS;
   return (
-    choices.length >= minChoices && choices.length <= maxChoices && choices.every((choice) => isText(choice, choiceLength))
+    isText(text, choiceLength) &&
+    isOptionalText(code, longTextLength) &&
+    (rationale === undefined || typeof rationale === 'string') &&
+    isOptionalDisplayText(misconceptionId)
   );
+}
+
+function hasValidChoices(choices: unknown[]): boolean {
+  const { minChoices, maxChoices } = CONTENT_LIMITS;
+  return choices.length >= minChoices && choices.length <= maxChoices && choices.every(isValidChoice);
 }
 
 function isValidChoiceAnswer(choices: unknown, answerIndex: unknown): boolean {
@@ -51,46 +70,106 @@ function isValidChoiceAnswer(choices: unknown, answerIndex: unknown): boolean {
   return Number.isInteger(answerIndex) && (answerIndex as number) >= 0 && (answerIndex as number) < choices.length;
 }
 
+const CRITERION_TYPES = ['performance', 'correctness', 'readability'];
+
+function isCriterionText(value: unknown): boolean {
+  return typeof value === 'string' && value.trim().length > 0 && value.length <= CONTENT_LIMITS.longTextLength;
+}
+
+function isValidCriterion(criterion: unknown): boolean {
+  if (!isRecord(criterion)) return false;
+  const { evidence, statement, type } = criterion;
+  return CRITERION_TYPES.includes(type as string) && isCriterionText(statement) && isCriterionText(evidence);
+}
+
+function isValidAbShape(question: Record<string, unknown>): boolean {
+  const { answerIndex, choices, criterion } = question;
+  return (
+    Array.isArray(choices) &&
+    choices.length === AB_CHOICE_COUNT &&
+    isValidChoiceAnswer(choices, answerIndex) &&
+    isValidCriterion(criterion)
+  );
+}
+
+function isValidBoolExtras(question: Record<string, unknown>): boolean {
+  const { misconceptionId, rationale } = question;
+  return (
+    (rationale === undefined || typeof rationale === 'string') &&
+    isOptionalDisplayText(misconceptionId)
+  );
+}
+
 function isValidAnswerShape(question: Record<string, unknown>): boolean {
   const { type, choices, answerIndex, answer } = question;
-  if (type === 'bool') return typeof answer === 'boolean';
+  if (type === 'bool') return typeof answer === 'boolean' && isValidBoolExtras(question);
+  if (type === 'ab') return isValidAbShape(question);
   return type === 'mc' && isValidChoiceAnswer(choices, answerIndex);
 }
 
-function isValidQuestion(question: unknown): question is Question {
-  if (!isRecord(question)) return false;
-  const { code, id, prompt, query } = question;
+function collectRationales(question: Record<string, unknown>): unknown[] {
+  const { choices, rationale, type } = question;
+  if (type === 'bool') return [rationale];
+  return Array.isArray(choices) ? choices.map((choice) => (isRecord(choice) ? choice.rationale : undefined)) : [];
+}
+
+function hasLongRationale(question: Record<string, unknown>): boolean {
+  return collectRationales(question).some(
+    (rationale) => typeof rationale === 'string' && rationale.length > CONTENT_LIMITS.rationaleLength,
+  );
+}
+
+function findUnknownReferenceRule(question: Record<string, unknown>, context: BankContext): string | null {
+  const { topic } = question;
+  if (typeof topic === 'string' && !context.topicIds.includes(topic)) return 'unknown-topic';
+  const hasUnknownId = collectMisconceptionIds(question).some((id) => !context.misconceptionIds.includes(id));
+  return hasUnknownId ? 'unknown-misconception' : null;
+}
+
+// Returns the rule a question breaks, or null when it is valid.
+function findBrokenRule(question: unknown, context: BankContext): string | null {
+  if (!isRecord(question)) return 'malformed question';
+  const { code, id, prompt, query, topic } = question;
   const { longTextLength, promptLength } = CONTENT_LIMITS;
-  return (
+  const isShapeValid =
     typeof id === 'string' &&
     QUESTION_ID.test(id) &&
     isText(prompt, promptLength) &&
     isOptionalText(code, longTextLength) &&
-    isValidQuery(query) &&
-    isValidAnswerShape(question)
-  );
+    isOptionalDisplayText(topic) &&
+    isValidQuery(query);
+  if (!isShapeValid) return 'malformed question';
+  if (hasLongRationale(question)) return 'rationale-too-long';
+  if (!isValidAnswerShape(question)) return 'malformed question';
+  if (!isValidProvenance(question.provenance)) return 'missing-provenance';
+  return findUnknownReferenceRule(question, context);
 }
 
 function describeQuestionId(question: unknown): string {
   return isRecord(question) && typeof question.id === 'string' ? question.id : '(no id)';
 }
 
-function partitionQuestions(entries: unknown[]): { droppedQuestionIds: string[]; questions: Question[] } {
+function partitionQuestions(entries: unknown[], context: BankContext): {
+  dropped: DroppedQuestion[];
+  droppedQuestionIds: string[];
+  questions: Question[];
+} {
   const seenIds = new Set<string>();
   const questions: Question[] = [];
-  const droppedQuestionIds: string[] = [];
+  const dropped: DroppedQuestion[] = [];
   for (const entry of entries) {
-    if (isValidQuestion(entry) && !seenIds.has(entry.id)) {
-      seenIds.add(entry.id);
-      questions.push(entry);
+    const rule = findBrokenRule(entry, context);
+    if (rule === null && !seenIds.has((entry as Question).id)) {
+      seenIds.add((entry as Question).id);
+      questions.push(entry as Question);
     } else {
-      droppedQuestionIds.push(describeQuestionId(entry));
+      dropped.push({ id: describeQuestionId(entry), rule: rule ?? 'duplicate id' });
     }
   }
-  return { droppedQuestionIds, questions };
+  return { dropped, droppedQuestionIds: dropped.map((drop) => drop.id), questions };
 }
 
-export function validateQuestionBank(input: unknown): BankResult {
+export function validateQuestionBank(input: unknown, context: BankContext): BankResult {
   if (!isRecord(input) || !Array.isArray(input.questions)) {
     return { isValid: false, rule: 'root shape is invalid' };
   }
@@ -101,7 +180,7 @@ export function validateQuestionBank(input: unknown): BankResult {
   if (inputQuestions.length > CONTENT_LIMITS.maxQuestions) {
     return { isValid: false, rule: 'too many questions' };
   }
-  const { droppedQuestionIds, questions } = partitionQuestions(inputQuestions);
+  const { dropped, droppedQuestionIds, questions } = partitionQuestions(inputQuestions, context);
   if (questions.length === 0) return { isValid: false, rule: 'no valid questions' };
-  return { droppedQuestionIds, isValid: true, questions };
+  return { dropped, droppedQuestionIds, isValid: true, questions };
 }

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Text } from 'react-native';
 
 import { QuizRound } from '../QuizRound';
+import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/contentFixtures';
 
 // Reduced motion makes the query Modal close without a CSS animation;
 // react-native-web unmounts an animated Modal only on animationend, which
@@ -14,8 +15,8 @@ jest.mock('../../../state/StatsProvider', () => ({
 }));
 
 const query = { explanation: 'Because', title: 'Why' };
-const mcQuestion: Question = { answerIndex: 2, choices: ['a', 'b', 'c', 'd'], id: 'q-1', prompt: 'Pick', query, type: 'mc' };
-const boolQuestion: Question = { answer: true, id: 'q-2', prompt: 'Yes?', query, type: 'bool' };
+const mcQuestion: Question = { answerIndex: 2, choices: [{ text: 'a' }, { text: 'b' }, { text: 'c' }, { text: 'd' }], id: 'q-1', prompt: 'Pick', query, provenance: TEST_PROVENANCE, type: 'mc' };
+const boolQuestion: Question = { answer: true, id: 'q-2', prompt: 'Yes?', query, provenance: TEST_PROVENANCE, type: 'bool' };
 
 function RoundHarness({ question }: { question: Question }) {
   const [isOnMenu, setIsOnMenu] = useState(false);
@@ -136,7 +137,7 @@ describe('web keyboard navigation in a round', () => {
 });
 
 describe('web keyboard navigation ignores keys meant for something else', () => {
-  const threeChoiceQuestion: Question = { answerIndex: 2, choices: ['a', 'b', 'c'], id: 'q-3', prompt: 'Pick', query, type: 'mc' };
+  const threeChoiceQuestion: Question = { answerIndex: 2, choices: [{ text: 'a' }, { text: 'b' }, { text: 'c' }], id: 'q-3', prompt: 'Pick', query, provenance: TEST_PROVENANCE, type: 'mc' };
 
   function pressKeyOn(target: HTMLElement, key: string) {
     act(() => {

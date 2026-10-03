@@ -1,15 +1,23 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "questions": [
     {
       "id": "pg-hard-01",
       "type": "mc",
       "prompt": "What transaction isolation level does Postgres use by default?",
       "choices": [
-        "READ UNCOMMITTED",
-        "READ COMMITTED",
-        "REPEATABLE READ",
-        "SERIALIZABLE"
+        {
+          "text": "READ UNCOMMITTED"
+        },
+        {
+          "text": "READ COMMITTED"
+        },
+        {
+          "text": "REPEATABLE READ"
+        },
+        {
+          "text": "SERIALIZABLE"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -20,6 +28,14 @@
           "transactions",
           "isolation"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -35,6 +51,14 @@
           "isolation",
           "anomalies"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -42,10 +66,18 @@
       "type": "mc",
       "prompt": "What mechanism lets Postgres readers avoid blocking writers (and vice versa) for the same rows?",
       "choices": [
-        "Row-level locking exclusively",
-        "MVCC (multiversion concurrency control)",
-        "Strict two-phase locking",
-        "A global read/write mutex per table"
+        {
+          "text": "Row-level locking exclusively"
+        },
+        {
+          "text": "MVCC (multiversion concurrency control)"
+        },
+        {
+          "text": "Strict two-phase locking"
+        },
+        {
+          "text": "A global read/write mutex per table"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -56,6 +88,14 @@
           "mvcc",
           "concurrency"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -64,10 +104,18 @@
       "prompt": "What does marking a CTE `WITH x AS MATERIALIZED (...)` guarantee (Postgres 12+)?",
       "code": "WITH x AS MATERIALIZED (\n  SELECT * FROM big_table WHERE flag = true\n)\nSELECT * FROM x JOIN other ON ...;",
       "choices": [
-        "The CTE is computed once as its own step and not inlined/folded into the outer query",
-        "The query always runs faster",
-        "The CTE becomes a permanent table in the schema",
-        "The results are cached across separate sessions"
+        {
+          "text": "The CTE is computed once as its own step and not inlined/folded into the outer query"
+        },
+        {
+          "text": "The query always runs faster"
+        },
+        {
+          "text": "The CTE becomes a permanent table in the schema"
+        },
+        {
+          "text": "The results are cached across separate sessions"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -78,6 +126,14 @@
           "cte",
           "planner"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -92,6 +148,14 @@
         "tags": [
           "locking"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -100,10 +164,18 @@
       "prompt": "What does an `EXCLUDE` constraint using `gist` let you enforce that a `UNIQUE` constraint cannot?",
       "code": "ALTER TABLE bookings ADD EXCLUDE USING gist (room_id WITH =, during WITH &&);",
       "choices": [
-        "Simple column-value uniqueness",
-        "No two rows may have overlapping ranges/values for a given column, using a custom operator",
-        "Cascading foreign key deletes",
-        "Case-insensitive text uniqueness"
+        {
+          "text": "Simple column-value uniqueness"
+        },
+        {
+          "text": "No two rows may have overlapping ranges/values for a given column, using a custom operator"
+        },
+        {
+          "text": "Cascading foreign key deletes"
+        },
+        {
+          "text": "Case-insensitive text uniqueness"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -114,6 +186,14 @@
           "constraints",
           "ranges"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -121,10 +201,18 @@
       "type": "mc",
       "prompt": "Which statistics does the query planner primarily use to estimate row counts for a plan?",
       "choices": [
-        "pg_stat_activity",
-        "pg_class.reltuples and the histograms/MCVs in pg_statistic",
-        "pg_locks",
-        "pg_settings"
+        {
+          "text": "pg_stat_activity"
+        },
+        {
+          "text": "pg_class.reltuples and the histograms/MCVs in pg_statistic"
+        },
+        {
+          "text": "pg_locks"
+        },
+        {
+          "text": "pg_settings"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -135,6 +223,14 @@
           "planner",
           "statistics"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -149,6 +245,14 @@
         "tags": [
           "indexes"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -156,10 +260,18 @@
       "type": "mc",
       "prompt": "What happens to a column value once it exceeds roughly the TOAST threshold (~2KB)?",
       "choices": [
-        "Postgres raises an error and rejects the write",
-        "It is stored out-of-line in a separate TOAST table, compressed and/or chunked",
-        "The value is silently truncated to fit",
-        "It is stored inline as base64 text"
+        {
+          "text": "Postgres raises an error and rejects the write"
+        },
+        {
+          "text": "It is stored out-of-line in a separate TOAST table, compressed and/or chunked"
+        },
+        {
+          "text": "The value is silently truncated to fit"
+        },
+        {
+          "text": "It is stored inline as base64 text"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -170,6 +282,14 @@
           "storage",
           "toast"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -178,10 +298,18 @@
       "prompt": "What does `SELECT ... FOR UPDATE SKIP LOCKED` do?",
       "code": "SELECT id FROM jobs WHERE status = 'pending'\nORDER BY id LIMIT 1\nFOR UPDATE SKIP LOCKED;",
       "choices": [
-        "Waits for any locked rows, then locks and updates them",
-        "Skips over rows currently locked by another transaction instead of blocking on them",
-        "Locks every row in the table, skipping none",
-        "Disables row locking for the statement entirely"
+        {
+          "text": "Waits for any locked rows, then locks and updates them"
+        },
+        {
+          "text": "Skips over rows currently locked by another transaction instead of blocking on them"
+        },
+        {
+          "text": "Locks every row in the table, skipping none"
+        },
+        {
+          "text": "Disables row locking for the statement entirely"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -192,6 +320,14 @@
           "locking",
           "queues"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -199,10 +335,18 @@
       "type": "mc",
       "prompt": "What is a HOT (heap-only tuple) update, and what must be true for Postgres to use one instead of an ordinary update?",
       "choices": [
-        "An update that skips WAL logging entirely",
-        "An update where the new row version fits on the same page and no indexed column changed, avoiding new index entries",
-        "An update performed entirely in memory without touching disk",
-        "An update that automatically triggers a VACUUM afterward"
+        {
+          "text": "An update that skips WAL logging entirely"
+        },
+        {
+          "text": "An update where the new row version fits on the same page and no indexed column changed, avoiding new index entries"
+        },
+        {
+          "text": "An update performed entirely in memory without touching disk"
+        },
+        {
+          "text": "An update that automatically triggers a VACUUM afterward"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -213,6 +357,14 @@
           "mvcc",
           "hot updates"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -228,6 +380,14 @@
           "mvcc",
           "wraparound"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -235,10 +395,18 @@
       "type": "mc",
       "prompt": "How does Postgres detect a deadlock between two transactions each waiting on a lock the other holds?",
       "choices": [
-        "It never detects deadlocks; both transactions hang forever",
-        "A waiter builds a wait-for graph after a timeout and cancels one transaction if a cycle is found",
-        "It relies on the operating system to detect the cycle",
-        "The client driver detects the deadlock and retries automatically"
+        {
+          "text": "It never detects deadlocks; both transactions hang forever"
+        },
+        {
+          "text": "A waiter builds a wait-for graph after a timeout and cancels one transaction if a cycle is found"
+        },
+        {
+          "text": "It relies on the operating system to detect the cycle"
+        },
+        {
+          "text": "The client driver detects the deadlock and retries automatically"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -249,6 +417,14 @@
           "locking",
           "deadlocks"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -256,10 +432,18 @@
       "type": "mc",
       "prompt": "What is the difference between `pg_advisory_lock()` and `pg_advisory_xact_lock()`?",
       "choices": [
-        "They are aliases for the same function",
-        "The session-level lock must be released explicitly (or on disconnect); the transaction-level lock releases automatically at COMMIT or ROLLBACK",
-        "pg_advisory_xact_lock only works inside stored procedures",
-        "pg_advisory_lock acquires a lock on a specific row"
+        {
+          "text": "They are aliases for the same function"
+        },
+        {
+          "text": "The session-level lock must be released explicitly (or on disconnect); the transaction-level lock releases automatically at COMMIT or ROLLBACK"
+        },
+        {
+          "text": "pg_advisory_xact_lock only works inside stored procedures"
+        },
+        {
+          "text": "pg_advisory_lock acquires a lock on a specific row"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -270,6 +454,14 @@
           "locking",
           "advisory locks"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -277,10 +469,18 @@
       "type": "mc",
       "prompt": "What does Postgres streaming replication ship from primary to replica to keep it up to date?",
       "choices": [
-        "A continuous stream of WAL (write-ahead log) records",
-        "Periodic full pg_dump snapshots",
-        "SQL statements re-executed on the replica",
-        "Only the final row values via logical decoding"
+        {
+          "text": "A continuous stream of WAL (write-ahead log) records"
+        },
+        {
+          "text": "Periodic full pg_dump snapshots"
+        },
+        {
+          "text": "SQL statements re-executed on the replica"
+        },
+        {
+          "text": "Only the final row values via logical decoding"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -291,6 +491,14 @@
           "replication",
           "wal"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -306,6 +514,14 @@
           "wal",
           "durability"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -313,10 +529,18 @@
       "type": "mc",
       "prompt": "Setting `synchronous_commit = on` together with `synchronous_standby_names` changes what guarantee a COMMIT gives you compared to plain asynchronous replication?",
       "choices": [
-        "The primary waits for the named standby to acknowledge the WAL before returning success to the client",
-        "It makes replication faster by skipping WAL entirely",
-        "It guarantees the standby will never lag",
-        "It disables autovacuum on the standby"
+        {
+          "text": "The primary waits for the named standby to acknowledge the WAL before returning success to the client"
+        },
+        {
+          "text": "It makes replication faster by skipping WAL entirely"
+        },
+        {
+          "text": "It guarantees the standby will never lag"
+        },
+        {
+          "text": "It disables autovacuum on the standby"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -327,6 +551,14 @@
           "replication",
           "durability"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -334,10 +566,18 @@
       "type": "mc",
       "prompt": "How does logical replication differ fundamentally from physical (streaming) replication?",
       "choices": [
-        "It replicates individual row changes decoded from WAL and can target specific tables, across different major versions, rather than copying identical physical bytes",
-        "It is faster because it skips WAL entirely",
-        "It requires the replica to run an older Postgres version",
-        "It can only replicate DDL, not data"
+        {
+          "text": "It replicates individual row changes decoded from WAL and can target specific tables, across different major versions, rather than copying identical physical bytes"
+        },
+        {
+          "text": "It is faster because it skips WAL entirely"
+        },
+        {
+          "text": "It requires the replica to run an older Postgres version"
+        },
+        {
+          "text": "It can only replicate DDL, not data"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -348,6 +588,14 @@
           "replication",
           "logical replication"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -363,6 +611,14 @@
           "pg_dump",
           "mvcc"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -370,10 +626,18 @@
       "type": "mc",
       "prompt": "What is required for `pg_restore --jobs=N` to restore a database using multiple parallel workers?",
       "choices": [
-        "The dump must be in the custom (-Fc) or directory (-Fd) format, not plain SQL text",
-        "The database must already contain the schema",
-        "The dump must have been produced with --jobs as well",
-        "Nothing extra, plain SQL dumps parallelize automatically"
+        {
+          "text": "The dump must be in the custom (-Fc) or directory (-Fd) format, not plain SQL text"
+        },
+        {
+          "text": "The database must already contain the schema"
+        },
+        {
+          "text": "The dump must have been produced with --jobs as well"
+        },
+        {
+          "text": "Nothing extra, plain SQL dumps parallelize automatically"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -384,6 +648,14 @@
           "pg_dump",
           "tooling"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -391,10 +663,18 @@
       "type": "mc",
       "prompt": "A 500-million-row table only gets vacuumed after roughly 100 million dead tuples accumulate, with default settings. Why?",
       "choices": [
-        "autovacuum_vacuum_scale_factor (default 0.2) multiplies the table's row count, so the dead-tuple threshold scales with table size, not just the fixed base threshold",
-        "Postgres caps autovacuum to once per day regardless of table size",
-        "Large tables are exempt from autovacuum",
-        "The table needs a REINDEX first"
+        {
+          "text": "autovacuum_vacuum_scale_factor (default 0.2) multiplies the table's row count, so the dead-tuple threshold scales with table size, not just the fixed base threshold"
+        },
+        {
+          "text": "Postgres caps autovacuum to once per day regardless of table size"
+        },
+        {
+          "text": "Large tables are exempt from autovacuum"
+        },
+        {
+          "text": "The table needs a REINDEX first"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -405,6 +685,14 @@
           "autovacuum",
           "tuning"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -412,10 +700,18 @@
       "type": "mc",
       "prompt": "Which built-in extension gives an accurate, direct measurement of dead-tuple bloat inside a table by physically scanning it?",
       "choices": [
-        "pg_stat_statements",
-        "pgstattuple",
-        "pg_buffercache",
-        "pg_trgm"
+        {
+          "text": "pg_stat_statements"
+        },
+        {
+          "text": "pgstattuple"
+        },
+        {
+          "text": "pg_buffercache"
+        },
+        {
+          "text": "pg_trgm"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -426,6 +722,14 @@
           "bloat",
           "maintenance"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -433,10 +737,18 @@
       "type": "mc",
       "prompt": "What does `CLUSTER orders USING orders_created_at_idx` do?",
       "choices": [
-        "Sets up multi-master clustering across servers",
-        "Physically rewrites the table so its rows are stored on disk in the order defined by that index",
-        "Creates a read replica named \"orders\"",
-        "Merges the table into a partition"
+        {
+          "text": "Sets up multi-master clustering across servers"
+        },
+        {
+          "text": "Physically rewrites the table so its rows are stored on disk in the order defined by that index"
+        },
+        {
+          "text": "Creates a read replica named \"orders\""
+        },
+        {
+          "text": "Merges the table into a partition"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -447,6 +759,14 @@
           "storage",
           "maintenance"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -454,10 +774,18 @@
       "type": "mc",
       "prompt": "You have `WHERE city = 'Paris' AND country = 'France'`, and the planner badly overestimates how selective this is because city and country are correlated. What Postgres feature addresses this?",
       "choices": [
-        "CREATE STATISTICS with the dependencies or ndistinct kind, so ANALYZE records the actual correlation between the two columns",
-        "Adding a CHECK constraint linking the two columns",
-        "Switching the columns to a composite type",
-        "Rewriting the query as a subquery"
+        {
+          "text": "CREATE STATISTICS with the dependencies or ndistinct kind, so ANALYZE records the actual correlation between the two columns"
+        },
+        {
+          "text": "Adding a CHECK constraint linking the two columns"
+        },
+        {
+          "text": "Switching the columns to a composite type"
+        },
+        {
+          "text": "Rewriting the query as a subquery"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -468,6 +796,14 @@
           "planner",
           "statistics"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -483,6 +819,14 @@
           "extensibility",
           "operators"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -490,10 +834,18 @@
       "type": "mc",
       "prompt": "Why does indexing a custom data type require an operator class, not just an operator?",
       "choices": [
-        "An operator class tells the index access method which operators implement comparison/ordering/overlap for that type, so it knows how to build and search the index",
-        "Operator classes are only cosmetic labels with no functional role",
-        "Every column needs its own operator class regardless of type",
-        "Operator classes replace the need for CREATE INDEX entirely"
+        {
+          "text": "An operator class tells the index access method which operators implement comparison/ordering/overlap for that type, so it knows how to build and search the index"
+        },
+        {
+          "text": "Operator classes are only cosmetic labels with no functional role"
+        },
+        {
+          "text": "Every column needs its own operator class regardless of type"
+        },
+        {
+          "text": "Operator classes replace the need for CREATE INDEX entirely"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -504,6 +856,14 @@
           "extensibility",
           "indexes"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -511,10 +871,18 @@
       "type": "mc",
       "prompt": "In `EXPLAIN (ANALYZE, BUFFERS)` output, what does \"Buffers: shared hit=120 read=40\" tell you about a plan node?",
       "choices": [
-        "120 buffers came from the shared_buffers cache and 40 had to be read from disk (or the OS cache) for that node",
-        "120 rows were hit and 40 were missed by the WHERE clause",
-        "The query used 160MB of memory",
-        "The planner considered 160 alternative plans"
+        {
+          "text": "120 buffers came from the shared_buffers cache and 40 had to be read from disk (or the OS cache) for that node"
+        },
+        {
+          "text": "120 rows were hit and 40 were missed by the WHERE clause"
+        },
+        {
+          "text": "The query used 160MB of memory"
+        },
+        {
+          "text": "The planner considered 160 alternative plans"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -525,6 +893,14 @@
           "explain",
           "performance"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -540,6 +916,14 @@
           "explain",
           "tooling"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -547,10 +931,18 @@
       "type": "mc",
       "prompt": "Why does opening a fresh Postgres connection for every web request tend to become a bottleneck as traffic grows?",
       "choices": [
-        "Postgres forks an entire OS process per connection, which is comparatively expensive to create/tear down and consumes real memory per connection regardless of activity",
-        "Postgres connections are billed per second by the server",
-        "Postgres limits every database to 10 concurrent connections",
-        "Each connection recompiles the entire query planner"
+        {
+          "text": "Postgres forks an entire OS process per connection, which is comparatively expensive to create/tear down and consumes real memory per connection regardless of activity"
+        },
+        {
+          "text": "Postgres connections are billed per second by the server"
+        },
+        {
+          "text": "Postgres limits every database to 10 concurrent connections"
+        },
+        {
+          "text": "Each connection recompiles the entire query planner"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -561,6 +953,14 @@
           "connections",
           "architecture"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -568,10 +968,18 @@
       "type": "mc",
       "prompt": "Under PgBouncer's \"transaction\" pooling mode, what commonly breaks that works fine with a direct connection?",
       "choices": [
-        "Session-level state like prepared statements, session advisory locks, and a bare SET (without LOCAL) can leak across unrelated clients or silently vanish, since the underlying server connection is only borrowed for one transaction",
-        "Transactions can no longer be rolled back",
-        "INSERT statements stop working",
-        "The database name can no longer be specified"
+        {
+          "text": "Session-level state like prepared statements, session advisory locks, and a bare SET (without LOCAL) can leak across unrelated clients or silently vanish, since the underlying server connection is only borrowed for one transaction"
+        },
+        {
+          "text": "Transactions can no longer be rolled back"
+        },
+        {
+          "text": "INSERT statements stop working"
+        },
+        {
+          "text": "The database name can no longer be specified"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -582,6 +990,14 @@
           "connections",
           "pooling"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -589,10 +1005,18 @@
       "type": "mc",
       "prompt": "A transaction running under SERIALIZABLE isolation fails with SQLSTATE 40001. What should the application do?",
       "choices": [
-        "Treat it as a permanent error and give up",
-        "Retry the entire transaction from the beginning; the failure means Postgres could not prove the concurrent history was equivalent to some serial order, not that anything is actually wrong with the data",
-        "Switch to READ UNCOMMITTED and retry",
-        "Manually run VACUUM before retrying"
+        {
+          "text": "Treat it as a permanent error and give up"
+        },
+        {
+          "text": "Retry the entire transaction from the beginning; the failure means Postgres could not prove the concurrent history was equivalent to some serial order, not that anything is actually wrong with the data"
+        },
+        {
+          "text": "Switch to READ UNCOMMITTED and retry"
+        },
+        {
+          "text": "Manually run VACUUM before retrying"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -603,6 +1027,14 @@
           "serializable",
           "isolation"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -610,10 +1042,18 @@
       "type": "mc",
       "prompt": "What does the `pg_stat_statements` extension track?",
       "choices": [
-        "Per-normalized-query execution statistics (calls, total/mean time, rows, buffer usage) aggregated across all executions with the same query shape, literals replaced by placeholders",
-        "A live feed of currently running queries",
-        "A history of every DDL change ever made",
-        "Row-level audit logs of every UPDATE"
+        {
+          "text": "Per-normalized-query execution statistics (calls, total/mean time, rows, buffer usage) aggregated across all executions with the same query shape, literals replaced by placeholders"
+        },
+        {
+          "text": "A live feed of currently running queries"
+        },
+        {
+          "text": "A history of every DDL change ever made"
+        },
+        {
+          "text": "Row-level audit logs of every UPDATE"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -624,6 +1064,14 @@
           "monitoring",
           "pg_stat_statements"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -631,10 +1079,18 @@
       "type": "mc",
       "prompt": "What actually happens when you run `CREATE EXTENSION hstore;`?",
       "choices": [
-        "Postgres downloads the extension source from the internet and compiles it on the fly",
-        "Postgres reads the extension's already-installed control file and SQL script and executes that script to create its objects inside the current database, tracked as one unit",
-        "It only adds a comment to the catalog with no functional change",
-        "It creates a new physical database dedicated to the extension"
+        {
+          "text": "Postgres downloads the extension source from the internet and compiles it on the fly"
+        },
+        {
+          "text": "Postgres reads the extension's already-installed control file and SQL script and executes that script to create its objects inside the current database, tracked as one unit"
+        },
+        {
+          "text": "It only adds a comment to the catalog with no functional change"
+        },
+        {
+          "text": "It creates a new physical database dedicated to the extension"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -644,6 +1100,14 @@
         "tags": [
           "extensions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -651,10 +1115,18 @@
       "type": "mc",
       "prompt": "What does `postgres_fdw` let you do?",
       "choices": [
-        "Query tables on a remote Postgres server as if they were local tables, with the planner able to push some filtering/joining work to the remote side",
-        "Convert a Postgres table into a foreign key automatically",
-        "Replicate a table across data centers automatically",
-        "Encrypt foreign key columns"
+        {
+          "text": "Query tables on a remote Postgres server as if they were local tables, with the planner able to push some filtering/joining work to the remote side"
+        },
+        {
+          "text": "Convert a Postgres table into a foreign key automatically"
+        },
+        {
+          "text": "Replicate a table across data centers automatically"
+        },
+        {
+          "text": "Encrypt foreign key columns"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -665,6 +1137,14 @@
           "fdw",
           "extensibility"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -680,6 +1160,14 @@
           "inheritance",
           "constraints"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -687,10 +1175,18 @@
       "type": "mc",
       "prompt": "What is a key advantage declarative partitioning (`PARTITION BY RANGE/LIST/HASH`) has over old-style table inheritance for splitting a large table?",
       "choices": [
-        "The planner has first-class awareness of partitions and can prune irrelevant ones automatically, and routing an INSERT to the correct partition is automatic instead of needing trigger-based routing",
-        "Partitioned tables have no row limit while inherited tables do",
-        "Partitioning removes the need for indexes on child tables",
-        "Partitioning replicates data automatically across partitions"
+        {
+          "text": "The planner has first-class awareness of partitions and can prune irrelevant ones automatically, and routing an INSERT to the correct partition is automatic instead of needing trigger-based routing"
+        },
+        {
+          "text": "Partitioned tables have no row limit while inherited tables do"
+        },
+        {
+          "text": "Partitioning removes the need for indexes on child tables"
+        },
+        {
+          "text": "Partitioning replicates data automatically across partitions"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -701,6 +1197,14 @@
           "partitioning",
           "inheritance"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -708,10 +1212,18 @@
       "type": "mc",
       "prompt": "Why can partition pruning sometimes only happen at execution time rather than planning time?",
       "choices": [
-        "When the partition key is compared against a bind parameter or a subquery result rather than a literal constant, the planner cannot know which partitions qualify until the value is actually known, so pruning is deferred to execution",
-        "Execution-time pruning is always disabled by default",
-        "Partition pruning only ever happens at planning time",
-        "Partition pruning requires manually calling a pruning function"
+        {
+          "text": "When the partition key is compared against a bind parameter or a subquery result rather than a literal constant, the planner cannot know which partitions qualify until the value is actually known, so pruning is deferred to execution"
+        },
+        {
+          "text": "Execution-time pruning is always disabled by default"
+        },
+        {
+          "text": "Partition pruning only ever happens at planning time"
+        },
+        {
+          "text": "Partition pruning requires manually calling a pruning function"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -722,6 +1234,14 @@
           "partitioning",
           "planner"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -729,10 +1249,18 @@
       "type": "mc",
       "prompt": "What is a hard limit on `NOTIFY channel, payload` that makes it unsuitable as a general message queue?",
       "choices": [
-        "The payload is capped at 8000 bytes, and notifications are only visible to listeners that were connected at commit time, with no persistence or delivery guarantee otherwise",
-        "NOTIFY can only be called from a superuser session",
-        "Only one LISTEN per database is allowed at a time",
-        "NOTIFY blocks until every listener acknowledges receipt"
+        {
+          "text": "The payload is capped at 8000 bytes, and notifications are only visible to listeners that were connected at commit time, with no persistence or delivery guarantee otherwise"
+        },
+        {
+          "text": "NOTIFY can only be called from a superuser session"
+        },
+        {
+          "text": "Only one LISTEN per database is allowed at a time"
+        },
+        {
+          "text": "NOTIFY blocks until every listener acknowledges receipt"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -742,6 +1270,14 @@
         "tags": [
           "listen-notify"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -749,10 +1285,18 @@
       "type": "mc",
       "prompt": "What is the purpose of a checkpoint, and what do `max_wal_size` and `checkpoint_timeout` control about it?",
       "choices": [
-        "A checkpoint flushes all dirty pages to disk and marks a point WAL replay can start from after a crash; max_wal_size and checkpoint_timeout bound how much WAL (or how much time) can accumulate before the next checkpoint is forced",
-        "A checkpoint deletes old rows to save space",
-        "A checkpoint rebuilds every index in the database",
-        "A checkpoint disconnects idle client connections"
+        {
+          "text": "A checkpoint flushes all dirty pages to disk and marks a point WAL replay can start from after a crash; max_wal_size and checkpoint_timeout bound how much WAL (or how much time) can accumulate before the next checkpoint is forced"
+        },
+        {
+          "text": "A checkpoint deletes old rows to save space"
+        },
+        {
+          "text": "A checkpoint rebuilds every index in the database"
+        },
+        {
+          "text": "A checkpoint disconnects idle client connections"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -763,6 +1307,14 @@
           "wal",
           "checkpoints"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -778,6 +1330,14 @@
           "wal",
           "durability"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -785,10 +1345,18 @@
       "type": "mc",
       "prompt": "A query has been running for a while and `pg_stat_activity.wait_event_type` shows \"Lock\" with `wait_event` \"relation\". What is that query doing?",
       "choices": [
-        "Actively using CPU to scan the relation",
-        "Blocked, waiting to acquire a lock on a relation held by another session",
-        "Waiting for a client-side network read",
-        "Running a background vacuum"
+        {
+          "text": "Actively using CPU to scan the relation"
+        },
+        {
+          "text": "Blocked, waiting to acquire a lock on a relation held by another session"
+        },
+        {
+          "text": "Waiting for a client-side network read"
+        },
+        {
+          "text": "Running a background vacuum"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -799,6 +1367,14 @@
           "monitoring",
           "locking"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -806,10 +1382,18 @@
       "type": "mc",
       "prompt": "Why does `CREATE INDEX CONCURRENTLY` avoid blocking regular reads and writes on the table, unlike a plain `CREATE INDEX`?",
       "choices": [
-        "It takes a weaker lock (SHARE UPDATE EXCLUSIVE) that does not conflict with ordinary SELECT/INSERT/UPDATE/DELETE, by building the index in multiple passes instead of one exclusive scan",
-        "It builds the index entirely in memory with no disk writes",
-        "It skips validating existing rows",
-        "It only works on empty tables"
+        {
+          "text": "It takes a weaker lock (SHARE UPDATE EXCLUSIVE) that does not conflict with ordinary SELECT/INSERT/UPDATE/DELETE, by building the index in multiple passes instead of one exclusive scan"
+        },
+        {
+          "text": "It builds the index entirely in memory with no disk writes"
+        },
+        {
+          "text": "It skips validating existing rows"
+        },
+        {
+          "text": "It only works on empty tables"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -820,6 +1404,14 @@
           "locking",
           "indexes"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -827,10 +1419,18 @@
       "type": "mc",
       "prompt": "What is `PREPARE TRANSACTION` used for?",
       "choices": [
-        "Precompiling a query plan for reuse",
-        "The first phase of a two-phase commit: it durably records a transaction as ready to commit without actually committing it, so an external coordinator can commit or roll it back later, even across a server restart",
-        "Preparing a parameterized statement for a prepared statement",
-        "Scheduling a transaction to run at a future time"
+        {
+          "text": "Precompiling a query plan for reuse"
+        },
+        {
+          "text": "The first phase of a two-phase commit: it durably records a transaction as ready to commit without actually committing it, so an external coordinator can commit or roll it back later, even across a server restart"
+        },
+        {
+          "text": "Preparing a parameterized statement for a prepared statement"
+        },
+        {
+          "text": "Scheduling a transaction to run at a future time"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -841,6 +1441,14 @@
           "transactions",
           "2pc"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -856,6 +1464,14 @@
           "mvcc",
           "vacuum"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -863,10 +1479,18 @@
       "type": "mc",
       "prompt": "What must be true for Postgres to satisfy a query with an index-only scan, never touching the underlying heap page at all?",
       "choices": [
-        "Every column the query needs is present in the index, and the visibility map shows the relevant heap pages are \"all visible\" so per-tuple visibility does not need to be rechecked against the heap",
-        "The table must have no indexes other than the one used",
-        "The query must use SELECT *",
-        "Index-only scans never need the visibility map"
+        {
+          "text": "Every column the query needs is present in the index, and the visibility map shows the relevant heap pages are \"all visible\" so per-tuple visibility does not need to be rechecked against the heap"
+        },
+        {
+          "text": "The table must have no indexes other than the one used"
+        },
+        {
+          "text": "The query must use SELECT *"
+        },
+        {
+          "text": "Index-only scans never need the visibility map"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -877,6 +1501,14 @@
           "indexes",
           "vacuum"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -884,10 +1516,18 @@
       "type": "mc",
       "prompt": "When is a BRIN (Block Range INdex) a better fit than a B-tree?",
       "choices": [
-        "On a very large table where the indexed column is naturally correlated with physical row order (like an ever-increasing timestamp), trading precision for a tiny index that only stores min/max summaries per block range",
-        "When you need exact equality lookups on a low-cardinality column",
-        "When the table is small and fits entirely in memory",
-        "When you need the index to enforce uniqueness"
+        {
+          "text": "On a very large table where the indexed column is naturally correlated with physical row order (like an ever-increasing timestamp), trading precision for a tiny index that only stores min/max summaries per block range"
+        },
+        {
+          "text": "When you need exact equality lookups on a low-cardinality column"
+        },
+        {
+          "text": "When the table is small and fits entirely in memory"
+        },
+        {
+          "text": "When you need the index to enforce uniqueness"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -898,6 +1538,14 @@
           "indexes",
           "brin"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -905,10 +1553,18 @@
       "type": "mc",
       "prompt": "Structurally, what does a GIN index store that lets it efficiently answer \"does this array/jsonb/tsvector contain value X\"?",
       "choices": [
-        "A single sorted list of whole row values, like a B-tree",
-        "An inverted index: one entry per distinct component value, each pointing to a posting list of every row containing it",
-        "A hash of the entire column value",
-        "A compressed copy of the full column"
+        {
+          "text": "A single sorted list of whole row values, like a B-tree"
+        },
+        {
+          "text": "An inverted index: one entry per distinct component value, each pointing to a posting list of every row containing it"
+        },
+        {
+          "text": "A hash of the entire column value"
+        },
+        {
+          "text": "A compressed copy of the full column"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -919,6 +1575,14 @@
           "indexes",
           "gin"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -926,10 +1590,18 @@
       "type": "mc",
       "prompt": "What does adding `INCLUDE (total)` to `CREATE INDEX ON orders (customer_id) INCLUDE (total)` accomplish that a plain index on `customer_id` alone would not?",
       "choices": [
-        "total is stored in the index leaf pages (not part of the sort key) so a query selecting customer_id and total can be answered as an index-only scan without adding total to the key",
-        "It sorts the index by total as a secondary key",
-        "It makes the index enforce uniqueness on total",
-        "It compresses the total column"
+        {
+          "text": "total is stored in the index leaf pages (not part of the sort key) so a query selecting customer_id and total can be answered as an index-only scan without adding total to the key"
+        },
+        {
+          "text": "It sorts the index by total as a secondary key"
+        },
+        {
+          "text": "It makes the index enforce uniqueness on total"
+        },
+        {
+          "text": "It compresses the total column"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -940,6 +1612,14 @@
           "indexes",
           "covering indexes"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -947,10 +1627,18 @@
       "type": "mc",
       "prompt": "A table shows a high `n_dead_tup` relative to `n_live_tup` in `pg_stat_user_tables` right before autovacuum is due to run. What does that indicate?",
       "choices": [
-        "A large fraction of the table’s rows are stale versions from UPDATE/DELETE waiting to be reclaimed, meaning queries are scanning more physical rows than the \"logical\" row count suggests",
-        "The table has too many indexes",
-        "The table's data is corrupted",
-        "Replication has fallen behind"
+        {
+          "text": "A large fraction of the table’s rows are stale versions from UPDATE/DELETE waiting to be reclaimed, meaning queries are scanning more physical rows than the \"logical\" row count suggests"
+        },
+        {
+          "text": "The table has too many indexes"
+        },
+        {
+          "text": "The table's data is corrupted"
+        },
+        {
+          "text": "Replication has fallen behind"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -961,6 +1649,14 @@
           "vacuum",
           "monitoring"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -968,10 +1664,18 @@
       "type": "mc",
       "prompt": "Why can one client that opens a transaction, runs one query, and then sits idle for hours (without committing) cause vacuum on unrelated, busy tables to stop reclaiming space?",
       "choices": [
-        "That transaction still holds an old snapshot, which pins the oldest XID Postgres must still treat as \"possibly visible to someone,\" so vacuum anywhere in the database cannot remove any tuple newer than that XID until the transaction ends",
-        "It locks every table in the database explicitly",
-        "It only affects the specific table it queried",
-        "Idle transactions have no effect on vacuum"
+        {
+          "text": "That transaction still holds an old snapshot, which pins the oldest XID Postgres must still treat as \"possibly visible to someone,\" so vacuum anywhere in the database cannot remove any tuple newer than that XID until the transaction ends"
+        },
+        {
+          "text": "It locks every table in the database explicitly"
+        },
+        {
+          "text": "It only affects the specific table it queried"
+        },
+        {
+          "text": "Idle transactions have no effect on vacuum"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -982,6 +1686,14 @@
           "vacuum",
           "transactions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -997,6 +1709,14 @@
           "replication",
           "wal"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1004,10 +1724,18 @@
       "type": "mc",
       "prompt": "By default, does a Row Level Security policy on a table apply to the table's owner?",
       "choices": [
-        "No, table owners bypass RLS by default unless the table has FORCE ROW LEVEL SECURITY set",
-        "Yes, RLS always applies to every role including the owner with no way to change that",
-        "RLS only ever applies to superusers",
-        "RLS policies apply only to SELECT, never to owners running UPDATE"
+        {
+          "text": "No, table owners bypass RLS by default unless the table has FORCE ROW LEVEL SECURITY set"
+        },
+        {
+          "text": "Yes, RLS always applies to every role including the owner with no way to change that"
+        },
+        {
+          "text": "RLS only ever applies to superusers"
+        },
+        {
+          "text": "RLS policies apply only to SELECT, never to owners running UPDATE"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1018,6 +1746,14 @@
           "security",
           "rls"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1033,6 +1769,14 @@
           "sequences",
           "transactions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1040,10 +1784,18 @@
       "type": "mc",
       "prompt": "What is one practical advantage of `GENERATED ALWAYS AS IDENTITY` over `SERIAL` for a primary key column?",
       "choices": [
-        "It is SQL-standard syntax, and with GENERATED ALWAYS it rejects a plain manual INSERT into that column unless the caller explicitly opts in with OVERRIDING SYSTEM VALUE, preventing accidental collisions with the sequence",
-        "Identity columns can be updated directly without any restriction, unlike SERIAL",
-        "Identity columns do not use a backing sequence at all",
-        "Identity columns are always faster to insert into"
+        {
+          "text": "It is SQL-standard syntax, and with GENERATED ALWAYS it rejects a plain manual INSERT into that column unless the caller explicitly opts in with OVERRIDING SYSTEM VALUE, preventing accidental collisions with the sequence"
+        },
+        {
+          "text": "Identity columns can be updated directly without any restriction, unlike SERIAL"
+        },
+        {
+          "text": "Identity columns do not use a backing sequence at all"
+        },
+        {
+          "text": "Identity columns are always faster to insert into"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1054,6 +1806,14 @@
           "schema",
           "sequences"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1061,10 +1821,18 @@
       "type": "mc",
       "prompt": "In a window function, what is the practical difference between a `ROWS BETWEEN` frame and a `RANGE BETWEEN` frame?",
       "choices": [
-        "ROWS counts a fixed number of physical rows before/after the current row; RANGE instead measures by the value of the ORDER BY expression, grouping \"peer\" rows with equal ordering values into the same frame boundary",
-        "They are exact synonyms with no behavioral difference",
-        "RANGE only works with integer columns",
-        "ROWS ignores the ORDER BY clause entirely"
+        {
+          "text": "ROWS counts a fixed number of physical rows before/after the current row; RANGE instead measures by the value of the ORDER BY expression, grouping \"peer\" rows with equal ordering values into the same frame boundary"
+        },
+        {
+          "text": "They are exact synonyms with no behavioral difference"
+        },
+        {
+          "text": "RANGE only works with integer columns"
+        },
+        {
+          "text": "ROWS ignores the ORDER BY clause entirely"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1074,6 +1842,14 @@
         "tags": [
           "window functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1081,10 +1857,18 @@
       "type": "mc",
       "prompt": "What happens if you write a `WITH RECURSIVE` query over a graph with a cycle and forget a termination/visited-check condition?",
       "choices": [
-        "Postgres automatically detects the cycle and stops after one pass",
-        "The recursive query loops until resources run out, since Postgres does not detect cycles on its own, unlike SQL's optional CYCLE clause (PG14+) which must be explicitly requested",
-        "It raises a compile-time error before running",
-        "It silently returns zero rows"
+        {
+          "text": "Postgres automatically detects the cycle and stops after one pass"
+        },
+        {
+          "text": "The recursive query loops until resources run out, since Postgres does not detect cycles on its own, unlike SQL's optional CYCLE clause (PG14+) which must be explicitly requested"
+        },
+        {
+          "text": "It raises a compile-time error before running"
+        },
+        {
+          "text": "It silently returns zero rows"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1095,6 +1879,14 @@
           "cte",
           "recursion"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1102,10 +1894,18 @@
       "type": "mc",
       "prompt": "What does the `LATERAL` keyword let a subquery in the FROM clause do that a plain subquery cannot?",
       "choices": [
-        "Reference columns from FROM items that appear earlier in the same FROM clause, effectively running once per row of the preceding item",
-        "Run before the rest of the query starts, at parse time",
-        "Replace the need for a JOIN entirely",
-        "Automatically parallelize the subquery"
+        {
+          "text": "Reference columns from FROM items that appear earlier in the same FROM clause, effectively running once per row of the preceding item"
+        },
+        {
+          "text": "Run before the rest of the query starts, at parse time"
+        },
+        {
+          "text": "Replace the need for a JOIN entirely"
+        },
+        {
+          "text": "Automatically parallelize the subquery"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1116,6 +1916,14 @@
           "joins",
           "lateral"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1131,6 +1939,14 @@
           "extensibility",
           "aggregates"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1138,10 +1954,18 @@
       "type": "mc",
       "prompt": "Why is wrapping a PL/pgSQL statement in `BEGIN ... EXCEPTION WHEN ... END` inside a loop that runs millions of times a common performance mistake?",
       "choices": [
-        "Each EXCEPTION block establishes a subtransaction, which has real overhead to set up and tear down even when no exception is raised",
-        "EXCEPTION blocks are purely cosmetic and have zero runtime cost",
-        "PL/pgSQL forbids EXCEPTION blocks inside loops",
-        "It disables all indexes for the duration of the loop"
+        {
+          "text": "Each EXCEPTION block establishes a subtransaction, which has real overhead to set up and tear down even when no exception is raised"
+        },
+        {
+          "text": "EXCEPTION blocks are purely cosmetic and have zero runtime cost"
+        },
+        {
+          "text": "PL/pgSQL forbids EXCEPTION blocks inside loops"
+        },
+        {
+          "text": "It disables all indexes for the duration of the loop"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1152,6 +1976,14 @@
           "plpgsql",
           "performance"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1159,10 +1991,18 @@
       "type": "mc",
       "prompt": "What is an event trigger, as distinct from a regular (DML) trigger?",
       "choices": [
-        "A trigger that fires on DDL events (like CREATE TABLE or DROP) or other database-wide events, rather than on row/statement-level INSERT/UPDATE/DELETE against one table",
-        "A trigger that fires on a schedule, like a cron job",
-        "A synonym for a per-row AFTER trigger",
-        "A trigger that only fires on client connect/disconnect"
+        {
+          "text": "A trigger that fires on DDL events (like CREATE TABLE or DROP) or other database-wide events, rather than on row/statement-level INSERT/UPDATE/DELETE against one table"
+        },
+        {
+          "text": "A trigger that fires on a schedule, like a cron job"
+        },
+        {
+          "text": "A synonym for a per-row AFTER trigger"
+        },
+        {
+          "text": "A trigger that only fires on client connect/disconnect"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1173,6 +2013,14 @@
           "triggers",
           "ddl"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1180,10 +2028,18 @@
       "type": "mc",
       "prompt": "Why does inserting a row with a foreign key reference take a lock on the referenced parent row, and specifically why is it `FOR KEY SHARE` rather than a full row lock?",
       "choices": [
-        "The insert needs to ensure the parent row is not deleted or have its key changed before commit, but FOR KEY SHARE is deliberately the weakest lock that still allows concurrent non-key updates to the parent row",
-        "Foreign keys never lock the parent row at all",
-        "It takes the strongest lock, ACCESS EXCLUSIVE, on the parent row",
-        "The lock is only taken at COMMIT time, not on INSERT"
+        {
+          "text": "The insert needs to ensure the parent row is not deleted or have its key changed before commit, but FOR KEY SHARE is deliberately the weakest lock that still allows concurrent non-key updates to the parent row"
+        },
+        {
+          "text": "Foreign keys never lock the parent row at all"
+        },
+        {
+          "text": "It takes the strongest lock, ACCESS EXCLUSIVE, on the parent row"
+        },
+        {
+          "text": "The lock is only taken at COMMIT time, not on INSERT"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1194,6 +2050,14 @@
           "foreign-keys",
           "locking"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1201,10 +2065,18 @@
       "type": "mc",
       "prompt": "What does declaring a constraint `DEFERRABLE INITIALLY DEFERRED` change compared to the default (immediate) checking?",
       "choices": [
-        "The constraint is checked at COMMIT time instead of after each individual statement, which allows temporarily-violating intermediate states within one transaction",
-        "The constraint is never actually enforced",
-        "It makes the constraint apply only to future rows",
-        "It converts a CHECK constraint into a trigger automatically"
+        {
+          "text": "The constraint is checked at COMMIT time instead of after each individual statement, which allows temporarily-violating intermediate states within one transaction"
+        },
+        {
+          "text": "The constraint is never actually enforced"
+        },
+        {
+          "text": "It makes the constraint apply only to future rows"
+        },
+        {
+          "text": "It converts a CHECK constraint into a trigger automatically"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1215,6 +2087,14 @@
           "constraints",
           "transactions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1222,10 +2102,18 @@
       "type": "mc",
       "prompt": "Why is `pg_upgrade --link` (link mode) dramatically faster than the default copy mode for a large database?",
       "choices": [
-        "It uses hard links to the old cluster's data files instead of physically copying them, so the upgrade's time is roughly independent of database size, at the cost of making the old cluster unusable once you start the new one",
-        "It skips upgrading indexes entirely",
-        "It runs entirely on the standby without touching the primary",
-        "It only works for databases under 1GB"
+        {
+          "text": "It uses hard links to the old cluster's data files instead of physically copying them, so the upgrade's time is roughly independent of database size, at the cost of making the old cluster unusable once you start the new one"
+        },
+        {
+          "text": "It skips upgrading indexes entirely"
+        },
+        {
+          "text": "It runs entirely on the standby without touching the primary"
+        },
+        {
+          "text": "It only works for databases under 1GB"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1236,6 +2124,14 @@
           "upgrade",
           "tooling"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1243,10 +2139,18 @@
       "type": "mc",
       "prompt": "What role does an output plugin (like `pgoutput` or `wal2json`) play in logical replication?",
       "choices": [
-        "It decodes the raw, binary WAL record stream into a structured, plugin-defined representation of the logical row changes, which is what a subscriber or external consumer actually reads",
-        "It compresses WAL files for storage",
-        "It replaces the need for a replication slot",
-        "It only works for DDL changes, not DML"
+        {
+          "text": "It decodes the raw, binary WAL record stream into a structured, plugin-defined representation of the logical row changes, which is what a subscriber or external consumer actually reads"
+        },
+        {
+          "text": "It compresses WAL files for storage"
+        },
+        {
+          "text": "It replaces the need for a replication slot"
+        },
+        {
+          "text": "It only works for DDL changes, not DML"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1256,6 +2160,14 @@
         "tags": [
           "logical-replication"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1263,10 +2175,18 @@
       "type": "mc",
       "prompt": "A table has no primary key and no unique index. What happens when you try to UPDATE or DELETE a row on it through logical replication?",
       "choices": [
-        "It fails (or is disallowed) because logical replication needs a REPLICA IDENTITY to identify which row on the subscriber to apply the change to, and the default replica identity is the primary key",
-        "It works exactly the same as with a primary key",
-        "It silently updates a random row",
-        "It automatically falls back to physical replication for that table"
+        {
+          "text": "It fails (or is disallowed) because logical replication needs a REPLICA IDENTITY to identify which row on the subscriber to apply the change to, and the default replica identity is the primary key"
+        },
+        {
+          "text": "It works exactly the same as with a primary key"
+        },
+        {
+          "text": "It silently updates a random row"
+        },
+        {
+          "text": "It automatically falls back to physical replication for that table"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1277,6 +2197,14 @@
           "logical-replication",
           "replica-identity"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1284,10 +2212,18 @@
       "type": "mc",
       "prompt": "What is the relationship between `CREATE PUBLICATION` and `CREATE SUBSCRIPTION`?",
       "choices": [
-        "A publication (defined on the sender) names which tables/changes to expose; a subscription (defined on the receiver) connects to a publication and applies the changes it streams",
-        "They are two names for the same object created on the same server",
-        "A publication is required only for DDL replication",
-        "A subscription must be created before its publication exists"
+        {
+          "text": "A publication (defined on the sender) names which tables/changes to expose; a subscription (defined on the receiver) connects to a publication and applies the changes it streams"
+        },
+        {
+          "text": "They are two names for the same object created on the same server"
+        },
+        {
+          "text": "A publication is required only for DDL replication"
+        },
+        {
+          "text": "A subscription must be created before its publication exists"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1297,6 +2233,14 @@
         "tags": [
           "logical-replication"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1304,10 +2248,18 @@
       "type": "mc",
       "prompt": "How does `pg_repack` shrink a bloated table without the long ACCESS EXCLUSIVE lock that VACUUM FULL or CLUSTER require?",
       "choices": [
-        "It builds a new, compact copy of the table alongside the old one while capturing concurrent changes via a log table, then swaps the two with only a brief exclusive lock at the very end",
-        "It rewrites the table in place one page at a time with no locking at all",
-        "It only defragments indexes, never touches heap pages",
-        "It requires taking the whole database offline"
+        {
+          "text": "It builds a new, compact copy of the table alongside the old one while capturing concurrent changes via a log table, then swaps the two with only a brief exclusive lock at the very end"
+        },
+        {
+          "text": "It rewrites the table in place one page at a time with no locking at all"
+        },
+        {
+          "text": "It only defragments indexes, never touches heap pages"
+        },
+        {
+          "text": "It requires taking the whole database offline"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1318,6 +2270,14 @@
           "maintenance",
           "bloat"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1325,10 +2285,18 @@
       "type": "mc",
       "prompt": "What does `max_parallel_workers_per_gather` control, and why might a query you expect to be parallelized still run with a single worker?",
       "choices": [
-        "It caps how many parallel worker processes one Gather node can request; the planner can still choose fewer if the estimated cost does not clear the parallel setup/tuple cost, or if the query is unsafe to parallelize",
-        "It sets the maximum number of concurrent client connections allowed",
-        "It has no effect on planning, only execution",
-        "It guarantees every query will use exactly that many workers"
+        {
+          "text": "It caps how many parallel worker processes one Gather node can request; the planner can still choose fewer if the estimated cost does not clear the parallel setup/tuple cost, or if the query is unsafe to parallelize"
+        },
+        {
+          "text": "It sets the maximum number of concurrent client connections allowed"
+        },
+        {
+          "text": "It has no effect on planning, only execution"
+        },
+        {
+          "text": "It guarantees every query will use exactly that many workers"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1339,6 +2307,14 @@
           "parallel-query",
           "planner"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1346,10 +2322,18 @@
       "type": "mc",
       "prompt": "What triggers Postgres to JIT-compile expressions in a query plan rather than interpreting them?",
       "choices": [
-        "The planner's estimated total query cost exceeding jit_above_cost, so JIT is skipped for cheap queries where compilation overhead would outweigh any speedup",
-        "JIT compilation happens for every query unconditionally once the jit extension is installed",
-        "JIT only applies to DDL statements",
-        "JIT is triggered by the number of rows actually returned, discovered after execution finishes"
+        {
+          "text": "The planner's estimated total query cost exceeding jit_above_cost, so JIT is skipped for cheap queries where compilation overhead would outweigh any speedup"
+        },
+        {
+          "text": "JIT compilation happens for every query unconditionally once the jit extension is installed"
+        },
+        {
+          "text": "JIT only applies to DDL statements"
+        },
+        {
+          "text": "JIT is triggered by the number of rows actually returned, discovered after execution finishes"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1360,6 +2344,14 @@
           "jit",
           "performance"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1367,10 +2359,18 @@
       "type": "mc",
       "prompt": "Given a large table joined to a tiny lookup table on an indexed key, which join strategy does the planner typically favor, and why?",
       "choices": [
-        "A nested loop using the index: for each row of the tiny table, an index probe into the large table is cheap, whereas building a hash table or sorting the large table first would cost more for no benefit",
-        "A hash join, always, regardless of table sizes",
-        "A merge join, because it is always the fastest option",
-        "Postgres always uses nested loop joins for every join"
+        {
+          "text": "A nested loop using the index: for each row of the tiny table, an index probe into the large table is cheap, whereas building a hash table or sorting the large table first would cost more for no benefit"
+        },
+        {
+          "text": "A hash join, always, regardless of table sizes"
+        },
+        {
+          "text": "A merge join, because it is always the fastest option"
+        },
+        {
+          "text": "Postgres always uses nested loop joins for every join"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1381,6 +2381,14 @@
           "planner",
           "joins"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1388,10 +2396,18 @@
       "type": "mc",
       "prompt": "A sort or hash operation in a plan needs more memory than `work_mem` allows. What happens?",
       "choices": [
-        "The operation spills intermediate data to temporary files on disk and continues in a slower, disk-based algorithm rather than failing",
-        "The query fails immediately with an out-of-memory error",
-        "Postgres automatically raises work_mem for that one query",
-        "The planner silently returns incomplete results"
+        {
+          "text": "The operation spills intermediate data to temporary files on disk and continues in a slower, disk-based algorithm rather than failing"
+        },
+        {
+          "text": "The query fails immediately with an out-of-memory error"
+        },
+        {
+          "text": "Postgres automatically raises work_mem for that one query"
+        },
+        {
+          "text": "The planner silently returns incomplete results"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1402,6 +2418,14 @@
           "work_mem",
           "performance"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1417,6 +2441,14 @@
           "memory",
           "shared_buffers"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1424,10 +2456,18 @@
       "type": "mc",
       "prompt": "`effective_cache_size` sounds like it allocates memory, but what does it actually do?",
       "choices": [
-        "Nothing is allocated; it is purely a hint telling the planner how much memory is likely available for caching data, which biases cost estimates toward or away from index usage",
-        "It sets a hard cap on total memory Postgres can use",
-        "It reserves that much RAM exclusively for shared_buffers",
-        "It controls how much memory autovacuum can use"
+        {
+          "text": "Nothing is allocated; it is purely a hint telling the planner how much memory is likely available for caching data, which biases cost estimates toward or away from index usage"
+        },
+        {
+          "text": "It sets a hard cap on total memory Postgres can use"
+        },
+        {
+          "text": "It reserves that much RAM exclusively for shared_buffers"
+        },
+        {
+          "text": "It controls how much memory autovacuum can use"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1438,6 +2478,14 @@
           "planner",
           "memory"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1445,10 +2493,18 @@
       "type": "mc",
       "prompt": "Why is lowering `random_page_cost` from its default of 4 toward something like 1.1 commonly recommended when a database’s storage is SSD/NVMe rather than spinning disk?",
       "choices": [
-        "The default ratio to seq_page_cost models the extra seek penalty of random I/O on rotating disks; SSDs have far less of a random-access penalty, so a lower ratio stops the planner from over-favoring sequential scans to avoid \"expensive\" random access that is no longer actually expensive",
-        "random_page_cost has no effect on plan choice, only on logging",
-        "Lowering it disables index scans entirely",
-        "It changes how data is physically stored on disk"
+        {
+          "text": "The default ratio to seq_page_cost models the extra seek penalty of random I/O on rotating disks; SSDs have far less of a random-access penalty, so a lower ratio stops the planner from over-favoring sequential scans to avoid \"expensive\" random access that is no longer actually expensive"
+        },
+        {
+          "text": "random_page_cost has no effect on plan choice, only on logging"
+        },
+        {
+          "text": "Lowering it disables index scans entirely"
+        },
+        {
+          "text": "It changes how data is physically stored on disk"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1459,6 +2515,14 @@
           "planner",
           "tuning"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1466,10 +2530,18 @@
       "type": "mc",
       "prompt": "A server has `autovacuum_max_workers = 3` and 20 tables all become eligible for autovacuum around the same time. What happens?",
       "choices": [
-        "Only 3 tables get an autovacuum worker at once; the rest queue and wait their turn as workers free up",
-        "All 20 tables are vacuumed simultaneously regardless of the setting",
-        "Autovacuum refuses to run at all until the setting is raised to 20",
-        "The setting only limits manual VACUUM, not autovacuum"
+        {
+          "text": "Only 3 tables get an autovacuum worker at once; the rest queue and wait their turn as workers free up"
+        },
+        {
+          "text": "All 20 tables are vacuumed simultaneously regardless of the setting"
+        },
+        {
+          "text": "Autovacuum refuses to run at all until the setting is raised to 20"
+        },
+        {
+          "text": "The setting only limits manual VACUUM, not autovacuum"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1480,6 +2552,14 @@
           "autovacuum",
           "tuning"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1487,10 +2567,18 @@
       "type": "mc",
       "prompt": "What is a \"multixact ID\" used for, and why can it also suffer a wraparound-style problem similar to regular transaction IDs?",
       "choices": [
-        "It represents a set of transaction IDs that jointly hold a shared row lock, and because multixact IDs are also a bounded counter, they must be periodically frozen/vacuumed away just like regular XIDs, or the cluster can hit multixact wraparound",
-        "It is an alternate name for a two-phase-commit transaction",
-        "It only appears in logical replication and never affects vacuum",
-        "It is a deprecated feature with no modern relevance"
+        {
+          "text": "It represents a set of transaction IDs that jointly hold a shared row lock, and because multixact IDs are also a bounded counter, they must be periodically frozen/vacuumed away just like regular XIDs, or the cluster can hit multixact wraparound"
+        },
+        {
+          "text": "It is an alternate name for a two-phase-commit transaction"
+        },
+        {
+          "text": "It only appears in logical replication and never affects vacuum"
+        },
+        {
+          "text": "It is a deprecated feature with no modern relevance"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1501,6 +2589,14 @@
           "mvcc",
           "multixact"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1508,10 +2604,18 @@
       "type": "mc",
       "prompt": "In `pg_stat_bgwriter`, a high `buffers_backend` relative to `buffers_clean` and `buffers_checkpoint` suggests what?",
       "choices": [
-        "Backend processes are frequently having to write out dirty buffers themselves to make room for new pages, rather than the background writer or checkpointer keeping ahead of demand",
-        "The database has too few tables",
-        "Replication is broken",
-        "The value has no operational meaning"
+        {
+          "text": "Backend processes are frequently having to write out dirty buffers themselves to make room for new pages, rather than the background writer or checkpointer keeping ahead of demand"
+        },
+        {
+          "text": "The database has too few tables"
+        },
+        {
+          "text": "Replication is broken"
+        },
+        {
+          "text": "The value has no operational meaning"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1522,6 +2626,14 @@
           "monitoring",
           "bgwriter"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1529,10 +2641,18 @@
       "type": "mc",
       "prompt": "How does a `GENERATED ALWAYS AS (expression) STORED` column differ from just computing that expression in every SELECT?",
       "choices": [
-        "Its value is computed once and physically stored on disk whenever the row is written, so it can be indexed directly and read without recomputation, but it cannot be written to directly",
-        "It behaves identically to a VIEW column with zero storage cost",
-        "It is computed fresh on every read and never stored",
-        "It can be updated directly like any normal column"
+        {
+          "text": "Its value is computed once and physically stored on disk whenever the row is written, so it can be indexed directly and read without recomputation, but it cannot be written to directly"
+        },
+        {
+          "text": "It behaves identically to a VIEW column with zero storage cost"
+        },
+        {
+          "text": "It is computed fresh on every read and never stored"
+        },
+        {
+          "text": "It can be updated directly like any normal column"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1543,6 +2663,14 @@
           "schema",
           "generated-columns"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1550,10 +2678,18 @@
       "type": "mc",
       "prompt": "What is the advantage of `CREATE DOMAIN positive_int AS integer CHECK (VALUE > 0)` over just adding a CHECK constraint to every column that needs this rule?",
       "choices": [
-        "The validation rule is defined once and attached to the type itself, so every column or function that uses the domain automatically enforces it, instead of the rule being copy-pasted across every table definition",
-        "Domains are strictly faster at runtime than CHECK constraints",
-        "Domains can only be used for text columns",
-        "Domains automatically create an index on every column that uses them"
+        {
+          "text": "The validation rule is defined once and attached to the type itself, so every column or function that uses the domain automatically enforces it, instead of the rule being copy-pasted across every table definition"
+        },
+        {
+          "text": "Domains are strictly faster at runtime than CHECK constraints"
+        },
+        {
+          "text": "Domains can only be used for text columns"
+        },
+        {
+          "text": "Domains automatically create an index on every column that uses them"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1564,6 +2700,14 @@
           "domains",
           "constraints"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1571,10 +2715,18 @@
       "type": "mc",
       "prompt": "Why does `WHERE tags @> ARRAY['urgent']` benefit from a GIN index on `tags` while `WHERE tags = ARRAY['urgent', 'bug']` (exact equality) does not use it the same way?",
       "choices": [
-        "GIN’s inverted-index structure is built to answer \"contains element X\" efficiently by looking up postings for that element; whole-array equality is a different comparison the GIN opclass for arrays does not accelerate the same way",
-        "GIN indexes cannot be built on array columns at all",
-        "Both queries use the GIN index identically",
-        "GIN indexes only support text columns"
+        {
+          "text": "GIN’s inverted-index structure is built to answer \"contains element X\" efficiently by looking up postings for that element; whole-array equality is a different comparison the GIN opclass for arrays does not accelerate the same way"
+        },
+        {
+          "text": "GIN indexes cannot be built on array columns at all"
+        },
+        {
+          "text": "Both queries use the GIN index identically"
+        },
+        {
+          "text": "GIN indexes only support text columns"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1585,6 +2737,14 @@
           "indexes",
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1592,10 +2752,18 @@
       "type": "mc",
       "prompt": "In Postgres full text search, what is the difference between what `@@` determines and what `ts_rank()` adds?",
       "choices": [
-        "@@ answers a yes/no match against the document; ts_rank() separately computes a relevance score from term frequency and lexeme weight/position, letting you order matching rows by relevance rather than just filtering them",
-        "ts_rank replaces the need for a tsvector column entirely",
-        "@@ and ts_rank are interchangeable and return the same type",
-        "ts_rank only works on unindexed columns"
+        {
+          "text": "@@ answers a yes/no match against the document; ts_rank() separately computes a relevance score from term frequency and lexeme weight/position, letting you order matching rows by relevance rather than just filtering them"
+        },
+        {
+          "text": "ts_rank replaces the need for a tsvector column entirely"
+        },
+        {
+          "text": "@@ and ts_rank are interchangeable and return the same type"
+        },
+        {
+          "text": "ts_rank only works on unindexed columns"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1605,6 +2773,14 @@
         "tags": [
           "full-text-search"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1612,10 +2788,18 @@
       "type": "mc",
       "prompt": "How does the `pg_trgm` extension make `ILIKE '%searchterm%'` or fuzzy similarity queries index-able, when a plain B-tree cannot help with a leading wildcard?",
       "choices": [
-        "It breaks each string into overlapping three-character sequences (trigrams) and builds a GIN or GiST index over those, so a search can be answered by matching trigrams of the search term instead of scanning every row",
-        "It converts the column to a full-text tsvector automatically",
-        "It rewrites the query to remove the wildcard entirely",
-        "It only accelerates exact equality, not pattern matching"
+        {
+          "text": "It breaks each string into overlapping three-character sequences (trigrams) and builds a GIN or GiST index over those, so a search can be answered by matching trigrams of the search term instead of scanning every row"
+        },
+        {
+          "text": "It converts the column to a full-text tsvector automatically"
+        },
+        {
+          "text": "It rewrites the query to remove the wildcard entirely"
+        },
+        {
+          "text": "It only accelerates exact equality, not pattern matching"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1626,6 +2810,14 @@
           "pg_trgm",
           "full-text-search"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1633,10 +2825,18 @@
       "type": "mc",
       "prompt": "An extension you installed a while ago has a newer version available with bugfixes. What is the correct way to pick it up?",
       "choices": [
-        "ALTER EXTENSION extname UPDATE, which runs the specific migration script for upgrading from the currently-installed version to the target version, rather than reinstalling from scratch",
-        "DROP EXTENSION followed by CREATE EXTENSION, which is always safe and equivalent",
-        "Extensions update themselves automatically on server restart",
-        "You must dump and restore the whole database"
+        {
+          "text": "ALTER EXTENSION extname UPDATE, which runs the specific migration script for upgrading from the currently-installed version to the target version, rather than reinstalling from scratch"
+        },
+        {
+          "text": "DROP EXTENSION followed by CREATE EXTENSION, which is always safe and equivalent"
+        },
+        {
+          "text": "Extensions update themselves automatically on server restart"
+        },
+        {
+          "text": "You must dump and restore the whole database"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1647,6 +2847,14 @@
           "extensions",
           "maintenance"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1654,10 +2862,18 @@
       "type": "mc",
       "prompt": "A parent table has a child table referencing it with `ON DELETE CASCADE`, and the child table is large with no index on the foreign key column. What happens when you delete one parent row?",
       "choices": [
-        "Postgres must find and delete every matching child row, and without an index on the foreign key column it does so via a sequential scan of the entire child table",
-        "The cascade delete is skipped automatically if there is no index",
-        "ON DELETE CASCADE requires an index and refuses to be created without one",
-        "Only the parent row is deleted; children are cleaned up later by autovacuum"
+        {
+          "text": "Postgres must find and delete every matching child row, and without an index on the foreign key column it does so via a sequential scan of the entire child table"
+        },
+        {
+          "text": "The cascade delete is skipped automatically if there is no index"
+        },
+        {
+          "text": "ON DELETE CASCADE requires an index and refuses to be created without one"
+        },
+        {
+          "text": "Only the parent row is deleted; children are cleaned up later by autovacuum"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1668,6 +2884,14 @@
           "foreign-keys",
           "performance"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1675,10 +2899,18 @@
       "type": "mc",
       "prompt": "What does `SELECT * FROM big_table TABLESAMPLE SYSTEM (1)` do?",
       "choices": [
-        "Returns a random sample of roughly 1% of the table by randomly selecting whole storage pages, as opposed to BERNOULLI which samples individual rows independently",
-        "Returns exactly the first 1% of rows in insertion order",
-        "Limits the query to 1 second of execution time",
-        "Samples 1 row from the table regardless of size"
+        {
+          "text": "Returns a random sample of roughly 1% of the table by randomly selecting whole storage pages, as opposed to BERNOULLI which samples individual rows independently"
+        },
+        {
+          "text": "Returns exactly the first 1% of rows in insertion order"
+        },
+        {
+          "text": "Limits the query to 1 second of execution time"
+        },
+        {
+          "text": "Samples 1 row from the table regardless of size"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1688,6 +2920,14 @@
         "tags": [
           "sampling"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1695,10 +2935,18 @@
       "type": "mc",
       "prompt": "pg_stat_statements normalizes `SELECT * FROM t WHERE id = 5` and `SELECT * FROM t WHERE id = 999` into the same tracked entry. What about `SELECT * FROM t WHERE id IN (1,2,3)` versus `SELECT * FROM t WHERE id IN (1,2)`?",
       "choices": [
-        "They are typically tracked as separate entries, because normalization does not collapse a variable-length IN-list into a single canonical shape the way a single scalar parameter is collapsed",
-        "They are always merged into one entry regardless of list length",
-        "pg_stat_statements cannot track any query containing IN at all",
-        "IN-lists are converted to JOINs before normalization"
+        {
+          "text": "They are typically tracked as separate entries, because normalization does not collapse a variable-length IN-list into a single canonical shape the way a single scalar parameter is collapsed"
+        },
+        {
+          "text": "They are always merged into one entry regardless of list length"
+        },
+        {
+          "text": "pg_stat_statements cannot track any query containing IN at all"
+        },
+        {
+          "text": "IN-lists are converted to JOINs before normalization"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1709,6 +2957,14 @@
           "pg_stat_statements",
           "monitoring"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1716,10 +2972,18 @@
       "type": "mc",
       "prompt": "What are \"hint bits\" on a heap tuple, and why does the first read of a freshly-committed row sometimes trigger an extra write?",
       "choices": [
-        "Hint bits cache the outcome of a previous visibility check directly on the tuple so future readers can skip re-checking transaction status against the commit log; setting them for the first time dirties the page even though no user-visible data changed",
-        "Hint bits are a debugging feature with no effect on production behavior",
-        "They store the query planner’s hints for that specific row",
-        "They are only relevant to TOAST-ed columns"
+        {
+          "text": "Hint bits cache the outcome of a previous visibility check directly on the tuple so future readers can skip re-checking transaction status against the commit log; setting them for the first time dirties the page even though no user-visible data changed"
+        },
+        {
+          "text": "Hint bits are a debugging feature with no effect on production behavior"
+        },
+        {
+          "text": "They store the query planner’s hints for that specific row"
+        },
+        {
+          "text": "They are only relevant to TOAST-ed columns"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1730,6 +2994,14 @@
           "mvcc",
           "internals"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1737,10 +3009,18 @@
       "type": "mc",
       "prompt": "A parameterized prepared statement is executed repeatedly with different parameter values. What changes about how it is planned after the fifth execution?",
       "choices": [
-        "Postgres starts considering a generic plan (built without knowing the specific parameter values) and switches to using it going forward if its estimated cost is not noticeably worse than the average cost of the custom plans built for the first five executions",
-        "Nothing changes; the exact same plan from the first execution is always reused forever",
-        "A brand new plan is generated from scratch on every single execution regardless of history",
-        "The statement is automatically converted into a stored procedure"
+        {
+          "text": "Postgres starts considering a generic plan (built without knowing the specific parameter values) and switches to using it going forward if its estimated cost is not noticeably worse than the average cost of the custom plans built for the first five executions"
+        },
+        {
+          "text": "Nothing changes; the exact same plan from the first execution is always reused forever"
+        },
+        {
+          "text": "A brand new plan is generated from scratch on every single execution regardless of history"
+        },
+        {
+          "text": "The statement is automatically converted into a stored procedure"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1751,6 +3031,14 @@
           "prepared-statements",
           "planner"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1766,6 +3054,14 @@
           "autovacuum",
           "statistics"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1773,10 +3069,18 @@
       "type": "mc",
       "prompt": "What does `pg_stat_replication.replay_lag` (as opposed to `write_lag` or `flush_lag`) measure on the primary?",
       "choices": [
-        "The time between a transaction committing on the primary and that change actually being replayed (applied and visible to queries) on the standby",
-        "The network latency between primary and standby",
-        "How long the primary has been running",
-        "The disk space difference between primary and standby"
+        {
+          "text": "The time between a transaction committing on the primary and that change actually being replayed (applied and visible to queries) on the standby"
+        },
+        {
+          "text": "The network latency between primary and standby"
+        },
+        {
+          "text": "How long the primary has been running"
+        },
+        {
+          "text": "The disk space difference between primary and standby"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1787,6 +3091,14 @@
           "replication",
           "monitoring"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1794,10 +3106,18 @@
       "type": "mc",
       "prompt": "Why must `wal_level` be set to at least `replica` (not `minimal`) before you can set up streaming physical replication, and to `logical` before logical replication?",
       "choices": [
-        "Each higher wal_level records additional information in WAL beyond the bare minimum needed for crash recovery: replica adds what a standby needs to reconstruct changes, logical adds what decoding needs to reconstruct row-level changes",
-        "wal_level only controls compression, not content",
-        "minimal WAL level is actually sufficient for logical replication, this is a common misconception",
-        "wal_level has no relationship to replication at all"
+        {
+          "text": "Each higher wal_level records additional information in WAL beyond the bare minimum needed for crash recovery: replica adds what a standby needs to reconstruct changes, logical adds what decoding needs to reconstruct row-level changes"
+        },
+        {
+          "text": "wal_level only controls compression, not content"
+        },
+        {
+          "text": "minimal WAL level is actually sufficient for logical replication, this is a common misconception"
+        },
+        {
+          "text": "wal_level has no relationship to replication at all"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1808,6 +3128,14 @@
           "wal",
           "replication"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1815,10 +3143,18 @@
       "type": "mc",
       "prompt": "Why would you lower a table’s `FILLFACTOR` below the default of 100 for a table that receives frequent UPDATEs?",
       "choices": [
-        "Leaving free space on each page at insert time gives room for later HOT updates to place the new row version on the same page, avoiding new index entries",
-        "Lowering FILLFACTOR makes SELECT queries return faster",
-        "FILLFACTOR only affects index pages, never heap pages",
-        "FILLFACTOR determines the maximum row size allowed"
+        {
+          "text": "Leaving free space on each page at insert time gives room for later HOT updates to place the new row version on the same page, avoiding new index entries"
+        },
+        {
+          "text": "Lowering FILLFACTOR makes SELECT queries return faster"
+        },
+        {
+          "text": "FILLFACTOR only affects index pages, never heap pages"
+        },
+        {
+          "text": "FILLFACTOR determines the maximum row size allowed"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1829,6 +3165,14 @@
           "storage",
           "hot updates"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1836,10 +3180,18 @@
       "type": "mc",
       "prompt": "A query filters with `WHERE lower(email) = 'someone@example.com'`. What kind of index actually helps here, and why does a plain index on `email` not?",
       "choices": [
-        "An expression index built on lower(email) itself, since a plain B-tree on the raw column is sorted by the unmodified value and cannot satisfy a predicate on a function of that column",
-        "Any index on email automatically covers this, functions are transparent to the planner",
-        "A GIN index is required for any function-based predicate",
-        "This case can only be solved with a generated column, never an index directly"
+        {
+          "text": "An expression index built on lower(email) itself, since a plain B-tree on the raw column is sorted by the unmodified value and cannot satisfy a predicate on a function of that column"
+        },
+        {
+          "text": "Any index on email automatically covers this, functions are transparent to the planner"
+        },
+        {
+          "text": "A GIN index is required for any function-based predicate"
+        },
+        {
+          "text": "This case can only be solved with a generated column, never an index directly"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1850,6 +3202,14 @@
           "indexes",
           "expression-indexes"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1857,10 +3217,18 @@
       "type": "mc",
       "prompt": "What does it mean for a trigger to be `CONSTRAINT TRIGGER ... DEFERRABLE INITIALLY DEFERRED`?",
       "choices": [
-        "It is a constraint trigger whose firing can be postponed to COMMIT time, rather than firing immediately after the triggering statement, which lets it validate the final state of a transaction rather than each intermediate step",
-        "It is a normal trigger that only runs on DDL",
-        "It is a trigger that fires once per database restart",
-        "It is a trigger with no functional difference from a regular AFTER trigger"
+        {
+          "text": "It is a constraint trigger whose firing can be postponed to COMMIT time, rather than firing immediately after the triggering statement, which lets it validate the final state of a transaction rather than each intermediate step"
+        },
+        {
+          "text": "It is a normal trigger that only runs on DDL"
+        },
+        {
+          "text": "It is a trigger that fires once per database restart"
+        },
+        {
+          "text": "It is a trigger with no functional difference from a regular AFTER trigger"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1871,6 +3239,14 @@
           "triggers",
           "constraints"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1878,10 +3254,18 @@
       "type": "mc",
       "prompt": "What is the difference between `pg_cancel_backend(pid)` and `pg_terminate_backend(pid)`?",
       "choices": [
-        "pg_cancel_backend asks the target backend to abort its current query while keeping the session/connection open; pg_terminate_backend forcibly ends the entire backend process and its connection",
-        "They are exact synonyms provided for convenience",
-        "pg_cancel_backend only works on the current session's own backend",
-        "pg_terminate_backend only cancels the query, never the connection"
+        {
+          "text": "pg_cancel_backend asks the target backend to abort its current query while keeping the session/connection open; pg_terminate_backend forcibly ends the entire backend process and its connection"
+        },
+        {
+          "text": "They are exact synonyms provided for convenience"
+        },
+        {
+          "text": "pg_cancel_backend only works on the current session's own backend"
+        },
+        {
+          "text": "pg_terminate_backend only cancels the query, never the connection"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1892,6 +3276,14 @@
           "administration",
           "connections"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1899,10 +3291,18 @@
       "type": "mc",
       "prompt": "What is a composite type created with `CREATE TYPE address AS (street text, city text, zip text)`, structurally?",
       "choices": [
-        "A structured row type with named, typed fields that can be used as a column type, function parameter/return type, or nested inside another composite/array",
-        "An alias with no structure, equivalent to text",
-        "A type that can only be used as a table's primary key",
-        "A synonym for a JSON column"
+        {
+          "text": "A structured row type with named, typed fields that can be used as a column type, function parameter/return type, or nested inside another composite/array"
+        },
+        {
+          "text": "An alias with no structure, equivalent to text"
+        },
+        {
+          "text": "A type that can only be used as a table's primary key"
+        },
+        {
+          "text": "A synonym for a JSON column"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1913,6 +3313,14 @@
           "data-types",
           "composite-types"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1920,10 +3328,18 @@
       "type": "mc",
       "prompt": "Why does `SELECT int4range(1,5) = int4range(1,4,'[]')` evaluate to true, even though the literal bounds look different?",
       "choices": [
-        "Discrete range types are canonicalized to a standard form before comparison, converting an inclusive upper bound to the equivalent exclusive one, so two textually different but logically identical ranges compare equal",
-        "Postgres range equality only checks the lower bound",
-        "This actually evaluates to false; ranges with different bound literals are never equal",
-        "Range types cannot be compared with = at all"
+        {
+          "text": "Discrete range types are canonicalized to a standard form before comparison, converting an inclusive upper bound to the equivalent exclusive one, so two textually different but logically identical ranges compare equal"
+        },
+        {
+          "text": "Postgres range equality only checks the lower bound"
+        },
+        {
+          "text": "This actually evaluates to false; ranges with different bound literals are never equal"
+        },
+        {
+          "text": "Range types cannot be compared with = at all"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1933,6 +3349,14 @@
         "tags": [
           "range-types"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1940,10 +3364,18 @@
       "type": "mc",
       "prompt": "A parent table's primary key is updated on a row referenced by a large child table with `ON UPDATE CASCADE`. What lock-related cost does this share with an uncascaded, unindexed `ON DELETE CASCADE`?",
       "choices": [
-        "Postgres must locate every child row referencing the old key value to update their foreign key column, which without an index on that column means scanning the entire child table while holding locks for the duration",
-        "ON UPDATE CASCADE never needs to touch the child table at all",
-        "It is always faster than ON DELETE CASCADE regardless of indexing",
-        "It only affects the parent table, never the child"
+        {
+          "text": "Postgres must locate every child row referencing the old key value to update their foreign key column, which without an index on that column means scanning the entire child table while holding locks for the duration"
+        },
+        {
+          "text": "ON UPDATE CASCADE never needs to touch the child table at all"
+        },
+        {
+          "text": "It is always faster than ON DELETE CASCADE regardless of indexing"
+        },
+        {
+          "text": "It only affects the parent table, never the child"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1954,6 +3386,14 @@
           "foreign-keys",
           "performance"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1961,10 +3401,18 @@
       "type": "mc",
       "prompt": "A table has both a `BEFORE INSERT FOR EACH ROW` trigger and a `BEFORE INSERT FOR EACH STATEMENT` trigger for a multi-row INSERT. In what order do they fire?",
       "choices": [
-        "The statement-level trigger fires once, before any row-level trigger invocations begin; then the row-level trigger fires once per inserted row",
-        "The row-level trigger fires once per row first, then the statement-level trigger fires once at the very end regardless of BEFORE/AFTER",
-        "They fire simultaneously and their relative order is undefined",
-        "Only one of the two trigger levels can exist on the same table at once"
+        {
+          "text": "The statement-level trigger fires once, before any row-level trigger invocations begin; then the row-level trigger fires once per inserted row"
+        },
+        {
+          "text": "The row-level trigger fires once per row first, then the statement-level trigger fires once at the very end regardless of BEFORE/AFTER"
+        },
+        {
+          "text": "They fire simultaneously and their relative order is undefined"
+        },
+        {
+          "text": "Only one of the two trigger levels can exist on the same table at once"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1974,6 +3422,14 @@
         "tags": [
           "triggers"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1981,10 +3437,18 @@
       "type": "mc",
       "prompt": "`unnest(some_array)` used in a FROM clause and `array_agg(column)` used with GROUP BY are, in a sense, inverse operations. What does `unnest` specifically do?",
       "choices": [
-        "It expands an array value into a set of rows, one per element, which lets you join against, filter, or aggregate individual array elements using ordinary relational operations",
-        "It sorts an array in place without changing its structure",
-        "It converts an array to a single JSON string",
-        "It removes duplicate elements from an array"
+        {
+          "text": "It expands an array value into a set of rows, one per element, which lets you join against, filter, or aggregate individual array elements using ordinary relational operations"
+        },
+        {
+          "text": "It sorts an array in place without changing its structure"
+        },
+        {
+          "text": "It converts an array to a single JSON string"
+        },
+        {
+          "text": "It removes duplicate elements from an array"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1995,6 +3459,14 @@
           "arrays",
           "set-returning-functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     }
   ]

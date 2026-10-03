@@ -65,7 +65,7 @@ describe('buildContentManifest', () => {
                 const bankEntries = await Promise.all(
                     Object.entries(language.banks).map(async ([difficulty, bank]) => [
                         difficulty,
-                        { path: bank.path, hash: await hashFileBytes(join(contentDir, bank.path)) },
+                        { ...bank, hash: await hashFileBytes(join(contentDir, bank.path)) },
                     ]),
                 );
                 return { ...language, banks: Object.fromEntries(bankEntries) };
@@ -118,7 +118,7 @@ describe('buildContentManifest', () => {
     });
 
     it('rejects naming the bank path when a bank is invalid as a whole', async () => {
-        await writeJsonFile(join(contentDir, 'python', 'easy.json'), { schemaVersion: 1, questions: [] });
+        await writeJsonFile(join(contentDir, 'python', 'easy.json'), { schemaVersion: 2, questions: [] });
 
         await expect(buildContentManifest(contentDir, generatedPath)).rejects.toThrow(/python\/easy\.json/);
     });
@@ -126,7 +126,7 @@ describe('buildContentManifest', () => {
     it('rejects naming the bank path when a bank contains a question validation would drop', async () => {
         const bankPath = join(contentDir, 'python', 'medium.json');
         const bankFile = await readJsonFile<{ schemaVersion: number; questions: Record<string, unknown>[] }>(bankPath);
-        bankFile.questions[0] = { ...bankFile.questions[0], type: 'mc', choices: ['only one choice'], answerIndex: 0 };
+        bankFile.questions[0] = { ...bankFile.questions[0], type: 'mc', choices: [{ text: 'only one choice' }], answerIndex: 0 };
         await writeJsonFile(bankPath, bankFile);
 
         await expect(buildContentManifest(contentDir, generatedPath)).rejects.toThrow(/python\/medium\.json/);
@@ -139,6 +139,13 @@ describe('buildContentManifest', () => {
         await writeJsonFile(manifestPath, manifest);
 
         await expect(buildContentManifest(contentDir, generatedPath)).rejects.toThrow(/manifest/);
+    });
+
+    it('rejects naming the manifest, not a TypeError, when a language topic list is malformed', async () => {
+        const manifest = await readJsonFile<{ languages: Record<string, unknown>[] }>(join(contentDir, 'manifest.json'));
+        manifest.languages[0].topics = [null];
+        await writeJsonFile(join(contentDir, 'manifest.json'), manifest);
+        await expect(buildContentManifest(contentDir, generatedPath)).rejects.toThrow(/manifest\.json is invalid/);
     });
 
     it('rejects a bank file that starts with a UTF-8 byte-order mark', async () => {

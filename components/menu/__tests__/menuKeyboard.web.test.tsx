@@ -1,3 +1,4 @@
+import type { LanguageEntry } from '@syntactical/content-schema';
 import { act, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { Text } from 'react-native';
@@ -19,7 +20,7 @@ jest.mock('../../../state/useLanguageManifest', () => ({
         tagline: 'Snakes.',
       },
     ],
-    schemaVersion: 1,
+    schemaVersion: 2,
   }),
 }));
 jest.mock('../../../state/useQuestionBank', () => ({
@@ -27,10 +28,10 @@ jest.mock('../../../state/useQuestionBank', () => ({
 }));
 jest.mock('../../../state/useIsOnline', () => ({ useIsOnline: () => false }));
 
-const languages = [
-  { banks: {}, glyph: 'PY', grammar: 'python', id: 'python', label: 'Python', tagline: 'Snakes.' },
-  { banks: {}, glyph: 'PG', grammar: 'sql', id: 'postgres', label: 'Postgres', tagline: 'Tables.' },
-] as const;
+const languages: LanguageEntry[] = [
+  { banks: {}, glyph: 'PY', grammar: 'python', id: 'python', label: 'Python', misconceptions: [], tagline: 'Snakes.', topics: [] },
+  { banks: {}, glyph: 'PG', grammar: 'sql', id: 'postgres', label: 'Postgres', misconceptions: [], tagline: 'Tables.', topics: [] },
+];
 
 function MenuHarness() {
   const [selection, setSelection] = useState('nothing selected');

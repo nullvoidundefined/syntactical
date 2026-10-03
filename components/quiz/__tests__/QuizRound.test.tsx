@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Text } from 'react-native';
 
 import { QuizRound } from '../QuizRound';
+import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/contentFixtures';
 
 const mockRecordAnswer = jest.fn();
 const mockRecordCompletion = jest.fn();
@@ -12,7 +13,7 @@ jest.mock('../../../state/StatsProvider', () => ({
 }));
 
 const query = { explanation: 'Because', title: 'Why' };
-const questions: Question[] = [{ answer: true, id: 'q-1', prompt: 'Is it?', query, type: 'bool' }];
+const questions: Question[] = [{ answer: true, id: 'q-1', prompt: 'Is it?', query, provenance: TEST_PROVENANCE, type: 'bool' }];
 
 function RoundHarness() {
   const [isOnMenu, setIsOnMenu] = useState(false);

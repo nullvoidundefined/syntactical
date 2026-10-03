@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "questions": [
     {
       "id": "js-med-01",
@@ -7,10 +7,18 @@
       "prompt": "In strict mode, what is `this` inside a function called as a bare call?",
       "code": "\"use strict\";\nfunction f() { return this; }\nf();",
       "choices": [
-        "the global object",
-        "undefined",
-        "null",
-        "the function object"
+        {
+          "text": "the global object"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "null"
+        },
+        {
+          "text": "the function object"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -21,6 +29,14 @@
           "this",
           "strict-mode"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -29,10 +45,18 @@
       "prompt": "What does `obj.m()` return?",
       "code": "const obj = { n: 1, m() { return this.n; } };\nobj.m();",
       "choices": [
-        "1",
-        "undefined",
-        "0",
-        "the function object"
+        {
+          "text": "1"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "0"
+        },
+        {
+          "text": "the function object"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -43,6 +67,14 @@
           "this",
           "methods"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -51,10 +83,18 @@
       "prompt": "In strict mode, what is `this` when an extracted method is called as a bare function?",
       "code": "\"use strict\";\nconst obj = { m() { return this; } };\nconst fn = obj.m;\nfn();",
       "choices": [
-        "the object",
-        "the global object",
-        "undefined",
-        "null"
+        {
+          "text": "the object"
+        },
+        {
+          "text": "the global object"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "null"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -66,6 +106,14 @@
           "methods",
           "strict-mode"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -74,10 +122,18 @@
       "prompt": "What does `f.call({ n: 2 })` return?",
       "code": "function f() { return this.n; }\nf.call({ n: 2 });",
       "choices": [
-        "undefined",
-        "the global n",
-        "a TypeError",
-        "2"
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "the global n"
+        },
+        {
+          "text": "a TypeError"
+        },
+        {
+          "text": "2"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -88,6 +144,14 @@
           "this",
           "call"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -96,10 +160,18 @@
       "prompt": "What does `f.apply({ n: 1 }, [2, 3])` return?",
       "code": "function f(a, b) { return this.n + a + b; }\nf.apply({ n: 1 }, [2, 3]);",
       "choices": [
-        "6",
-        "3",
-        "NaN",
-        "a TypeError"
+        {
+          "text": "6"
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "NaN"
+        },
+        {
+          "text": "a TypeError"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -110,6 +182,14 @@
           "this",
           "apply"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -118,10 +198,18 @@
       "prompt": "What does the bound function `g()` return?",
       "code": "function f() { return this.n; }\nconst g = f.bind({ n: 5 });\ng();",
       "choices": [
-        "undefined",
-        "5",
-        "the global n",
-        "a TypeError"
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "5"
+        },
+        {
+          "text": "the global n"
+        },
+        {
+          "text": "a TypeError"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -132,6 +220,14 @@
           "this",
           "bind"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -140,10 +236,18 @@
       "prompt": "What does `g.call({ n: 99 })` return after `g` was created with `bind`?",
       "code": "function f() { return this.n; }\nconst g = f.bind({ n: 1 });\ng.call({ n: 99 });",
       "choices": [
-        "99",
-        "undefined",
-        "1",
-        "a TypeError"
+        {
+          "text": "99"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "a TypeError"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -155,6 +259,14 @@
           "bind",
           "call"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -163,10 +275,18 @@
       "prompt": "What does `outer.call({ tag: \"outer\" })` return?",
       "code": "function outer() {\n  const arrow = () => this.tag;\n  return arrow.call({ tag: \"call\" });\n}\nouter.call({ tag: \"outer\" });",
       "choices": [
-        "outer",
-        "call",
-        "undefined",
-        "a TypeError"
+        {
+          "text": "outer"
+        },
+        {
+          "text": "call"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "a TypeError"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -178,6 +298,14 @@
           "arrow-functions",
           "call"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -186,10 +314,18 @@
       "prompt": "What does `obj.m()` return?",
       "code": "const obj = {\n  n: 1,\n  m() {\n    const inner = () => this.n;\n    return inner();\n  },\n};\nobj.m();",
       "choices": [
-        "undefined",
-        "the global object",
-        "a TypeError",
-        "1"
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "the global object"
+        },
+        {
+          "text": "a TypeError"
+        },
+        {
+          "text": "1"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -201,6 +337,14 @@
           "arrow-functions",
           "methods"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -209,10 +353,18 @@
       "prompt": "What does `obj.get()` return?",
       "code": "function make() {\n  return {\n    tag: \"obj\",\n    get: () => this.tag,\n  };\n}\nconst obj = make.call({ tag: \"outer\" });\nobj.get();",
       "choices": [
-        "obj",
-        "outer",
-        "undefined",
-        "a TypeError"
+        {
+          "text": "obj"
+        },
+        {
+          "text": "outer"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "a TypeError"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -223,6 +375,14 @@
           "this",
           "arrow-functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -231,10 +391,18 @@
       "prompt": "What is `new Box(4).n`?",
       "code": "function Box(n) { this.n = n; }\nnew Box(4).n;",
       "choices": [
-        "undefined",
-        "the global object",
-        "4",
-        "a TypeError"
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "the global object"
+        },
+        {
+          "text": "4"
+        },
+        {
+          "text": "a TypeError"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -245,6 +413,14 @@
           "this",
           "constructors"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -253,10 +429,18 @@
       "prompt": "What does `f()` return?",
       "code": "let n = 1;\nconst f = () => n;\nn = 2;\nf();",
       "choices": [
-        "2",
-        "1",
-        "undefined",
-        "a ReferenceError"
+        {
+          "text": "2"
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "a ReferenceError"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -267,6 +451,14 @@
           "closures",
           "scope"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -275,10 +467,18 @@
       "prompt": "What does `fns.map((fn) => fn())` produce?",
       "code": "const fns = [];\nfor (var i = 0; i < 3; i++) {\n  fns.push(() => i);\n}\nfns.map((fn) => fn());",
       "choices": [
-        "[0, 1, 2]",
-        "[1, 2, 3]",
-        "[2, 2, 2]",
-        "[3, 3, 3]"
+        {
+          "text": "[0, 1, 2]"
+        },
+        {
+          "text": "[1, 2, 3]"
+        },
+        {
+          "text": "[2, 2, 2]"
+        },
+        {
+          "text": "[3, 3, 3]"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -290,6 +490,14 @@
           "var",
           "loops"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -298,10 +506,18 @@
       "prompt": "What does `fns.map((fn) => fn())` produce?",
       "code": "const fns = [];\nfor (let i = 0; i < 3; i++) {\n  fns.push(() => i);\n}\nfns.map((fn) => fn());",
       "choices": [
-        "[3, 3, 3]",
-        "[0, 1, 2]",
-        "[1, 2, 3]",
-        "a ReferenceError"
+        {
+          "text": "[3, 3, 3]"
+        },
+        {
+          "text": "[0, 1, 2]"
+        },
+        {
+          "text": "[1, 2, 3]"
+        },
+        {
+          "text": "a ReferenceError"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -313,6 +529,14 @@
           "let",
           "loops"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -321,10 +545,18 @@
       "prompt": "What does `outer(7)()` return?",
       "code": "function outer(x) {\n  return () => x;\n}\nouter(7)();",
       "choices": [
-        "undefined",
-        "a ReferenceError",
-        "7",
-        "0"
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "a ReferenceError"
+        },
+        {
+          "text": "7"
+        },
+        {
+          "text": "0"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -335,6 +567,14 @@
           "closures",
           "functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -343,10 +583,18 @@
       "prompt": "What is `obj.a`?",
       "code": "const proto = { a: 1 };\nconst obj = Object.create(proto);\nobj.a;",
       "choices": [
-        "1",
-        "undefined",
-        "a TypeError",
-        "null"
+        {
+          "text": "1"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "a TypeError"
+        },
+        {
+          "text": "null"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -357,6 +605,14 @@
           "prototypes",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -365,10 +621,18 @@
       "prompt": "After `obj.a = 2`, what is `obj.a`?",
       "code": "const proto = { a: 1 };\nconst obj = Object.create(proto);\nobj.a = 2;\nobj.a;",
       "choices": [
-        "1",
-        "undefined",
-        "a TypeError",
-        "2"
+        {
+          "text": "1"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "a TypeError"
+        },
+        {
+          "text": "2"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -379,6 +643,14 @@
           "prototypes",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -387,10 +659,18 @@
       "prompt": "What is `a.m === b.m` for two instances of this class?",
       "code": "class Box {\n  m() { return 1; }\n}\nconst a = new Box();\nconst b = new Box();\na.m === b.m;",
       "choices": [
-        "false, because each instance owns a fresh method",
-        "true, because both share the method on the prototype",
-        "false, because methods live on the constructor",
-        "true, because the method is copied onto each instance at the first call"
+        {
+          "text": "false, because each instance owns a fresh method"
+        },
+        {
+          "text": "true, because both share the method on the prototype"
+        },
+        {
+          "text": "false, because methods live on the constructor"
+        },
+        {
+          "text": "true, because the method is copied onto each instance at the first call"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -401,6 +681,14 @@
           "classes",
           "prototypes"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -409,10 +697,18 @@
       "prompt": "Where does the class field `n` live?",
       "code": "class Box {\n  n = 1;\n}\nconst a = new Box();\nconst b = new Box();\na.n = 2;",
       "choices": [
-        "on Box.prototype, shared by every instance",
-        "on the constructor Box",
-        "as an own property of each instance",
-        "only inside the class body, not on the instance"
+        {
+          "text": "on Box.prototype, shared by every instance"
+        },
+        {
+          "text": "on the constructor Box"
+        },
+        {
+          "text": "as an own property of each instance"
+        },
+        {
+          "text": "only inside the class body, not on the instance"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -423,6 +719,14 @@
           "classes",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -431,10 +735,18 @@
       "prompt": "Where does `static id` live?",
       "code": "class Box {\n  static id() { return 1; }\n}\nBox.id();\nBox.prototype.id;",
       "choices": [
-        "on the constructor, not on the prototype",
-        "on Box.prototype",
-        "as an own property of each instance",
-        "only while the class body is evaluating"
+        {
+          "text": "on the constructor, not on the prototype"
+        },
+        {
+          "text": "on Box.prototype"
+        },
+        {
+          "text": "as an own property of each instance"
+        },
+        {
+          "text": "only while the class body is evaluating"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -445,6 +757,14 @@
           "classes",
           "static"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -453,10 +773,18 @@
       "prompt": "What happens when `new Child()` runs?",
       "code": "class Base {}\nclass Child extends Base {\n  constructor() {\n    this.n = 1;\n    super();\n  }\n}\nnew Child();",
       "choices": [
-        "The instance is created and n is 1",
-        "A TypeError",
-        "undefined, and n is ignored",
-        "A ReferenceError"
+        {
+          "text": "The instance is created and n is 1"
+        },
+        {
+          "text": "A TypeError"
+        },
+        {
+          "text": "undefined, and n is ignored"
+        },
+        {
+          "text": "A ReferenceError"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -468,6 +796,14 @@
           "super",
           "this"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -476,10 +812,18 @@
       "prompt": "What does `new Child().m()` return?",
       "code": "class Parent {\n  m() { return \"parent\"; }\n}\nclass Child extends Parent {\n  m() { return super.m(); }\n}\nnew Child().m();",
       "choices": [
-        "child",
-        "parent",
-        "undefined",
-        "a TypeError"
+        {
+          "text": "child"
+        },
+        {
+          "text": "parent"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "a TypeError"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -490,6 +834,14 @@
           "classes",
           "super"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -498,10 +850,18 @@
       "prompt": "What is `new Child() instanceof Base`?",
       "code": "class Base {}\nclass Child extends Base {}\nnew Child() instanceof Base;",
       "choices": [
-        "false, because only Child constructed it",
-        "false, because instanceof checks one level only",
-        "true, because instanceof walks the prototype chain",
-        "a TypeError"
+        {
+          "text": "false, because only Child constructed it"
+        },
+        {
+          "text": "false, because instanceof checks one level only"
+        },
+        {
+          "text": "true, because instanceof walks the prototype chain"
+        },
+        {
+          "text": "a TypeError"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -513,6 +873,14 @@
           "instanceof",
           "classes"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -521,10 +889,18 @@
       "prompt": "What is the value of `obj.toString`?",
       "code": "const obj = Object.create(null);\nobj.toString;",
       "choices": [
-        "undefined",
-        "the function Object.prototype.toString",
-        "null",
-        "a TypeError is thrown by the read"
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "the function Object.prototype.toString"
+        },
+        {
+          "text": "null"
+        },
+        {
+          "text": "a TypeError is thrown by the read"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -535,6 +911,14 @@
           "prototypes",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -543,10 +927,18 @@
       "prompt": "What does `Object.getPrototypeOf(obj)` return?",
       "code": "const proto = {};\nconst obj = Object.create(proto);\nObject.getPrototypeOf(obj);",
       "choices": [
-        "Object.prototype",
-        "null",
-        "obj.prototype",
-        "proto"
+        {
+          "text": "Object.prototype"
+        },
+        {
+          "text": "null"
+        },
+        {
+          "text": "obj.prototype"
+        },
+        {
+          "text": "proto"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -557,6 +949,14 @@
           "prototypes",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -565,10 +965,18 @@
       "prompt": "When does the callback passed to `.then` or `.catch` run?",
       "code": "Promise.resolve(1).then((value) => value);",
       "choices": [
-        "on the macrotask queue",
-        "as a microtask, after the current stack",
-        "synchronously, before then returns",
-        "on the next animation frame"
+        {
+          "text": "on the macrotask queue"
+        },
+        {
+          "text": "as a microtask, after the current stack"
+        },
+        {
+          "text": "synchronously, before then returns"
+        },
+        {
+          "text": "on the next animation frame"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -579,6 +987,14 @@
           "promises",
           "microtasks"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -587,10 +1003,18 @@
       "prompt": "What kind of task is a `setTimeout(fn, 0)` callback?",
       "code": "setTimeout(() => {}, 0);",
       "choices": [
-        "a microtask",
-        "synchronous code on the current stack",
-        "a macrotask",
-        "a promise reaction"
+        {
+          "text": "a microtask"
+        },
+        {
+          "text": "synchronous code on the current stack"
+        },
+        {
+          "text": "a macrotask"
+        },
+        {
+          "text": "a promise reaction"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -601,6 +1025,14 @@
           "timers",
           "macrotasks"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -609,10 +1041,18 @@
       "prompt": "After the timer callback has run, what is `log`?",
       "code": "const log = [];\nsetTimeout(() => log.push(\"timer\"), 0);\nPromise.resolve().then(() => log.push(\"micro\"));\nlog.push(\"sync\");",
       "choices": [
-        "[\"sync\", \"micro\", \"timer\"]",
-        "[\"sync\", \"timer\", \"micro\"]",
-        "[\"micro\", \"sync\", \"timer\"]",
-        "[\"timer\", \"sync\", \"micro\"]"
+        {
+          "text": "[\"sync\", \"micro\", \"timer\"]"
+        },
+        {
+          "text": "[\"sync\", \"timer\", \"micro\"]"
+        },
+        {
+          "text": "[\"micro\", \"sync\", \"timer\"]"
+        },
+        {
+          "text": "[\"timer\", \"sync\", \"micro\"]"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -624,6 +1064,14 @@
           "macrotasks",
           "promises"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -632,10 +1080,18 @@
       "prompt": "What does calling `f()` return?",
       "code": "async function f() { return 1; }\nf();",
       "choices": [
-        "the number 1",
-        "undefined",
-        "null",
-        "a Promise"
+        {
+          "text": "the number 1"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "null"
+        },
+        {
+          "text": "a Promise"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -646,6 +1102,14 @@
           "async",
           "promises"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -654,10 +1118,18 @@
       "prompt": "Immediately after `f()` returns and the next line runs, before microtasks, what is `log`?",
       "code": "const log = [];\nasync function f() {\n  log.push(\"body\");\n  await null;\n  log.push(\"after\");\n}\nf();\nlog.push(\"caller\");",
       "choices": [
-        "[\"body\", \"after\", \"caller\"]",
-        "[\"body\", \"caller\"]",
-        "[\"caller\", \"body\"]",
-        "[\"body\", \"caller\", \"after\"]"
+        {
+          "text": "[\"body\", \"after\", \"caller\"]"
+        },
+        {
+          "text": "[\"body\", \"caller\"]"
+        },
+        {
+          "text": "[\"caller\", \"body\"]"
+        },
+        {
+          "text": "[\"body\", \"caller\", \"after\"]"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -668,6 +1140,14 @@
           "async",
           "microtasks"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -676,10 +1156,18 @@
       "prompt": "What does `await 1` do inside an async function?",
       "code": "async function f() {\n  const value = await 1;\n  return value;\n}",
       "choices": [
-        "It blocks the caller until a timer fires",
-        "It throws, because 1 is not a promise",
-        "It wraps 1 and resumes later as a microtask with that value",
-        "It continues on the same stack before the async call returns"
+        {
+          "text": "It blocks the caller until a timer fires"
+        },
+        {
+          "text": "It throws, because 1 is not a promise"
+        },
+        {
+          "text": "It wraps 1 and resumes later as a microtask with that value"
+        },
+        {
+          "text": "It continues on the same stack before the async call returns"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -691,6 +1179,14 @@
           "promises",
           "microtasks"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -699,10 +1195,18 @@
       "prompt": "What happens at the call `f()`?",
       "code": "async function f() { throw new Error(\"x\"); }\nf();",
       "choices": [
-        "The returned promise rejects, and the caller is not thrown into",
-        "The caller catches a synchronous exception",
-        "The call returns undefined",
-        "The call returns a fulfilled promise of the error object"
+        {
+          "text": "The returned promise rejects, and the caller is not thrown into"
+        },
+        {
+          "text": "The caller catches a synchronous exception"
+        },
+        {
+          "text": "The call returns undefined"
+        },
+        {
+          "text": "The call returns a fulfilled promise of the error object"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -714,6 +1218,14 @@
           "promises",
           "errors"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -722,10 +1234,18 @@
       "prompt": "What happens to this `Promise.all` call?",
       "code": "Promise.all([\n  Promise.resolve(1),\n  Promise.reject(\"bad\"),\n]);",
       "choices": [
-        "It fulfills with [1, undefined]",
-        "It waits for every input and then fulfills",
-        "It stays pending",
-        "It rejects with the first rejection reason"
+        {
+          "text": "It fulfills with [1, undefined]"
+        },
+        {
+          "text": "It waits for every input and then fulfills"
+        },
+        {
+          "text": "It stays pending"
+        },
+        {
+          "text": "It rejects with the first rejection reason"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -735,6 +1255,14 @@
         "tags": [
           "promises"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -743,10 +1271,18 @@
       "prompt": "What does `Promise.allSettled` do when one input rejects?",
       "code": "Promise.allSettled([\n  Promise.resolve(1),\n  Promise.reject(2),\n]);",
       "choices": [
-        "It rejects with 2",
-        "It fulfills with one result object per input",
-        "It fulfills with only the fulfilled values",
-        "It stays pending"
+        {
+          "text": "It rejects with 2"
+        },
+        {
+          "text": "It fulfills with one result object per input"
+        },
+        {
+          "text": "It fulfills with only the fulfilled values"
+        },
+        {
+          "text": "It stays pending"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -756,6 +1292,14 @@
         "tags": [
           "promises"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -764,10 +1308,18 @@
       "prompt": "What does this `Promise.race` call do?",
       "code": "Promise.race([\n  Promise.resolve(\"fast\"),\n  new Promise(() => {}),\n]);",
       "choices": [
-        "It stays pending forever",
-        "It rejects",
-        "It fulfills with \"fast\"",
-        "It fulfills with undefined"
+        {
+          "text": "It stays pending forever"
+        },
+        {
+          "text": "It rejects"
+        },
+        {
+          "text": "It fulfills with \"fast\""
+        },
+        {
+          "text": "It fulfills with undefined"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -777,6 +1329,14 @@
         "tags": [
           "promises"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -785,10 +1345,18 @@
       "prompt": "What does `Promise.any` do when every input rejects?",
       "code": "Promise.any([\n  Promise.reject(1),\n  Promise.reject(2),\n]);",
       "choices": [
-        "It rejects with an AggregateError",
-        "It rejects with 1",
-        "It fulfills with undefined",
-        "It stays pending"
+        {
+          "text": "It rejects with an AggregateError"
+        },
+        {
+          "text": "It rejects with 1"
+        },
+        {
+          "text": "It fulfills with undefined"
+        },
+        {
+          "text": "It stays pending"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -799,6 +1367,14 @@
           "promises",
           "errors"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -807,10 +1383,18 @@
       "prompt": "After both callbacks have run, what is `log`?",
       "code": "const log = [];\nsetTimeout(() => log.push(\"timer\"), 0);\nqueueMicrotask(() => log.push(\"micro\"));",
       "choices": [
-        "[\"timer\", \"micro\"]",
-        "[\"micro\"]",
-        "[\"timer\"]",
-        "[\"micro\", \"timer\"]"
+        {
+          "text": "[\"timer\", \"micro\"]"
+        },
+        {
+          "text": "[\"micro\"]"
+        },
+        {
+          "text": "[\"timer\"]"
+        },
+        {
+          "text": "[\"micro\", \"timer\"]"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -821,6 +1405,14 @@
           "microtasks",
           "timers"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -829,10 +1421,18 @@
       "prompt": "What is `q` relative to `p`?",
       "code": "const p = Promise.resolve(1);\nconst q = p.then((n) => n);",
       "choices": [
-        "the same promise as p",
-        "a new promise",
-        "the number 1",
-        "undefined"
+        {
+          "text": "the same promise as p"
+        },
+        {
+          "text": "a new promise"
+        },
+        {
+          "text": "the number 1"
+        },
+        {
+          "text": "undefined"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -842,6 +1442,14 @@
         "tags": [
           "promises"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -850,10 +1458,18 @@
       "prompt": "What is the fulfillment value of the promise returned by `.then`?",
       "code": "Promise.resolve(1).then((n) => n + 1);",
       "choices": [
-        "1",
-        "undefined",
-        "2",
-        "a nested promise of 2"
+        {
+          "text": "1"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "a nested promise of 2"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -863,6 +1479,14 @@
         "tags": [
           "promises"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -871,10 +1495,18 @@
       "prompt": "What does the promise returned by `.then` do?",
       "code": "Promise.resolve(1).then(() => Promise.reject(\"later\"));",
       "choices": [
-        "It rejects with \"later\"",
-        "It fulfills with a rejected promise",
-        "It fulfills with 1",
-        "It fulfills with undefined"
+        {
+          "text": "It rejects with \"later\""
+        },
+        {
+          "text": "It fulfills with a rejected promise"
+        },
+        {
+          "text": "It fulfills with 1"
+        },
+        {
+          "text": "It fulfills with undefined"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -884,6 +1516,14 @@
         "tags": [
           "promises"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -892,10 +1532,18 @@
       "prompt": "What is the fulfillment value of this promise?",
       "code": "Promise.resolve(1).finally(() => 2);",
       "choices": [
-        "2",
-        "undefined",
-        "a TypeError",
-        "1"
+        {
+          "text": "2"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "a TypeError"
+        },
+        {
+          "text": "1"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -905,6 +1553,14 @@
         "tags": [
           "promises"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -913,10 +1569,18 @@
       "prompt": "What does the first `it.next()` return?",
       "code": "function* g() {\n  yield 1;\n  yield 2;\n}\nconst it = g();\nit.next();",
       "choices": [
-        "1",
-        "{ value: 1, done: false }",
-        "{ value: 2, done: false }",
-        "{ value: undefined, done: true }"
+        {
+          "text": "1"
+        },
+        {
+          "text": "{ value: 1, done: false }"
+        },
+        {
+          "text": "{ value: 2, done: false }"
+        },
+        {
+          "text": "{ value: undefined, done: true }"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -927,6 +1591,14 @@
           "generators",
           "iterators"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -935,10 +1607,18 @@
       "prompt": "What does `it.next(5)` return?",
       "code": "function* g() {\n  const x = yield 1;\n  return x;\n}\nconst it = g();\nit.next();\nit.next(5);",
       "choices": [
-        "{ value: 1, done: false }",
-        "{ value: undefined, done: true }",
-        "{ value: 5, done: true }",
-        "{ value: 5, done: false }"
+        {
+          "text": "{ value: 1, done: false }"
+        },
+        {
+          "text": "{ value: undefined, done: true }"
+        },
+        {
+          "text": "{ value: 5, done: true }"
+        },
+        {
+          "text": "{ value: 5, done: false }"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -949,6 +1629,14 @@
           "generators",
           "iterators"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -957,10 +1645,18 @@
       "prompt": "Which method does `for...of` call to obtain an iterator?",
       "code": "const bag = {\n  [Symbol.iterator]() {\n    return { next: () => ({ value: 1, done: true }) };\n  },\n};\nfor (const item of bag) {}",
       "choices": [
-        "Symbol.iterator",
-        "Symbol.asyncIterator",
-        "Object.keys",
-        "toString"
+        {
+          "text": "Symbol.iterator"
+        },
+        {
+          "text": "Symbol.asyncIterator"
+        },
+        {
+          "text": "Object.keys"
+        },
+        {
+          "text": "toString"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -971,6 +1667,14 @@
           "iterators",
           "symbols"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -979,10 +1683,18 @@
       "prompt": "What happens when this loop runs?",
       "code": "for (const item of { a: 1 }) {}",
       "choices": [
-        "It visits the key \"a\"",
-        "It visits the value 1",
-        "It visits nothing and finishes",
-        "It throws a TypeError"
+        {
+          "text": "It visits the key \"a\""
+        },
+        {
+          "text": "It visits the value 1"
+        },
+        {
+          "text": "It visits nothing and finishes"
+        },
+        {
+          "text": "It throws a TypeError"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -993,6 +1705,14 @@
           "iterators",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1001,10 +1721,18 @@
       "prompt": "What shape does an iterator `next()` method return?",
       "code": "function next() {\n  return { value: 1, done: false };\n}",
       "choices": [
-        "the next value by itself",
-        "{ value, done }",
-        "{ next, done }",
-        "a boolean"
+        {
+          "text": "the next value by itself"
+        },
+        {
+          "text": "{ value, done }"
+        },
+        {
+          "text": "{ next, done }"
+        },
+        {
+          "text": "a boolean"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1014,6 +1742,14 @@
         "tags": [
           "iterators"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1022,10 +1758,18 @@
       "prompt": "What is `[...map.keys()]`?",
       "code": "const map = new Map();\nmap.set(2, \"b\");\nmap.set(1, \"a\");\n[...map.keys()];",
       "choices": [
-        "[1, 2]",
-        "[\"b\", \"a\"]",
-        "[2, 1]",
-        "an unspecified order"
+        {
+          "text": "[1, 2]"
+        },
+        {
+          "text": "[\"b\", \"a\"]"
+        },
+        {
+          "text": "[2, 1]"
+        },
+        {
+          "text": "an unspecified order"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -1036,6 +1780,14 @@
           "map",
           "collections"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1044,10 +1796,18 @@
       "prompt": "What does `map.get(key)` return?",
       "code": "const key = {};\nconst map = new Map();\nmap.set(key, 1);\nmap.get(key);",
       "choices": [
-        "1",
-        "undefined",
-        "a TypeError",
-        "the key object"
+        {
+          "text": "1"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "a TypeError"
+        },
+        {
+          "text": "the key object"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1058,6 +1818,14 @@
           "map",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1066,10 +1834,18 @@
       "prompt": "What does `map.get({ a: 1 })` return?",
       "code": "const map = new Map();\nmap.set({ a: 1 }, \"yes\");\nmap.get({ a: 1 });",
       "choices": [
-        "\"yes\"",
-        "a TypeError",
-        "the string \"[object Object]\"",
-        "undefined"
+        {
+          "text": "\"yes\""
+        },
+        {
+          "text": "a TypeError"
+        },
+        {
+          "text": "the string \"[object Object]\""
+        },
+        {
+          "text": "undefined"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -1080,6 +1856,14 @@
           "map",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1088,10 +1872,18 @@
       "prompt": "What is `set.size` after adding `NaN` twice?",
       "code": "const set = new Set();\nset.add(NaN);\nset.add(NaN);\nset.size;",
       "choices": [
-        "0",
-        "1",
-        "2",
-        "NaN"
+        {
+          "text": "0"
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "NaN"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1102,6 +1894,14 @@
           "set",
           "nan"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1110,10 +1910,18 @@
       "prompt": "What happens when a string is used as a WeakMap key?",
       "code": "new WeakMap().set(\"user\", 1);",
       "choices": [
-        "The entry is stored under that string",
-        "The string is boxed into a String object and stored",
-        "It throws a TypeError",
-        "The entry is stored until the next garbage collection"
+        {
+          "text": "The entry is stored under that string"
+        },
+        {
+          "text": "The string is boxed into a String object and stored"
+        },
+        {
+          "text": "It throws a TypeError"
+        },
+        {
+          "text": "The entry is stored until the next garbage collection"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -1124,6 +1932,14 @@
           "weakmap",
           "collections"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1132,10 +1948,18 @@
       "prompt": "What does spreading a WeakMap do?",
       "code": "const entries = [...new WeakMap()];",
       "choices": [
-        "It throws a TypeError",
-        "It produces []",
-        "It produces undefined",
-        "It lists the entries"
+        {
+          "text": "It throws a TypeError"
+        },
+        {
+          "text": "It produces []"
+        },
+        {
+          "text": "It produces undefined"
+        },
+        {
+          "text": "It lists the entries"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1146,6 +1970,14 @@
           "weakmap",
           "iterators"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1154,10 +1986,18 @@
       "prompt": "What is `Symbol(\"a\") === Symbol(\"a\")`?",
       "code": "Symbol(\"a\") === Symbol(\"a\");",
       "choices": [
-        "true, because the descriptions match",
-        "true, because symbols with one description are interned",
-        "true, but only inside the same function",
-        "false, because each Symbol() call creates a new symbol"
+        {
+          "text": "true, because the descriptions match"
+        },
+        {
+          "text": "true, because symbols with one description are interned"
+        },
+        {
+          "text": "true, but only inside the same function"
+        },
+        {
+          "text": "false, because each Symbol() call creates a new symbol"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -1167,6 +2007,14 @@
         "tags": [
           "symbols"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1175,10 +2023,18 @@
       "prompt": "What is `Symbol.for(\"a\") === Symbol.for(\"a\")`?",
       "code": "Symbol.for(\"a\") === Symbol.for(\"a\");",
       "choices": [
-        "false, the same as Symbol()",
-        "true, the registry returns the same symbol",
-        "true, but only within one function",
-        "a TypeError"
+        {
+          "text": "false, the same as Symbol()"
+        },
+        {
+          "text": "true, the registry returns the same symbol"
+        },
+        {
+          "text": "true, but only within one function"
+        },
+        {
+          "text": "a TypeError"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1188,6 +2044,14 @@
         "tags": [
           "symbols"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1196,10 +2060,18 @@
       "prompt": "What does `Object.keys` return for this object?",
       "code": "const s = Symbol(\"s\");\nObject.keys({ [s]: 1, a: 2 });",
       "choices": [
-        "[\"a\", s]",
-        "a TypeError",
-        "[\"a\"]",
-        "[s]"
+        {
+          "text": "[\"a\", s]"
+        },
+        {
+          "text": "a TypeError"
+        },
+        {
+          "text": "[\"a\"]"
+        },
+        {
+          "text": "[s]"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -1210,6 +2082,14 @@
           "symbols",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1218,10 +2098,18 @@
       "prompt": "What does `Object.getOwnPropertySymbols` return?",
       "code": "const s = Symbol(\"s\");\nObject.getOwnPropertySymbols({ [s]: 1, a: 2 });",
       "choices": [
-        "[s]",
-        "[\"a\"]",
-        "[\"a\", s]",
-        "[]"
+        {
+          "text": "[s]"
+        },
+        {
+          "text": "[\"a\"]"
+        },
+        {
+          "text": "[\"a\", s]"
+        },
+        {
+          "text": "[]"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1232,6 +2120,14 @@
           "symbols",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1240,10 +2136,18 @@
       "prompt": "What does `Number(obj)` return?",
       "code": "const obj = {\n  [Symbol.toPrimitive](hint) {\n    if (hint === \"number\") return 7;\n    return \"x\";\n  },\n  valueOf() { return 1; },\n  toString() { return \"no\"; },\n};\nNumber(obj);",
       "choices": [
-        "1",
-        "\"no\"",
-        "NaN",
-        "7"
+        {
+          "text": "1"
+        },
+        {
+          "text": "\"no\""
+        },
+        {
+          "text": "NaN"
+        },
+        {
+          "text": "7"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -1254,6 +2158,14 @@
           "symbols",
           "coercion"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1262,10 +2174,18 @@
       "prompt": "What is `[10, 2, 1].sort()`?",
       "code": "[10, 2, 1].sort();",
       "choices": [
-        "[1, 2, 10]",
-        "[1, 10, 2]",
-        "[10, 2, 1]",
-        "[2, 1, 10]"
+        {
+          "text": "[1, 2, 10]"
+        },
+        {
+          "text": "[1, 10, 2]"
+        },
+        {
+          "text": "[10, 2, 1]"
+        },
+        {
+          "text": "[2, 1, 10]"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1276,6 +2196,14 @@
           "arrays",
           "sort"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1284,10 +2212,18 @@
       "prompt": "After `const b = a.sort()`, what is true?",
       "code": "const a = [3, 1];\nconst b = a.sort();",
       "choices": [
-        "a is still [3, 1] and b is [1, 3]",
-        "a TypeError is thrown",
-        "a and b are the same array, now [1, 3]",
-        "b is [1, 3] and a is unchanged"
+        {
+          "text": "a is still [3, 1] and b is [1, 3]"
+        },
+        {
+          "text": "a TypeError is thrown"
+        },
+        {
+          "text": "a and b are the same array, now [1, 3]"
+        },
+        {
+          "text": "b is [1, 3] and a is unchanged"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -1298,6 +2234,14 @@
           "arrays",
           "sort"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1306,10 +2250,18 @@
       "prompt": "What is `[10, 2, 1].sort((a, b) => a - b)`?",
       "code": "[10, 2, 1].sort((a, b) => a - b);",
       "choices": [
-        "[1, 2, 10]",
-        "[1, 10, 2]",
-        "[10, 2, 1]",
-        "[2, 1, 10]"
+        {
+          "text": "[1, 2, 10]"
+        },
+        {
+          "text": "[1, 10, 2]"
+        },
+        {
+          "text": "[10, 2, 1]"
+        },
+        {
+          "text": "[2, 1, 10]"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1320,6 +2272,14 @@
           "arrays",
           "sort"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1328,10 +2288,18 @@
       "prompt": "What is `log` after `forEach`?",
       "code": "const log = [];\n[1, , 3].forEach((n) => log.push(n));",
       "choices": [
-        "[1, undefined, 3]",
-        "[1, 3, undefined]",
-        "[undefined]",
-        "[1, 3]"
+        {
+          "text": "[1, undefined, 3]"
+        },
+        {
+          "text": "[1, 3, undefined]"
+        },
+        {
+          "text": "[undefined]"
+        },
+        {
+          "text": "[1, 3]"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -1342,6 +2310,14 @@
           "arrays",
           "sparse-arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1350,10 +2326,18 @@
       "prompt": "What is true of `[1, , 3].map((n) => n * 2)`?",
       "code": "const out = [1, , 3].map((n) => n * 2);",
       "choices": [
-        "The callback runs 3 times and index 1 is undefined",
-        "The callback runs 2 times and index 1 stays a hole",
-        "The callback runs 2 times and the result is shorter",
-        "The callback runs 3 times and index 1 is 0"
+        {
+          "text": "The callback runs 3 times and index 1 is undefined"
+        },
+        {
+          "text": "The callback runs 2 times and index 1 stays a hole"
+        },
+        {
+          "text": "The callback runs 2 times and the result is shorter"
+        },
+        {
+          "text": "The callback runs 3 times and index 1 is 0"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1364,6 +2348,14 @@
           "arrays",
           "sparse-arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1372,10 +2364,18 @@
       "prompt": "What is `1 in [, ,]`?",
       "code": "1 in [, ,];",
       "choices": [
-        "true, because the length is 2",
-        "true, because the hole is undefined",
-        "false, because a hole is a missing property",
-        "a TypeError"
+        {
+          "text": "true, because the length is 2"
+        },
+        {
+          "text": "true, because the hole is undefined"
+        },
+        {
+          "text": "false, because a hole is a missing property"
+        },
+        {
+          "text": "a TypeError"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -1386,6 +2386,14 @@
           "arrays",
           "sparse-arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1394,10 +2402,18 @@
       "prompt": "What does `[...[, ,]]` produce?",
       "code": "const copy = [...[, ,]];",
       "choices": [
-        "[undefined, undefined], and those indexes exist",
-        "a sparse array that still has holes",
-        "[]",
-        "a TypeError"
+        {
+          "text": "[undefined, undefined], and those indexes exist"
+        },
+        {
+          "text": "a sparse array that still has holes"
+        },
+        {
+          "text": "[]"
+        },
+        {
+          "text": "a TypeError"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1409,6 +2425,14 @@
           "sparse-arrays",
           "iterators"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1417,10 +2441,18 @@
       "prompt": "On the first callback of this `reduce`, what is the accumulator?",
       "code": "[2, 3, 4].reduce((acc, n) => acc + n);",
       "choices": [
-        "0",
-        "undefined",
-        "3",
-        "2"
+        {
+          "text": "0"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "2"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -1431,6 +2463,14 @@
           "arrays",
           "reduce"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1439,10 +2479,18 @@
       "prompt": "What does `[].reduce((a, b) => a + b)` do?",
       "code": "[].reduce((a, b) => a + b);",
       "choices": [
-        "It returns undefined",
-        "It throws a TypeError",
-        "It returns 0",
-        "It returns null"
+        {
+          "text": "It returns undefined"
+        },
+        {
+          "text": "It throws a TypeError"
+        },
+        {
+          "text": "It returns 0"
+        },
+        {
+          "text": "It returns null"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1454,6 +2502,14 @@
           "reduce",
           "errors"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1462,10 +2518,18 @@
       "prompt": "What is `[1, [2, [3]]].flat()`?",
       "code": "[1, [2, [3]]].flat();",
       "choices": [
-        "[1, 2, 3]",
-        "[1, [2, [3]]]",
-        "[1, 2, [3]]",
-        "a TypeError"
+        {
+          "text": "[1, 2, 3]"
+        },
+        {
+          "text": "[1, [2, [3]]]"
+        },
+        {
+          "text": "[1, 2, [3]]"
+        },
+        {
+          "text": "a TypeError"
+        }
       ],
       "answerIndex": 2,
       "query": {
@@ -1475,6 +2539,14 @@
         "tags": [
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1483,10 +2555,18 @@
       "prompt": "What is `[1, 2].flatMap((n) => [n, n])`?",
       "code": "[1, 2].flatMap((n) => [n, n]);",
       "choices": [
-        "[1, 1, 2, 2]",
-        "[[1, 1], [2, 2]]",
-        "[1, 2]",
-        "[1, [1], 2, [2]]"
+        {
+          "text": "[1, 1, 2, 2]"
+        },
+        {
+          "text": "[[1, 1], [2, 2]]"
+        },
+        {
+          "text": "[1, 2]"
+        },
+        {
+          "text": "[1, [1], 2, [2]]"
+        }
       ],
       "answerIndex": 0,
       "query": {
@@ -1496,6 +2576,14 @@
         "tags": [
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1504,10 +2592,18 @@
       "prompt": "After `const b = a.toSorted()`, what is true?",
       "code": "const a = [3, 1];\nconst b = a.toSorted();",
       "choices": [
-        "a and b are both [1, 3]",
-        "a TypeError is thrown",
-        "b stays [3, 1] and a becomes [1, 3]",
-        "a stays [3, 1] and b is [1, 3]"
+        {
+          "text": "a and b are both [1, 3]"
+        },
+        {
+          "text": "a TypeError is thrown"
+        },
+        {
+          "text": "b stays [3, 1] and a becomes [1, 3]"
+        },
+        {
+          "text": "a stays [3, 1] and b is [1, 3]"
+        }
       ],
       "answerIndex": 3,
       "query": {
@@ -1518,6 +2614,14 @@
           "arrays",
           "sort"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1526,10 +2630,18 @@
       "prompt": "What is `[\"a\", \"b\", \"c\"].at(-1)`?",
       "code": "[\"a\", \"b\", \"c\"].at(-1);",
       "choices": [
-        "undefined",
-        "c",
-        "a",
-        "a TypeError"
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "c"
+        },
+        {
+          "text": "a"
+        },
+        {
+          "text": "a TypeError"
+        }
       ],
       "answerIndex": 1,
       "query": {
@@ -1539,6 +2651,14 @@
         "tags": [
           "arrays"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1555,6 +2675,14 @@
           "tagged-templates",
           "functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1571,6 +2699,14 @@
           "functions",
           "rest"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1587,6 +2723,14 @@
           "functions",
           "arguments"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1602,6 +2746,14 @@
         "tags": [
           "functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1618,6 +2770,14 @@
           "functions",
           "constructors"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1634,6 +2794,14 @@
           "classes",
           "private-fields"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1650,6 +2818,14 @@
           "classes",
           "private-fields"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1666,6 +2842,14 @@
           "objects",
           "accessors"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1682,6 +2866,14 @@
           "objects",
           "accessors"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1697,6 +2889,14 @@
         "tags": [
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1712,6 +2912,14 @@
         "tags": [
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1727,6 +2935,14 @@
         "tags": [
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1743,6 +2959,14 @@
           "structured-clone",
           "dates"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1759,6 +2983,14 @@
           "json",
           "dates"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1775,6 +3007,14 @@
           "structured-clone",
           "functions"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1790,6 +3030,14 @@
         "tags": [
           "regexp"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1806,6 +3054,14 @@
           "regexp",
           "strings"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1822,6 +3078,14 @@
           "strings",
           "regexp"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1837,6 +3101,14 @@
           "modules",
           "bindings"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1851,6 +3123,14 @@
         "tags": [
           "modules"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1867,6 +3147,14 @@
           "control-flow",
           "errors"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1883,6 +3171,14 @@
           "scope",
           "switch"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1899,6 +3195,14 @@
           "strict-mode",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1915,6 +3219,14 @@
           "classes",
           "static"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1931,6 +3243,14 @@
           "functions",
           "defaults"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1947,6 +3267,14 @@
           "functions",
           "destructuring"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1963,6 +3291,14 @@
           "destructuring",
           "objects"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1979,6 +3315,14 @@
           "microtasks",
           "timers"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -1996,6 +3340,14 @@
           "microtasks",
           "timers"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     },
     {
@@ -2012,6 +3364,14 @@
           "async",
           "call-stack"
         ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
       }
     }
   ]

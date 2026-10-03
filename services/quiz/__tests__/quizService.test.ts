@@ -2,6 +2,7 @@ import type { Question } from '@syntactical/content-schema';
 import { calculateAccuracy } from '../calculateAccuracy';
 import { isAnswerCorrect } from '../isAnswerCorrect';
 import { shuffleQuestions } from '../shuffleQuestions';
+import { TEST_PROVENANCE } from '../../content/__tests__/fixtures/contentFixtures';
 
 const query = { explanation: 'e', title: 't' };
 
@@ -18,8 +19,8 @@ describe('quiz service', () => {
   });
 
   it('grades multiple-choice and boolean answers', () => {
-    const mcQuestion: Question = { answerIndex: 1, choices: ['x', 'y'], id: 'a', prompt: 'p', query, type: 'mc' };
-    const boolQuestion: Question = { answer: false, id: 'b', prompt: 'p', query, type: 'bool' };
+    const mcQuestion: Question = { answerIndex: 1, choices: [{ text: 'x' }, { text: 'y' }], id: 'a', prompt: 'p', query, provenance: TEST_PROVENANCE, type: 'mc' };
+    const boolQuestion: Question = { answer: false, id: 'b', prompt: 'p', query, provenance: TEST_PROVENANCE, type: 'bool' };
     expect(isAnswerCorrect(mcQuestion, 1)).toBe(true);
     expect(isAnswerCorrect(mcQuestion, 0)).toBe(false);
     expect(isAnswerCorrect(boolQuestion, true)).toBe(false);

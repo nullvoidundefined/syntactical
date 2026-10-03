@@ -1,4 +1,4 @@
-// A manifest entry for one language and the banks it offers per difficulty.
+// A manifest entry for one language, its topics, misconceptions, and banks per difficulty.
 import type { DifficultyId } from '../difficulties.js';
 import type { Grammar } from '../grammars.js';
 
@@ -10,5 +10,7 @@ export type LanguageEntry = {
   glyph: string;
   tagline: string;
   grammar: Grammar;
+  topics: { id: string; label: string }[];
+  misconceptions: { id: string; description: string }[];
   banks: Partial<Record<DifficultyId, BankEntry>>;
 };

@@ -295,7 +295,7 @@ Order matches the slices in the plan. Each line is one RED slice.
 - B-19: `pipeline gap-fill` tops up a topic with fewer than 10 questions; a generated question is kept only when its claimed answer matches its executed oracle.
 - B-20: `pipeline enrich` writes one `rationale` per wrong choice, conditioned on the recorded oracle output, each at most 280 characters, and a judge that finds a rationale contradicting the oracle output rejects it.
 - B-21: `pipeline enrich` tags each wrong choice with a `misconceptionId` from the approved taxonomy and never invents an id outside it.
-- B-22: `pipeline publish` refuses to write a question that is not `passed` or human-reviewed, then runs `buildContentManifest` so manifest hashes, topic counts, and content versions update.
+- B-22: `pipeline publish` refuses to write a question whose validation `failed` (human review does not override a failed oracle), and a `pending` question unless it is human-reviewed, then runs `buildContentManifest` so manifest hashes, topic counts, and content versions update.
 - B-23: The difficulty step lists a bank's topics from the manifest with counts, and choosing a topic starts a round of only that topic's questions.
 - B-24: After a wrong answer, the query drawer shows the chosen choice's `rationale` first, then the question's `query`.
 

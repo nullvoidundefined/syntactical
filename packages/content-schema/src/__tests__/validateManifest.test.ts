@@ -1,20 +1,56 @@
+// The v1 manifest rules, restated against schema 2 fixtures. Each rejection
+// asserts the rule names the offending element's path (the same
+// `languages[i].…` form the validator has always reported), so a manifest is
+// proven to be rejected for the rule under test and not for its schemaVersion.
+// Version-independent root-shape cases live in validateManifestRootShape.test.ts.
 import { describe, expect, it } from 'vitest';
 
 import { validateManifest } from '../validateManifest.js';
 
 const VALID_HASH = 'a'.repeat(32) + '0123456789abcdef'.repeat(2);
 
-function buildLanguage(id: string, overrides: Record<string, unknown> = {}): Record<string, unknown> {
+function buildFreeBank(path: string): Record<string, unknown> {
+    return {
+        path,
+        hash: VALID_HASH,
+        access: 'free',
+        contentVersion: 1,
+        topicCounts: { strings: 2 },
+    };
+}
+
+function buildPaidBank(path: string, productId: string): Record<string, unknown> {
+    return {
+        path,
+        hash: VALID_HASH,
+        access: 'paid',
+        productId,
+        contentVersion: 3,
+        topicCounts: { strings: 4 },
+    };
+}
+
+function buildLanguage(
+    id: string,
+    overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
     return {
         id,
         label: 'Python',
         glyph: 'PY',
         tagline: 'Runtime semantics, stdlib, and the sharp edges.',
         grammar: 'python',
+        topics: [{ id: 'strings', label: 'Strings' }],
+        misconceptions: [
+            {
+                id: `${id}.off-by-one`,
+                description: 'Counts from one where the language counts from zero.',
+            },
+        ],
         banks: {
-            easy: { path: `${id}/easy.json`, hash: VALID_HASH },
-            medium: { path: `${id}/medium.json`, hash: VALID_HASH },
-            hard: { path: `${id}/hard.json`, hash: VALID_HASH },
+            easy: buildFreeBank(`${id}/easy.json`),
+            medium: buildPaidBank(`${id}/medium.json`, `syntactical.${id}.medium`),
+            hard: buildPaidBank(`${id}/hard.json`, `syntactical.${id}.hard`),
         },
         ...overrides,
     };
@@ -22,13 +58,18 @@ function buildLanguage(id: string, overrides: Record<string, unknown> = {}): Rec
 
 function buildManifest(overrides: Record<string, unknown> = {}): Record<string, unknown> {
     return {
-        schemaVersion: 1,
-        languages: [buildLanguage('python'), buildLanguage('sql', { grammar: 'sql', label: 'SQL' })],
+        schemaVersion: 2,
+        languages: [
+            buildLanguage('python'),
+            buildLanguage('sql', { grammar: 'sql', label: 'SQL' }),
+        ],
         ...overrides,
     };
 }
 
-function buildManifestWithLanguage(languageOverrides: Record<string, unknown>): Record<string, unknown> {
+function buildManifestWithLanguage(
+    languageOverrides: Record<string, unknown>,
+): Record<string, unknown> {
     return buildManifest({ languages: [buildLanguage('python', languageOverrides)] });
 }
 
@@ -40,12 +81,15 @@ function buildManifestWithEasyBank(bankEntry: unknown): Record<string, unknown> 
     return buildManifestWithBanks({ easy: bankEntry });
 }
 
-function expectRejected(input: unknown): void {
+// Rejected, with a rule that starts with the path of the element at fault.
+function expectRejectedAt(input: unknown, rulePrefix: string): void {
     const result = validateManifest(input);
     expect(result.isValid).toBe(false);
     if (!result.isValid) {
-        expect(typeof result.rule).toBe('string');
-        expect(result.rule.length).toBeGreaterThan(0);
+        expect(
+            result.rule.startsWith(rulePrefix),
+            `rule "${result.rule}" should start with "${rulePrefix}"`,
+        ).toBe(true);
     }
 }
 
@@ -56,15 +100,24 @@ describe('validateManifest', () => {
             expect(validateManifest(manifest)).toEqual({ isValid: true, manifest });
         });
 
-        it.each(['python', 'sql', 'javascript', 'typescript', 'go', 'rust', 'ruby', 'bash', 'plain'])(
-            'accepts the supported grammar %p',
-            (grammar) => {
-                expect(validateManifest(buildManifestWithLanguage({ grammar })).isValid).toBe(true);
-            },
-        );
+        it.each([
+            'python',
+            'sql',
+            'javascript',
+            'typescript',
+            'go',
+            'rust',
+            'ruby',
+            'bash',
+            'plain',
+        ])('accepts the supported grammar %p', (grammar) => {
+            expect(validateManifest(buildManifestWithLanguage({ grammar })).isValid).toBe(true);
+        });
 
         it('accepts a language with a subset of difficulties', () => {
-            const manifest = buildManifestWithBanks({ hard: { path: 'python/hard.json', hash: VALID_HASH } });
+            const manifest = buildManifestWithBanks({
+                hard: buildPaidBank('python/hard.json', 'syntactical.python.hard'),
+            });
             expect(validateManifest(manifest).isValid).toBe(true);
         });
 
@@ -89,39 +142,16 @@ describe('validateManifest', () => {
         });
     });
 
-    describe('root shape', () => {
-        it.each([
-            ['null', null],
-            ['undefined', undefined],
-            ['a string', 'manifest'],
-            ['a number', 1],
-            ['an array', [buildManifest()]],
-        ])('rejects a root that is %s', (_description, input) => {
-            expectRejected(input);
-        });
-    });
-
     describe('schemaVersion', () => {
-        it.each([
-            ['missing', undefined],
-            ['newer than supported', 2],
-            ['zero', 0],
-            ['a non-integer', 1.5],
-            ['a numeric string', '1'],
-            ['null', null],
-        ])('rejects a schemaVersion that is %s', (_description, schemaVersion) => {
-            expectRejected(buildManifest({ schemaVersion }));
+        it('rejects a well-formed manifest declaring schemaVersion 1', () => {
+            expect(validateManifest(buildManifest({ schemaVersion: 1 })).isValid).toBe(false);
+            expect(validateManifest(buildManifest({ schemaVersion: 2 })).isValid).toBe(true);
         });
     });
 
     describe('languages', () => {
-        it.each([
-            ['missing', undefined],
-            ['empty', []],
-            ['an object', { python: buildLanguage('python') }],
-            ['a string', 'python'],
-        ])('rejects a languages value that is %s', (_description, languages) => {
-            expectRejected(buildManifest({ languages }));
+        it('rejects an empty languages list', () => {
+            expectRejectedAt(buildManifest({ languages: [] }), 'languages');
         });
 
         it.each([
@@ -129,7 +159,10 @@ describe('validateManifest', () => {
             ['a string', 'python'],
             ['an array', [buildLanguage('python')]],
         ])('rejects a language entry that is %s', (_description, languageEntry) => {
-            expectRejected(buildManifest({ languages: [buildLanguage('python'), languageEntry] }));
+            expectRejectedAt(
+                buildManifest({ languages: [buildLanguage('python'), languageEntry] }),
+                'languages[1].',
+            );
         });
     });
 
@@ -146,11 +179,13 @@ describe('validateManifest', () => {
             ['over 32 characters', 'a'.repeat(33)],
             ['a number', 42],
         ])('rejects an id that is %s', (_description, id) => {
-            expectRejected(buildManifestWithLanguage({ id }));
+            expectRejectedAt(buildManifestWithLanguage({ id }), 'languages[0].');
         });
 
         it('rejects a duplicate id at index 1 with its exact rule', () => {
-            const manifest = buildManifest({ languages: [buildLanguage('python'), buildLanguage('python')] });
+            const manifest = buildManifest({
+                languages: [buildLanguage('python'), buildLanguage('python')],
+            });
             expect(validateManifest(manifest)).toEqual({
                 isValid: false,
                 rule: 'languages[1].id is a duplicate',
@@ -169,16 +204,21 @@ describe('validateManifest', () => {
     });
 
     describe('display fields', () => {
-        const displayFieldCases = ['label', 'glyph', 'tagline'].flatMap((field): [string, string, unknown][] => [
-            [field, 'missing', undefined],
-            [field, 'empty', ''],
-            [field, 'over 120 characters', 'x'.repeat(121)],
-            [field, 'a number', 7],
-            [field, 'null', null],
-        ]);
+        const displayFieldCases = ['label', 'glyph', 'tagline'].flatMap(
+            (field): [string, string, unknown][] => [
+                [field, 'missing', undefined],
+                [field, 'empty', ''],
+                [field, 'over 120 characters', 'x'.repeat(121)],
+                [field, 'a number', 7],
+                [field, 'null', null],
+            ],
+        );
 
         it.each(displayFieldCases)('rejects a %s that is %s', (field, _description, value) => {
-            expectRejected(buildManifestWithLanguage({ [field as string]: value }));
+            expectRejectedAt(
+                buildManifestWithLanguage({ [field as string]: value }),
+                'languages[0].',
+            );
         });
     });
 
@@ -190,7 +230,7 @@ describe('validateManifest', () => {
             ['empty', ''],
             ['a number', 1],
         ])('rejects a grammar that is %s', (_description, grammar) => {
-            expectRejected(buildManifestWithLanguage({ grammar }));
+            expectRejectedAt(buildManifestWithLanguage({ grammar }), 'languages[0].');
         });
     });
 
@@ -199,28 +239,38 @@ describe('validateManifest', () => {
             ['missing', undefined],
             ['empty', {}],
             ['null', null],
-            ['an array', [{ path: 'python/easy.json', hash: VALID_HASH }]],
+            ['an array', [buildFreeBank('python/easy.json')]],
             ['a string', 'python/easy.json'],
         ])('rejects a banks value that is %s', (_description, banks) => {
-            expectRejected(buildManifestWithBanks(banks));
+            expectRejectedAt(buildManifestWithBanks(banks), 'languages[0].banks');
         });
 
-        it.each(['expert', 'Easy', 'EASY', '', 'beginner'])('rejects the unknown difficulty key %p', (difficulty) => {
-            expectRejected(
-                buildManifestWithBanks({
-                    easy: { path: 'python/easy.json', hash: VALID_HASH },
-                    [difficulty]: { path: 'python/other.json', hash: VALID_HASH },
-                }),
-            );
-        });
+        it.each(['expert', 'Easy', 'EASY', '', 'beginner'])(
+            'rejects the unknown difficulty key %p',
+            (difficulty) => {
+                expectRejectedAt(
+                    buildManifestWithBanks({
+                        easy: buildFreeBank('python/easy.json'),
+                        [difficulty]: buildFreeBank('python/other.json'),
+                    }),
+                    'languages[0].banks',
+                );
+            },
+        );
 
         it.each([
             ['null', null],
             ['a string', 'python/easy.json'],
-            ['missing its path', { hash: VALID_HASH }],
-            ['missing its hash', { path: 'python/easy.json' }],
+            [
+                'missing its path',
+                { hash: VALID_HASH, access: 'free', contentVersion: 1, topicCounts: {} },
+            ],
+            [
+                'missing its hash',
+                { path: 'python/easy.json', access: 'free', contentVersion: 1, topicCounts: {} },
+            ],
         ])('rejects a bank entry that is %s', (_description, bankEntry) => {
-            expectRejected(buildManifestWithEasyBank(bankEntry));
+            expectRejectedAt(buildManifestWithEasyBank(bankEntry), 'languages[0].banks.easy');
         });
     });
 
@@ -234,7 +284,10 @@ describe('validateManifest', () => {
             ['a placeholder', '<sha256 of the file>'],
             ['a number', 123],
         ])('rejects a hash that is %s', (_description, hash) => {
-            expectRejected(buildManifestWithEasyBank({ path: 'python/easy.json', hash }));
+            expectRejectedAt(
+                buildManifestWithEasyBank({ ...buildFreeBank('python/easy.json'), hash }),
+                'languages[0].banks.easy',
+            );
         });
     });
 
@@ -253,7 +306,10 @@ describe('validateManifest', () => {
             ['carrying a query string', 'python/easy.json?v=1'],
             ['a number', 5],
         ])('rejects a path that is %s', (_description, path) => {
-            expectRejected(buildManifestWithEasyBank({ path, hash: VALID_HASH }));
+            expectRejectedAt(
+                buildManifestWithEasyBank({ ...buildFreeBank('python/easy.json'), path }),
+                'languages[0].banks.easy',
+            );
         });
     });
 });

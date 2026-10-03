@@ -10,5 +10,8 @@
   "devDependencies": {
     "@types/node": "^22.20.5",
     "vitest": "^3.2.7"
+  },
+  "dependencies": {
+    "@syntactical/content-schema": "*"
   }
 }

@@ -2,12 +2,13 @@
 // rule it broke so the caller can log it and keep the previous copy.
 import { CONTENT_LIMITS } from './contentLimits.js';
 import { DIFFICULTIES } from './difficulties.js';
+import { findBankEntryProblem } from './findBankEntryProblem.js';
+import { findMisconceptionsProblem } from './findMisconceptionsProblem.js';
+import { findTopicsProblem } from './findTopicsProblem.js';
 import { GRAMMARS } from './grammars.js';
-import { SUPPORTED_SCHEMA_VERSION } from './supportedSchemaVersion.js';
-
-import { SHA256_HEX } from './SHA256_HEX.js';
 import { isRecord } from './isRecord.js';
-import { isSafeBankPath } from './isSafeBankPath.js';
+import { isTextWithin } from './isTextWithin.js';
+import { SUPPORTED_SCHEMA_VERSION } from './supportedSchemaVersion.js';
 import type { Manifest } from './types/Manifest.js';
 
 const LANGUAGE_ID = /^[a-z0-9-]{1,32}$/;
@@ -17,21 +18,15 @@ const GRAMMAR_IDS: readonly string[] = GRAMMARS;
 type ManifestResult = { isValid: true; manifest: Manifest } | { isValid: false; rule: string };
 
 function isDisplayText(value: unknown): boolean {
-  return typeof value === 'string' && value.length > 0 && value.length <= CONTENT_LIMITS.displayFieldLength;
+  return isTextWithin(value, CONTENT_LIMITS.displayFieldLength);
 }
 
-function findBankEntryProblem(bank: unknown): string | null {
-  if (!isRecord(bank)) return 'is not an object';
-  const { hash, path } = bank;
-  if (typeof hash !== 'string' || !SHA256_HEX.test(hash)) return 'hash is invalid';
-  return isSafeBankPath(path) ? null : 'path is unsafe';
-}
-
-function findBankProblem(banks: unknown): string | null {
+function findBankProblem(banks: unknown, languageId: string, topicIds: readonly string[]): string | null {
   if (!isRecord(banks) || Object.keys(banks).length === 0) return 'banks is empty';
   for (const [difficulty, bank] of Object.entries(banks)) {
     if (!DIFFICULTY_IDS.includes(difficulty)) return `banks.${difficulty} is not a known difficulty`;
-    const problem = findBankEntryProblem(bank);
+    const productId = `syntactical.${languageId}.${difficulty}`;
+    const problem = findBankEntryProblem(bank, productId, topicIds);
     if (problem) return `banks.${difficulty}.${problem}`;
   }
   return null;
@@ -39,11 +34,16 @@ function findBankProblem(banks: unknown): string | null {
 
 function findLanguageProblem(language: unknown): string | null {
   if (!isRecord(language)) return 'is not an object';
-  const { id, label, glyph, tagline, grammar, banks } = language;
+  const { id, label, glyph, tagline, grammar, banks, topics, misconceptions } = language;
   if (typeof id !== 'string' || !LANGUAGE_ID.test(id)) return 'id is invalid';
   if (![label, glyph, tagline].every(isDisplayText)) return 'a display field is invalid';
   if (typeof grammar !== 'string' || !GRAMMAR_IDS.includes(grammar)) return 'grammar is not supported';
-  return findBankProblem(banks);
+  const topicsProblem = findTopicsProblem(topics);
+  if (topicsProblem) return topicsProblem;
+  const misconceptionsProblem = findMisconceptionsProblem(misconceptions, id);
+  if (misconceptionsProblem) return misconceptionsProblem;
+  const topicIds = (topics as { id: string }[]).map((topic) => topic.id);
+  return findBankProblem(banks, id, topicIds);
 }
 
 function findLanguagesProblem(languages: unknown[]): string | null {

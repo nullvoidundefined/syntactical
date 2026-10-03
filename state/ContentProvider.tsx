@@ -2,7 +2,7 @@
 // renders the app. Rounds never wait on the network: whatever is cached,
 // or bundled, is available as soon as this read completes. It then
 // refreshes the manifest and prefetches every bank whose hash changed.
-import { validateQuestionBank } from '@syntactical/content-schema';
+import { buildBankContext, validateQuestionBank } from '@syntactical/content-schema';
 import type { CachedBank, Manifest } from '@syntactical/content-schema';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
@@ -29,18 +29,25 @@ function buildBankId(language: string, difficulty: string): string {
 
 function readBundledBank(language: string, difficulty: string): CachedBank | null {
   const entry = findBankEntry(BUNDLED, language, difficulty);
-  const result = validateQuestionBank(BUNDLED_BANKS[buildBankId(language, difficulty)]);
-  if (!entry || !result.isValid) return null;
+  const languageEntry = BUNDLED.languages.find(({ id }) => id === language);
+  if (!entry || !languageEntry) return null;
+  const result = validateQuestionBank(BUNDLED_BANKS[buildBankId(language, difficulty)], buildBankContext(languageEntry));
+  if (!result.isValid) return null;
   const { questions } = result;
   return { hash: entry.hash, questions };
 }
 
+// Cached banks are validated against the baseline (cached or bundled) manifest's
+// topics and misconceptions; a bank cached under a newer manifest whose cache is
+// gone may drop questions and fall back to the bundled bank, never crash.
 async function readAllCachedBanks(manifest: Manifest): Promise<Map<string, CachedBank>> {
-  const slots = manifest.languages.flatMap(({ banks, id }) =>
-    Object.keys(banks).map((difficulty) => ({ difficulty, language: id })),
+  const slots = manifest.languages.flatMap((languageEntry) =>
+    Object.keys(languageEntry.banks).map((difficulty) => ({ difficulty, language: languageEntry.id, languageEntry })),
   );
   const banks = await Promise.all(
-    slots.map(({ language, difficulty }) => readCachedBank(language, difficulty)),
+    slots.map(({ language, difficulty, languageEntry }) =>
+      readCachedBank(language, difficulty, buildBankContext(languageEntry)),
+    ),
   );
   const cachedBanks = new Map<string, CachedBank>();
   slots.forEach(({ language, difficulty }, index) => {

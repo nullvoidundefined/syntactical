@@ -1,11 +1,21 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Question } from '@syntactical/content-schema';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import type { ReactNode } from 'react';
 import { Text } from 'react-native';
 
 import { StatsProvider, useQuizStats } from '../../../state/StatsProvider';
 import { QuizRound } from '../QuizRound';
+import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/contentFixtures';
 
-const questions: Question[] = [{ answer: true, id: 'q-1', prompt: 'Is it?', query: { explanation: 'Because', title: 'Why' }, type: 'bool' }];
+const questions: Question[] = [{ answer: true, id: 'q-1', prompt: 'Is it?', query: { explanation: 'Because', title: 'Why' }, provenance: TEST_PROVENANCE, type: 'bool' }];
+
+// Mounts the round only once stats have hydrated, as the round route does, so
+// an immediate completion is not swallowed by the pre-hydration guard.
+function AfterHydration({ children }: { children: ReactNode }) {
+  const { isHydrated } = useQuizStats();
+  return isHydrated ? children : null;
+}
 
 function CompletionsProbe() {
   const { isHydrated, stats } = useQuizStats();
@@ -14,6 +24,8 @@ function CompletionsProbe() {
 }
 
 describe('QuizRound with the real stats provider', () => {
+  beforeEach(() => AsyncStorage.clear());
+
   it('records exactly one completion when the round ends, even as stats change afterwards', async () => {
     await render(
       <StatsProvider>
@@ -36,5 +48,22 @@ describe('QuizRound with the real stats provider', () => {
     await waitFor(() => expect(screen.getByTestId('completions').props.children).toBe('1'));
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(screen.getByTestId('completions').props.children).toBe('1');
+  });
+
+  it('records no completion for a round with no playable questions (A/B only until Stage 5)', async () => {
+    const abOnly = [
+      { answerIndex: 0, choices: [{ text: 'a' }, { text: 'b' }], criterion: { evidence: 'e', statement: 's', type: 'performance' }, id: 'q-ab', prompt: 'p', provenance: questions[0].provenance, query: questions[0].query, type: 'ab' },
+    ] as unknown as Question[];
+    await render(
+      <StatsProvider>
+        <CompletionsProbe />
+        <AfterHydration>
+          <QuizRound language="python" languageLabel="Python" difficulty="easy" difficultyLabel="Easy" grammar="python" questions={abOnly} onExit={() => undefined} onRetry={() => undefined} />
+        </AfterHydration>
+      </StatsProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId('completions').props.children).toBe('0'));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.getByTestId('completions').props.children).toBe('0');
   });
 });
