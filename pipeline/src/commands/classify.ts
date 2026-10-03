@@ -16,6 +16,7 @@ import { type Question, validateManifest } from '@syntactical/content-schema';
 
 import { assertContentRootUsable } from '../services/classify/assertContentRootUsable.js';
 import { classifyBank } from '../services/classify/classifyBank.js';
+import { pickTopics } from '../services/classify/pickTopics.js';
 import { readFallbackTopics } from '../services/classify/readFallbackTopics.js';
 import { readLatestReport } from '../services/classify/readLatestReport.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
@@ -44,12 +45,6 @@ const STAGE = 'classify';
 
 async function readJson(path: string): Promise<unknown> {
     return JSON.parse(await readFile(path, 'utf8'));
-}
-
-// The manifest's topic list wins; pipeline/topics.json covers a language whose manifest lists none.
-function pickTopics(manifestTopics: { id: string }[], fallback: string[] | undefined): string[] {
-    const fromManifest = manifestTopics.map(({ id }) => id);
-    return fromManifest.length > 0 ? fromManifest : (fallback ?? []);
 }
 
 function buildReport(

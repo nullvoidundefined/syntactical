@@ -1,6 +1,6 @@
 // Paid output must never land in the public tree: refuse a content root at or under the
 // pipeline dir, the repo root, or the content dir, comparing real paths so a symlink
-// cannot smuggle it in. Shared by every stage that writes paid output (classify, enrich).
+// cannot smuggle it in.
 import { realpathSync } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
