@@ -22,7 +22,7 @@ export default function LanguageScreen() {
         </View>
         <LanguageStep languages={languages} onSelectLanguage={(language) => router.push(`/${language}`)} />
         <StatsPanel />
-        <View role="contentinfo" className="mt-10 items-center border-t border-line pt-6">
+        <View className="mt-10 items-center border-t border-line pt-6">
           <Pressable role="link" aria-label="Content quality" onPress={() => router.push('/quality')}>
             <Text className="font-mono text-xs uppercase tracking-widest text-muted">Content quality</Text>
           </Pressable>
