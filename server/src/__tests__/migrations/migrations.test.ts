@@ -29,15 +29,11 @@ const APPLICATION_TABLES = [
     'users',
 ];
 
+// Matches the pipeline's Docker tests: SKIP_DOCKER_TESTS=1 skips them unless
+// TEST_DATABASE_URL names a database (CI's server-integration job).
+const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.env.TEST_DATABASE_URL;
+
 let scratch: Awaited<ReturnType<typeof createScratchDatabase>>;
-
-beforeEach(async () => {
-    scratch = await createScratchDatabase(inject('testDatabaseUrl'));
-});
-
-afterEach(async () => {
-    await scratch.drop();
-});
 
 async function tableNames(pool: pg.Pool): Promise<string[]> {
     const { rows } = await pool.query<{ table_name: string }>(
@@ -99,7 +95,15 @@ async function countRows(pool: pg.Pool, table: string, userId: string): Promise<
     return Number(count);
 }
 
-describe('migrations', () => {
+describe.skipIf(SKIP_DATABASE_TESTS)('migrations', () => {
+    beforeEach(async () => {
+        scratch = await createScratchDatabase(inject('testDatabaseUrl'));
+    });
+
+    afterEach(async () => {
+        await scratch.drop();
+    });
+
     it(
         'run up, down, and up again on an empty database',
         async () => {

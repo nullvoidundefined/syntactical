@@ -55,6 +55,10 @@ export async function setupTestDatabase(
         provide('testDatabaseUrl', configuredUrl);
         return () => undefined;
     }
+    // Matches the pipeline's Docker tests; the migrations tests skip themselves too.
+    if (process.env.SKIP_DOCKER_TESTS === '1') {
+        return () => undefined;
+    }
     const { containerId, databaseUrl } = startTestContainer(docker, randomBytes(PASSPHRASE_BYTES).toString('hex'));
     function stopContainer(): void {
         docker(['stop', containerId]);
