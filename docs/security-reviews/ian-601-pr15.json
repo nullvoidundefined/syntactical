@@ -1,0 +1,29 @@
+{
+  "reviewer": "security-reviewer subagent",
+  "model": "claude-fable-5-1",
+  "range": "609a3a0..1d041ca",
+  "rounds": [
+    { "round": 1, "range": "609a3a0..7cc3ddf", "findings": 4 },
+    { "round": 2, "range": "609a3a0..87cbf58", "findings": 2 },
+    { "round": 3, "range": "609a3a0..1d041ca", "findings": 0 }
+  ],
+  "findings": [
+    { "id": 1, "severity": "HIGH", "control": "claude -p ran with default tools, MCP servers, settings, and the repo as cwd", "status": "fixed 87cbf58" },
+    { "id": 2, "severity": "MEDIUM", "control": "no test fed the CLI capability surface its insecure value", "status": "fixed 87cbf58" },
+    { "id": 3, "severity": "LOW", "control": "CLI subprocess had no timeout and an open stdin", "status": "fixed 87cbf58" },
+    { "id": 4, "severity": "LOW", "control": "a prompt naming a CLI subcommand could dispatch it despite the -- terminator", "status": "fixed 87cbf58" },
+    { "id": 5, "severity": "MEDIUM", "control": "the real spawn bounds had no direct test", "status": "fixed 1d041ca" },
+    { "id": 6, "severity": "LOW", "control": "user-level settings, hooks, and CLAUDE.md still loaded", "status": "fixed 1d041ca" }
+  ],
+  "nothingFound": [
+    "createSpawnExec failure paths: tried missing binary, writes past the cap, timer after close, kill racing a non-zero exit, stderr output",
+    "argv construction: tried shell metacharacters, --allowedTools Bash, empty and 5 MB system prompts",
+    "prompt on stdin: tried --mcp-config, agents, mcp add evil, empty and 5 MB prompts, child exiting before reading",
+    "buildCliEnv: tried DATABASE_URL, AWS_PROFILE, npm_config_registry, GITHUB_TOKEN, unset PATH, ANTHROPIC_BASE_URL, CLAUDE_CONFIG_DIR, undefined values",
+    "scratch cwd: tried TMPDIR inside the repo, exec rejection, exec writing into cwd",
+    "CLI envelope: tried non-JSON, null, [], is_error with secret-looking text, missing result, non-string model, odd modelUsage, stdout over 32 MiB",
+    "API path: tried unset key, empty and * PIPELINE_MODEL, typo'd model, max_tokens stop",
+    "error disclosure: tried 5000-character bodies, issues, and keys",
+    "schema validation: tried null, [], string, wrong types, __proto__, extra keys"
+  ]
+}

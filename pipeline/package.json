@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "cli": "tsx src/cli.ts",
+    "cli": "npm run build -w @syntactical/content-schema --silent && tsx src/cli.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
@@ -13,6 +13,9 @@
     "vitest": "^3.2.7"
   },
   "dependencies": {
-    "@syntactical/content-schema": "*"
+    "@anthropic-ai/sdk": "^0.131.0",
+    "@syntactical/content-schema": "*",
+    "acorn": "^8.18.0",
+    "zod": "^4.6.5"
   }
 }

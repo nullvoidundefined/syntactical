@@ -1,5 +1,8 @@
 name: CI
 
+permissions:
+  contents: read
+
 on:
   pull_request:
     branches: [main]
@@ -13,11 +16,15 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          # The pipeline's Python oracle checker parses with the same Python as the runner image.
+          python-version: '3.13'
       - run: npm ci
       - run: npm run lint
       - run: npx tsc --noEmit
       - run: npm test
-      - run: npm run content:build && git diff --exit-code content/manifest.json services/content/bundledManifest.generated.ts services/content/bundledBanks.generated.ts
+      - run: npm run content:build && git diff --exit-code content/manifest.json services/content/bundledManifest.generated.ts services/content/bundledBanks.generated.ts services/quality/qualityReport.generated.ts
       - run: npm run build
 
   workspaces:
@@ -28,6 +35,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          # The pipeline's Python oracle checker parses with the same Python as the runner image.
+          python-version: '3.13'
       - run: npm ci
       - run: npm run build:workspaces
       - name: Import the built shared packages from Node
