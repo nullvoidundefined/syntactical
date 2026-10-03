@@ -5,7 +5,7 @@
 import { toLocalDate } from '@syntactical/progress';
 
 import type { Database } from '../clients/database.js';
-import { withTransaction } from '../clients/withTransaction.js';
+import { withBoundedTransaction } from '../clients/withBoundedTransaction.js';
 import { PROGRESS_DEFAULTS } from '../constants/progressDefaults.js';
 import type { MeUpdate } from '../schemas/meSchemas.js';
 import type { UpdateProfileResult } from '../types/UpdateProfileResult.js';
@@ -20,7 +20,7 @@ async function updateProfile(
   update: MeUpdate,
   now: Date,
 ): Promise<UpdateProfileResult> {
-  return withTransaction(database, async (client) => {
+  return withBoundedTransaction(database, async (client) => {
     const lock = await lockUserRow(client, userId);
     if (lock.kind !== 'locked') {
       return { kind: lock.kind };

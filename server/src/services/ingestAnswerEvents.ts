@@ -4,7 +4,7 @@
 // that would exceed it is refused whole; already-stored ids do not count), the events are inserted once by (user_id, event_id)
 // with is_correct derived from the answer key, and daily progress is recomputed.
 import type { Database } from '../clients/database.js';
-import { withTransaction } from '../clients/withTransaction.js';
+import { withBoundedTransaction } from '../clients/withBoundedTransaction.js';
 import { SYNC } from '../constants/sync.js';
 import type { AnswerEventInput } from '../schemas/answerEventSchemas.js';
 import type { AnswerKey } from '../types/AnswerKey.js';
@@ -39,7 +39,7 @@ async function ingestAnswerEvents(
   if (invalid.length > 0) {
     return { eventIds: ids(invalid), kind: 'invalid-events' };
   }
-  return withTransaction(database, async (client): Promise<IngestResult> => {
+  return withBoundedTransaction(database, async (client): Promise<IngestResult> => {
     const lock = await lockUserRow(client, userId);
     if (lock.kind === 'busy') {
       return { kind: 'busy' };
