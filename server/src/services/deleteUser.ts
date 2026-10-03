@@ -7,14 +7,14 @@
 // address or the id; a row linked to another user is scrubbed match-only), the email's rate-limit counters go, then the user row is deleted (sessions,
 // answer events, progress, and goal changes cascade; entitlements and purchase_events user_id go
 // null by foreign key). Resolves false when no such user exists. Nothing here logs the email or id.
-import type pg from "pg";
+import type pg from 'pg';
 
-import { AUTH } from "../constants/auth.js";
+import { AUTH } from '../constants/auth.js';
 
-import { carriesPurchaseIdentity } from "./carriesPurchaseIdentity.js";
-import { deleteRateLimitCountersForEmail } from "./deleteRateLimitCountersForEmail.js";
-import { normalizeEmail } from "./normalizeEmail.js";
-import { scrubPurchasePayload } from "./scrubPurchasePayload.js";
+import { carriesPurchaseIdentity } from './carriesPurchaseIdentity.js';
+import { deleteRateLimitCountersForEmail } from './deleteRateLimitCountersForEmail.js';
+import { normalizeEmail } from './normalizeEmail.js';
+import { scrubPurchasePayload } from './scrubPurchasePayload.js';
 
 interface DeleteUserInput {
   rateLimitKeySecret: string;
@@ -33,10 +33,7 @@ function containsPattern(value: string): string {
   return `%${value.replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
 }
 
-async function scrubPurchaseEvents(
-  client: pg.PoolClient,
-  identity: { email: string; userId: string },
-): Promise<void> {
+async function scrubPurchaseEvents(client: pg.PoolClient, identity: { email: string; userId: string }): Promise<void> {
   const { email, userId } = identity;
   // The SQL is a superset (it also folds NFKC forms); the JS predicate decides which rows change.
   const { rows } = await client.query<PurchaseEventRow>(
@@ -48,29 +45,16 @@ async function scrubPurchaseEvents(
     [userId, containsPattern(email), containsPattern(userId)],
   );
   const changed = rows
-    .filter(
-      ({ payload, user_id: rowUserId }) =>
-        rowUserId === userId || carriesPurchaseIdentity(payload, identity),
-    )
-    .map(
-      ({
-        payload,
-        provider,
-        provider_event_id: providerEventId,
-        user_id: rowUserId,
-      }) => ({
-        payload: scrubPurchasePayload(payload, identity, {
-          clearPiiAttributes: rowUserId === null || rowUserId === userId,
-        }),
-        previous: payload,
-        provider,
-        providerEventId,
+    .filter(({ payload, user_id: rowUserId }) => rowUserId === userId || carriesPurchaseIdentity(payload, identity))
+    .map(({ payload, provider, provider_event_id: providerEventId, user_id: rowUserId }) => ({
+      payload: scrubPurchasePayload(payload, identity, {
+        clearPiiAttributes: rowUserId === null || rowUserId === userId,
       }),
-    )
-    .filter(
-      ({ payload, previous }) =>
-        JSON.stringify(payload) !== JSON.stringify(previous),
-    )
+      previous: payload,
+      provider,
+      providerEventId,
+    }))
+    .filter(({ payload, previous }) => JSON.stringify(payload) !== JSON.stringify(previous))
     .map(({ payload, provider, providerEventId }) => ({
       payload,
       provider,
@@ -89,33 +73,23 @@ async function scrubPurchaseEvents(
   );
 }
 
-async function deleteUser(
-  client: pg.PoolClient,
-  input: DeleteUserInput,
-): Promise<boolean> {
+async function deleteUser(client: pg.PoolClient, input: DeleteUserInput): Promise<boolean> {
   const { rateLimitKeySecret, userId } = input;
   // SET LOCAL takes no bind parameters; both values are constants from AUTH.DELETION.
   await client.query(`SET LOCAL lock_timeout = '${AUTH.DELETION.LOCK_TIMEOUT}'`);
-  await client.query(
-    `SET LOCAL statement_timeout = '${AUTH.DELETION.STATEMENT_TIMEOUT}'`,
-  );
-  const found = await client.query<{ email: string }>(
-    "SELECT email FROM users WHERE id = $1",
-    [userId],
-  );
+  await client.query(`SET LOCAL statement_timeout = '${AUTH.DELETION.STATEMENT_TIMEOUT}'`);
+  const found = await client.query<{ email: string }>('SELECT email FROM users WHERE id = $1', [userId]);
   const [row] = found.rows;
   if (!row) {
     return false;
   }
   const email = normalizeEmail(row.email);
-  await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [
-    email,
-  ]);
-  await client.query("DELETE FROM one_time_codes WHERE email = $1", [email]);
-  await client.query("SELECT id FROM users WHERE id = $1 FOR UPDATE", [userId]);
+  await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [email]);
+  await client.query('DELETE FROM one_time_codes WHERE email = $1', [email]);
+  await client.query('SELECT id FROM users WHERE id = $1 FOR UPDATE', [userId]);
   await scrubPurchaseEvents(client, { email, userId });
   await deleteRateLimitCountersForEmail(client, rateLimitKeySecret, email);
-  await client.query("DELETE FROM users WHERE id = $1", [userId]);
+  await client.query('DELETE FROM users WHERE id = $1', [userId]);
   return true;
 }
 
