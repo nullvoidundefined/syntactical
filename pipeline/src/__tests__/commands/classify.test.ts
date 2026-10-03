@@ -1,6 +1,6 @@
 // `pipeline classify` with a fake provider: thresholds, review-queue placement (free vs
 // paid), agreement, wtf-overuse, hostile manifest, and no content-file writes.
-import { mkdir, mkdtemp, readFile, readdir, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, stat, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -128,9 +128,9 @@ describe('classify', () => {
     beforeEach(async () => {
         logs.length = 0;
         root = await mkdtemp(join(tmpdir(), 'classify-root-'));
-        contentDir = join(root, 'content');
+        contentDir = join(root, 'repo/content');
         contentRoot = join(root, 'syntactical-content');
-        pipelineDir = join(root, 'pipeline');
+        pipelineDir = join(root, 'repo/pipeline');
         await mkdir(contentRoot, { recursive: true });
         await writeTree(pipelineDir, {
             'topics.json': { python: ['strings', 'wtf'] },
@@ -296,10 +296,45 @@ describe('classify', () => {
     it('refuses a content root inside the pipeline directory when a paid bank exists', async () => {
         await seed({ 'medium:paid': [buildQuestion('paid-1', PAID_TEXT)] });
         const provider = scripted(() => ({ confidence: 0.1, topic: 'strings' }));
+        await mkdir(join(pipelineDir, 'private'), { recursive: true });
         await expect(run(provider, { contentRoot: join(pipelineDir, 'private') })).rejects.toThrow(
-            'outside the pipeline directory',
+            'content root must be outside',
         );
         expect(provider.prompts).toEqual([]);
+    });
+
+    it.each([
+        ['a symlink pointing into the pipeline dir', 'link'],
+        ['the repo root', 'repo'],
+        ['the content dir', 'content'],
+    ])('refuses a content root that is %s', async (_name, kind) => {
+        await seed({ 'medium:paid': [buildQuestion('paid-1', PAID_TEXT)] });
+        const inside = join(pipelineDir, 'inside');
+        await mkdir(inside, { recursive: true });
+        await symlink(inside, join(root, 'link'));
+        const target = { content: contentDir, link: join(root, 'link'), repo: join(root, 'repo') }[kind] as string;
+        const provider = scripted(() => ({ confidence: 0.9, topic: 'strings' }));
+        await expect(run(provider, { contentRoot: target })).rejects.toThrow('content root must be outside');
+        expect(provider.prompts).toEqual([]);
+    });
+
+    it('accepts a sibling directory literally named ..private (not mistaken for a parent)', async () => {
+        await seed({ 'medium:paid': [buildQuestion('paid-1', PAID_TEXT)] });
+        const odd = join(root, '..private');
+        await mkdir(odd, { recursive: true });
+        await run(
+            scripted(() => ({ confidence: 0.3, topic: 'strings' })),
+            { contentRoot: odd },
+        );
+        expect(await listFiles(odd)).toContain('review-queue/python/medium/paid-1.json');
+    });
+
+    it('refuses a directory named ..private inside the pipeline dir', async () => {
+        await seed({ 'medium:paid': [buildQuestion('paid-1', PAID_TEXT)] });
+        const odd = join(pipelineDir, '..private');
+        await mkdir(odd, { recursive: true });
+        const provider = scripted(() => ({ confidence: 0.9, topic: 'strings' }));
+        await expect(run(provider, { contentRoot: odd })).rejects.toThrow('content root must be outside');
     });
 
     it('fails clearly when a paid bank exists and the content root is missing', async () => {
