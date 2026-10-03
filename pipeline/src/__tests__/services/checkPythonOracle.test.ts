@@ -142,13 +142,13 @@ describe('checkPythonOracle (real python3; defense in depth, the runner sandbox 
         const broken = async () => {
             throw new Error('python3 could not start');
         };
-        expect(await checkPythonOracle('print(1)', broken)).toBe('python checker unavailable');
+        expect(await checkPythonOracle('print(1)', broken)).toMatch(/^python checker unavailable \(/);
     });
 
     it('fails closed when the checker prints something that is not a verdict', async () => {
         const garbage = async () => ({ stdout: 'not json' });
         const wrongShape = async () => ({ stdout: '{"ok": "yes"}' });
-        expect(await checkPythonOracle('print(1)', garbage)).toBe('python checker unavailable');
-        expect(await checkPythonOracle('print(1)', wrongShape)).toBe('python checker unavailable');
+        expect(await checkPythonOracle('print(1)', garbage)).toMatch(/^python checker unavailable \(/);
+        expect(await checkPythonOracle('print(1)', wrongShape)).toMatch(/^python checker unavailable \(/);
     });
 });

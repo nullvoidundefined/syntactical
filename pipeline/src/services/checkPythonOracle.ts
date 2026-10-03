@@ -14,18 +14,23 @@ const UNAVAILABLE = 'python checker unavailable';
 
 const defaultExec = createSpawnExec({ maxStdoutBytes: MAX_CHECKER_OUTPUT_BYTES, timeoutMs: CHECKER_TIMEOUT_MS });
 
+// The refusal reason for a checker that could not give a verdict, with the cause for the log.
+function unavailable(cause: unknown): string {
+    return `${UNAVAILABLE} (${cause instanceof Error ? cause.message : String(cause)})`;
+}
+
 function readVerdict(stdout: string): string | null {
     let verdict: unknown;
     try {
         verdict = JSON.parse(stdout);
-    } catch {
-        return UNAVAILABLE;
+    } catch (error) {
+        return unavailable(error);
     }
     const { ok, reason } = (verdict ?? {}) as { ok?: unknown; reason?: unknown };
     if (ok === true) {
         return null;
     }
-    return ok === false && typeof reason === 'string' ? reason : UNAVAILABLE;
+    return ok === false && typeof reason === 'string' ? reason : unavailable('unexpected verdict');
 }
 
 // Returns the reason the program is refused, or null when it is inside the allowed grammar.
@@ -38,7 +43,7 @@ export async function checkPythonOracle(code: string, exec: ExecFn = defaultExec
             input: code,
         });
         return readVerdict(stdout);
-    } catch {
-        return UNAVAILABLE;
+    } catch (error) {
+        return unavailable(error);
     }
 }
