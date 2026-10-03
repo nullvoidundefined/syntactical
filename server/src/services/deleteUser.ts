@@ -2,15 +2,15 @@
 // Lock order matches sign-in (email advisory lock, then rows) so the two cannot deadlock: the
 // email's one-time codes go, the user row is locked, purchase payloads naming the email or id are
 // scrubbed in place (rows linked to the user, plus rows whose payload carries the email as a whole
-// address or the id), the email's rate-limit counters go, then the user row is deleted (sessions,
+// address or the id; a row linked to another user is scrubbed match-only), the email's rate-limit counters go, then the user row is deleted (sessions,
 // answer events, progress, and goal changes cascade; entitlements and purchase_events user_id go
 // null by foreign key). Resolves false when no such user exists. Nothing here logs the email or id.
-import type pg from 'pg';
+import type pg from "pg";
 
-import { carriesPurchaseIdentity } from './carriesPurchaseIdentity.js';
-import { deleteRateLimitCountersForEmail } from './deleteRateLimitCountersForEmail.js';
-import { normalizeEmail } from './normalizeEmail.js';
-import { scrubPurchasePayload } from './scrubPurchasePayload.js';
+import { carriesPurchaseIdentity } from "./carriesPurchaseIdentity.js";
+import { deleteRateLimitCountersForEmail } from "./deleteRateLimitCountersForEmail.js";
+import { normalizeEmail } from "./normalizeEmail.js";
+import { scrubPurchasePayload } from "./scrubPurchasePayload.js";
 
 interface DeleteUserInput {
   rateLimitKeySecret: string;
@@ -48,13 +48,25 @@ async function scrubPurchaseEvents(
       ({ payload, user_id: rowUserId }) =>
         rowUserId === userId || carriesPurchaseIdentity(payload, identity),
     )
-    .map(({ payload, provider, provider_event_id: providerEventId }) => ({
-      payload: scrubPurchasePayload(payload, identity),
-      previous: payload,
-      provider,
-      providerEventId,
-    }))
-    .filter(({ payload, previous }) => JSON.stringify(payload) !== JSON.stringify(previous))
+    .map(
+      ({
+        payload,
+        provider,
+        provider_event_id: providerEventId,
+        user_id: rowUserId,
+      }) => ({
+        payload: scrubPurchasePayload(payload, identity, {
+          clearPiiAttributes: rowUserId === null || rowUserId === userId,
+        }),
+        previous: payload,
+        provider,
+        providerEventId,
+      }),
+    )
+    .filter(
+      ({ payload, previous }) =>
+        JSON.stringify(payload) !== JSON.stringify(previous),
+    )
     .map(({ payload, provider, providerEventId }) => ({
       payload,
       provider,
@@ -73,22 +85,28 @@ async function scrubPurchaseEvents(
   );
 }
 
-async function deleteUser(client: pg.PoolClient, input: DeleteUserInput): Promise<boolean> {
+async function deleteUser(
+  client: pg.PoolClient,
+  input: DeleteUserInput,
+): Promise<boolean> {
   const { rateLimitKeySecret, userId } = input;
-  const found = await client.query<{ email: string }>('SELECT email FROM users WHERE id = $1', [
-    userId,
-  ]);
+  const found = await client.query<{ email: string }>(
+    "SELECT email FROM users WHERE id = $1",
+    [userId],
+  );
   const [row] = found.rows;
   if (!row) {
     return false;
   }
   const email = normalizeEmail(row.email);
-  await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [email]);
-  await client.query('DELETE FROM one_time_codes WHERE email = $1', [email]);
-  await client.query('SELECT id FROM users WHERE id = $1 FOR UPDATE', [userId]);
+  await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [
+    email,
+  ]);
+  await client.query("DELETE FROM one_time_codes WHERE email = $1", [email]);
+  await client.query("SELECT id FROM users WHERE id = $1 FOR UPDATE", [userId]);
   await scrubPurchaseEvents(client, { email, userId });
   await deleteRateLimitCountersForEmail(client, rateLimitKeySecret, email);
-  await client.query('DELETE FROM users WHERE id = $1', [userId]);
+  await client.query("DELETE FROM users WHERE id = $1", [userId]);
   return true;
 }
 

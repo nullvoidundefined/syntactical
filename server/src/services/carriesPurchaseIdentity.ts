@@ -1,32 +1,18 @@
 // Whether a purchase payload holds the email or id under the B-59.1c rule, in any string value or
-// object key, without the PII-attribute clearing the scrub does. A container nested past the depth
-// cap counts as carrying, since the scrub replaces it wholesale.
-import { carriesIdentity } from './carriesIdentity.js';
-import type { PurchaseIdentity } from './purchaseIdentity.js';
-import { buildNeedles } from './purchaseNeedles.js';
+// object key, without the PII-attribute clearing the scrub does. Derived from the scrubber's own
+// walker (match-only mode, then compare), so row selection and scrubbing share one walk and one
+// depth cap; a container nested past the cap is replaced wholesale and so counts as carrying.
+import type { PurchaseIdentity } from "./purchaseIdentity.js";
+import { scrubPurchasePayload } from "./scrubPurchasePayload.js";
 
-const MAX_DEPTH = 64;
-
-function holdsIdentity(node: unknown, needles: PurchaseIdentity, depth: number): boolean {
-  if (typeof node === 'string') {
-    return carriesIdentity(node, needles);
-  }
-  if (node === null || typeof node !== 'object') {
-    return false;
-  }
-  if (depth > MAX_DEPTH) {
-    return true;
-  }
-  if (Array.isArray(node)) {
-    return node.some((item) => holdsIdentity(item, needles, depth + 1));
-  }
-  return Object.entries(node as Record<string, unknown>).some(
-    ([key, value]) => carriesIdentity(key, needles) || holdsIdentity(value, needles, depth + 1),
-  );
-}
-
-function carriesPurchaseIdentity(payload: unknown, identity: PurchaseIdentity): boolean {
-  return holdsIdentity(payload, buildNeedles(identity), 1);
+function carriesPurchaseIdentity(
+  payload: unknown,
+  identity: PurchaseIdentity,
+): boolean {
+  const matchOnly = scrubPurchasePayload(payload, identity, {
+    clearPiiAttributes: false,
+  });
+  return JSON.stringify(matchOnly) !== JSON.stringify(payload);
 }
 
 export { carriesPurchaseIdentity };
