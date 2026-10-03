@@ -43,6 +43,17 @@ describe('quiz screens on the web expose accessible names and headings', () => {
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Python / Easy / Multiple choice');
   });
 
+  it('keeps one level-one heading when the verified badge is shown', () => {
+    const verified = { ...TEST_PROVENANCE, runtimeVersion: 'Python 3.13.2', validation: { method: 'executed', status: 'passed' } } as const;
+    render(
+      <QuestionCardFrame languageLabel="Python" difficultyLabel="Easy" type="mc" onOpenQuery={jest.fn()} provenance={verified}>
+        <Text>body</Text>
+      </QuestionCardFrame>,
+    );
+    expect(screen.getByText('Output verified on Python 3.13.2')).toBeTruthy();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+  });
+
   it('gives the results screen a level-one heading', () => {
     render(
       <ResultsScreen accuracy={50} correctCount={1} totalQuestions={2} languageLabel="Python" difficultyLabel="Easy" onMenu={jest.fn()} onRetry={jest.fn()} />,
