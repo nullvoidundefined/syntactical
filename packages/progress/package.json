@@ -23,6 +23,6 @@
     "vitest": "^3.2.7"
   },
   "dependencies": {
-    "ts-fsrs": "^5.4.2"
+    "ts-fsrs": "5.4.2"
   }
 }
