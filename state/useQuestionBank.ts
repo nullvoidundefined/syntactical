@@ -1,9 +1,10 @@
 // One bank's load state. A local copy (cached or bundled) whose hash
 // matches the manifest is used directly; otherwise the bank downloads,
 // keyed by its hash so overlapping requests share one fetch. A paid bank's
-// local copy also includes the signed-in owner's own cache (read even offline),
-// and it downloads only for an owner holding its entitlement; without one it is
-// locked and no request is made.
+// shared or bundled copy plays only for a signed-in owner holding its
+// entitlement, and the owner's own cache (read even offline) also counts as a
+// local copy. It downloads only for an entitled owner; without one it is
+// locked (loading while entitlements load) and no request is made.
 import { buildBankContext } from '@syntactical/content-schema';
 import type { BankEntry, CachedBank, Manifest } from '@syntactical/content-schema';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -74,13 +75,14 @@ export function useQuestionBank(language: string, difficulty: string): QuestionB
   const { data: ownedBank, isPending: isOwnedQueryPending } = ownedQuery;
   const isOwnedPending = isPaid && ownerUserId !== null && isOwnedQueryPending;
   const sharedBank = access.readLocalBank(language, difficulty);
+  const isPaidEntitled = isPaid && isEntitled(entitlements, productId);
   // A paid bank plays an older copy only from the owner's own cache; a shared or
-  // bundled copy counts only when it is the current one.
+  // bundled copy counts only when it is current and the owner is entitled.
   const localBank = isPaid
-    ? pickLocalBank([sharedBank?.hash === hash ? sharedBank : null, ownedBank], hash)
+    ? pickLocalBank([isPaidEntitled && sharedBank?.hash === hash ? sharedBank : null, ownedBank], hash)
     : sharedBank;
   const needsDownload = entry !== undefined && localBank?.hash !== hash;
-  const canDownload = isPaid ? isEntitled(entitlements, productId) : access.contentBaseUrl !== null;
+  const canDownload = isPaid ? isPaidEntitled : access.contentBaseUrl !== null;
   const query = useQuery({
     ...buildBankQuery(queryClient, access, language, difficulty, entry ?? PLACEHOLDER_ENTRY, isPaid ? ownerUserId : null),
     enabled: needsDownload && canDownload && !isOwnedPending,
