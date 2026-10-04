@@ -8,8 +8,6 @@ import { type Question, validateManifest } from '@syntactical/content-schema';
 
 import { ORACLE_LANGUAGES } from '../services/ORACLE_LANGUAGES.js';
 import { draftOracle } from '../services/draftOracle.js';
-import { findRefusedConstruct } from '../services/findRefusedConstruct.js';
-import { readCheckerPythonVersion } from '../services/readCheckerPythonVersion.js';
 import { readExistingOracles } from '../services/readExistingOracles.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
 import { writeFileAtomic } from '../services/writeFileAtomic.js';
@@ -32,7 +30,6 @@ async function readJson(path: string): Promise<unknown> {
 
 interface SaveBankArgs {
     bankKey: string;
-    dropped: number;
     file: string;
     kept: Map<string, Oracle>;
     log: (line: string) => void;
@@ -41,8 +38,8 @@ interface SaveBankArgs {
 }
 
 async function saveBank(args: SaveBankArgs): Promise<void> {
-    const { bankKey, dropped, file, kept, log, oracles, total } = args;
-    if (oracles.size === 0 && dropped === 0) {
+    const { bankKey, file, kept, log, oracles, total } = args;
+    if (oracles.size === 0) {
         log(`${bankKey}: nothing drafted, existing file left as is`);
         return;
     }
@@ -52,20 +49,6 @@ async function saveBank(args: SaveBankArgs): Promise<void> {
     await mkdir(dirname(file), { recursive: true });
     await writeFileAtomic(file, `${JSON.stringify(Object.fromEntries(merged), null, JSON_INDENT)}\n`);
     log(`${bankKey}: ${oracles.size} of ${total} oracles drafted, ${merged.size} in file`);
-}
-
-// Entries already on disk went through an older check; run the current one and drop what fails.
-async function dropRefused(saved: Map<string, Oracle>, bankKey: string, log: (line: string) => void): Promise<number> {
-    let dropped = 0;
-    for (const [id, oracle] of saved) {
-        const refused = await findRefusedConstruct(oracle);
-        if (refused) {
-            saved.delete(id);
-            dropped += 1;
-            log(`${bankKey} ${id}: dropped saved oracle (refused: ${refused})`);
-        }
-    }
-    return dropped;
 }
 
 export async function draftOracles(options: DraftOraclesOptions): Promise<void> {
@@ -81,7 +64,6 @@ export async function draftOracles(options: DraftOraclesOptions): Promise<void> 
         throw new Error(`Manifest rejected: ${sanitizeLogText(checked.rule)}`);
     }
     const { manifest } = checked;
-    log(`python checker running under Python ${await readCheckerPythonVersion()}`);
     for (const { banks, id: languageId } of manifest.languages) {
         const language = Object.hasOwn(ORACLE_LANGUAGES, languageId) ? ORACLE_LANGUAGES[languageId] : undefined;
         for (const [difficulty, { access, path }] of Object.entries(banks)) {
@@ -98,7 +80,6 @@ export async function draftOracles(options: DraftOraclesOptions): Promise<void> 
             const file = join(oraclesDir, `${bankKey}.json`);
             // Read the saved file before drafting anything, so a bad file fails fast.
             const kept = await readExistingOracles(file);
-            const dropped = await dropRefused(kept, bankKey, log);
             const oracles = new Map<string, Oracle>();
             let completed = false;
             try {
@@ -121,7 +102,7 @@ export async function draftOracles(options: DraftOraclesOptions): Promise<void> 
             } finally {
                 // An error that stops the run still saves what this bank drafted so far. If that
                 // save fails too, log it and let the original error stay the one that propagates.
-                const saveArgs = { bankKey, dropped, file, kept, log, oracles, total: bank.questions.length };
+                const saveArgs = { bankKey, file, kept, log, oracles, total: bank.questions.length };
                 if (completed) {
                     await saveBank(saveArgs);
                 } else {

@@ -465,7 +465,7 @@ describe('ModelProvider', () => {
 
 **Interfaces:** `draftOracle(question: Question, language: string, provider: ModelProvider): Promise<Oracle | { isExecutable: false; reason: string }>`.
 
-- [ ] **Step 1:** tests with a fake provider: a Python question about `0.1 + 0.2` yields `{ language: 'python', code: 'print(0.1 + 0.2)' }`; a conceptual question yields `{ isExecutable: false }`; an oracle containing `socket`, `requests`, `urllib`, or `fetch(` is refused before it is run.
+- [ ] **Step 1:** tests with a fake provider: a Python question about `0.1 + 0.2` yields `{ language: 'python', code: 'print(0.1 + 0.2)' }`; a conceptual question yields `{ isExecutable: false }`. There is no text pre-filter on drafted code: the Docker runner sandbox (Task 1.7) is the control, and every oracle runs only through `runOracle`.
 - [ ] **Steps 2–4:** implement; pass. **Step 5:** commit `feat(pipeline): draft oracles for existing questions`.
 
 ### Task 1.11: `pipeline validate` and the pipeline report
