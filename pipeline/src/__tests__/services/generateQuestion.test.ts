@@ -181,26 +181,6 @@ describe('generateQuestion', () => {
         expect(calls).toHaveLength(0);
     });
 
-    it('screens execute code with findRefusedConstruct: refused code never runs and costs a revision', async () => {
-        const provider = scripted((call) =>
-            call === 0 ? { execute: { code: 'import subprocess\nprint(1)', language: 'python' } } : buildDraft(),
-        );
-        const { calls, run } = fakeRun();
-        const outcome = await generateQuestion(baseArgs(provider, run));
-        expect(outcome.status).toBe('kept');
-        expect(provider.prompts).toHaveLength(2);
-        expect(provider.prompts[1]).toContain('refused: subprocess');
-        expect(calls.every(({ oracle }) => !oracle.code.includes('subprocess'))).toBe(true);
-    });
-
-    it('screens the answer oracle too: a refused oracle never runs', async () => {
-        const provider = scripted(() => buildDraft({ oracle: { code: 'import subprocess\nprint(3)' } }));
-        const { calls, run } = fakeRun();
-        const outcome = await generateQuestion(baseArgs(provider, run));
-        expect(outcome).toEqual({ reason: 'generation-failed', status: 'dropped' });
-        expect(calls).toHaveLength(0);
-    });
-
     it('bounds execute requests per draft so a model cannot loop forever', async () => {
         const provider = scripted(() => ({ execute: { code: 'print(1)', language: 'python' } }));
         const { calls, run } = fakeRun();

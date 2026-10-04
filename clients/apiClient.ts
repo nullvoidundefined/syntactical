@@ -15,7 +15,13 @@ import { readSessionToken } from './readSessionToken';
 
 type ApiResponse = { status: number; body: unknown };
 
-type ApiRequestInit = { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown };
+// responseType 'text' hands back the body exactly as received (a string), for a
+// caller that verifies the bytes, such as a paid bank checked against its hash.
+type ApiRequestInit = {
+  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  body?: unknown;
+  responseType?: 'json' | 'text';
+};
 
 function resolveRequestUrl(path: string): string {
   const base = validateApiBaseUrl(Constants.expoConfig?.extra?.apiBaseUrl);
@@ -69,13 +75,14 @@ function isOffBase(responseUrl: string | undefined, requestedUrl: string): boole
   }
 }
 
-async function parseBody(response: Response): Promise<unknown> {
+async function parseBody(response: Response, responseType: 'json' | 'text'): Promise<unknown> {
   let text: string;
   try {
     text = await response.text();
   } catch (cause) {
     throw new ApiUnavailable('API response body failed', { cause });
   }
+  if (responseType === 'text') return text;
   try {
     return text ? (JSON.parse(text) as unknown) : null;
   } catch {
@@ -87,6 +94,7 @@ async function requestAndRead(
   url: string,
   init: RequestInit,
   signal: AbortSignal,
+  responseType: 'json' | 'text',
 ): Promise<ApiResponse> {
   let response: Response;
   try {
@@ -98,7 +106,7 @@ async function requestAndRead(
   if (redirected || isOffBase(responseUrl, url)) {
     throw new ApiUnavailable('API response was redirected');
   }
-  return { body: await parseBody(response), status };
+  return { body: await parseBody(response, responseType), status };
 }
 
 function createTimeoutRace(controller: AbortController): {
@@ -135,7 +143,7 @@ async function handleUnauthorized(sentSession: string | null, requestSeq: number
 export async function apiFetch(path: string, init: ApiRequestInit = {}): Promise<ApiResponse> {
   const requestSeq = (apiRequestState.latestRequestSeq += 1);
   const url = resolveRequestUrl(path);
-  const { body, method } = init;
+  const { body, method, responseType = 'json' } = init;
   const hasBody = body !== undefined;
   const { headers, sentSession } = await buildRequest(hasBody);
   const controller = new AbortController();
@@ -152,6 +160,7 @@ export async function apiFetch(path: string, init: ApiRequestInit = {}): Promise
           method: method ?? 'GET',
         },
         controller.signal,
+        responseType,
       ),
       timeout.promise,
     ]);

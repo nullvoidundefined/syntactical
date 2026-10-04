@@ -28,6 +28,7 @@ import { generateUuid } from '../clients/uuidClient';
 import { writeJson } from '../clients/writeJson';
 import { buildUserStatsKey, EVENT_LOG_STORAGE_KEY, GUEST_CLAIM_STORAGE_KEY, STORAGE_KEY } from '../constants/appConfig';
 import { readLocalToday } from '../services/progress/readLocalToday';
+import { setGoalFromDate } from '../services/progress/setGoalFromDate';
 import { appendAnswerEvent } from '../services/stats/appendAnswerEvent';
 import { buildLoggedAnswerEvent } from '../services/stats/buildLoggedAnswerEvent';
 import { claimGuestEvents as claimGuest } from '../services/stats/claimGuestEvents';
@@ -52,6 +53,7 @@ type StatsContextValue = {
   claimGuestEvents: (userId: string) => Promise<void>;
   clearSyncCursor: () => void;
   discardUnsyncedEvents: (userId: string) => Promise<void>;
+  dismissSignUpPrompt: () => void;
   eventLog: LoggedAnswerEvent[];
   isHydrated: boolean;
   markEventsHeld: (eventIds: string[], ownerUserId: string, reason?: HeldReason) => Promise<void>;
@@ -61,6 +63,7 @@ type StatsContextValue = {
   recordAnswer: (answer: RecordedAnswer) => void;
   readSyncCursor: (userId: string) => string | null;
   recordCompletion: (event: RoundKey) => void;
+  setDailyGoal: (goal: number) => void;
   stats: Stats;
 };
 
@@ -349,11 +352,26 @@ export function StatsProvider({ children, deletedUserId = null, ownerUserId = nu
     [isHydrated, statsSlot],
   );
 
+  // A new goal applies from today on; earlier days keep the goal they had.
+  const setDailyGoal = useCallback(
+    (goal: number) => {
+      if (!isHydrated) return;
+      void changeSlot(statsSlot, (current) => ({ ...current, goalHistory: setGoalFromDate(current.goalHistory, readLocalToday(), goal) }));
+    },
+    [isHydrated, statsSlot],
+  );
+
+  const dismissSignUpPrompt = useCallback(() => {
+    if (!isHydrated) return;
+    void changeSlot(statsSlot, (current) => ({ ...current, isSignUpPromptDismissed: true }));
+  }, [isHydrated, statsSlot]);
+
   const value = useMemo<StatsContextValue>(
     () => ({
       claimGuestEvents,
       clearSyncCursor,
       discardUnsyncedEvents,
+      dismissSignUpPrompt,
       eventLog: visibleEventLog,
       isHydrated,
       markEventsHeld,
@@ -363,12 +381,14 @@ export function StatsProvider({ children, deletedUserId = null, ownerUserId = nu
       readSyncCursor,
       recordAnswer,
       recordCompletion,
+      setDailyGoal,
       stats,
     }),
     [
       claimGuestEvents,
       clearSyncCursor,
       discardUnsyncedEvents,
+      dismissSignUpPrompt,
       isHydrated,
       markEventsHeld,
       markEventsReleased,
@@ -377,6 +397,7 @@ export function StatsProvider({ children, deletedUserId = null, ownerUserId = nu
       readSyncCursor,
       recordAnswer,
       recordCompletion,
+      setDailyGoal,
       stats,
       visibleEventLog,
     ],

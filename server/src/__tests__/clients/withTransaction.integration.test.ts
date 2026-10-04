@@ -82,3 +82,48 @@ describe.skipIf(SKIP_DATABASE_TESTS)('withTransaction when the backend dies mid-
         TEST_TIMEOUT_MS,
     );
 });
+
+async function readTimeouts(client: pg.PoolClient): Promise<string[]> {
+    const statement = await client.query<{ statement_timeout: string }>('SHOW statement_timeout');
+    const lock = await client.query<{ lock_timeout: string }>('SHOW lock_timeout');
+    return [statement.rows[0].statement_timeout, lock.rows[0].lock_timeout];
+}
+
+describe.skipIf(SKIP_DATABASE_TESTS)('withTransaction timeouts', () => {
+    beforeAll(async () => {
+        database = await createMigratedDatabase(inject('testDatabaseUrl'));
+    }, SETUP_TIMEOUT_MS);
+
+    afterAll(async () => {
+        await database?.drop();
+    });
+
+    it(
+        'cancels a statement past the 5 s statement timeout with 57014 when hasTimeouts is true',
+        async () => {
+            const outcome = withTransaction(database.pool, (client) => client.query('SELECT pg_sleep(6)'), {
+                hasTimeouts: true,
+            });
+
+            await expect(outcome).rejects.toMatchObject({ code: '57014' });
+        },
+        TEST_TIMEOUT_MS,
+    );
+
+    it('leaves the server default timeouts on the pooled connection afterwards', async () => {
+        const client = await database.pool.connect();
+        const defaults = await readTimeouts(client);
+        client.release();
+
+        await withTransaction(database.pool, (inner) => inner.query('SELECT 1'), { hasTimeouts: true });
+
+        const reused = await database.pool.connect();
+        try {
+            expect(reused).toBe(client);
+            expect(defaults).toEqual(['0', '0']);
+            expect(await readTimeouts(reused)).toEqual(defaults);
+        } finally {
+            reused.release();
+        }
+    });
+});

@@ -24,7 +24,7 @@
 - Session tokens: 32 random bytes, base64url; only `sha256(token)` stored; expiry 30 days absolute or 14 days idle. One-time codes: 6 digits, only `sha256(code)` stored, 10-minute expiry, 5 attempts, a new code invalidates older unused ones, compared with `timingSafeEqual`.
 - Cookie: `syntactical_session`, `HttpOnly; SameSite=Lax; Path=/`, `Secure` except in `NODE_ENV=development`, host-only on `api.syntactical.dev`.
 - CORS: exactly `https://syntactical.dev`, credentials true. Cookie-authenticated non-GET routes require `X-Requested-With: XMLHttpRequest` and `Content-Type: application/json`. `app.set('trust proxy', 1)`.
-- Answer events: batches of at most 200; `answeredAt` within [user `created_at` − 365 days, server now + 5 minutes]; the server derives `isCorrect`.
+- Answer events: batches of at most 200; `answeredAt` within [user `created_at` − 365 days, server now + 24 hours]; the server derives `isCorrect`.
 - Never log email, one-time code, session token, or webhook secrets.
 - Lighthouse accessibility 100 on every route; reduced motion uses `animation: none`; screen readers and web keyboard supported on every new screen; no key binding fires while a text field has focus.
 - Prices come from the RevenueCat offering's `priceString` on every platform; product id `syntactical.<language>.<difficulty>`; $5 list price. The server holds no Stripe code; RevenueCat is the only purchase webhook.
@@ -465,7 +465,7 @@ describe('ModelProvider', () => {
 
 **Interfaces:** `draftOracle(question: Question, language: string, provider: ModelProvider): Promise<Oracle | { isExecutable: false; reason: string }>`.
 
-- [ ] **Step 1:** tests with a fake provider: a Python question about `0.1 + 0.2` yields `{ language: 'python', code: 'print(0.1 + 0.2)' }`; a conceptual question yields `{ isExecutable: false }`; an oracle containing `socket`, `requests`, `urllib`, or `fetch(` is refused before it is run.
+- [ ] **Step 1:** tests with a fake provider: a Python question about `0.1 + 0.2` yields `{ language: 'python', code: 'print(0.1 + 0.2)' }`; a conceptual question yields `{ isExecutable: false }`. There is no text pre-filter on drafted code: the Docker runner sandbox (Task 1.7) is the control, and every oracle runs only through `runOracle`.
 - [ ] **Steps 2–4:** implement; pass. **Step 5:** commit `feat(pipeline): draft oracles for existing questions`.
 
 ### Task 1.11: `pipeline validate` and the pipeline report
@@ -640,13 +640,13 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 **Risk:** high (sets the middleware stack every security control depends on). **Behaviors:** B-62; foundation for B-25 to B-39.
 
-**Files:** Create `server/src/app.ts` (`createApp(deps)`: `helmet`, `cors`, `cookie-parser`, `express.json({ limit: '10kb' })`, `trust proxy` 1, request id, routes, error handler), `server/src/index.ts`, `server/src/config/env.ts` (zod-validated env), `server/src/middleware/requestId.ts`, `server/src/middleware/errorHandler.ts`, `server/src/routes/health.ts` (`/health`, `/health/ready`, outside `/v1`), `server/src/clients/logger.ts` (pino with redaction paths `req.headers.cookie`, `req.headers.authorization`, `res.headers["set-cookie"]`, `*.email`, `*.code`, `*.token`); tests `server/src/__tests__/routes/health.test.ts`, `server/src/__tests__/clients/logger.test.ts`, `server/src/__tests__/config/env.test.ts`.
+**Files:** Create `server/src/app.ts` (`createApp(deps)`: `helmet`, `cors`, `cookie-parser`, `express.json({ limit: '10kb' })`, `trust proxy` 1, request id, routes, error handler), `server/src/index.ts`, `server/src/config/env.ts` (zod-validated env), `server/src/middleware/requestId.ts`, `server/src/middleware/errorHandler.ts`, `server/src/routes/health.ts` (`/health`, `/health/ready`, outside `/v1`), `server/src/clients/logger.ts` (pino `redact` paths for `authorization`, `code`, `cookie`, `email`, `otp`, `password`, `secret`, and `token` at the top level and one level down, plus `req.headers.cookie`, `req.headers.authorization`, `res.headers["set-cookie"]`; an `err` serializer that keeps only the error name, pg code, and constraint); tests `server/src/__tests__/routes/health.test.ts`, `server/src/__tests__/clients/logger.test.ts`, `server/src/__tests__/config/env.test.ts`.
 
 **Behaviors (RED tests):**
 - `GET /health` returns 200 `{ status: 'ok' }` without touching the database (a db stub that throws is never called).
 - `GET /health/ready` returns 200 `{ status: 'ok', database: 'ok' }` with a reachable database and 503 `{ status: 'degraded' }` with an unreachable one.
 - Every response carries an `X-Request-Id` UUID, and every log line carries the same id.
-- Log redaction: a line logged with email, code, token, cookie, and authorization values built at run time contains none of those values.
+- Log redaction: for each redacted field, a line logged with a value built at run time contains none of it, and an Error logged under `err` shows only its name, pg code, and constraint.
 - A response carrying `Set-Cookie: syntactical_session=<run-time token>` through `createApp` with the pino destination captured leaves no log line containing the token.
 - The error handler logs a `pg` error by `code` and constraint name only: a unique violation whose `detail` contains a run-time email leaves no log line containing that email.
 - `REVENUECAT_WEBHOOK_AUTH` shorter than 32 characters, or empty, fails startup.
@@ -756,10 +756,10 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Behaviors (RED tests):**
 - A batch of 50 events inserts 50 rows; re-posting it inserts 0 and returns identical totals.
 - The server sets `is_correct` from `choiceIndex` against the bank's answer, ignoring any client value; a `choiceIndex` outside the question's choices → 422.
-- An event more than 5 minutes in the future, or before the user's `created_at` minus 365 days, → the whole batch 422 with the offending ids; nothing inserted.
+- An event more than 24 hours in the future, or before the user's `created_at` minus 365 days, → the whole batch 422 with the offending ids; nothing inserted.
 - A batch over 200 events → 413; an unknown `bankKey` or `questionId` → 422.
 - Two concurrent uploads of overlapping batches for one user both succeed and leave each event once; derived XP equals `computeXp` summed over distinct events.
-- `daily_progress` for the affected local dates is recomputed with `@syntactical/progress` in the same transaction.
+- `daily_progress` is rebuilt from all of the user's stored events with `@syntactical/progress` in the same transaction (on every upload and every `PATCH /v1/me`).
 - `GET /v1/answer-events?after=<cursor>` returns at most 500 events ordered by `received_at, event_id` with a `nextCursor`, and never another user's events; the cursor is opaque base64url decoded by zod into `(received_at, event_id)`, and `' OR 1=1 --`, an oversized value, or a non-cursor string returns 400.
 
 - [ ] Gated cycle; commit `feat(sync): idempotent answer event upload and paged download`.

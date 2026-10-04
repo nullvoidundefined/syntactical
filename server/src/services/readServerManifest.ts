@@ -1,22 +1,16 @@
 // Builds the server's answer key from the content directory's manifest and bank files, so
 // answer events can derive isCorrect from choiceIndex and reject unknown banks, questions,
-// and out-of-range choices.
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-
-import {
-  buildBankContext,
-  isSafeBankPath,
-  validateManifest,
-  validateQuestionBank,
-} from '@syntactical/content-schema';
+// and out-of-range choices. Paid banks come only from the paid content directory.
+import { buildBankContext, validateQuestionBank } from '@syntactical/content-schema';
 import type { BankEntry, LanguageEntry, Question } from '@syntactical/content-schema';
 
 import type { AnswerKey } from '../types/AnswerKey.js';
 import type { AnswerKeyEntry } from '../types/AnswerKeyEntry.js';
 
+import { assertPaidDirSeparate } from './assertPaidDirSeparate.js';
+import { readBankBytes } from './readBankBytes.js';
+import { readManifest } from './readManifest.js';
 import { sha256 } from './sha256.js';
-
 
 type BoolQuestion = Extract<Question, { type: 'bool' }>;
 
@@ -32,44 +26,46 @@ function toAnswerKeyEntry(question: Question): AnswerKeyEntry {
   return question.type === 'bool' ? toBoolEntry(question) : toChoiceEntry(question);
 }
 
-async function readBankText(contentDir: string, { path }: BankEntry): Promise<string | null> {
-  if (!isSafeBankPath(path)) throw new Error(`Unsafe bank path: ${path}`);
-  try {
-    return await readFile(join(contentDir, path), 'utf8');
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
-    throw error;
-  }
-}
-
 async function readBank(
-  contentDir: string,
+  root: string,
   language: LanguageEntry,
   entry: BankEntry,
+  forbiddenDir?: string,
 ): Promise<Map<string, AnswerKeyEntry> | null> {
   const { hash, path } = entry;
-  const text = await readBankText(contentDir, entry);
-  if (text === null) return null;
-  if (sha256(text).toString('hex') !== hash) {
+  const bytes = await readBankBytes(root, entry, forbiddenDir);
+  if (bytes === null) return null;
+  if (sha256(bytes).toString('hex') !== hash) {
     throw new Error(`Bank hash mismatch: ${path}`);
   }
-  const validation = validateQuestionBank(JSON.parse(text) as unknown, buildBankContext(language));
+  const validation = validateQuestionBank(
+    JSON.parse(bytes.toString('utf8')) as unknown,
+    buildBankContext(language),
+  );
   if ('rule' in validation) throw new Error(`Invalid bank ${path}: ${validation.rule}`);
   const { questions } = validation;
   return new Map(questions.map((question) => [question.id, toAnswerKeyEntry(question)]));
 }
 
-async function readServerManifest(contentDir: string): Promise<AnswerKey> {
-  const manifestText = await readFile(join(contentDir, 'manifest.json'), 'utf8');
-  const manifestResult = validateManifest(JSON.parse(manifestText) as unknown);
-  if ('rule' in manifestResult) throw new Error(`Invalid manifest: ${manifestResult.rule}`);
-  const { manifest } = manifestResult;
+// The directory a bank is read from, or null for a paid bank when no paid directory is given.
+function pickRoot(entry: BankEntry, contentDir: string, paidContentDir?: string): string | null {
+  return entry.access === 'paid' ? (paidContentDir ?? null) : contentDir;
+}
+
+async function readServerManifest(contentDir: string, paidContentDir?: string): Promise<AnswerKey> {
+  if (paidContentDir !== undefined) await assertPaidDirSeparate(contentDir, paidContentDir);
+  const manifest = await readManifest(contentDir);
   const answerKey = new Map<string, ReadonlyMap<string, AnswerKeyEntry>>();
   for (const language of manifest.languages) {
     const { banks, id } = language;
     for (const [difficulty, entry] of Object.entries(banks)) {
-      const bank = await readBank(contentDir, language, entry);
+      const root = pickRoot(entry, contentDir, paidContentDir);
+      if (root === null) continue;
+      const { access, path } = entry;
+      const isPaid = access === 'paid';
+      const bank = await readBank(root, language, entry, isPaid ? contentDir : undefined);
       if (bank) answerKey.set(`${id}/${difficulty}`, bank);
+      else if (isPaid) throw new Error(`Paid bank missing: ${path}`);
     }
   }
   return answerKey;

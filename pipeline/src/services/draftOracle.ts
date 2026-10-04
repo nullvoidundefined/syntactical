@@ -1,5 +1,5 @@
-// Drafts an executable oracle for one question with a model, then refuses any
-// draft that reaches for the network or a subprocess before it can be accepted.
+// Drafts an executable oracle for one question with a model. The draft only ever runs
+// inside the Docker runner sandbox (`runOracle`), which is the control on what it can do.
 import type { Question } from '@syntactical/content-schema';
 import { z } from 'zod';
 
@@ -9,7 +9,6 @@ import type { Oracle } from '../types/Oracle.js';
 import type { OracleLanguage } from '../types/OracleLanguage.js';
 
 import { buildDraftPrompt } from './buildDraftPrompt.js';
-import { findRefusedConstruct } from './findRefusedConstruct.js';
 
 const PROMPT_VERSION = 'draft-oracle-v1';
 
@@ -45,12 +44,10 @@ export async function draftOracle(
     if (!code) {
         return { isExecutable: false, reason: 'model returned no code' };
     }
-    const oracle: Oracle = {
+    return {
         code,
         language,
         ...(setupSql ? { setupSql } : {}),
         ...(choiceCode && choiceCode.length > 0 ? { choiceCode } : {}),
     };
-    const denied = await findRefusedConstruct(oracle);
-    return denied ? { isExecutable: false, reason: `refused: ${denied}` } : oracle;
 }

@@ -8,7 +8,6 @@ export type AbFailureReason =
     | 'no-clear-winner'
     | 'no-distinguishing-case'
     | 'no-edge-cases'
-    | 'refused'
     | 'runner-error'
     | 'unstable'
     | 'unsupported-language';

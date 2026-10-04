@@ -10,7 +10,10 @@
 // for it. After the server deletes the account, signOutDeletedAccount signs
 // out with no request and names the deleted id in deletedUserId, so the stats
 // layer removes that user's local data. The session value, email, and code
-// are never logged or stored outside the secure store.
+// are never logged or stored outside the secure store. The RevenueCat purchaser
+// identity follows the signed-in user (identified after sign-in and hydration,
+// reset on every sign-out path, never for a guest); its failures never change
+// a result.
 import {
   createContext,
   useCallback,
@@ -29,6 +32,7 @@ import { clearSessionToken } from '../clients/clearSessionToken';
 import { getLatestRequestSeq } from '../clients/getLatestRequestSeq';
 import { logWarning } from '../clients/logClient';
 import { onUnauthorized } from '../clients/onUnauthorized';
+import { identifyPurchaser, resetPurchaser } from '../clients/purchasesIdentity';
 import { readStoredJson } from '../clients/readStoredJson';
 import { writeJson } from '../clients/writeJson';
 import { writeSessionToken } from '../clients/writeSessionToken';
@@ -140,6 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOutLocally = useCallback(async () => {
     setUserId(null);
     persist(null);
+    void resetPurchaser();
     try {
       await clearSessionToken();
     } catch (err) {
@@ -161,6 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { knownUserIds, userId: storedUserId } = stored;
         setKnownUserIds(knownUserIds);
         setUserId(storedUserId);
+        if (storedUserId !== null) void identifyPurchaser(storedUserId);
       }
       setPendingClaims(resolvePendingClaims(pendingRead.value));
       setIsHydrated(true);
@@ -223,6 +229,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         setUserId(sessionUserId);
         persist(sessionUserId);
+        void identifyPurchaser(sessionUserId);
         return { isOk: true };
       } catch {
         return { isOk: false, reason: 'unavailable' };
@@ -313,4 +320,10 @@ export function useAuth(): AuthContextValue {
     throw new Error('useAuth must be used inside AuthProvider');
   }
   return context;
+}
+
+// The signed-in user's id, or null for a guest or outside AuthProvider, for
+// hooks that also run where no AuthProvider is mounted (content loading).
+export function useSignedInUserId(): string | null {
+  return useContext(AuthContext)?.user?.id ?? null;
 }

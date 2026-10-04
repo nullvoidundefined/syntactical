@@ -16,8 +16,8 @@ import {
   buildDownloadPage,
   buildErrorResponse,
   buildRejectedEvents,
+  buildServerBusy,
   buildUploadSuccess,
-  buildUserBusy,
   SERVER_ERROR_CODES,
 } from './syncServerResponses';
 import type { ServerResponse } from './syncServerResponses';
@@ -32,8 +32,8 @@ export type RecordedRequest = { body: unknown; method: string; path: string };
 type PostOverride = FakeResponse | 'throw' | 'store-then-throw' | undefined;
 
 type FakeServerOptions = {
-  // POST numbers (1-based) answered 429 SYNC_USER_BUSY with Retry-After, storing nothing,
-  // as when another upload holds the user's row lock.
+  // POST numbers (1-based) answered 503 SERVER_BUSY, storing nothing, as when a
+  // database lock or statement timeout ends the upload.
   busyPostNumbers?: ReadonlySet<number>;
   // Requests allowed per route before the server answers 429 RATE_LIMIT_EXCEEDED.
   downloadLimit?: number;
@@ -188,7 +188,7 @@ export function createFakeSyncServer(options: FakeServerOptions = {}) {
     if (override) return override;
     const invalid = namedIn(events, options.rejectedEventIds);
     if (invalid.length > 0) return buildRejectedEvents(SERVER_ERROR_CODES.INVALID_EVENTS, invalid);
-    if (options.busyPostNumbers?.has(postCount)) return buildUserBusy();
+    if (options.busyPostNumbers?.has(postCount)) return buildServerBusy();
     const outOfRange = namedIn(events, options.outOfRangeEventIds);
     if (outOfRange.length > 0) return buildRejectedEvents(SERVER_ERROR_CODES.TIMESTAMP_OUT_OF_RANGE, outOfRange);
     const fresh = new Set(events.map(({ eventId }) => eventId).filter((id) => !stored.has(id)));

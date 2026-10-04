@@ -37,7 +37,8 @@ export default function RoundScreen() {
   const difficultyEntry = DIFFICULTIES.find(({ id }) => id === difficulty);
 
   const { status } = bankState;
-  if (!languageEntry || !difficultyEntry || status === 'unknown') return <NotFoundScreen />;
+  // A locked paid bank (no entitlement) is not playable from a deep link.
+  if (!languageEntry || !difficultyEntry || status === 'unknown' || status === 'locked') return <NotFoundScreen />;
   if ('retry' in bankState) {
     const { retry } = bankState;
     return <DownloadFailed onRetry={retry} />;

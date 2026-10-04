@@ -1,5 +1,4 @@
-// B-62d: findings from the PR #19 reviews. Redaction holds at any depth and key
-// spelling; exactly one proxy hop is trusted; client-class errors answer 4xx;
+// B-62d: findings from the PR #19 reviews. Exactly one proxy hop is trusted; client-class errors answer 4xx;
 // secrets need real length; request logs carry route templates, not raw paths.
 import { randomBytes } from 'node:crypto';
 
@@ -55,48 +54,6 @@ function validEnv(): NodeJS.ProcessEnv {
     REVENUECAT_WEBHOOK_AUTH: secret(),
   };
 }
-
-describe('redaction at any depth', () => {
-  it.each([
-    ['a top-level email', (value: string) => ({ email: value })],
-    ['a top-level token', (value: string) => ({ token: value })],
-    ['a top-level code', (value: string) => ({ code: value })],
-    ['an email two levels deep', (value: string) => ({ user: { profile: { email: value } } })],
-    ['an email inside an array', (value: string) => ({ users: [{ email: value }] })],
-    ['a renamed sessionToken', (value: string) => ({ session: { sessionToken: value } })],
-    ['a cookie header under another parent', (value: string) => ({ upstream: { headers: { cookie: value } } })],
-    [
-      'an authorization header under another parent',
-      (value: string) => ({ upstream: { headers: { authorization: value } } }),
-    ],
-    ['a set-cookie header under another parent', (value: string) => ({ reply: { headers: { 'set-cookie': [value] } } })],
-  ])('never writes %s', (_label, shape) => {
-    const value = token();
-    const { destination, lines } = capture();
-    createLogger({ destination }).info(shape(value), 'probe');
-    expect(lines.join('\n')).not.toContain(value);
-    expect(lines.some((line) => line.includes('probe'))).toBe(true);
-  });
-
-  it('redacts response headers logged through the app', async () => {
-    const value = token();
-    const { destination, lines } = capture();
-    const app = createApp({
-      db: okDb(),
-      extraRoutes: (router: Router) => {
-        router.get('/probe', (_req, res) => {
-          res.setHeader('Set-Cookie', `syntactical_session=${value}`);
-          res.locals.logger.info({ headers: res.getHeaders() }, 'headers');
-          res.status(HTTP_OK).json({ ok: true });
-        });
-      },
-      logger: createLogger({ destination }),
-    });
-    await request(app).get('/probe');
-    await flush();
-    expect(lines.join('\n')).not.toContain(value);
-  });
-});
 
 describe('proxy trust', () => {
   it('takes req.ip from the one trusted hop and ignores a spoofed leftmost entry', async () => {

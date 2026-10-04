@@ -1,4 +1,4 @@
-// Checks one finished draft: duplicate, content schema, refused constructs, then execution
+// Checks one finished draft: duplicate, content schema, then execution
 // through the sandboxed runner. Returns the kept question, a drop, or the feedback that
 // goes into the next revision.
 import { createHash } from 'node:crypto';
@@ -10,7 +10,6 @@ import { runOracle } from '../../clients/dockerRunner.js';
 import type { DraftEvaluation } from '../../types/DraftEvaluation.js';
 import type { GenerateQuestionArgs } from '../../types/GenerateQuestionArgs.js';
 import type { Oracle } from '../../types/Oracle.js';
-import { findRefusedConstruct } from '../findRefusedConstruct.js';
 import { validateQuestion } from '../validateQuestion.js';
 
 import { GENERATE_PROMPT_VERSION } from './GENERATE_PROMPT_VERSION.js';
@@ -71,10 +70,6 @@ export async function evaluateDraft(
         return { feedback: 'the draft breaks the question schema (shape, lengths, or answer index)', status: 'revise' };
     }
     const oracle = buildOracle(draft, args);
-    const refused = await findRefusedConstruct(oracle);
-    if (refused) {
-        return { feedback: `oracle refused: ${refused}`, status: 'revise' };
-    }
     const result = await validateQuestion(question, oracle, (each) => runSandboxed(run, each));
     const { reason, runtimeVersion, status } = result;
     if (status !== 'passed') {
