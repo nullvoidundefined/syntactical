@@ -1,0 +1,47 @@
+name: E2E
+
+permissions:
+  contents: read
+
+# Runs the web app against the real API and a real Postgres. Only pull requests that touch code
+# the browser flows depend on trigger it, so content-only and docs-only changes skip it.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'components/**'
+      - 'state/**'
+      - 'services/**'
+      - 'clients/**'
+      - 'server/**'
+      - 'packages/**'
+      - 'e2e/**'
+      - 'app.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/e2e.yml'
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # The global setup starts a throwaway postgres:17 container (labelled, removed at the end),
+      # applies the migrations, starts the API and the web export, and tears them down.
+      - run: npm run e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7

@@ -33,3 +33,7 @@ expo-env.d.ts
 
 # Plan execution workspace
 .superpowers/
+
+# Playwright
+/test-results/
+/playwright-report/
