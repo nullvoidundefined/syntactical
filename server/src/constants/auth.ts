@@ -1,5 +1,5 @@
 // Auth constants: one-time code shape and lifetime, session lifetimes and cookie name, and
-// the rate limits on issuing and verifying codes, and the waits an account deletion may spend.
+// the rate limits on issuing and verifying codes and on account deletion, and the waits an account deletion may spend.
 // One place so routes, middleware, and account deletion agree on the numbers.
 const HOUR_MS = 3_600_000;
 
@@ -25,6 +25,8 @@ const AUTH = {
     SEND_TIMEOUT_MS: 8_000,
   },
   RATE_LIMIT: {
+    DELETE_PER_IP: 5,
+    DELETE_PER_USER: 3,
     ISSUE_PER_EMAIL: 5,
     ISSUE_PER_IP: 20,
     // A person mistypes a code a few times; 10 guesses an hour keeps a guess at 1 in 100,000.
@@ -33,6 +35,8 @@ const AUTH = {
     WINDOW_MS: HOUR_MS,
   },
   RATE_LIMIT_SCOPE: {
+    DELETE_IP: 'account-delete:ip',
+    DELETE_USER: 'account-delete:user',
     ISSUE_EMAIL: 'code-issue:email',
     ISSUE_IP: 'code-issue:ip',
     VERIFY_EMAIL: 'session-verify:email',

@@ -6,7 +6,7 @@
 // scrubbed in place (rows linked to the user, plus rows whose payload carries the email as a whole
 // address or the id; a row linked to another user is scrubbed match-only; candidates are read
 // without a row lock, and only the chosen rows are locked, in key order, and re-read), the email's
-// rate-limit counters go, then the user row is deleted (sessions, answer events, progress, and goal
+// rate-limit counters and the user's own account-delete counters go (B-59.12), then the user row is deleted (sessions, answer events, progress, and goal
 // changes cascade; entitlements and purchase_events user_id go null by foreign key). Resolves false, having
 // changed nothing, when no such user exists, including when a concurrent deletion of the same user won the
 // email's advisory lock first (B-59.6: the user row is re-checked after the lock, before the codes go). The row
@@ -18,6 +18,7 @@ import { AUTH } from '../constants/auth.js';
 
 import { carriesPurchaseIdentity } from './carriesPurchaseIdentity.js';
 import { deleteRateLimitCountersForEmail } from './deleteRateLimitCountersForEmail.js';
+import { deleteRateLimitCountersForUser } from './deleteRateLimitCountersForUser.js';
 import { exceedsDepthCap } from './exceedsDepthCap.js';
 import { normalizeEmail } from './normalizeEmail.js';
 import type { PurchaseIdentity } from './purchaseIdentity.js';
@@ -137,6 +138,7 @@ async function deleteUser(client: pg.PoolClient, input: DeleteUserInput): Promis
   }
   await scrubPurchaseEvents(client, { email, userId });
   await deleteRateLimitCountersForEmail(client, rateLimitKeySecret, email);
+  await deleteRateLimitCountersForUser(client, rateLimitKeySecret, userId);
   await client.query('DELETE FROM users WHERE id = $1', [userId]);
   return true;
 }

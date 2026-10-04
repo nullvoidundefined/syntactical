@@ -105,7 +105,9 @@ async function snapshot(): Promise<Record<string, string[]>> {
     entitlements: 'SELECT row_to_json(t)::text AS row FROM entitlements t',
     one_time_codes: 'SELECT row_to_json(t)::text AS row FROM one_time_codes t',
     purchase_events: 'SELECT row_to_json(t)::text AS row FROM purchase_events t',
-    rate_limit_counters: 'SELECT row_to_json(t)::text AS row FROM rate_limit_counters t',
+    // The DELETE /v1/me limiters (B-59.12) count every request on the pool, outside the deletion.
+    rate_limit_counters:
+      "SELECT row_to_json(t)::text AS row FROM rate_limit_counters t WHERE key NOT LIKE 'account-delete:%'",
     sessions:
       "SELECT json_build_object('id', id, 'user_id', user_id, 'revoked_at', revoked_at, 'expires_at', expires_at)::text AS row FROM sessions",
     users: 'SELECT row_to_json(t)::text AS row FROM users t',

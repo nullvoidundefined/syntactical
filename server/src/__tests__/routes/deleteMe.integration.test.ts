@@ -286,7 +286,9 @@ async function snapshot(): Promise<Record<string, string[]>> {
     entitlements: 'SELECT row_to_json(t)::text AS row FROM entitlements t',
     one_time_codes: 'SELECT row_to_json(t)::text AS row FROM one_time_codes t',
     purchase_events: 'SELECT row_to_json(t)::text AS row FROM purchase_events t',
-    rate_limit_counters: 'SELECT row_to_json(t)::text AS row FROM rate_limit_counters t',
+    // The DELETE /v1/me limiters (B-59.12) count every request on the pool, outside the deletion.
+    rate_limit_counters:
+      "SELECT row_to_json(t)::text AS row FROM rate_limit_counters t WHERE key NOT LIKE 'account-delete:%'",
     sessions:
       'SELECT json_build_object(\'id\', id, \'user_id\', user_id, \'revoked_at\', revoked_at, \'expires_at\', expires_at)::text AS row FROM sessions',
     users: 'SELECT row_to_json(t)::text AS row FROM users t',
@@ -340,8 +342,11 @@ async function expectAccountErased(seed: Seed & { eventIds: Record<string, strin
   expect(await countWhere('SELECT count(*) FROM answer_events WHERE user_id = $1', [otherUserId])).toBe(1);
   expect(await countWhere('SELECT count(*) FROM one_time_codes WHERE email = $1', [otherEmail])).toBe(1);
 
-  // Only the two email-scoped counters for the deleted email are gone.
-  const { rows: counters } = await database.pool.query<{ key: string }>('SELECT key FROM rate_limit_counters');
+  // Only the two email-scoped counters for the deleted email are gone (the B-59.12 per-IP counter for
+  // DELETE /v1/me itself is left out of the count).
+  const { rows: counters } = await database.pool.query<{ key: string }>(
+    "SELECT key FROM rate_limit_counters WHERE key NOT LIKE 'account-delete:%'",
+  );
   expect(counters).toHaveLength(3);
   const { ISSUE_EMAIL, VERIFY_EMAIL } = AUTH.RATE_LIMIT_SCOPE;
   const { rows: remaining } = await database.pool.query<{ key: string }>(

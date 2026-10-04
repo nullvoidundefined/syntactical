@@ -1,4 +1,5 @@
-// DELETE /v1/me (B-59.2): deletes the caller's account in one transaction (see deleteUser) and
+// DELETE /v1/me (B-59.2): rate limited per client IP, then session-checked, then per user (B-59.12; both
+// on the pool, outside the deletion transaction, so a failed deletion still counts); deletes the caller's account in one transaction (see deleteUser) and
 // clears the session cookie for every caller. Any failure rolls back and surfaces as a 500
 // through the error handler. After the commit, when this request deleted the user (B-59.6: a duplicate
 // concurrent deletion changes nothing and logs nothing, still 204), it writes one `account deleted` info line through
@@ -10,12 +11,16 @@ import { withTransaction } from '../clients/withTransaction.js';
 import { sessionCookieOptions } from '../config/sessionCookieOptions.js';
 import { AUTH } from '../constants/auth.js';
 import { HTTP } from '../constants/http.js';
+import { createRateLimit } from '../middleware/rateLimit.js';
 import { createRequireSession } from '../middleware/requireSession.js';
 import { deleteUser } from '../services/deleteUser.js';
+import { ipRateLimitKey } from '../services/ipRateLimitKey.js';
 
 import type { ResolvedAuthDeps } from './authDeps.js';
 
 const {
+  RATE_LIMIT: { DELETE_PER_IP, DELETE_PER_USER, WINDOW_MS },
+  RATE_LIMIT_SCOPE: { DELETE_IP, DELETE_USER },
   SESSION: { COOKIE_NAME },
 } = AUTH;
 
@@ -23,7 +28,21 @@ function createDeleteMeRouter(deps: ResolvedAuthDeps): Router {
   const { database, deletionStatementTimeoutMs, isCookieSecure, now, rateLimitKeySecret } = deps;
   const router = Router();
 
-  router.delete('/me', createRequireSession({ database, now }), async (_req, res) => {
+  const limits = { database, keySecret: rateLimitKeySecret, now, windowMs: WINDOW_MS };
+  const perIp = createRateLimit({
+    ...limits,
+    keyOf: (req) => ipRateLimitKey(req.ip),
+    limit: DELETE_PER_IP,
+    scope: DELETE_IP,
+  });
+  const perUser = createRateLimit({
+    ...limits,
+    keyOf: (_req, res) => (res.locals as { session: { userId: string } }).session.userId,
+    limit: DELETE_PER_USER,
+    scope: DELETE_USER,
+  });
+
+  router.delete('/me', perIp, createRequireSession({ database, now }), perUser, async (_req, res) => {
     const {
       logger,
       session: { userId },
