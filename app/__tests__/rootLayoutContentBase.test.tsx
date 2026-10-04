@@ -42,9 +42,12 @@ describe('root layout content base URL gate', () => {
     readExtra().contentBaseUrl = originalBaseUrl;
   });
 
-  it('makes no content request and warns once for a missing value', async () => {
+  it.each([
+    ['undefined', undefined],
+    ['an empty string', ''],
+  ])('makes no content request and warns once for %s', async (_label, contentBaseUrl) => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    await renderLayoutWithBaseUrl(undefined);
+    await renderLayoutWithBaseUrl(contentBaseUrl);
     expect(global.fetch).not.toHaveBeenCalled();
     expect(countUntrustedWarnings(warnSpy)).toBe(1);
   });

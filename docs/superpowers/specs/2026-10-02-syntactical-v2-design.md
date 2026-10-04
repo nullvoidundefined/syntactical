@@ -69,7 +69,7 @@ Proposed during grounding, settled by approving this spec (each resolves a confl
 | Bank hash check | `services/content/verifyBankHash.ts` | `verifyBankHash` |
 | Bank URL | `services/content/resolveBankUrl.ts` | `resolveBankUrl` |
 | Content provider | `state/ContentProvider.tsx` | `ContentProvider` |
-| Content base URL pin | `app.config.ts` | `CONTENT_ORIGIN`, `ALLOWED_BASE_URLS` (module constants) |
+| Content base URL | `app.config.ts` | `CONTENT_ORIGIN` (module constant) |
 | Query client | `config/queryClient.ts` | `createQueryClient` |
 | Manifest hook | `state/useLanguageManifest.ts` | `useLanguageManifest` |
 | Bank hook | `state/useQuestionBank.ts` | `useQuestionBank` |
@@ -136,7 +136,7 @@ Concepts with no match in the repo, which this spec therefore creates: topic, A/
 - New components; R-305 asks for one folder per component, the repo groups by domain at `components/quiz/BooleanCard.tsx:1` (R-305: resolved by decision 22, follow the repo).
 - `pipeline/` is not in the directory vocabulary and existing content tooling lives in `scripts/` at `scripts/buildContentManifest.mjs:1` (R-304: `pipeline/` is its own workspace package; inside it the standard vocabulary applies: `clients/` for the model provider and Docker, `services/` for stages, `prompts/` for prompt text).
 - Tests in `server/` and `pipeline/`; the app uses per-directory `__tests__/` at `services/content/__tests__/validateQuestionBank.test.ts:1` (R-313, R-314: each new package uses one top-level `src/__tests__/` tree mirroring `src/`, with vitest; the app keeps its pattern).
-- The content base URL allowlist pins GitHub Pages at `app.config.ts:7` (R-109: moving to `https://syntactical.dev` changes a security control and gets the R-109 review and an insecure-value test per control).
+- The content base URL is a build-time constant in `app.config.ts` (`CONTENT_ORIGIN`); moving to `https://syntactical.dev` is a one-line config change with no runtime allow-list.
 
 ## Domain vocabulary
 

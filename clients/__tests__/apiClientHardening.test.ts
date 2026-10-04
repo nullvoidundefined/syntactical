@@ -1,8 +1,8 @@
 // Hardening for apiFetch on native: redirects refused, a bounded wait for the
 // response and its body, every transport or session store failure surfaced as
 // ApiUnavailable (with the original error as cause), a 401 that never deletes
-// a newer session value and always notifies every handler, paths that cannot
-// escape the pinned base, and no session value in any console output.
+// a newer session value and always notifies every handler, and no session
+// value in any console output.
 import { inspect } from 'node:util';
 
 import {

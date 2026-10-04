@@ -92,7 +92,7 @@ Passed 2026-10-02. The owner approved the spec and plan, chose owner-merges-ever
 
 ### Task 0.1: move the web build and content origin to syntactical.dev
 
-**Risk:** high (the content base URL allowlist is a security control). **Behaviors:** B-55.
+**Risk:** standard (the content base URL is a build-time constant). **Behaviors:** B-55.
 
 **Files:**
 - Modify: `app.config.ts` (`CONTENT_ORIGIN`, `experiments.baseUrl`)
