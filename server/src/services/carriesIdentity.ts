@@ -1,9 +1,10 @@
-// Whether one string carries the identity. Strict mode (B-59.1c, rows linked to another user): the user id
-// anywhere inside it, the email only as a whole address (no letter, digit, `_`, `+`, `-`, `.`, or apostrophe before
-// it, no domain continuation after it; B-59.9: the apostrophe is a local-part character, so a quote directly before
-// the email keeps the row), checked on the normalized text; any one bounded occurrence is enough. The raw string and each of its percent-decoded
-// forms (B-59.1e) are checked. Loose mode (B-59.7, the deleted user's own and unlinked rows): the email or the id
-// anywhere in the normalized text, no boundary rule. Needles are already normalized.
+// Whether one string carries the identity. Strict mode (B-59.1c, rows linked to another user): the user id anywhere
+// inside it, the email only as a whole address (no letter, digit, `_`, `+`, `-`, `.`, or apostrophe before it, no
+// domain continuation after it; B-59.9: the apostrophe is a local-part character, so a quote directly before the email
+// keeps the row), checked on the normalized text; any one bounded occurrence is enough. The raw string and each of its
+// percent-decoded forms (B-59.1e) are checked, and so are the percent-decoded forms of its NFKC-normalized text
+// (B-59.10), so a fullwidth escape such as `％40` matches. Loose mode (B-59.7, the deleted user's own and unlinked
+// rows): the email or the id anywhere in the normalized text, no boundary rule. Needles are already normalized.
 import { normalizeEmail } from './normalizeEmail.js';
 import { percentDecodeForms } from './percentDecodeForms.js';
 import type { PurchaseIdentity } from './purchaseIdentity.js';
@@ -41,10 +42,11 @@ function carriesIdentityAsIs(text: string, { email, userId }: PurchaseIdentity, 
 }
 
 function carriesIdentity(text: string, needles: PurchaseIdentity, { isLoose = false }: CarriesOptions = {}): boolean {
-  return (
-    carriesIdentityAsIs(text, needles, isLoose) ||
-    percentDecodeForms(text).some((form) => carriesIdentityAsIs(form, needles, isLoose))
-  );
+  if (carriesIdentityAsIs(text, needles, isLoose)) {
+    return true;
+  }
+  const forms = new Set([...percentDecodeForms(text), ...percentDecodeForms(normalizeEmail(text))]);
+  return Array.from(forms).some((form) => carriesIdentityAsIs(form, needles, isLoose));
 }
 
 export { carriesIdentity };

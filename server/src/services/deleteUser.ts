@@ -54,14 +54,15 @@ function isChosenRow(rowUserId: string | null, payload: unknown, userId: string,
 
 async function scrubPurchaseEvents(client: pg.PoolClient, identity: { email: string; userId: string }): Promise<void> {
   const { email, userId } = identity;
-  // The SQL is a superset (it also folds NFKC forms and takes every payload holding a `%`, which may carry the
-  // email or id percent-encoded); it takes no row lock. The JS predicate chooses the rows, and only those are locked.
+  // The SQL is a superset (it also folds NFKC forms and takes every payload holding a `%` or a fullwidth `％`, which
+  // may carry the email or id percent-encoded); it takes no row lock. The JS predicate chooses the rows, and only
+  // those are locked.
   const { rows: candidates } = await client.query<PurchaseEventRow>(
     `SELECT provider, provider_event_id, payload, user_id FROM purchase_events
      WHERE user_id = $1
         OR lower(normalize(payload::text, NFKC)) LIKE $2 ESCAPE '\\'
         OR lower(normalize(payload::text, NFKC)) LIKE $3 ESCAPE '\\'
-        OR payload::text LIKE '%\\%%' ESCAPE '\\'`,
+        OR normalize(payload::text, NFKC) LIKE '%\\%%' ESCAPE '\\'`,
     [userId, containsPattern(email), containsPattern(userId)],
   );
   const chosen = candidates.filter(({ payload, user_id: rowUserId }) =>
