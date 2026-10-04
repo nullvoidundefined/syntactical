@@ -39,7 +39,7 @@ function flagsOf(args: string[]): string[] {
 }
 
 describe('buildDockerArgs', () => {
-    for (const language of ['python', 'node'] as const) {
+    for (const language of ['python', 'node', 'ruby', 'rails'] as const) {
         it(`builds exactly the sandbox flags for a ${language} oracle`, () => {
             const args = buildDockerArgs({ language, code: 'print(1)' }, IMAGE);
 
@@ -51,8 +51,31 @@ describe('buildDockerArgs', () => {
             }
             expect(flagsOf(args)).toEqual(EXPECTED_FLAGS);
             expect(args[args.length - 1]).toBe(IMAGE);
+            expect(args.some((arg) => arg.startsWith('/work:'))).toBe(false);
+            expect(args.some((arg) => /(?:^|[:,])exec(?:,|$)/.test(arg))).toBe(false);
         });
     }
+
+    it('adds exactly one executable, size-capped /work tmpfs for a go oracle', () => {
+        const pythonArgs = buildDockerArgs({ language: 'python', code: 'print(1)' }, IMAGE);
+        const args = buildDockerArgs({ language: 'go', code: 'package main\nfunc main() {}' }, IMAGE);
+        const mounts = args.flatMap((arg, index) => arg === '--tmpfs' ? [args[index + 1]] : []);
+        const workMounts = mounts.filter((mount) => mount?.startsWith('/work:'));
+
+        expect(mounts).toHaveLength(2);
+        expect(workMounts).toHaveLength(1);
+        const workMount = workMounts[0] as string;
+        const options = workMount.slice('/work:'.length).split(',');
+        expect(options).toEqual(expect.arrayContaining(['rw', 'exec', 'nosuid']));
+        expect(options).not.toContain('noexec');
+        expect(options.filter((option) => option.startsWith('size='))).toHaveLength(1);
+        expect(options.find((option) => option.startsWith('size='))).toMatch(/^size=[1-9]\d*[kmg]?$/i);
+        expect(mounts).toContain('/tmp:rw,noexec,nosuid,size=64m');
+
+        const workIndex = args.indexOf(workMount);
+        expect(args[workIndex - 1]).toBe('--tmpfs');
+        expect([...args.slice(0, workIndex - 1), ...args.slice(workIndex + 1)]).toEqual(pythonArgs);
+    });
 
     it('keeps every sandbox flag for a postgres oracle, adding only tmpfs mounts', () => {
         const image = 'syntactical-runner-postgres:1';

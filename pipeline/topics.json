@@ -1,4 +1,16 @@
 {
+    "go": [
+        "operators-and-types",
+        "numbers-and-math",
+        "strings",
+        "iterables",
+        "data-structures",
+        "functions-and-scope",
+        "errors-and-control-flow",
+        "async-and-concurrency",
+        "optimization",
+        "wtf"
+    ],
     "javascript": [
         "operators-and-types",
         "numbers-and-math",
