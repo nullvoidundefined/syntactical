@@ -11,6 +11,7 @@ import { join } from 'node:path';
 
 import type { ExecFn } from '../types/ExecFn.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
+import { ProviderTransientError } from '../types/ProviderTransientError.js';
 import { createSpawnExec } from './createSpawnExec.js';
 import { generateWithRetries } from './generateWithRetries.js';
 
@@ -69,6 +70,19 @@ function readEnvelope(stdout: string): { model: string; text: string } {
     return { model: readModel(model, modelUsage), text: result };
 }
 
+// A non-zero exit is transient unless the CLI printed an error envelope: then it reported
+// the failure itself (auth, billing), which retrying will not fix, so it stays fatal.
+function hasErrorEnvelope(stdout: string): boolean {
+    try {
+        const envelope: unknown = JSON.parse(stdout);
+        return (
+            typeof envelope === 'object' && envelope !== null && (envelope as Record<string, unknown>).is_error === true
+        );
+    } catch {
+        return false;
+    }
+}
+
 export function createClaudeCliProvider(exec: ExecFn = defaultExec): ModelProvider {
     return {
         generate(request) {
@@ -78,21 +92,26 @@ export function createClaudeCliProvider(exec: ExecFn = defaultExec): ModelProvid
                 let stdout: string;
                 try {
                     ({ stdout } = await exec(
-                    'claude',
-                    [
-                        '-p',
-                        '--output-format',
-                        'json',
-                        '--tools',
-                        '',
-                        '--strict-mcp-config',
-                        '--setting-sources',
-                        '',
-                        '--no-session-persistence',
-                        `--system-prompt=${system}`,
-                    ],
-                    { cwd, env: buildCliEnv(process.env), input: prompt },
-                ));
+                        'claude',
+                        [
+                            '-p',
+                            '--output-format',
+                            'json',
+                            '--tools',
+                            '',
+                            '--strict-mcp-config',
+                            '--setting-sources',
+                            '',
+                            '--no-session-persistence',
+                            `--system-prompt=${system}`,
+                        ],
+                        { cwd, env: buildCliEnv(process.env), input: prompt },
+                    ));
+                } catch (error) {
+                    if (error instanceof ProviderTransientError && hasErrorEnvelope(error.stdout)) {
+                        return readEnvelope(error.stdout);
+                    }
+                    throw error;
                 } finally {
                     rmSync(cwd, { force: true, recursive: true });
                 }

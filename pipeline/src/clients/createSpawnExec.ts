@@ -43,12 +43,15 @@ export function createSpawnExec(limits: SpawnExecLimits): ExecFn {
             });
             child.on('close', (code) => {
                 clearTimeout(timer);
+                const stdout = Buffer.concat(chunks).toString('utf8');
                 if (failure) {
                     reject(failure);
                 } else if (code !== 0) {
-                    reject(new ProviderTransientError('model-error', `${file} exited with status ${String(code)}`));
+                    reject(
+                        new ProviderTransientError('model-error', `${file} exited with status ${String(code)}`, stdout),
+                    );
                 } else {
-                    resolve({ stdout: Buffer.concat(chunks).toString('utf8') });
+                    resolve({ stdout });
                 }
             });
             child.stdin.on('error', () => undefined);

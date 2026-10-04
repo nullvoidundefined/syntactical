@@ -11,6 +11,7 @@ import { buildCliEnv } from '../../clients/claudeCliProvider.js';
 import { createModelProvider } from '../../clients/modelProvider.js';
 import type { ExecOptions } from '../../types/ExecFn.js';
 import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
+import { ProviderTransientError } from '../../types/ProviderTransientError.js';
 
 const schema = z.object({ topic: z.string() });
 const MAX_ATTEMPTS = 3;
@@ -41,9 +42,7 @@ describe('ModelProvider', () => {
 
     it('throws ModelOutputInvalid after three schema failures', async () => {
         const exec = vi.fn().mockResolvedValue(cliAnswer('{"nope":1}'));
-        await expect(createModelProvider('cli', { exec }).generate(REQUEST)).rejects.toBeInstanceOf(
-            ModelOutputInvalid,
-        );
+        await expect(createModelProvider('cli', { exec }).generate(REQUEST)).rejects.toBeInstanceOf(ModelOutputInvalid);
         expect(exec).toHaveBeenCalledTimes(MAX_ATTEMPTS);
     });
 
@@ -193,6 +192,27 @@ describe('ModelProvider', () => {
             /claude CLI reported an error/,
         );
         expect(exec).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps an auth error envelope fatal when the CLI also exits non-zero', async () => {
+        const envelope = JSON.stringify({ is_error: true, result: 'Invalid API key · Please run /login' });
+        const exec = vi
+            .fn()
+            .mockRejectedValue(new ProviderTransientError('model-error', 'claude exited with status 1', envelope));
+        const failure = await createModelProvider('cli', { exec })
+            .generate(REQUEST)
+            .catch((error: unknown) => error);
+        expect(failure).not.toBeInstanceOf(ProviderTransientError);
+        expect(String(failure)).toMatch(/claude CLI reported an error/);
+    });
+
+    it('keeps a non-zero exit with no error envelope transient', async () => {
+        const exec = vi
+            .fn()
+            .mockRejectedValue(new ProviderTransientError('model-error', 'claude exited with status 1', ''));
+        await expect(createModelProvider('cli', { exec }).generate(REQUEST)).rejects.toMatchObject({
+            reason: 'model-error',
+        });
     });
 
     it('reports a model name of unknown when the CLI envelope omits it', async () => {

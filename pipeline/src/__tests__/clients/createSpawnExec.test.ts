@@ -49,6 +49,18 @@ describe('createSpawnExec', () => {
     );
 
     it(
+        'keeps the stdout of a non-zero exit on the error for the provider to classify',
+        async () => {
+            const failure = await run('process.stdout.write(\'{"is_error":true}\'); process.exitCode = 1').catch(
+                (error: unknown) => error,
+            );
+            expect(failure).toMatchObject({ reason: 'model-error', stdout: '{"is_error":true}' });
+            expect(String(failure)).not.toContain('is_error');
+        },
+        TEST_TIMEOUT_MS,
+    );
+
+    it(
         'keeps a nonexistent binary startup error fatal',
         async () => {
             const exec = createSpawnExec(LIMITS);
