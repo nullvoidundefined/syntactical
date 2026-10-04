@@ -3419,6 +3419,166 @@
         },
         "isHumanReviewed": false
       }
+    },
+    {
+      "id": "pg-easy-101",
+      "type": "ab",
+      "prompt": "users.email is stored in lower case and has a B-tree index. Which query finds a user by email faster?",
+      "choices": [
+        {
+          "text": "Compare lower(email)",
+          "code": "SELECT id FROM users WHERE lower(email) = 'user4242@example.com'",
+          "rationale": "An index on email cannot answer a condition on lower(email), so the planner scans every row and calls lower() on each."
+        },
+        {
+          "text": "Compare email directly",
+          "code": "SELECT id FROM users WHERE email = 'user4242@example.com'"
+        }
+      ],
+      "answerIndex": 1,
+      "criterion": {
+        "type": "performance",
+        "statement": "Faster median execution time on a 50,000-row table.",
+        "evidence": "A: 3.5 ms, B: 0.002 ms median on PostgreSQL 17.11"
+      },
+      "query": {
+        "title": "Functions on indexed columns hide the index",
+        "explanation": "A B-tree index on `email` stores `email` values, not `lower(email)` values, so a condition on the expression cannot use it. Compare the column itself, or create an expression index on `lower(email)` if case-insensitive lookups are needed.",
+        "tags": [
+          "indexes",
+          "sargable",
+          "performance"
+        ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "isHumanReviewed": false,
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "pg-easy-102",
+      "type": "ab",
+      "prompt": "Which query checks faster whether customer 7 has any orders? (orders has 100,000 rows and no index on customer_id.)",
+      "choices": [
+        {
+          "text": "count(*) > 0",
+          "code": "SELECT count(*) > 0 FROM orders WHERE customer_id = 7",
+          "rationale": "count(*) has to read every matching row to finish the count, which means scanning the whole table."
+        },
+        {
+          "text": "EXISTS",
+          "code": "SELECT EXISTS (SELECT 1 FROM orders WHERE customer_id = 7)"
+        }
+      ],
+      "answerIndex": 1,
+      "criterion": {
+        "type": "performance",
+        "statement": "Faster median execution time on a 100,000-row table.",
+        "evidence": "A: 2.3 ms, B: 0.002 ms median on PostgreSQL 17.11"
+      },
+      "query": {
+        "title": "EXISTS stops at the first match",
+        "explanation": "To answer \"is there at least one?\", `EXISTS` can stop as soon as it finds a row. `count(*)` must find every matching row before it can compare the count with zero.",
+        "tags": [
+          "exists",
+          "aggregates",
+          "performance"
+        ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "isHumanReviewed": false,
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "pg-easy-103",
+      "type": "ab",
+      "prompt": "products.id is the primary key. Which query fetches product 4242 faster?",
+      "choices": [
+        {
+          "text": "Cast id to text",
+          "code": "SELECT sku FROM products WHERE id::text = '4242'",
+          "rationale": "Casting the column to text means the primary key index on id no longer applies, so every row is cast and compared."
+        },
+        {
+          "text": "Compare id as an integer",
+          "code": "SELECT sku FROM products WHERE id = 4242"
+        }
+      ],
+      "answerIndex": 1,
+      "criterion": {
+        "type": "performance",
+        "statement": "Faster median execution time on a 50,000-row table.",
+        "evidence": "A: 1.9 ms, B: 0.002 ms median on PostgreSQL 17.11"
+      },
+      "query": {
+        "title": "Cast the value, not the column",
+        "explanation": "An index can only serve a condition on the indexed column itself. `id::text = ...` applies a cast to every row. Compare `id` with an integer, casting the literal or parameter if needed, and the primary key index finds the row directly.",
+        "tags": [
+          "indexes",
+          "casts",
+          "performance"
+        ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "isHumanReviewed": false,
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "pg-easy-104",
+      "type": "ab",
+      "prompt": "products.sku has a B-tree index (C collation). Which query finds SKUs starting with SKU-0042 faster?",
+      "choices": [
+        {
+          "text": "left(sku, 8) = 'SKU-0042'",
+          "code": "SELECT count(*) FROM products WHERE left(sku, 8) = 'SKU-0042'",
+          "rationale": "left(sku, 8) is an expression the index does not store, so every row is read and trimmed."
+        },
+        {
+          "text": "sku LIKE 'SKU-0042%'",
+          "code": "SELECT count(*) FROM products WHERE sku LIKE 'SKU-0042%'"
+        }
+      ],
+      "answerIndex": 1,
+      "criterion": {
+        "type": "performance",
+        "statement": "Faster median execution time on a 50,000-row table.",
+        "evidence": "A: 3.2 ms, B: 0.016 ms median on PostgreSQL 17.11"
+      },
+      "query": {
+        "title": "Prefix searches with LIKE can use a B-tree",
+        "explanation": "With the C collation (or a `text_pattern_ops` index), Postgres turns `LIKE 'prefix%'` into a range condition on the index. Wrapping the column in `left()` or `substr()` gives the same answer but forces a scan of every row.",
+        "tags": [
+          "indexes",
+          "like",
+          "performance"
+        ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "isHumanReviewed": false,
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
     }
   ]
 }

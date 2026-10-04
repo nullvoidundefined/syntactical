@@ -66,10 +66,15 @@ describe('buildContentManifest with a private content root', () => {
     bank.questions[0].topic = 'strings';
     await writeFile(bankPath, `${JSON.stringify(bank, null, 2)}\n`);
 
+    // Versions are read from the copied repository manifest, so the test holds as content ships.
+    const before = (await readManifest(contentDir)).languages[0].banks;
     await buildContentManifest(contentDir, outputs, undefined, undefined, contentRoot);
     const changed = (await readManifest(contentDir)).languages[0].banks;
-    expect(changed.medium).toMatchObject({ contentVersion: 2, topicCounts: { strings: 1 } });
-    expect(changed.easy.contentVersion).toBe(1);
+    expect(changed.medium).toMatchObject({
+      contentVersion: before.medium.contentVersion + 1,
+      topicCounts: { strings: 1 },
+    });
+    expect(changed.easy.contentVersion).toBe(before.easy.contentVersion);
 
     await buildContentManifest(contentDir, outputs, undefined, undefined, contentRoot);
     expect((await readManifest(contentDir)).languages[0].banks).toEqual(changed);
