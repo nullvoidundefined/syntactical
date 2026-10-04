@@ -9,7 +9,7 @@ import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/co
 const mockRecordAnswer = jest.fn();
 const mockRecordCompletion = jest.fn();
 jest.mock('../../../state/StatsProvider', () => ({
-  useQuizStats: () => ({ isHydrated: true, recordAnswer: mockRecordAnswer, recordCompletion: mockRecordCompletion }),
+  useQuizStats: () => ({ eventLog: [], isHydrated: true, recordAnswer: mockRecordAnswer, recordCompletion: mockRecordCompletion }),
 }));
 
 const query = { explanation: 'Because', title: 'Why' };

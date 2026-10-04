@@ -10,15 +10,23 @@ function readBaseUrl(): string {
   return process.env.EXPO_BASE_URL ?? '/syntactical';
 }
 
-// A RevenueCat key reaches the bundle only when it carries its public prefix, so
+// A vendor key reaches the bundle only when it carries its public prefix, so
 // a secret or Stripe key can never be built in. The error names the variable,
 // never the value.
-function readPublicKey(envName: string, prefix: string): string | undefined {
+function readPublicKey(envName: string, prefix: string, vendor = 'RevenueCat'): string | undefined {
   const value = process.env[envName];
   if (value === undefined || value === '') return undefined;
   if (!new RegExp(`^${prefix}_[A-Za-z0-9_.-]+$`).test(value)) {
-    throw new Error(`${envName} must be a public RevenueCat key`);
+    throw new Error(`${envName} must be a public ${vendor} key`);
   }
+  return value;
+}
+
+// The analytics host must be an https URL; the error names the variable, never the value.
+function readPostHogHost(): string | undefined {
+  const value = process.env.POSTHOG_HOST;
+  if (value === undefined || value === '') return undefined;
+  if (!value.startsWith('https://')) throw new Error('POSTHOG_HOST must start with https://');
   return value;
 }
 
@@ -31,6 +39,8 @@ const config: ExpoConfig = {
   extra: {
     apiBaseUrl: API_BASE_URL,
     contentBaseUrl: CONTENT_BASE_URL,
+    posthogHost: readPostHogHost(),
+    posthogKey: readPublicKey('POSTHOG_KEY', 'phc', 'PostHog'),
     revenueCatAppleKey: readPublicKey('REVENUECAT_APPLE_KEY', 'appl'),
     revenueCatGoogleKey: readPublicKey('REVENUECAT_GOOGLE_KEY', 'goog'),
     revenueCatWebBillingKey: readPublicKey('REVENUECAT_WEB_BILLING_KEY', 'rcb'),
