@@ -28,6 +28,6 @@ Rules:
 - `moreReadable` is `A` or `B` when one option is clearly easier to read under the rubric, and
   `tie` when neither is clearly easier. Do not guess a winner to avoid a tie.
 - Do not prefer an option for being first, second, shorter, or longer on its own.
-- `reason` is one or two short sentences naming the rubric points that decide it, written for a
-  learner. It must refer to the options only as Option A and Option B.
+- `reason` is one or two short sentences, at most 200 characters in total, naming the rubric
+  points that decide it, written for a learner. It must refer to the options only as Option A and Option B.
 - Reply with JSON only, matching the schema: `moreReadable` and `reason`.
