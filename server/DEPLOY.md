@@ -1,6 +1,6 @@
 # Deploying the API
 
-The API ships as the image built from `server/Dockerfile`. GitHub Actions builds it, checks it, scans it, and pushes it to a private GitHub Container Registry package; Railway runs that pushed image as one service and never builds anything. (Railway's builder rejects BuildKit secret mounts, which the paid-content key needs.) The image starts itself: its `CMD` runs `server/scripts/start.sh`, so Railway needs no start command, healthcheck setting, or config file.
+The API ships as the image built from `server/Dockerfile`. GitHub Actions builds and scans it, then uploads the same build context to Railway with `railway up`; Railway builds it from that upload and runs it as one service. Railway's builder rejects BuildKit secret mounts, so the paid-content deploy key is never used inside Docker or on Railway: it is a GitHub Actions secret that only `server/scripts/stageBuildContent.sh` reads on the CI runner. The image starts itself: its `CMD` runs `server/scripts/start.sh` (migrations, then the server), so Railway needs no start command.
 
 ## Environment variables
 
@@ -30,26 +30,34 @@ The read-only deploy key for the private `nullvoidundefined/syntactical-content`
 
 Set `ALLOW_STUBBED_INTEGRATIONS=true` to deploy while some settings are still missing. Only `RESEND_API_KEY`, `EMAIL_FROM`, `REVENUECAT_WEBHOOK_AUTH`, `RATE_LIMIT_KEY_SECRET`, `ALLOWED_ORIGINS`, and `PUBLIC_BASE_URL` can be stubbed, and only when missing; `DATABASE_URL` never is. Each stub fails closed: no email is sent (so sign-in does not work until `RESEND_API_KEY` is set), the RevenueCat webhook answers 503 to every request, the rate limit key is random per boot (counters reset on restart), and no browser origin is allowed. Without the `CONTENT_DEPLOY_KEY` Actions secret, CI builds the image with the fixture banks instead (`CONTENT_SOURCE=fixture`), so the server starts but serves no real paid bank. The boot log and `/health/ready` (`"stubbed": [...]`) list what is stubbed. Everything to replace before launch is in [launch-placeholders.md](../docs/launch-placeholders.md).
 
-## The image pipeline
+## The deploy pipeline
 
-`.github/workflows/server-image.yml` runs on every push to `main` that touches `server/`, `packages/`, `content/`, or `package-lock.json`. It builds the image (with the `content_deploy_key` secret mount when the `CONTENT_DEPLOY_KEY` Actions secret exists, otherwise with `CONTENT_SOURCE=fixture`), runs `checkImageHealth.sh` and `scanImageForKeys.sh` on it, and only then pushes `ghcr.io/nullvoidundefined/syntactical-api` with the tags `sha-<short sha>` and `main`. The image label `dev.syntactical.content` is `private` or `fixture`; check it before launch (`docker inspect --format '{{ index .Config.Labels "dev.syntactical.content" }}' <image>`). A `fixture` image serves no real paid bank.
+`.github/workflows/server-deploy.yml`:
 
-**Keep the package private.** The image holds the paid banks. After the first push, open the package on GitHub (Packages, `syntactical-api`, Package settings) and confirm its visibility is Private; never make it public.
+- **Staging** deploys on every push to `main` that touches `server/`, `packages/`, `content/`, `package-lock.json`, or `railway.json`.
+- **Production** is a manual run (Actions, Server deploy, Run workflow, on `main`) and uses its own token.
+
+Each job:
+
+1. Stages the content with `server/scripts/stageBuildContent.sh`. With the `CONTENT_DEPLOY_KEY` secret it clones the private `nullvoidundefined/syntactical-content` repo (key in a 0600 temp file outside the repo, removed on exit) and copies only the manifest-named, hash-checked paid banks into `build/paid-content`. Without the secret it stages the fixture content under `server/ci-fixture`, and the job summary says `fixture`. A fixture image serves no real paid bank.
+2. Builds the image locally and runs `checkImageHealth.sh` and `scanImageForKeys.sh` (with its self-test) on it. A failure here stops the job before anything is uploaded.
+3. Runs `server/scripts/deployToRailway.sh`: it copies the committed tree (`git archive HEAD`) plus `build/` into a clean temp directory outside the repo, refuses to upload if that directory holds `.git`, an env file, a PEM file, a deploy key, or an `id_*` file, and runs `railway up <dir> --ci --no-gitignore --service api --environment <env>`.
+
+The image CI checked and the image Railway builds are two builds of the same Dockerfile and the same staged context, not one image.
+
+Actions secrets (repository settings): `CONTENT_DEPLOY_KEY` (read-only deploy key for `syntactical-content`), `RAILWAY_TOKEN_STAGING`, and `RAILWAY_TOKEN_PRODUCTION`. Railway project tokens are scoped to one environment, which is why there are two. Each token is mapped to `RAILWAY_TOKEN` in its own job only. A job fails with a clear message when its token is empty. The Railway CLI version is pinned in the workflow.
 
 ## Railway service settings
 
-- Source: Docker image `ghcr.io/nullvoidundefined/syntactical-api:main`. No repo, root directory, Dockerfile path, or config file path is set.
-- Registry credentials (set by the owner in the service's source settings, since the package is private): username `nullvoidundefined` and a GitHub token with `read:packages` only. Use a classic token with that single scope if a fine-grained token cannot read container packages. The token lives only in Railway's registry settings.
-- Start command: leave it empty. The image `CMD` runs `node-pg-migrate up` against `DATABASE_MIGRATION_URL` when set, otherwise `DATABASE_URL`, then `exec node dist/index.js`. A failed migration stops the start before the new server takes traffic. `node-pg-migrate` reads the URL as given, so its TLS mode is not checked by the server's pool: `DATABASE_MIGRATION_URL` (and `DATABASE_URL` when it is the one used for migrations) must be a `*.railway.internal` host or carry `sslmode=verify-full`. Never use `disable`, `allow`, `prefer`, `require`, or `no-verify` there.
-- Healthcheck path: `/health` (the image also carries its own `HEALTHCHECK`).
-- The deploy key is not on Railway at all. It exists only as the GitHub Actions secret `CONTENT_DEPLOY_KEY`, so it is never injected into the running container.
+- Service name: `api` in each environment, deployed by `railway up` from CI. No GitHub repo, root directory, or registry credentials are connected.
+- Config: `railway.json` at the repository root: Dockerfile builder, `server/Dockerfile`, healthcheck `/health` (60 second timeout), restart on failure up to 5 times. There is no start command: the image `CMD` runs `node-pg-migrate up` against `DATABASE_MIGRATION_URL` when set, otherwise `DATABASE_URL`, then `exec node dist/index.js`. A failed migration stops the start before the new server takes traffic. `node-pg-migrate` reads the URL as given, so its TLS mode is not checked by the server's pool: `DATABASE_MIGRATION_URL` (and `DATABASE_URL` when it is the one used for migrations) must be a `*.railway.internal` host or carry `sslmode=verify-full`. Never use `disable`, `allow`, `prefer`, `require`, or `no-verify` there.
+- Variables: only the runtime variables in the table above. No build or content variable is needed, because the content mode is decided by what CI stages into `build/`, and `CONTENT_DEPLOY_KEY` is never set on Railway, so it is never injected into the running container.
 - Custom domain: `api.syntactical.dev` (the owner adds the CNAME at the DNS host).
+- Redeploy: push to `main` (staging) or run the Server deploy workflow (production).
 
-### Deploying a new image
+Open Railway behaviors to confirm on the first deploy: that `railway up` with a directory argument reads `railway.json` from that directory, that `--no-gitignore` uploads the gitignored `build/` directory, and that Railway honors `server/Dockerfile.dockerignore` (or ignores it harmlessly, since the upload holds only committed files and `build/`).
 
-A push to `main` moves the `main` tag, but Railway does not pull on its own. After the Server image workflow finishes, redeploy the service in Railway (Deployments, Redeploy), which pulls the current `main` image. To pin or roll back, set the service image to a `sha-<short sha>` tag instead and redeploy.
-
-Local build with the real key (written to a file first): `docker build -f server/Dockerfile --secret id=content_deploy_key,src=<path to key file> .` Without a key, add `--build-arg CONTENT_SOURCE=fixture` to build with the fixture content under `server/ci-fixture`.
+Local build: stage the content first, then build. `server/scripts/stageBuildContent.sh fixture` stages the fixture content; `CONTENT_DEPLOY_KEY="$(cat <path to key file>)" server/scripts/stageBuildContent.sh private` stages the real banks. Then `docker build -f server/Dockerfile .` from the repository root. `build/` is gitignored.
 
 ## Post-deploy checks
 
