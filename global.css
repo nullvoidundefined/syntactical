@@ -2,3 +2,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* The paywall sheet's web slide-in; the sheet sets animation to none under reduced motion. */
+@keyframes paywall-slide-up {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
