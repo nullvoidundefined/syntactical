@@ -200,9 +200,12 @@ describe('SignOutDialog', () => {
     expect(sessionDeletes(router)).toEqual([]);
   });
 
-  it('Sync now uploads every unsynced event, then signs out, clears the sync cursor, and removes the user\'s events from the device', async () => {
-    await mountSignedIn(router, userId, [...unsynced, ...synced]);
+  it('Sync now uploads every unsynced event that is not held, then signs out, clears the sync cursor, and removes the user\'s events from the device', async () => {
+    const held = buildOwnedLog(1, userId, 20).map((entry) => ({ ...entry, isHeld: true }));
+    await mountSignedIn(router, userId, [...unsynced, ...held, ...synced]);
     const dialog = await openDialog();
+    // A held answer is never uploaded, so the dialog says it goes with sign-out.
+    expect(textOf(dialog)).toContain('Answers the server refused cannot sync and are discarded at sign-out.');
     router.state.isFailing = false;
     fireEvent.press(within(dialog).getByRole('button', { name: 'Sync now' }));
     await waitFor(() => expect(latest.auth?.isSignedIn).toBe(false));
@@ -210,6 +213,7 @@ describe('SignOutDialog', () => {
 
     const server = router.serverFor(userId);
     for (const id of idsOf(unsynced)) expect(server.storedIds().has(id)).toBe(true);
+    for (const id of idsOf(held)) expect(server.storedIds().has(id)).toBe(false);
     const lastUpload = router.sent.map(({ method }) => method).lastIndexOf('POST');
     const signOutAt = router.sent.findIndex(({ method, path }) => method === 'DELETE' && path === 'auth/sessions/current');
     expect(signOutAt).toBeGreaterThan(lastUpload);

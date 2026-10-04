@@ -1,7 +1,8 @@
 // The "Sign out" control. Signs out at once when the signed-in user has no
 // unsynced events (held ones count as unsynced); otherwise opens a modal
 // dialog offering "Sync now" (upload, then sign out), "Discard" (drop this
-// user's events, then sign out), and "Cancel". A failed sync stays open and is
+// user's events, then sign out), and "Cancel"; it says that held answers,
+// which never upload, are discarded at sign-out. A failed sync stays open and is
 // announced in an alert. Every sign-out clears the sync cursor and removes the
 // user's events from this device, so it holds one owner's events at a time. No animation; on the web focus moves into
 // the dialog on open, Escape closes it (and goes no further), and focus returns
@@ -66,7 +67,10 @@ function DialogPanel({ failureMessage, isBusy, onCancel, onDiscard, onSyncNow }:
         <Text role="heading" aria-level={2} nativeID={HEADING_ID} className="font-mono text-sm text-ink">
           {HEADING}
         </Text>
-        <Text className="mt-2 text-sm text-muted">Some of your answers have not synced yet. Sync them before you sign out, or discard them.</Text>
+        <Text className="mt-2 text-sm text-muted">
+          Some of your answers have not synced yet. Sync them before you sign out, or discard them. Answers the server refused cannot sync and
+          are discarded at sign-out.
+        </Text>
         {failureMessage === null ? null : (
           <Text role="alert" className="mt-2 text-sm text-ink">
             {failureMessage}
