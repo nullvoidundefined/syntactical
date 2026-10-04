@@ -42,6 +42,9 @@ async function renderRound() {
   return handlers;
 }
 
+// The sign-up prompt reads auth and stats; SignUpPrompt.test.tsx covers it.
+jest.mock('../../auth/SignUpPrompt', () => ({ SignUpPrompt: () => null }));
+
 describe('QuizRound', () => {
   it('offers Explain after an incorrect answer, opening the query without advancing', async () => {
     await renderRound();

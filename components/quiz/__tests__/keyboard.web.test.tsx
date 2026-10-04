@@ -46,6 +46,9 @@ function pressKey(key: string) {
   });
 }
 
+// The sign-up prompt reads auth and stats; SignUpPrompt.test.tsx covers it.
+jest.mock('../../auth/SignUpPrompt', () => ({ SignUpPrompt: () => null }));
+
 describe('web keyboard navigation in a round', () => {
   it.each([
     ['1', 'a, incorrect'],

@@ -12,6 +12,9 @@ jest.mock('react-native-reanimated', () => ({ useReducedMotion: () => true }));
 
 const query = { explanation: 'Counts from start.', syntax: 'enumerate(iterable, start=0)', tags: ['builtins'], title: 'enumerate(iterable, start=0)' };
 
+// The sign-up prompt reads auth and stats; SignUpPrompt.test.tsx covers it.
+jest.mock('../../auth/SignUpPrompt', () => ({ SignUpPrompt: () => null }));
+
 describe('quiz screens on the web expose accessible names and headings', () => {
   it('names the round progress bar with the current question and total', () => {
     render(<ProgressBar current={4} total={100} />);

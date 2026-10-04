@@ -1,7 +1,10 @@
-// Shown when a round ends: accuracy, correct count, and Retry or Menu.
+// Shown when a round ends: accuracy, correct count, Retry or Menu, and for a
+// guest the one-time sign-up prompt. Enter retries; Enter on a focused
+// button activates that button only, since the pressable consumes the key.
 import { Pressable, Text, View } from 'react-native';
 
 import { useKeyboardNav } from '../../state/useKeyboardNav';
+import { SignUpPrompt } from '../auth/SignUpPrompt';
 
 type ResultsScreenProps = {
   accuracy: number;
@@ -30,6 +33,7 @@ export function ResultsScreen({ accuracy, correctCount, difficultyLabel, languag
           <Text className="text-center font-mono text-sm uppercase text-muted">Menu</Text>
         </Pressable>
       </View>
+      <SignUpPrompt />
     </View>
   );
 }
