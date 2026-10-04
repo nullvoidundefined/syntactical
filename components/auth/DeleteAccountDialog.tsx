@@ -110,7 +110,7 @@ function DialogPanel({ confirmation, isBusy, isOnline, message, onCancel, onChan
 }
 
 export function DeleteAccountDialog() {
-  const { signOutDeletedAccount } = useAuth();
+  const { signOutDeletedAccount, user } = useAuth();
   const { cancelPass } = useSync();
   const isOnline = useIsOnline();
   const [isOpen, setIsOpen] = useState(false);
@@ -143,8 +143,12 @@ export function DeleteAccountDialog() {
 
   async function handleConfirm() {
     if (isBusyRef.current || !isOnline || confirmation !== CONFIRMATION) return;
+    if (user === null) return;
+    // The id is taken before the request: a concurrent 401 can sign the device out first.
+    const deletedUserId = user.id;
     setBusy(true);
     setMessage(null);
+    cancelPass();
     let isDeleted = false;
     try {
       isDeleted = (await apiFetch('me', { method: 'DELETE' })).status === HTTP_NO_CONTENT;
@@ -157,8 +161,7 @@ export function DeleteAccountDialog() {
       return;
     }
     setIsOpen(false);
-    cancelPass();
-    await signOutDeletedAccount();
+    await signOutDeletedAccount(deletedUserId);
   }
 
   const panel = (

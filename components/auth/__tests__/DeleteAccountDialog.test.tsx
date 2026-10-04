@@ -23,16 +23,22 @@ import { DeleteAccountDialog } from '../DeleteAccountDialog';
 
 type Reply = { status: number; body: unknown } | 'reject';
 
-const mockApi: { deleteReply: Reply; router: ApiRouter | null } = { deleteReply: { body: null, status: 204 }, router: null };
+const mockApi: { beforeDeleteReply: (() => Promise<void>) | null; deleteReply: Reply; router: ApiRouter | null } = {
+  beforeDeleteReply: null,
+  deleteReply: { body: null, status: 204 },
+  router: null,
+};
 const mockNetwork = { isConnected: true };
 
 jest.mock('../../../clients/apiClient', () => ({
-  apiFetch: (path: string, init?: { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown }) => {
+  apiFetch: async (path: string, init?: { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown }) => {
     if (!mockApi.router) throw new Error('no router installed');
     if (path === 'me' && init?.method === 'DELETE') {
       mockApi.router.sent.push({ method: 'DELETE', path, sessionUserId: mockApi.router.state.activeUserId });
+      await mockApi.beforeDeleteReply?.();
       const reply = mockApi.deleteReply;
-      return reply === 'reject' ? Promise.reject(new Error('network down')) : Promise.resolve(reply);
+      if (reply === 'reject') throw new Error('network down');
+      return reply;
     }
     return mockApi.router.request(path, init);
   },
@@ -118,6 +124,7 @@ describe('DeleteAccountDialog', () => {
     await AsyncStorage.clear();
     router = createApiRouter();
     mockApi.router = router;
+    mockApi.beforeDeleteReply = null;
     mockApi.deleteReply = { body: null, status: 204 };
     mockNetwork.isConnected = true;
     latest.auth = null;
@@ -157,6 +164,22 @@ describe('DeleteAccountDialog', () => {
     expect(idsOf(await readStoredLog()).sort()).toEqual(idsOf(guestEntries).sort());
     expect(await AsyncStorage.getItem(buildUserStatsKey(userId))).toBeNull();
     expect(queryDialog()).toBeNull();
+  });
+
+  it('still removes the user\'s events and stats key when a concurrent 401 signed the device out between the 204 and the local sign-out', async () => {
+    await mountSignedIn(router, userId, [...guestEntries, ...userEntries]);
+    mockApi.beforeDeleteReply = async () => {
+      await latest.auth?.signOut();
+    };
+    const dialog = await openDialog();
+    await fireEvent.changeText(within(dialog).getByLabelText(INPUT), 'DELETE');
+    await fireEvent.press(within(dialog).getByRole('button', { name: CONFIRM }));
+    await waitFor(() => expect(latest.auth?.isSignedIn).toBe(false));
+    await waitFor(async () => expect(await AsyncStorage.getItem(buildUserStatsKey(userId))).toBeNull());
+    await flush();
+
+    expect(idsOf(await readStoredLog()).sort()).toEqual(idsOf(guestEntries).sort());
+    expect(await AsyncStorage.getItem(buildUserStatsKey(userId))).toBeNull();
   });
 
   it.each([

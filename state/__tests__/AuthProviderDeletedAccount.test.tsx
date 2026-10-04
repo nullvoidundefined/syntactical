@@ -50,7 +50,7 @@ describe('AuthProvider signOutDeletedAccount', () => {
     await waitFor(async () => expect((await readStoredAuth())?.knownUserIds).toContain(identity.userId));
 
     await act(async () => {
-      await result.current.signOutDeletedAccount();
+      await result.current.signOutDeletedAccount(identity.userId);
     });
 
     expect(result.current.isSignedIn).toBe(false);

@@ -57,7 +57,7 @@ type AuthContextValue = {
   isSignedIn: boolean;
   requestCode: (email: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
-  signOutDeletedAccount: () => Promise<void>;
+  signOutDeletedAccount: (deletedUserId: string) => Promise<void>;
   user: { id: string } | null;
   verifyCode: (email: string, code: string) => Promise<AuthResult>;
 };
@@ -240,17 +240,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [signOutLocally]);
 
   // The account is already gone on the server, so no session request is sent.
-  const signOutDeletedAccount = useCallback(async () => {
-    const deletedId = userIdRef.current;
-    setDeletedUserId(deletedId);
-    if (deletedId === null) {
-      await signOutLocally();
-      return;
-    }
-    // The deleted id is forgotten: it leaves the known ids, in memory and in storage.
-    setKnownUserIds(knownRef.current.filter((id) => id !== deletedId));
-    await signOutLocally(deletedId);
-  }, [setKnownUserIds, signOutLocally]);
+  // The caller names the deleted id, since a concurrent 401 may already have
+  // signed the device out and cleared the current user.
+  const signOutDeletedAccount = useCallback(
+    async (deletedId: string) => {
+      setDeletedUserId(deletedId);
+      // The deleted id is forgotten: it leaves the known ids, in memory and in storage.
+      setKnownUserIds(knownRef.current.filter((id) => id !== deletedId));
+      await signOutLocally(deletedId);
+    },
+    [setKnownUserIds, signOutLocally],
+  );
 
   const completeGuestClaim = useCallback(
     (claimedUserId: string) => {
