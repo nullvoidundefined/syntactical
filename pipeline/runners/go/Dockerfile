@@ -1,6 +1,6 @@
 FROM golang:1.25-bookworm AS harness
-COPY harness.go /src/harness.go
-RUN cd /src && CGO_ENABLED=0 go build -o /harness harness.go
+COPY harness.go harness_test.go /src/
+RUN cd /src && go test harness.go harness_test.go && CGO_ENABLED=0 go build -o /harness harness.go
 
 FROM golang:1.25-bookworm
 ENV GOTOOLCHAIN=local GOPROXY=off CGO_ENABLED=0

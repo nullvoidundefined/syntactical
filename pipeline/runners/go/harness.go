@@ -17,6 +17,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"syscall"
@@ -162,16 +163,43 @@ func signaled(state *os.ProcessState) bool {
 	return ok && status.Signaled()
 }
 
+// sourceDiagnostic matches a compiler error that points into the oracle source.
+var sourceDiagnostic = regexp.MustCompile(`(?m)^(\./|/work/)?main\.go:\d+:\d+: `)
+
+func isResourceFailure(stderr string) bool {
+	return strings.Contains(stderr, "signal: killed") ||
+		strings.Contains(stderr, "no space left on device") ||
+		strings.Contains(stderr, "out of memory") ||
+		strings.Contains(stderr, "cannot allocate memory")
+}
+
+// classifyBuildFailure separates the oracle's own compile errors from a build the sandbox
+// stopped (a killed compiler, a full /work) and from a broken toolchain.
+func classifyBuildFailure(stderr string) result {
+	switch {
+	case isResourceFailure(stderr):
+		return result{Outcome: "resource-limit"}
+	case sourceDiagnostic.MatchString(stderr):
+		return result{Outcome: "syntax-error"}
+	default:
+		return result{Outcome: "exception", ExceptionType: "RunnerFailure"}
+	}
+}
+
+// classifyFailure names a non-zero exit from the oracle binary. The runtime prints a
+// goroutine trace after a panic or fatal error; the "panic: " line may follow stderr the
+// oracle left unterminated, so it is searched for anywhere.
 func classifyFailure(stderr string) result {
+	hasTrace := strings.Contains(stderr, "\ngoroutine ")
 	switch {
 	case strings.Contains(stderr, "fatal error: all goroutines are asleep - deadlock!"):
 		return result{Outcome: "exception", ExceptionType: "deadlock"}
 	case strings.Contains(stderr, "fatal error: runtime: out of memory"),
 		strings.Contains(stderr, "runtime: cannot allocate memory"):
 		return result{Outcome: "resource-limit"}
-	case strings.HasPrefix(stderr, "panic: ") || strings.Contains(stderr, "\npanic: "):
+	case hasTrace && strings.Contains(stderr, "panic: "):
 		return result{Outcome: "exception", ExceptionType: "panic"}
-	case strings.HasPrefix(stderr, "fatal error: ") || strings.Contains(stderr, "\nfatal error: "):
+	case hasTrace && strings.Contains(stderr, "fatal error: "):
 		return result{Outcome: "exception", ExceptionType: "fatal error"}
 	default:
 		return result{Outcome: "exception", ExceptionType: "exit"}
@@ -222,8 +250,7 @@ func main() {
 		if signaled(state) {
 			finish(result{Outcome: "resource-limit"})
 		}
-		// Parse and type errors both stop the build; the oracle never ran.
-		finish(result{Outcome: "syntax-error"})
+		finish(classifyBuildFailure(buildErr.data.String() + buildOut.data.String()))
 	}
 
 	stdout := &cappedBuffer{limit: outputCapBytes}

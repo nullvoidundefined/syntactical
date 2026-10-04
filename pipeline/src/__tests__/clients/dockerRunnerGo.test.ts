@@ -90,6 +90,19 @@ describe.skipIf(SKIP_DOCKER)('runOracle go (docker)', () => {
         );
 
         it(
+            'records a panic that follows unterminated stderr output as a panic',
+            async () => {
+                const run = await runOracle({
+                    language: 'go',
+                    code: 'package main\nimport ("fmt"; "os")\nfunc main() { fmt.Fprint(os.Stderr, "starting "); panic("boom") }',
+                });
+
+                expect(run).toMatchObject({ outcome: 'exception', exceptionType: 'panic' });
+            },
+            RUN_TIMEOUT_MS,
+        );
+
+        it(
             'records a runtime deadlock as a deadlock exception',
             async () => {
                 const run = await runOracle({ language: 'go', code: 'package main\nfunc main() { select {} }' });
