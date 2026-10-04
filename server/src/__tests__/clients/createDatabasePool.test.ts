@@ -1,5 +1,6 @@
 // The pool's TLS posture and error handling. Production verifies the database certificate; no
 // input yields rejectUnauthorized false; a pool error is logged by name and code only.
+import { parse } from 'pg-connection-string';
 import { pino } from 'pino';
 import { describe, expect, it } from 'vitest';
 
@@ -24,6 +25,23 @@ describe('buildPoolConfig', () => {
   it('refuses a URL that asks for no or unverified TLS on a public host in production', () => {
     for (const mode of ['disable', 'allow', 'prefer', 'no-verify']) {
       expect(() => buildPoolConfig(`${PUBLIC_URL}?sslmode=${mode}`, 'production')).toThrow(/unverified TLS/);
+    }
+  });
+
+  it('strips every URL TLS parameter so none can override the verified setting', () => {
+    for (const query of [
+      'ssl=0',
+      'ssl=false',
+      'sslrootcert=/dev/null',
+      'sslcert=/dev/null&sslkey=/dev/null',
+      'sslnegotiation=direct',
+      'uselibpqcompat=true&sslmode=require',
+    ]) {
+      const { connectionString, ssl } = buildPoolConfig(`${PUBLIC_URL}?${query}`, 'production');
+      expect(ssl).toEqual({ rejectUnauthorized: true });
+      expect(String(connectionString)).not.toMatch(/ssl|uselibpqcompat/);
+      // What pg merges over the explicit option is whatever the string still parses to.
+      expect(parse(String(connectionString)).ssl).toBeUndefined();
     }
   });
 

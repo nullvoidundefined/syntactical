@@ -8,7 +8,7 @@ describe('cutover to the Expo web build', () => {
     const { build, dev, lint, test } = scripts;
     expect(dev).toBe('expo start');
     expect(build).toBe(
-      'npm run content:build && npm run build -w @syntactical/progress && expo export --platform web --output-dir dist && cp -R content dist/content && node scripts/copySpaFallback.mjs dist',
+      'npm run content:build && npm run build -w @syntactical/progress && expo export --platform web --output-dir dist && cp -R content dist/content && node scripts/copySpaFallback.mjs dist && node scripts/assertNoPaidBanks.mjs dist',
     );
     expect(test).toBe('jest');
     expect(lint).toBe('oxlint');
@@ -16,7 +16,9 @@ describe('cutover to the Expo web build', () => {
 
   it('no longer contains Vite, its dependencies, or the old source tree', () => {
     const dependencyNames = Object.keys({ ...dependencies, ...devDependencies });
-    expect(dependencyNames.filter((name) => name.includes('vite') || name === 'gh-pages' || name === 'tailwindcss-v4')).toEqual([]);
+    expect(
+      dependencyNames.filter((name) => name.includes('vite') || name === 'gh-pages' || name === 'tailwindcss-v4'),
+    ).toEqual([]);
     expect(existsSync('vite.config.js')).toBe(false);
     expect(existsSync('index.html')).toBe(false);
     expect(existsSync('src')).toBe(false);
@@ -51,7 +53,11 @@ describe('workspaces', () => {
       const shared = JSON.parse(readFileSync(`${directory}/package.json`, 'utf8'));
       expect(shared['react-native']).toBe('./src/index.ts');
       expect(shared.main).toBe('./dist/index.js');
-      expect(shared.exports['.']).toEqual({ types: './src/index.ts', 'react-native': './src/index.ts', default: './dist/index.js' });
+      expect(shared.exports['.']).toEqual({
+        types: './src/index.ts',
+        'react-native': './src/index.ts',
+        default: './dist/index.js',
+      });
       expect(shared.scripts.build).toBe('tsc -p tsconfig.build.json');
     }
   });
@@ -59,7 +65,9 @@ describe('workspaces', () => {
   it('keeps workspace code out of the root Jest projects and root type check', () => {
     const jestConfig = require('../../jest.config.js');
     for (const project of jestConfig.projects) {
-      expect(project.testPathIgnorePatterns).toEqual(expect.arrayContaining(['<rootDir>/packages/', '<rootDir>/pipeline/', '<rootDir>/server/']));
+      expect(project.testPathIgnorePatterns).toEqual(
+        expect.arrayContaining(['<rootDir>/packages/', '<rootDir>/pipeline/', '<rootDir>/server/']),
+      );
     }
     const rootTsconfig = JSON.parse(readFileSync('tsconfig.json', 'utf8'));
     expect(rootTsconfig.exclude).toEqual(expect.arrayContaining(['packages', 'pipeline', 'server']));

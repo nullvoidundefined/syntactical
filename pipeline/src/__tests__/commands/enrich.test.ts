@@ -139,12 +139,15 @@ describe('enrich', () => {
     async function seed(banks: Record<string, unknown[]>): Promise<void> {
         const entries: Record<string, unknown> = {};
         const files: Record<string, unknown> = {};
+        const paidFiles: Record<string, unknown> = {};
         for (const [name, questions] of Object.entries(banks)) {
             const [difficulty, access] = name.split(':') as [string, 'free' | 'paid'];
             entries[difficulty] = buildEntry(`python/${difficulty}.json`, access);
-            files[`python/${difficulty}.json`] = { questions };
+            // Paid banks live in the private content root, never under content/ (B-60).
+            (access === 'free' ? files : paidFiles)[`python/${difficulty}.json`] = { questions };
         }
         await writeTree(contentDir, { ...files, 'manifest.json': buildManifest(entries) });
+        await writeTree(contentRoot, paidFiles);
     }
 
     beforeEach(async () => {
@@ -188,7 +191,9 @@ describe('enrich', () => {
         await seed({ 'easy:free': [buildMc('q-1', 'p1')] });
         // Choice 0 gets the same tag both runs; choice 2 gets different tags.
         const report = await run(
-            scripted({ tag: (callIndex, choiceIndex) => (choiceIndex === 2 && callIndex === 1 ? SECOND_TAG : FIRST_TAG) }),
+            scripted({
+                tag: (callIndex, choiceIndex) => (choiceIndex === 2 && callIndex === 1 ? SECOND_TAG : FIRST_TAG),
+            }),
         );
         expect(report.agreement).toEqual({ enrich: 0.5 });
         const written = await readJson(join(pipelineDir, 'enrichment/python/easy.json'));
@@ -215,7 +220,10 @@ describe('enrich', () => {
 
     it('skips a language whose approved taxonomy file is absent, even when a draft exists', async () => {
         await seed({ 'easy:free': [buildBool('q-1', 'p1')] });
-        await writeFile(join(pipelineDir, 'taxonomy/python.draft.json'), JSON.stringify([{ description: 'd', id: FIRST_TAG }]));
+        await writeFile(
+            join(pipelineDir, 'taxonomy/python.draft.json'),
+            JSON.stringify([{ description: 'd', id: FIRST_TAG }]),
+        );
         await rm(join(pipelineDir, 'taxonomy/python.json'));
         const provider = scripted({ tag: () => FIRST_TAG });
         await run(provider);
@@ -265,7 +273,7 @@ describe('enrich', () => {
 
     it('writes paid output only under the content root, never under pipeline/ or content/', async () => {
         await seed({ 'medium:paid': [buildBool('paid-1', PAID_TEXT)] });
-        const bankBefore = await readFile(join(contentDir, 'python/medium.json'), 'utf8');
+        const bankBefore = await readFile(join(contentRoot, 'python/medium.json'), 'utf8');
         await run(scripted({ tag: () => FIRST_TAG }));
         expect(await readJson(join(contentRoot, 'enrichment/python/medium.json'))).toEqual({
             'paid-1': [{ choiceIndex: 0, misconceptionId: FIRST_TAG, rationale: 'rationale-0' }],
@@ -275,7 +283,7 @@ describe('enrich', () => {
             await Promise.all((await listFiles(pipelineDir)).map((name) => readFile(join(pipelineDir, name), 'utf8')))
         ).join('');
         expect(pipelineText).not.toContain(PAID_TEXT);
-        expect(await readFile(join(contentDir, 'python/medium.json'), 'utf8')).toBe(bankBefore);
+        expect(await readFile(join(contentRoot, 'python/medium.json'), 'utf8')).toBe(bankBefore);
         expect(logs.join('\n')).not.toContain(PAID_TEXT);
     });
 

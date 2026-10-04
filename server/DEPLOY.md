@@ -23,7 +23,7 @@ Set these on the Railway service. The example column holds placeholders or publi
 
 The server refuses to start, naming the variable and never its value, when a required variable is missing or invalid. It also refuses to start when a paid bank is missing or its hash differs from the manifest.
 
-Build time only, never a runtime variable: the read-only deploy key for the private `nullvoidundefined/syntactical-content` repo, stored as the Railway service variable `CONTENT_DEPLOY_KEY` (secret, placeholder `${CONTENT_DEPLOY_KEY}`). It reaches the build only as a BuildKit secret mount.
+Build time only in intent, but see the note below on Railway: the read-only deploy key for the private `nullvoidundefined/syntactical-content` repo, stored as the Railway service variable `CONTENT_DEPLOY_KEY` (secret, placeholder `${CONTENT_DEPLOY_KEY}`). It reaches the build only as a BuildKit secret mount.
 
 ## Deploying with missing secrets (stub mode)
 
@@ -33,8 +33,9 @@ Set `ALLOW_STUBBED_INTEGRATIONS=true` to deploy while some settings are still mi
 
 - Source: this repo, root directory the repository root (the image needs `packages/content-schema` and `packages/progress`).
 - Config as code file path: `/server/railway.json`. It sets the Dockerfile builder, `server/Dockerfile`, the start command, and the `/health` healthcheck.
-- Start command (from `railway.json`): runs `node-pg-migrate up` against `DATABASE_MIGRATION_URL` when set, otherwise `DATABASE_URL`, then `exec node dist/index.js`. A failed migration stops the deploy before the new server takes traffic.
+- Start command (from `railway.json`): runs `node-pg-migrate up` against `DATABASE_MIGRATION_URL` when set, otherwise `DATABASE_URL`, then `exec node dist/index.js`. A failed migration stops the deploy before the new server takes traffic. `node-pg-migrate` reads the URL as given, so its TLS mode is not checked by the server's pool: `DATABASE_MIGRATION_URL` (and `DATABASE_URL` when it is the one used for migrations) must be a `*.railway.internal` host or carry `sslmode=verify-full`. Never use `disable`, `allow`, `prefer`, `require`, or `no-verify` there.
 - Deploy key for the build (the `content_deploy_key` build secret): Railway exposes service variables to the Dockerfile build, so add the service variable named `CONTENT_DEPLOY_KEY` holding the private key text. The Dockerfile reads it from a BuildKit secret mount of that name, and also accepts the lowercase name `content_deploy_key` that CI and local builds use. Never pass it as a build argument.
+- Runtime exposure of the deploy key: Railway also injects every service variable into the running container, so a `CONTENT_DEPLOY_KEY` service variable is visible to the running server process. The key is read-only and guards content the image already holds, so the added exposure is small. To avoid it, build the image in CI (where the key is a build secret only), push it to a registry, and deploy the pushed image instead of building on Railway.
 - Healthcheck path: `/health`.
 - Custom domain: `api.syntactical.dev` (the owner adds the CNAME at the DNS host).
 

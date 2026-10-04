@@ -3,12 +3,6 @@
 
 export const BUNDLED_BANKS: Record<string, unknown> = {
   'javascript/easy': require('../../content/javascript/easy.json'),
-  'javascript/hard': require('../../content/javascript/hard.json'),
-  'javascript/medium': require('../../content/javascript/medium.json'),
   'postgres/easy': require('../../content/postgres/easy.json'),
-  'postgres/hard': require('../../content/postgres/hard.json'),
-  'postgres/medium': require('../../content/postgres/medium.json'),
   'python/easy': require('../../content/python/easy.json'),
-  'python/hard': require('../../content/python/hard.json'),
-  'python/medium': require('../../content/python/medium.json'),
 };

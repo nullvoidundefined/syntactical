@@ -56,6 +56,10 @@ const FILES: Record<string, unknown> = {
             buildQuestion('p-3', SECRET_PROMPT),
         ],
     },
+};
+
+// Paid banks live in the private content root, never in the public content dir (B-60).
+const PRIVATE_FILES: Record<string, unknown> = {
     'python/medium.json': { questions: [buildQuestion('paid-1', PAID_PROMPT)] },
 };
 
@@ -80,15 +84,21 @@ async function snapshot(dir: string): Promise<Record<string, string>> {
 describe('validateContent', () => {
     let root: string;
     let contentDir: string;
+    let contentRoot: string;
     let reportsDir: string;
 
     beforeEach(async () => {
         root = await mkdtemp(join(tmpdir(), 'validate-'));
         contentDir = join(root, 'content');
+        contentRoot = join(root, 'private');
         reportsDir = join(root, 'reports');
         await mkdir(join(contentDir, 'python'), { recursive: true });
+        await mkdir(join(contentRoot, 'python'), { recursive: true });
         for (const [name, value] of Object.entries(FILES)) {
             await writeFile(join(contentDir, name), JSON.stringify(value));
+        }
+        for (const [name, value] of Object.entries(PRIVATE_FILES)) {
+            await writeFile(join(contentRoot, name), JSON.stringify(value));
         }
     });
 
@@ -103,6 +113,7 @@ describe('validateContent', () => {
         const times = ['2026-10-03T10:00:00.000Z', '2026-10-03T10:00:05.000Z'];
         return validateContent({
             contentDir,
+            contentRoot,
             newRunId: () => 'run-1',
             now: () => times.shift() ?? 'exhausted',
             oracleSource: async (_bankKey, id) => oracleFor(id),
@@ -147,7 +158,10 @@ describe('validateContent', () => {
     });
 
     it('zero-fills counts for statuses with no questions', async () => {
-        const report = await run(() => ORACLE, async () => ({ status: 'passed' }));
+        const report = await run(
+            () => ORACLE,
+            async () => ({ status: 'passed' }),
+        );
 
         expect(report.counts).toEqual({ failed: 0, 'not-executable': 0, passed: 4 });
     });

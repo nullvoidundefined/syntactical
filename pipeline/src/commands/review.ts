@@ -22,6 +22,7 @@ import { assertContentRootUsable } from '../services/classify/assertContentRootU
 import { readLatestReport } from '../services/classify/readLatestReport.js';
 import { reviewBank } from '../services/review/reviewBank.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
+import { resolveBankFile } from '../services/resolveBankFile.js';
 import type { ReviewResult } from '../types/review/ReviewResult.js';
 
 export interface ReviewOptions {
@@ -60,7 +61,9 @@ export async function review(options: ReviewOptions): Promise<ReviewResult> {
     for (const { banks, id: languageId } of languages) {
         for (const [difficulty, { access, path }] of Object.entries(banks)) {
             const bankKey = `${languageId}/${difficulty}`;
-            const bank = (await readJson(join(contentDir, path))) as { questions: Question[] };
+            const bank = (await readJson(resolveBankFile(contentDir, contentRoot, { access, path }))) as {
+                questions: Question[];
+            };
             const counts = await reviewBank({
                 bank: bank.questions,
                 difficulty,

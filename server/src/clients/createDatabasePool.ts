@@ -13,20 +13,28 @@ const IDLE_IN_TRANSACTION_TIMEOUT_MS = 10_000;
 const PRIVATE_HOST_SUFFIX = '.railway.internal';
 const WEAK_SSL_MODES = new Set(['allow', 'disable', 'no-verify', 'prefer']);
 
+// pg merges every TLS-related URL parameter (ssl, sslrootcert, sslcert, sslkey, sslnegotiation,
+// uselibpqcompat) over the explicit ssl option, so none may survive in the connection string.
+function stripTlsParams(url: URL): void {
+  for (const name of [...url.searchParams.keys()]) {
+    if (name.startsWith('ssl') || name === 'uselibpqcompat') url.searchParams.delete(name);
+  }
+}
+
 function buildPoolConfig(databaseUrl: string, nodeEnv: Env['NODE_ENV']): pg.PoolConfig {
   if (nodeEnv !== 'production') {
     return { connectionString: databaseUrl };
   }
   const url = new URL(databaseUrl);
   if (url.hostname.endsWith(PRIVATE_HOST_SUFFIX)) {
-    url.searchParams.delete('sslmode');
+    stripTlsParams(url);
     return { connectionString: url.href, ssl: false };
   }
   const sslMode = url.searchParams.get('sslmode');
   if (sslMode !== null && WEAK_SSL_MODES.has(sslMode)) {
     throw new Error('DATABASE_URL asks for an unverified TLS mode in production');
   }
-  url.searchParams.delete('sslmode');
+  stripTlsParams(url);
   return { connectionString: url.href, ssl: { rejectUnauthorized: true } };
 }
 

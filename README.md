@@ -32,13 +32,15 @@ Every action is also reachable by pointer or touch; the keyboard bindings are ad
 
 ## Content
 
-Questions are not compiled into the app logic. They live in `content/manifest.json` and `content/<language>/<difficulty>.json`, and the app downloads them at runtime from the content base URL, verifying each bank against the SHA-256 recorded in the manifest. Copies of every bank are also bundled into the app so it works offline.
+Questions are not compiled into the app logic. `content/manifest.json` lists every bank with its SHA-256 hash. Free banks live in `content/<language>/<difficulty>.json`; the app downloads them at runtime from the content base URL, verifying each against the manifest hash, and bundled copies let it work offline.
+
+Paid banks are not in this repository. They live in the private repository `nullvoidundefined/syntactical-content` at the same `<language>/<difficulty>.json` paths, reach the API image as `PAID_CONTENT_DIR`, and reach entitled owners only through `GET /v1/banks/:language/:difficulty`. They are never bundled and never on the static host: `npm run content:build` fails on a paid bank file under `content/`, and `npm run build` fails when the web export holds one (`scripts/assertNoPaidBanks.mjs`).
 
 Each question is either multiple choice or true/false, and carries a `query` (`title`, `syntax`, `explanation`, `tags`) that backs the query drawer:
 
 ```json
 {
-  "id": "py-med-01",
+  "id": "py-easy-01",
   "type": "mc",
   "prompt": "...",
   "code": "...",
@@ -52,8 +54,8 @@ A true/false question uses `"type": "bool"` and `"answer": true` or `false` in p
 
 ### Editing a question
 
-1. Edit the question in `content/<language>/<difficulty>.json`.
-2. Run `npm run content:build`. It validates the content, recomputes every bank hash into `content/manifest.json`, and regenerates `services/content/bundledManifest.generated.ts` and `services/content/bundledBanks.generated.ts`.
+1. Edit the question in `content/<language>/<difficulty>.json` (free banks only; paid banks change through the pipeline, below).
+2. Run `npm run content:build`. It validates the content, recomputes every free bank hash into `content/manifest.json` (a paid entry is kept as it is), and regenerates `services/content/bundledManifest.generated.ts` and `services/content/bundledBanks.generated.ts`.
 3. Commit the bank, `content/manifest.json`, and both `services/content/*.generated.ts` files together, then push. CI fails the pull request if any of them drift from what `npm run content:build` produces.
 
 ### Adding a language
@@ -62,11 +64,15 @@ A true/false question uses `"type": "bool"` and `"answer": true` or `false` in p
 2. Add an entry to `languages` in `content/manifest.json` with `id`, `label`, `glyph`, `tagline`, `grammar` (the Prism language id used for highlighting), and a `banks` object whose entries each have a `path` and `"hash": ""`.
 3. Run `npm run content:build` to fill in the hashes and regenerate the bundled files, then commit and push as above.
 
+### Publishing paid banks
+
+Clone `nullvoidundefined/syntactical-content` beside this repository (`../syntactical-content`), or pass `--content-root <path>` or set `SYNTACTICAL_CONTENT_ROOT`. The pipeline reads and writes paid banks there and refuses a content root inside this repository. Run `npm run pipeline -- publish`; it writes changed paid banks into the content checkout and rewrites `content/manifest.json` with their hashes. Then commit and push in `syntactical-content` first, and commit the manifest and generated files here.
+
 A `grammar` that the build does not include renders code as plain text; the supported list is `GRAMMARS` in `constants/appConfig.ts`. A language outside that list needs the list and the Prism imports in `services/codeBlock/tokenizeCode.ts` extended in code.
 
 ## Deploying
 
-Pushing to `main` runs `.github/workflows/deploy.yml`, which installs dependencies, runs `npm run build`, and publishes `dist/` (the Expo web export plus `content/`) to GitHub Pages. Watch the run under the Actions tab. The site is served at `/syntactical/`, and `404.html` serves deep links to the single-page app. Banks pushed to `main` reach installed apps on their next manifest refresh, with no new build.
+Pushing to `main` runs `.github/workflows/deploy.yml`, which installs dependencies, runs `npm run build`, and publishes `dist/` (the Expo web export plus the free banks and manifest in `content/`) to GitHub Pages. Watch the run under the Actions tab. The site is served at `/syntactical/`, and `404.html` serves deep links to the single-page app. Banks pushed to `main` reach installed apps on their next manifest refresh, with no new build.
 
 ## Device builds
 

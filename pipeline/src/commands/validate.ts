@@ -7,6 +7,7 @@ import type { Manifest, Question } from '@syntactical/content-schema';
 
 import { validateQuestion } from '../services/validateQuestion.js';
 import { writePipelineReport } from '../services/writePipelineReport.js';
+import { resolveBankFile } from '../services/resolveBankFile.js';
 import type { Oracle } from '../types/Oracle.js';
 import type { OracleSource } from '../types/OracleSource.js';
 import type { PipelineReport } from '../types/PipelineReport.js';
@@ -17,6 +18,8 @@ export type QuestionValidator = (question: Question, oracle: Oracle | null) => P
 
 export interface ValidateOptions {
     contentDir: string;
+    // The private content repo that holds paid banks (B-60).
+    contentRoot: string;
     reportsDir: string;
     oracleSource: OracleSource;
     newRunId: () => string;
@@ -32,11 +35,7 @@ async function readJson(path: string): Promise<unknown> {
     return JSON.parse(await readFile(path, 'utf8'));
 }
 
-function toReportQuestion(
-    id: string,
-    bankKey: string,
-    result: ValidationResult,
-): PipelineReportQuestion {
+function toReportQuestion(id: string, bankKey: string, result: ValidationResult): PipelineReportQuestion {
     const { reason, runtimeVersion, status } = result;
     return {
         bankKey,
@@ -48,7 +47,7 @@ function toReportQuestion(
 }
 
 export async function validateContent(options: ValidateOptions): Promise<PipelineReport> {
-    const { contentDir, newRunId, now, oracleSource, reportsDir } = options;
+    const { contentDir, contentRoot, newRunId, now, oracleSource, reportsDir } = options;
     const validate = options.validate ?? validateQuestion;
     const startedAt = now();
     const manifest = (await readJson(join(contentDir, 'manifest.json'))) as Manifest;
@@ -57,7 +56,7 @@ export async function validateContent(options: ValidateOptions): Promise<Pipelin
         const { banks, id: languageId } = language;
         for (const [difficulty, entry] of Object.entries(banks)) {
             const bankKey = `${languageId}/${difficulty}`;
-            const bank = (await readJson(join(contentDir, entry.path))) as { questions: Question[] };
+            const bank = (await readJson(resolveBankFile(contentDir, contentRoot, entry))) as { questions: Question[] };
             // Paid banks are validated like free ones; only ids and verdicts leave this loop.
             for (const question of bank.questions) {
                 const oracle = await oracleSource(bankKey, question.id);

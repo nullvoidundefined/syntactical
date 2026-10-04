@@ -114,13 +114,15 @@ describe('draftTaxonomy', () => {
     it('refuses a language the manifest does not list, before building any path', async () => {
         const options = { contentDir, language: '../evil', log: () => undefined, pipelineDir };
 
-        await expect(
-            draftTaxonomy({ ...options, provider: fakeProvider({ misconceptions: [] }) }),
-        ).rejects.toThrow('unknown language');
+        await expect(draftTaxonomy({ ...options, provider: fakeProvider({ misconceptions: [] }) })).rejects.toThrow(
+            'unknown language',
+        );
     });
 
     it('keeps hostile question text inside the data block and never sends a paid bank', async () => {
         await setFirstPrompt('python/easy.json', HOSTILE);
+        // Paid banks are not in the public tree (B-60); a stray paid file there must still never be sent.
+        await cp(join(contentDir, 'python/easy.json'), join(contentDir, 'python/medium.json'));
         await setFirstPrompt('python/medium.json', PAID_TEXT);
         const provider = fakeProvider({ misconceptions: entries(1) });
 
