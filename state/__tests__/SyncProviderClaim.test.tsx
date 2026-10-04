@@ -1,7 +1,7 @@
 // SyncProvider guest claim ordering (Task 3.11 hardening; B-36, B-61): the
 // claim completes only after the claimed event log has reached storage, and
-// nothing uploads before then; a claim whose write fails stays pending and is
-// retried on the next mount, ending with the guest events owned by the user
+// nothing uploads before then; a claim whose write fails stays pending (the
+// user's own sync still runs) and is retried on the next mount, ending with the guest events owned by the user
 // and uploaded. Real AuthProvider, StatsProvider, and runSyncPass; apiFetch
 // routed to a fake server per signed-in account; AsyncStorage writes of the
 // claimed event log held or failed on purpose.
@@ -205,6 +205,8 @@ describe('SyncProvider guest claim ordering', () => {
     await flush();
     expect(latest.auth?.guestClaimUserId).toBe(userId);
     expect(await readStoredLog()).toEqual(guestLog);
+    // The failed claim does not stall sync: the user's own pass still runs.
+    await waitFor(() => expect(router.serverFor(userId).requests.length).toBeGreaterThan(0));
 
     await firstView.unmount();
     failing.isFailing = false;

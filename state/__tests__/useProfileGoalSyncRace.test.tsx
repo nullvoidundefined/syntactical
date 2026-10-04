@@ -88,7 +88,7 @@ describe('useProfile updateDailyGoal', () => {
     await waitFor(() => expect(latest.stats?.eventLog).toHaveLength(1));
     const eventId = latest.stats?.eventLog[0]?.eventId ?? '';
     await act(async () => {
-      await latest.stats?.markEventsSynced([eventId], userId);
+      await latest.stats?.markEventsSynced([eventId]);
     });
     await waitFor(() => expect(mockServer.getCount).toBe(2));
     await waitFor(() => expect(latest.profile?.snapshot?.seenEventIds.has(eventId)).toBe(true));

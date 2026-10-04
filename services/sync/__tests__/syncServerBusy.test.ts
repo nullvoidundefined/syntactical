@@ -14,8 +14,6 @@ import { buildOwnedLog, createFakeSyncServer } from './fakeSyncServer';
 import type { FakeRequestInit, FakeResponse, FakeSyncServer } from './fakeSyncServer';
 import { FAKE_REQUEST_ID, SERVER_ERROR_CODES, SERVER_STATUS } from './syncServerResponses';
 
-const NOW = new Date(Date.UTC(2026, 9, 2, 12));
-
 function createDevice(userId: string, initialLog: LoggedAnswerEvent[]) {
   const device = {
     heldIds: [] as string[],
@@ -51,10 +49,8 @@ async function runRecordedPass(device: Device, server: FakeSyncServer) {
     eventLog: device.log,
     isCurrent: () => true,
     markHeld: device.markHeld,
-    markReleased: () => undefined,
     markSynced: device.markSynced,
     mergeDownloaded: device.mergeDownloaded,
-    now: () => NOW,
     request,
     syncCursor: null,
     userId: device.userId,

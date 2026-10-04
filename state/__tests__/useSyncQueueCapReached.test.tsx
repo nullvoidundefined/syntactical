@@ -1,9 +1,9 @@
-// PR #33 review fix 4 (B-36, B-61): once the server answers an upload with
-// 422 SYNC_EVENT_CAP_REACHED, useSyncQueue stops uploading for that user (no
-// POST on later passes, after a remount either), still downloads, and exposes
-// isUploadCapReached for the UI; another user on the same device is not
-// blocked. A held event's reason reaches the stored event log. Real
-// StatsProvider and runSyncPass, apiFetch routed to a fake server per account.
+// Once the server answers an upload with 422 SYNC_EVENT_CAP_REACHED,
+// useSyncQueue stops uploading for that user until the user changes (no POST
+// on later passes), still downloads, and exposes isUploadCapReached for the
+// UI; another user on the same device is not blocked. A held event reaches
+// the stored event log. Real StatsProvider and runSyncPass, apiFetch routed to
+// a fake server per account.
 import { randomUUID } from 'node:crypto';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -175,29 +175,7 @@ describe('useSyncQueue at the stored-event cap', () => {
     expect(latest.queue?.isUploadCapReached).toBe(true);
   });
 
-  it('posts nothing for the same user after a remount, still downloads, and still exposes isUploadCapReached', async () => {
-    const { server } = createCappedServer(2);
-    mockApi.servers.set(userA, server);
-    await seedEventLog(buildOwnedLog(3, userA));
-    const view = await mountThenSignIn(userA);
-    const postsBeforeRemount = server.postRequests().length;
-    expect(latest.queue?.isUploadCapReached).toBe(true);
-    const downloadsBeforeRemount = server.getRequests().length;
-
-    await view.unmount();
-    latest.queue = null;
-    await render(<Harness userId={userA} />);
-    await flush();
-    await recordNewAnswer();
-    await bringToForeground();
-
-    expect(server.postRequests()).toHaveLength(postsBeforeRemount);
-    expect(server.getRequests().length).toBeGreaterThan(downloadsBeforeRemount);
-    // Re-read through the declared type: the null reset above narrows `latest.queue` for tsc.
-    expect((latest.queue as QueueValue | null)?.isUploadCapReached).toBe(true);
-  });
-
-  it('does not block another user on the same device: B uploads and sees isUploadCapReached false, while A stays blocked', async () => {
+  it('does not block another user on the same device: B uploads and sees isUploadCapReached false', async () => {
     const { server: serverA } = createCappedServer(2);
     const serverB = createFakeSyncServer();
     mockApi.servers.set(userA, serverA);
@@ -215,16 +193,17 @@ describe('useSyncQueue at the stored-event cap', () => {
     expect([...serverB.storedIds()].sort()).toEqual(idsOf(ownedByB).sort());
     const stored = await readStoredLog();
     for (const entry of ownedByB) expect(entryIn(stored, entry.eventId)?.isSynced).toBe(true);
-
-    await signIn(view, userA);
-    await bringToForeground();
-
     expect(serverA.postRequests()).toHaveLength(postsByA);
+
+    // The flag lasts one sign-in: A's next one tries the upload again.
+    await signIn(view, userA);
+
+    expect(serverA.postRequests().length).toBeGreaterThan(postsByA);
     expect(latest.queue?.isUploadCapReached).toBe(true);
   });
 });
 
-describe('useSyncQueue held reasons', () => {
+describe('useSyncQueue held events', () => {
   const userA = randomUUID();
 
   beforeEach(async () => {
@@ -244,7 +223,7 @@ describe('useSyncQueue held reasons', () => {
     jest.restoreAllMocks();
   });
 
-  it('stores heldReason invalid-events on the event a 422 SYNC_INVALID_EVENTS names, and leaves isUploadCapReached false', async () => {
+  it('stores the event a 422 SYNC_INVALID_EVENTS names as held, and leaves isUploadCapReached false', async () => {
     const log = buildOwnedLog(3, userA);
     const server = createFakeSyncServer({ rejectedEventIds: new Set([log[1].eventId]) });
     mockApi.servers.set(userA, server);
@@ -252,12 +231,8 @@ describe('useSyncQueue held reasons', () => {
     await mountThenSignIn(userA);
 
     const stored = await readStoredLog();
-    expect(entryIn(stored, log[1].eventId)).toMatchObject({ heldReason: 'invalid-events', isHeld: true, isSynced: false });
-    for (const entry of [log[0], log[2]]) {
-      const storedEntry = entryIn(stored, entry.eventId);
-      expect(storedEntry).toMatchObject({ isHeld: false, isSynced: true });
-      expect(storedEntry).not.toHaveProperty('heldReason');
-    }
+    expect(entryIn(stored, log[1].eventId)).toMatchObject({ isHeld: true, isSynced: false });
+    for (const entry of [log[0], log[2]]) expect(entryIn(stored, entry.eventId)).toMatchObject({ isHeld: false, isSynced: true });
     expect(latest.queue?.isUploadCapReached).toBe(false);
   });
 });

@@ -1,6 +1,4 @@
-// SignOutDialog races (Task 3.11 hardening; B-61, B-64): Sync now pressed
-// while an earlier pass is in flight uploads an answer recorded after that
-// pass began before the session DELETE is sent; Discard pressed during an
+// SignOutDialog races (Task 3.11 hardening; B-61, B-64): Discard pressed during an
 // in-flight upload stops that pass before signing out; while Sync now runs the
 // native back request leaves the dialog open, and a failure is announced
 // inside it; and held events count as unsynced for the sign-out prompt.
@@ -100,8 +98,6 @@ function App() {
 
 const SIGN_OUT = 'Sign out';
 
-const correctAnswer = { choiceIndex: 0, difficulty: 'easy', language: 'python', questionId: 'py-easy-01', roundKind: 'bank', wasCorrect: true } as const;
-
 function isUpload(path: string, method: string): boolean {
   return method === 'POST' && path === 'answer-events';
 }
@@ -181,34 +177,6 @@ describe('SignOutDialog races', () => {
     await flush(200);
   });
 
-  it('Sync now pressed while the sign-in pass is in flight uploads an answer recorded after that pass began before the session DELETE is sent', async () => {
-    const unsynced = buildOwnedLog(3, userId);
-    const uploadHold = hold(isUpload);
-    await mountSignedIn(router, userId, unsynced);
-    await waitFor(() => expect(uploadHold.isReached()).toBe(true));
-
-    await act(async () => {
-      latest.stats?.recordAnswer(correctAnswer);
-    });
-    const known = new Set(idsOf(unsynced));
-    const lateId = idsOf(latest.stats?.eventLog ?? []).find((id) => !known.has(id));
-    if (lateId === undefined) throw new Error('recordAnswer appended no event');
-
-    const dialog = await openDialog();
-    await fireEvent.press(within(dialog).getByRole('button', { name: 'Sync now' }));
-    uploadHold.release();
-    await waitFor(() => expect(latest.auth?.isSignedIn).toBe(false));
-    await flush();
-
-    const server = router.serverFor(userId);
-    expect(server.storedIds().has(lateId)).toBe(true);
-    expect([...server.storedIds()].sort()).toEqual([...idsOf(unsynced), lateId].sort());
-    const lastUpload = router.sent.map(({ method, path }) => isUpload(path, method)).lastIndexOf(true);
-    const signOutAt = router.sent.findIndex(({ method, path }) => isSessionDelete(path, method));
-    expect(signOutAt).toBeGreaterThan(lastUpload);
-    expect(sessionDeletes(router)).toHaveLength(1);
-  });
-
   it('Discard pressed during an in-flight upload sends no further batch of the discarded events, then signs out', async () => {
     const unsynced = buildOwnedLog(450, userId);
     const uploadHold = hold(isUpload);
@@ -278,10 +246,7 @@ describe('SignOutDialog races', () => {
     await fireEvent.press(within(dialog as Node).getByRole('button', { name: 'Discard' }));
     await waitFor(() => expect(latest.auth?.isSignedIn).toBe(false));
     await flush();
-    const heldIds = new Set(idsOf(held));
-    const stored = await readStoredLog();
-    expect(stored.filter(({ eventId }) => heldIds.has(eventId))).toEqual([]);
-    expect(idsOf(stored).sort()).toEqual(idsOf(synced).sort());
+    expect(await readStoredLog()).toEqual([]);
     expect(sessionDeletes(router)).toHaveLength(1);
   });
 });

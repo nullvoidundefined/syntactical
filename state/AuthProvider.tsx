@@ -2,9 +2,9 @@
 // holds the native session value only in the secure store (the web build uses
 // an HttpOnly cookie), and persists just the non-secret identity (user id and
 // the ids that have signed in on this device). The first sign-in of an id on
-// this device raises guestClaimUserId until completeGuestClaim(userId); the
-// pending ids live in their own storage key, so the claim survives remounts
-// and sign-out. Sign-out clears local state even when the server call fails, a
+// this device raises guestClaimUserId until completeGuestClaim(userId), and
+// only then is the id stored as known, so a claim that never completed is
+// raised again on the next launch. Sign-out clears local state even when the server call fails, a
 // 401 for a request sent after the current sign-in signs the user out locally
 // (an older request's 401 is ignored), and calls made before hydration wait
 // for it. The session value, email, and code are never logged or stored
@@ -42,8 +42,6 @@ import {
 } from '../constants/appConfig';
 import { resolveStoredAuth } from '../services/auth/resolveStoredAuth';
 
-const PENDING_CLAIMS_STORAGE_KEY = 'syntactical.auth.pending-claims.v1';
-
 export type AuthResult =
   | { isOk: true }
   | { isOk: false; reason: 'invalid-code' | 'invalid-email' | 'rate-limited' | 'unavailable' };
@@ -61,11 +59,6 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function resolvePendingClaims(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((id): id is string => typeof id === 'string');
-}
-
 function readSessionResponse(body: unknown): { sessionValue: string | null; userId: string | null } {
   const data = (body as { data?: { token?: unknown; userId?: unknown } } | null)?.data;
   const { token, userId } = data ?? {};
@@ -77,11 +70,10 @@ function readSessionResponse(body: unknown): { sessionValue: string | null; user
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [userId, setUserIdState] = useState<string | null>(null);
-  const [pendingClaims, setPendingClaimsState] = useState<string[]>([]);
+  const [knownUserIds, setKnownUserIdsState] = useState<string[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
   const userIdRef = useRef<string | null>(null);
   const knownRef = useRef<string[]>([]);
-  const pendingRef = useRef<string[]>([]);
   const writeQueue = useRef<Promise<unknown>>(Promise.resolve());
   const hydration = useRef<{ promise: Promise<void>; resolve: () => void } | null>(null);
   if (hydration.current === null) {
@@ -100,13 +92,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserIdState(next);
   }, []);
 
-  const setPendingClaims = useCallback((next: string[]) => {
-    pendingRef.current = next;
-    setPendingClaimsState(next);
-  }, []);
-
   const setKnownUserIds = useCallback((next: string[]) => {
     knownRef.current = next;
+    setKnownUserIdsState(next);
   }, []);
 
   // Writes the identity, merged with what storage holds so ids this session
@@ -120,18 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const stored = resolveStoredAuth(value);
       const merged = Array.from(new Set([...(stored?.knownUserIds ?? []), ...memoryKnown]));
       await writeJson(AUTH_STORAGE_KEY, { knownUserIds: merged, userId: nextUserId });
-    });
-  }, []);
-
-  // Adds or removes one id in the stored pending claims, against what storage
-  // holds now; skipped when storage cannot be read.
-  const persistPending = useCallback((change: { add?: string; remove?: string }) => {
-    writeQueue.current = writeQueue.current.then(async () => {
-      const { isReadFailed, value } = await readStoredJson(PENDING_CLAIMS_STORAGE_KEY);
-      if (isReadFailed) return;
-      const next = resolvePendingClaims(value).filter((id) => id !== change.remove);
-      if (change.add !== undefined && !next.includes(change.add)) next.push(change.add);
-      await writeJson(PENDING_CLAIMS_STORAGE_KEY, next);
     });
   }, []);
 
@@ -150,10 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let isActive = true;
-    void Promise.all([
-      readStoredJson(AUTH_STORAGE_KEY),
-      readStoredJson(PENDING_CLAIMS_STORAGE_KEY),
-    ]).then(([read, pendingRead]) => {
+    void readStoredJson(AUTH_STORAGE_KEY).then((read) => {
       if (!isActive) return;
       const stored = resolveStoredAuth(read.value);
       if (stored) {
@@ -162,14 +135,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserId(storedUserId);
         if (storedUserId !== null) void identifyPurchaser(storedUserId);
       }
-      setPendingClaims(resolvePendingClaims(pendingRead.value));
       setIsHydrated(true);
       hydration.current?.resolve();
     });
     return () => {
       isActive = false;
     };
-  }, [setKnownUserIds, setPendingClaims, setUserId]);
+  }, [setKnownUserIds, setUserId]);
 
   useEffect(
     () =>
@@ -216,11 +188,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         signInSeq.current = getLatestRequestSeq();
         signInCount.current += 1;
-        if (!knownRef.current.includes(sessionUserId)) {
-          setKnownUserIds([...knownRef.current, sessionUserId]);
-          setPendingClaims([...pendingRef.current, sessionUserId]);
-          persistPending({ add: sessionUserId });
-        }
         setUserId(sessionUserId);
         persist(sessionUserId);
         void identifyPurchaser(sessionUserId);
@@ -229,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { isOk: false, reason: 'unavailable' };
       }
     },
-    [persist, persistPending, setKnownUserIds, setPendingClaims, setUserId],
+    [persist, setUserId],
   );
 
   const verifyCode = useCallback(
@@ -263,15 +230,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const completeGuestClaim = useCallback(
     (claimedUserId: string) => {
-      if (userIdRef.current !== claimedUserId) return;
-      if (!pendingRef.current.includes(claimedUserId)) return;
-      setPendingClaims(pendingRef.current.filter((id) => id !== claimedUserId));
-      persistPending({ remove: claimedUserId });
+      if (userIdRef.current !== claimedUserId || knownRef.current.includes(claimedUserId)) return;
+      setKnownUserIds([...knownRef.current, claimedUserId]);
+      persist(claimedUserId);
     },
-    [persistPending, setPendingClaims],
+    [persist, setKnownUserIds],
   );
 
-  const guestClaimUserId = userId !== null && pendingClaims.includes(userId) ? userId : null;
+  const guestClaimUserId = userId !== null && !knownUserIds.includes(userId) ? userId : null;
 
   const value = useMemo<AuthContextValue>(
     () => ({
