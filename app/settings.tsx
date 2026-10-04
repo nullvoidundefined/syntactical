@@ -85,6 +85,24 @@ function AccountSection() {
   );
 }
 
+function LegalLinks() {
+  return (
+    <View className="mt-10 border-t border-line pt-6">
+      <Text role="heading" aria-level={2} className="font-mono text-sm uppercase tracking-widest text-ink">
+        Legal
+      </Text>
+      <View className="mt-4 flex-row items-center gap-6">
+        <Pressable role="link" aria-label="Privacy policy" onPress={() => router.push('/privacy')}>
+          <Text className="font-mono text-xs uppercase tracking-widest text-ink">Privacy policy</Text>
+        </Pressable>
+        <Pressable role="link" aria-label="Account deletion" onPress={() => router.push('/delete-account')}>
+          <Text className="font-mono text-xs uppercase tracking-widest text-ink">Account deletion</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 export default function SettingsScreen() {
   const { isSignedIn } = useAuth();
   const { setDailyGoal } = useQuizStats();
@@ -137,6 +155,7 @@ export default function SettingsScreen() {
           )}
         </View>
         <AccountSection />
+        <LegalLinks />
       </View>
     </ScrollView>
   );

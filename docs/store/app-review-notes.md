@@ -27,12 +27,12 @@ Account deletion: Settings, then Account, then Delete account. The app asks you 
 
 Sign-in is optional for the free Easy banks. A guest keeps progress on the device.
 
-Data collection: email (sign-in), purchase history, and anonymous product analytics through PostHog (no location, no advertising identifier, no tracking). The privacy policy is at <PRIVACY POLICY URL>.
+Data collection: email (sign-in), purchase history, and anonymous product analytics through PostHog (no location, no advertising identifier, no tracking). The privacy policy is at https://nullvoidundefined.github.io/syntactical/privacy.
 
 Purchases are processed by Apple and Google through RevenueCat. The app never handles card details.
 ```
 
-Before pasting, replace `<PRIVACY POLICY URL>` with the hosted policy URL.
+The policy page is a draft in the app (`app/privacy.tsx`); the owner fills in its placeholders before submission (see `docs/launch-placeholders.md`).
 
 ## Checked against the code
 
