@@ -7,8 +7,10 @@
 // and sign-out. Sign-out clears local state even when the server call fails, a
 // 401 for a request sent after the current sign-in signs the user out locally
 // (an older request's 401 is ignored), and calls made before hydration wait
-// for it. The session value, email, and code are never logged or stored
-// outside the secure store.
+// for it. After the server deletes the account, signOutDeletedAccount signs
+// out with no request and names the deleted id in deletedUserId, so the stats
+// layer removes that user's local data. The session value, email, and code
+// are never logged or stored outside the secure store.
 import {
   createContext,
   useCallback,
@@ -47,11 +49,13 @@ export type AuthResult =
 
 type AuthContextValue = {
   completeGuestClaim: (userId: string) => void;
+  deletedUserId: string | null;
   guestClaimUserId: string | null;
   isHydrated: boolean;
   isSignedIn: boolean;
   requestCode: (email: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
+  signOutDeletedAccount: () => Promise<void>;
   user: { id: string } | null;
   verifyCode: (email: string, code: string) => Promise<AuthResult>;
 };
@@ -76,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userId, setUserIdState] = useState<string | null>(null);
   const [pendingClaims, setPendingClaimsState] = useState<string[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [deletedUserId, setDeletedUserId] = useState<string | null>(null);
   const userIdRef = useRef<string | null>(null);
   const knownRef = useRef<string[]>([]);
   const pendingRef = useRef<string[]>([]);
@@ -255,6 +260,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signOutLocally();
   }, [signOutLocally]);
 
+  // The account is already gone on the server, so no session request is sent.
+  const signOutDeletedAccount = useCallback(async () => {
+    setDeletedUserId(userIdRef.current);
+    await signOutLocally();
+  }, [signOutLocally]);
+
   const completeGuestClaim = useCallback(
     (claimedUserId: string) => {
       if (userIdRef.current !== claimedUserId) return;
@@ -270,15 +281,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       completeGuestClaim,
+      deletedUserId,
       guestClaimUserId,
       isHydrated,
       isSignedIn: userId !== null,
       requestCode,
       signOut,
+      signOutDeletedAccount,
       user: userId === null ? null : { id: userId },
       verifyCode,
     }),
-    [completeGuestClaim, guestClaimUserId, isHydrated, requestCode, signOut, userId, verifyCode],
+    [
+      completeGuestClaim,
+      deletedUserId,
+      guestClaimUserId,
+      isHydrated,
+      requestCode,
+      signOut,
+      signOutDeletedAccount,
+      userId,
+      verifyCode,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,7 +1,7 @@
 // Root layout: global styles, safe area, the query client, and the
 // content, auth, stats, and sync providers, and the app shell, around every route.
 import '../global.css';
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import Constants from 'expo-constants';
@@ -13,9 +13,9 @@ import { AccountControl } from '../components/auth/AccountControl';
 import { AppShell } from '../components/layout/AppShell';
 import { createQueryClient } from '../config/queryClient';
 import { validateContentBaseUrl } from '../services/content/validateContentBaseUrl';
-import { AuthProvider, useAuth } from '../state/AuthProvider';
+import { AuthProvider } from '../state/AuthProvider';
 import { ContentProvider } from '../state/ContentProvider';
-import { StatsProvider } from '../state/StatsProvider';
+import { OwnedStatsProvider } from '../state/OwnedStatsProvider';
 import { SyncProvider } from '../state/SyncProvider';
 
 function readTrustedContentBaseUrl(): string | null {
@@ -24,12 +24,6 @@ function readTrustedContentBaseUrl(): string | null {
     logWarning({}, 'content base URL is missing or untrusted; content fetching is disabled');
   }
   return contentBaseUrl;
-}
-
-// Stats belong to the signed-in user; a guest's are owned by no one.
-function OwnedStatsProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  return <StatsProvider ownerUserId={user?.id ?? null}>{children}</StatsProvider>;
 }
 
 export default function RootLayout() {

@@ -23,6 +23,7 @@ import {
 import type { AnswerEvent } from '@syntactical/progress';
 
 import { readStoredJson } from '../clients/readStoredJson';
+import { removeStoredKey } from '../clients/removeStoredKey';
 import { generateUuid } from '../clients/uuidClient';
 import { writeJson } from '../clients/writeJson';
 import { buildUserStatsKey, EVENT_LOG_STORAGE_KEY, GUEST_CLAIM_STORAGE_KEY, STORAGE_KEY } from '../constants/appConfig';
@@ -107,6 +108,11 @@ function changeSlot<T>(slot: PersistedSlot<T>, fold: (current: T) => T): Promise
   return write;
 }
 
+// Removes a stored key once every write already queued on the slot has run.
+function queueKeyRemoval<T>(slot: PersistedSlot<T>, key: string): void {
+  slot.queue.current = slot.queue.current.then(() => removeStoredKey(key));
+}
+
 async function requirePersisted(isPersisted: Promise<boolean>): Promise<void> {
   if (!(await isPersisted)) throw new Error('event log change was not persisted');
 }
@@ -115,7 +121,14 @@ function requireOwner(currentOwner: string | null, userId: string): void {
   if (currentOwner !== userId) throw new Error('guest stats claim refused: owner changed');
 }
 
-export function StatsProvider({ children, ownerUserId = null }: { children: ReactNode; ownerUserId?: string | null }) {
+type StatsProviderProps = {
+  children: ReactNode;
+  // An account the server deleted; once it is no longer the owner its local data goes.
+  deletedUserId?: string | null;
+  ownerUserId?: string | null;
+};
+
+export function StatsProvider({ children, deletedUserId = null, ownerUserId = null }: StatsProviderProps) {
   const statsKey = ownerUserId === null ? STORAGE_KEY : buildUserStatsKey(ownerUserId);
   const [loadedStats, statsSlot] = usePersistedSlot<Stats>(statsKey, () => createEmptyStats(readLocalToday()));
   const [eventLog, eventLogSlot] = usePersistedSlot<LoggedAnswerEvent[]>(EVENT_LOG_STORAGE_KEY, () => []);
@@ -194,6 +207,14 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
       isCancelled = true;
     };
   }, [eventLogSlot]);
+
+  // A deleted account's events leave the log, and its stats key (sync cursor
+  // included) is removed behind any stats write already queued for it.
+  useEffect(() => {
+    if (deletedUserId === null || deletedUserId === ownerUserId || !isEventLogLoaded) return;
+    void changeSlot(eventLogSlot, (current) => current.filter((entry) => entry.ownerUserId !== deletedUserId));
+    queueKeyRemoval(statsSlot, buildUserStatsKey(deletedUserId));
+  }, [deletedUserId, eventLogSlot, isEventLogLoaded, ownerUserId, statsSlot]);
 
   const recordAnswer = useCallback(
     (answer: RecordedAnswer) => {

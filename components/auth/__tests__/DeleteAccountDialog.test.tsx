@@ -99,7 +99,7 @@ async function mountSignedIn(router: ApiRouter, userId: string, log: LoggedAnswe
 }
 
 async function openDialog(): Promise<Node> {
-  fireEvent.press(screen.getByRole('button', { name: DELETE_ACCOUNT }));
+  await fireEvent.press(screen.getByRole('button', { name: DELETE_ACCOUNT }));
   await waitFor(() => expect(queryDialog()).not.toBeNull());
   return queryDialog() as Node;
 }
@@ -131,12 +131,12 @@ describe('DeleteAccountDialog', () => {
     const confirm = within(dialog).getByRole('button', { name: CONFIRM });
     expect(isDisabled(confirm)).toBe(true);
 
-    fireEvent.changeText(within(dialog).getByLabelText(INPUT), 'delete');
+    await fireEvent.changeText(within(dialog).getByLabelText(INPUT), 'delete');
     expect(isDisabled(within(dialog).getByRole('button', { name: CONFIRM }))).toBe(true);
-    fireEvent.press(within(dialog).getByRole('button', { name: CONFIRM }));
-    fireEvent.changeText(within(dialog).getByLabelText(INPUT), 'DELETE');
+    await fireEvent.press(within(dialog).getByRole('button', { name: CONFIRM }));
+    await fireEvent.changeText(within(dialog).getByLabelText(INPUT), 'DELETE');
     expect(isDisabled(within(dialog).getByRole('button', { name: CONFIRM }))).toBe(false);
-    fireEvent.press(within(dialog).getByRole('button', { name: 'Cancel' }));
+    await fireEvent.press(within(dialog).getByRole('button', { name: 'Cancel' }));
     await flush();
 
     expect(queryDialog()).toBeNull();
@@ -147,8 +147,8 @@ describe('DeleteAccountDialog', () => {
   it('on 204 signs out locally and removes that user\'s events and stats key, keeping guest events', async () => {
     await mountSignedIn(router, userId, [...guestEntries, ...userEntries]);
     const dialog = await openDialog();
-    fireEvent.changeText(within(dialog).getByLabelText(INPUT), 'DELETE');
-    fireEvent.press(within(dialog).getByRole('button', { name: CONFIRM }));
+    await fireEvent.changeText(within(dialog).getByLabelText(INPUT), 'DELETE');
+    await fireEvent.press(within(dialog).getByRole('button', { name: CONFIRM }));
     await waitFor(() => expect(latest.auth?.isSignedIn).toBe(false));
     await flush();
 
@@ -167,8 +167,8 @@ describe('DeleteAccountDialog', () => {
     mockApi.deleteReply = reply;
     await mountSignedIn(router, userId, [...guestEntries, ...userEntries]);
     const dialog = await openDialog();
-    fireEvent.changeText(within(dialog).getByLabelText(INPUT), 'DELETE');
-    fireEvent.press(within(dialog).getByRole('button', { name: CONFIRM }));
+    await fireEvent.changeText(within(dialog).getByLabelText(INPUT), 'DELETE');
+    await fireEvent.press(within(dialog).getByRole('button', { name: CONFIRM }));
     await waitFor(() => expect(within(dialog).getByRole('alert')).toHaveTextContent(GENERIC_FAILURE));
     await flush();
 
@@ -181,12 +181,12 @@ describe('DeleteAccountDialog', () => {
     mockNetwork.isConnected = false;
     await mountSignedIn(router, userId, userEntries);
     const dialog = await openDialog();
-    fireEvent.changeText(within(dialog).getByLabelText(INPUT), 'DELETE');
+    await fireEvent.changeText(within(dialog).getByLabelText(INPUT), 'DELETE');
 
     expect(within(dialog).getByRole('alert')).toHaveTextContent(OFFLINE);
     const confirm = within(dialog).getByRole('button', { name: CONFIRM });
     expect(isDisabled(confirm)).toBe(true);
-    fireEvent.press(confirm);
+    await fireEvent.press(confirm);
     await flush();
     expect(deleteRequests(router)).toEqual([]);
   });
