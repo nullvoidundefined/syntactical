@@ -4,14 +4,21 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AppShell } from '../AppShell';
 
-jest.mock('../../../state/useProgressSummary', () => ({ useProgressSummary: () => ({ dailyGoal: 20, dayStreak: 3, xpToday: 12 }) }));
+jest.mock('../../../state/useProgressSummary', () => ({
+  useProgressSummary: () => ({ dailyGoal: 20, dayStreak: 3, xpToday: 12 }),
+}));
 jest.mock('../../../state/useIsReducedMotion', () => ({ useIsReducedMotion: () => false }));
 jest.mock('../DownloadIndicator', () => ({ DownloadIndicator: () => null }));
 jest.mock('../ReviewDueLink', () => ({ ReviewDueLink: () => null }));
 
 function renderShell() {
   return render(
-    <SafeAreaProvider initialMetrics={{ frame: { height: 800, width: 400, x: 0, y: 0 }, insets: { bottom: 0, left: 0, right: 0, top: 0 } }}>
+    <SafeAreaProvider
+      initialMetrics={{
+        frame: { height: 800, width: 400, x: 0, y: 0 },
+        insets: { bottom: 0, left: 0, right: 0, top: 0 },
+      }}
+    >
       <AppShell>
         <Text>route content</Text>
       </AppShell>
@@ -43,5 +50,15 @@ describe('AppShell on the web', () => {
     renderShell();
     expect(screen.getByRole('link', { name: 'Settings' })).toBeTruthy();
     expect(screen.getByRole('banner').textContent).not.toMatch(/best/i);
+  });
+
+  // The sign-out dialog opens from the app bar and draws a fixed overlay. React Native Web views
+  // are stacking contexts, so the bar must stack above the page content or the overlay paints
+  // under it and its buttons cannot be clicked.
+  it('stacks the app bar above the page content', () => {
+    renderShell();
+    const bannerLayer = Number(screen.getByRole('banner').style.zIndex || 0);
+    const mainLayer = Number(screen.getByRole('main').style.zIndex || 0);
+    expect(bannerLayer).toBeGreaterThan(mainLayer);
   });
 });
