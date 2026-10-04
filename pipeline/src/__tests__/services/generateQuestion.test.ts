@@ -11,6 +11,7 @@ import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 import type { Oracle } from '../../types/Oracle.js';
 import type { OracleRun } from '../../types/OracleRun.js';
+import { ProviderTransientError } from '../../types/ProviderTransientError.js';
 import type { RunLimits } from '../../types/RunLimits.js';
 
 const TOPIC = 'strings';
@@ -80,6 +81,40 @@ function baseArgs(provider: ModelProvider, run: ReturnType<typeof fakeRun>['run'
 }
 
 describe('generateQuestion', () => {
+    it('drops a model timeout without calling the provider again for that question', async () => {
+        let attempts = 0;
+        const provider = scripted(() => {
+            attempts += 1;
+            if (attempts === 1) {
+                throw new ProviderTransientError('model-timeout', 'claude timed out after 300000 ms');
+            }
+            return buildDraft();
+        });
+        await expect(generateQuestion(baseArgs(provider, fakeRun().run))).resolves.toEqual({
+            reason: 'model-timeout',
+            status: 'dropped',
+        });
+        expect(attempts).toBe(1);
+    });
+
+    it('drops a model error as model-error', async () => {
+        const provider = scripted(() => {
+            throw new ProviderTransientError('model-error', 'claude exited with status 1');
+        });
+        await expect(generateQuestion(baseArgs(provider, fakeRun().run))).resolves.toEqual({
+            reason: 'model-error',
+            status: 'dropped',
+        });
+    });
+
+    it('propagates the original plain provider error', async () => {
+        const failure = new Error('authentication failed');
+        const provider = scripted(() => {
+            throw failure;
+        });
+        await expect(generateQuestion(baseArgs(provider, fakeRun().run))).rejects.toBe(failure);
+    });
+
     it('keeps a question whose claimed answer matches the executed oracle, with full provenance', async () => {
         const provider = scripted(() => buildDraft());
         const { run } = fakeRun();
@@ -98,10 +133,13 @@ describe('generateQuestion', () => {
             validation: { method: 'executed', status: 'passed' },
         });
         expect(question.topic).toBe(TOPIC);
-        const checked = validateQuestionBank({ questions: [question], schemaVersion: 2 }, {
-            misconceptionIds: [],
-            topicIds: [TOPIC],
-        });
+        const checked = validateQuestionBank(
+            { questions: [question], schemaVersion: 2 },
+            {
+                misconceptionIds: [],
+                topicIds: [TOPIC],
+            },
+        );
         expect(checked).toMatchObject({ isValid: true });
     });
 
@@ -151,9 +189,16 @@ describe('generateQuestion', () => {
     });
 
     it('forwards setupSql and strips choiceCode before anything reaches runOracle', async () => {
-        const draft = buildDraft({ oracle: { choiceCode: ['print(1)', 'print(2)', 'print(3)'], code: 'print(3)', setupSql: 'select 1' } });
+        const draft = buildDraft({
+            oracle: { choiceCode: ['print(1)', 'print(2)', 'print(3)'], code: 'print(3)', setupSql: 'select 1' },
+        });
         const { calls, run } = fakeRun();
-        await generateQuestion(baseArgs(scripted(() => draft), run));
+        await generateQuestion(
+            baseArgs(
+                scripted(() => draft),
+                run,
+            ),
+        );
         expect(calls.length).toBeGreaterThan(0);
         for (const { oracle } of calls) {
             expect(Object.keys(oracle).sort()).toEqual(['code', 'language', 'setupSql']);
@@ -166,7 +211,15 @@ describe('generateQuestion', () => {
     });
 
     it('rejects an execute request that tries to set docker flags, an image, or limits, without running it', async () => {
-        const hostile = { execute: { code: 'print(1)', dockerFlags: '--privileged', image: 'evil', language: 'python', timeoutMs: 999999 } };
+        const hostile = {
+            execute: {
+                code: 'print(1)',
+                dockerFlags: '--privileged',
+                image: 'evil',
+                language: 'python',
+                timeoutMs: 999999,
+            },
+        };
         const provider = scripted(() => hostile);
         const { calls, run } = fakeRun();
         const outcome = await generateQuestion(baseArgs(provider, run));
@@ -208,7 +261,12 @@ describe('generateQuestion', () => {
                 type: 'bool',
             },
         };
-        const outcome = await generateQuestion(baseArgs(scripted(() => draft), fakeRun({ outcome: 'value', runtimeVersion: RUNTIME, value: 'True' }).run));
+        const outcome = await generateQuestion(
+            baseArgs(
+                scripted(() => draft),
+                fakeRun({ outcome: 'value', runtimeVersion: RUNTIME, value: 'True' }).run,
+            ),
+        );
         expect(outcome.status).toBe('kept');
     });
 });
