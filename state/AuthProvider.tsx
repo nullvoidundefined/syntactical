@@ -142,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(
     () =>
       onUnauthorized(() => {
-        void signOutLocally();
+        void hydration.current?.promise.then(signOutLocally);
       }),
     [signOutLocally],
   );

@@ -292,6 +292,21 @@ describe('AuthProvider session integrity on native', () => {
       expect(third.result.current.guestClaimUserId).toBeNull();
     });
 
+    it('survives a sign-out followed by a sign-in of the same id', async () => {
+      const identity = buildIdentity();
+      installRoutedFetch(signInRoutes(identity));
+      const { result } = await mountAuth();
+      await signIn(result, identity);
+      expect(result.current.guestClaimUserId).toBe(identity.userId);
+
+      await signOut(result);
+      expect(result.current.isSignedIn).toBe(false);
+      await signIn(result, identity);
+
+      expect(result.current.isSignedIn).toBe(true);
+      expect(result.current.guestClaimUserId).toBe(identity.userId);
+    });
+
     it('is not cleared by completeGuestClaim with a different user id', async () => {
       const identity = buildIdentity();
       installRoutedFetch(signInRoutes(identity));
@@ -407,6 +422,34 @@ describe('AuthProvider session integrity on native', () => {
       expect(remounted.result.current.isSignedIn).toBe(false);
     });
 
+
+    it('a 401 fired before hydration finishes keeps the stored known ids and leaves the device signed out', async () => {
+      const identity = buildIdentity();
+      await AsyncStorage.setItem(
+        AUTH_STORAGE_KEY,
+        JSON.stringify({ userId: identity.userId, knownUserIds: [identity.userId] }),
+      );
+      secureStore.mockValues.set(SESSION_TOKEN_KEY, identity.sessionValue);
+      installRoutedFetch({ 'GET answer-events': UNAUTHORIZED });
+      const hold = holdIdentityRead();
+      const rendered = await renderHook(() => useAuth(), { wrapper: AuthProvider });
+      expect(rendered.result.current.isHydrated).toBe(false);
+
+      await act(async () => {
+        await apiFetch('answer-events').catch(() => undefined);
+      });
+      await flush();
+      await act(async () => {
+        hold.release();
+      });
+      await waitFor(() => expect(rendered.result.current.isHydrated).toBe(true));
+      await flush();
+
+      expect(rendered.result.current.isSignedIn).toBe(false);
+      expect(secureStore.mockValues.has(SESSION_TOKEN_KEY)).toBe(false);
+      expect(await storedUserId()).toBeNull();
+      expect(await storedKnownIds()).toContain(identity.userId);
+    });
   });
 
   describe('overlapping sign-in and sign-out', () => {
