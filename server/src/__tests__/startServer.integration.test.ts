@@ -9,6 +9,7 @@ import { dirname, join } from 'node:path';
 import { pino } from 'pino';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, inject, it } from 'vitest';
 
+import { AUTH } from '../constants/auth.js';
 import { startServer } from '../startServer.js';
 import type { RunningServer } from '../startServer.js';
 
@@ -149,6 +150,37 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
 
     const response = await fetch(`http://127.0.0.1:${running.port}/v1/banks/python/medium`);
     expect(response.status).toBe(401);
+  });
+
+  it('wires CORS and the CSRF guard to the one allowed origin', async () => {
+    await writeContent(contentDir, paidDir);
+    running = await startServer(buildSource(), { logger });
+    const base = `http://127.0.0.1:${running.port}`;
+
+    const foreign = await fetch(`${base}/health`, { headers: { Origin: 'https://evil.example' } });
+    expect(foreign.headers.get('access-control-allow-origin')).toBeNull();
+
+    const allowed = await fetch(`${base}/health`, { headers: { Origin: 'https://syntactical.dev' } });
+    expect(allowed.headers.get('access-control-allow-origin')).toBe('https://syntactical.dev');
+
+    const cookie = `${AUTH.SESSION.COOKIE_NAME}=${randomSecret()}`;
+    const withoutHeader = await fetch(`${base}/v1/auth/sessions`, {
+      body: '{}',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      method: 'POST',
+    });
+    expect(withoutHeader.status).toBe(403);
+    const foreignWithHeader = await fetch(`${base}/v1/auth/sessions`, {
+      body: '{}',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: cookie,
+        Origin: 'https://evil.example',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      method: 'POST',
+    });
+    expect(foreignWithHeader.status).toBe(403);
   });
 
   it('stops accepting connections after close', async () => {
