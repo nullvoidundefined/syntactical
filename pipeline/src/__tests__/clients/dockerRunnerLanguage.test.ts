@@ -6,7 +6,7 @@ import { runOracle } from '../../clients/dockerRunner.js';
 import type { OracleLanguage } from '../../types/OracleLanguage.js';
 
 describe('runOracle language check', () => {
-    it.each(['../../etc', 'ruby', '', 'python/../node'])(
+    it.each(['../../etc', 'cobol', '', 'python/../node'])(
         'returns a RunnerFailure for the unknown language %j',
         async (language) => {
             const run = await runOracle({ code: 'x', language: language as OracleLanguage });
