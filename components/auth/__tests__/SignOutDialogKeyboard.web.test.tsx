@@ -206,6 +206,60 @@ describe('SignOutDialog keyboard on the web', () => {
     expect(latest.auth?.isSignedIn).toBe(true);
   });
 
+  it('keeps Tab inside the dialog: from the last control it returns to the first, and Shift+Tab from the first goes to the last', async () => {
+    await mountWithUnsynced(router, userId);
+    const dialog = await openDialogFromFocusedControl();
+    const first = within(dialog).getByRole('button', { name: 'Sync now' });
+    const last = within(dialog).getByRole('button', { name: 'Cancel' });
+
+    await act(async () => {
+      last.focus();
+      fireEvent.keyDown(last, { code: 'Tab', key: 'Tab' });
+    });
+    expect(document.activeElement).toBe(first);
+
+    await act(async () => {
+      fireEvent.keyDown(first, { code: 'Tab', key: 'Tab', shiftKey: true });
+    });
+    expect(document.activeElement).toBe(last);
+  });
+
+  it('Shift+Tab right after open goes to the last control, and Tab right after open goes to the first', async () => {
+    await mountWithUnsynced(router, userId);
+    const dialog = await openDialogFromFocusedControl();
+    const first = within(dialog).getByRole('button', { name: 'Sync now' });
+    const last = within(dialog).getByRole('button', { name: 'Cancel' });
+    expect(document.activeElement).toBe(dialog);
+
+    await act(async () => {
+      fireEvent.keyDown(document.activeElement ?? dialog, { code: 'Tab', key: 'Tab', shiftKey: true });
+    });
+    expect(document.activeElement).toBe(last);
+
+    await act(async () => {
+      dialog.focus();
+      fireEvent.keyDown(dialog, { code: 'Tab', key: 'Tab' });
+    });
+    expect(document.activeElement).toBe(first);
+  });
+
+  it('Tab stays in the dialog while Sync now runs and every button is disabled', async () => {
+    await mountWithUnsynced(router, userId);
+    const dialog = await openDialogFromFocusedControl();
+    const uploadHold = hold(isUpload);
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Sync now' }));
+    });
+    await waitFor(() => expect(uploadHold.isReached()).toBe(true));
+
+    let isDefaultAllowed = true;
+    await act(async () => {
+      isDefaultAllowed = fireEvent.keyDown(document.activeElement ?? dialog, { code: 'Tab', key: 'Tab' });
+    });
+    expect(isDefaultAllowed).toBe(false);
+    expect(dialog.contains(document.activeElement)).toBe(true);
+  });
+
   it('while Sync now is running Escape leaves the dialog open, and a failed sync is announced in the still-open dialog', async () => {
     await mountWithUnsynced(router, userId);
     const dialog = await openDialogFromFocusedControl();
