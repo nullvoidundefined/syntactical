@@ -74,10 +74,12 @@ function buildPostgresSetup(snippet: string, fixtureSql: string): string {
     ].join('\n');
 }
 
-export function buildBenchOracle(snippet: string, source: AbSource): Oracle {
+export function buildBenchOracle(snippet: string, source: AbSource): Oracle | null {
     const { language, setupSql = '' } = source;
     if (language === 'postgres') {
         return { code: 'SELECT bench_samples()', language, setupSql: buildPostgresSetup(snippet, setupSql) };
     }
-    return { code: language === 'python' ? buildPython(snippet) : buildNode(snippet), language };
+    if (language === 'python') return { code: buildPython(snippet), language };
+    if (language === 'node') return { code: buildNode(snippet), language };
+    return null;
 }

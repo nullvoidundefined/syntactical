@@ -1,1 +1,1 @@
-export type OracleLanguage = 'python' | 'node' | 'postgres';
+export type OracleLanguage = 'python' | 'node' | 'postgres' | 'ruby' | 'rails';
