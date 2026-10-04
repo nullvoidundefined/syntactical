@@ -1,6 +1,7 @@
 // B-60: no paid bank is ever public. The repository's content/ tree and the bundled bank module
 // hold no paid bank, the web build fails when its export holds one, and the export check finds a
 // paid bank by its manifest path or by its bytes (a copy at any other path).
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -106,5 +107,31 @@ describe('findPaidBankFiles', () => {
     await writeFileUnder(exportDir, '_expo/static/js/web/bank-1234.json', PAID_BODY);
 
     expect(await findPaidBankFiles(exportDir, manifest)).toEqual(['_expo/static/js/web/bank-1234.json']);
+  });
+});
+
+// The build step must never pass silently: run from a path that needs URL encoding, the script
+// still recognizes itself as the entry point and fails on a paid bank.
+describe('assertNoPaidBanks.mjs run as a script', () => {
+  it('fails the build from a path with a space in it', async () => {
+    const workDir = await mkdtemp(join(tmpdir(), 'paid check '));
+    try {
+      const source = await readFile(join(REPO_DIR, 'scripts/assertNoPaidBanks.mjs'), 'utf8');
+      await writeFileUnder(workDir, 'scripts dir/assertNoPaidBanks.mjs', source);
+      const paidEntry = { access: 'paid', hash: 'f'.repeat(64), path: 'python/medium.json' };
+      const manifest = { languages: [{ banks: { medium: paidEntry }, id: 'python' }] };
+      await writeFileUnder(workDir, 'content/manifest.json', JSON.stringify(manifest));
+      await writeFileUnder(workDir, 'dist/content/python/medium.json', '{}');
+
+      const run = spawnSync(process.execPath, [join(workDir, 'scripts dir', 'assertNoPaidBanks.mjs'), 'dist'], {
+        cwd: workDir,
+        encoding: 'utf8',
+      });
+
+      expect(run.status).toBe(1);
+      expect(run.stderr).toContain('paid bank in the web export: content/python/medium.json');
+    } finally {
+      await rm(workDir, { force: true, recursive: true });
+    }
   });
 });

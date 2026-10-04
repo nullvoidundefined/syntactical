@@ -3,8 +3,10 @@
 // paid entry's SHA-256 (a copy under any other name). Paid banks live in the private
 // syntactical-content repo and reach owners only through the API.
 import { createHash } from 'node:crypto';
+import { realpathSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 function listPaidEntries(manifest) {
   return manifest.languages.flatMap((language) =>
@@ -41,7 +43,9 @@ async function assertNoPaidBanks(rootDir) {
   if (found.length > 0) throw new Error(`paid bank in the web export: ${found.join(', ')}`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Compared as real-path URLs, as Node resolves the entry module, so a symlinked path or one with
+// a space or other encoded character still runs the check instead of exiting 0 unchecked.
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   assertNoPaidBanks(process.argv[2] ?? 'dist').catch((err) => {
     console.error(err.message);
     process.exitCode = 1;
