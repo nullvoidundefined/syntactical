@@ -11,7 +11,6 @@ on:
       - 'packages/**'
       - 'content/**'
       - 'package-lock.json'
-      - 'railway.json'
       - '.github/workflows/server.yml'
       - '.github/actions/check-api-image/**'
 
