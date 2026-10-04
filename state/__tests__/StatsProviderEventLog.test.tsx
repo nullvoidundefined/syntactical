@@ -102,6 +102,6 @@ describe('StatsProvider answer event log', () => {
     expect(screen.getByTestId('events')).toHaveTextContent('0');
     await fireEvent.press(screen.getByTestId('bank-answer'));
     await waitFor(async () => expect(await readStoredLog()).toHaveLength(1));
-    expect((await readStoredLog())[0]).not.toEqual({ eventId: 7 });
+    expect((await readStoredLog())[0]).toMatchObject({ eventId: expect.stringMatching(UUID_V4) });
   });
 });
