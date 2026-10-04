@@ -50,14 +50,43 @@ Actions secrets (repository settings): `CONTENT_DEPLOY_KEY` (read-only deploy ke
 ## Railway service settings
 
 - Service name: `api` in each environment, deployed by `railway up` from CI. No GitHub repo, root directory, or registry credentials are connected.
-- Config: `railway.json` at the repository root: Dockerfile builder, `server/Dockerfile`, healthcheck `/health` (60 second timeout), restart on failure up to 5 times. There is no start command: the image `CMD` runs `node-pg-migrate up` against `DATABASE_MIGRATION_URL` when set, otherwise `DATABASE_URL`, then `exec node dist/index.js`. A failed migration stops the start before the new server takes traffic. `node-pg-migrate` reads the URL as given, so its TLS mode is not checked by the server's pool: `DATABASE_MIGRATION_URL` (and `DATABASE_URL` when it is the one used for migrations) must be a `*.railway.internal` host or carry `sslmode=verify-full`. Never use `disable`, `allow`, `prefer`, `require`, or `no-verify` there.
+- Config: `railway.json` at the repository root: Dockerfile builder, `server/Dockerfile`, healthcheck `/health` (60 second timeout), restart on failure up to 5 times. There is no start command: the image `CMD` runs `node-pg-migrate up` against `DATABASE_MIGRATION_URL` when set, otherwise `DATABASE_URL`, then `exec node dist/index.js`. A failed migration stops the start before the new server takes traffic. `node-pg-migrate` reads the URL as given, so its TLS mode is not checked by the server's pool: `DATABASE_MIGRATION_URL` (and `DATABASE_URL` when it is the one used for migrations) must be a `*.railway.internal` host or carry `sslmode=verify-full`. Never use `disable`, `allow`, `prefer`, `require`, or `no-verify` there. Railway warns that railway.json config-as-code is deprecated (it works until 2026-12-01). Before then, run `railway config migrate` to move it to `.railway/railway.ts`.
 - Variables: only the runtime variables in the table above. No build or content variable is needed, because the content mode is decided by what CI stages into `build/`, and `CONTENT_DEPLOY_KEY` is never set on Railway, so it is never injected into the running container.
-- Custom domain: `api.syntactical.dev` (the owner adds the CNAME at the DNS host).
+- Custom domain: `api.syntactical.dev`. The Cloudflare record does not exist yet; the owner adds a CNAME to the production Railway domain (below). Until then the apps' compiled production API URL does not resolve: add the CNAME or point the builds at the Railway URL.
 - Redeploy: push to `main` (staging) or run the Server deploy workflow (production).
 
-Open Railway behaviors to confirm on the first deploy: that `railway up` with a directory argument reads `railway.json` from that directory, that `--no-gitignore` uploads the gitignored `build/` directory, and that Railway honors `server/Dockerfile.dockerignore` (or ignores it harmlessly, since the upload holds only committed files and `build/`).
+Observed on the first deploys (2026-10-04): `railway up` with a directory outside the working directory needs `--path-as-root` (`deployToRailway.sh` passes it), and `--no-gitignore` uploads the gitignored `build/` directory. Railway does not read `railway.json` from that upload in this setup; see the next section.
 
 Local build: stage the content first, then build. `server/scripts/stageBuildContent.sh fixture` stages the fixture content; `CONTENT_DEPLOY_KEY="$(cat <path to key file>)" server/scripts/stageBuildContent.sh private` stages the real banks. Then `docker build -f server/Dockerfile .` from the repository root. `build/` is gitignored.
+
+## Live environments and first-time setup
+
+Observed on the first real deploys (2026-10-04). Follow this so a new environment works the first time.
+
+| Environment | URL                                          | Neon branch (project `syntactical`, id `rough-paper-04073210`, aws-us-east-1) |
+| ----------- | -------------------------------------------- | ----------------------------------------------------------------------------- |
+| staging     | `https://api-staging-accd.up.railway.app`    | `staging`                                                                     |
+| production  | `https://api-production-9973.up.railway.app` | `main`                                                                        |
+
+Railway project `syntactical` (id `2ffc74bd-badb-47f1-9985-4d606dfa12ee`) has the environments `staging` and `production`, each with one service, `api`. Both currently run with `ALLOW_STUBBED_INTEGRATIONS=true` and the six stubs listed on `/health/ready`; see `docs/launch-placeholders.md` for what is still owed.
+
+1. **Create the service instance in each environment.** A Railway service created in one environment does not exist in the others. `railway up --environment X` fails with `Failed to upload code with status code 404 Not Found` until the service has an instance there. Create it with an environment patch through `railway api` (the `environmentPatchCommit` mutation with a `services.<serviceId>` entry). `railway environment edit --service-config` is not a substitute: it reports "No changes to apply" when the service has no instance.
+2. **Set `RAILWAY_DOCKERFILE_PATH=server/Dockerfile` as a service variable on every environment's `api` service.** Railway does not read `railway.json` from the `railway up` upload here. Without the variable its default builder (Railpack) builds the root Expo app and the container crashes with `Cannot find module '/app/expo-router/entry'`. Keep `railway.json` for the healthcheck and restart policy.
+3. **Set `NODE_ENV=production` on both environments.** The env schema accepts only `development`, `production`, and `test`. Staging is distinguished by the Railway environment, not by `NODE_ENV`.
+4. **Do not connect the GitHub repo as the service source.** Railway's own builds cannot stage the private content and fail; only CI's `railway up` deploys. If a source gets connected (it is one way to create an instance), disconnect it with `railway service source disconnect`.
+5. **Upload with `--path-as-root`** when the upload directory is outside the working directory; otherwise the CLI reports "prefix not found". `server/scripts/deployToRailway.sh` already does this.
+
+### How the secrets were set (no copy-paste, nothing printed)
+
+Every secret moved from its source to its destination through a pipe, so no human handled the value and nothing was echoed:
+
+- Neon connection strings: `neonctl connection-string <branch> --ssl verify-full` piped into `railway variables --set` (the `staging` branch for the staging environment, `main` for production).
+- Railway tokens: an environment-scoped project token created with `railway api` (the `projectTokenCreate` mutation) and piped into `gh secret set RAILWAY_TOKEN_STAGING` or `gh secret set RAILWAY_TOKEN_PRODUCTION`.
+- The content deploy key: generated with `ssh-keygen`; the public half added as a read-only deploy key on `syntactical-content`, the private half piped into `gh secret set CONTENT_DEPLOY_KEY`.
+
+### DNS
+
+The `api.syntactical.dev` record (Cloudflare) does not exist yet. Add a CNAME from `api` to the production Railway domain (`api-production-9973.up.railway.app`). For staging, see the `staging-api` row in `docs/launch-placeholders.md`.
 
 ## Post-deploy checks
 
