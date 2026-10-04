@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 2,
+  "questions": [
+    {
+      "id": "fixture-easy-1",
+      "type": "mc",
+      "prompt": "Which value does the fixture expect?",
+      "choices": [
+        {
+          "text": "one"
+        },
+        {
+          "text": "two"
+        },
+        {
+          "text": "three"
+        }
+      ],
+      "answerIndex": 1,
+      "query": {
+        "title": "Fixture rule",
+        "explanation": "A fixture question for the image check."
+      },
+      "provenance": {
+        "source": "original",
+        "isHumanReviewed": false,
+        "validation": {
+          "method": "judged",
+          "status": "pending"
+        }
+      }
+    }
+  ]
+}

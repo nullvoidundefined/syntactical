@@ -1,0 +1,94 @@
+name: Server
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - 'packages/**'
+      - 'package-lock.json'
+      - '.github/workflows/server.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          # Reachable only from this job's runner, so trust auth needs no password.
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck -w server
+      - run: npm test -w server
+      - name: Run the server integration tests against the Postgres service
+        run: npm run test:integration -w server
+        env:
+          TEST_DATABASE_URL: postgres://postgres@localhost:5432/postgres
+
+  image:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # With the deploy key (a pull request from this repo), the paid banks come from the private
+      # content repo through a BuildKit secret mount. Without it (a fork, or the secret not set
+      # yet), the fixture content stage stands in, so CI still proves the image builds and runs.
+      - name: Build the image
+        env:
+          CONTENT_DEPLOY_KEY: ${{ secrets.CONTENT_DEPLOY_KEY }}
+          DOCKER_BUILDKIT: '1'
+        run: |
+          set -euo pipefail
+          key_file="$RUNNER_TEMP/content_deploy_key"
+          trap 'rm -f "$key_file"' EXIT
+          if [ -n "$CONTENT_DEPLOY_KEY" ]; then
+            echo 'Content source: private repo (deploy key present)' >> "$GITHUB_STEP_SUMMARY"
+            (umask 077; printf '%s\n' "$CONTENT_DEPLOY_KEY" > "$key_file")
+            docker build -f server/Dockerfile --secret id=content_deploy_key,src="$key_file" -t syntactical-server:ci .
+          else
+            echo 'Content source: fixture (CONTENT_DEPLOY_KEY is absent)' >> "$GITHUB_STEP_SUMMARY"
+            docker build -f server/Dockerfile --build-arg CONTENT_SOURCE=fixture -t syntactical-server:ci .
+          fi
+
+      - name: Run the image's start command and HEALTHCHECK once
+        env:
+          DATABASE_URL: postgres://postgres@127.0.0.1:5432/postgres
+        run: bash server/scripts/checkImageHealth.sh syntactical-server:ci
+
+      - name: Prove the key scan catches a planted key
+        run: bash server/scripts/scanImageForKeys.sh --self-test
+
+      - name: Scan the image history and every layer for key material and .ssh directories
+        run: bash server/scripts/scanImageForKeys.sh syntactical-server:ci

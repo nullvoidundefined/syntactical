@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 2,
+  "languages": [
+    {
+      "id": "python",
+      "label": "Python",
+      "glyph": "PY",
+      "tagline": "Fixture language for the image check.",
+      "grammar": "python",
+      "topics": [],
+      "misconceptions": [],
+      "banks": {
+        "easy": {
+          "path": "python/easy.json",
+          "hash": "aff7ec44f8a4e8fb4a26edd8edc6e2ab1e02569e97387cb7afc1c21fedf842de",
+          "access": "free",
+          "contentVersion": 1,
+          "topicCounts": {}
+        },
+        "medium": {
+          "path": "python/medium.json",
+          "hash": "11190ca7f843566d8fda6c7bfbf24baa0d1e05376c3a397c68f2924bfd60bcc6",
+          "access": "paid",
+          "productId": "syntactical.python.medium",
+          "contentVersion": 1,
+          "topicCounts": {}
+        }
+      }
+    }
+  ]
+}

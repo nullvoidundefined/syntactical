@@ -4,8 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "migrate:down": "node-pg-migrate down",
     "migrate:up": "node-pg-migrate up",
+    "start": "node dist/index.js",
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "typecheck": "tsc --noEmit"
@@ -19,6 +21,7 @@
     "@types/supertest": "^7.2.1",
     "pg-connection-string": "^2.14.1",
     "supertest": "^7.3.1",
+    "typescript": "~6.0.3",
     "vitest": "^3.2.7"
   },
   "dependencies": {

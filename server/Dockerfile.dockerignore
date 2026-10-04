@@ -1,0 +1,31 @@
+# The ignore file for server/Dockerfile. BuildKit reads <Dockerfile name>.dockerignore beside the
+# Dockerfile before a root .dockerignore, and the build context is the repository root.
+# Allow-list: nothing enters the image's build context unless it is listed here.
+*
+
+!package.json
+!package-lock.json
+!packages/*/package.json
+!packages/*/tsconfig.json
+!packages/*/tsconfig.build.json
+!packages/*/src
+!pipeline/package.json
+!server/package.json
+!server/tsconfig.json
+!server/tsconfig.build.json
+!server/src
+!server/migrations
+!server/scripts/copyContent.mjs
+!server/ci-fixture
+!content
+
+# Never in the context, even under an allowed directory.
+**/.git
+**/.env*
+**/.ssh
+**/node_modules
+**/dist
+**/coverage
+**/__tests__
+**/*.test.ts
+**/*.test.tsx
