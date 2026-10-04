@@ -119,3 +119,41 @@ describe('stageBuildContent.sh fixture', () => {
     expect(staged('paid-content')).toEqual(['/python/medium.json']);
   });
 });
+
+describe('stageBuildContent.sh private mode ref', () => {
+  function stagePrivate(refText: string | null) {
+    mkdirSync(join(work, 'server', 'scripts'), { recursive: true });
+    mkdirSync(join(work, 'content'), { recursive: true });
+    cpSync(copyScript, join(work, 'server', 'scripts', 'copyContent.mjs'));
+    cpSync(stageScript, join(work, 'server', 'scripts', 'stageBuildContent.sh'));
+    if (refText !== null) {
+      writeFileSync(join(work, 'content', 'paid-content.ref'), refText);
+    }
+    // The repo path does not exist: a malformed ref must fail before any clone or fetch.
+    return spawnSync('bash', [join(work, 'server', 'scripts', 'stageBuildContent.sh'), 'private'], {
+      encoding: 'utf8',
+      env: { ...process.env, CONTENT_DEPLOY_KEY: 'placeholder', CONTENT_REPO: join(work, 'no-such-repo') },
+    });
+  }
+
+  it.each([
+    ['too short', 'abc123\n'],
+    ['uppercase hex', `${'A'.repeat(40)}\n`],
+    ['a branch name', 'main\n'],
+    ['41 characters', `${'a'.repeat(41)}\n`],
+    ['empty', ''],
+  ])('fails before any clone when the ref is %s', (_label, text) => {
+    const result = stagePrivate(text);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('40 lowercase hex');
+    expect(existsSync(join(work, 'build', 'paid-content'))).toBe(false);
+  });
+
+  it('fails when the ref file is missing', () => {
+    const result = stagePrivate(null);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('missing content/paid-content.ref');
+  });
+});
