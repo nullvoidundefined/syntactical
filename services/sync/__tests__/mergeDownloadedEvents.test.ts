@@ -97,4 +97,13 @@ describe('mergeDownloadedEvents', () => {
     expect(next.filter(({ eventId }) => eventId === held.eventId)).toEqual([{ ...held, isHeld: false, isSynced: true }]);
     expect(buildUploadBatches(next, userId).flat().map(({ eventId }) => eventId)).toEqual([pending.eventId]);
   });
+
+  it('leaves another owner\'s unsynced entry unsynced when a downloaded id matches it', () => {
+    const foreign = toLogged(buildAnswerEvent(0), randomUUID());
+    const guest = toLogged(buildAnswerEvent(1), null);
+
+    const next = mergeDownloadedEvents([foreign, guest], [stripToAnswerEvent(foreign), stripToAnswerEvent(guest)], userId);
+
+    expect(next).toEqual([foreign, guest]);
+  });
 });
