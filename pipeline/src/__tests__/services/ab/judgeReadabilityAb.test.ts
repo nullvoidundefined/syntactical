@@ -139,6 +139,15 @@ describe('judgeReadabilityAb', () => {
         await expect(judgeReadabilityAb(buildQuestion(0), scripted([{ moreReadable: 'A', reason: '  ' }]))).rejects.toThrow();
     });
 
+    it('tells the judge the reason length cap its schema enforces, so a compliant reply is never rejected', async () => {
+        const provider = scripted([A_WINS, B_WINS]);
+        await judgeReadabilityAb(buildQuestion(0), provider);
+        expect(provider.prompts[0]).toContain('at most 200 characters');
+        await expect(
+            judgeReadabilityAb(buildQuestion(0), scripted([{ moreReadable: 'A', reason: 'x'.repeat(201) }])),
+        ).rejects.toThrow();
+    });
+
     it('shows the judge both options in swapped order on the second call, without the answer index', async () => {
         const provider = scripted([A_WINS, B_WINS]);
         await judgeReadabilityAb(buildQuestion(0), provider);
