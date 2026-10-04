@@ -16,7 +16,8 @@ history_pattern="${content_pattern}|\\.ssh|id_(rsa|dsa|ecdsa|ed25519)|deploy_key
 scan_image() {
   local image="$1" work found=0
   work="$(mktemp -d)"
-  trap 'rm -rf "$work"' RETURN
+  # Extracted layers keep read-only modes, so make them writable before removing.
+  trap 'chmod -R u+w "$work" 2>/dev/null; rm -rf "$work"' RETURN
 
   if docker history --no-trunc --format '{{.CreatedBy}}' "$image" | grep -Eqe "$history_pattern"; then
     echo "scan: build history of $image mentions key material or .ssh" >&2

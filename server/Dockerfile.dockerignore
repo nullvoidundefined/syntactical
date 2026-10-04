@@ -16,8 +16,9 @@
 !server/src
 !server/migrations
 !server/scripts/copyContent.mjs
-!server/ci-fixture
-!content
+!server/scripts/start.sh
+!build/content
+!build/paid-content
 
 # Never in the context, even under an allowed directory.
 **/.git

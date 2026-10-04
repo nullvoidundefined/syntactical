@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Runs a built server image once and proves it works: the railway.json start command (migrations,
-# then the server) comes up, the image's own HEALTHCHECK turns healthy, /health and /health/ready
-# answer, the process is not root, and SIGTERM stops it cleanly.
+# Runs a built server image once and proves it works: the image's own CMD (migrations, then the
+# server) comes up, the image's own HEALTHCHECK turns healthy, /health and /health/ready
+# answer, migrations ran at start, the process is not root, and SIGTERM stops it cleanly.
 #
 #   DATABASE_URL=<url the container can reach> [DOCKER_NETWORK=<network>] \
 #     server/scripts/checkImageHealth.sh <image>
@@ -14,8 +14,6 @@ set -euo pipefail
 image="${1:?usage: checkImageHealth.sh <image>}"
 : "${DATABASE_URL:?DATABASE_URL must be set}"
 network="${DOCKER_NETWORK:-host}"
-root="$(cd "$(dirname "$0")/../.." && pwd)"
-start_command="$(node -e "console.log(require('$root/server/railway.json').deploy.startCommand)")"
 name="syntactical-image-check-$$"
 
 # Random run-time values, never stored anywhere.
@@ -36,7 +34,7 @@ docker run --detach --name "$name" --label throwaway=syntactical-image-check --n
   -e "RESEND_API_KEY=$(secret)" \
   -e "RATE_LIMIT_KEY_SECRET=$(secret)" \
   -e "REVENUECAT_WEBHOOK_AUTH=$(secret)" \
-  "$image" sh -c "$start_command" >/dev/null
+  "$image" >/dev/null
 
 status=starting
 for _ in $(seq 1 60); do
@@ -48,6 +46,12 @@ for _ in $(seq 1 60); do
 done
 if [ "$status" != healthy ]; then
   echo "image check: HEALTHCHECK status is '$status'; container log follows" >&2
+  docker logs "$name" >&2 || true
+  exit 1
+fi
+
+if ! docker logs "$name" 2>&1 | grep -q 'Migrations complete!'; then
+  echo 'image check: the start command did not run migrations; container log follows' >&2
   docker logs "$name" >&2 || true
   exit 1
 fi
@@ -71,4 +75,4 @@ if [ "$exit_code" != 0 ]; then
   docker logs "$name" >&2 || true
   exit 1
 fi
-echo 'image check: healthy, non-root, and clean SIGTERM shutdown'
+echo 'image check: migrated, healthy, non-root, and clean SIGTERM shutdown'

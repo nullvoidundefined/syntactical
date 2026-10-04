@@ -1,20 +1,21 @@
 # syntax=docker/dockerfile:1.7
 #
 # The API image. Build from the repository root, which holds the workspace packages the server
-# imports (content-schema, progress):
+# imports (content-schema, progress). Stage the content first:
 #
-#   docker build -f server/Dockerfile --secret id=content_deploy_key,src=<key file> .
+#   server/scripts/stageBuildContent.sh fixture      (or: private, with CONTENT_DEPLOY_KEY set)
+#   docker build -f server/Dockerfile .
 #
-# CONTENT_SOURCE picks where the content comes from:
-#   private  (default) the public content from this repo, the paid banks from the private
-#            syntactical-content repo, cloned with a read-only deploy key that only a BuildKit
-#            secret mount carries.
-#   fixture  the tiny content set under server/ci-fixture, so CI can build and run the image
-#            without the key.
-# The key is never an ARG, an ENV, a layer, or a file under any .ssh directory in any stage.
+# The content comes from build/content and build/paid-content, which stageBuildContent.sh fills:
+# the manifest and free banks from this repo, and the paid banks either from the private
+# syntactical-content repo (cloned with a read-only deploy key, outside Docker) or from the fixture
+# under server/ci-fixture. No key is used inside any Docker build, so none can be an ARG, an ENV,
+# or a layer; Railway's builder, which rejects secret mounts, builds this file unchanged.
+#
+# The image starts itself: CMD runs scripts/start.sh (migrations, then the server), so a platform
+# needs no start command.
 
 ARG NODE_IMAGE=node:22.21.1-bookworm-slim
-ARG CONTENT_SOURCE=private
 
 # Installs the server's dependencies and compiles the shared packages and the server.
 FROM ${NODE_IMAGE} AS builder
@@ -32,57 +33,14 @@ RUN npm run build --workspace @syntactical/content-schema --workspace @syntactic
 # build output fails the build rather than the first request.
 RUN node --input-type=module -e "await import('/app/server/dist/startServer.js')"
 
-# Public content: the manifest and the free banks only.
-FROM ${NODE_IMAGE} AS public-content-private
+# Content: re-checks every staged bank against the manifest hash and copies only the files the
+# manifest names, one access tier each.
+FROM ${NODE_IMAGE} AS content
 COPY server/scripts/copyContent.mjs /build/
-COPY content /build/content
-RUN node /build/copyContent.mjs /build/content/manifest.json /build/content /public free
-
-FROM ${NODE_IMAGE} AS public-content-fixture
-COPY server/scripts/copyContent.mjs /build/
-COPY server/ci-fixture/public /build/content
-RUN node /build/copyContent.mjs /build/content/manifest.json /build/content /public free
-
-# Paid content from the private repo. The deploy key is read from a secret mount, which Docker
-# never writes to a layer. It is copied to a mode 0600 file under /tmp (not ~/.ssh), used for one
-# clone, and this whole stage is discarded: only the paid bank files the manifest names are
-# copied on, so neither the key nor the clone's .git reaches the runtime image. The secret id
-# content_deploy_key is the CI and local name; Railway exposes a service variable under its own
-# name, so CONTENT_DEPLOY_KEY is accepted too.
-FROM ${NODE_IMAGE} AS paid-content-private
-ARG CONTENT_REPO=git@github.com:nullvoidundefined/syntactical-content.git
-ARG CONTENT_REF=main
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends git openssh-client \
-    && rm -rf /var/lib/apt/lists/*
-COPY server/scripts/copyContent.mjs /build/
-COPY content/manifest.json /build/manifest.json
-# Trust only GitHub's published ed25519 host key: the scanned key must match the pinned
-# fingerprint, or the build fails.
-RUN ssh-keyscan -t ed25519 github.com > /tmp/known_hosts 2>/dev/null \
-    && ssh-keygen -lf /tmp/known_hosts | grep -q 'SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU'
-RUN --mount=type=secret,id=content_deploy_key,required=false \
-    --mount=type=secret,id=CONTENT_DEPLOY_KEY,required=false \
-    set -eu; \
-    keyfile=/run/secrets/content_deploy_key; \
-    [ -s "$keyfile" ] || keyfile=/run/secrets/CONTENT_DEPLOY_KEY; \
-    [ -s "$keyfile" ] || { echo 'build secret content_deploy_key is not set' >&2; exit 1; }; \
-    umask 077; \
-    { cat "$keyfile"; printf '\n'; } > /tmp/deploy_key; \
-    GIT_SSH_COMMAND='ssh -i /tmp/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/tmp/known_hosts' \
-        git clone --quiet --depth 1 --branch "$CONTENT_REF" "$CONTENT_REPO" /tmp/content; \
-    rm -f /tmp/deploy_key; \
-    node /build/copyContent.mjs /build/manifest.json /tmp/content /paid paid; \
-    rm -rf /tmp/content
-
-FROM ${NODE_IMAGE} AS paid-content-fixture
-COPY server/scripts/copyContent.mjs /build/
-COPY server/ci-fixture/public/manifest.json /build/manifest.json
-COPY server/ci-fixture/paid /build/paid
-RUN node /build/copyContent.mjs /build/manifest.json /build/paid /paid paid
-
-FROM public-content-${CONTENT_SOURCE} AS public-content
-FROM paid-content-${CONTENT_SOURCE} AS paid-content
+COPY build/content /build/content
+COPY build/paid-content /build/paid-content
+RUN node /build/copyContent.mjs /build/content/manifest.json /build/content /public free \
+    && node /build/copyContent.mjs /build/content/manifest.json /build/paid-content /paid paid
 
 # Runtime: production dependencies, build output, migrations, and content. No compiler, no key.
 FROM ${NODE_IMAGE} AS runtime
@@ -101,12 +59,13 @@ COPY --from=builder /app/packages/content-schema/dist packages/content-schema/di
 COPY --from=builder /app/packages/progress/dist packages/progress/dist
 COPY --from=builder /app/server/dist server/dist
 COPY server/migrations server/migrations
-COPY --from=public-content /public /app/content
-COPY --from=paid-content --chown=node:node /paid /app/paid-content
+COPY server/scripts/start.sh server/scripts/start.sh
+COPY --from=content /public /app/content
+COPY --from=content --chown=node:node /paid /app/paid-content
 RUN chmod -R go-rwx /app/paid-content
 USER node
 WORKDIR /app/server
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD ["node", "-e", "fetch('http://127.0.0.1:'+(process.env.PORT||3001)+'/health').then((r)=>process.exit(r.ok?0:1),()=>process.exit(1))"]
-CMD ["node", "dist/index.js"]
+CMD ["sh", "scripts/start.sh"]

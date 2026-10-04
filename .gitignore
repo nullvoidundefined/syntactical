@@ -33,3 +33,6 @@ expo-env.d.ts
 
 # Plan execution workspace
 .superpowers/
+
+# Content staged for the API image build (scripts/stageBuildContent.sh); never committed.
+/build/
