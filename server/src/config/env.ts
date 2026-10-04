@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { isAbsolute } from 'node:path';
 
 import { z } from 'zod';
@@ -39,17 +40,65 @@ const envSchema = z.object({
   REVENUECAT_WEBHOOK_AUTH: strongSecret,
 });
 
-type Env = z.infer<typeof envSchema>;
+const STUB_OPT_IN = 'ALLOW_STUBBED_INTEGRATIONS';
+const RATE_LIMIT_STUB_BYTES = 32;
 
-// Fails closed. The error names each offending variable and never includes a value.
+// Values that satisfy the schema for a variable that is missing under the opt-in. The two
+// credentials get a placeholder only to pass validation: loadEnv removes them afterwards, so the
+// placeholder never reaches the app. ALLOWED_ORIGINS is emptied afterwards (no origin allowed).
+const STUBBABLE = {
+  ALLOWED_ORIGINS: () => 'https://stub.invalid',
+  EMAIL_FROM: () => 'Syntactical <stub@stub.invalid>',
+  PUBLIC_BASE_URL: () => 'https://stub.invalid',
+  // A fresh random value per boot, never logged: rate limit counters reset on each restart.
+  RATE_LIMIT_KEY_SECRET: () => randomBytes(RATE_LIMIT_STUB_BYTES).toString('hex'),
+  RESEND_API_KEY: () => 'stub',
+  REVENUECAT_WEBHOOK_AUTH: () => 'stub'.repeat(SECRET_MIN_LENGTH),
+} as const;
+
+type StubbedIntegration = keyof typeof STUBBABLE;
+
+type ParsedEnv = z.infer<typeof envSchema>;
+
+// A stubbed credential is absent here, so no code path can use a placeholder as a secret.
+type Env = Omit<ParsedEnv, 'RESEND_API_KEY' | 'REVENUECAT_WEBHOOK_AUTH'> & {
+  RESEND_API_KEY: string | undefined;
+  REVENUECAT_WEBHOOK_AUTH: string | undefined;
+  // Names only, never values. Empty unless ALLOW_STUBBED_INTEGRATIONS=true and something was missing.
+  stubbed: StubbedIntegration[];
+};
+
+function isMissing(value: string | undefined): boolean {
+  return value === undefined || value.trim() === '';
+}
+
+// Fails closed. The error names each offending variable and never includes a value. Only a
+// missing variable is ever stubbed, and only when ALLOW_STUBBED_INTEGRATIONS is exactly `true`;
+// a present but invalid value still fails. DATABASE_URL and PAID_CONTENT_DIR are never stubbed.
 function loadEnv(source: NodeJS.ProcessEnv): Env {
-  const { data, error, success } = envSchema.safeParse(source);
-  if (success) {
-    return data;
+  const effective: NodeJS.ProcessEnv = { ...source };
+  const stubbed: StubbedIntegration[] = [];
+  if (source[STUB_OPT_IN] === 'true') {
+    for (const name of Object.keys(STUBBABLE) as StubbedIntegration[]) {
+      if (isMissing(source[name])) {
+        effective[name] = STUBBABLE[name]();
+        stubbed.push(name);
+      }
+    }
   }
-  const names = [...new Set(error.issues.map((issue) => issue.path.join('.')))];
-  throw new Error(`Invalid environment: ${names.join(', ')}`);
+  const { data, error, success } = envSchema.safeParse(effective);
+  if (!success) {
+    const names = [...new Set(error.issues.map((issue) => issue.path.join('.')))];
+    throw new Error(`Invalid environment: ${names.join(', ')}`);
+  }
+  return {
+    ...data,
+    ALLOWED_ORIGINS: stubbed.includes('ALLOWED_ORIGINS') ? '' : data.ALLOWED_ORIGINS,
+    RESEND_API_KEY: stubbed.includes('RESEND_API_KEY') ? undefined : data.RESEND_API_KEY,
+    REVENUECAT_WEBHOOK_AUTH: stubbed.includes('REVENUECAT_WEBHOOK_AUTH') ? undefined : data.REVENUECAT_WEBHOOK_AUTH,
+    stubbed,
+  };
 }
 
 export { loadEnv };
-export type { Env };
+export type { Env, StubbedIntegration };

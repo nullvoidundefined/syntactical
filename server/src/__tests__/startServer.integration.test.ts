@@ -172,6 +172,55 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
     await expect(startServer(buildSource(), { logger })).rejects.toThrow(/Paid bank missing/);
   });
 
+  describe('with missing integrations', () => {
+    const STUBBED = [
+      'ALLOWED_ORIGINS',
+      'EMAIL_FROM',
+      'PUBLIC_BASE_URL',
+      'RATE_LIMIT_KEY_SECRET',
+      'RESEND_API_KEY',
+      'REVENUECAT_WEBHOOK_AUTH',
+    ];
+
+    function onlyDatabase(): NodeJS.ProcessEnv {
+      const { DATABASE_URL, NODE_ENV, PAID_CONTENT_DIR, PORT, CONTENT_DIR } = buildSource();
+      return { CONTENT_DIR, DATABASE_URL, NODE_ENV, PAID_CONTENT_DIR, PORT };
+    }
+
+    it('refuses to start without the opt-in', async () => {
+      await writeContent(contentDir, paidDir);
+
+      await expect(startServer(onlyDatabase(), { logger })).rejects.toThrow(/Invalid environment/);
+    });
+
+    it('starts with the opt-in, lists the stubs on /health/ready, and answers the webhook 503', async () => {
+      await writeContent(contentDir, paidDir);
+      running = await startServer({ ...onlyDatabase(), ALLOW_STUBBED_INTEGRATIONS: 'true' }, { logger });
+
+      const ready = await fetch(`http://127.0.0.1:${running.port}/health/ready`);
+      expect(ready.status).toBe(HTTP_OK);
+      const body = (await ready.json()) as { stubbed: string[] };
+      expect([...body.stubbed].sort()).toEqual(STUBBED);
+
+      const webhook = await fetch(`http://127.0.0.1:${running.port}/v1/webhooks/revenuecat`, {
+        body: '{}',
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      });
+      expect(webhook.status).toBe(503);
+    });
+
+    it('allows no browser origin when ALLOWED_ORIGINS is stubbed', async () => {
+      await writeContent(contentDir, paidDir);
+      running = await startServer({ ...onlyDatabase(), ALLOW_STUBBED_INTEGRATIONS: 'true' }, { logger });
+
+      const response = await fetch(`http://127.0.0.1:${running.port}/health`, {
+        headers: { Origin: 'https://example.test' },
+      });
+      expect(response.headers.get('access-control-allow-origin')).toBeNull();
+    });
+  });
+
   it('fails fast on a missing variable, naming it and never a value', async () => {
     await writeContent(contentDir, paidDir);
     const source = buildSource();

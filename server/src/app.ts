@@ -27,6 +27,7 @@ import { createDeleteMeRouter } from './routes/deleteMe.js';
 import { createHealthRouter } from './routes/health.js';
 import type { HealthDb } from './routes/health.js';
 import { createMeRouter } from './routes/me.js';
+import { createDisabledWebhookRouter } from './routes/disabledWebhook.js';
 import { createRevenueCatWebhookRouter } from './routes/revenueCatWebhook.js';
 import { createSignOutRouter } from './routes/signOut.js';
 import type { SyncDeps } from './routes/syncDeps.js';
@@ -41,10 +42,15 @@ interface AppDeps {
   db: HealthDb;
   extraRoutes?: (router: Router) => void;
   logger?: Logger;
+  // Integrations running on a stub, by name; reported on /health/ready.
+  stubbed?: readonly string[];
   // The /v1 answer event and profile routes; omitted, they are not mounted.
   sync?: SyncDeps;
   // The /v1/webhooks routes; omitted, they are not mounted.
   webhooks?: WebhookDeps;
+  // No webhook credential is configured: every request under /v1/webhooks answers 503 and
+  // records nothing. Ignored when `webhooks` is given.
+  webhooksDisabled?: boolean;
 }
 
 // Builds the Express app without listening or reading env; callers inject everything.
@@ -56,8 +62,10 @@ function createApp(deps: AppDeps) {
     db,
     extraRoutes,
     logger = createLogger({ destination: process.stdout }),
+    stubbed = [],
     sync,
     webhooks,
+    webhooksDisabled = false,
   } = deps;
   const app = express();
 
@@ -72,6 +80,8 @@ function createApp(deps: AppDeps) {
   // by prefix covers every spelling Express routes to it (a trailing slash, another case).
   if (webhooks) {
     app.use('/v1/webhooks', createRevenueCatWebhookRouter(webhooks, logger));
+  } else if (webhooksDisabled) {
+    app.use('/v1/webhooks', createDisabledWebhookRouter());
   }
   app.use(requireJson);
   // The upload route reads its larger body in its own router, after authentication; only
@@ -89,7 +99,7 @@ function createApp(deps: AppDeps) {
   app.use(cookieParser());
   app.use(createCsrfGuard(allowedOrigins));
 
-  app.use('/health', createHealthRouter(db, logger));
+  app.use('/health', createHealthRouter(db, logger, stubbed));
 
   if (auth) {
     const { now = () => new Date(), randomInt: codeGenerator = randomInt } = auth;

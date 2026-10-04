@@ -25,6 +25,10 @@ The server refuses to start, naming the variable and never its value, when a req
 
 Build time only, never a runtime variable: the read-only deploy key for the private `nullvoidundefined/syntactical-content` repo, stored as the Railway service variable `CONTENT_DEPLOY_KEY` (secret, placeholder `${CONTENT_DEPLOY_KEY}`). It reaches the build only as a BuildKit secret mount.
 
+## Deploying with missing secrets (stub mode)
+
+Set `ALLOW_STUBBED_INTEGRATIONS=true` to deploy while some settings are still missing. Only `RESEND_API_KEY`, `EMAIL_FROM`, `REVENUECAT_WEBHOOK_AUTH`, `RATE_LIMIT_KEY_SECRET`, `ALLOWED_ORIGINS`, and `PUBLIC_BASE_URL` can be stubbed, and only when missing; `DATABASE_URL` never is. Each stub fails closed: no email is sent (so sign-in does not work until `RESEND_API_KEY` is set), the RevenueCat webhook answers 503 to every request, the rate limit key is random per boot (counters reset on restart), and no browser origin is allowed. For paid content without the deploy key, set the service variable `CONTENT_SOURCE=fixture` so the image builds with the fixture banks. The boot log and `/health/ready` (`"stubbed": [...]`) list what is stubbed. Everything to replace before launch is in [launch-placeholders.md](../docs/launch-placeholders.md).
+
 ## Railway service settings
 
 - Source: this repo, root directory the repository root (the image needs `packages/content-schema` and `packages/progress`).
