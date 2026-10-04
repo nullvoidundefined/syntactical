@@ -1,5 +1,5 @@
-// Reads a bank's current questions from the first of `files` that exists. A paid bank already
-// published lives in the private content root; one not yet moved is still in the content dir.
+// Reads a bank's current questions from the first of `files` that exists: a free bank from the
+// content dir, a paid bank from the private content root.
 import { readFile } from 'node:fs/promises';
 
 import type { Question } from '@syntactical/content-schema';

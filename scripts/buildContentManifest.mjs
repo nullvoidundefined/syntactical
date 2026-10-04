@@ -2,9 +2,22 @@
 // content/manifest.json, validates banks and manifest with the app's own
 // validators, and generates the TypeScript modules that bundle them offline:
 // one exporting the manifest and one exporting the bank require map.
-import { CONTENT_LIMITS, buildBankContext, findMisconceptionsProblem, isSafeBankPath, validateManifest, validateQuestionBank } from '@syntactical/content-schema';
+//
+// Paid banks never live in this public repo (B-60): they are in the private
+// syntactical-content repo, passed in as `contentRoot`. Without it, paid entries
+// keep the hash, topic counts, and version already in the manifest. Paid banks
+// are never bundled, and the build fails on a paid bank file under content/ or a
+// free bank file under the content root.
+import {
+  CONTENT_LIMITS,
+  buildBankContext,
+  findMisconceptionsProblem,
+  isSafeBankPath,
+  validateManifest,
+  validateQuestionBank,
+} from '@syntactical/content-schema';
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, sep } from 'node:path';
 
 import { summarizeBanks } from '../services/quality/summarizeBanks.ts';
@@ -59,17 +72,37 @@ function countTopics(bytes) {
   return counts;
 }
 
-// A paid bank is read from the private content root when one is given; every other bank
-// is read from the public content directory.
+// A paid bank is read from the private content root; every other bank is read from the
+// public content directory.
 function pickBankDir(contentDir, contentRoot, bank) {
-  return contentRoot && bank.access === 'paid' ? contentRoot : contentDir;
+  return bank.access === 'paid' ? contentRoot : contentDir;
+}
+
+async function isFilePresent(path) {
+  return (await stat(path).catch(() => null))?.isFile() ?? false;
+}
+
+// B-60: a paid bank file under content/ would ship on the static host, and a free bank file
+// under the content root means the two trees were mixed up; either fails the build.
+async function assertBanksInTheirTrees(contentDir, manifest, contentRoot) {
+  for (const { bank, difficulty, language } of listBankEntries(manifest)) {
+    const bankKey = `${language.id}/${difficulty}`;
+    if (bank.access === 'paid' && (await isFilePresent(join(contentDir, bank.path)))) {
+      throw new Error(`paid bank in public content: ${bankKey}`);
+    }
+    if (contentRoot && bank.access !== 'paid' && (await isFilePresent(join(contentRoot, bank.path)))) {
+      throw new Error(`free bank in private content: ${bankKey}`);
+    }
+  }
 }
 
 // Recomputes the bank's hash and topic counts, and bumps its content version only when the
-// hash changed, so a rebuild with no content change is a no-op.
+// hash changed, so a rebuild with no content change is a no-op. Without a content root a paid
+// bank is not read and its manifest entry is kept as it is.
 async function hashAllBanks(contentDir, manifest, contentRoot) {
   await Promise.all(
     listBankEntries(manifest).map(async ({ bank, language }) => {
+      if (bank.access === 'paid' && !contentRoot) return;
       const bytes = await readBankBytes(pickBankDir(contentDir, contentRoot, bank), bank.path);
       assertValidBank(bank.path, bytes, language);
       const hash = createHash('sha256').update(bytes).digest('hex');
@@ -132,10 +165,10 @@ ${bankLines.join('\n')}
 `;
 }
 
-// With a private content root, paid banks are not bundled: their files live outside this repo.
-function listBankLines(contentDir, banksPath, manifest, contentRoot) {
+// Paid banks are never bundled: their files live outside this repo and reach owners through the API.
+function listBankLines(contentDir, banksPath, manifest) {
   return listBankEntries(manifest)
-    .filter(({ bank }) => !contentRoot || bank.access !== 'paid')
+    .filter(({ bank }) => bank.access !== 'paid')
     .map(({ language, difficulty, bank }) => ({
       key: `${language.id}/${difficulty}`,
       requirePath: toRequirePath(banksPath, join(contentDir, bank.path)),
@@ -146,12 +179,12 @@ function listBankLines(contentDir, banksPath, manifest, contentRoot) {
 
 // `outputs` is either one module path (a single module exporting both the
 // manifest and the banks) or { banksPath, manifestPath } (one export per file).
-async function writeGeneratedModules(contentDir, outputs, manifest, contentRoot) {
+async function writeGeneratedModules(contentDir, outputs, manifest) {
   const isSplit = typeof outputs !== 'string';
   const banksPath = isSplit ? outputs.banksPath : outputs;
   const manifestPath = isSplit ? outputs.manifestPath : outputs;
   const manifestRequirePath = toRequirePath(manifestPath, join(contentDir, 'manifest.json'));
-  const bankLines = listBankLines(contentDir, banksPath, manifest, contentRoot);
+  const bankLines = listBankLines(contentDir, banksPath, manifest);
   await mkdir(dirname(manifestPath), { recursive: true });
   await mkdir(dirname(banksPath), { recursive: true });
   if (!isSplit) {
@@ -192,9 +225,11 @@ function assertValidAgreement(agreement) {
   if (typeof agreement !== 'object' || agreement === null || Array.isArray(agreement)) {
     throw new Error('pipeline report agreement is not a plain object');
   }
-  if (Object.keys(agreement).length > AGREEMENT_STAGES.length) throw new Error('pipeline report agreement has too many keys');
+  if (Object.keys(agreement).length > AGREEMENT_STAGES.length)
+    throw new Error('pipeline report agreement has too many keys');
   for (const [stage, rate] of Object.entries(agreement)) {
-    if (!AGREEMENT_STAGES.includes(stage)) throw new Error(`pipeline report agreement has an invalid stage name: ${stage.slice(0, 40)}`);
+    if (!AGREEMENT_STAGES.includes(stage))
+      throw new Error(`pipeline report agreement has an invalid stage name: ${stage.slice(0, 40)}`);
     if (typeof rate !== 'number' || !Number.isFinite(rate) || rate < 0 || rate > 1) {
       throw new Error(`pipeline report agreement for ${stage} is not a number from 0 to 1`);
     }
@@ -203,7 +238,8 @@ function assertValidAgreement(agreement) {
 
 function assertValidQuestion(question, manifestBankKeys) {
   if (!isBoundedString(question?.bankKey)) throw new Error('pipeline report has a question with no bankKey string');
-  if (!manifestBankKeys.has(question.bankKey)) throw new Error('pipeline report has a question for a bank the manifest does not list');
+  if (!manifestBankKeys.has(question.bankKey))
+    throw new Error('pipeline report has a question for a bank the manifest does not list');
   if (!REPORT_STATUSES.includes(question.status)) {
     throw new Error(`pipeline report has a question with an unknown status: ${String(question.status).slice(0, 40)}`);
   }
@@ -221,7 +257,9 @@ function assertValidReport(report, manifestBankKeys) {
 }
 
 function assertEveryBankReported(manifest, report) {
-  const manifestBankKeys = new Set(listBankEntries(manifest).map(({ language, difficulty }) => `${language.id}/${difficulty}`));
+  const manifestBankKeys = new Set(
+    listBankEntries(manifest).map(({ language, difficulty }) => `${language.id}/${difficulty}`),
+  );
   assertValidReport(report, manifestBankKeys);
   const reported = new Set(report.questions.map(({ bankKey }) => bankKey));
   for (const bankKey of manifestBankKeys) {
@@ -238,7 +276,12 @@ async function writeQualityModule({ outputPath, reportPath }, manifest) {
   const quality =
     report === undefined
       ? null
-      : { banks: summarizeBanks(report), finishedAt: report.finishedAt, runId: report.runId, summary: summarizeReport(report) };
+      : {
+          banks: summarizeBanks(report),
+          finishedAt: report.finishedAt,
+          runId: report.runId,
+          summary: summarizeReport(report),
+        };
   await mkdir(dirname(outputPath), { recursive: true });
   await writeFile(
     outputPath,
@@ -283,6 +326,7 @@ export async function buildContentManifest(contentDir, outputs, quality, taxonom
   assertSafeBankPaths(manifest);
   assertValidManifest(withPlaceholderHashes(manifest));
   if (taxonomyDir) await applyApprovedTaxonomies(taxonomyDir, manifest);
+  await assertBanksInTheirTrees(contentDir, manifest, contentRoot);
   await hashAllBanks(contentDir, manifest, contentRoot);
   assertValidManifest(manifest);
   const manifestText = `${JSON.stringify(manifest, null, 2)}\n`;
@@ -290,7 +334,7 @@ export async function buildContentManifest(contentDir, outputs, quality, taxonom
     throw new Error(`manifest.json is over the ${CONTENT_LIMITS.manifestBytes} byte limit`);
   }
   await writeFile(manifestPath, manifestText);
-  await writeGeneratedModules(contentDir, outputs, manifest, contentRoot);
+  await writeGeneratedModules(contentDir, outputs, manifest);
   if (quality) await writeQualityModule(quality, manifest);
 }
 

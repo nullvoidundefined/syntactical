@@ -1,5 +1,5 @@
 // The pipeline CLI's command dispatch, with every side effect injected so the real
-// entry path can be tested: `validate`, `draft-oracles [--api]`, or
+// entry path can be tested: `validate [--content-root <path>]`, `draft-oracles [--api]`, or
 // `classify`, `gap-fill`, or `enrich [--api] [--content-root <path>]`, `review [--content-root <path>]`, or `publish [--content-root <path>]`.
 import { randomUUID } from 'node:crypto';
 
@@ -135,8 +135,16 @@ async function runPublish(argv: string[], deps: CliDeps): Promise<number> {
 }
 
 export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
-    const { contentDir, createProvider, draft, draftTaxonomy: draftTaxonomyList, pipelineDir, stderr, stdout, validate } =
-        deps;
+    const {
+        contentDir,
+        createProvider,
+        draft,
+        draftTaxonomy: draftTaxonomyList,
+        pipelineDir,
+        stderr,
+        stdout,
+        validate,
+    } = deps;
     const [command] = argv.slice(FIRST_COMMAND_ARG);
     if (command === 'draft-oracles') {
         await draft({
@@ -176,12 +184,17 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
     }
     if (command !== 'validate') {
         stderr(
-            'Usage: pipeline validate | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | gap-fill [--api] [--content-root <path>] | enrich [--api] [--content-root <path>] | review [--content-root <path>] | publish [--content-root <path>]\n',
+            'Usage: pipeline validate [--content-root <path>] | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | gap-fill [--api] [--content-root <path>] | enrich [--api] [--content-root <path>] | review [--content-root <path>] | publish [--content-root <path>]\n',
         );
+        return 1;
+    }
+    const contentRoot = resolveContentRoot(argv, deps);
+    if (contentRoot === undefined) {
         return 1;
     }
     const report = await validate({
         contentDir,
+        contentRoot,
         newRunId: randomUUID,
         now: () => new Date().toISOString(),
         oracleSource: createOracleSource(`${pipelineDir}oracles`),

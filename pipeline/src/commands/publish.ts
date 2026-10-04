@@ -6,11 +6,13 @@
 // one is never written, reviewed or not (B-22). `validateBankForPublish` runs on every merged
 // bank and any problem refuses that whole bank. Free banks are written under `contentDir`;
 // paid banks only under `contentRoot` (the private content repo), never under `contentDir`.
+// A paid bank file found under `contentDir` refuses the whole run before anything is written
+// (B-60): paid banks are never public, so one there is a mistake to fix, not a source to read.
 // The manifest build runs once, and only when at least one bank was written.
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { validateManifest } from '@syntactical/content-schema';
+import { validateManifest, type Manifest } from '@syntactical/content-schema';
 
 import { assertContentRootUsable } from '../services/classify/assertContentRootUsable.js';
 import { readFallbackTopics } from '../services/classify/readFallbackTopics.js';
@@ -47,6 +49,20 @@ async function readJson(path: string): Promise<unknown> {
     return JSON.parse(await readFile(path, 'utf8'));
 }
 
+async function isFilePresent(path: string): Promise<boolean> {
+    return (await stat(path).catch(() => null))?.isFile() ?? false;
+}
+
+async function assertNoPublicPaidBank(contentDir: string, languages: Manifest['languages']): Promise<void> {
+    for (const { banks, id } of languages) {
+        for (const [difficulty, { access, path }] of Object.entries(banks)) {
+            if (access === 'paid' && (await isFilePresent(join(contentDir, path)))) {
+                throw new Error(`paid bank in public content: ${id}/${difficulty}`);
+            }
+        }
+    }
+}
+
 export async function publish(options: PublishOptions): Promise<PublishResult> {
     const { buildManifest, contentDir, contentRoot, newRunId, now, pipelineDir } = options;
     const log = (line: string): void => options.log(sanitizeLogText(line));
@@ -64,6 +80,7 @@ export async function publish(options: PublishOptions): Promise<PublishResult> {
     if (languages.some(({ banks }) => Object.values(banks).some(({ access }) => access !== 'free'))) {
         await assertContentRootUsable(contentRoot, pipelineDir, contentDir);
     }
+    await assertNoPublicPaidBank(contentDir, languages);
     const previous = await readLatestReport(join(pipelineDir, 'reports'));
     const verdicts = readVerdicts(previous);
     const fallbackTopics = await readFallbackTopics(join(pipelineDir, 'topics.json'));
@@ -86,7 +103,7 @@ export async function publish(options: PublishOptions): Promise<PublishResult> {
                 log,
                 outRoot: isFree ? pipelineDir : contentRoot,
                 reported: verdicts.get(bankKey) ?? new Map(),
-                source: await readSourceQuestions(isFree ? [publicFile] : [privateFile, publicFile]),
+                source: await readSourceQuestions([isFree ? publicFile : privateFile]),
             });
         }
     }

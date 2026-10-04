@@ -121,7 +121,9 @@ describe('gapFill', () => {
             const [difficulty, access] = name.split(':') as [string, 'free' | 'paid'];
             entries[difficulty] = buildEntry(`python/${difficulty}.json`, access);
             const questions = topics.map((_topic, index) => buildBankQuestion(`${difficulty}-${index}`));
-            await writeJson(join(contentDir, `python/${difficulty}.json`), { questions });
+            // Paid banks live in the private content root, never under content/ (B-60).
+            const bankRoot = access === 'free' ? contentDir : contentRoot;
+            await writeJson(join(bankRoot, `python/${difficulty}.json`), { questions });
             const accepted = Object.fromEntries(
                 topics.map((topic, index) => [`${difficulty}-${index}`, { confidence: 0.9, topic }]),
             );

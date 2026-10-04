@@ -17,13 +17,27 @@ function EventProbe() {
       <Pressable
         testID="bank-answer"
         onPress={() =>
-          recordAnswer({ choiceIndex: 2, difficulty: 'hard', language: 'postgres', questionId: 'pg-hard-07', roundKind: 'bank', wasCorrect: false })
+          recordAnswer({
+            choiceIndex: 2,
+            difficulty: 'hard',
+            language: 'postgres',
+            questionId: 'pg-easy-07',
+            roundKind: 'bank',
+            wasCorrect: false,
+          })
         }
       />
       <Pressable
         testID="review-answer"
         onPress={() =>
-          recordAnswer({ choiceIndex: 0, difficulty: 'easy', language: 'python', questionId: 'py-easy-01', roundKind: 'review', wasCorrect: true })
+          recordAnswer({
+            choiceIndex: 0,
+            difficulty: 'easy',
+            language: 'python',
+            questionId: 'py-easy-01',
+            roundKind: 'review',
+            wasCorrect: true,
+          })
         }
       />
     </>
@@ -35,7 +49,11 @@ async function readStoredLog(): Promise<LoggedAnswerEvent[]> {
 }
 
 async function renderHydrated(ownerUserId?: string | null) {
-  const view = await render(<StatsProvider ownerUserId={ownerUserId}><EventProbe /></StatsProvider>);
+  const view = await render(
+    <StatsProvider ownerUserId={ownerUserId}>
+      <EventProbe />
+    </StatsProvider>,
+  );
   await waitFor(() => expect(screen.getByTestId('hydrated')).toHaveTextContent('true'));
   return view;
 }
@@ -58,7 +76,7 @@ describe('StatsProvider answer event log', () => {
       isHeld: false,
       isSynced: false,
       ownerUserId: null,
-      questionId: 'pg-hard-07',
+      questionId: 'pg-easy-07',
       roundKind: 'bank',
     });
     expect(new Date(event.answeredAt).toISOString()).toBe(event.answeredAt);

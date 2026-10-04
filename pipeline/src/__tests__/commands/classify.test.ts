@@ -16,6 +16,8 @@ const TOPIC_LIST = [
     { id: 'wtf', label: 'WTF' },
 ];
 const PAID_TEXT = 'PAID-SECRET-PROMPT';
+// The seeded paid bank's path under the content root (B-60: paid banks never sit under content/).
+const PAID_BANK_FILE = 'python/medium.json';
 
 function buildEntry(path: string, access: 'free' | 'paid'): Record<string, unknown> {
     const productId = access === 'paid' ? { productId: 'syntactical.python.medium' } : {};
@@ -114,15 +116,18 @@ describe('classify', () => {
     async function seed(banks: Record<string, unknown[]>, topics?: unknown[]): Promise<void> {
         const entries: Record<string, unknown> = {};
         const files: Record<string, unknown> = {};
+        const paidFiles: Record<string, unknown> = {};
         for (const [name, questions] of Object.entries(banks)) {
             const [difficulty, access] = name.split(':') as [string, 'free' | 'paid'];
             entries[difficulty] = buildEntry(`python/${difficulty}.json`, access);
-            files[`python/${difficulty}.json`] = { questions };
+            // Paid banks live in the private content root, never under content/ (B-60).
+            (access === 'free' ? files : paidFiles)[`python/${difficulty}.json`] = { questions };
         }
         await writeTree(contentDir, {
             ...files,
             'manifest.json': buildManifest(entries, topics),
         });
+        await writeTree(contentRoot, paidFiles);
     }
 
     beforeEach(async () => {
@@ -177,8 +182,11 @@ describe('classify', () => {
             ...(await Promise.all(
                 (await listFiles(pipelineDir)).map((name) => readFile(join(pipelineDir, name), 'utf8')),
             )),
+            // The seeded paid bank itself lives in the content root; only what classify wrote counts.
             ...(await Promise.all(
-                (await listFiles(contentRoot)).map((name) => readFile(join(contentRoot, name), 'utf8')),
+                (await listFiles(contentRoot))
+                    .filter((name) => name !== PAID_BANK_FILE)
+                    .map((name) => readFile(join(contentRoot, name), 'utf8')),
             )),
         ];
         expect(written.length).toBeGreaterThan(0);
@@ -204,7 +212,11 @@ describe('classify', () => {
                 await Promise.all(
                     [pipelineDir, contentRoot].flatMap((dir) =>
                         listFiles(dir).then((names) =>
-                            Promise.all(names.map((name) => readFile(join(dir, name), 'utf8'))),
+                            Promise.all(
+                                names
+                                    .filter((name) => dir !== contentRoot || name !== PAID_BANK_FILE)
+                                    .map((name) => readFile(join(dir, name), 'utf8')),
+                            ),
                         ),
                     ),
                 )
@@ -353,7 +365,7 @@ describe('classify', () => {
     it('accepts a sibling directory literally named ..private (not mistaken for a parent)', async () => {
         await seed({ 'medium:paid': [buildQuestion('paid-1', PAID_TEXT)] });
         const odd = join(root, '..private');
-        await mkdir(odd, { recursive: true });
+        await writeTree(odd, { [PAID_BANK_FILE]: { questions: [buildQuestion('paid-1', PAID_TEXT)] } });
         await run(
             scripted(() => ({ confidence: 0.3, topic: 'strings' })),
             { contentRoot: odd },
