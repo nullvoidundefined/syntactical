@@ -12,30 +12,22 @@ import {
   HTTP_STATUS_PAYLOAD_TOO_LARGE,
   HTTP_STATUS_UNPROCESSABLE,
   SYNC_MAX_PAGES_PER_PASS,
-  SYNC_PAST_BOUND_MS,
 } from '../../constants/appConfig';
 import { isAnswerEvent } from '../stats/isAnswerEvent';
-import type { HeldReason, LoggedAnswerEvent } from '../stats/types/LoggedAnswerEvent';
+import type { LoggedAnswerEvent } from '../stats/types/LoggedAnswerEvent';
 
 import { buildUploadBatches } from './buildUploadBatches';
-import { releaseHeldEvents } from './releaseHeldEvents';
 
 type SyncPassInput = {
   userId: string;
   eventLog: LoggedAnswerEvent[];
   syncCursor: string | null;
-  now?: () => Date;
-  // A capped user's probe: post one batch, whole, with no halving.
-  isCapProbe?: boolean;
   request: typeof apiFetch;
   isCurrent(): boolean;
   markSynced(ids: string[]): void | Promise<void>;
-  markHeld(ids: string[], reason: HeldReason): void | Promise<void>;
-  markReleased?(ids: string[]): void | Promise<void>;
+  markHeld(ids: string[]): void | Promise<void>;
   mergeDownloaded(events: AnswerEvent[], cursor: string | null): void | Promise<void>;
 };
-
-const HALVES = 2;
 
 type UploadOutcome = 'cap' | 'failed' | 'ok' | 'stop';
 
@@ -69,35 +61,10 @@ function readDownloadPage(body: unknown): DownloadPage | null {
   return { events: unique, nextCursor };
 }
 
-// Why an event the server refused for its timestamp is held: answered more
-// than 365 days before the device clock is past; every other named event is
-// future, so the release check uploads it once it is within 5 minutes.
-function readTimestampReason(event: AnswerEvent, nowMs: number): HeldReason {
-  return Date.parse(event.answeredAt) < nowMs - SYNC_PAST_BOUND_MS ? 'timestamp-past' : 'timestamp-future';
-}
-
-// Holds the events a 422 names and returns the rest, or null when it names none of this batch.
-async function holdNamed(input: SyncPassInput, pending: AnswerEvent[], body: unknown, code: string): Promise<AnswerEvent[] | null> {
-  const named = new Set(readRejectedIds(body));
-  const held = pending.filter(({ eventId }) => named.has(eventId));
-  if (held.length === 0) return null;
-  if (code === 'SYNC_INVALID_EVENTS') {
-    await input.markHeld(held.map(({ eventId }) => eventId), 'invalid-events');
-  } else {
-    const nowMs = (input.now ?? (() => new Date()))().getTime();
-    const byReason = new Map<HeldReason, string[]>();
-    for (const event of held) {
-      const reason = readTimestampReason(event, nowMs);
-      byReason.set(reason, [...(byReason.get(reason) ?? []), event.eventId]);
-    }
-    for (const [reason, ids] of byReason) await input.markHeld(ids, reason);
-  }
-  return pending.filter(({ eventId }) => !named.has(eventId));
-}
-
 // Posts one batch. 'stop' ends the pass at once; 'failed' (a rejected upload)
-// and 'cap' (the stored-event cap, confirmed by a refused 1-event batch, or by
-// any refused batch on a probe) still let the download run.
+// and 'cap' (the stored-event cap) still let the download run. A 422 naming
+// events holds them and re-posts the rest; a batch the server refuses as a
+// body error is held whole.
 async function uploadBatch(input: SyncPassInput, batch: AnswerEvent[]): Promise<UploadOutcome> {
   let pending = batch;
   while (pending.length > 0) {
@@ -113,35 +80,23 @@ async function uploadBatch(input: SyncPassInput, batch: AnswerEvent[]): Promise<
       return 'ok';
     }
     const code = readErrorCode(body);
-    if (status === HTTP_STATUS_UNPROCESSABLE && code === 'SYNC_EVENT_CAP_REACHED') {
-      if (pending.length === 1 || input.isCapProbe) return 'cap';
-      return uploadHalves(input, pending);
-    }
+    if (status === HTTP_STATUS_UNPROCESSABLE && code === 'SYNC_EVENT_CAP_REACHED') return 'cap';
     if (
       (status === HTTP_STATUS_BAD_REQUEST && code === 'INPUT_INVALID_BODY') ||
       (status === HTTP_STATUS_PAYLOAD_TOO_LARGE && code === 'INPUT_PAYLOAD_TOO_LARGE')
     ) {
-      await input.markHeld(pending.map(({ eventId }) => eventId), 'invalid-batch');
+      await input.markHeld(pending.map(({ eventId }) => eventId));
       return 'ok';
     }
     if (status !== HTTP_STATUS_UNPROCESSABLE || (code !== 'SYNC_INVALID_EVENTS' && code !== 'SYNC_TIMESTAMP_OUT_OF_RANGE')) {
       return 'failed';
     }
-    const rest = await holdNamed(input, pending, body, code);
+    const named = new Set(readRejectedIds(body));
+    const held = pending.filter(({ eventId }) => named.has(eventId));
     // A 422 naming nothing in this batch is not understood: hold nothing and stop.
-    if (rest === null) return 'failed';
-    pending = rest;
-  }
-  return 'ok';
-}
-
-// Retries a batch the cap refused in two halves; each half that is refused is
-// split again. The first refused 1-event batch ends the upload.
-async function uploadHalves(input: SyncPassInput, pending: AnswerEvent[]): Promise<UploadOutcome> {
-  const middle = Math.ceil(pending.length / HALVES);
-  for (const half of [pending.slice(0, middle), pending.slice(middle)]) {
-    const outcome = await uploadBatch(input, half);
-    if (outcome !== 'ok') return outcome;
+    if (held.length === 0) return 'failed';
+    await input.markHeld(held.map(({ eventId }) => eventId));
+    pending = pending.filter(({ eventId }) => !named.has(eventId));
   }
   return 'ok';
 }
@@ -171,12 +126,9 @@ async function downloadAll(input: SyncPassInput): Promise<boolean> {
 }
 
 export async function runSyncPass(input: SyncPassInput): Promise<{ isOk: boolean; isUploadCapReached?: true }> {
-  const { eventLog: log, isCapProbe, now = () => new Date(), userId } = input;
+  const { eventLog, userId } = input;
   try {
-    const { eventLog, releasedIds } = releaseHeldEvents(log, userId, now());
-    if (releasedIds.length > 0) await input.markReleased?.(releasedIds);
-    const batches = buildUploadBatches(eventLog, userId);
-    for (const batch of isCapProbe ? batches.slice(0, 1) : batches) {
+    for (const batch of buildUploadBatches(eventLog, userId)) {
       const outcome = await uploadBatch(input, batch);
       if (outcome === 'ok') continue;
       // A rejected upload does not starve the download.

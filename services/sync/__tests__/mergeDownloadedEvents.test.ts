@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { EVENT_LOG_CAP } from '../../../constants/appConfig';
 import type { LoggedAnswerEvent } from '../../stats/types/LoggedAnswerEvent';
+import { buildUploadBatches } from '../buildUploadBatches';
 import { mergeDownloadedEvents } from '../mergeDownloadedEvents';
 import { buildAnswerEvent, buildOwnedLog, stripToAnswerEvent, toLogged } from './fakeSyncServer';
 
@@ -85,5 +86,15 @@ describe('mergeDownloadedEvents', () => {
     const ids = new Set(idsOf(next));
     expect(next).toHaveLength(EVENT_LOG_CAP);
     for (const entry of log) expect(ids.has(entry.eventId)).toBe(true);
+  });
+
+  it('marks a held entry synced and no longer held, so it is not uploaded again', () => {
+    const held = toLogged(buildAnswerEvent(0), userId, { isHeld: true });
+    const pending = toLogged(buildAnswerEvent(1), userId);
+
+    const next = mergeDownloadedEvents([held, pending], [stripToAnswerEvent(held)], userId);
+
+    expect(next.filter(({ eventId }) => eventId === held.eventId)).toEqual([{ ...held, isHeld: false, isSynced: true }]);
+    expect(buildUploadBatches(next, userId).flat().map(({ eventId }) => eventId)).toEqual([pending.eventId]);
   });
 });

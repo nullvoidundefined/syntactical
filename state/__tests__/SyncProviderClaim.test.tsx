@@ -1,8 +1,7 @@
 // SyncProvider guest claim ordering (Task 3.11 hardening; B-36, B-61): the
 // claim completes only after the claimed event log has reached storage, and
-// nothing uploads before then; a claim whose write fails stays pending and is
-// retried on the next mount, ending with the guest events owned by the user
-// and uploaded. Real AuthProvider, StatsProvider, and runSyncPass; apiFetch
+// nothing uploads before then; a claim whose write fails stays pending and
+// nothing uploads. Real AuthProvider, StatsProvider, and runSyncPass; apiFetch
 // routed to a fake server per signed-in account; AsyncStorage writes of the
 // claimed event log held or failed on purpose.
 import { randomBytes, randomInt, randomUUID } from 'node:crypto';
@@ -193,34 +192,19 @@ describe('SyncProvider guest claim ordering', () => {
     expect(router.syncRequestsWithoutSession()).toEqual([]);
   });
 
-  it('keeps the claim pending when the claimed event log fails to store, and the next mount retries it, ending with the guest events owned by the user and uploaded', async () => {
+  it('keeps the claim pending and uploads nothing when the claimed event log fails to store', async () => {
     const userId = randomUUID();
     const guestLog = buildOwnedLog(5, null);
     await seedEventLog(guestLog);
     const failing = failClaimWrites(userId);
-    const firstView = await mountHydrated();
+    await mountHydrated();
 
     await signIn(router, userId);
     await waitFor(() => expect(failing.failures).toBeGreaterThan(0));
     await flush();
+
     expect(latest.auth?.guestClaimUserId).toBe(userId);
     expect(await readStoredLog()).toEqual(guestLog);
-
-    await firstView.unmount();
-    failing.isFailing = false;
-    latest.auth = null;
-    latest.stats = null;
-    await mountHydrated();
-
-    await waitFor(() => expect(router.serverFor(userId).storedIds().size).toBe(5));
-    await waitFor(async () => {
-      const stored = await readStoredLog();
-      expect(stored.every(({ isSynced, ownerUserId }) => isSynced && ownerUserId === userId)).toBe(true);
-    });
-    expect([...router.serverFor(userId).storedIds()].sort()).toEqual(idsOf(guestLog).sort());
-    expect(idsOf(await readStoredLog()).sort()).toEqual(idsOf(guestLog).sort());
-    // Re-read through the declared type: the null reset above narrows `latest.auth` for tsc.
-    expect((latest.auth as AuthValue | null)?.guestClaimUserId).toBeNull();
-    expect(router.syncRequestsWithoutSession()).toEqual([]);
+    expect(router.serverFor(userId).postRequests()).toEqual([]);
   });
 });

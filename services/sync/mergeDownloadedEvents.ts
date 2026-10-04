@@ -1,5 +1,6 @@
 // Merges a downloaded page into the event log: new events arrive synced and
-// owned by the user; one already present is kept and marked synced. The log
+// owned by the user; one already present is kept and marked synced (and no
+// longer held). The log
 // obeys the same cap as appendAnswerEvent.
 import type { AnswerEvent } from '@syntactical/progress';
 
@@ -10,10 +11,9 @@ export function mergeDownloadedEvents(eventLog: LoggedAnswerEvent[], downloaded:
   const downloadedIds = new Set(downloaded.map(({ eventId }) => eventId));
   const presentIds = new Set<string>();
   const merged = eventLog.map((entry) => {
-    const { eventId, isHeld, isSynced, ownerUserId } = entry;
+    const { eventId, isHeld, isSynced } = entry;
     presentIds.add(eventId);
-    const isOwnDownloaded = downloadedIds.has(eventId) && ownerUserId === userId;
-    return isOwnDownloaded && (!isSynced || isHeld) ? { ...entry, isHeld: false, isSynced: true } : entry;
+    return downloadedIds.has(eventId) && (!isSynced || isHeld) ? { ...entry, isHeld: false, isSynced: true } : entry;
   });
   for (const event of downloaded) {
     if (presentIds.has(event.eventId)) continue;

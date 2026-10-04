@@ -2,9 +2,9 @@
 // once when the signed-in user has no unsynced events; otherwise it opens a
 // modal dialog offering "Sync now", "Discard", and "Cancel". Sync now signs
 // out only after every event synced and announces a failed pass in an alert;
-// Discard removes that user's unsynced events and signs out. Every sign-out
-// clears the sync cursor, and the guest that follows sees none of the
-// previous user's events. Real AuthProvider, StatsProvider, SyncProvider, and
+// Discard removes that user's events and signs out. Every sign-out clears
+// the sync cursor and removes the user's events from the device, so the guest
+// that follows sees none of them. Real AuthProvider, StatsProvider, SyncProvider, and
 // runSyncPass; apiFetch routed to a fake server per signed-in account.
 import { randomUUID } from 'node:crypto';
 
@@ -194,7 +194,7 @@ describe('SignOutDialog', () => {
     expect(sessionDeletes(router)).toEqual([]);
   });
 
-  it('Sync now uploads every unsynced event, then signs out, clears the sync cursor, and leaves the guest none of the user\'s events', async () => {
+  it('Sync now uploads every unsynced event, then signs out, clears the sync cursor, and removes the user\'s events from the device', async () => {
     await mountSignedIn(router, userId, [...unsynced, ...synced]);
     const dialog = await openDialog();
     router.state.isFailing = false;
@@ -207,8 +207,7 @@ describe('SignOutDialog', () => {
     const lastUpload = router.sent.map(({ method }) => method).lastIndexOf('POST');
     const signOutAt = router.sent.findIndex(({ method, path }) => method === 'DELETE' && path === 'auth/sessions/current');
     expect(signOutAt).toBeGreaterThan(lastUpload);
-    const stored = await readStoredLog();
-    for (const entry of unsynced) expect(entryIn(stored, entry.eventId)?.isSynced).toBe(true);
+    expect(await readStoredLog()).toEqual([]);
     expect((await readUserStats(userId))?.syncCursor).toBeUndefined();
     expect(latest.stats?.eventLog).toEqual([]);
     expect(queryDialog()).toBeNull();
@@ -230,7 +229,7 @@ describe('SignOutDialog', () => {
     expect((await readUserStats(userId))?.syncCursor).toBeDefined();
   });
 
-  it('Discard removes the user\'s unsynced events without uploading them, signs out, and clears the sync cursor', async () => {
+  it('Discard removes the user\'s events without uploading them, signs out, and clears the sync cursor', async () => {
     await mountSignedIn(router, userId, [...unsynced, ...synced]);
     const dialog = await openDialog();
     router.state.isFailing = false;
@@ -240,9 +239,7 @@ describe('SignOutDialog', () => {
 
     const unsyncedIds = new Set(idsOf(unsynced));
     expect([...router.serverFor(userId).storedIds()].filter((id) => unsyncedIds.has(id))).toEqual([]);
-    const stored = await readStoredLog();
-    expect(stored.filter(({ eventId }) => unsyncedIds.has(eventId))).toEqual([]);
-    for (const entry of synced) expect(entryIn(stored, entry.eventId)).toEqual(entry);
+    expect(await readStoredLog()).toEqual([]);
     expect(sessionDeletes(router)).toHaveLength(1);
     expect((await readUserStats(userId))?.syncCursor).toBeUndefined();
     expect(latest.stats?.eventLog).toEqual([]);
@@ -261,7 +258,7 @@ describe('SignOutDialog', () => {
     for (const entry of unsynced) expect(entryIn(stored, entry.eventId)).toEqual(entry);
   });
 
-  it('with no unsynced events signs out directly, with no dialog, and clears the sync cursor', async () => {
+  it('with no unsynced events signs out directly, with no dialog, clears the sync cursor, and removes the user\'s events', async () => {
     router.state.isFailing = false;
     await mountSignedIn(router, userId, synced);
     fireEvent.press(screen.getByRole('button', { name: SIGN_OUT }));
@@ -272,6 +269,6 @@ describe('SignOutDialog', () => {
     expect(sessionDeletes(router)).toHaveLength(1);
     expect((await readUserStats(userId))?.syncCursor).toBeUndefined();
     expect(latest.stats?.eventLog).toEqual([]);
-    expect(idsOf(await readStoredLog()).sort()).toEqual(idsOf(synced).sort());
+    expect(await readStoredLog()).toEqual([]);
   });
 });

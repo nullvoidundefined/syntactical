@@ -168,7 +168,7 @@ describe('sync server contract: upload rejections', () => {
   it('answers a batch past the stored-event cap with 422 SYNC_EVENT_CAP_REACHED and no eventIds; the pass holds and syncs nothing', async () => {
     const userId = randomUUID();
     const device = createDevice(userId, buildOwnedLog(5, userId));
-    // A cap of 0 refuses every split of the batch too, down to a single event.
+    // A cap of 0 refuses the batch; the pass does not retry a smaller one.
     const server = createFakeSyncServer({ maxStoredEvents: 0 });
 
     const { exchanges, result } = await runRecordedPass(device, server);

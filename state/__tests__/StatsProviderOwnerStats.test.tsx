@@ -40,7 +40,7 @@ function StatsProbe() {
       <Pressable testID="right" onPress={() => answer(true)} />
       <Pressable testID="wrong" onPress={() => answer(false)} />
       <Pressable testID="complete" onPress={() => recordCompletion({ difficulty: 'easy', language: 'python' })} />
-      <Pressable testID="claim" onPress={() => void claimGuestEvents(probeClaimUserId)} />
+      <Pressable testID="claim" onPress={() => void claimGuestEvents(probeClaimUserId).catch(() => undefined)} />
     </>
   );
 }
@@ -185,5 +185,29 @@ describe('StatsProvider owner-scoped stats', () => {
     expect(screen.getByTestId('streak')).toHaveTextContent('5/6');
     expect(screen.getByTestId('goal')).toHaveTextContent('50');
     expect(screen.getByTestId('dismissed')).toHaveTextContent('true');
+  });
+
+  it('claims nothing for a user who is not the current owner', async () => {
+    probeClaimUserId = userB;
+    await render(renderProvider(userA));
+    await settle();
+    await fireEvent.press(screen.getByTestId('claim'));
+    await settle();
+    expectEmptyStats();
+    expect(await readGuestKey()).toEqual(guestStats);
+  });
+
+  it('leaves the guest stats in place when they cannot be read during a claim', async () => {
+    probeClaimUserId = userA;
+    await render(renderProvider(userA));
+    await settle();
+    const getItem = AsyncStorage.getItem as unknown as jest.Mock;
+    const originalGetItem = getItem.getMockImplementation() as (key: string) => Promise<string | null>;
+    getItem.mockImplementation((key: string) => (key === STORAGE_KEY ? Promise.reject(new Error('read failed')) : originalGetItem(key)));
+    await fireEvent.press(screen.getByTestId('claim'));
+    await settle();
+    getItem.mockImplementation(originalGetItem);
+    expectEmptyStats();
+    expect(await readGuestKey()).toEqual(guestStats);
   });
 });

@@ -56,36 +56,15 @@ export const KEY_BINDINGS = {
 // The most events one answer-events upload carries (the server limit).
 export const SYNC_BATCH_SIZE = 200;
 
-// Each user id the server stopped at the stored-event cap, with the time (ms)
-// it did; they post nothing until the cap clears, but still download.
-export const SYNC_CAP_REACHED_STORAGE_KEY = 'syntactical.sync.cap-reached.v1';
-// Marks a guest stats fold in progress or done, until the guest reset lands.
-export const GUEST_CLAIM_STORAGE_KEY = 'syntactical.stats.guest-claim.v1';
-
 // The most download pages one sync pass requests; the next pass resumes from the stored cursor.
 export const SYNC_MAX_PAGES_PER_PASS = 100;
 
 const MS_PER_SECOND = 1000;
 const SECONDS_PER_MINUTE = 60;
 const MS_PER_MINUTE = SECONDS_PER_MINUTE * MS_PER_SECOND;
-const MINUTES_PER_HOUR = 60;
-const HOURS_PER_DAY = 24;
-const MINUTES_PER_DAY = HOURS_PER_DAY * MINUTES_PER_HOUR;
-const SYNC_CAP_RETRY_HOURS = 24;
-const SYNC_PAST_BOUND_DAYS = 365;
 const SYNC_INTERVAL_MINUTES = 5;
-const SYNC_FUTURE_TOLERANCE_MINUTES = 5;
 const SYNC_BACKOFF_START_SECONDS = 30;
 const SYNC_BACKOFF_CAP_MINUTES = 15;
-
-// An event answered more than this far ahead of the device clock is held as timestamp-future.
-export const SYNC_FUTURE_TOLERANCE_MS = SYNC_FUTURE_TOLERANCE_MINUTES * MS_PER_MINUTE;
-
-// An event answered more than this far before the device clock is held as timestamp-past.
-export const SYNC_PAST_BOUND_MS = SYNC_PAST_BOUND_DAYS * MINUTES_PER_DAY * MS_PER_MINUTE;
-
-// A capped user posts nothing for this long, then one probe batch.
-export const SYNC_CAP_RETRY_MS = SYNC_CAP_RETRY_HOURS * MINUTES_PER_HOUR * MS_PER_MINUTE;
 
 // How often a signed-in, online client runs a sync pass.
 export const SYNC_INTERVAL_MS = SYNC_INTERVAL_MINUTES * MS_PER_MINUTE;

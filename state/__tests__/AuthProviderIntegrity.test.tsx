@@ -335,32 +335,22 @@ describe('AuthProvider session integrity on native', () => {
   });
 
   describe('the pending guest claim', () => {
-    it('survives an unmount and remount until completeGuestClaim, and the stored value holds no secret', async () => {
+    it('stays raised until completeGuestClaim, and the stored values hold no secret', async () => {
       const identity = buildIdentity();
       installRoutedFetch(signInRoutes(identity));
-      const first = await mountAuth();
-      await signIn(first.result, identity);
-      expect(first.result.current.guestClaimUserId).toBe(identity.userId);
+      const { result } = await mountAuth();
+      await signIn(result, identity);
+      expect(result.current.guestClaimUserId).toBe(identity.userId);
       await waitFor(async () => expect(await storedUserId()).toBe(identity.userId));
       await flush();
-      await first.unmount();
 
-      const second = await mountAuth();
-
-      expect(second.result.current.isSignedIn).toBe(true);
-      expect(second.result.current.guestClaimUserId).toBe(identity.userId);
       const storedValues = (await readAllStoredValues()).join('\n');
       for (const secret of [identity.sessionValue, identity.email, identity.code]) {
         expect(storedValues).not.toContain(secret);
       }
 
-      await completeClaim(second.result, identity.userId);
-      expect(second.result.current.guestClaimUserId).toBeNull();
-      await flush();
-      await second.unmount();
-
-      const third = await mountAuth();
-      expect(third.result.current.guestClaimUserId).toBeNull();
+      await completeClaim(result, identity.userId);
+      expect(result.current.guestClaimUserId).toBeNull();
     });
 
     it('survives a sign-out followed by a sign-in of the same id', async () => {
@@ -387,11 +377,6 @@ describe('AuthProvider session integrity on native', () => {
       await completeClaim(first.result, randomUUID());
 
       expect(first.result.current.guestClaimUserId).toBe(identity.userId);
-      await flush();
-      await first.unmount();
-
-      const second = await mountAuth();
-      expect(second.result.current.guestClaimUserId).toBe(identity.userId);
     });
 
     it('raises a claim for a second distinct user and persists both ids as known once their claims complete', async () => {

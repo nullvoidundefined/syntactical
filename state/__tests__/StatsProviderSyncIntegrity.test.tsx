@@ -1,6 +1,5 @@
 // Task 3.11 hardening (B-36, B-61): the download cursor belongs to the user
-// who stored it, every sync change names its owner and is refused for any
-// other, and every event-log action reports whether it reached storage.
+// who stored it, and every event-log action reports whether it reached storage.
 import { randomUUID } from 'node:crypto';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,7 +16,6 @@ import { StatsProvider, useQuizStats } from '../StatsProvider';
 
 type StatsValue = ReturnType<typeof useQuizStats>;
 type SetItem = (key: string, value: string) => Promise<void>;
-type SyncAction = 'markEventsHeld' | 'markEventsReleased' | 'markEventsSynced' | 'mergeDownloadedEvents';
 
 let latest: StatsValue;
 
@@ -135,17 +133,6 @@ function track(promise: Promise<unknown> | void) {
   return state;
 }
 
-function callAction(action: SyncAction, ids: string[], owner: string | null | undefined): Promise<void> {
-  // The owner argument is required; the cast lets a test omit it to prove the
-  // omission is refused at run time too.
-  const call = latest[action] as unknown as (...args: unknown[]) => Promise<void>;
-  if (action === 'mergeDownloadedEvents') {
-    const args: unknown[] = [[buildAnswerEvent()], buildCursor()];
-    return owner === undefined ? call(...args) : call(...args, owner);
-  }
-  return owner === undefined ? call(ids) : call(ids, owner);
-}
-
 afterEach(() => {
   setItemMock.mockImplementation(originalSetItem);
 });
@@ -193,79 +180,6 @@ describe('StatsProvider sync cursor ownership', () => {
     expect(latest.readSyncCursor(userA)).toBeNull();
     expect(await readStoredStats(userA)).toEqual(seeded);
   });
-
-  it('writes no cursor when the owner changes while the event-log write is pending', async () => {
-    const view = await renderHydrated(userA);
-    const hold = holdNextEventLogWrite();
-    const downloaded = buildAnswerEvent();
-    let merge: ReturnType<typeof track> | undefined;
-    await act(async () => {
-      merge = track(latest.mergeDownloadedEvents([downloaded], buildCursor(), userA));
-    });
-    await waitFor(() => expect(hold.isReached()).toBe(true));
-    await view.rerender(<StatsProvider ownerUserId={userB}><IntegrityProbe /></StatsProvider>);
-    await act(async () => hold.release());
-    await waitFor(() => expect(merge?.isSettled).toBe(true));
-    await flushTurns();
-    expect((await readStoredStats(userA))?.syncCursor).toBeUndefined();
-    expect((await readStoredStats(userB))?.syncCursor).toBeUndefined();
-    expect(latest.stats.syncCursor).toBeUndefined();
-    expect(latest.readSyncCursor(userB)).toBeNull();
-    expect(latest.readSyncCursor(userA)).toBeNull();
-  });
-});
-
-describe('StatsProvider sync actions require their owner', () => {
-  const userA = randomUUID();
-  const userB = randomUUID();
-  const actions: SyncAction[] = ['markEventsSynced', 'markEventsHeld', 'markEventsReleased', 'mergeDownloadedEvents'];
-
-  beforeEach(() => AsyncStorage.clear());
-
-  async function expectRefusedAndUnchanged(providerOwner: string | null, action: SyncAction, owner: string | null | undefined) {
-    // Release only changes a held entry, so its entries start held and a
-    // write that slipped past the owner check would show in the stored log.
-    const flags = action === 'markEventsReleased' ? { isHeld: true } : {};
-    const own = buildEntry(providerOwner, flags);
-    const other = buildEntry(providerOwner === null ? userB : null, flags);
-    const seededLog = [own, other];
-    const seededStats = createEmptyStats(readLocalToday());
-    await seedLog(seededLog);
-    await seedStats(seededStats, providerOwner);
-    await renderHydrated(providerOwner);
-    const visibleBefore = latest.eventLog;
-    setItemMock.mockClear();
-
-    let outcome: ReturnType<typeof track> | undefined;
-    await act(async () => {
-      outcome = track(callAction(action, [own.eventId, other.eventId], owner));
-    });
-    await waitFor(() => expect(outcome?.isSettled).toBe(true));
-    await flushTurns();
-
-    expect(outcome?.isRejected).toBe(true);
-    expect(setItemMock).not.toHaveBeenCalled();
-    expect(await readStoredLog()).toEqual(seededLog);
-    expect(await readStoredStats(providerOwner)).toEqual(seededStats);
-    expect(latest.eventLog).toEqual(visibleBefore);
-    expect(latest.stats.syncCursor).toBeUndefined();
-  }
-
-  it.each(actions)('%s rejects and changes nothing when the owner argument names another user', async (action) => {
-    await expectRefusedAndUnchanged(userA, action, userB);
-  });
-
-  it.each(actions)('%s rejects and changes nothing when the owner argument is omitted', async (action) => {
-    await expectRefusedAndUnchanged(userA, action, undefined);
-  });
-
-  it.each(actions)('%s rejects and changes nothing when the provider has no owner and the argument is null', async (action) => {
-    await expectRefusedAndUnchanged(null, action, null);
-  });
-
-  it.each(actions)('%s rejects and changes nothing when the provider has no owner and the argument names a user', async (action) => {
-    await expectRefusedAndUnchanged(null, action, userA);
-  });
 });
 
 describe('StatsProvider sync actions report a failed event-log write', () => {
@@ -280,7 +194,7 @@ describe('StatsProvider sync actions report a failed event-log write', () => {
     failEventLogWrites();
     let outcome: ReturnType<typeof track> | undefined;
     await act(async () => {
-      outcome = track(latest[action]([entry.eventId], userA));
+      outcome = track(latest[action]([entry.eventId]));
     });
     await waitFor(() => expect(outcome?.isSettled).toBe(true));
     expect(outcome?.isRejected).toBe(true);
@@ -302,7 +216,7 @@ describe('StatsProvider sync actions report a failed event-log write', () => {
   });
 });
 
-describe('StatsProvider claimGuestEvents and discardUnsyncedEvents settle with their write', () => {
+describe('StatsProvider claimGuestEvents and removeUserEvents settle with their write', () => {
   const userA = randomUUID();
 
   beforeEach(() => AsyncStorage.clear());
@@ -337,7 +251,7 @@ describe('StatsProvider claimGuestEvents and discardUnsyncedEvents settle with t
     expect(outcome?.isRejected).toBe(true);
   });
 
-  it('discardUnsyncedEvents resolves only once persisted, and the discarded events stay gone after a remount', async () => {
+  it('removeUserEvents resolves only once persisted, and the removed events stay gone after a remount', async () => {
     const unsynced = buildEntry(userA);
     const synced = buildEntry(userA, { isSynced: true });
     await seedLog([unsynced, synced]);
@@ -345,7 +259,7 @@ describe('StatsProvider claimGuestEvents and discardUnsyncedEvents settle with t
     const hold = holdNextEventLogWrite();
     let outcome: ReturnType<typeof track> | undefined;
     await act(async () => {
-      outcome = track(latest.discardUnsyncedEvents(userA));
+      outcome = track(latest.removeUserEvents(userA));
     });
     await waitFor(() => expect(hold.isReached()).toBe(true));
     await flushTurns();
@@ -355,16 +269,16 @@ describe('StatsProvider claimGuestEvents and discardUnsyncedEvents settle with t
     expect(outcome?.isRejected).toBe(false);
     await view.unmount();
     await renderHydrated(userA);
-    expect(latest.eventLog).toEqual([synced]);
+    expect(latest.eventLog).toEqual([]);
   });
 
-  it('discardUnsyncedEvents rejects when the write fails', async () => {
+  it('removeUserEvents rejects when the write fails', async () => {
     await seedLog([buildEntry(userA)]);
     await renderHydrated(userA);
     failEventLogWrites();
     let outcome: ReturnType<typeof track> | undefined;
     await act(async () => {
-      outcome = track(latest.discardUnsyncedEvents(userA));
+      outcome = track(latest.removeUserEvents(userA));
     });
     await waitFor(() => expect(outcome?.isSettled).toBe(true));
     expect(outcome?.isRejected).toBe(true);
