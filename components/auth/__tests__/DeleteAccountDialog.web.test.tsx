@@ -84,4 +84,34 @@ describe('DeleteAccountDialog on the web', () => {
     expect(router.sent.filter(({ path }) => path === 'me')).toEqual([]);
     expect(latest.auth?.isSignedIn).toBe(true);
   });
+
+  it('keeps Tab inside the dialog: from the last control it returns to the first', async () => {
+    render(
+      <AuthProvider>
+        <OwnedStatsProvider>
+          <SyncProvider>
+            <DeleteAccountDialog />
+            <Probe />
+          </SyncProvider>
+        </OwnedStatsProvider>
+      </AuthProvider>,
+    );
+    await waitFor(() => expect(latest.auth?.user).toEqual({ id: userId }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Delete account' }));
+    });
+    const dialog = await screen.findByRole('dialog', { name: 'Delete account' });
+    const input = within(dialog).getByRole('textbox', { name: 'Type DELETE to confirm' });
+    const cancel = within(dialog).getByRole('button', { name: 'Cancel' });
+    await act(async () => {
+      cancel.focus();
+      fireEvent.keyDown(cancel, { code: 'Tab', key: 'Tab' });
+    });
+    expect(document.activeElement).toBe(input);
+
+    await act(async () => {
+      fireEvent.keyDown(input, { code: 'Tab', key: 'Tab', shiftKey: true });
+    });
+    expect(document.activeElement).toBe(cancel);
+  });
 });

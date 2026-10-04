@@ -45,13 +45,26 @@ function DialogPanel({ confirmation, isBusy, isOnline, message, onCancel, onChan
   useEffect(() => {
     if (!isWeb) return undefined;
     (panelRef.current as unknown as HTMLElement | null)?.focus();
-    function closeOnEscape(event: KeyboardEvent) {
+    // Tab wraps inside the dialog: from the last control to the first, and back with Shift.
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Tab') {
+        const panel = panelRef.current as unknown as HTMLElement | null;
+        const controls = Array.from(panel?.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled])') ?? []);
+        const [first] = controls;
+        const last = controls[controls.length - 1];
+        const edge = event.shiftKey ? first : last;
+        if (first === undefined || (document.activeElement !== edge && !(event.shiftKey && document.activeElement === panel))) return;
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+        return;
+      }
       if (event.key !== 'Escape') return;
       event.stopPropagation();
       onCancel();
     }
-    document.addEventListener('keydown', closeOnEscape);
-    return () => document.removeEventListener('keydown', closeOnEscape);
+    // Capture phase, so a focused text input cannot swallow the key first.
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
   }, [isWeb, onCancel]);
 
   const shownMessage = isOnline ? message : OFFLINE_MESSAGE;
@@ -64,7 +77,6 @@ function DialogPanel({ confirmation, isBusy, isOnline, message, onCancel, onChan
         role="dialog"
         aria-modal={true}
         accessibilityViewIsModal
-        aria-label={HEADING}
         aria-labelledby={HEADING_ID}
         nativeID="delete-account-dialog"
         tabIndex={-1}
