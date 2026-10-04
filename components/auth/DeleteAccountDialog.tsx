@@ -2,10 +2,13 @@
 // that permanently deletes the signed-in account once the user types DELETE
 // (exactly) and confirms. Confirm sends one DELETE /v1/me; on 204 the running
 // sync pass is cancelled, the user is signed out on this device only (never a
-// session DELETE, the account and its sessions are already gone), and then that
-// user's local events and stats key are removed. Any refusal is announced in an
-// alert inside the dialog, nothing is deleted locally, and the typed text stays
-// so a retry works. Offline the confirm button stays disabled. While the
+// session DELETE, the account and its sessions are already gone), after the
+// user id is recorded in the durable pending-purge list (StatsProvider removes
+// that user's local events and stats key, so the purge outlives this dialog).
+// Any refusal is announced in an alert inside the dialog, nothing is deleted
+// locally, and the typed text stays so a retry works. A 401 is also reported
+// to the settings screen (onSessionEnded), which keeps the notice visible once
+// the sign-out has unmounted this dialog. Offline the confirm button stays disabled. While the
 // request runs the dialog cannot be closed. On the web focus moves into the
 // dialog on open, Escape closes it when idle, and focus returns to the trigger.
 // Nothing from the response body is read or logged.
@@ -14,8 +17,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, Platform, Pressable, Text, TextInput, View } from 'react-native';
 
 import { apiFetch } from '../../clients/apiClient';
+import { logWarning } from '../../clients/logClient';
+import { addPendingPurge } from '../../services/account/addPendingPurge';
 import { useAuth } from '../../state/AuthProvider';
-import { useQuizStats } from '../../state/StatsProvider';
 import { useSync } from '../../state/SyncProvider';
 import { markModalOpen } from '../../state/modalOpenSignal';
 import { useIsOnline } from '../../state/useIsOnline';
@@ -27,6 +31,7 @@ const HEADING_ID = 'delete-account-dialog-heading';
 const INPUT_LABEL = 'Type DELETE to confirm';
 const CONFIRMATION = 'DELETE';
 const HTTP_NO_CONTENT = 204;
+const HTTP_UNAUTHORIZED = 401;
 const OFFLINE_MESSAGE = 'You are offline. Connect to the internet to delete your account.';
 const GENERIC_FAILURE = 'Your account could not be deleted. Check your connection and try again.';
 const FAILURE_BY_STATUS: Record<number, string> = {
@@ -107,9 +112,8 @@ function DialogPanel({ confirmation, isBusy, isOnline, message, onCancel, onChan
   );
 }
 
-export function DeleteAccountDialog() {
+export function DeleteAccountDialog({ onSessionEnded }: { onSessionEnded?: () => void }) {
   const { signOutLocally, user } = useAuth();
-  const { deleteLocalUserData } = useQuizStats();
   const { cancelPass } = useSync();
   const isOnline = useIsOnline();
   const [isOpen, setIsOpen] = useState(false);
@@ -150,18 +154,24 @@ export function DeleteAccountDialog() {
       status = (await apiFetch('me', { method: 'DELETE' })).status;
     } catch {
       status = null;
+      logWarning({}, 'account deletion request failed');
     }
     if (status !== HTTP_NO_CONTENT) {
+      if (status === HTTP_UNAUTHORIZED) onSessionEnded?.();
       setMessage((status !== null && FAILURE_BY_STATUS[status]) || GENERIC_FAILURE);
       setBusy(false);
       return;
     }
     try {
+      // The id must reach storage before the sign-out is persisted. A failed
+      // write cannot undo the deletion, so the sign-out still goes ahead.
+      if (!(await addPendingPurge(userId))) logWarning({}, 'pending account purge was not recorded');
       cancelPass();
       await signOutLocally();
-      await deleteLocalUserData(userId);
       setIsOpen(false);
       setConfirmation('');
+    } catch {
+      logWarning({}, 'sign-out after account deletion failed');
     } finally {
       setBusy(false);
     }
