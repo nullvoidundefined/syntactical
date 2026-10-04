@@ -4,7 +4,7 @@
 import type { ExpoConfig } from 'expo/config';
 
 const CONTENT_ORIGIN = 'https://nullvoidundefined.github.io';
-const API_BASE_URL = 'https://api.syntactical.dev/v1/';
+const DEFAULT_API_BASE_URL = 'https://api.syntactical.dev/v1/';
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
 
 function readBaseUrl(): string {
@@ -43,6 +43,17 @@ function readLoopbackUrl(envName: string, fallback: string): string {
   return value;
 }
 
+// A staging build points at its own API through API_BASE_URL; it must be an https URL that ends in a slash.
+// The error names the variable, never the value.
+function readApiBaseUrl(): string {
+  const value = process.env.API_BASE_URL;
+  if (value === undefined || value === '') return DEFAULT_API_BASE_URL;
+  if (!/^https:\/\/[^/\s]+\/(\S*\/)?$/.test(value)) {
+    throw new Error('API_BASE_URL must be an https URL that ends with a slash');
+  }
+  return value;
+}
+
 const BASE_URL = readBaseUrl();
 const CONTENT_BASE_URL = readLoopbackUrl('E2E_CONTENT_BASE_URL', new URL(`${BASE_URL}/content/`, CONTENT_ORIGIN).href);
 
@@ -50,7 +61,7 @@ const config: ExpoConfig = {
   android: { package: 'dev.nullvoidundefined.syntactical' },
   experiments: { baseUrl: BASE_URL, typedRoutes: true },
   extra: {
-    apiBaseUrl: readLoopbackUrl('E2E_API_BASE_URL', API_BASE_URL),
+    apiBaseUrl: readLoopbackUrl('E2E_API_BASE_URL', readApiBaseUrl()),
     contentBaseUrl: CONTENT_BASE_URL,
     posthogHost: readPostHogHost(),
     posthogKey: readPublicKey('POSTHOG_KEY', 'phc', 'PostHog'),
@@ -58,7 +69,12 @@ const config: ExpoConfig = {
     revenueCatGoogleKey: readPublicKey('REVENUECAT_GOOGLE_KEY', 'goog'),
     revenueCatWebBillingKey: readPublicKey('REVENUECAT_WEB_BILLING_KEY', 'rcb'),
   },
-  ios: { bundleIdentifier: 'dev.nullvoidundefined.syntactical', supportsTablet: true },
+  ios: {
+    bundleIdentifier: 'dev.nullvoidundefined.syntactical',
+    // The app uses only the platform's HTTPS and SHA-256 hashing, which are exempt from export documentation.
+    config: { usesNonExemptEncryption: false },
+    supportsTablet: true,
+  },
   name: 'Syntactical',
   orientation: 'portrait',
   plugins: ['expo-router'],

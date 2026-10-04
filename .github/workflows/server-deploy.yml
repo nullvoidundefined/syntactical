@@ -1,0 +1,107 @@
+name: Server deploy
+
+# Builds the API image here, checks and scans it, then uploads the same build context to Railway
+# with `railway up`. Railway's builder rejects BuildKit secret mounts, so the paid-content deploy
+# key is used only by stageBuildContent.sh on this runner and never reaches Docker or Railway.
+# A push to main deploys staging; production is a manual run.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - 'packages/**'
+      - 'content/**'
+      - 'package-lock.json'
+      - 'railway.json'
+      - '.github/workflows/server-deploy.yml'
+      - '.github/actions/check-api-image/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  RAILWAY_CLI_VERSION: 5.62.1
+
+jobs:
+  staging:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: server-deploy-staging
+      cancel-in-progress: false
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres@127.0.0.1:5432/postgres
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - name: Check the Railway token is set
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
+        run: |
+          [ -n "$RAILWAY_TOKEN" ] || { echo 'The RAILWAY_TOKEN_STAGING Actions secret is not set; nothing was deployed.' >&2; exit 1; }
+      - uses: ./.github/actions/check-api-image
+        with:
+          content-deploy-key: ${{ secrets.CONTENT_DEPLOY_KEY }}
+      - name: Deploy to Railway staging
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
+        run: bash server/scripts/deployToRailway.sh staging "$RAILWAY_CLI_VERSION"
+
+  production:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: server-deploy-production
+      cancel-in-progress: false
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres@127.0.0.1:5432/postgres
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - name: Check the Railway token is set
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PRODUCTION }}
+        run: |
+          [ -n "$RAILWAY_TOKEN" ] || { echo 'The RAILWAY_TOKEN_PRODUCTION Actions secret is not set; nothing was deployed.' >&2; exit 1; }
+      - name: Check the content deploy key is set
+        env:
+          CONTENT_DEPLOY_KEY: ${{ secrets.CONTENT_DEPLOY_KEY }}
+        run: |
+          [ -n "$CONTENT_DEPLOY_KEY" ] || { echo 'The CONTENT_DEPLOY_KEY Actions secret is not set; production never deploys fixture content. Nothing was deployed.' >&2; exit 1; }
+      - uses: ./.github/actions/check-api-image
+        with:
+          content-deploy-key: ${{ secrets.CONTENT_DEPLOY_KEY }}
+      - name: Deploy to Railway production
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PRODUCTION }}
+        run: bash server/scripts/deployToRailway.sh production "$RAILWAY_CLI_VERSION"
