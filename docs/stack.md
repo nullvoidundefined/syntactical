@@ -206,6 +206,15 @@ Last updated: 2026-10-02 (Vite app, gh-pages, and the Tailwind 4 alias removed a
 - **Why chosen:** React Native Testing Library renders through a test renderer and cannot produce DOM elements.
 - **Configured in:** `jest.config.js` (web project).
 
+### jest-axe
+
+- **Version:** ^11.0.0 (with @types/jest-axe)
+- **What it is:** Runs the axe-core accessibility rules against rendered DOM and adds the `toHaveNoViolations` matcher.
+- **Docs:** https://github.com/NickColley/jest-axe
+- **Role here:** Web tests (`*.web.test.tsx`) that check a screen for accessibility violations, the same rule engine Lighthouse uses.
+- **Why chosen:** The project requires a 100 Lighthouse accessibility score; this checks signed-in views that a headless Lighthouse run cannot reach.
+- **Configured in:** `app/__tests__/settingsAccessibility.web.test.tsx`.
+
 ### @types/jest and @types/node
 
 - **Version:** ^30.0.0, ^26.6.4

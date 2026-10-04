@@ -928,14 +928,15 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 **Risk:** high (PII, store requirement). **Behaviors:** B-59.
 
-**Files:** Create `server/src/routes/deleteMe.ts`, `server/src/services/deleteUser.ts`, `components/auth/DeleteAccountDialog.tsx`; modify `app/settings.tsx`; tests.
+**Files:** Create `server/src/routes/deleteMe.ts`, `server/src/services/deleteUser.ts`, `components/auth/DeleteAccountDialog.tsx`; modify `app/settings.tsx` (until it lands with Tasks 3.12 and 3.13, the control sits in `components/auth/AccountControl.tsx`); tests.
 
 **Behaviors (RED tests):**
-- `DELETE /v1/me` (session, CSRF header) deletes the user's sessions, answer events, daily progress, and goal changes in one transaction; deletes every `one_time_codes` row for the user's normalized email; replaces every string in each of the user's `purchase_events.payload` that equals the user's email or display name after the same normalization on both sides (trim, NFKC, lowercase), at any depth and under any key (`subscriber_attributes.$email`, `$displayName`, aliases), with `[deleted]`; deletes the `users` row, which sets `entitlements.user_id` and `purchase_events.user_id` to null (the rows stay for accounting); responds 204 and clears the cookie.
-- After deletion, a case-insensitive search of every table for the run-time email finds nothing (the payload fixture carries a mixed-case copy of the email), and the user's entitlement rows still exist with `user_id` null.
+- `DELETE /v1/me` (session, CSRF header) deletes the user's sessions, answer events, daily progress, and goal changes in one transaction; takes the email's advisory lock (the key `issueOneTimeCode` uses), deletes every `one_time_codes` row and email-keyed rate-limit counter for the user's normalized email, and deletes the `users` row, which sets `entitlements.user_id` and `purchase_events.user_id` to null (the rows stay for accounting); responds 204 and clears the cookie.
+- Purchase payloads store no email or name (the webhook stores an allowlisted scalar projection, B-39), so deletion scrubs nothing; it has no payload scrubber, no scrub caps, and no deletion rate limits. After deletion, a case-insensitive search of every table for the run-time email and the user id finds nothing, and the user's entitlement and purchase event rows still exist with `user_id` null.
+- A second concurrent delete for the same user answers 204 or 401, never an error.
 - The same token then gets 401; signing in again with the same email creates a new, empty user with no entitlements.
-- The settings screen shows "Delete account" with a confirmation dialog that requires typing `DELETE`; cancel changes nothing; success signs out locally and clears the event log.
-- No log line from deletion contains the email.
+- The settings screen shows "Delete account" with a confirmation dialog that requires typing `DELETE`; cancel changes nothing; success cancels the sync pass, signs out locally, and removes that user's local events and per-user stats key (guest events stay); any failure shows one generic message, and offline shows an offline message.
+- Deletion logs one `account deleted` line with the request id only, never the email or user id.
 
 - [ ] Gated cycle; R-109 review over PR 20; commit `feat(account): delete an account and its personal data`.
 
