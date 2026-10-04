@@ -1,0 +1,51 @@
+name: Check the API image
+description: >-
+  Stages the image content (private with the deploy key, otherwise fixture), builds the API image
+  locally, runs its start command and HEALTHCHECK once, and scans it for key material. The caller
+  provides a Postgres service reachable at DATABASE_URL in its environment.
+
+inputs:
+  content-deploy-key:
+    description: Read-only deploy key text for the private content repo; empty selects fixture content.
+    required: false
+    default: ''
+
+outputs:
+  content-source:
+    description: private or fixture
+    value: ${{ steps.stage.outputs.content-source }}
+
+runs:
+  using: composite
+  steps:
+    - name: Stage the image content
+      id: stage
+      shell: bash
+      env:
+        CONTENT_DEPLOY_KEY: ${{ inputs.content-deploy-key }}
+      run: |
+        set -euo pipefail
+        if [ -n "$CONTENT_DEPLOY_KEY" ]; then
+          mode=private
+        else
+          mode=fixture
+        fi
+        bash server/scripts/stageBuildContent.sh "$mode"
+        echo "content-source=$mode" >> "$GITHUB_OUTPUT"
+        echo "Content source: $mode" >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Build the image
+      shell: bash
+      run: docker build -f server/Dockerfile -t syntactical-api:candidate .
+
+    - name: Run the image's own start command and HEALTHCHECK once
+      shell: bash
+      run: bash server/scripts/checkImageHealth.sh syntactical-api:candidate
+
+    - name: Prove the key scan catches a planted key
+      shell: bash
+      run: bash server/scripts/scanImageForKeys.sh --self-test
+
+    - name: Scan the image history and every layer for key material and .ssh directories
+      shell: bash
+      run: bash server/scripts/scanImageForKeys.sh syntactical-api:candidate
