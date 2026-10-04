@@ -11,6 +11,7 @@ import { createApp } from './app.js';
 import { createDatabasePool } from './clients/createDatabasePool.js';
 import { createEmailClient } from './clients/emailClient.js';
 import { createLogger } from './clients/logger.js';
+import { createStubEmailClient } from './clients/stubEmailClient.js';
 import { loadEnv } from './config/env.js';
 import { isCookieSecure } from './config/isCookieSecure.js';
 import { readPaidBanks } from './services/readServerBank.js';
@@ -70,6 +71,12 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
   const paidBanks = await readPaidBanks(contentDir, PAID_CONTENT_DIR);
   const paidProductIds = new Set([...paidBanks.values()].map(({ productId }) => productId));
 
+  const { RESEND_API_KEY, REVENUECAT_WEBHOOK_AUTH, stubbed } = env;
+  if (stubbed.length > 0) {
+    // Names only, never values. Rate limit counters reset on each restart while their key is a stub.
+    logger.warn({ stubbed }, 'running with stubbed integrations');
+  }
+
   const pool = createDatabasePool(DATABASE_URL, NODE_ENV, logger);
   const app = createApp({
     allowedOrigins: ALLOWED_ORIGINS.split(',')
@@ -77,15 +84,21 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
       .filter(Boolean),
     auth: {
       database: pool,
-      emailClient: createEmailClient({ from: EMAIL_FROM, logger, resend: new Resend(env.RESEND_API_KEY) }),
+      emailClient:
+        RESEND_API_KEY === undefined
+          ? createStubEmailClient(logger)
+          : createEmailClient({ from: EMAIL_FROM, logger, resend: new Resend(RESEND_API_KEY) }),
       isCookieSecure: isCookieSecure(NODE_ENV),
       rateLimitKeySecret: env.RATE_LIMIT_KEY_SECRET,
     },
     banks: { database: pool, paidBanks },
     db: pool,
     logger,
+    stubbed,
     sync: { answerKey, database: pool, rateLimitKeySecret: env.RATE_LIMIT_KEY_SECRET },
-    webhooks: { database: pool, paidProductIds, revenueCatAuth: env.REVENUECAT_WEBHOOK_AUTH },
+    ...(REVENUECAT_WEBHOOK_AUTH === undefined
+      ? { webhooksDisabled: true }
+      : { webhooks: { database: pool, paidProductIds, revenueCatAuth: REVENUECAT_WEBHOOK_AUTH } }),
   });
 
   let server: Server;
