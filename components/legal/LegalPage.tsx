@@ -36,9 +36,12 @@ export function LegalList({ items }: { items: string[] }) {
   return (
     <View role="list" className="mt-3 gap-2">
       {items.map((item) => (
-        <Text key={item} role="listitem" className="text-sm text-muted">
-          {`• ${item}`}
-        </Text>
+        <View key={item} role="listitem" className="flex-row gap-2">
+          <Text aria-hidden className="text-sm text-muted">
+            {'\u2022'}
+          </Text>
+          <Text className="flex-1 text-sm text-muted">{item}</Text>
+        </View>
       ))}
     </View>
   );
