@@ -39,7 +39,7 @@ Set `ALLOW_STUBBED_INTEGRATIONS=true` to deploy while some settings are still mi
 
 Each job:
 
-1. Stages the content with `server/scripts/stageBuildContent.sh`. With the `CONTENT_DEPLOY_KEY` secret it clones the private `nullvoidundefined/syntactical-content` repo (key in a 0600 temp file outside the repo, removed on exit) and copies only the manifest-named, hash-checked paid banks into `build/paid-content`. Without the secret it stages the fixture content under `server/ci-fixture`, and the job summary says `fixture`. A fixture image serves no real paid bank.
+1. Stages the content with `server/scripts/stageBuildContent.sh`. With the `CONTENT_DEPLOY_KEY` secret it fetches the private `nullvoidundefined/syntactical-content` repo at the exact commit recorded in `content/paid-content.ref` (one 40-hex sha, validated before any network call; update it in the same PR as any manifest change) (key in a 0600 temp file outside the repo, removed on exit) and copies only the manifest-named, hash-checked paid banks into `build/paid-content`. Without the secret it stages the fixture content under `server/ci-fixture`, and the job summary says `fixture`. A fixture image serves no real paid bank.
 2. Builds the image locally and runs `checkImageHealth.sh` and `scanImageForKeys.sh` (with its self-test) on it. A failure here stops the job before anything is uploaded.
 3. Runs `server/scripts/deployToRailway.sh`: it copies the committed tree (`git archive HEAD`) plus `build/` into a clean temp directory outside the repo, refuses to upload if that directory holds `.git`, an env file, a PEM file, a deploy key, or an `id_*` file, and runs `railway up <dir> --ci --no-gitignore --service api --environment <env>`.
 

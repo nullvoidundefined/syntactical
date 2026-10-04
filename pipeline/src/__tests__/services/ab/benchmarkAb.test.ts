@@ -67,6 +67,17 @@ function fakeRunner(medians: Medians, snippets: [string, string] = [OPTION_A, OP
 }
 
 describe('benchmarkAb', () => {
+    it.each(['ruby', 'rails'] as const)(
+        'refuses a %s performance card as runner-error instead of benchmarking it as another language',
+        async (language) => {
+            const { run } = fakeRunner({ a: [1, 1], b: [9, 9] });
+            expect(await benchmarkAb(buildQuestion(0), { language }, run)).toMatchObject({
+                reason: 'runner-error',
+                status: 'failed',
+            });
+        },
+    );
+
     it('publishes when the optimal option wins by the ratio on both runs and writes the evidence line', async () => {
         const { run } = fakeRunner({ a: [1.2, 1.2], b: [9.8, 9.8] });
         const result = await benchmarkAb(buildQuestion(0), NODE, run);

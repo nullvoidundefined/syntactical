@@ -43,7 +43,9 @@ function formatVersion(runtimeVersion: string): string {
 }
 
 async function measureOption(snippet: string, source: AbSource, run: OracleRunner): Promise<Measure | null> {
-    const result = await run(buildBenchOracle(snippet, source), { timeoutMs: AB_BENCH.timeoutMs });
+    const oracle = buildBenchOracle(snippet, source);
+    if (oracle === null) return null;
+    const result = await run(oracle, { timeoutMs: AB_BENCH.timeoutMs });
     const samples = readBenchSamples(result);
     const { runtimeVersion } = result;
     if (samples === null || runtimeVersion === undefined) {

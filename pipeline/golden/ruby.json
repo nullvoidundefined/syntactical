@@ -1,0 +1,440 @@
+[
+    {
+        "id": "rb-golden-01",
+        "note": "integer division truncates",
+        "question": {
+            "id": "rb-golden-01",
+            "type": "mc",
+            "prompt": "What is printed?",
+            "code": "puts 7 / 2",
+            "query": {
+                "title": "integer division truncates",
+                "explanation": "integer division truncates"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "3"
+                },
+                {
+                    "text": "3.5"
+                },
+                {
+                    "text": "4"
+                }
+            ],
+            "answerIndex": 0
+        },
+        "oracle": {
+            "language": "ruby",
+            "code": "puts 7 / 2"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "3",
+            "runtimeVersion": "Ruby 3.4.1"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "rb-golden-02",
+        "note": "wrong: integer division truncates",
+        "question": {
+            "id": "rb-golden-02",
+            "type": "mc",
+            "prompt": "What is printed?",
+            "code": "puts 7 / 2",
+            "query": {
+                "title": "integer division truncates",
+                "explanation": "integer division truncates"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "3"
+                },
+                {
+                    "text": "3.5"
+                },
+                {
+                    "text": "4"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "ruby",
+            "code": "puts 7 / 2"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "3",
+            "runtimeVersion": "Ruby 3.4.1"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "rb-golden-03",
+        "note": "nil.to_a is an empty array",
+        "question": {
+            "id": "rb-golden-03",
+            "type": "mc",
+            "prompt": "What is printed?",
+            "code": "p nil.to_a",
+            "query": {
+                "title": "nil.to_a is an empty array",
+                "explanation": "nil.to_a is an empty array"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "nil"
+                },
+                {
+                    "text": "[]"
+                },
+                {
+                    "text": "NoMethodError"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "ruby",
+            "code": "p nil.to_a"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "[]",
+            "runtimeVersion": "Ruby 3.4.1"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "rb-golden-04",
+        "note": "wrong: map returns a new array",
+        "question": {
+            "id": "rb-golden-04",
+            "type": "mc",
+            "prompt": "What is printed?",
+            "code": "p [1, 2, 3].map { |x| x * 2 }",
+            "query": {
+                "title": "map returns a new array",
+                "explanation": "map returns a new array"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "[1, 2, 3]"
+                },
+                {
+                    "text": "[2, 4, 6]"
+                }
+            ],
+            "answerIndex": 0
+        },
+        "oracle": {
+            "language": "ruby",
+            "code": "p [1, 2, 3].map { |x| x * 2 }"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "[2, 4, 6]",
+            "runtimeVersion": "Ruby 3.4.1"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "rb-golden-05",
+        "note": "float addition is inexact",
+        "question": {
+            "id": "rb-golden-05",
+            "type": "bool",
+            "prompt": "This prints true.",
+            "code": "puts 0.1 + 0.2 == 0.3",
+            "query": {
+                "title": "float addition is inexact",
+                "explanation": "float addition is inexact"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "answer": false
+        },
+        "oracle": {
+            "language": "ruby",
+            "code": "puts 0.1 + 0.2 == 0.3"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "false",
+            "runtimeVersion": "Ruby 3.4.1"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "rb-golden-06",
+        "note": "wrong: float addition is inexact",
+        "question": {
+            "id": "rb-golden-06",
+            "type": "bool",
+            "prompt": "This prints true.",
+            "code": "puts 0.1 + 0.2 == 0.3",
+            "query": {
+                "title": "float addition is inexact",
+                "explanation": "float addition is inexact"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "answer": true
+        },
+        "oracle": {
+            "language": "ruby",
+            "code": "puts 0.1 + 0.2 == 0.3"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "false",
+            "runtimeVersion": "Ruby 3.4.1"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "rb-golden-07",
+        "note": "negative string index counts from the end",
+        "question": {
+            "id": "rb-golden-07",
+            "type": "mc",
+            "prompt": "What is printed?",
+            "code": "puts \"abc\"[-1]",
+            "query": {
+                "title": "negative string index counts from the end",
+                "explanation": "negative string index counts from the end"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "a"
+                },
+                {
+                    "text": "c"
+                },
+                {
+                    "text": "nil"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "ruby",
+            "code": "puts \"abc\"[-1]"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "c",
+            "runtimeVersion": "Ruby 3.4.1"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "rb-golden-08",
+        "note": "wrong: string repetition",
+        "question": {
+            "id": "rb-golden-08",
+            "type": "mc",
+            "prompt": "What is printed?",
+            "code": "puts 'a' * 3",
+            "query": {
+                "title": "string repetition",
+                "explanation": "string repetition"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "aaa"
+                },
+                {
+                    "text": "a3"
+                },
+                {
+                    "text": "TypeError"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "ruby",
+            "code": "puts 'a' * 3"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "aaa",
+            "runtimeVersion": "Ruby 3.4.1"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "rb-golden-09",
+        "note": "wrong: exponent operator",
+        "question": {
+            "id": "rb-golden-09",
+            "type": "mc",
+            "prompt": "What is printed?",
+            "code": "puts 2**10",
+            "query": {
+                "title": "exponent operator",
+                "explanation": "exponent operator"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "1024"
+                },
+                {
+                    "text": "20"
+                },
+                {
+                    "text": "100"
+                }
+            ],
+            "answerIndex": 2
+        },
+        "oracle": {
+            "language": "ruby",
+            "code": "puts 2**10"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "1024",
+            "runtimeVersion": "Ruby 3.4.1"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "rb-golden-10",
+        "note": "wrong: sort returns ascending order",
+        "question": {
+            "id": "rb-golden-10",
+            "type": "mc",
+            "prompt": "What is printed?",
+            "code": "puts [3, 1, 2].sort.first",
+            "query": {
+                "title": "sort returns ascending order",
+                "explanation": "sort returns ascending order"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "1"
+                },
+                {
+                    "text": "3"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "ruby",
+            "code": "puts [3, 1, 2].sort.first"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "1",
+            "runtimeVersion": "Ruby 3.4.1"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    }
+]

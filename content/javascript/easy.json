@@ -3371,6 +3371,164 @@
         },
         "isHumanReviewed": false
       }
+    },
+    {
+      "id": "js-easy-101",
+      "type": "ab",
+      "prompt": "Which function returns a copy of an array of numbers sorted from smallest to largest?",
+      "choices": [
+        {
+          "text": "sort() with a numeric comparator",
+          "code": "function sortNumbers(values) {\n  return [...values].sort((a, b) => a - b);\n}"
+        },
+        {
+          "text": "sort() with no comparator",
+          "code": "function sortNumbers(values) {\n  return [...values].sort();\n}",
+          "rationale": "With no comparator, sort() converts the numbers to strings and compares them as text, so 10 sorts before 9."
+        }
+      ],
+      "answerIndex": 0,
+      "criterion": {
+        "type": "correctness",
+        "statement": "Sorts every array of numbers into ascending numeric order.",
+        "evidence": "Fails for input [10, 9, 1]: expected [1,9,10], got [1,10,9]"
+      },
+      "query": {
+        "title": "Array.prototype.sort() compares strings by default",
+        "explanation": "Without a comparator, `sort()` converts every element to a string and orders them by UTF-16 code units, so `[10, 9, 1]` becomes `[1, 10, 9]`. Pass `(a, b) => a - b` to sort numbers by value.",
+        "tags": [
+          "arrays",
+          "sorting"
+        ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "isHumanReviewed": false,
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "js-easy-102",
+      "type": "ab",
+      "prompt": "Which function returns true only when its argument is the number 0?",
+      "choices": [
+        {
+          "text": "Loose equality, value == 0",
+          "code": "function isZero(value) {\n  return value == 0;\n}",
+          "rationale": "== converts its operands first, so the empty string, '0', and [] all compare equal to 0."
+        },
+        {
+          "text": "Strict equality, value === 0",
+          "code": "function isZero(value) {\n  return value === 0;\n}"
+        }
+      ],
+      "answerIndex": 1,
+      "criterion": {
+        "type": "correctness",
+        "statement": "Returns true for the number 0 and false for every other value.",
+        "evidence": "Fails for input \"\": expected false, got true"
+      },
+      "query": {
+        "title": "=== does not convert types",
+        "explanation": "Loose equality converts both sides to a common type before comparing, so `'' == 0`, `'0' == 0`, and `[] == 0` are all true. Strict equality compares type and value with no conversion, which is what a check for one specific value needs.",
+        "tags": [
+          "equality",
+          "type-coercion"
+        ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "isHumanReviewed": false,
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "js-easy-103",
+      "type": "ab",
+      "prompt": "Both snippets count how many of 2,000 numbers are in an allowed collection of 10,000. Which is faster?",
+      "choices": [
+        {
+          "text": "Set.prototype.has",
+          "code": "const allowed = new Set(Array.from({ length: 10000 }, (_, i) => i));\nlet hits = 0;\nfor (let n = 0; n < 2000; n += 1) {\n  if (allowed.has(9999 - n)) hits += 1;\n}"
+        },
+        {
+          "text": "Array.prototype.includes",
+          "code": "const allowed = Array.from({ length: 10000 }, (_, i) => i);\nlet hits = 0;\nfor (let n = 0; n < 2000; n += 1) {\n  if (allowed.includes(9999 - n)) hits += 1;\n}",
+          "rationale": "includes() scans the array from the start on every call, so each lookup here walks through about 9,000 items."
+        }
+      ],
+      "answerIndex": 0,
+      "criterion": {
+        "type": "performance",
+        "statement": "Faster median run time on the same input.",
+        "evidence": "A: 0.6 ms, B: 3.1 ms median on Node 24.21.0"
+      },
+      "query": {
+        "title": "Membership tests: Array.includes versus Set.has",
+        "explanation": "`array.includes(x)` is a linear scan. A `Set` is a hash table, so `set.has(x)` takes about the same time however many items it holds. For repeated lookups, build the Set once.",
+        "tags": [
+          "sets",
+          "arrays",
+          "performance"
+        ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "isHumanReviewed": false,
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "js-easy-104",
+      "type": "ab",
+      "prompt": "Both snippets double 2,000 numbers into a new array. Which is faster?",
+      "choices": [
+        {
+          "text": "reduce() that spreads the accumulator each step",
+          "code": "const values = Array.from({ length: 2000 }, (_, i) => i);\nconst doubled = values.reduce((result, value) => [...result, value * 2], []);",
+          "rationale": "Spreading the accumulator copies every element built so far on each step, so the reduce is quadratic."
+        },
+        {
+          "text": "map()",
+          "code": "const values = Array.from({ length: 2000 }, (_, i) => i);\nconst doubled = values.map((value) => value * 2);"
+        }
+      ],
+      "answerIndex": 1,
+      "criterion": {
+        "type": "performance",
+        "statement": "Faster median run time on the same input.",
+        "evidence": "A: 2.6 ms, B: 0.094 ms median on Node 24.21.0"
+      },
+      "query": {
+        "title": "Spreading inside reduce() is quadratic",
+        "explanation": "`[...result, value]` allocates a new array and copies all of `result` into it. Doing that once per element copies about n * n / 2 elements in total. `map()` writes each result once.",
+        "tags": [
+          "arrays",
+          "spread",
+          "performance"
+        ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "isHumanReviewed": false,
+        "runtimeVersion": "Node v24.21.0"
+      }
     }
   ]
 }

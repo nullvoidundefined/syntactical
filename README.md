@@ -66,7 +66,7 @@ A true/false question uses `"type": "bool"` and `"answer": true` or `false` in p
 
 ### Publishing paid banks
 
-Clone `nullvoidundefined/syntactical-content` beside this repository (`../syntactical-content`), or pass `--content-root <path>` or set `SYNTACTICAL_CONTENT_ROOT`. The pipeline reads and writes paid banks there and refuses a content root inside this repository. Run `npm run pipeline -- publish`; it writes changed paid banks into the content checkout and rewrites `content/manifest.json` with their hashes. Then commit and push in `syntactical-content` first, and commit the manifest and generated files here.
+Clone `nullvoidundefined/syntactical-content` beside this repository (`../syntactical-content`), or pass `--content-root <path>` or set `SYNTACTICAL_CONTENT_ROOT`. The pipeline reads and writes paid banks there and refuses a content root inside this repository. Run `npm run pipeline -- publish`; it writes changed paid banks into the content checkout and rewrites `content/manifest.json` with their hashes. Then commit and push in `syntactical-content` first, and commit the manifest and generated files here. In the same PR, set `content/paid-content.ref` to the full sha of that pushed `syntactical-content` commit (`git -C ../syntactical-content rev-parse HEAD`). Deploys stage exactly that commit, so the manifest hashes and the private banks always match; a manifest change without the matching ref fails the deploy hash check.
 
 A `grammar` that the build does not include renders code as plain text; the supported list is `GRAMMARS` in `constants/appConfig.ts`. A language outside that list needs the list and the Prism imports in `services/codeBlock/tokenizeCode.ts` extended in code.
 
