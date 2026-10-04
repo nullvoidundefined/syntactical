@@ -14,7 +14,7 @@ export type EntitlementsState =
   | { retry: () => void; status: 'error' }
   | { productIds: ReadonlySet<string>; status: 'ready' };
 
-async function fetchEntitlements(): Promise<string[]> {
+export async function fetchEntitlements(): Promise<string[]> {
   const { body, status } = await apiFetch('me');
   const entitlements = (body as { data?: { entitlements?: unknown } } | null)?.data?.entitlements;
   if (status !== HTTP_STATUS_OK || !Array.isArray(entitlements)) {
@@ -27,12 +27,16 @@ function toProductIdSet(ids: string[]): ReadonlySet<string> {
   return new Set(ids);
 }
 
+export function buildEntitlementsKey(userId: string | null) {
+  return ['me', userId, 'entitlements'] as const;
+}
+
 export function useEntitlements(): EntitlementsState {
   const userId = useSignedInUserId();
   const query = useQuery({
     enabled: userId !== null,
     queryFn: fetchEntitlements,
-    queryKey: ['me', userId, 'entitlements'],
+    queryKey: buildEntitlementsKey(userId),
     select: toProductIdSet,
   });
   const { data, isError, refetch } = query;

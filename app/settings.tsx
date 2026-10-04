@@ -6,7 +6,7 @@
 import { useState } from 'react';
 
 import { router } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { DeleteAccountDialog } from '../components/auth/DeleteAccountDialog';
 import { SignOutDialog } from '../components/auth/SignOutDialog';
@@ -15,8 +15,48 @@ import { useAuth } from '../state/AuthProvider';
 import { useQuizStats } from '../state/StatsProvider';
 import { useProfile } from '../state/useProfile';
 import { useProgressSummary } from '../state/useProgressSummary';
+import { usePurchases } from '../state/usePurchases';
 
 const GOAL_SAVE_FAILED = 'Your daily goal was not saved. Check your connection and try again.';
+
+const RESTORE_DONE = 'Purchases restored.';
+const RESTORE_FAILED = 'Restore failed. Check your connection and try again.';
+
+// Native only: Web Billing purchases follow the signed-in account, so the web has nothing to restore.
+function RestorePurchases() {
+  const { restore } = usePurchases();
+  const [isBusy, setIsBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function restorePurchases() {
+    setIsBusy(true);
+    setMessage(null);
+    try {
+      setMessage((await restore()) ? RESTORE_DONE : RESTORE_FAILED);
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  return (
+    <View className="mt-4">
+      <Pressable
+        role="button"
+        aria-label="Restore purchases"
+        aria-disabled={isBusy}
+        disabled={isBusy}
+        onPress={() => void restorePurchases()}
+      >
+        <Text className="font-mono text-xs uppercase tracking-widest text-ink">Restore purchases</Text>
+      </Pressable>
+      {message === null ? null : (
+        <Text role="status" className="mt-2 text-sm text-ink">
+          {message}
+        </Text>
+      )}
+    </View>
+  );
+}
 
 function AccountSection() {
   const { isSignedIn } = useAuth();
@@ -26,7 +66,9 @@ function AccountSection() {
         Account
       </Text>
       <View className="mt-4 flex-row items-center justify-between">
-        <Text className="text-sm text-muted">{isSignedIn ? 'Signed in. Your progress syncs across devices.' : 'Sign in to save your progress.'}</Text>
+        <Text className="text-sm text-muted">
+          {isSignedIn ? 'Signed in. Your progress syncs across devices.' : 'Sign in to save your progress.'}
+        </Text>
         {isSignedIn ? (
           <View className="flex-row items-center gap-4">
             <SignOutDialog />
@@ -38,6 +80,7 @@ function AccountSection() {
           </Pressable>
         )}
       </View>
+      {isSignedIn && Platform.OS !== 'web' ? <RestorePurchases /> : null}
     </View>
   );
 }
@@ -72,11 +115,21 @@ export default function SettingsScreen() {
           Settings
         </Text>
         <View className="mt-8">
-          <Text role="heading" aria-level={2} nativeID="daily-goal-heading" className="font-mono text-sm uppercase tracking-widest text-ink">
+          <Text
+            role="heading"
+            aria-level={2}
+            nativeID="daily-goal-heading"
+            className="font-mono text-sm uppercase tracking-widest text-ink"
+          >
             Daily goal
           </Text>
           <Text className="mt-2 text-sm text-muted">XP to earn each day. A new goal applies from today on.</Text>
-          <DailyGoalPicker isBusy={isBusy} labelledBy="daily-goal-heading" onSelect={(next) => void chooseGoal(next)} selectedGoal={dailyGoal} />
+          <DailyGoalPicker
+            isBusy={isBusy}
+            labelledBy="daily-goal-heading"
+            onSelect={(next) => void chooseGoal(next)}
+            selectedGoal={dailyGoal}
+          />
           {errorMessage === null ? null : (
             <Text role="alert" className="mt-3 text-sm text-ink">
               {errorMessage}

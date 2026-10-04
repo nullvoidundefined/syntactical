@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
 
+import { trackEvent } from '../clients/analyticsClient';
 import { apiFetch } from '../clients/apiClient';
 import {
   HTTP_STATUS_OK,
@@ -65,6 +66,7 @@ export default function PurchaseCompleteScreen() {
       }
       if (isDecided) return;
       if (isUnlocked) {
+        trackEvent('purchase_completed', { productId: productId as string });
         decide('unlocked');
         return;
       }

@@ -3,12 +3,23 @@
 // echoed or logged.
 import { useRef, useState } from 'react';
 
-import { router } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 
 import { CodeStep } from '../components/auth/CodeStep';
 import { EmailStep } from '../components/auth/EmailStep';
 import { useAuth, type AuthResult } from '../state/AuthProvider';
+
+const RETURN_TO_MAX_LENGTH = 200;
+// One leading slash, never followed by another slash or a backslash, then URL-safe characters only.
+const RETURN_TO_PATTERN = /^\/(?:[A-Za-z0-9._~!$&'()*+,;=:@%?-][A-Za-z0-9._~!$&'()*+,;=:@%?/-]*)?$/;
+
+// Where a successful sign-in goes: the returnTo param when it is a safe in-app
+// path, else the menu. The param comes from the URL, so anything else is ignored.
+function readReturnTo(value: string | string[] | undefined): string {
+  const isSafe = typeof value === 'string' && value.length <= RETURN_TO_MAX_LENGTH && RETURN_TO_PATTERN.test(value);
+  return isSafe ? value : '/';
+}
 
 type FailureReason = Extract<AuthResult, { isOk: false }>['reason'];
 
@@ -26,6 +37,7 @@ function readFailureMessage(result: AuthResult): string | null {
 
 export default function SignInScreen() {
   const { requestCode, verifyCode } = useAuth();
+  const { returnTo } = useLocalSearchParams<{ returnTo?: string | string[] }>();
   const [email, setEmail] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
@@ -64,7 +76,7 @@ export default function SignInScreen() {
         setErrorMessage(failureMessage);
         return;
       }
-      router.replace('/');
+      router.replace(readReturnTo(returnTo) as Href);
     } finally {
       isInFlightRef.current = false;
       setIsBusy(false);
