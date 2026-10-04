@@ -2,8 +2,9 @@
 // holds the native session value only in the secure store (the web build uses
 // an HttpOnly cookie), and persists just the non-secret identity (user id and
 // the ids that have signed in on this device). The first sign-in of an id on
-// this device raises guestClaimUserId until completeGuestClaim(userId); the
-// pending claim is held in memory only. Sign-out clears local state even when the server call fails, a
+// this device raises guestClaimUserId until completeGuestClaim(userId), and
+// only then is the id stored as known, so a claim that never completed is
+// raised again on the next launch. Sign-out clears local state even when the server call fails, a
 // 401 for a request sent after the current sign-in signs the user out locally
 // (an older request's 401 is ignored), and calls made before hydration wait
 // for it. The session value, email, and code are never logged or stored
@@ -69,7 +70,7 @@ function readSessionResponse(body: unknown): { sessionValue: string | null; user
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [userId, setUserIdState] = useState<string | null>(null);
-  const [pendingClaimId, setPendingClaimId] = useState<string | null>(null);
+  const [knownUserIds, setKnownUserIdsState] = useState<string[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
   const userIdRef = useRef<string | null>(null);
   const knownRef = useRef<string[]>([]);
@@ -93,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const setKnownUserIds = useCallback((next: string[]) => {
     knownRef.current = next;
+    setKnownUserIdsState(next);
   }, []);
 
   // Writes the identity, merged with what storage holds so ids this session
@@ -186,10 +188,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         signInSeq.current = getLatestRequestSeq();
         signInCount.current += 1;
-        if (!knownRef.current.includes(sessionUserId)) {
-          setKnownUserIds([...knownRef.current, sessionUserId]);
-          setPendingClaimId(sessionUserId);
-        }
         setUserId(sessionUserId);
         persist(sessionUserId);
         void identifyPurchaser(sessionUserId);
@@ -198,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { isOk: false, reason: 'unavailable' };
       }
     },
-    [persist, setKnownUserIds, setUserId],
+    [persist, setUserId],
   );
 
   const verifyCode = useCallback(
@@ -230,12 +228,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signOutLocally();
   }, [signOutLocally]);
 
-  const completeGuestClaim = useCallback((claimedUserId: string) => {
-    if (userIdRef.current !== claimedUserId) return;
-    setPendingClaimId((pending) => (pending === claimedUserId ? null : pending));
-  }, []);
+  const completeGuestClaim = useCallback(
+    (claimedUserId: string) => {
+      if (userIdRef.current !== claimedUserId || knownRef.current.includes(claimedUserId)) return;
+      setKnownUserIds([...knownRef.current, claimedUserId]);
+      persist(claimedUserId);
+    },
+    [persist, setKnownUserIds],
+  );
 
-  const guestClaimUserId = userId !== null && pendingClaimId === userId ? userId : null;
+  const guestClaimUserId = userId !== null && !knownUserIds.includes(userId) ? userId : null;
 
   const value = useMemo<AuthContextValue>(
     () => ({
