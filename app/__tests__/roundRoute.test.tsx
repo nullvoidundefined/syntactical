@@ -18,6 +18,9 @@ jest.mock('../../state/useQuestionBank', () => ({
   }),
 }));
 
+// The sign-up prompt reads auth and stats; SignUpPrompt.test.tsx covers it.
+jest.mock('../../components/auth/SignUpPrompt', () => ({ SignUpPrompt: () => null }));
+
 describe('round route', () => {
   it('resets every piece of round state on Retry', async () => {
     await renderRouter({ '[language]/[difficulty]/play': RoundScreen }, { initialUrl: '/python/easy/play' });

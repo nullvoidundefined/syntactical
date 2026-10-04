@@ -23,6 +23,9 @@ function CompletionsProbe() {
   return <Text testID="completions">{isHydrated ? String(completions) : 'loading'}</Text>;
 }
 
+// The sign-up prompt reads auth and stats; SignUpPrompt.test.tsx covers it.
+jest.mock('../../auth/SignUpPrompt', () => ({ SignUpPrompt: () => null }));
+
 describe('QuizRound with the real stats provider', () => {
   beforeEach(() => AsyncStorage.clear());
 

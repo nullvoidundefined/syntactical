@@ -54,6 +54,9 @@ async function renderReview(seed: LoggedAnswerEvent[]) {
   );
 }
 
+// The sign-up prompt reads auth and stats; SignUpPrompt.test.tsx covers it.
+jest.mock('../../components/auth/SignUpPrompt', () => ({ SignUpPrompt: () => null }));
+
 describe('review route', () => {
   beforeEach(() => AsyncStorage.clear());
 

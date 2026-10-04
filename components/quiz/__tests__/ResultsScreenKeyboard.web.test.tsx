@@ -8,6 +8,9 @@ function pressKeyOn(target: EventTarget, key: string) {
   });
 }
 
+// The sign-up prompt reads auth and stats; SignUpPrompt.test.tsx covers it.
+jest.mock('../../auth/SignUpPrompt', () => ({ SignUpPrompt: () => null }));
+
 describe('ResultsScreen keyboard bindings on the web', () => {
   it('ignores Enter and Escape typed into a text field, and honors them otherwise', () => {
     const onRetry = jest.fn();
