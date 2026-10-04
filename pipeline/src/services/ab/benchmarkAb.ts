@@ -1,11 +1,12 @@
 // Validates a performance A/B card by timing both options. Each option runs in its own
 // sandboxed run (only through the injected runner, `runOracle` in production) of
 // `AB_BENCH.iterations` measured executions, and the pair is measured `AB_BENCH.runs`
-// times. A winner is named only when the same option has the faster median on every run and the gap is at least `AB_MIN_RATIO` on every run, and that
-// option is the one the card's `answerIndex` names. Anything else refuses to pick a winner:
-// runs that disagree or straddle the threshold are `unstable`, a gap under the threshold on
-// every run is `no-clear-winner`. Medians below `AB_BENCH.noiseFloorMs` are raised to it
-// before the ratio, so timer-resolution jitter cannot manufacture a gap.
+// times. A winner is named only when the same option has the faster median on every run,
+// the gap is at least `AB_MIN_RATIO` on every run, and that option is the one the card's
+// `answerIndex` names. Anything else refuses to pick a winner: runs that disagree or
+// straddle the threshold are `unstable`, a gap under the threshold on every run is
+// `no-clear-winner`. Medians below `AB_BENCH.noiseFloorMs` are raised to it before the
+// ratio, so timer-resolution jitter cannot manufacture a gap.
 import { runOracle } from '../../clients/dockerRunner.js';
 import type { OracleRunner } from '../../types/OracleRunner.js';
 import type { AbFailureReason } from '../../types/ab/AbFailureReason.js';

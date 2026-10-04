@@ -1,8 +1,9 @@
 // Validates a correctness A/B card by executing both options against edge cases. Every
 // program runs only through the sandboxed runner. The card passes when the option its
-// `answerIndex` names matches the expected output on every edge case and the other option fails at least one; the first failing
-// edge case of the other option becomes the card's evidence. Python and Node only: an
-// option is code followed by a call, which has no Postgres equivalent.
+// `answerIndex` names matches the expected output on every edge case and the other option
+// fails at least one; the first failing edge case of the other option becomes the card's
+// evidence. Python and Node only: an option is code followed by a call, which has no
+// Postgres equivalent.
 import { runOracle } from '../../clients/dockerRunner.js';
 import type { Oracle } from '../../types/Oracle.js';
 import type { OracleRun } from '../../types/OracleRun.js';
