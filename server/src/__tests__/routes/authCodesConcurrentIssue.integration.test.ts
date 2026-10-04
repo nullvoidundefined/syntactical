@@ -20,6 +20,9 @@ const CONCURRENT_ISSUES = 5;
 // Holds each issue transaction open across the send, so the transactions overlap.
 const SEND_DELAY_MS = 100;
 const EMAIL_BYTES = 6;
+// Above the 2 s lock timeout sync transactions use, so a bounded issue would answer 503.
+const SLOW_SEND_DELAY_MS = 3_000;
+const SLOW_TEST_TIMEOUT_MS = 20_000;
 
 let database: Awaited<ReturnType<typeof createMigratedDatabase>>;
 
@@ -64,4 +67,25 @@ describe.skipIf(SKIP_DATABASE_TESTS)('concurrent code issues for one email', () 
     );
     expect(rows.map(({ count }) => Number(count))).toEqual([1]);
   });
+
+  it(
+    'makes a second issue for the same email wait for the first one\'s slow send, then succeed, not 503',
+    async () => {
+      const { app, sentCodes } = createAuthTestApp({
+        pool: database.pool,
+        async sendSignInCode() {
+          await delay(SLOW_SEND_DELAY_MS);
+        },
+      });
+      const email = `learner-${randomBytes(EMAIL_BYTES).toString('hex')}@example.com`;
+
+      const responses = await Promise.all(
+        [1, 2].map((host) => request(app).post(CODES_ROUTE).set('X-Forwarded-For', `192.0.2.${host}`).send({ email })),
+      );
+
+      expect(responses.map(({ status }) => status)).toEqual([HTTP_ACCEPTED, HTTP_ACCEPTED]);
+      expect(sentCodes).toHaveLength(2);
+    },
+    SLOW_TEST_TIMEOUT_MS,
+  );
 });
