@@ -52,6 +52,8 @@ test.describe('modal dialogs cover the whole page', () => {
     for (const name of ['Sync now', 'Discard', 'Cancel']) {
       expect(await isHitTestable(dialog.getByRole('button', { name }))).toBe(true);
     }
+    await page.keyboard.press('Shift+Tab');
+    await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeFocused();
     await dialog.getByRole('button', { name: 'Cancel' }).focus();
     await page.keyboard.press('Tab');
     await expect(dialog.getByRole('button', { name: 'Sync now' })).toBeFocused();
