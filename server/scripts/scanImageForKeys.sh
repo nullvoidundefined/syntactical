@@ -9,6 +9,8 @@ set -euo pipefail
 # Private key armor, an OpenSSH private key body, and an ssh key file by name.
 content_pattern='PRIVATE KEY-----|b3BlbnNzaC1rZXktdjE'
 path_pattern='(^|/)\.ssh(/|$)|(^|/)id_(rsa|dsa|ecdsa|ed25519)(\.pub)?$|(^|/)deploy_key$'
+# Base image paths whose content legitimately contains key armor strings.
+expected_paths='^(usr/lib/|usr/share/|usr/local/lib/node_modules/npm/|tmp/node-compile-cache/)'
 history_pattern="${content_pattern}|\\.ssh|id_(rsa|dsa|ecdsa|ed25519)|deploy_key"
 
 scan_image() {
@@ -24,7 +26,7 @@ scan_image() {
   docker save "$image" -o "$work/image.tar"
   mkdir "$work/image"
   tar -xf "$work/image.tar" -C "$work/image"
-  local blob layers=0
+  local blob layer_dir hits layers=0
   while IFS= read -r blob; do
     if tar -tf "$blob" >"$work/listing" 2>/dev/null; then
       layers=$((layers + 1))
@@ -32,11 +34,16 @@ scan_image() {
         echo "scan: a layer holds a key file or an .ssh directory: $(grep -E -e "$path_pattern" "$work/listing" | head -3 | tr '\n' ' ')" >&2
         found=1
       fi
-      # Extract to a file and grep the file: grep -q on a pipe exits at its first match, the
-      # writer then dies of SIGPIPE, and pipefail turns that into a false "no match".
-      tar -xOf "$blob" >"$work/layer.bytes" 2>/dev/null || true
-      if grep -aEq -e "$content_pattern" "$work/layer.bytes"; then
-        echo "scan: a layer holds private key material" >&2
+      # Extract the layer and grep the files, never a pipe from tar: grep -q on a pipe exits at its
+      # first match, the writer dies of SIGPIPE, and pipefail turns that into a false "no match".
+      # Matches under the base image's own library and npm documentation paths are expected (the
+      # GnuTLS self-test vectors, npm's `key=` docs example) and are ignored.
+      layer_dir="$work/layer$layers"
+      mkdir "$layer_dir"
+      tar -xf "$blob" -C "$layer_dir" 2>/dev/null || true
+      hits="$(grep -rlaE -e "$content_pattern" "$layer_dir" 2>/dev/null | sed "s#^$layer_dir/##" | grep -vE "$expected_paths" || true)"
+      if [ -n "$hits" ]; then
+        echo "scan: a layer holds private key material: $(printf '%s\n' "$hits" | head -3 | tr '\n' ' ')" >&2
         found=1
       fi
     elif grep -aEq -e "$content_pattern" "$blob"; then
