@@ -25,7 +25,11 @@ function buildQuestion(id: string, prompt = `prompt of ${id}`): Record<string, u
         choices: [{ text: '1' }, { text: '2' }],
         id,
         prompt,
-        provenance: { isHumanReviewed: false, source: 'original', validation: { method: 'executed', status: 'passed' } },
+        provenance: {
+            isHumanReviewed: false,
+            source: 'original',
+            validation: { method: 'executed', status: 'passed' },
+        },
         query: { prompt: 'q' },
         type: 'mc',
     };
@@ -132,7 +136,8 @@ describe('review', () => {
         await writeJson(join(contentDir, 'python/easy.json'), {
             questions: [...FREE_IDS, 'q-bad'].map((id) => buildQuestion(id)),
         });
-        await writeJson(join(contentDir, 'python/medium.json'), {
+        // Paid banks live in the private content root, never under content/ (B-60).
+        await writeJson(join(contentRoot, 'python/medium.json'), {
             questions: ['paid-1', 'paid-2', 'paid-3', 'paid-4'].map((id) => buildQuestion(id, PAID_TEXT)),
         });
         await writeJson(join(pipelineDir, 'reports/latest.json'), {
@@ -366,7 +371,11 @@ describe('review', () => {
     });
 
     it('leaves every content bank file and the manifest byte-identical', async () => {
-        const files = [join(contentDir, 'manifest.json'), join(contentDir, 'python/easy.json'), join(contentDir, 'python/medium.json')];
+        const files = [
+            join(contentDir, 'manifest.json'),
+            join(contentDir, 'python/easy.json'),
+            join(contentRoot, 'python/medium.json'),
+        ];
         const before = await Promise.all(files.map((file) => readFile(file)));
         await run();
         await tick('q-3', 'approve');

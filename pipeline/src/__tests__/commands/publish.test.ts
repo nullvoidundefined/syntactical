@@ -168,7 +168,9 @@ beforeEach(async () => {
     await mkdir(dirs.contentRoot, { recursive: true });
     await writeJson(join(dirs.contentDir, 'manifest.json'), buildManifest());
     await writeJson(join(dirs.pipelineDir, 'topics.json'), { python: TOPICS });
-    await writeJson(join(dirs.pipelineDir, 'taxonomy', 'python.json'), [{ description: 'Thinks "0" is falsy', id: TAG }]);
+    await writeJson(join(dirs.pipelineDir, 'taxonomy', 'python.json'), [
+        { description: 'Thinks "0" is falsy', id: TAG },
+    ]);
     await writeJson(join(dirs.contentDir, 'python', 'easy.json'), {
         questions: [buildQuestion('q-1'), buildQuestion('q-2')],
         schemaVersion: 2,
@@ -242,7 +244,11 @@ describe('publish: which questions are written', () => {
 
     it('adds a staged generated question that passed and ignores one whose id the bank already has', async () => {
         await writeReport({ 'q-1': 'passed', 'q-2': 'passed' });
-        const passed = { isHumanReviewed: false, source: 'generated', validation: { method: 'executed', status: 'passed' } };
+        const passed = {
+            isHumanReviewed: false,
+            source: 'generated',
+            validation: { method: 'executed', status: 'passed' },
+        };
         await writeJson(join(dirs.pipelineDir, 'generated', 'python', 'easy.json'), {
             questions: [
                 buildQuestion('g-1', { provenance: passed, topic: 'strings' }),
@@ -265,7 +271,9 @@ describe('publish: reviews already recorded on the bank', () => {
     async function setReviewed(id: string): Promise<void> {
         const file = join(dirs.contentDir, 'python', 'easy.json');
         const bank = await readBank(file);
-        const questions = bank.questions.map((question) => (question.id === id ? { ...question, provenance: reviewed } : question));
+        const questions = bank.questions.map((question) =>
+            question.id === id ? { ...question, provenance: reviewed } : question,
+        );
         await writeJson(file, { questions, schemaVersion: 2 });
     }
 
@@ -276,7 +284,10 @@ describe('publish: reviews already recorded on the bank', () => {
 
         expect(banks['python/easy']?.refused).toEqual([]);
         const { questions } = await readBank(join(dirs.contentDir, 'python', 'easy.json'));
-        expect(questions[1]).toMatchObject({ id: 'q-2', provenance: { isHumanReviewed: true, validation: { status: 'pending' } } });
+        expect(questions[1]).toMatchObject({
+            id: 'q-2',
+            provenance: { isHumanReviewed: true, validation: { status: 'pending' } },
+        });
     });
 
     it('keeps the human flag on a question that passed validation', async () => {
@@ -308,7 +319,13 @@ describe('publish: bank-level refusal', () => {
         const before = await readFile(join(dirs.contentDir, 'python', 'easy.json'), 'utf8');
         const { banks } = await run();
 
-        expect(banks['python/easy']).toMatchObject({ isWritten: false, problems: [{ id: 'q-2', rule: 'missing-rationale' }, { id: 'q-2', rule: 'missing-rationale' }] });
+        expect(banks['python/easy']).toMatchObject({
+            isWritten: false,
+            problems: [
+                { id: 'q-2', rule: 'missing-rationale' },
+                { id: 'q-2', rule: 'missing-rationale' },
+            ],
+        });
         expect(await readFile(join(dirs.contentDir, 'python', 'easy.json'), 'utf8')).toBe(before);
     });
 
@@ -333,7 +350,12 @@ describe('publish: paid banks', () => {
         const publicPaid = join(dirs.contentDir, 'python', 'medium.json');
         await run();
 
-        expect(await stat(publicPaid).then(() => true, () => false)).toBe(false);
+        expect(
+            await stat(publicPaid).then(
+                () => true,
+                () => false,
+            ),
+        ).toBe(false);
         const { questions } = await readBank(join(dirs.contentRoot, 'python', 'medium.json'));
         expect(questions).toHaveLength(1);
         expect(questions[0]).toMatchObject({ id: 'm-1', topic: 'strings' });
@@ -353,7 +375,12 @@ describe('publish: paid banks', () => {
         await expect(run()).rejects.toThrow('paid bank in public content: python/medium');
 
         const privatePaid = join(dirs.contentRoot, 'python', 'medium.json');
-        expect(await stat(privatePaid).then(() => true, () => false)).toBe(false);
+        expect(
+            await stat(privatePaid).then(
+                () => true,
+                () => false,
+            ),
+        ).toBe(false);
         expect(await readFile(publicPaid, 'utf8')).toBe(before);
         expect(await readFile(easyFile, 'utf8')).toBe(easyBefore);
     });

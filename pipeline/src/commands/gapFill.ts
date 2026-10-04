@@ -20,6 +20,7 @@ import { readLatestReport } from '../services/classify/readLatestReport.js';
 import { fillBank } from '../services/gapFill/fillBank.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
 import { writePipelineReport } from '../services/writePipelineReport.js';
+import { resolveBankFile } from '../services/resolveBankFile.js';
 import type { FillBankResult } from '../types/FillBankResult.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 import type { PipelineReport } from '../types/PipelineReport.js';
@@ -96,7 +97,9 @@ export async function gapFill(options: GapFillOptions): Promise<PipelineReport> 
                     log(`skipping bank ${bankKey}: no oracle runner or topic list for language ${languageId}`);
                     continue;
                 }
-                const bank = (await readJson(join(contentDir, path))) as { questions: Question[] };
+                const bank = (await readJson(resolveBankFile(contentDir, contentRoot, { access, path }))) as {
+                    questions: Question[];
+                };
                 const result = await fillBank({
                     bankKey,
                     difficulty,

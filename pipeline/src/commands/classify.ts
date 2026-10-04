@@ -21,6 +21,7 @@ import { readFallbackTopics } from '../services/classify/readFallbackTopics.js';
 import { readLatestReport } from '../services/classify/readLatestReport.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
 import { writePipelineReport } from '../services/writePipelineReport.js';
+import { resolveBankFile } from '../services/resolveBankFile.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 import type { PipelineReport } from '../types/PipelineReport.js';
 
@@ -110,7 +111,7 @@ export async function classify(options: ClassifyOptions): Promise<PipelineReport
                 log(`skipping bank ${bankKey}: no topic list for language ${languageId}`);
                 continue;
             }
-            const bank = (await readJson(join(contentDir, path))) as {
+            const bank = (await readJson(resolveBankFile(contentDir, contentRoot, { access, path }))) as {
                 questions: Question[];
             };
             const result = await classifyBank({
