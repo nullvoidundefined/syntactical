@@ -6,7 +6,7 @@ jest.mock('../../../state/StatsProvider', () => ({
   useQuizStats: () => ({
     eventLog: [],
     stats: {
-      answerStreak: { best: 0, current: 0 },
+      answerStreak: { best: 7, current: 2 },
       goalHistory: [],
       isSignUpPromptDismissed: false,
       totals: { attempted: 4, correct: 3 },
@@ -31,6 +31,12 @@ describe('StatsPanel', () => {
     await render(<StatsPanel />);
     expect(screen.getAllByText('75%')).toHaveLength(2);
     expect(screen.getByText('PY / Easy')).toBeTruthy();
+  });
+
+  it('keeps the answer streak, current and best, in the stats panel', async () => {
+    await render(<StatsPanel />);
+    expect(screen.getByText('Answer streak')).toBeTruthy();
+    expect(screen.getByText('2 (best 7)')).toBeTruthy();
   });
 
   it('omits stats for a language no longer in the manifest', async () => {

@@ -16,6 +16,29 @@ async function onAdmin(adminUrl: string, sql: string): Promise<void> {
     }
 }
 
+// pool.end() resolves once the pool has forgotten its idle clients, before their sockets have
+// closed. Dropping the database WITH (FORCE) in that window terminates a backend that is still
+// closing (57P01), and the client's idle listener re-emits that on the pool as an unhandled
+// error. Waiting for every client's 'remove' event means every backend is gone first.
+async function endPool(pool: pg.Pool): Promise<void> {
+    const { totalCount } = pool;
+    let removedCount = 0;
+    const allRemoved = new Promise<void>((resolve) => {
+        if (totalCount === 0) {
+            resolve();
+            return;
+        }
+        pool.on('remove', () => {
+            removedCount += 1;
+            if (removedCount === totalCount) {
+                resolve();
+            }
+        });
+    });
+    await pool.end();
+    await allRemoved;
+}
+
 export async function createScratchDatabase(
     adminUrl: string,
 ): Promise<{ databaseUrl: string; drop: () => Promise<void>; pool: pg.Pool }> {
@@ -26,7 +49,7 @@ export async function createScratchDatabase(
     const databaseUrl = url.toString();
     const pool = new pg.Pool({ connectionString: databaseUrl });
     async function drop(): Promise<void> {
-        await pool.end();
+        await endPool(pool);
         await onAdmin(adminUrl, `DROP DATABASE IF EXISTS ${name} WITH (FORCE)`);
     }
     return { databaseUrl, drop, pool };

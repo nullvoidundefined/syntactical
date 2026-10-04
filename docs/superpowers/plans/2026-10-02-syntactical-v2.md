@@ -640,13 +640,13 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 **Risk:** high (sets the middleware stack every security control depends on). **Behaviors:** B-62; foundation for B-25 to B-39.
 
-**Files:** Create `server/src/app.ts` (`createApp(deps)`: `helmet`, `cors`, `cookie-parser`, `express.json({ limit: '10kb' })`, `trust proxy` 1, request id, routes, error handler), `server/src/index.ts`, `server/src/config/env.ts` (zod-validated env), `server/src/middleware/requestId.ts`, `server/src/middleware/errorHandler.ts`, `server/src/routes/health.ts` (`/health`, `/health/ready`, outside `/v1`), `server/src/clients/logger.ts` (pino with redaction paths `req.headers.cookie`, `req.headers.authorization`, `res.headers["set-cookie"]`, `*.email`, `*.code`, `*.token`); tests `server/src/__tests__/routes/health.test.ts`, `server/src/__tests__/clients/logger.test.ts`, `server/src/__tests__/config/env.test.ts`.
+**Files:** Create `server/src/app.ts` (`createApp(deps)`: `helmet`, `cors`, `cookie-parser`, `express.json({ limit: '10kb' })`, `trust proxy` 1, request id, routes, error handler), `server/src/index.ts`, `server/src/config/env.ts` (zod-validated env), `server/src/middleware/requestId.ts`, `server/src/middleware/errorHandler.ts`, `server/src/routes/health.ts` (`/health`, `/health/ready`, outside `/v1`), `server/src/clients/logger.ts` (pino `redact` paths for `authorization`, `code`, `cookie`, `email`, `otp`, `password`, `secret`, and `token` at the top level and one level down, plus `req.headers.cookie`, `req.headers.authorization`, `res.headers["set-cookie"]`; an `err` serializer that keeps only the error name, pg code, and constraint); tests `server/src/__tests__/routes/health.test.ts`, `server/src/__tests__/clients/logger.test.ts`, `server/src/__tests__/config/env.test.ts`.
 
 **Behaviors (RED tests):**
 - `GET /health` returns 200 `{ status: 'ok' }` without touching the database (a db stub that throws is never called).
 - `GET /health/ready` returns 200 `{ status: 'ok', database: 'ok' }` with a reachable database and 503 `{ status: 'degraded' }` with an unreachable one.
 - Every response carries an `X-Request-Id` UUID, and every log line carries the same id.
-- Log redaction: a line logged with email, code, token, cookie, and authorization values built at run time contains none of those values.
+- Log redaction: for each redacted field, a line logged with a value built at run time contains none of it, and an Error logged under `err` shows only its name, pg code, and constraint.
 - A response carrying `Set-Cookie: syntactical_session=<run-time token>` through `createApp` with the pino destination captured leaves no log line containing the token.
 - The error handler logs a `pg` error by `code` and constraint name only: a unique violation whose `detail` contains a run-time email leaves no log line containing that email.
 - `REVENUECAT_WEBHOOK_AUTH` shorter than 32 characters, or empty, fails startup.
