@@ -7,8 +7,7 @@
 // and sign-out. Sign-out clears local state even when the server call fails, a
 // 401 for a request sent after the current sign-in signs the user out locally
 // (an older request's 401 is ignored), and calls made before hydration wait
-// for it. signOutLocally is also exposed for the device-side step after the
-// server deletes the account: it signs out with no network request. The session value, email, and code are never logged or stored
+// for it. The session value, email, and code are never logged or stored
 // outside the secure store.
 import {
   createContext,
@@ -53,7 +52,6 @@ type AuthContextValue = {
   isSignedIn: boolean;
   requestCode: (email: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
-  signOutLocally: () => Promise<void>;
   user: { id: string } | null;
   verifyCode: (email: string, code: string) => Promise<AuthResult>;
 };
@@ -277,11 +275,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isSignedIn: userId !== null,
       requestCode,
       signOut,
-      signOutLocally,
       user: userId === null ? null : { id: userId },
       verifyCode,
     }),
-    [completeGuestClaim, guestClaimUserId, isHydrated, requestCode, signOut, signOutLocally, userId, verifyCode],
+    [completeGuestClaim, guestClaimUserId, isHydrated, requestCode, signOut, userId, verifyCode],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

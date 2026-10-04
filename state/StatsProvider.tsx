@@ -7,9 +7,7 @@
 // destroyed unseen. Each recorded answer folds into the stats and appends
 // one answer event with a fresh UUID. Every change persists through one
 // ordered write queue per key; in-memory state stays authoritative when a
-// write fails. deleteLocalUserData(userId) removes a deleted account's events
-// and stats key (sync cursor included) from the device, refuses while that user
-// owns the provider, and queues the key removal behind any write already queued.
+// write fails.
 import {
   createContext,
   useCallback,
@@ -25,7 +23,6 @@ import {
 import type { AnswerEvent } from '@syntactical/progress';
 
 import { readStoredJson } from '../clients/readStoredJson';
-import { removeStoredKey } from '../clients/removeStoredKey';
 import { generateUuid } from '../clients/uuidClient';
 import { writeJson } from '../clients/writeJson';
 import { buildUserStatsKey, EVENT_LOG_STORAGE_KEY, GUEST_CLAIM_STORAGE_KEY, STORAGE_KEY } from '../constants/appConfig';
@@ -42,7 +39,6 @@ import { readGuestClaimMarker } from '../services/stats/readGuestClaimMarker';
 import { recordAnswer as foldAnswer } from '../services/stats/recordAnswer';
 import { recordCompletion as foldCompletion } from '../services/stats/recordCompletion';
 import { releaseEvents } from '../services/stats/releaseEvents';
-import { removeUserEvents } from '../services/stats/removeUserEvents';
 import { resolveStoredEventLog } from '../services/stats/resolveStoredEventLog';
 import { resolveStoredStats } from '../services/stats/resolveStoredStats';
 import type { GuestClaimMarker } from '../services/stats/types/GuestClaimMarker';
@@ -55,7 +51,6 @@ import { mergeDownloadedEvents as mergeDownloaded } from '../services/sync/merge
 type StatsContextValue = {
   claimGuestEvents: (userId: string) => Promise<void>;
   clearSyncCursor: () => void;
-  deleteLocalUserData: (userId: string) => Promise<void>;
   discardUnsyncedEvents: (userId: string) => Promise<void>;
   dismissSignUpPrompt: () => void;
   eventLog: LoggedAnswerEvent[];
@@ -273,20 +268,6 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
     [eventLogSlot, isHydrated],
   );
 
-  // The removal rides the stats write queue (shared across owner keys), so a
-  // write queued before this call cannot recreate the key afterwards.
-  const deleteLocalUserData = useCallback(
-    async (userId: string) => {
-      if (ownerRef.current === userId) throw new Error('local data deletion refused: user is still the owner');
-      if (!isHydrated) throw new Error('local data deletion refused: stats not hydrated');
-      await requirePersisted(changeSlot(eventLogSlot, (current) => removeUserEvents(current, userId)));
-      const removal = statsSlot.queue.current.then(() => removeStoredKey(buildUserStatsKey(userId)));
-      statsSlot.queue.current = removal;
-      if (!(await removal)) throw new Error('stats key removal was not persisted');
-    },
-    [eventLogSlot, isHydrated, statsSlot],
-  );
-
   const clearSyncCursor = useCallback(() => {
     if (!isHydrated) return;
     void changeSlot(statsSlot, ({ syncCursor: _cursor, syncCursorOwner: _owner, ...rest }) => rest);
@@ -368,7 +349,6 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
     () => ({
       claimGuestEvents,
       clearSyncCursor,
-      deleteLocalUserData,
       discardUnsyncedEvents,
       dismissSignUpPrompt,
       eventLog: visibleEventLog,
@@ -386,7 +366,6 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
     [
       claimGuestEvents,
       clearSyncCursor,
-      deleteLocalUserData,
       discardUnsyncedEvents,
       dismissSignUpPrompt,
       isHydrated,
