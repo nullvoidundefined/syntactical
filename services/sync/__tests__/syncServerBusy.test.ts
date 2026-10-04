@@ -1,8 +1,8 @@
-// PR #33 review round 2, fix 6 (B-36): while another upload or profile update
-// holds the user's row lock, the real server answers POST /v1/answer-events
-// with 429 SYNC_USER_BUSY and Retry-After: 1 (server/src/routes/answerEvents.ts).
-// The fake copies that envelope; runSyncPass leaves the batch unsynced and not
-// held, reports failure, and the next pass retries the same batch and syncs it.
+// When a database lock or statement timeout ends an upload, the real server
+// answers POST /v1/answer-events with 503 SERVER_BUSY
+// (server/src/middleware/errorHandler.ts). The fake copies that envelope;
+// runSyncPass leaves the batch unsynced and not held, reports failure, and the
+// next pass retries the same batch and syncs it.
 import { randomUUID } from 'node:crypto';
 
 import type { AnswerEvent } from '@syntactical/progress';
@@ -70,8 +70,8 @@ function postedIds(post: { body: unknown }): string[] {
   return (post.body as { events: AnswerEvent[] }).events.map(({ eventId }) => eventId);
 }
 
-describe('429 SYNC_USER_BUSY on upload', () => {
-  it('answers a busy upload with the server\'s 429 envelope and Retry-After: 1, storing nothing', async () => {
+describe('503 SERVER_BUSY on upload', () => {
+  it('answers a busy upload with the server\'s 503 envelope, storing nothing', async () => {
     const userId = randomUUID();
     const device = createDevice(userId, buildOwnedLog(3, userId));
     const server = createFakeSyncServer({ busyPostNumbers: new Set([1]) });
@@ -81,13 +81,12 @@ describe('429 SYNC_USER_BUSY on upload', () => {
     expect(postResponses[0]).toEqual({
       body: {
         error: {
-          code: SERVER_ERROR_CODES.USER_BUSY,
-          message: 'Another sync is in progress; retry shortly',
+          code: SERVER_ERROR_CODES.SERVER_BUSY,
+          message: 'Server busy, retry shortly',
           requestId: FAKE_REQUEST_ID,
         },
       },
-      headers: { 'Retry-After': '1' },
-      status: SERVER_STATUS.TOO_MANY_REQUESTS,
+      status: SERVER_STATUS.SERVICE_UNAVAILABLE,
     });
     expect(server.storedIds().size).toBe(0);
   });

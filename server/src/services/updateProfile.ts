@@ -1,13 +1,12 @@
 // PATCH /v1/me's write (B-35): in one transaction, under the same per-user row lock uploads
-// take (taken without waiting; a held lock answers busy), stores a new timezone and records a daily goal change effective from today in the
+// take, stores a new timezone and records a daily goal change effective from today in the
 // user's timezone (the new one when both change), then rebuilds daily_progress, since both
 // decide which local day an answer counts toward and whether that day's goal was met.
 import { toLocalDate } from '@syntactical/progress';
 
 import type { Database } from '../clients/database.js';
-import { withBoundedTransaction } from '../clients/withBoundedTransaction.js';
+import { withTransaction } from '../clients/withTransaction.js';
 import { PROGRESS_DEFAULTS } from '../constants/progressDefaults.js';
-import { UserBusyError } from '../errors/UserBusyError.js';
 import type { MeUpdate } from '../schemas/meSchemas.js';
 import type { UpdateProfileResult } from '../types/UpdateProfileResult.js';
 
@@ -21,28 +20,11 @@ async function updateProfile(
   update: MeUpdate,
   now: Date,
 ): Promise<UpdateProfileResult> {
-  try {
-    return await writeProfile(database, userId, update, now);
-  } catch (error) {
-    if (error instanceof UserBusyError) {
-      return { kind: 'busy' };
-    }
-    throw error;
-  }
-}
-
-async function writeProfile(
-  database: Database,
-  userId: string,
-  update: MeUpdate,
-  now: Date,
-): Promise<UpdateProfileResult> {
-  return withBoundedTransaction(database, async (client): Promise<UpdateProfileResult> => {
-    const lock = await lockUserRow(client, userId);
-    if (lock.kind === 'missing') {
+  return withTransaction(database, async (client): Promise<UpdateProfileResult> => {
+    const user = await lockUserRow(client, userId);
+    if (!user) {
       return { kind: 'missing' };
     }
-    const { user } = lock;
     const { dailyGoal, timezone: newTimezone } = update;
     if (newTimezone !== undefined) {
       await client.query('UPDATE users SET timezone = $2 WHERE id = $1', [userId, newTimezone]);

@@ -30,7 +30,6 @@ const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.en
 const ROUTE = '/v1/answer-events';
 const HTTP_OK = 200;
 const HTTP_UNPROCESSABLE = 422;
-const HTTP_TOO_MANY_REQUESTS = 429;
 const SETUP_TIMEOUT_MS = 120_000;
 const SECOND_MS = 1000;
 const MINUTE_MS = 60_000;
@@ -427,26 +426,11 @@ describe.skipIf(SKIP_DATABASE_TESTS)('POST /v1/answer-events timestamps and dail
                 const secondBatch = [...shared, ...distinct.slice(20)];
 
                 const batches = [firstBatch, secondBatch];
-                const concurrent = await Promise.all(
+                // The second upload waits on the first's user row lock, then runs; both succeed.
+                const accepted = await Promise.all(
                     batches.map((events) => request(app).post(ROUTE).set('Authorization', authorization).send({ events })),
                 );
-                // One upload per user is in flight at a time (R1c): the loser of the race may be
-                // answered 429 SYNC_USER_BUSY, and the client retries it once the other is done.
-                const accepted: request.Response[] = [];
-                for (const [index, response] of concurrent.entries()) {
-                    expect([HTTP_OK, HTTP_TOO_MANY_REQUESTS]).toContain(response.status);
-                    if (response.status === HTTP_OK) {
-                        accepted.push(response);
-                        continue;
-                    }
-                    expect(response.body.error.code).toBe('SYNC_USER_BUSY');
-                    const retry = await request(app)
-                        .post(ROUTE)
-                        .set('Authorization', authorization)
-                        .send({ events: batches[index] });
-                    expect(retry.status).toBe(HTTP_OK);
-                    accepted.push(retry);
-                }
+                for (const response of accepted) expect(response.status).toBe(HTTP_OK);
 
                 expect(accepted).toHaveLength(batches.length);
                 expect(accepted.reduce((sum, response) => sum + response.body.data.insertedCount, 0)).toBe(

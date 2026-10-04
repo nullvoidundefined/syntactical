@@ -366,6 +366,7 @@ Order matches the slices in the plan. Each line is one RED slice.
 - Resend down: `POST /auth/codes` returns 503 and logs; the code is not stored as sent.
 - Webhook delivered twice or out of order: purchase events are keyed by the provider event id; entitlements are recomputed from the latest event per product.
 - Partial batch upload: events are inserted in one transaction; a failed batch inserts none and the client retries the whole batch.
+- Concurrent writes for one user: uploads and `PATCH /v1/me` take the user's row lock and run one at a time; a request that hits the 2 s lock timeout or the 5 s statement timeout gets 503 `SERVER_BUSY`, stores nothing, and the client retries.
 - Device clock wrong: events more than 5 minutes in the future are rejected with 422 and kept locally for a later retry after the clock is fixed.
 - Pipeline runner hangs: killed at the wall-clock limit and recorded `timeout`.
 - Model returns malformed JSON: rejected at parse time, retried at most twice, then reported.
