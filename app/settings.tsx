@@ -2,10 +2,8 @@
 // and the account: sign in for a guest, sign out and delete account for a signed-in user. A
 // guest's goal is stored on the device; a signed-in user's goal is sent with
 // PATCH /v1/me and stored on the device once the server accepts it, and a
-// refused or failed change is announced and leaves the goal unchanged. When
-// account deletion is refused with 401 the "session ended" notice stays in the
-// account section after the sign-out, until the user signs in again.
-import { useEffect, useState } from 'react';
+// refused or failed change is announced and leaves the goal unchanged.
+import { useState } from 'react';
 
 import { router } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
@@ -20,16 +18,8 @@ import { useProgressSummary } from '../state/useProgressSummary';
 
 const GOAL_SAVE_FAILED = 'Your daily goal was not saved. Check your connection and try again.';
 
-const SESSION_ENDED = 'Your session has ended. Sign in again to delete your account.';
-
 function AccountSection() {
   const { isSignedIn } = useAuth();
-  const [isSessionEnded, setIsSessionEnded] = useState(false);
-  // Signing in again (or leaving the screen) clears the notice.
-  useEffect(() => {
-    if (isSignedIn) return undefined;
-    return () => setIsSessionEnded(false);
-  }, [isSignedIn]);
   return (
     <View className="mt-10 border-t border-line pt-6">
       <Text role="heading" aria-level={2} className="font-mono text-sm uppercase tracking-widest text-ink">
@@ -40,7 +30,7 @@ function AccountSection() {
         {isSignedIn ? (
           <View className="items-end gap-4">
             <SignOutDialog />
-            <DeleteAccountDialog onSessionEnded={() => setIsSessionEnded(true)} />
+            <DeleteAccountDialog />
           </View>
         ) : (
           <Pressable role="link" aria-label="Sign in" onPress={() => router.push('/sign-in')}>
@@ -48,11 +38,6 @@ function AccountSection() {
           </Pressable>
         )}
       </View>
-      {isSessionEnded ? (
-        <Text role="alert" className="mt-3 text-sm text-ink">
-          {SESSION_ENDED}
-        </Text>
-      ) : null}
     </View>
   );
 }

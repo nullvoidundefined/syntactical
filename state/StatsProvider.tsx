@@ -11,10 +11,6 @@
 // and stats key (sync cursor included) from the device, refuses while that user
 // owns the provider or the stored event log has not loaded (a guest stats key
 // still loading does not block it), and queues the key removal behind any write already queued.
-// Once the event log has loaded, and whenever the owner changes, the provider
-// applies the durable pending-purge list itself: each listed id that is not the
-// owner is purged and then dropped from the list; a failed purge keeps the id,
-// warns without it, and is retried on a later mount.
 import {
   createContext,
   useCallback,
@@ -29,14 +25,11 @@ import {
 
 import type { AnswerEvent } from '@syntactical/progress';
 
-import { logWarning } from '../clients/logClient';
 import { readStoredJson } from '../clients/readStoredJson';
 import { removeStoredKey } from '../clients/removeStoredKey';
 import { generateUuid } from '../clients/uuidClient';
 import { writeJson } from '../clients/writeJson';
 import { buildUserStatsKey, EVENT_LOG_STORAGE_KEY, GUEST_CLAIM_STORAGE_KEY, STORAGE_KEY } from '../constants/appConfig';
-import { readPendingPurge } from '../services/account/readPendingPurge';
-import { removePendingPurge } from '../services/account/removePendingPurge';
 import { readLocalToday } from '../services/progress/readLocalToday';
 import { setGoalFromDate } from '../services/progress/setGoalFromDate';
 import { appendAnswerEvent } from '../services/stats/appendAnswerEvent';
@@ -297,27 +290,6 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
     },
     [eventLogSlot, statsSlot],
   );
-
-  useEffect(() => {
-    if (!isEventLogLoaded) return undefined;
-    let isCancelled = false;
-    async function applyPendingPurges() {
-      for (const userId of await readPendingPurge()) {
-        if (isCancelled) return;
-        if (userId === ownerUserId) continue;
-        try {
-          await deleteLocalUserData(userId);
-          await removePendingPurge(userId);
-        } catch (err) {
-          logWarning({ err: String(err) }, 'pending account purge failed, will retry on a later launch');
-        }
-      }
-    }
-    void applyPendingPurges();
-    return () => {
-      isCancelled = true;
-    };
-  }, [deleteLocalUserData, isEventLogLoaded, ownerUserId]);
 
   const clearSyncCursor = useCallback(() => {
     if (!isHydrated) return;

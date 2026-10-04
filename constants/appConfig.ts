@@ -28,10 +28,6 @@ export const EVENT_LOG_CAP = 5000;
 // signed in on this device. Never the session value, email, or sign-in code.
 export const AUTH_STORAGE_KEY = 'syntactical.auth.v1';
 
-// User ids of deleted accounts whose local data has not been purged yet (a JSON
-// array of ids), so a purge outlives the dialog that started it.
-export const PENDING_PURGE_STORAGE_KEY = 'syntactical.account.pending-purge.v1';
-
 // The longest an API request may take, response and body read together.
 export const API_FETCH_TIMEOUT_MS = 10000;
 
