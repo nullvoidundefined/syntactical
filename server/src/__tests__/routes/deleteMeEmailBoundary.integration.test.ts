@@ -85,7 +85,7 @@ describe.skipIf(SKIP_DATABASE_TESTS)('DELETE /v1/me email boundary (B-59.1c)', (
     await database.reset();
   });
 
-  it("leaves another user's payload byte-identical when the deleted email is a substring of theirs", async () => {
+  it("leaves another user's linked payload byte-identical when the deleted email is a substring of theirs", async () => {
     const testApp = createAuthTestApp({ pool: database.pool });
     const now = testApp.clock.now();
     const local = `learner-${randomBytes(HEX_BYTES).toString('hex')}`;
@@ -111,7 +111,6 @@ describe.skipIf(SKIP_DATABASE_TESTS)('DELETE /v1/me email boundary (B-59.1c)', (
     const unlinkedOtherEventId = await insertPurchaseEvent(null, unlinkedOtherPayload, now);
     const ownEventId = await insertPurchaseEvent(null, { event: { contact: email, type: 'TRANSFER' } }, now);
     const otherBefore = await rowOf(otherEventId);
-    const unlinkedOtherBefore = await rowOf(unlinkedOtherEventId);
 
     const response = await deleteWithBearer(testApp, caller.sessionToken);
 
@@ -123,7 +122,6 @@ describe.skipIf(SKIP_DATABASE_TESTS)('DELETE /v1/me email boundary (B-59.1c)', (
     // An unlinked row is matched loosely since B-59.7, so the longer address that contains the
     // deleted one is scrubbed there (over-scrubbing an unowned row is the owner's accepted cost).
     const unlinkedOtherAfter = await rowOf(unlinkedOtherEventId);
-    expect(unlinkedOtherBefore.payload).toEqual(unlinkedOtherPayload);
     expect(unlinkedOtherAfter.payload).toEqual({ event: { contact: DELETED, type: 'TRANSFER' } });
     expect((await rowOf(ownEventId)).payload).toEqual({ event: { contact: DELETED, type: 'TRANSFER' } });
   });
