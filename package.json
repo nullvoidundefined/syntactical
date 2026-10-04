@@ -17,6 +17,7 @@
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "12.0.1",
+    "@revenuecat/purchases-js": "^1.67.1",
     "@tanstack/react-query": "^5.104.0",
     "expo": "^57.0.26",
     "expo-constants": "~57.0.20",
@@ -31,6 +32,7 @@
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
     "react-native-css-interop": "^0.2.7",
+    "react-native-purchases": "^10.11.0",
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
