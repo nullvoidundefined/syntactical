@@ -1,0 +1,430 @@
+[
+    {
+        "id": "rr-golden-01",
+        "note": "irregular plural",
+        "question": {
+            "id": "rr-golden-01",
+            "type": "mc",
+            "prompt": "What is printed?",
+            "code": "puts 'person'.pluralize",
+            "query": {
+                "title": "irregular plural",
+                "explanation": "irregular plural"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "persons"
+                },
+                {
+                    "text": "people"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "rails",
+            "code": "puts 'person'.pluralize"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "people",
+            "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.1)"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "rr-golden-02",
+        "note": "camelize joins words",
+        "question": {
+            "id": "rr-golden-02",
+            "type": "mc",
+            "prompt": "What is printed?",
+            "code": "puts 'admin_user'.camelize",
+            "query": {
+                "title": "camelize joins words",
+                "explanation": "camelize joins words"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "AdminUser"
+                },
+                {
+                    "text": "adminUser"
+                },
+                {
+                    "text": "Admin_user"
+                }
+            ],
+            "answerIndex": 0
+        },
+        "oracle": {
+            "language": "rails",
+            "code": "puts 'admin_user'.camelize"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "AdminUser",
+            "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.1)"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "rr-golden-03",
+        "note": "an empty array is blank",
+        "question": {
+            "id": "rr-golden-03",
+            "type": "bool",
+            "prompt": "This prints true.",
+            "code": "puts [].blank?",
+            "query": {
+                "title": "an empty array is blank",
+                "explanation": "an empty array is blank"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "answer": true
+        },
+        "oracle": {
+            "language": "rails",
+            "code": "puts [].blank?"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "true",
+            "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.1)"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "rr-golden-04",
+        "note": "one day in seconds",
+        "question": {
+            "id": "rr-golden-04",
+            "type": "mc",
+            "prompt": "What is printed?",
+            "code": "puts 1.day.to_i",
+            "query": {
+                "title": "one day in seconds",
+                "explanation": "one day in seconds"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "86400"
+                },
+                {
+                    "text": "1440"
+                },
+                {
+                    "text": "24"
+                }
+            ],
+            "answerIndex": 0
+        },
+        "oracle": {
+            "language": "rails",
+            "code": "puts 1.day.to_i"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "86400",
+            "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.1)"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "rr-golden-05",
+        "note": "where filters rows",
+        "question": {
+            "id": "rr-golden-05",
+            "type": "mc",
+            "prompt": "What is printed?",
+            "code": "ActiveRecord::Schema.define { create_table(:users) { |t| t.string :name } }\nclass User < ActiveRecord::Base; end\nUser.create!(name: 'a')\nUser.create!(name: 'b')\nputs User.where(name: 'a').count",
+            "query": {
+                "title": "where filters rows",
+                "explanation": "where filters rows"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "1"
+                },
+                {
+                    "text": "2"
+                },
+                {
+                    "text": "0"
+                }
+            ],
+            "answerIndex": 0
+        },
+        "oracle": {
+            "language": "rails",
+            "code": "ActiveRecord::Schema.define { create_table(:users) { |t| t.string :name } }\nclass User < ActiveRecord::Base; end\nUser.create!(name: 'a')\nUser.create!(name: 'b')\nputs User.where(name: 'a').count"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "1",
+            "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.1)"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "rr-golden-06",
+        "note": "wrong: whitespace is not present",
+        "question": {
+            "id": "rr-golden-06",
+            "type": "bool",
+            "prompt": "This prints true.",
+            "code": "puts ' '.present?",
+            "query": {
+                "title": "whitespace is not present",
+                "explanation": "whitespace is not present"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "answer": true
+        },
+        "oracle": {
+            "language": "rails",
+            "code": "puts ' '.present?"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "false",
+            "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.1)"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "rr-golden-07",
+        "note": "wrong: parameterize uses hyphens",
+        "question": {
+            "id": "rr-golden-07",
+            "type": "mc",
+            "prompt": "What is printed?",
+            "code": "puts 'Hello World'.parameterize",
+            "query": {
+                "title": "parameterize uses hyphens",
+                "explanation": "parameterize uses hyphens"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "hello-world"
+                },
+                {
+                    "text": "hello_world"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "rails",
+            "code": "puts 'Hello World'.parameterize"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "hello-world",
+            "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.1)"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "rr-golden-08",
+        "note": "wrong: singularize",
+        "question": {
+            "id": "rr-golden-08",
+            "type": "mc",
+            "prompt": "What is printed?",
+            "code": "puts 'users'.singularize",
+            "query": {
+                "title": "singularize",
+                "explanation": "singularize"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "user"
+                },
+                {
+                    "text": "users"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "rails",
+            "code": "puts 'users'.singularize"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "user",
+            "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.1)"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "rr-golden-09",
+        "note": "wrong: try on nil returns nil",
+        "question": {
+            "id": "rr-golden-09",
+            "type": "mc",
+            "prompt": "What is printed?",
+            "code": "p nil.try(:upcase)",
+            "query": {
+                "title": "try on nil returns nil",
+                "explanation": "try on nil returns nil"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "nil"
+                },
+                {
+                    "text": "NoMethodError"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "rails",
+            "code": "p nil.try(:upcase)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "nil",
+            "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.1)"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "rr-golden-10",
+        "note": "wrong: count sees every created row",
+        "question": {
+            "id": "rr-golden-10",
+            "type": "mc",
+            "prompt": "What is printed?",
+            "code": "ActiveRecord::Schema.define { create_table(:users) { |t| t.string :name } }\nclass User < ActiveRecord::Base; end\nUser.create!(name: 'a')\nUser.create!(name: 'b')\nputs User.count",
+            "query": {
+                "title": "count sees every created row",
+                "explanation": "count sees every created row"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "2"
+                },
+                {
+                    "text": "1"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "rails",
+            "code": "ActiveRecord::Schema.define { create_table(:users) { |t| t.string :name } }\nclass User < ActiveRecord::Base; end\nUser.create!(name: 'a')\nUser.create!(name: 'b')\nputs User.count"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "2",
+            "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.1)"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    }
+]

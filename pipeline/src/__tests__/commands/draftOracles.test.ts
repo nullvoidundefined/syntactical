@@ -221,7 +221,7 @@ describe('draftOracles', () => {
             ['not JSON', '{ not json', /is not valid: not JSON/],
             ['not an object', '[1, 2]', /is not valid: expected an object/],
             ['an entry that is not an oracle', '{"p-1": {"code": 5}}', /is not valid: entry "p-1" is not an oracle/],
-            ['an entry with a language it does not know', '{"p-1": {"code": "x", "language": "ruby"}}', /entry "p-1"/],
+            ['an entry with a language it does not know', '{"p-1": {"code": "x", "language": "cobol"}}', /entry "p-1"/],
         ])('fails fast, before any model call, on an existing file that is %s', async (_name, text, message) => {
             await mkdir(join(oraclesDir, 'python'), { recursive: true });
             await writeFile(join(oraclesDir, PYTHON_FILE), text);

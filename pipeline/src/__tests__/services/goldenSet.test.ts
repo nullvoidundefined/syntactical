@@ -28,7 +28,7 @@ import {
 
 const SKIP_DOCKER = process.env.SKIP_DOCKER_TESTS === '1';
 
-const LANGUAGES: OracleLanguage[] = ['python', 'node', 'postgres'];
+const LANGUAGES: OracleLanguage[] = ['python', 'node', 'postgres', 'ruby', 'rails'];
 
 const MIN_ENTRIES = 10;
 
@@ -101,7 +101,7 @@ describe.skipIf(SKIP_DOCKER)('golden set (docker)', () => {
         for (const language of LANGUAGES) {
             await ensureRunnerImage(language);
         }
-    }, DOCKER_LOCK_WAIT_MS + 300_000);
+    }, DOCKER_LOCK_WAIT_MS + 600_000);
 
     afterAll(() => {
         releaseDockerTestLock();
