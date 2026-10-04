@@ -10,7 +10,6 @@ import { HTTP } from '../constants/http.js';
 import { createErrorResponse, ERROR_CODES } from '../errors.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
 import { authSchemas } from '../schemas/authSchemas.js';
-import { ipRateLimitKey } from '../services/ipRateLimitKey.js';
 import { issueOneTimeCode } from '../services/issueOneTimeCode.js';
 
 import type { ResolvedAuthDeps } from './authDeps.js';
@@ -40,7 +39,7 @@ function createAuthCodesRouter(deps: ResolvedAuthDeps, logger: Logger): Router {
   const limits = { database, keySecret: rateLimitKeySecret, now, windowMs: WINDOW_MS };
   const perIp = createRateLimit({
     ...limits,
-    keyOf: (req) => ipRateLimitKey(req.ip),
+    keyOf: (req) => req.ip ?? 'unknown',
     limit: ISSUE_PER_IP,
     scope: ISSUE_IP,
   });

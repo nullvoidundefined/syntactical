@@ -197,20 +197,17 @@ describe.skipIf(SKIP_DATABASE_TESTS)('POST /v1/auth/codes', () => {
     expect(afterWindow.status).toBe(HTTP_ACCEPTED);
   });
 
-  it('keys IPv6 clients by /64 and IPv4-mapped clients as their IPv4 address', async () => {
+  it('counts two different client IPs in separate buckets', async () => {
     const { app } = createAuthTestApp({ pool: database.pool });
 
     for (let index = 0; index < IP_LIMIT; index += 1) {
-      await postCode(app, buildEmail(), '2001:db8::1');
-      await postCode(app, buildEmail(), '::ffff:203.0.113.7');
+      await postCode(app, buildEmail(), '203.0.113.7');
     }
-    const sameSlash64 = await postCode(app, buildEmail(), '2001:db8::2');
-    const otherMapped = await postCode(app, buildEmail(), '::ffff:203.0.113.8');
-    const sameIpv4Unmapped = await postCode(app, buildEmail(), '203.0.113.7');
+    const sameClient = await postCode(app, buildEmail(), '203.0.113.7');
+    const otherClient = await postCode(app, buildEmail(), '203.0.113.8');
 
-    expect(sameSlash64.status).toBe(HTTP_TOO_MANY_REQUESTS);
-    expect(otherMapped.status).toBe(HTTP_ACCEPTED);
-    expect(sameIpv4Unmapped.status).toBe(HTTP_TOO_MANY_REQUESTS);
+    expect(sameClient.status).toBe(HTTP_TOO_MANY_REQUESTS);
+    expect(otherClient.status).toBe(HTTP_ACCEPTED);
   });
 
   it('keys the IP by the one trusted proxy hop, so spoofed X-Forwarded-For entries change nothing', async () => {
