@@ -6,7 +6,7 @@ import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/co
 
 jest.mock('react-native-reanimated', () => ({ useReducedMotion: () => true }));
 jest.mock('../../../state/StatsProvider', () => ({
-  useQuizStats: () => ({ isHydrated: true, recordAnswer: () => undefined, recordCompletion: () => undefined }),
+  useQuizStats: () => ({ eventLog: [], isHydrated: true, recordAnswer: () => undefined, recordCompletion: () => undefined }),
 }));
 
 const query = { explanation: 'Because', title: 'Why' };
