@@ -1,20 +1,17 @@
 // Stores one upload batch (B-32, B-33). Events are checked against the answer key before any
-// write; then, in one transaction, the user's row is locked without waiting (a concurrent upload for the user
-// is answered busy), the timestamps are bounded, the per-user stored-event cap is enforced (a batch
+// write; then, in one transaction, the user's row is locked (a concurrent upload for the user
+// waits), the timestamps are bounded, the per-user stored-event cap is enforced (a batch
 // that would exceed it is refused whole; already-stored ids do not count), the events are inserted once by (user_id, event_id)
-// with is_correct derived from the answer key, and daily progress is refreshed (refreshDailyProgress: incremental, or a full replay when the zone
-// changed since it was built).
+// with is_correct derived from the answer key, and daily progress is rebuilt from every stored event.
 import type { Database } from '../clients/database.js';
-import { withBoundedTransaction } from '../clients/withBoundedTransaction.js';
+import { withTransaction } from '../clients/withTransaction.js';
 import { SYNC } from '../constants/sync.js';
-import { UserBusyError } from '../errors/UserBusyError.js';
 import type { AnswerEventInput } from '../schemas/answerEventSchemas.js';
 import type { AnswerKey } from '../types/AnswerKey.js';
 import type { IngestResult } from '../types/IngestResult.js';
 
 import { lockUserRow } from './lockUserRow.js';
-import { readStoredProgress } from './readStoredProgress.js';
-import { refreshDailyProgress } from './refreshDailyProgress.js';
+import { recomputeDailyProgress } from './recomputeDailyProgress.js';
 
 const MINUTE_MS = 60_000;
 const DAY_MS = 86_400_000;
@@ -47,29 +44,11 @@ async function ingestAnswerEvents(
   if (invalid.length > 0) {
     return { eventIds: ids(invalid), kind: 'invalid-events' };
   }
-  try {
-    return await storeEvents(database, answerKey, userId, events, now);
-  } catch (error) {
-    if (error instanceof UserBusyError) {
-      return { kind: 'busy' };
-    }
-    throw error;
-  }
-}
-
-async function storeEvents(
-  database: Database,
-  answerKey: AnswerKey,
-  userId: string,
-  events: readonly AnswerEventInput[],
-  now: Date,
-): Promise<IngestResult> {
-  return withBoundedTransaction(database, async (client): Promise<IngestResult> => {
-    const lock = await lockUserRow(client, userId);
-    if (lock.kind === 'missing') {
+  return withTransaction(database, async (client): Promise<IngestResult> => {
+    const user = await lockUserRow(client, userId);
+    if (!user) {
       return { eventIds: ids(events), kind: 'invalid-events' };
     }
-    const { user } = lock;
     const latest = now.getTime() + FUTURE_TOLERANCE_MS;
     const earliest = user.created_at.getTime() - PAST_TOLERANCE_MS;
     const outOfRange = events.filter((event) => isOutside(event.answeredAt, earliest, latest));
@@ -89,14 +68,13 @@ async function storeEvents(
     if (Number(stored[0]?.count ?? 0) + newCount > MAX_EVENTS_PER_USER) {
       return { kind: 'event-cap-reached' };
     }
-    const { rows: insertedRows } = await client.query<{ event_id: string; question_id: string }>(
+    const { rowCount } = await client.query(
       `INSERT INTO answer_events
          (user_id, event_id, bank_key, question_id, choice_index, answered_at, round_kind, is_correct, received_at)
        SELECT $1, event_id, bank_key, question_id, choice_index, answered_at, round_kind, is_correct, clock_timestamp()
        FROM unnest($2::uuid[], $3::text[], $4::text[], $5::int[], $6::timestamptz[], $7::text[], $8::boolean[])
          AS t(event_id, bank_key, question_id, choice_index, answered_at, round_kind, is_correct)
-       ON CONFLICT (user_id, event_id) DO NOTHING
-       RETURNING event_id, question_id`,
+       ON CONFLICT (user_id, event_id) DO NOTHING`,
       [
         userId,
         ids(events),
@@ -108,9 +86,8 @@ async function storeEvents(
         events.map(({ bankKey, choiceIndex, questionId }) => choiceIndex === answerKey.get(bankKey)?.get(questionId)?.answerIndex),
       ],
     );
-    await refreshDailyProgress(client, userId, user, insertedRows, now);
-    const totals = await readStoredProgress(client, userId, user.timezone, now);
-    return { kind: 'stored', totals: { ...totals, insertedCount: insertedRows.length } };
+    const totals = await recomputeDailyProgress(client, userId, user.timezone, now);
+    return { kind: 'stored', totals: { ...totals, insertedCount: rowCount ?? 0 } };
   });
 }
 

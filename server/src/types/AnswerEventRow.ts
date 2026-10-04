@@ -9,7 +9,6 @@ interface AnswerEventRow {
   is_correct: boolean;
   question_id: string;
   round_kind: AnswerEvent['roundKind'];
-  xp: number;
 }
 
 export type { AnswerEventRow };

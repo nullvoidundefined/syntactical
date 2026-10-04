@@ -759,7 +759,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 - An event more than 5 minutes in the future, or before the user's `created_at` minus 365 days, → the whole batch 422 with the offending ids; nothing inserted.
 - A batch over 200 events → 413; an unknown `bankKey` or `questionId` → 422.
 - Two concurrent uploads of overlapping batches for one user both succeed and leave each event once; derived XP equals `computeXp` summed over distinct events.
-- `daily_progress` for the affected local dates is recomputed with `@syntactical/progress` in the same transaction.
+- `daily_progress` is rebuilt from all of the user's stored events with `@syntactical/progress` in the same transaction (on every upload and every `PATCH /v1/me`).
 - `GET /v1/answer-events?after=<cursor>` returns at most 500 events ordered by `received_at, event_id` with a `nextCursor`, and never another user's events; the cursor is opaque base64url decoded by zod into `(received_at, event_id)`, and `' OR 1=1 --`, an oversized value, or a non-cursor string returns 400.
 
 - [ ] Gated cycle; commit `feat(sync): idempotent answer event upload and paged download`.
