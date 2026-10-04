@@ -1,3 +1,5 @@
+import { isAbsolute } from 'node:path';
+
 import { z } from 'zod';
 
 const SECRET_MIN_LENGTH = 32;
@@ -25,6 +27,12 @@ const envSchema = z.object({
   // The sign-in email's sender, for example `Syntactical <sign-in@syntactical.dev>`.
   EMAIL_FROM: z.string().trim().min(1),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  // Where paid banks live, outside the public content directory.
+  PAID_CONTENT_DIR: z
+    .string()
+    .trim()
+    .min(1)
+    .refine((value) => isAbsolute(value)),
   PUBLIC_BASE_URL: httpsUrl,
   RATE_LIMIT_KEY_SECRET: strongSecret,
   RESEND_API_KEY: z.string().trim().min(1),

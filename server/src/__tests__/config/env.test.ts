@@ -29,6 +29,7 @@ function buildValidSource(): NodeJS.ProcessEnv {
     PUBLIC_BASE_URL: 'https://api.syntactical.dev',
     RESEND_API_KEY: randomBytes(RANDOM_SECRET_BYTES).toString('hex'),
     EMAIL_FROM: 'Syntactical <sign-in@syntactical.dev>',
+    PAID_CONTENT_DIR: '/srv/syntactical-content',
   };
 }
 
