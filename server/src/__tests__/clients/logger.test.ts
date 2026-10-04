@@ -1,103 +1,65 @@
-// B-62b: the pino logger client redacts emails, one-time codes, session tokens, and auth headers.
-import { randomBytes, randomUUID } from 'node:crypto';
+// B-62b: the pino logger client redacts emails, one-time codes, secrets, session tokens,
+// cookies, and auth headers, and logs an Error by name, pg code, and constraint only.
+import { randomBytes } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
 
 import { createLogger } from '../../clients/logger.js';
 
-const TOKEN_BYTES = 32;
-const CODE_BYTES = 8;
-const EMAIL_LOCAL_PART_BYTES = 6;
-const SESSION_COOKIE_NAME = 'syntactical_session';
+const VALUE_BYTES = 16;
+const PG_UNIQUE_VIOLATION = '23505';
+const PG_EMAIL_CONSTRAINT = 'users_email_key';
 
-interface CapturedDestination {
-  lines: string[];
-  write(chunk: string): void;
-}
-
-function createCapturedDestination(): CapturedDestination {
+function capture() {
   const lines: string[] = [];
-  return {
-    lines,
+  const destination = {
     write(chunk: string) {
       lines.push(...chunk.split('\n').filter((line) => line.length > 0));
     },
   };
+  return { lines, logger: createLogger({ destination }) };
 }
 
-function buildSecrets() {
-  return {
-    authorizationToken: randomBytes(TOKEN_BYTES).toString('hex'),
-    code: randomBytes(CODE_BYTES).toString('hex'),
-    cookieToken: randomBytes(TOKEN_BYTES).toString('hex'),
-    email: `learner-${randomBytes(EMAIL_LOCAL_PART_BYTES).toString('hex')}@example.com`,
-    setCookieToken: randomBytes(TOKEN_BYTES).toString('hex'),
-    token: randomBytes(TOKEN_BYTES).toString('hex'),
-  };
+function runTimeValue(): string {
+  return randomBytes(VALUE_BYTES).toString('hex');
 }
 
 describe('createLogger', () => {
-  it('writes a JSON line with no email, code, token, cookie, authorization, or set-cookie value', () => {
-    const destination = createCapturedDestination();
-    const logger = createLogger({ destination });
-    const secrets = buildSecrets();
-    const marker = randomUUID();
-
-    logger.info(
-      {
-        marker,
-        otp: { code: secrets.code },
-        req: {
-          headers: {
-            authorization: `Bearer ${secrets.authorizationToken}`,
-            cookie: `${SESSION_COOKIE_NAME}=${secrets.cookieToken}`,
-          },
-          method: 'GET',
-          url: '/v1/me',
-        },
-        res: {
-          headers: {
-            'set-cookie': `${SESSION_COOKIE_NAME}=${secrets.setCookieToken}; HttpOnly; Secure; SameSite=Lax; Path=/`,
-          },
-          statusCode: 200,
-        },
-        session: { token: secrets.token },
-        user: { email: secrets.email },
-      },
-      'redaction probe',
-    );
-
-    expect(destination.lines).toHaveLength(1);
-    const [line] = destination.lines;
-    const parsed = JSON.parse(line) as Record<string, unknown>;
-    expect(parsed.msg).toBe('redaction probe');
-    expect(parsed.marker).toBe(marker);
-    expect((parsed.req as { url: string }).url).toBe('/v1/me');
-    for (const value of Object.values(secrets)) {
-      expect(line).not.toContain(value);
-    }
+  it.each([
+    ['email', (value: string) => ({ user: { email: `${value}@example.test` } })],
+    ['code', (value: string) => ({ code: value })],
+    ['otp', (value: string) => ({ otp: value })],
+    ['password', (value: string) => ({ password: value })],
+    ['secret', (value: string) => ({ webhook: { secret: value } })],
+    ['token', (value: string) => ({ session: { token: value } })],
+    ['cookie', (value: string) => ({ cookie: value })],
+    ['authorization', (value: string) => ({ authorization: `Bearer ${value}` })],
+    ['req.headers.cookie', (value: string) => ({ req: { headers: { cookie: `syntactical_session=${value}` } } })],
+    ['req.headers.authorization', (value: string) => ({ req: { headers: { authorization: `Bearer ${value}` } } })],
+    [
+      'res.headers set-cookie',
+      (value: string) => ({ res: { headers: { 'set-cookie': [`syntactical_session=${value}; HttpOnly`] } } }),
+    ],
+  ])('never writes the value of %s', (_field, shape) => {
+    const value = runTimeValue();
+    const { lines, logger } = capture();
+    logger.info(shape(value), 'probe');
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toContain('"msg":"probe"');
+    expect(lines[0]).not.toContain(value);
   });
 
-  it('redacts a set-cookie header given as an array of cookies', () => {
-    const destination = createCapturedDestination();
-    const logger = createLogger({ destination });
-    const firstToken = randomBytes(TOKEN_BYTES).toString('hex');
-    const secondToken = randomBytes(TOKEN_BYTES).toString('hex');
-
-    logger.info(
-      {
-        res: {
-          headers: {
-            'set-cookie': [`${SESSION_COOKIE_NAME}=${firstToken}; HttpOnly`, `other=${secondToken}; HttpOnly`],
-          },
-        },
-      },
-      'set-cookie array probe',
-    );
-
-    expect(destination.lines).toHaveLength(1);
-    expect(destination.lines[0]).toContain('set-cookie array probe');
-    expect(destination.lines[0]).not.toContain(firstToken);
-    expect(destination.lines[0]).not.toContain(secondToken);
+  it('logs an Error under err by name, pg code, and constraint only', () => {
+    const email = `${runTimeValue()}@example.test`;
+    const error = Object.assign(new Error(`duplicate key for ${email}`), {
+      code: PG_UNIQUE_VIOLATION,
+      constraint: PG_EMAIL_CONSTRAINT,
+      detail: `Key (email)=(${email}) already exists.`,
+    });
+    const { lines, logger } = capture();
+    logger.error({ err: error }, 'insert failed');
+    const entry = JSON.parse(lines[0] ?? '{}') as { err?: unknown };
+    expect(entry.err).toEqual({ constraint: PG_EMAIL_CONSTRAINT, name: 'Error', pgCode: PG_UNIQUE_VIOLATION });
+    expect(lines.join('\n')).not.toContain(email);
   });
 });
