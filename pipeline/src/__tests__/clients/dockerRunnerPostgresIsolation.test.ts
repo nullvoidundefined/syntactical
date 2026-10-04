@@ -36,16 +36,37 @@ describe.skipIf(SKIP_DOCKER)('runOracle Postgres privilege isolation (B-8c)', ()
     });
 
     describe('superuser-only capabilities are denied', () => {
-        it('refuses COPY TO PROGRAM with insufficient_privilege', async () => {
-            const run = await runOracle({
-                language: 'postgres',
-                code: "COPY (SELECT 1) TO PROGRAM 'id'",
-            });
+        it(
+            'refuses COPY TO PROGRAM with insufficient_privilege',
+            async () => {
+                const run = await runOracle({
+                    language: 'postgres',
+                    code: "COPY (SELECT 1) TO PROGRAM 'id'",
+                });
 
-            expect(run.outcome, JSON.stringify(run)).toBe('exception');
-            expect(run.exceptionType).toBe(INSUFFICIENT_PRIVILEGE);
-            expect(run.value).toBeUndefined();
-            expect(runningRunnerContainers('postgres')).toBe('');
-        }, RUN_TIMEOUT_MS);
+                expect(run.outcome, JSON.stringify(run)).toBe('exception');
+                expect(run.exceptionType).toBe(INSUFFICIENT_PRIVILEGE);
+                expect(run.value).toBeUndefined();
+                expect(runningRunnerContainers('postgres')).toBe('');
+            },
+            RUN_TIMEOUT_MS,
+        );
+
+        // Guards the PID 1 forge (B-5 in docs/superpowers/specs/2026-10-05-harness-pid1-forge-design.md):
+        // the oracle role cannot write a forged result line onto the harness's stdout.
+        it(
+            'refuses COPY to the harness stdout with insufficient_privilege',
+            async () => {
+                const run = await runOracle({
+                    language: 'postgres',
+                    code: "COPY (SELECT 'FORGED') TO '/proc/1/fd/1'",
+                });
+
+                expect(run.outcome, JSON.stringify(run)).toBe('exception');
+                expect(run.exceptionType).toBe(INSUFFICIENT_PRIVILEGE);
+                expect(run.value).toBeUndefined();
+            },
+            RUN_TIMEOUT_MS,
+        );
     });
 });
