@@ -13,7 +13,6 @@ on:
       - 'packages/**'
       - 'content/**'
       - 'package-lock.json'
-      - 'railway.json'
       - '.github/workflows/server-deploy.yml'
       - '.github/actions/check-api-image/**'
   workflow_dispatch:

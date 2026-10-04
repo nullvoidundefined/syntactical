@@ -50,32 +50,32 @@ Passed 2026-10-02. The owner approved the spec and plan, chose owner-merges-ever
 
 ## PR boundaries
 
-| PR | Tasks | Risk |
-|---|---|---|
-| 1 | 0.1, 0.2 | high (content origin control) |
-| 2 | 1.0 | standard (bug fix, test-first) |
-| 3 | 1.1, 1.2 | standard |
-| 4 | 1.3, 1.4, 1.5, 1.6 | high (trust-boundary content validation, private content split) |
-| 5 | 1.7, 1.8 | high (runner sandbox) |
-| 6 | 1.9, 1.10, 1.11 | standard |
-| 7 | 1.12 (content audit fixes) | standard, content only |
-| 8 | 1.13, 1.14 | standard |
-| 9 | 2.1, 2.2, 2.3 | high (2.3 runs generated code) |
-| 10 | 2.4, 2.5, 2.6 | standard |
-| 11 | 2.7, 2.8 | standard |
-| 12 | 3.1, 3.2 | high (migrations, middleware stack) |
-| 13 | 3.3, 3.4, 3.5 | high (auth, sessions, CORS, CSRF) |
-| 14 | 3.6, 3.7, 3.8 | high (sync concurrency) |
-| 15 | 3.9, 3.10, 3.11 | high (client sessions, guest merge) |
-| 16 | 3.12, 3.13 | standard |
-| 17 | 3.14, 3.15 | high (entitlement gate) |
-| 18 | 3.16, 3.17 | high (payments: web billing and the RevenueCat webhook) |
-| 19 | 3.18 | high (purchase flow) |
-| 20 | 3.21 | high (account deletion) |
-| 21 | 3.19, 3.20 | standard |
-| 22 | 4.1, 4.2, 4.3 | standard |
-| 23 | 5.1 to 5.5 | standard |
-| 24 | 6.1 | standard |
+| PR  | Tasks                      | Risk                                                            |
+| --- | -------------------------- | --------------------------------------------------------------- |
+| 1   | 0.1, 0.2                   | high (content origin control)                                   |
+| 2   | 1.0                        | standard (bug fix, test-first)                                  |
+| 3   | 1.1, 1.2                   | standard                                                        |
+| 4   | 1.3, 1.4, 1.5, 1.6         | high (trust-boundary content validation, private content split) |
+| 5   | 1.7, 1.8                   | high (runner sandbox)                                           |
+| 6   | 1.9, 1.10, 1.11            | standard                                                        |
+| 7   | 1.12 (content audit fixes) | standard, content only                                          |
+| 8   | 1.13, 1.14                 | standard                                                        |
+| 9   | 2.1, 2.2, 2.3              | high (2.3 runs generated code)                                  |
+| 10  | 2.4, 2.5, 2.6              | standard                                                        |
+| 11  | 2.7, 2.8                   | standard                                                        |
+| 12  | 3.1, 3.2                   | high (migrations, middleware stack)                             |
+| 13  | 3.3, 3.4, 3.5              | high (auth, sessions, CORS, CSRF)                               |
+| 14  | 3.6, 3.7, 3.8              | high (sync concurrency)                                         |
+| 15  | 3.9, 3.10, 3.11            | high (client sessions, guest merge)                             |
+| 16  | 3.12, 3.13                 | standard                                                        |
+| 17  | 3.14, 3.15                 | high (entitlement gate)                                         |
+| 18  | 3.16, 3.17                 | high (payments: web billing and the RevenueCat webhook)         |
+| 19  | 3.18                       | high (purchase flow)                                            |
+| 20  | 3.21                       | high (account deletion)                                         |
+| 21  | 3.19, 3.20                 | standard                                                        |
+| 22  | 4.1, 4.2, 4.3              | standard                                                        |
+| 23  | 5.1 to 5.5                 | standard                                                        |
+| 24  | 6.1                        | standard                                                        |
 
 ---
 
@@ -96,6 +96,7 @@ Passed 2026-10-02. The owner approved the spec and plan, chose owner-merges-ever
 **Risk:** standard (the content base URL is a build-time constant). **Behaviors:** B-55.
 
 **Files:**
+
 - Modify: `app.config.ts` (`CONTENT_ORIGIN`, `experiments.baseUrl`)
 - Create: `public/CNAME` (contains `syntactical.dev`)
 - Modify: `.github/workflows/deploy.yml` (no base path), `scripts/copySpaFallback.mjs` if it assumes `/syntactical`
@@ -104,10 +105,12 @@ Passed 2026-10-02. The owner approved the spec and plan, chose owner-merges-ever
 **Interfaces:** Produces `extra.contentBaseUrl === 'https://syntactical.dev/content/'`; the app reads it from `extra.contentBaseUrl` with no runtime allow-list (`validateContentBaseUrl` was removed in IAN-601).
 
 **Behaviors (RED tests):**
+
 - `appConfigOrigin.test.ts`: an unset `EXPO_BASE_URL` resolves the content base URL to `https://syntactical.dev/content/`; `experiments.baseUrl` is `''`.
 - `packageScripts.test.ts`: `public/CNAME` contains exactly `syntactical.dev`.
 
 **Steps:**
+
 - [ ] `tdd.sh open 0.1`; dispatch `test-author` with the behaviors; `tdd.sh red`.
 - [ ] Dispatch `implementer`; `tdd.sh green`; `slice-critic`.
 - [ ] `npm test && npx tsc --noEmit && npm run build`; `grep -r "nullvoidundefined.github.io" app.config.ts services clients state` returns nothing.
@@ -127,7 +130,10 @@ import { checkLiveSite } from '../checkLiveSite.mjs';
 function fakeFetch(map: Record<string, { status: number; location?: string }>) {
   return async (url: string) => {
     const hit = map[url];
-    return { status: hit.status, headers: { get: (name: string) => (name === 'location' ? hit.location ?? null : null) } };
+    return {
+      status: hit.status,
+      headers: { get: (name: string) => (name === 'location' ? (hit.location ?? null) : null) },
+    };
   };
 }
 
@@ -135,7 +141,10 @@ describe('checkLiveSite', () => {
   it('passes when the old Pages URL redirects to the same path and both pages load', async () => {
     const result = await checkLiveSite(
       fakeFetch({
-        'https://nullvoidundefined.github.io/syntactical/python/easy': { status: 301, location: 'https://syntactical.dev/python/easy' },
+        'https://nullvoidundefined.github.io/syntactical/python/easy': {
+          status: 301,
+          location: 'https://syntactical.dev/python/easy',
+        },
         'https://syntactical.dev/': { status: 200 },
         'https://syntactical.dev/python/easy': { status: 200 },
       }),
@@ -146,7 +155,10 @@ describe('checkLiveSite', () => {
   it('reports a redirect to the wrong path', async () => {
     const result = await checkLiveSite(
       fakeFetch({
-        'https://nullvoidundefined.github.io/syntactical/python/easy': { status: 301, location: 'https://syntactical.dev/' },
+        'https://nullvoidundefined.github.io/syntactical/python/easy': {
+          status: 301,
+          location: 'https://syntactical.dev/',
+        },
         'https://syntactical.dev/': { status: 200 },
         'https://syntactical.dev/python/easy': { status: 200 },
       }),
@@ -228,6 +240,7 @@ it('ignores a choice key beyond the question’s choices', () => {
 **Risk:** standard. **Behaviors:** B-1.
 
 **Files:**
+
 - Modify: `package.json` (`"workspaces": ["packages/*", "pipeline", "server"]`, script `test:workspaces`: `npm test --workspaces --if-present`)
 - Modify: `tsconfig.json` (`exclude`: `packages`, `pipeline`, `server`), `jest.config.js` (`testPathIgnorePatterns` adds `/packages/`, `/pipeline/`, `/server/`), `metro.config.js` (`watchFolders` adds `packages/`)
 - Create for each of `packages/content-schema`, `packages/progress`, `pipeline`, `server`: `package.json` (`"type": "module"`, `"name": "@syntactical/<name>"`, scripts `test: vitest run`, `typecheck: tsc --noEmit`, and for the two packages `build: tsc -p tsconfig.build.json`, `exports` pointing at `dist/`, `react-native` pointing at `src/index.ts`), `tsconfig.json` (strict, `module: NodeNext`), `vitest.config.ts`, `src/index.ts`, `src/__tests__/index.test.ts`
@@ -263,6 +276,7 @@ describe('workspaces', () => {
 **Risk:** standard (pure move; existing tests prove behavior is unchanged). **Behaviors:** B-2.
 
 **Files:**
+
 - Move: `services/content/types/{Question,Query,Manifest,LanguageEntry,BankEntry,CachedBank}.ts`, `services/content/validateManifest.ts`, `services/content/validateQuestionBank.ts`, `services/content/isSafeBankPath.ts`, `services/content/SHA256_HEX.ts`, and the constants they need (`SUPPORTED_SCHEMA_VERSION`, `QUESTION_TYPES`, `GRAMMARS`, `Grammar`, `CONTENT_LIMITS`, `DIFFICULTIES`, `DifficultyId`) from `constants/appConfig.ts` → `packages/content-schema/src/` (the package imports nothing from the app)
 - Move tests: `services/content/__tests__/validateManifest.test.ts`, `validateQuestionBank.test.ts`, `isSafeBankPath.test.ts`, `fixtures/contentFixtures.ts` → `packages/content-schema/src/__tests__/` (vitest imports)
 - Modify: every importer (`services/content/*.ts`, `state/*.ts`, `components/**/*.tsx`, `constants/appConfig.ts`, `scripts/buildContentManifest.mjs`) to import from `@syntactical/content-schema`
@@ -276,7 +290,16 @@ import { expect, it } from 'vitest';
 import * as schema from '../index';
 
 it('exports the shared content contract', () => {
-  for (const name of ['validateManifest', 'validateQuestionBank', 'isSafeBankPath', 'SHA256_HEX', 'SUPPORTED_SCHEMA_VERSION', 'DIFFICULTIES', 'GRAMMARS', 'CONTENT_LIMITS']) {
+  for (const name of [
+    'validateManifest',
+    'validateQuestionBank',
+    'isSafeBankPath',
+    'SHA256_HEX',
+    'SUPPORTED_SCHEMA_VERSION',
+    'DIFFICULTIES',
+    'GRAMMARS',
+    'CONTENT_LIMITS',
+  ]) {
     expect(schema).toHaveProperty(name);
   }
 });
@@ -292,17 +315,20 @@ it('exports the shared content contract', () => {
 **Risk:** high (validation of content downloaded from the network is a trust boundary). **Behaviors:** B-3, B-4, B-6.
 
 **Files:**
+
 - Modify: `packages/content-schema/src/types/Question.ts` (v2 union from the spec); create `types/Choice.ts` (`{ text; code?; rationale?; misconceptionId? }`), `types/Criterion.ts`, `types/Provenance.ts`, `types/BankContext.ts`
 - Modify: `packages/content-schema/src/validateQuestionBank.ts` (schema 2, `context: BankContext` argument; drops bad questions, keeps the bank)
 - Create: `packages/content-schema/src/validateBankForPublish.ts`
 - Test: `packages/content-schema/src/__tests__/validateQuestionBank.test.ts`, `validateBankForPublish.test.ts`
 
 **Interfaces:**
+
 - `validateQuestionBank(raw: unknown, context: BankContext): { questions: Question[]; dropped: { id: string; rule: string }[] } | null`
 - `validateBankForPublish(bank: { questions: Question[] }, context: BankContext): { problems: { id: string; rule: string }[] }`
 - `type BankContext = { topicIds: readonly string[]; misconceptionIds: readonly string[] }`
 
 **Behaviors (RED tests):**
+
 - A schema-2 `mc` question with choices `[{ text }, { text, rationale, misconceptionId }]` and no `topic` validates in `validateQuestionBank`.
 - The same question fails `validateBankForPublish` with `missing-topic` and one `missing-rationale` per wrong choice lacking it.
 - A `rationale` over 280 characters is dropped with `rationale-too-long`; the rest of the bank is kept.
@@ -324,6 +350,7 @@ it('exports the shared content contract', () => {
 **Interfaces:** `BankEntry = { path; hash; access: 'free' | 'paid'; productId?: string; contentVersion: number; topicCounts: Record<string, number> }`; `LanguageEntry` adds `topics: { id: string; label: string }[]` and `misconceptions: { id: string; description: string }[]`; `buildBankContext(language: LanguageEntry): BankContext`.
 
 **Behaviors (RED tests):**
+
 - `access: 'paid'` without `productId` rejects the manifest; `access: 'free'` with a `productId` rejects it; any other `access` value rejects it.
 - `productId` must equal `syntactical.<language>.<difficulty>` for its own entry.
 - `contentVersion` must be a positive integer; `topicCounts` keys must be ids in the language's `topics`.
@@ -338,12 +365,14 @@ it('exports the shared content contract', () => {
 **Risk:** high (bundled and cached content path; paid content leaves the public repo). **Behaviors:** B-7.
 
 **Files:**
+
 - Create: `pipeline/src/commands/migrateV1.ts` (one-time converter: wraps choices as `{ text }`; adds `provenance: { source: 'original', validation: { method: 'judged', status: 'pending' }, isHumanReviewed: false }`; sets bank entry `access` (`easy` → free, else paid), `productId`, `contentVersion: 1`, `topicCounts: {}`; empty `topics` and `misconceptions`; writes free banks to `content/` and paid banks to `CONTENT_PRIVATE_DIR` (default `../syntactical-content`), then deletes the paid files from `content/`)
 - Modify: `content/**/*.json`, `content/manifest.json`
 - Modify: `services/content/loadQuestionBank.ts`, `state/ContentProvider.tsx`, `state/useQuestionBank.ts`, `services/content/readCachedBank.ts` (pass `buildBankContext(language)`), `components/quiz/MultipleChoiceCard.tsx` (render `choice.text`)
 - Test: `pipeline/src/__tests__/commands/migrateV1.test.ts`, `components/quiz/__tests__/cards.test.tsx`, `services/content/__tests__/loadQuestionBank.test.ts`
 
 **Behaviors (RED tests):**
+
 - `migrateV1` on a v1 `mc` question returns a v2 question whose `choices[i].text` equals the v1 string at `i`, the same `answerIndex`, and `provenance.source === 'original'`.
 - `migrateV1` on a v1 `bool` question keeps `answer` and adds provenance.
 - `migrateV1` on the v1 manifest marks every `easy` bank `access: 'free'` with no `productId`, and every other bank `access: 'paid'` with `syntactical.<language>.<difficulty>`.
@@ -366,6 +395,7 @@ it('exports the shared content contract', () => {
 **Interfaces:** `buildContentManifest({ rootDir, privateDir, dryRun? }): { bundledBanks: Record<string, unknown>; staticBankPaths: string[]; manifest: Manifest }`.
 
 **Behaviors (RED tests):**
+
 - With `python/easy` free in `content/` and `python/medium` paid in the private dir, `bundledBanks` keys are exactly `['python/easy']` and `staticBankPaths` excludes any medium or hard bank; the manifest lists both with correct hashes.
 - A paid bank found under `content/` fails the build with `paid bank in public content: python/medium`; a free bank under the private dir fails with `free bank in private content: python/easy`.
 - After `npm run build`, `dist/content` contains no file for a paid bank (test walks a fixture export).
@@ -379,6 +409,7 @@ it('exports the shared content contract', () => {
 **Risk:** high (executes model-written code). **Behaviors:** B-8, B-12.
 
 **Files:**
+
 - Create: `pipeline/runners/{python,node,postgres}/Dockerfile` (non-root user 10001, pinned runtime) with a harness that reads an oracle JSON on stdin and writes `{ outcome: 'value' | 'exception' | 'syntax-error', value?, exceptionType?, stdout }`
 - Create: `pipeline/src/clients/dockerRunner.ts`, `pipeline/src/types/OracleRun.ts`, `pipeline/src/types/Oracle.ts`
 - Test: `pipeline/src/__tests__/clients/dockerRunner.test.ts` (runs in the pipeline CI job, which has Docker)
@@ -386,6 +417,7 @@ it('exports the shared content contract', () => {
 **Interfaces:** `runOracle(oracle: Oracle, limits?: { timeoutMs: number }): Promise<OracleRun>`; `Oracle = { language: 'python' | 'node' | 'postgres'; code: string; setupSql?: string; choiceCode?: string[] }`; `OracleRun = { outcome: 'value' | 'exception' | 'syntax-error' | 'timeout' | 'sandbox-violation' | 'resource-limit'; value?: string; exceptionType?: string; runtimeVersion: string }`.
 
 **Behaviors (RED tests):**
+
 - Python `print(0.1 + 0.2)` → `{ outcome: 'value', value: '0.30000000000000004' }`, `runtimeVersion` matching `/^Python 3\.\d+\.\d+$/`.
 - Node `[] + {}` → `'[object Object]'`; Postgres `SELECT NULL = NULL` after setup SQL → a null value.
 - Python code raising `TypeError` → `{ outcome: 'exception', exceptionType: 'TypeError' }`.
@@ -406,6 +438,7 @@ it('exports the shared content contract', () => {
 **Interfaces:** `validateQuestion(question: Question, oracle: Oracle, run = runOracle): Promise<ValidationResult>`; `ValidationResult = { status: 'passed' | 'failed' | 'not-executable'; reason?: 'answer-mismatch' | 'nondeterministic' | 'ambiguous' | 'runner-error'; observed?: string; runtimeVersion?: string }`.
 
 **Behaviors (RED tests, fake `run`):**
+
 - Every golden-set question marked correct → `passed`; every one marked wrong → `failed` / `answer-mismatch` (at least 10 per language, half deliberately wrong).
 - Three runs with different values → `failed` / `nondeterministic`.
 - Two choices matching the observed value → `failed` / `ambiguous`.
@@ -436,22 +469,34 @@ const schema = z.object({ topic: z.string() });
 
 describe('ModelProvider', () => {
   it('parses structured output from the CLI path', async () => {
-    const exec = vi.fn().mockResolvedValue({ stdout: JSON.stringify({ result: '{"topic":"strings"}', model: 'claude-x' }) });
+    const exec = vi
+      .fn()
+      .mockResolvedValue({ stdout: JSON.stringify({ result: '{"topic":"strings"}', model: 'claude-x' }) });
     const provider = createModelProvider('cli', { exec });
-    await expect(provider.generate({ system: 's', prompt: 'p', schema, promptVersion: 'v1' })).resolves.toEqual({ value: { topic: 'strings' }, model: 'claude-x' });
+    await expect(provider.generate({ system: 's', prompt: 'p', schema, promptVersion: 'v1' })).resolves.toEqual({
+      value: { topic: 'strings' },
+      model: 'claude-x',
+    });
   });
 
   it('throws ModelOutputInvalid after three schema failures', async () => {
     const exec = vi.fn().mockResolvedValue({ stdout: JSON.stringify({ result: '{"nope":1}', model: 'claude-x' }) });
     const provider = createModelProvider('cli', { exec });
-    await expect(provider.generate({ system: 's', prompt: 'p', schema, promptVersion: 'v1' })).rejects.toBeInstanceOf(ModelOutputInvalid);
+    await expect(provider.generate({ system: 's', prompt: 'p', schema, promptVersion: 'v1' })).rejects.toBeInstanceOf(
+      ModelOutputInvalid,
+    );
     expect(exec).toHaveBeenCalledTimes(3);
   });
 
   it('parses structured output from the API path', async () => {
-    const create = vi.fn().mockResolvedValue({ model: 'claude-y', content: [{ type: 'text', text: '{"topic":"wtf"}' }] });
+    const create = vi
+      .fn()
+      .mockResolvedValue({ model: 'claude-y', content: [{ type: 'text', text: '{"topic":"wtf"}' }] });
     const provider = createModelProvider('api', { messages: { create } });
-    await expect(provider.generate({ system: 's', prompt: 'p', schema, promptVersion: 'v1' })).resolves.toEqual({ value: { topic: 'wtf' }, model: 'claude-y' });
+    await expect(provider.generate({ system: 's', prompt: 'p', schema, promptVersion: 'v1' })).resolves.toEqual({
+      value: { topic: 'wtf' },
+      model: 'claude-y',
+    });
   });
 });
 ```
@@ -512,7 +557,16 @@ import { render, screen } from '@testing-library/react-native';
 import { VerifiedBadge } from '../VerifiedBadge';
 
 it('shows the runtime when the output was executed and passed', async () => {
-  await render(<VerifiedBadge provenance={{ source: 'original', runtimeVersion: 'Python 3.13.2', validation: { method: 'executed', status: 'passed' }, isHumanReviewed: false }} />);
+  await render(
+    <VerifiedBadge
+      provenance={{
+        source: 'original',
+        runtimeVersion: 'Python 3.13.2',
+        validation: { method: 'executed', status: 'passed' },
+        isHumanReviewed: false,
+      }}
+    />,
+  );
   expect(screen.getByText('Output verified on Python 3.13.2')).toBeTruthy();
 });
 
@@ -521,7 +575,11 @@ it.each([
   { method: 'executed', status: 'failed' },
   { method: 'executed', status: 'pending' },
 ] as const)('shows nothing for %p', async (validation) => {
-  await render(<VerifiedBadge provenance={{ source: 'original', runtimeVersion: 'Python 3.13.2', validation, isHumanReviewed: true }} />);
+  await render(
+    <VerifiedBadge
+      provenance={{ source: 'original', runtimeVersion: 'Python 3.13.2', validation, isHumanReviewed: true }}
+    />,
+  );
   expect(screen.queryByText(/Output verified/)).toBeNull();
 });
 ```
@@ -559,6 +617,7 @@ it.each([
 **Files:** Create `pipeline/src/commands/gapFill.ts`, `pipeline/src/services/generateQuestion.ts` (tool-use loop with an `execute` tool bound to `runOracle`), `pipeline/prompts/generateQuestion.md`; test `pipeline/src/__tests__/services/generateQuestion.test.ts`.
 
 **Behaviors (RED tests):**
+
 - A topic with 7 questions requests exactly 3; a topic with 10 or more requests none.
 - A drafted question is kept only when `validateQuestion` returns `passed`; a mismatch triggers a revision; after 3 failed revisions it is dropped and reported `generation-failed`.
 - The `execute` tool runs only through `runOracle` with the runner limits; the agent cannot choose docker flags or the image.
@@ -644,6 +703,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** Create `server/src/app.ts` (`createApp(deps)`: `helmet`, `cors`, `cookie-parser`, `express.json({ limit: '10kb' })`, `trust proxy` 1, request id, routes, error handler), `server/src/index.ts`, `server/src/config/env.ts` (zod-validated env), `server/src/middleware/requestId.ts`, `server/src/middleware/errorHandler.ts`, `server/src/routes/health.ts` (`/health`, `/health/ready`, outside `/v1`), `server/src/clients/logger.ts` (pino `redact` paths for `authorization`, `code`, `cookie`, `email`, `otp`, `password`, `secret`, and `token` at the top level and one level down, plus `req.headers.cookie`, `req.headers.authorization`, `res.headers["set-cookie"]`; an `err` serializer that keeps only the error name, pg code, and constraint); tests `server/src/__tests__/routes/health.test.ts`, `server/src/__tests__/clients/logger.test.ts`, `server/src/__tests__/config/env.test.ts`.
 
 **Behaviors (RED tests):**
+
 - `GET /health` returns 200 `{ status: 'ok' }` without touching the database (a db stub that throws is never called).
 - `GET /health/ready` returns 200 `{ status: 'ok', database: 'ok' }` with a reachable database and 503 `{ status: 'degraded' }` with an unreachable one.
 - Every response carries an `X-Request-Id` UUID, and every log line carries the same id.
@@ -664,6 +724,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** One `server/migrations/<timestamp>_create-<table>.js` per table (node-pg-migrate, ESM, `up` and `down`): `users (id uuid pk, email citext unique, timezone text null, created_at)`; `daily_goal_changes (user_id fk, from_date date, goal int check (goal in (10,20,50)), pk (user_id, from_date))`; `one_time_codes (id, email citext, code_hash bytea, expires_at, attempts int default 0, used_at, invalidated_at, created_at; index on email)`; `sessions (id, user_id fk, token_hash bytea unique, created_at, last_used_at, expires_at, revoked_at)`; `answer_events (user_id fk, event_id uuid, question_id text, bank_key text, choice_index int, is_correct bool, answered_at timestamptz, round_kind text check in ('bank','topic','review'), received_at, pk (user_id, event_id))`; `daily_progress (user_id, local_date date, xp int, is_goal_met bool, pk (user_id, local_date))`; `entitlements (id uuid pk, user_id uuid null references users on delete set null, product_id text, status text check in ('granted','revoked'), source text, updated_at, unique (user_id, product_id))`; `purchase_events (provider text, provider_event_id text, user_id null, product_id, kind text, payload jsonb, occurred_at, received_at, pk (provider, provider_event_id))`; `rate_limit_counters (key text, window_start timestamptz, count int, pk (key, window_start))`. Test `server/src/__tests__/migrations/migrations.test.ts`.
 
 **Behaviors (RED tests, real Postgres):**
+
 - `up`, `down`, `up` succeeds on an empty database.
 - A duplicate `(user_id, event_id)` in `answer_events` fails with a unique violation; the same `event_id` under another user succeeds.
 - A goal of 15 fails the check constraint; a duplicate `(provider, provider_event_id)` fails.
@@ -678,6 +739,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** Create `server/src/routes/authCodes.ts`, `server/src/services/issueOneTimeCode.ts`, `server/src/clients/emailClient.ts` (Resend; `sendSignInCode(email, code)`), `server/src/middleware/rateLimit.ts` (Postgres counters keyed by `HMAC-SHA256(RATE_LIMIT_KEY_SECRET, normalized email)` and `HMAC-SHA256(RATE_LIMIT_KEY_SECRET, ip key)` with `trust proxy` 1, so no plaintext or brute-forceable email or IP is stored), `server/src/schemas/authSchemas.ts`; tests.
 
 **Behaviors (RED tests):**
+
 - A well-formed email gets 202, one row whose `code_hash` is `sha256(code)` and `expires_at` 10 minutes ahead, and one `sendSignInCode` call with a 6-digit code.
 - Emails are normalized (trim, NFKC, lowercase) before the rate-limit key and every lookup: 5 requests for `Foo@Example.com`, `FOO@example.com`, and `foo@example.com ` then a 6th in a new casing gets 429.
 - The code comes from an injected `randomInt(0, 1_000_000)` (Node `crypto.randomInt` in production), zero-padded to 6 digits; the test asserts the injected generator is the one called.
@@ -703,6 +765,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** Create `server/src/routes/authSessions.ts`, `server/src/services/verifyOneTimeCode.ts`, `server/src/services/createSession.ts`; tests.
 
 **Behaviors (RED tests):**
+
 - A correct code (body `{ email, code, timezone }`) → 201; first sign-in creates a `users` row with that timezone if it is a valid IANA zone; a `sessions` row stores `sha256(token)` with a 30-day expiry; the code is marked used.
 - A web request gets `Set-Cookie: syntactical_session=<token>; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000` and no token in the body; with `NODE_ENV=development` the cookie omits `Secure`.
 - A native request (`X-Client: native`) gets `{ data: { token } }` and no `Set-Cookie`.
@@ -723,6 +786,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** Create `server/src/middleware/requireSession.ts` (updates `last_used_at`; enforces 30-day absolute and 14-day idle expiry), `server/src/middleware/cors.ts`, `server/src/middleware/csrfGuard.ts`, `server/src/middleware/requireJson.ts`, `server/src/routes/signOut.ts`; tests.
 
 **Behaviors (RED tests):**
+
 - A valid cookie authenticates; a valid bearer token authenticates; with both present the bearer token decides, and a failing bearer token returns 401 even if the cookie is valid.
 - Unknown, revoked, absolute-expired, and idle-expired tokens → 401 with the same body.
 - `Origin: https://syntactical.dev` gets `Access-Control-Allow-Origin` with credentials; `https://evil.com`, `null`, `https://syntactical.dev.evil.com`, and `http://syntactical.dev` get none.
@@ -740,6 +804,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Interfaces:** `AnswerEvent = { eventId: string; questionId: string; bankKey: string; choiceIndex: number; isCorrect: boolean; answeredAt: string; roundKind: 'bank' | 'topic' | 'review' }`; `computeXp(event: AnswerEvent, isDueReview: boolean): number`; `computeDailyProgress(events: AnswerEvent[], timezone: string, goalHistory: { from: string; goal: number }[], isDueReview: (event: AnswerEvent) => boolean): { localDate: string; xp: number; isGoalMet: boolean }[]`; `computeDayStreak(progress, today: string): number`; `toLocalDate(instant: string, timezone: string): string`.
 
 **Behaviors (RED tests):**
+
 - A correct hard answer earns 3 XP, a wrong answer 0, a correct due review on easy 2.
 - `toLocalDate('2026-10-02T11:05:00Z', 'Pacific/Auckland') === '2026-10-03'` (Review Focus 2).
 - Goal met on consecutive local dates gives that streak length; a missed day resets it; today not yet met does not break a streak that ended yesterday.
@@ -755,6 +820,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** Create `server/src/routes/answerEvents.ts` (`POST` with `express.json({ limit: '256kb' })`, `GET ?after=`), `server/src/services/ingestAnswerEvents.ts`, `server/src/services/recomputeDailyProgress.ts`, `server/src/services/readServerManifest.ts`, `server/src/schemas/answerEventSchemas.ts`; tests.
 
 **Behaviors (RED tests):**
+
 - A batch of 50 events inserts 50 rows; re-posting it inserts 0 and returns identical totals.
 - The server sets `is_correct` from `choiceIndex` against the bank's answer, ignoring any client value; a `choiceIndex` outside the question's choices → 422.
 - An event more than 24 hours in the future, or before the user's `created_at` minus 365 days, → the whole batch 422 with the offending ids; nothing inserted.
@@ -781,6 +847,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** Modify `services/stats/types/Stats.ts` (v2: `answerStreak`, `goalHistory`, `isSignUpPromptDismissed`, `syncCursor?`), `services/stats/isStoredStats.ts`, `services/stats/recordAnswer.ts` (also appends an answer event with `eventId` from `expo-crypto` `randomUUID`); create `services/stats/migrateStatsV1.ts`, `services/stats/answerEventLog.ts` (stored separately under `syntactical.events.v1`, entries `AnswerEvent & { ownerUserId: string | null; isSynced: boolean; isHeld: boolean }`); modify `state/StatsProvider.tsx` (migrate on hydrate), `constants/appConfig.ts` (`STORAGE_SCHEMA_VERSION = 2`; stats key stays `syntactical.stats.v1`); tests in `services/stats/__tests__/` and `state/__tests__/`.
 
 **Behaviors (RED tests):**
+
 - A stored v1 value migrates: totals and tracks unchanged, `streak` becomes `answerStreak`, goal history `[{ from: today, goal: 20 }]`, an empty event log.
 - A stored value that fails the type guards starts empty, and a failed storage read keeps changes in memory without overwriting what is stored.
 - Each recorded answer appends exactly one event with a UUID v4 `eventId`, ISO `answeredAt`, its `roundKind`, and the current `ownerUserId` (null for a guest).
@@ -796,6 +863,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** Create `clients/apiClient.ts` (`apiFetch(path, init)`: base from `extra.apiBaseUrl`, a build-time constant with no runtime allow-list; `credentials: 'include'` and `X-Requested-With: XMLHttpRequest` on web; `Authorization: Bearer` from SecureStore and `X-Client: native` on native; JSON only), `clients/sessionTokenStore.ts`, `state/AuthProvider.tsx` (`useAuth()`: `{ user, isSignedIn, requestCode, verifyCode, signOut }`; sends the device IANA timezone with `verifyCode`), `app/sign-in.tsx` (`SignInScreen`), `components/auth/{EmailStep,CodeStep}.tsx`; modify `app.config.ts` (`extra.apiBaseUrl`); tests.
 
 **Behaviors (RED tests):**
+
 - With a missing `extra.apiBaseUrl`, `apiFetch` throws `ApiUnavailable` and makes no network request (never falls back to a literal URL).
 - On web, `apiFetch` sends `credentials: 'include'` and `X-Requested-With: XMLHttpRequest`, and never reads or writes a token.
 - On native, a successful `verifyCode` stores the token in SecureStore (mocked); later calls send `Authorization: Bearer <token>`; `signOut` deletes it even when the network call fails.
@@ -812,6 +880,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** Create `services/sync/buildUploadBatches.ts`, `services/sync/mergeDownloadedEvents.ts`, `state/useSyncQueue.ts` (uploads unsynced events owned by the signed-in user, or guest events on that user's first sign-in on this device, in batches of 200 after sign-in, on app foreground, and every 5 minutes when online; backoff up to 15 minutes), `components/auth/SignOutDialog.tsx`; modify `state/StatsProvider.tsx` (mark synced by id; store `syncCursor`); tests.
 
 **Behaviors (RED tests):**
+
 - First sign-in claims guest events for that user, uploads them in batches of 200, and marks each synced only after a 2xx; a 1,000-event guest log fully syncs. The guest's stats merge into the user's, then the guest stats reset, in sequence; the user id is stored as known only once the claim completes, so a failed claim is raised again on the next launch, and a crash between the two steps can at worst count the guest's answers twice (owner decision 2026-10-04, IAN-601).
 - A dropped response after the server stored a batch retries the same batch, and totals stay equal (integration test against a running test server).
 - A 422 for out-of-bounds timestamps marks those events `isHeld`, keeps them, and uploads the rest; a held event is not uploaded again. A 422 `SYNC_EVENT_CAP_REACHED` stops uploads until the next sign-in, and downloads continue.
@@ -845,6 +914,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** Create `server/src/routes/banks.ts`, `server/src/services/hasEntitlement.ts`, `server/src/services/readServerBank.ts` (reads paid banks from `PAID_CONTENT_DIR`, populated from `syntactical-content` at image build, verified against the manifest at startup); tests.
 
 **Behaviors (RED tests):**
+
 - No session → 401; a session without the entitlement → 403; a `granted` entitlement → 200 with the stored bytes verbatim (`Content-Type: application/json`) whose SHA-256 equals the manifest bank hash; a `revoked` entitlement → 403.
 - A free bank path → 404; traversal attempts (`..%2F`, an unknown language) → 404 without reading outside `PAID_CONTENT_DIR`.
 - `Cache-Control: private, no-store`.
@@ -868,6 +938,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** Create `clients/webBillingClient.ts` (`@revenuecat/purchases-js`: `configure({ apiKey, appUserId: user.id })`, `getOfferings()`, `purchase(package)`), `app/purchase-complete.tsx` (polls `/me`); modify `state/AuthProvider.tsx` (configure web billing with the server user id after sign-in, reset on sign-out); tests.
 
 **Behaviors (RED tests):**
+
 - After web sign-in, Web Billing is configured with `appUserId` equal to the server user id; before sign-in it is never configured (guests cannot buy).
 - Buying a paid bank purchases the offering package whose product id equals the bank's `productId`.
 - `/purchase-complete` polls `/me` every 2 seconds for up to 30 seconds and shows "Unlocked" or "Still processing, check back shortly".
@@ -883,6 +954,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** Create `server/src/routes/revenueCatWebhook.ts`, `server/src/services/recordPurchaseEvent.ts`, `server/src/services/recomputeEntitlement.ts` (latest event by provider `event_timestamp_ms`); modify `state/AuthProvider.tsx` (`Purchases.logIn(user.id)` after sign-in, `Purchases.logOut()` on sign-out, native only); tests.
 
 **Behaviors (RED tests):**
+
 - A wrong, empty, missing, or different-length `Authorization` header → 401, never 500: both sides are SHA-256 hashed before `timingSafeEqual`, so lengths always match.
 - `NON_RENEWING_PURCHASE` for a mapped product from `APP_STORE`, `PLAY_STORE`, or `RC_BILLING` (web) → a purchase event and `granted` for the user whose id equals `app_user_id`; `REFUND` or `CANCELLATION` → `revoked`; a duplicate event id → no change.
 - A refund event whose `event_timestamp_ms` precedes delivery of its purchase still leaves the entitlement `revoked`, because entitlements are recomputed from the latest event by provider time, not arrival (Review Focus 5).
@@ -899,6 +971,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** Create `state/usePurchases.ts` (web: `webBillingClient`; native: `react-native-purchases` offerings, `purchasePackage`, `restorePurchases`), `components/purchase/PaywallSheet.tsx`; modify `components/menu/DifficultyStep.tsx` (lock and localized price for paid banks without the entitlement), `app/settings.tsx` ("Restore purchases" on native); tests.
 
 **Behaviors (RED tests):**
+
 - A paid bank without the entitlement shows a lock with the accessible name "Medium, locked, <price>", where the price is the RevenueCat offering's `priceString` on every platform; selecting it opens the paywall and fires `paywall_viewed` once.
 - A guest selecting a paid bank goes to sign-in first, then back to the paywall.
 - On web, Buy calls `webBillingClient.purchase` for the bank's package and then routes to `/purchase-complete`.
@@ -922,7 +995,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 **Risk:** standard. **Behaviors:** operational.
 
-**Files:** Create `server/Dockerfile` (multi-stage, non-root user; a content stage copies the staged `build/content` and `build/paid-content`, hash-checked against the manifest; `server/scripts/stageBuildContent.sh` clones `syntactical-content` with the deploy key outside Docker, so the key never enters an `ARG`, `ENV`, layer, or build. The paid banks are already out of the public tree (IAN-618), so the deploy ships no paid file publicly), `server/scripts/start.sh` (the image CMD: `node-pg-migrate up`, then `exec node dist/index.js`), root `railway.json` (Dockerfile builder, healthcheck `/health`), `.github/workflows/server.yml` (vitest with a Postgres service container, `tsc`, image build and scan), `.github/workflows/server-deploy.yml` (on push to `main` and by manual run: stage content with the deploy key outside Docker, build, health check and key scan, then `railway up`; Railway's builder rejects secret mounts, so the key never reaches Docker or Railway).
+**Files:** Create `server/Dockerfile` (multi-stage, non-root user; a content stage copies the staged `build/content` and `build/paid-content`, hash-checked against the manifest; `server/scripts/stageBuildContent.sh` clones `syntactical-content` with the deploy key outside Docker, so the key never enters an `ARG`, `ENV`, layer, or build. The paid banks are already out of the public tree (IAN-618), so the deploy ships no paid file publicly), `server/scripts/start.sh` (the image CMD: `node-pg-migrate up`, then `exec node dist/index.js`), `.github/workflows/server.yml` (vitest with a Postgres service container, `tsc`, image build and scan), `.github/workflows/server-deploy.yml` (on push to `main` and by manual run: stage content with the deploy key outside Docker, build, health check and key scan, then `railway up`; Railway's builder rejects secret mounts, so the key never reaches Docker or Railway).
 
 - [ ] Check: `docker history --no-trunc` and every layer of the built image contain no key material and no `.ssh` directory (scripted in `server.yml`).
 - [ ] Steps: CI stages the content, builds, checks, and scans the image, then uploads the context to Railway with `railway up` (`.github/workflows/server-deploy.yml`: staging on push to `main`, production by manual run) → the owner adds the `api` CNAME → `curl https://api.syntactical.dev/health` and `/health/ready` return ok → a credentialed fetch from `https://syntactical.dev` in Safari works (spec assumption ledger) → commit `chore(server): container, migrations on deploy, and CI`.
@@ -934,6 +1007,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** Create `server/src/routes/deleteMe.ts`, `server/src/services/deleteUser.ts`, `components/auth/DeleteAccountDialog.tsx`; modify `app/settings.tsx` (until it lands with Tasks 3.12 and 3.13, the control sits in `components/auth/AccountControl.tsx`); tests.
 
 **Behaviors (RED tests):**
+
 - `DELETE /v1/me` (session, CSRF header) deletes the user's sessions, answer events, daily progress, and goal changes in one transaction; takes the email's advisory lock (the key `issueOneTimeCode` uses), deletes every `one_time_codes` row and email-keyed rate-limit counter for the user's normalized email, and deletes the `users` row, which sets `entitlements.user_id` and `purchase_events.user_id` to null (the rows stay for accounting); responds 204 and clears the cookie.
 - Purchase payloads store no email or name (the webhook stores an allowlisted scalar projection, B-39), so deletion scrubs nothing; it has no payload scrubber, no scrub caps, and no deletion rate limits. After deletion, a case-insensitive search of every table for the run-time email and the user id finds nothing, and the user's entitlement and purchase event rows still exist with `user_id` null.
 - A second concurrent delete for the same user answers 204 or 401, never an error.
@@ -964,7 +1038,11 @@ import { newReviewItem, scheduleReview } from '../scheduleReview';
 import { fixtureEvents, fixtureMisconceptionOf } from './fixtures/reviewFixtures';
 
 it('pushes a correct review further out and brings a miss back within a day', () => {
-  const learned = scheduleReview(scheduleReview(newReviewItem('py-easy-01', '2026-09-20T10:00:00Z'), true, '2026-09-20T10:00:00Z'), true, '2026-09-23T10:00:00Z');
+  const learned = scheduleReview(
+    scheduleReview(newReviewItem('py-easy-01', '2026-09-20T10:00:00Z'), true, '2026-09-20T10:00:00Z'),
+    true,
+    '2026-09-23T10:00:00Z',
+  );
   const previousGap = learned.card.due.getTime() - Date.parse('2026-09-23T10:00:00Z');
   const afterCorrect = scheduleReview(learned, true, learned.card.due.toISOString());
   expect(afterCorrect.card.due.getTime() - learned.card.due.getTime()).toBeGreaterThan(previousGap);
@@ -975,7 +1053,9 @@ it('pushes a correct review further out and brings a miss back within a day', ()
 
 it('replays the same events to the same review state whatever their arrival order', () => {
   const reversed = [...fixtureEvents].reverse();
-  expect(buildReviewState(reversed, fixtureMisconceptionOf)).toEqual(buildReviewState(fixtureEvents, fixtureMisconceptionOf));
+  expect(buildReviewState(reversed, fixtureMisconceptionOf)).toEqual(
+    buildReviewState(fixtureEvents, fixtureMisconceptionOf),
+  );
 });
 ```
 
