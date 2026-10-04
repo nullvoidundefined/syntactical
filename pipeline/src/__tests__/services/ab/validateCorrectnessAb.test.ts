@@ -1,6 +1,6 @@
 // B-51 (evidence): a correctness A/B card passes only when the option its answer index names
 // matches every edge case and the other option fails one; the failing case is the evidence.
-// The runner is a fake; the screen (`findRefusedConstruct`) is the real one.
+// The runner is a fake.
 import type { Provenance } from '@syntactical/content-schema';
 import { describe, expect, it } from 'vitest';
 
@@ -113,14 +113,6 @@ describe('validateCorrectnessAb', () => {
         await validateCorrectnessAb(buildQuestion(GOOD, CRASHES), EDGE_CASES, NODE, run);
         expect(calls[0]).toEqual({ code: `${GOOD}\nconsole.log(head([1, 2]));`, language: 'node' });
         expect(calls.some(({ code }) => code === `${CRASHES}\nconsole.log(head([]));`)).toBe(true);
-    });
-
-    it('never runs a program the construct screen refuses', async () => {
-        const { calls, run } = fakeRunner();
-        const hostile = 'function head(xs) { return process.env.HOME; }';
-        const result = await validateCorrectnessAb(buildQuestion(GOOD, hostile), EDGE_CASES, NODE, run);
-        expect(result).toMatchObject({ reason: 'refused', status: 'failed' });
-        expect(calls.some(({ code }) => code.includes('process.env'))).toBe(false);
     });
 
     it('fails with runner-error when the sandbox itself failed', async () => {

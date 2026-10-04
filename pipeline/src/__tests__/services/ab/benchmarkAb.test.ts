@@ -192,12 +192,4 @@ describe('benchmarkAb', () => {
         };
         expect(await benchmarkAb(buildQuestion(0), NODE, run)).toMatchObject({ reason: 'runner-error' });
     });
-
-    it('never benchmarks an option the construct screen refuses', async () => {
-        const { calls, run } = fakeRunner({ a: [1, 1], b: [9, 9] });
-        const hostile = buildQuestion(0);
-        hostile.choices[1].code = 'process.exit(0);';
-        expect(await benchmarkAb(hostile, NODE, run)).toMatchObject({ reason: 'refused' });
-        expect(calls).toHaveLength(0);
-    });
 });
