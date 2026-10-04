@@ -2,7 +2,8 @@
 // only when the character before it (if any) is not an address local-part character and the text
 // after it (if any) does not continue the domain (a letter, digit, or hyphen, or a dot followed by
 // a letter or digit). So `jo<email>`, `<email>m`, and `<email>.uk` name a different address and
-// are kept, in values and in object keys, while a whole copy beside them is still scrubbed.
+// are kept, in values and in object keys, while a whole copy beside them is still scrubbed. Since B-59.7
+// this strict rule applies to match-only mode (other users' rows); own and unlinked rows match loosely.
 import { randomBytes, randomUUID } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
@@ -11,6 +12,7 @@ import { scrubPurchasePayload } from '../../services/scrubPurchasePayload.js';
 
 const DELETED = '[deleted]';
 const HEX_BYTES = 4;
+const MATCH_ONLY = { clearPiiAttributes: false };
 
 // Maps printable ASCII to its fullwidth compatibility form, which NFKC folds back.
 function toFullwidth(text: string): string {
@@ -51,7 +53,7 @@ describe('scrubPurchasePayload email boundary (B-59.1c)', () => {
     const values = longerAddresses(identity.email);
     const payload = { event: { ...values, whole: identity.email } };
 
-    const scrubbed = scrubPurchasePayload(payload, identity);
+    const scrubbed = scrubPurchasePayload(payload, identity, MATCH_ONLY);
 
     expect(scrubbed).toStrictEqual({ event: { ...values, whole: DELETED } });
   });
@@ -64,7 +66,7 @@ describe('scrubPurchasePayload email boundary (B-59.1c)', () => {
       nested: { deeper: { contact: `jo${email}`, cc: [`${email}.uk`] } },
     };
 
-    const scrubbed = scrubPurchasePayload(payload, identity);
+    const scrubbed = scrubPurchasePayload(payload, identity, MATCH_ONLY);
 
     expect(scrubbed).toStrictEqual({
       aliases: [`jo${email}`, `${email}m`, `${email}.uk`, DELETED],
@@ -81,7 +83,7 @@ describe('scrubPurchasePayload email boundary (B-59.1c)', () => {
     }
     payload[identity.email] = 'whole';
 
-    const scrubbed = scrubPurchasePayload(payload, identity);
+    const scrubbed = scrubPurchasePayload(payload, identity, MATCH_ONLY);
 
     const expected: Record<string, string> = {};
     for (const [label, key] of Object.entries(values)) {
@@ -102,7 +104,7 @@ describe('scrubPurchasePayload email boundary (B-59.1c)', () => {
       },
     };
 
-    const scrubbed = scrubPurchasePayload(payload, identity);
+    const scrubbed = scrubPurchasePayload(payload, identity, MATCH_ONLY);
 
     expect(scrubbed).toStrictEqual(payload);
     expect(Object.keys((scrubbed as typeof payload).subscriber)).toEqual([

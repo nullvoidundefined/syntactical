@@ -68,7 +68,8 @@ describe('scrubPurchasePayload fixes (B-59.1d)', () => {
     const longer = longerAddresses(identity.email);
     const payload = { event: { bounded, longer, list: Object.values(bounded) } };
 
-    const scrubbed = scrubPurchasePayload(payload, identity);
+    // Match-only mode: since B-59.7 the local-part prefixes are kept only in other users' rows.
+    const scrubbed = scrubPurchasePayload(payload, identity, { clearPiiAttributes: false });
 
     const allDeleted = Object.fromEntries(Object.keys(bounded).map((label) => [label, DELETED]));
     expect(scrubbed).toStrictEqual({

@@ -1,6 +1,6 @@
 // B-59.1c: DELETE /v1/me matches the deleted user's email in purchase payloads only as a whole
 // address, after NFKC folding. Deleting a user whose email is a substring of another user's email
-// leaves the other user's payload byte-identical, and an unlinked purchase event that carries the
+// leaves the other user's linked payload byte-identical, and an unlinked purchase event that carries the
 // email only in a fullwidth form is still found and scrubbed.
 import { randomBytes } from 'node:crypto';
 
@@ -120,9 +120,11 @@ describe.skipIf(SKIP_DATABASE_TESTS)('DELETE /v1/me email boundary (B-59.1c)', (
     expect(otherAfter.payloadText).toBe(otherBefore.payloadText);
     expect(otherAfter.payload).toEqual(otherPayload);
     expect(otherAfter.user_id).toBe(otherUserId);
+    // An unlinked row is matched loosely since B-59.7, so the longer address that contains the
+    // deleted one is scrubbed there (over-scrubbing an unowned row is the owner's accepted cost).
     const unlinkedOtherAfter = await rowOf(unlinkedOtherEventId);
-    expect(unlinkedOtherAfter.payloadText).toBe(unlinkedOtherBefore.payloadText);
-    expect(unlinkedOtherAfter.payload).toEqual(unlinkedOtherPayload);
+    expect(unlinkedOtherBefore.payload).toEqual(unlinkedOtherPayload);
+    expect(unlinkedOtherAfter.payload).toEqual({ event: { contact: DELETED, type: 'TRANSFER' } });
     expect((await rowOf(ownEventId)).payload).toEqual({ event: { contact: DELETED, type: 'TRANSFER' } });
   });
 

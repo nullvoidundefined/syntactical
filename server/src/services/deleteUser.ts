@@ -12,14 +12,15 @@
 // email's advisory lock first (B-59.6: the user row is re-checked after the lock, before the codes go). The row
 // lock's result is checked too and also resolves false, but by then the email's codes are already deleted;
 // only a user row removed outside the advisory lock reaches that branch. Nothing here logs the email or id.
-import type pg from 'pg';
+import type pg from "pg";
 
-import { AUTH } from '../constants/auth.js';
+import { AUTH } from "../constants/auth.js";
 
-import { carriesPurchaseIdentity } from './carriesPurchaseIdentity.js';
-import { deleteRateLimitCountersForEmail } from './deleteRateLimitCountersForEmail.js';
-import { normalizeEmail } from './normalizeEmail.js';
-import { scrubPurchasePayload } from './scrubPurchasePayload.js';
+import { carriesPurchaseIdentity } from "./carriesPurchaseIdentity.js";
+import { deleteRateLimitCountersForEmail } from "./deleteRateLimitCountersForEmail.js";
+import { normalizeEmail } from "./normalizeEmail.js";
+import type { PurchaseIdentity } from "./purchaseIdentity.js";
+import { scrubPurchasePayload } from "./scrubPurchasePayload.js";
 
 interface DeleteUserInput {
   rateLimitKeySecret: string;
@@ -40,7 +41,23 @@ function containsPattern(value: string): string {
   return `%${value.replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
 }
 
-async function scrubPurchaseEvents(client: pg.PoolClient, identity: { email: string; userId: string }): Promise<void> {
+// Own rows are always chosen; unlinked rows by the loose match (B-59.7); another user's rows by the strict one.
+function isChosenRow(
+  rowUserId: string | null,
+  payload: unknown,
+  userId: string,
+  identity: PurchaseIdentity,
+): boolean {
+  return (
+    rowUserId === userId ||
+    carriesPurchaseIdentity(payload, identity, { isLoose: rowUserId === null })
+  );
+}
+
+async function scrubPurchaseEvents(
+  client: pg.PoolClient,
+  identity: { email: string; userId: string },
+): Promise<void> {
   const { email, userId } = identity;
   // The SQL is a superset (it also folds NFKC forms and takes every payload holding a `%`, which may carry the
   // email or id percent-encoded); it takes no row lock. The JS predicate chooses the rows, and only those are locked.
@@ -52,8 +69,8 @@ async function scrubPurchaseEvents(client: pg.PoolClient, identity: { email: str
         OR payload::text LIKE '%\\%%' ESCAPE '\\'`,
     [userId, containsPattern(email), containsPattern(userId)],
   );
-  const chosen = candidates.filter(
-    ({ payload, user_id: rowUserId }) => rowUserId === userId || carriesPurchaseIdentity(payload, identity),
+  const chosen = candidates.filter(({ payload, user_id: rowUserId }) =>
+    isChosenRow(rowUserId, payload, userId, identity),
   );
   if (chosen.length === 0) {
     return;
@@ -66,19 +83,34 @@ async function scrubPurchaseEvents(client: pg.PoolClient, identity: { email: str
        ON target.provider = chosen.provider AND target.provider_event_id = chosen.provider_event_id
      ORDER BY target.provider, target.provider_event_id
      FOR UPDATE OF target`,
-    [chosen.map(({ provider }) => provider), chosen.map(({ provider_event_id: providerEventId }) => providerEventId)],
+    [
+      chosen.map(({ provider }) => provider),
+      chosen.map(({ provider_event_id: providerEventId }) => providerEventId),
+    ],
   );
   const changed = rows
-    .filter(({ payload, user_id: rowUserId }) => rowUserId === userId || carriesPurchaseIdentity(payload, identity))
-    .map(({ payload, provider, provider_event_id: providerEventId, user_id: rowUserId }) => ({
-      payload: scrubPurchasePayload(payload, identity, {
-        clearPiiAttributes: rowUserId === null || rowUserId === userId,
+    .filter(({ payload, user_id: rowUserId }) =>
+      isChosenRow(rowUserId, payload, userId, identity),
+    )
+    .map(
+      ({
+        payload,
+        provider,
+        provider_event_id: providerEventId,
+        user_id: rowUserId,
+      }) => ({
+        payload: scrubPurchasePayload(payload, identity, {
+          clearPiiAttributes: rowUserId === null || rowUserId === userId,
+        }),
+        previous: payload,
+        provider,
+        providerEventId,
       }),
-      previous: payload,
-      provider,
-      providerEventId,
-    }))
-    .filter(({ payload, previous }) => JSON.stringify(payload) !== JSON.stringify(previous))
+    )
+    .filter(
+      ({ payload, previous }) =>
+        JSON.stringify(payload) !== JSON.stringify(previous),
+    )
     .map(({ payload, provider, providerEventId }) => ({
       payload,
       provider,
@@ -97,34 +129,51 @@ async function scrubPurchaseEvents(client: pg.PoolClient, identity: { email: str
   );
 }
 
-async function deleteUser(client: pg.PoolClient, input: DeleteUserInput): Promise<boolean> {
-  const { rateLimitKeySecret, statementTimeoutMs = AUTH.DELETION.STATEMENT_TIMEOUT_MS, userId } = input;
+async function deleteUser(
+  client: pg.PoolClient,
+  input: DeleteUserInput,
+): Promise<boolean> {
+  const {
+    rateLimitKeySecret,
+    statementTimeoutMs = AUTH.DELETION.STATEMENT_TIMEOUT_MS,
+    userId,
+  } = input;
   // set_config(..., true) is SET LOCAL with bind parameters; a bare number is read as milliseconds.
-  await client.query("SELECT set_config('lock_timeout', $1, true), set_config('statement_timeout', $2, true)", [
-    String(AUTH.DELETION.LOCK_TIMEOUT_MS),
-    String(statementTimeoutMs),
-  ]);
-  const found = await client.query<{ email: string }>('SELECT email FROM users WHERE id = $1', [userId]);
+  await client.query(
+    "SELECT set_config('lock_timeout', $1, true), set_config('statement_timeout', $2, true)",
+    [String(AUTH.DELETION.LOCK_TIMEOUT_MS), String(statementTimeoutMs)],
+  );
+  const found = await client.query<{ email: string }>(
+    "SELECT email FROM users WHERE id = $1",
+    [userId],
+  );
   const [row] = found.rows;
   if (!row) {
     return false;
   }
   const email = normalizeEmail(row.email);
-  await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [email]);
+  await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [
+    email,
+  ]);
   // A concurrent deletion of the same user committed before it released this lock: re-read without a row lock
   // (the users FOR UPDATE must stay after the codes delete, or it deadlocks with sign-in verify).
-  const stillThere = await client.query('SELECT 1 FROM users WHERE id = $1', [userId]);
+  const stillThere = await client.query("SELECT 1 FROM users WHERE id = $1", [
+    userId,
+  ]);
   if (stillThere.rows.length === 0) {
     return false;
   }
-  await client.query('DELETE FROM one_time_codes WHERE email = $1', [email]);
-  const locked = await client.query('SELECT id FROM users WHERE id = $1 FOR UPDATE', [userId]);
+  await client.query("DELETE FROM one_time_codes WHERE email = $1", [email]);
+  const locked = await client.query(
+    "SELECT id FROM users WHERE id = $1 FOR UPDATE",
+    [userId],
+  );
   if (locked.rows.length === 0) {
     return false;
   }
   await scrubPurchaseEvents(client, { email, userId });
   await deleteRateLimitCountersForEmail(client, rateLimitKeySecret, email);
-  await client.query('DELETE FROM users WHERE id = $1', [userId]);
+  await client.query("DELETE FROM users WHERE id = $1", [userId]);
   return true;
 }
 

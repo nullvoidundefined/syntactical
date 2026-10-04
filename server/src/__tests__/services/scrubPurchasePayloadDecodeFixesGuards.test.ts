@@ -68,7 +68,7 @@ describe('scrubPurchasePayload decode fixes guards (B-59.1f)', () => {
     };
     const expected = structuredClone(payload);
 
-    expect(scrubPurchasePayload(payload, identity)).toStrictEqual(expected);
+    // Match-only mode only: own and unlinked rows match loosely since B-59.7.
     expect(scrubPurchasePayload(payload, identity, MATCH_ONLY)).toStrictEqual(expected);
   });
 });

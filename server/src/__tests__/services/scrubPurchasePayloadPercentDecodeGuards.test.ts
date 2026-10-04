@@ -66,7 +66,7 @@ describe('scrubPurchasePayload percent-decode guards (B-59.1e)', () => {
       subscriber: Object.fromEntries(longer.map((value, index) => [value, index])),
     };
 
-    expect(scrubPurchasePayload(payload, identity)).toStrictEqual(payload);
+    // Match-only mode only: own and unlinked rows match loosely since B-59.7.
     expect(scrubPurchasePayload(payload, identity, MATCH_ONLY)).toStrictEqual(payload);
   });
 });
