@@ -25,6 +25,7 @@ import {
 
 import { Platform } from 'react-native';
 
+import { identifyAnalyticsUser, resetAnalyticsUser } from '../clients/analyticsClient';
 import { apiFetch } from '../clients/apiClient';
 import { clearSessionToken } from '../clients/clearSessionToken';
 import { logWarning } from '../clients/logClient';
@@ -111,6 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserId(null);
     persist(null);
     void resetPurchaser();
+    resetAnalyticsUser();
     try {
       await clearSessionToken();
     } catch (err) {
@@ -129,7 +131,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { knownUserIds, userId: storedUserId } = stored;
         setKnownUserIds(knownUserIds);
         setUserId(storedUserId);
-        if (storedUserId !== null) void identifyPurchaser(storedUserId);
+        if (storedUserId !== null) {
+          void identifyPurchaser(storedUserId);
+          identifyAnalyticsUser(storedUserId);
+        }
       }
       setIsHydrated(true);
       hydration.current?.resolve();
@@ -185,6 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserId(sessionUserId);
         persist(sessionUserId);
         void identifyPurchaser(sessionUserId);
+        identifyAnalyticsUser(sessionUserId);
         return { isOk: true };
       } catch {
         return { isOk: false, reason: 'unavailable' };
