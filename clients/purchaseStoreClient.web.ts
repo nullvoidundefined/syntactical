@@ -4,13 +4,13 @@ import type { WebPurchaseOutcome } from './types/WebPurchaseOutcome';
 import { purchaseWebBillingProduct, readWebBillingPrices } from './webBillingClient';
 
 export function readStorePrices(): Promise<Record<string, string>> {
-    return readWebBillingPrices();
+  return readWebBillingPrices();
 }
 
 export function buyStoreProduct(productId: string): Promise<WebPurchaseOutcome> {
-    return purchaseWebBillingProduct(productId);
+  return purchaseWebBillingProduct(productId);
 }
 
 export function restoreStorePurchases(): Promise<boolean> {
-    return Promise.resolve(false);
+  return Promise.resolve(false);
 }

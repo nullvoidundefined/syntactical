@@ -8,11 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Platform } from 'react-native';
 
 import { trackEvent } from '../clients/analyticsClient';
-import {
-    buyStoreProduct,
-    readStorePrices,
-    restoreStorePurchases,
-} from '../clients/purchaseStoreClient';
+import { buyStoreProduct, readStorePrices, restoreStorePurchases } from '../clients/purchaseStoreClient';
 
 import { useSignedInUserId } from './AuthProvider';
 import { buildEntitlementsKey, fetchEntitlements } from './useEntitlements';
@@ -23,61 +19,61 @@ import { buildEntitlementsKey, fetchEntitlements } from './useEntitlements';
 export type BuyOutcome = 'cancelled' | 'pending' | 'redirect' | 'unavailable' | 'unlocked';
 
 export type PurchasesState = {
-    buy: (productId: string) => Promise<BuyOutcome>;
-    prices: Readonly<Record<string, string>>;
-    restore: () => Promise<boolean>;
+  buy: (productId: string) => Promise<BuyOutcome>;
+  prices: Readonly<Record<string, string>>;
+  restore: () => Promise<boolean>;
 };
 
 const NO_PRICES: Readonly<Record<string, string>> = {};
 
 export function usePurchases({ shouldLoadPrices = false } = {}): PurchasesState {
-    const queryClient = useQueryClient();
-    const userId = useSignedInUserId();
-    const [prices, setPrices] = useState<Record<string, string>>({});
+  const queryClient = useQueryClient();
+  const userId = useSignedInUserId();
+  const [prices, setPrices] = useState<Record<string, string>>({});
 
-    useEffect(() => {
-        if (!shouldLoadPrices || userId === null) return undefined;
-        let isCurrent = true;
-        void readStorePrices().then((found) => {
-            if (isCurrent) setPrices(found);
-        });
-        return () => {
-            isCurrent = false;
-        };
-    }, [shouldLoadPrices, userId]);
+  useEffect(() => {
+    if (!shouldLoadPrices || userId === null) return undefined;
+    let isCurrent = true;
+    void readStorePrices().then((found) => {
+      if (isCurrent) setPrices(found);
+    });
+    return () => {
+      isCurrent = false;
+    };
+  }, [shouldLoadPrices, userId]);
 
-    // The server's entitlements after a fresh GET /me, or null when it fails.
-    const refetchEntitlements = useCallback(async (): Promise<string[] | null> => {
-        try {
-            return await queryClient.fetchQuery({
-                queryFn: fetchEntitlements,
-                queryKey: buildEntitlementsKey(userId),
-                staleTime: 0,
-            });
-        } catch {
-            return null;
-        }
-    }, [queryClient, userId]);
+  // The server's entitlements after a fresh GET /me, or null when it fails.
+  const refetchEntitlements = useCallback(async (): Promise<string[] | null> => {
+    try {
+      return await queryClient.fetchQuery({
+        queryFn: fetchEntitlements,
+        queryKey: buildEntitlementsKey(userId),
+        staleTime: 0,
+      });
+    } catch {
+      return null;
+    }
+  }, [queryClient, userId]);
 
-    const buy = useCallback(
-        async (productId: string): Promise<BuyOutcome> => {
-            const outcome = await buyStoreProduct(productId);
-            if (outcome !== 'purchased') return outcome;
-            if (Platform.OS === 'web') return 'redirect';
-            const entitlements = await refetchEntitlements();
-            if (entitlements?.includes(productId)) {
-                trackEvent('purchase_completed', { productId });
-                return 'unlocked';
-            }
-            return 'pending';
-        },
-        [refetchEntitlements],
-    );
+  const buy = useCallback(
+    async (productId: string): Promise<BuyOutcome> => {
+      const outcome = await buyStoreProduct(productId);
+      if (outcome !== 'purchased') return outcome;
+      if (Platform.OS === 'web') return 'redirect';
+      const entitlements = await refetchEntitlements();
+      if (entitlements?.includes(productId)) {
+        trackEvent('purchase_completed', { productId });
+        return 'unlocked';
+      }
+      return 'pending';
+    },
+    [refetchEntitlements],
+  );
 
-    const restore = useCallback(async (): Promise<boolean> => {
-        if (!(await restoreStorePurchases())) return false;
-        return (await refetchEntitlements()) !== null;
-    }, [refetchEntitlements]);
+  const restore = useCallback(async (): Promise<boolean> => {
+    if (!(await restoreStorePurchases())) return false;
+    return (await refetchEntitlements()) !== null;
+  }, [refetchEntitlements]);
 
-    return { buy, prices: userId === null ? NO_PRICES : prices, restore };
+  return { buy, prices: userId === null ? NO_PRICES : prices, restore };
 }
