@@ -67,7 +67,7 @@ function fakeRunner(medians: Medians, snippets: [string, string] = [OPTION_A, OP
 }
 
 describe('benchmarkAb', () => {
-    it.each(['ruby', 'rails'] as const)(
+    it.each(['ruby', 'rails', 'go'] as const)(
         'refuses a %s performance card as runner-error instead of benchmarking it as another language',
         async (language) => {
             const { run } = fakeRunner({ a: [1, 1], b: [9, 9] });

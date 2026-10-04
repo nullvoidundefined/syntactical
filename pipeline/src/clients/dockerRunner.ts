@@ -17,7 +17,7 @@ const RAW_OUTPUT_CAP_KIBIBYTES = 512;
 const VALUE_CAP_BYTES = VALUE_CAP_KIBIBYTES * KIBIBYTE;
 const RAW_OUTPUT_CAP_BYTES = RAW_OUTPUT_CAP_KIBIBYTES * KIBIBYTE;
 const OOM_EXIT_CODE = 137;
-const LANGUAGES: readonly string[] = ['python', 'node', 'postgres', 'ruby', 'rails'];
+const LANGUAGES: readonly string[] = ['python', 'node', 'postgres', 'ruby', 'rails', 'go'];
 
 const OUTCOMES: OracleOutcome[] = [
     'value',

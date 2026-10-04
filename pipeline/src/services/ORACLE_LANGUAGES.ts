@@ -3,6 +3,7 @@
 import type { OracleLanguage } from '../types/OracleLanguage.js';
 
 export const ORACLE_LANGUAGES: Record<string, OracleLanguage> = {
+    go: 'go',
     javascript: 'node',
     postgres: 'postgres',
     python: 'python',

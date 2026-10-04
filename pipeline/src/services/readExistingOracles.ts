@@ -13,7 +13,7 @@ import { sanitizeLogText } from './sanitizeLogText.js';
 const oracleSchema = z.strictObject({
     choiceCode: z.array(z.string()).optional(),
     code: z.string(),
-    language: z.enum(['python', 'node', 'postgres', 'ruby', 'rails']),
+    language: z.enum(['python', 'node', 'postgres', 'ruby', 'rails', 'go']),
     setupSql: z.string().optional(),
 });
 
