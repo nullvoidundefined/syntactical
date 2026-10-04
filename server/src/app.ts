@@ -21,6 +21,7 @@ import { createAnswerEventsRouter } from './routes/answerEvents.js';
 import { createAuthCodesRouter } from './routes/authCodes.js';
 import type { AuthDeps, ResolvedAuthDeps } from './routes/authDeps.js';
 import { createAuthSessionsRouter } from './routes/authSessions.js';
+import { createDeleteMeRouter } from './routes/deleteMe.js';
 import { createHealthRouter } from './routes/health.js';
 import type { HealthDb } from './routes/health.js';
 import { createMeRouter } from './routes/me.js';
@@ -75,6 +76,7 @@ function createApp(deps: AppDeps) {
       createAuthSessionsRouter(resolved),
       createSignOutRouter(resolved),
     );
+    app.use('/v1', createDeleteMeRouter(resolved, logger));
   }
 
   if (sync) {
