@@ -325,6 +325,20 @@ describe.skipIf(SKIP_DATABASE_TESTS)('POST /v1/auth/sessions', () => {
     expect(ipLimited.status).toBe(HTTP_TOO_MANY_REQUESTS);
   });
 
+  it('counts two different client IPs in separate verify buckets', async () => {
+    const testApp = createAuthTestApp({ pool: database.pool });
+    const busyIp = '198.51.100.50';
+    for (let attempt = 0; attempt < VERIFY_PER_IP; attempt += 1) {
+      await signIn(testApp, { code: '000000', email: buildEmail() }, { ip: busyIp });
+    }
+
+    const sameClient = await signIn(testApp, { code: '000000', email: buildEmail() }, { ip: busyIp });
+    const otherClient = await signIn(testApp, { code: '000000', email: buildEmail() }, { ip: '198.51.100.51' });
+
+    expect(sameClient.status).toBe(HTTP_TOO_MANY_REQUESTS);
+    expect(otherClient.status).not.toBe(HTTP_TOO_MANY_REQUESTS);
+  });
+
   it('answers a malformed code or email with 400 before touching the code', async () => {
     const testApp = createAuthTestApp({ pool: database.pool });
     const email = buildEmail();

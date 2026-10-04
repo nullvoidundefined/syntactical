@@ -681,7 +681,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 - Emails are normalized (trim, NFKC, lowercase) before the rate-limit key and every lookup: 5 requests for `Foo@Example.com`, `FOO@example.com`, and `foo@example.com ` then a 6th in a new casing gets 429.
 - The code comes from an injected `randomInt(0, 1_000_000)` (Node `crypto.randomInt` in production), zero-padded to 6 digits; the test asserts the injected generator is the one called.
 - Rate-limit counters increment atomically (`INSERT ... ON CONFLICT DO UPDATE SET count = count + 1 RETURNING count`): 20 concurrent requests for one email send at most 5 codes.
-- IPv6 clients are keyed by their /64 prefix and IPv4-mapped addresses (`::ffff:a.b.c.d`) are unmapped and keyed as the IPv4 address: `2001:db8::1` and `2001:db8::2` share a counter, `::ffff:203.0.113.7` and `::ffff:203.0.113.8` do not.
+- Clients are keyed by `req.ip` with `trust proxy` 1 (no IPv6 /64 or IPv4-mapped normalization): `203.0.113.7` and `203.0.113.8` have separate counters, and a spoofed `X-Forwarded-For` beyond the one trusted hop does not change the key.
 - A `rate_limit_counters` row never contains the plaintext email or IP, and its key differs from `sha256(email)` (keyed HMAC with a server secret).
 - Rows whose `window_start` is older than the window are deleted on the next insert; after the window passes, no row keyed by the user's email or IP remains. Account deletion also deletes counter rows keyed by the user's email.
 - `RATE_LIMIT_KEY_SECRET` shorter than 32 characters, or empty, fails startup.

@@ -14,7 +14,6 @@ import { createErrorResponse, ERROR_CODES } from '../errors.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
 import { authSchemas } from '../schemas/authSchemas.js';
 import { createSession } from '../services/createSession.js';
-import { ipRateLimitKey } from '../services/ipRateLimitKey.js';
 import { verifyOneTimeCode } from '../services/verifyOneTimeCode.js';
 
 import type { ResolvedAuthDeps } from './authDeps.js';
@@ -55,7 +54,7 @@ function createAuthSessionsRouter(deps: ResolvedAuthDeps): Router {
   const limits = { database, keySecret: rateLimitKeySecret, now, windowMs: WINDOW_MS };
   const perIp = createRateLimit({
     ...limits,
-    keyOf: (req) => ipRateLimitKey(req.ip),
+    keyOf: (req) => req.ip ?? 'unknown',
     limit: VERIFY_PER_IP,
     scope: VERIFY_IP,
   });
