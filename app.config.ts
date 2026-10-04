@@ -22,6 +22,14 @@ function readPublicKey(envName: string, prefix: string, vendor = 'RevenueCat'): 
   return value;
 }
 
+// The analytics host must be an https URL; the error names the variable, never the value.
+function readPostHogHost(): string | undefined {
+  const value = process.env.POSTHOG_HOST;
+  if (value === undefined || value === '') return undefined;
+  if (!value.startsWith('https://')) throw new Error('POSTHOG_HOST must start with https://');
+  return value;
+}
+
 const BASE_URL = readBaseUrl();
 const CONTENT_BASE_URL = new URL(`${BASE_URL}/content/`, CONTENT_ORIGIN).href;
 
@@ -31,7 +39,7 @@ const config: ExpoConfig = {
   extra: {
     apiBaseUrl: API_BASE_URL,
     contentBaseUrl: CONTENT_BASE_URL,
-    posthogHost: process.env.POSTHOG_HOST || undefined,
+    posthogHost: readPostHogHost(),
     posthogKey: readPublicKey('POSTHOG_KEY', 'phc', 'PostHog'),
     revenueCatAppleKey: readPublicKey('REVENUECAT_APPLE_KEY', 'appl'),
     revenueCatGoogleKey: readPublicKey('REVENUECAT_GOOGLE_KEY', 'goog'),
