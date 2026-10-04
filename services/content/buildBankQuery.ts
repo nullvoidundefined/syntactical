@@ -38,7 +38,8 @@ export function buildBankQuery(
   ownerUserId: string | null = null,
 ) {
   const { contentBaseUrl } = access;
-  const isPaid = entry.access === 'paid';
+  const { access: bankAccess, hash: entryHash } = entry;
+  const isPaid = bankAccess === 'paid';
   return {
     enabled: isPaid ? ownerUserId !== null : contentBaseUrl !== null,
     queryFn: () => {
@@ -56,6 +57,6 @@ export function buildBankQuery(
         ownerUserId: isPaid ? ownerUserId : null,
       });
     },
-    queryKey: isPaid ? ['bank', language, difficulty, entry.hash, ownerUserId] : ['bank', language, difficulty, entry.hash],
+    queryKey: isPaid ? ['bank', language, difficulty, entryHash, ownerUserId] : ['bank', language, difficulty, entryHash],
   };
 }
