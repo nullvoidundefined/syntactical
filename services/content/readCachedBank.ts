@@ -1,6 +1,7 @@
 // Reads one cached bank with its verified hash as a single entry, so a
 // cached bank can never be paired with the wrong hash. Entries that fail to
-// parse or validate read as absent, which includes a schema 1 bank.
+// parse or validate read as absent, which includes a schema 1 bank. With an
+// owner id it reads that owner's paid bank key and nothing else.
 import { SHA256_HEX, SUPPORTED_SCHEMA_VERSION, validateQuestionBank } from '@syntactical/content-schema';
 import type { BankContext, CachedBank } from '@syntactical/content-schema';
 
@@ -12,9 +13,10 @@ export async function readCachedBank(
   language: string,
   difficulty: string,
   context: BankContext,
+  ownerUserId: string | null = null,
 ): Promise<CachedBank | null> {
   const stored = await readJson<{ hash?: unknown; questions?: unknown } | null>(
-    buildBankCacheKey(language, difficulty),
+    buildBankCacheKey(language, difficulty, ownerUserId),
     null,
   );
   if (!stored) return null;

@@ -1,5 +1,7 @@
 // The TanStack Query definition for one bank download. Shared by the
-// content provider and useQuestionBank, so neither imports the other.
+// content provider and useQuestionBank, so neither imports the other. A paid
+// bank's key also names its owner, so one account's download is never served
+// from the query cache to another account on the same device.
 import { buildBankContext } from '@syntactical/content-schema';
 import type { BankEntry, Manifest } from '@syntactical/content-schema';
 import type { QueryClient } from '@tanstack/react-query';
@@ -33,12 +35,14 @@ export function buildBankQuery(
   language: string,
   difficulty: string,
   entry: BankEntry,
+  ownerUserId: string | null = null,
 ) {
   const { contentBaseUrl } = access;
+  const isPaid = entry.access === 'paid';
   return {
-    enabled: contentBaseUrl !== null,
+    enabled: isPaid ? ownerUserId !== null : contentBaseUrl !== null,
     queryFn: () => {
-      if (contentBaseUrl === null) return Promise.reject(new Error('no content base URL'));
+      if (!isPaid && contentBaseUrl === null) return Promise.reject(new Error('no content base URL'));
       const context = readBankContext(queryClient, access, language);
       if (context === null) return Promise.reject(new Error(`no manifest entry for ${language}`));
       return loadQuestionBank({
@@ -49,8 +53,9 @@ export function buildBankQuery(
         isHashCurrent: (hash: string) =>
           readCurrentHash(queryClient, access, language, difficulty) === hash,
         language,
+        ownerUserId: isPaid ? ownerUserId : null,
       });
     },
-    queryKey: ['bank', language, difficulty, entry.hash],
+    queryKey: isPaid ? ['bank', language, difficulty, entry.hash, ownerUserId] : ['bank', language, difficulty, entry.hash],
   };
 }
