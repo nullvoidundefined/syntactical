@@ -50,7 +50,8 @@ if [ "$status" != healthy ]; then
   exit 1
 fi
 
-if ! docker logs "$name" 2>&1 | grep -q 'Migrations complete!'; then
+startup_log="$(docker logs "$name" 2>&1)"
+if ! grep -q 'Migrations complete!' <<<"$startup_log"; then
   echo 'image check: the start command did not run migrations; container log follows' >&2
   docker logs "$name" >&2 || true
   exit 1

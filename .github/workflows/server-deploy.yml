@@ -46,8 +46,8 @@ jobs:
     env:
       DATABASE_URL: postgres://postgres@127.0.0.1:5432/postgres
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
       - name: Check the Railway token is set
@@ -84,8 +84,8 @@ jobs:
     env:
       DATABASE_URL: postgres://postgres@127.0.0.1:5432/postgres
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
       - name: Check the Railway token is set
@@ -93,6 +93,11 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PRODUCTION }}
         run: |
           [ -n "$RAILWAY_TOKEN" ] || { echo 'The RAILWAY_TOKEN_PRODUCTION Actions secret is not set; nothing was deployed.' >&2; exit 1; }
+      - name: Check the content deploy key is set
+        env:
+          CONTENT_DEPLOY_KEY: ${{ secrets.CONTENT_DEPLOY_KEY }}
+        run: |
+          [ -n "$CONTENT_DEPLOY_KEY" ] || { echo 'The CONTENT_DEPLOY_KEY Actions secret is not set; production never deploys fixture content. Nothing was deployed.' >&2; exit 1; }
       - uses: ./.github/actions/check-api-image
         with:
           content-deploy-key: ${{ secrets.CONTENT_DEPLOY_KEY }}
