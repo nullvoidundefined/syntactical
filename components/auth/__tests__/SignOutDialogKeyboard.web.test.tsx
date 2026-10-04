@@ -206,6 +206,24 @@ describe('SignOutDialog keyboard on the web', () => {
     expect(latest.auth?.isSignedIn).toBe(true);
   });
 
+  it('keeps Tab inside the dialog: from the last control it returns to the first, and Shift+Tab from the first goes to the last', async () => {
+    await mountWithUnsynced(router, userId);
+    const dialog = await openDialogFromFocusedControl();
+    const first = within(dialog).getByRole('button', { name: 'Sync now' });
+    const last = within(dialog).getByRole('button', { name: 'Cancel' });
+
+    await act(async () => {
+      last.focus();
+      fireEvent.keyDown(last, { code: 'Tab', key: 'Tab' });
+    });
+    expect(document.activeElement).toBe(first);
+
+    await act(async () => {
+      fireEvent.keyDown(first, { code: 'Tab', key: 'Tab', shiftKey: true });
+    });
+    expect(document.activeElement).toBe(last);
+  });
+
   it('while Sync now is running Escape leaves the dialog open, and a failed sync is announced in the still-open dialog', async () => {
     await mountWithUnsynced(router, userId);
     const dialog = await openDialogFromFocusedControl();

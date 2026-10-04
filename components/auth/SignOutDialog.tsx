@@ -5,7 +5,7 @@
 // which never upload, are discarded at sign-out. A failed sync stays open and is
 // announced in an alert. Every sign-out clears the sync cursor and removes the
 // user's events from this device, so it holds one owner's events at a time. No animation; on the web focus moves into
-// the dialog on open, Escape closes it (and goes no further), and focus returns
+// the dialog on open, Tab and Shift+Tab wrap inside it, Escape closes it (and goes no further), and focus returns
 // to "Sign out" on close. While Sync now or Discard runs the dialog cannot be
 // closed, and a failure is announced inside it. Quiz key bindings are inert
 // while it is open.
@@ -19,6 +19,7 @@ import { useSync } from '../../state/SyncProvider';
 import { markModalOpen } from '../../state/modalOpenSignal';
 
 import { ModalOverlay } from '../layout/ModalOverlay';
+import { wrapTab } from '../layout/wrapTab';
 
 import { AuthButton } from './AuthButton';
 
@@ -43,14 +44,20 @@ function DialogPanel({ failureMessage, isBusy, onCancel, onDiscard, onSyncNow }:
 
   useEffect(() => {
     if (!isWeb) return undefined;
-    (panelRef.current as unknown as HTMLElement | null)?.focus();
-    function closeOnEscape(event: KeyboardEvent) {
+    const panel = panelRef.current as unknown as HTMLElement | null;
+    panel?.focus();
+    // Escape closes; Tab and Shift+Tab wrap inside the dialog.
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Tab' && panel) {
+        wrapTab(event, panel);
+        return;
+      }
       if (event.key !== 'Escape') return;
       event.stopPropagation();
       onCancel();
     }
-    document.addEventListener('keydown', closeOnEscape);
-    return () => document.removeEventListener('keydown', closeOnEscape);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isWeb, onCancel]);
 
   return (
