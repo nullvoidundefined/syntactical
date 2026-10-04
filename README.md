@@ -16,7 +16,7 @@ npm run build    # content build, then the web export into dist/
 
 Run `npx tsc --noEmit` to type check; CI runs it too.
 
-Formatting follows `.prettierrc.mjs`, (2-space indent, 120 columns; `pipeline/` and `packages/progress/` keep 4-space). The codebase predates the config and about 400 files still differ from it, so run `npx prettier --write <file>` only on files you change, never on `.`, to keep diffs free of whole-file reformatting.
+Formatting follows `.prettierrc.mjs`: 2-space indent and 120 columns, except `pipeline/` and `packages/progress/` code, which keeps 4-space indent at the same width. The codebase predates the config and about 400 files still differ from it, so run `npx prettier --write <file>` only on files you change, never on `.`, to keep diffs free of whole-file reformatting.
 
 ## Keyboard controls (web)
 
