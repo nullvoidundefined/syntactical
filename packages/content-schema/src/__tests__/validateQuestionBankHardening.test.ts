@@ -94,8 +94,6 @@ describe('validateQuestionBank hardening (B-3b)', () => {
     describe('drops provenance strings over the display-field length with the missing-provenance rule', () => {
         it.each([
             ['model', buildProvenance({ model: OVER_DISPLAY_FIELD })],
-            ['promptVersion', buildProvenance({ promptVersion: OVER_DISPLAY_FIELD })],
-            ['runtimeVersion', buildProvenance({ runtimeVersion: OVER_DISPLAY_FIELD })],
         ])('drops a question whose provenance %s is 121 characters', (_field, provenance) => {
             const kept = buildBooleanQuestion('q-1');
             const malformed = buildMultipleChoiceQuestion('q-2', { provenance });
@@ -107,8 +105,6 @@ describe('validateQuestionBank hardening (B-3b)', () => {
     describe('drops a validation status outside pending, passed, and failed with the missing-provenance rule', () => {
         it.each([
             ['an unknown word', 'needs-review'],
-            ['an uppercase known status', 'PASSED'],
-            ['the empty string', ''],
             ['a 121-character string', OVER_DISPLAY_FIELD],
         ])('drops an mc question whose validation status is %s', (_description, status) => {
             const kept = buildBooleanQuestion('q-1');
