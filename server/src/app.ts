@@ -21,6 +21,8 @@ import { createAnswerEventsRouter } from './routes/answerEvents.js';
 import { createAuthCodesRouter } from './routes/authCodes.js';
 import type { AuthDeps, ResolvedAuthDeps } from './routes/authDeps.js';
 import { createAuthSessionsRouter } from './routes/authSessions.js';
+import { createBanksRouter } from './routes/banks.js';
+import type { BanksDeps } from './routes/banksDeps.js';
 import { createHealthRouter } from './routes/health.js';
 import type { HealthDb } from './routes/health.js';
 import { createMeRouter } from './routes/me.js';
@@ -33,6 +35,8 @@ interface AppDeps {
   allowedOrigins?: string[];
   // The /v1/auth routes; omitted, they are not mounted.
   auth?: AuthDeps;
+  // The /v1 paid bank route; omitted, it is not mounted.
+  banks?: BanksDeps;
   db: HealthDb;
   extraRoutes?: (router: Router) => void;
   logger?: Logger;
@@ -44,7 +48,16 @@ interface AppDeps {
 
 // Builds the Express app without listening or reading env; callers inject everything.
 function createApp(deps: AppDeps) {
-  const { allowedOrigins = [], auth, db, extraRoutes, logger = createLogger({ destination: process.stdout }), sync, webhooks } = deps;
+  const {
+    allowedOrigins = [],
+    auth,
+    banks,
+    db,
+    extraRoutes,
+    logger = createLogger({ destination: process.stdout }),
+    sync,
+    webhooks,
+  } = deps;
   const app = express();
 
   app.set('trust proxy', 1);
@@ -92,6 +105,11 @@ function createApp(deps: AppDeps) {
     const { now = () => new Date() } = sync;
     const resolvedSync = { ...sync, now };
     app.use('/v1', createAnswerEventsRouter(resolvedSync), createMeRouter(resolvedSync));
+  }
+
+  if (banks) {
+    const { now = () => new Date() } = banks;
+    app.use('/v1', createBanksRouter({ ...banks, now }));
   }
 
   if (extraRoutes) {

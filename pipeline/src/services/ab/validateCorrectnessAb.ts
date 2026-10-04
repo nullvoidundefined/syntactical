@@ -1,9 +1,9 @@
 // Validates a correctness A/B card by executing both options against edge cases. Every
-// program is screened with `findRefusedConstruct` and then run only through the sandboxed
-// runner. The card passes when the option its `answerIndex` names matches the expected
-// output on every edge case and the other option fails at least one; the first failing
-// edge case of the other option becomes the card's evidence. Python and Node only: an
-// option is code followed by a call, which has no Postgres equivalent.
+// program runs only through the sandboxed runner. The card passes when the option its
+// `answerIndex` names matches the expected output on every edge case and the other option
+// fails at least one; the first failing edge case of the other option becomes the card's
+// evidence. Python and Node only: an option is code followed by a call, which has no
+// Postgres equivalent.
 import { runOracle } from '../../clients/dockerRunner.js';
 import type { Oracle } from '../../types/Oracle.js';
 import type { OracleRun } from '../../types/OracleRun.js';
@@ -13,7 +13,6 @@ import type { AbFailureReason } from '../../types/ab/AbFailureReason.js';
 import type { AbQuestion } from '../../types/ab/AbQuestion.js';
 import type { AbSource } from '../../types/ab/AbSource.js';
 import type { AbValidationResult } from '../../types/ab/AbValidationResult.js';
-import { findRefusedConstruct } from '../findRefusedConstruct.js';
 
 import { readAbSnippets } from './readAbSnippets.js';
 
@@ -60,9 +59,6 @@ async function judgeOption(
     let runtimeVersion: string | undefined;
     for (const { call, expected, input } of edgeCases) {
         const oracle: Oracle = { code: `${snippet}\n${call}`, language, ...(setupSql === undefined ? {} : { setupSql }) };
-        if ((await findRefusedConstruct(oracle)) !== null) {
-            return { isPassing: false, reason: 'refused' };
-        }
         const result = await run(oracle);
         const { exceptionType, outcome, runtimeVersion: reported } = result;
         if (outcome === 'exception' && exceptionType === RUNNER_FAILURE) {

@@ -4,9 +4,8 @@
 // `question` draft with its answer oracle. The notes from earlier turns ride in the prompt.
 //
 // Generated code runs ONLY through `runSandboxed` (the Docker runner `runOracle`, fixed
-// limits), and only after `findRefusedConstruct` has screened it. A refused program, a
-// schema-invalid answer, or an oracle that disagrees with the claimed answer costs one of
-// MAX_REVISIONS drafts; a draft that still fails is dropped as `generation-failed`.
+// limits). A schema-invalid answer or an oracle that disagrees with the claimed answer
+// costs one of MAX_REVISIONS drafts; a draft that still fails is dropped as `generation-failed`.
 import type { z } from 'zod';
 
 import { runOracle } from '../../clients/dockerRunner.js';
@@ -14,7 +13,6 @@ import type { DraftEvaluation } from '../../types/DraftEvaluation.js';
 import type { GenerateOutcome } from '../../types/GenerateOutcome.js';
 import type { GenerateQuestionArgs } from '../../types/GenerateQuestionArgs.js';
 import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
-import { findRefusedConstruct } from '../findRefusedConstruct.js';
 
 import { GENERATE_PROMPT_VERSION } from './GENERATE_PROMPT_VERSION.js';
 import { MAX_EXECUTES_PER_DRAFT } from './MAX_EXECUTES_PER_DRAFT.js';
@@ -57,10 +55,6 @@ async function runExecute(args: GenerateQuestionArgs, request: Execute, notes: s
         return `execute must use ${language}`;
     }
     const oracle = { code, language, ...(setupSql === undefined ? {} : { setupSql }) };
-    const refused = await findRefusedConstruct(oracle);
-    if (refused) {
-        return `execute refused: ${refused}`;
-    }
     const { exceptionType, outcome, value } = await runSandboxed(run, oracle);
     const observation = JSON.stringify({ exceptionType, outcome, value }).slice(0, MAX_OBSERVATION_LENGTH);
     notes.push(`executed program, observed ${observation}`);

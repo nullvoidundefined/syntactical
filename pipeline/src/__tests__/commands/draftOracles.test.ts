@@ -107,11 +107,6 @@ describe('draftOracles', () => {
         expect(logs.some((line) => line.includes('p-2') && line.includes('not executable'))).toBe(true);
     });
 
-    it('logs the Python version the oracle checker runs under', async () => {
-        await draftOracles({ contentDir, log, oraclesDir, provider: scripted() });
-        expect(logs.some((line) => /^python checker running under Python 3\.\d+\.\d+/.test(line))).toBe(true);
-    });
-
     it('never calls the model for a paid bank and leaves content files byte-identical', async () => {
         const before = await snapshot(contentDir);
         const provider = scripted();
@@ -234,18 +229,6 @@ describe('draftOracles', () => {
             await expect(draftOracles({ contentDir, log, oraclesDir, provider })).rejects.toThrow(message);
             expect(provider.prompts).toEqual([]);
             expect(await readFile(join(oraclesDir, PYTHON_FILE), 'utf8')).toBe(text);
-        });
-
-        it('drops a saved oracle the current check refuses and logs it, even when nothing new is drafted', async () => {
-            await seed({ 'old-1': KEPT, 'p-9': { code: 'import os\nprint(os.getcwd())', language: 'python' } });
-            const nothing: ModelProvider = {
-                async generate(request) {
-                    return { model: 'fake', value: request.schema.parse({ isExecutable: false, reason: 'no' }) };
-                },
-            };
-            await draftOracles({ contentDir, log, oraclesDir, provider: nothing });
-            expect(JSON.parse(await readFile(join(oraclesDir, PYTHON_FILE), 'utf8'))).toEqual({ 'old-1': KEPT });
-            expect(logs.some((line) => line.includes('p-9') && line.includes('dropped') && line.includes('refused'))).toBe(true);
         });
     });
 

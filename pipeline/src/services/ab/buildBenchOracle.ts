@@ -1,6 +1,5 @@
 // Wraps one option's code in a timing program for its language. The option travels as
-// base64, so no quoting in the option can break out of the wrapper, and the caller screens
-// the option with `findRefusedConstruct` before this wrapper is built. The program prints one
+// base64, so no quoting in the option can break out of the wrapper. The program prints one
 // JSON line, `{"samples": [...]}`, of per-iteration milliseconds. Python and Node time the
 // code in process; Postgres sums `EXPLAIN (ANALYZE, FORMAT JSON)` execution times from a
 // helper function created next to the card's fixture SQL.
