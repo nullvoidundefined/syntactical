@@ -39,9 +39,9 @@ describe('buildPoolConfig', () => {
     ]) {
       const { connectionString, ssl } = buildPoolConfig(`${PUBLIC_URL}?${query}`, 'production');
       expect(ssl).toEqual({ rejectUnauthorized: true });
-      expect(connectionString).not.toMatch(/ssl|uselibpqcompat/);
+      expect(String(connectionString)).not.toMatch(/ssl|uselibpqcompat/);
       // What pg merges over the explicit option is whatever the string still parses to.
-      expect(parse(connectionString).ssl).toBeUndefined();
+      expect(parse(String(connectionString)).ssl).toBeUndefined();
     }
   });
 
