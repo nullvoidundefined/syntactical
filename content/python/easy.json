@@ -3348,16 +3348,16 @@
       "prompt": "Which function returns the last item of a list, or None when the list is empty?",
       "choices": [
         {
+          "text": "Guard the empty list, then index with -1",
+          "code": "def last(items):\n    return items[-1] if items else None"
+        },
+        {
           "text": "Index with -1 directly",
           "code": "def last(items):\n    return items[-1]",
           "rationale": "Indexing an empty list with -1 raises IndexError instead of returning None."
-        },
-        {
-          "text": "Guard the empty list, then index with -1",
-          "code": "def last(items):\n    return items[-1] if items else None"
         }
       ],
-      "answerIndex": 1,
+      "answerIndex": 0,
       "criterion": {
         "type": "correctness",
         "statement": "Returns the right value for every list, including an empty one.",
@@ -3426,20 +3426,20 @@
       "prompt": "Both snippets count how many of 2,000 numbers are in an allowed collection. Which is faster?",
       "choices": [
         {
+          "text": "Look each number up in a set",
+          "code": "allowed = set(range(3000))\nhits = sum(1 for n in range(2000) if n * 2 in allowed)"
+        },
+        {
           "text": "Look each number up in a list",
           "code": "allowed = list(range(3000))\nhits = sum(1 for n in range(2000) if n * 2 in allowed)",
           "rationale": "`in` on a list compares against items one by one, so each lookup can scan all 3,000 items."
-        },
-        {
-          "text": "Look each number up in a set",
-          "code": "allowed = set(range(3000))\nhits = sum(1 for n in range(2000) if n * 2 in allowed)"
         }
       ],
-      "answerIndex": 1,
+      "answerIndex": 0,
       "criterion": {
         "type": "performance",
         "statement": "Faster median run time on the same input.",
-        "evidence": "A: 19.7 ms, B: 0.1 ms median on Python 3.13.16"
+        "evidence": "A: 0.1 ms, B: 20.3 ms median on Python 3.13.16"
       },
       "query": {
         "title": "Membership tests: list versus set",

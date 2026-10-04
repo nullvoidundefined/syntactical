@@ -3378,16 +3378,16 @@
       "prompt": "Which function returns a copy of an array of numbers sorted from smallest to largest?",
       "choices": [
         {
+          "text": "sort() with a numeric comparator",
+          "code": "function sortNumbers(values) {\n  return [...values].sort((a, b) => a - b);\n}"
+        },
+        {
           "text": "sort() with no comparator",
           "code": "function sortNumbers(values) {\n  return [...values].sort();\n}",
           "rationale": "With no comparator, sort() converts the numbers to strings and compares them as text, so 10 sorts before 9."
-        },
-        {
-          "text": "sort() with a numeric comparator",
-          "code": "function sortNumbers(values) {\n  return [...values].sort((a, b) => a - b);\n}"
         }
       ],
-      "answerIndex": 1,
+      "answerIndex": 0,
       "criterion": {
         "type": "correctness",
         "statement": "Sorts every array of numbers into ascending numeric order.",
@@ -3453,23 +3453,23 @@
     {
       "id": "js-easy-103",
       "type": "ab",
-      "prompt": "Both snippets count how many of 2,000 numbers are in an allowed collection. Which is faster?",
+      "prompt": "Both snippets count how many of 2,000 numbers are in an allowed collection of 10,000. Which is faster?",
       "choices": [
         {
-          "text": "Array.prototype.includes",
-          "code": "const allowed = Array.from({ length: 5000 }, (_, i) => i);\nlet hits = 0;\nfor (let n = 0; n < 2000; n += 1) {\n  if (allowed.includes(n * 3)) hits += 1;\n}",
-          "rationale": "includes() scans the array from the start on every call, so each lookup can visit all 5,000 items."
+          "text": "Set.prototype.has",
+          "code": "const allowed = new Set(Array.from({ length: 10000 }, (_, i) => i));\nlet hits = 0;\nfor (let n = 0; n < 2000; n += 1) {\n  if (allowed.has(9999 - n)) hits += 1;\n}"
         },
         {
-          "text": "Set.prototype.has",
-          "code": "const allowed = new Set(Array.from({ length: 5000 }, (_, i) => i));\nlet hits = 0;\nfor (let n = 0; n < 2000; n += 1) {\n  if (allowed.has(n * 3)) hits += 1;\n}"
+          "text": "Array.prototype.includes",
+          "code": "const allowed = Array.from({ length: 10000 }, (_, i) => i);\nlet hits = 0;\nfor (let n = 0; n < 2000; n += 1) {\n  if (allowed.includes(9999 - n)) hits += 1;\n}",
+          "rationale": "includes() scans the array from the start on every call, so each lookup here walks through about 9,000 items."
         }
       ],
-      "answerIndex": 1,
+      "answerIndex": 0,
       "criterion": {
         "type": "performance",
         "statement": "Faster median run time on the same input.",
-        "evidence": "A: 1.0 ms, B: 0.3 ms median on Node 24.21.0"
+        "evidence": "A: 0.6 ms, B: 3.1 ms median on Node 24.21.0"
       },
       "query": {
         "title": "Membership tests: Array.includes versus Set.has",

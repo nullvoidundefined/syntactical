@@ -3426,20 +3426,20 @@
       "prompt": "users.email is stored in lower case and has a B-tree index. Which query finds a user by email faster?",
       "choices": [
         {
+          "text": "Compare email directly",
+          "code": "SELECT id FROM users WHERE email = 'user4242@example.com'"
+        },
+        {
           "text": "Compare lower(email)",
           "code": "SELECT id FROM users WHERE lower(email) = 'user4242@example.com'",
           "rationale": "An index on email cannot answer a condition on lower(email), so the planner scans every row and calls lower() on each."
-        },
-        {
-          "text": "Compare email directly",
-          "code": "SELECT id FROM users WHERE email = 'user4242@example.com'"
         }
       ],
-      "answerIndex": 1,
+      "answerIndex": 0,
       "criterion": {
         "type": "performance",
         "statement": "Faster median execution time on a 50,000-row table.",
-        "evidence": "A: 3.5 ms, B: 0.002 ms median on PostgreSQL 17.11"
+        "evidence": "A: 0.002 ms, B: 3.4 ms median on PostgreSQL 17.11"
       },
       "query": {
         "title": "Functions on indexed columns hide the index",
@@ -3506,20 +3506,20 @@
       "prompt": "products.id is the primary key. Which query fetches product 4242 faster?",
       "choices": [
         {
+          "text": "Compare id as an integer",
+          "code": "SELECT sku FROM products WHERE id = 4242"
+        },
+        {
           "text": "Cast id to text",
           "code": "SELECT sku FROM products WHERE id::text = '4242'",
           "rationale": "Casting the column to text means the primary key index on id no longer applies, so every row is cast and compared."
-        },
-        {
-          "text": "Compare id as an integer",
-          "code": "SELECT sku FROM products WHERE id = 4242"
         }
       ],
-      "answerIndex": 1,
+      "answerIndex": 0,
       "criterion": {
         "type": "performance",
         "statement": "Faster median execution time on a 50,000-row table.",
-        "evidence": "A: 1.9 ms, B: 0.002 ms median on PostgreSQL 17.11"
+        "evidence": "A: 0.002 ms, B: 1.9 ms median on PostgreSQL 17.11"
       },
       "query": {
         "title": "Cast the value, not the column",
