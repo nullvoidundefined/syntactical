@@ -25,7 +25,6 @@ jest.mock('../../clients/apiClient', () => ({
     return mockApi.router.request(path, init);
   },
 }));
-jest.mock('../../clients/getLatestRequestSeq', () => ({ getLatestRequestSeq: () => 0 }));
 jest.mock('../../clients/onUnauthorized', () => ({ onUnauthorized: () => () => undefined }));
 
 jest.mock('@react-native-community/netinfo', () => {

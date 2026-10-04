@@ -1,7 +1,5 @@
-// AuthProvider session integrity on web: the cookie carries the session, so
-// only the provider can tell a 401 for a request sent before the current
-// sign-in (ignored) from a 401 for one sent under the current session (signs
-// out). The real apiFetch runs against a routed fetch stand-in.
+// AuthProvider session integrity on web: the cookie carries the session, and
+// any 401 signs the user out locally. The real apiFetch runs against a routed fetch stand-in.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, renderHook, waitFor } from '@testing-library/react';
 
@@ -49,38 +47,7 @@ describe('AuthProvider session integrity on web', () => {
     await AsyncStorage.clear();
   });
 
-  it('keeps a new user signed in when a request sent before sign-in returns 401 afterwards', async () => {
-    const identity = buildIdentity();
-    const held = holdReply();
-    const { requests } = installRoutedFetch({
-      'POST auth/sessions': { status: 201, body: { data: { userId: identity.userId } } },
-      'GET answer-events': held,
-    });
-    const { result } = await mountAuth();
-
-    let stale: Promise<unknown> = Promise.resolve();
-    await act(async () => {
-      stale = apiFetch('answer-events').catch(() => undefined);
-    });
-    await waitFor(() => expect(requests.some((request) => request.path === 'answer-events')).toBe(true));
-
-    let outcome: unknown;
-    await act(async () => {
-      outcome = await result.current.verifyCode(identity.email, identity.code);
-    });
-    expect(outcome).toEqual({ isOk: true });
-    await act(async () => {
-      held.release(UNAUTHORIZED);
-      await stale;
-    });
-    await flush();
-
-    expect(result.current.isSignedIn).toBe(true);
-    expect(result.current.user).toEqual({ id: identity.userId });
-    expect((await readStoredAuth())?.userId).toBe(identity.userId);
-  });
-
-  it('still signs out when a request sent under the current session returns 401', async () => {
+  it('signs out locally when any request returns 401', async () => {
     const identity = buildIdentity();
     const held = holdReply();
     const { requests } = installRoutedFetch({

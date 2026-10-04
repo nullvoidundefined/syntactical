@@ -41,7 +41,6 @@ jest.mock('../../../clients/apiClient', () => ({
     return mockApi.router.request(path, init);
   },
 }));
-jest.mock('../../../clients/getLatestRequestSeq', () => ({ getLatestRequestSeq: () => 0 }));
 jest.mock('../../../clients/onUnauthorized', () => ({ onUnauthorized: () => () => undefined }));
 
 // How long deleting the session value takes; a delay lets the guest's stats
