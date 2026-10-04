@@ -1,4 +1,5 @@
-// Lifetime accuracy and a per-language, per-difficulty breakdown for the
+// The answer streak (consecutive correct answers, current and best),
+// lifetime accuracy, and a per-language, per-difficulty breakdown for the
 // languages the manifest currently lists, then the weekly weakness report.
 import { DIFFICULTIES } from '@syntactical/content-schema';
 import type { Manifest } from '@syntactical/content-schema';
@@ -29,10 +30,16 @@ function buildBreakdown(stats: Stats, manifest: Manifest): BreakdownEntry[] {
 export function StatsPanel() {
   const { stats } = useQuizStats();
   const manifest = useLanguageManifest();
-  const { attempted, correct } = stats.totals;
+  const { answerStreak, totals } = stats;
+  const { attempted, correct } = totals;
+  const { best: bestStreak, current: currentStreak } = answerStreak;
   const hasHistory = attempted > 0;
   return (
     <View className="mt-10 border-t border-line pt-6">
+      <View className="mb-4 flex-row items-center justify-between">
+        <Text className="font-mono text-xs uppercase tracking-widest text-muted">Answer streak</Text>
+        <Text className="font-mono text-xs text-ink">{`${currentStreak} (best ${bestStreak})`}</Text>
+      </View>
       <View className="flex-row items-center justify-between">
         <Text className="font-mono text-xs uppercase tracking-widest text-muted">Lifetime accuracy</Text>
         <Text className="font-mono text-xs text-ink">{hasHistory ? `${calculateAccuracy(correct, attempted)}%` : 'none yet'}</Text>

@@ -15,10 +15,11 @@ const ROUTES = {
 };
 
 describe('menu routes', () => {
-  it('shows the streak readout and the manifest languages on the home route', async () => {
+  it('shows the day streak in the header, the answer streak in the stats panel, and the manifest languages on the home route', async () => {
     await renderRouter(ROUTES, { initialUrl: '/' });
     await waitFor(() => expect(screen.queryByText('Python')).not.toBeNull());
-    expect(screen.queryByText(/streak/i)).not.toBeNull();
+    expect(screen.queryByText(/^Day streak 0, 0 of 20 XP today$/)).not.toBeNull();
+    expect(screen.queryByText('Answer streak')).not.toBeNull();
   });
 
   it('navigates from a language to its difficulty step', async () => {

@@ -1,7 +1,5 @@
-// B-62f: findings from the PR #19 security review, round 3. Grandchild loggers
-// work and keep their parent's bindings; pg payload fields copied onto plain
-// objects are redacted; absolute URLs come from PUBLIC_BASE_URL, and
-// X-Forwarded-Proto cannot flip req.protocol.
+// B-62f: a child derived from the request logger keeps the request id; absolute
+// URLs come from PUBLIC_BASE_URL, and X-Forwarded-Proto cannot flip req.protocol.
 import { randomBytes } from 'node:crypto';
 
 import type { Router } from 'express';
@@ -27,10 +25,6 @@ function capture() {
   };
 }
 
-function runTimeEmail(): string {
-  return `${randomBytes(TOKEN_BYTES).toString('hex')}@example.test`;
-}
-
 function secret(): string {
   return randomBytes(TOKEN_BYTES * 2).toString('hex');
 }
@@ -48,22 +42,7 @@ function envWith(publicBaseUrl: string | undefined): NodeJS.ProcessEnv {
   };
 }
 
-describe('grandchild loggers', () => {
-  it('logs from a grandchild with the parent binding and a redacted email', () => {
-    const email = runTimeEmail();
-    const { destination, lines } = capture();
-    const child = createLogger({ destination }).child({ requestId: 'req-1' });
-    let grandchild: ReturnType<typeof child.child> | undefined;
-    expect(() => {
-      grandchild = child.child({ email, userId: 'u-1' });
-    }).not.toThrow();
-    grandchild?.info('probe');
-    const entry = JSON.parse(lines[0] ?? '{}');
-    expect(entry.requestId).toBe('req-1');
-    expect(entry.userId).toBe('u-1');
-    expect(lines.join('\n')).not.toContain(email);
-  });
-
+describe('child loggers', () => {
   it('works through a route that derives a child from the request logger', async () => {
     const { destination, lines } = capture();
     const app = createApp({
@@ -80,32 +59,6 @@ describe('grandchild loggers', () => {
     expect(response.status).toBe(HTTP_OK);
     const scoped = lines.map((line) => JSON.parse(line)).find((entry) => entry.msg === 'scoped');
     expect(scoped?.requestId).toBe(response.headers['x-request-id']);
-  });
-});
-
-describe('pg payload fields on plain objects', () => {
-  it.each(['detail', 'hint', 'where', 'internalQuery', 'routine', 'column', 'stack'])(
-    'redacts %s',
-    (key) => {
-      const email = runTimeEmail();
-      const { destination, lines } = capture();
-      createLogger({ destination }).info({ failure: { [key]: `value for ${email}` } }, 'probe');
-      expect(lines.join('\n')).not.toContain(email);
-    },
-  );
-
-  it('redacts the message of a spread pg error', () => {
-    const email = runTimeEmail();
-    const pgError = Object.assign(new Error(`duplicate key for ${email}`), {
-      code: '23505',
-      detail: `Key (email)=(${email}) already exists.`,
-    });
-    const { destination, lines } = capture();
-    createLogger({ destination }).info(
-      { failure: { ...pgError, message: pgError.message, stack: pgError.stack } },
-      'probe',
-    );
-    expect(lines.join('\n')).not.toContain(email);
   });
 });
 

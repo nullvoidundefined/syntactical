@@ -28,8 +28,19 @@ export const EVENT_LOG_CAP = 5000;
 // signed in on this device. Never the session value, email, or sign-in code.
 export const AUTH_STORAGE_KEY = 'syntactical.auth.v1';
 
+// The longest a native purchaser identity call (logIn or logOut) may hold the
+// next one back.
+export const PURCHASER_CALL_TIMEOUT_MS = 10000;
+
 // The longest an API request may take, response and body read together.
 export const API_FETCH_TIMEOUT_MS = 10000;
+
+// After Web Billing checkout, the purchase-complete route polls the profile
+// this often, for at most this long, for the product's entitlement.
+export const PURCHASE_POLL_INTERVAL_MS = 2000;
+export const PURCHASE_POLL_DEADLINE_MS = 30000;
+// A product id: the app namespace, a language, and a difficulty, lower case.
+export const PRODUCT_ID_PATTERN = /^syntactical\.[a-z0-9-]+\.[a-z0-9-]+$/;
 
 // Web keyboard bindings, matched case-insensitively. A choice key's position
 // in its row of four is the choice index (1 and A select the first choice).

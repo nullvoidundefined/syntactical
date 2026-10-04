@@ -26,8 +26,10 @@ import type { BanksDeps } from './routes/banksDeps.js';
 import { createHealthRouter } from './routes/health.js';
 import type { HealthDb } from './routes/health.js';
 import { createMeRouter } from './routes/me.js';
+import { createRevenueCatWebhookRouter } from './routes/revenueCatWebhook.js';
 import { createSignOutRouter } from './routes/signOut.js';
 import type { SyncDeps } from './routes/syncDeps.js';
+import type { WebhookDeps } from './routes/webhookDeps.js';
 
 interface AppDeps {
   allowedOrigins?: string[];
@@ -40,11 +42,22 @@ interface AppDeps {
   logger?: Logger;
   // The /v1 answer event and profile routes; omitted, they are not mounted.
   sync?: SyncDeps;
+  // The /v1/webhooks routes; omitted, they are not mounted.
+  webhooks?: WebhookDeps;
 }
 
 // Builds the Express app without listening or reading env; callers inject everything.
 function createApp(deps: AppDeps) {
-  const { allowedOrigins = [], auth, banks, db, extraRoutes, logger = createLogger({ destination: process.stdout }), sync } = deps;
+  const {
+    allowedOrigins = [],
+    auth,
+    banks,
+    db,
+    extraRoutes,
+    logger = createLogger({ destination: process.stdout }),
+    sync,
+    webhooks,
+  } = deps;
   const app = express();
 
   app.set('trust proxy', 1);
@@ -53,13 +66,20 @@ function createApp(deps: AppDeps) {
   app.use(requestId);
   app.use(cors(createCorsOptions(allowedOrigins)));
   app.use(createRequestLogger(logger));
+  // The webhook router is mounted before the JSON guard, the global parser, and the CSRF guard,
+  // which do not apply to it: it authenticates first, then reads its own 64 KB body. Mounting
+  // by prefix covers every spelling Express routes to it (a trailing slash, another case).
+  if (webhooks) {
+    app.use('/v1/webhooks', createRevenueCatWebhookRouter(webhooks, logger));
+  }
   app.use(requireJson);
   // The upload route reads its larger body in its own router, after authentication; only
   // when the sync routes are mounted does the global parser skip it.
   const defaultJson = express.json({ limit: HTTP.JSON_BODY_SIZE_LIMIT });
   app.use((req, res, next) => {
     const { method, path } = req;
-    if (sync && method === 'POST' && path === SYNC.UPLOAD_PATH) {
+    const isSyncUpload = sync && method === 'POST' && path === SYNC.UPLOAD_PATH;
+    if (isSyncUpload) {
       next();
       return;
     }

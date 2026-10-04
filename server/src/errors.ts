@@ -35,6 +35,9 @@ const ERROR_CODES = {
     TIMESTAMP_OUT_OF_RANGE: 'SYNC_TIMESTAMP_OUT_OF_RANGE',
     USER_BUSY: 'SYNC_USER_BUSY',
   },
+  WEBHOOK: {
+    UNAUTHORIZED: 'WEBHOOK_UNAUTHORIZED',
+  },
 } as const;
 
 type NestedValues<T> = T extends Record<string, infer V> ? (V extends string ? V : NestedValues<V>) : never;
