@@ -48,13 +48,5 @@ describe('DifficultyStep', () => {
     expect(mockRetry).toHaveBeenCalledTimes(1);
   });
 
-  it('disables a locked paid bank, labels it, and never selects it', async () => {
-    mockBankState.current = { status: 'locked' };
-    const onSelectDifficulty = jest.fn();
-    await render(<DifficultyStep language="elixir" onSelectDifficulty={onSelectDifficulty} onBack={jest.fn()} />);
-    expect(screen.getByText('Locked')).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Hard/ })).toBeDisabled();
-    await fireEvent.press(screen.getByRole('button', { name: /Hard/ }));
-    expect(onSelectDifficulty).not.toHaveBeenCalled();
-  });
+  // A locked paid bank opens the paywall (Task 3.18); see app/__tests__/difficultyPaywall.test.tsx.
 });
