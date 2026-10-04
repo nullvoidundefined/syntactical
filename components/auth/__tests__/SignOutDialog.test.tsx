@@ -27,6 +27,7 @@ import {
   idsOf,
   readStoredLog,
   seedEventLog,
+  seedStats,
   type ApiRouter,
 } from '../../../state/__tests__/syncTestSupport';
 import './preloadNativeModal';
@@ -43,6 +44,10 @@ jest.mock('../../../clients/apiClient', () => ({
 jest.mock('../../../clients/getLatestRequestSeq', () => ({ getLatestRequestSeq: () => 0 }));
 jest.mock('../../../clients/onUnauthorized', () => ({ onUnauthorized: () => () => undefined }));
 
+// How long deleting the session value takes; a delay lets the guest's stats
+// load before sign-out finishes.
+const mockSecureStoreDelete = { delayMs: 0 };
+
 jest.mock('expo-secure-store', () => {
   const values = new Map<string, string>();
   return {
@@ -53,7 +58,7 @@ jest.mock('expo-secure-store', () => {
     },
     deleteItemAsync: (key: string) => {
       values.delete(key);
-      return Promise.resolve();
+      return new Promise((resolve) => setTimeout(resolve, mockSecureStoreDelete.delayMs));
     },
   };
 });
@@ -167,6 +172,7 @@ describe('SignOutDialog', () => {
     await AsyncStorage.clear();
     router = createApiRouter();
     mockApi.router = router;
+    mockSecureStoreDelete.delayMs = 0;
     latest.auth = null;
     latest.stats = null;
     unsynced = buildOwnedLog(3, userId);
@@ -270,5 +276,23 @@ describe('SignOutDialog', () => {
     expect((await readUserStats(userId))?.syncCursor).toBeUndefined();
     expect(latest.stats?.eventLog).toEqual([]);
     expect(await readStoredLog()).toEqual([]);
+  });
+
+  it('clears the cursor in the user\'s own stats and never writes the guest\'s stats over them', async () => {
+    router.state.isFailing = false;
+    await seedStats({ totals: { attempted: 4, correct: 1 } });
+    await mountSignedIn(router, userId, synced);
+    expect(latest.stats?.stats.totals.attempted).toBe(0);
+    mockSecureStoreDelete.delayMs = 50;
+
+    fireEvent.press(screen.getByRole('button', { name: SIGN_OUT }));
+    await waitFor(() => expect(latest.auth?.isSignedIn).toBe(false));
+    await waitFor(() => expect(latest.stats?.stats.totals.attempted).toBe(4));
+    await flush();
+
+    mockSecureStoreDelete.delayMs = 0;
+    const stored = await readUserStats(userId);
+    expect(stored?.totals).toEqual({ attempted: 0, correct: 0 });
+    expect(stored?.syncCursor).toBeUndefined();
   });
 });

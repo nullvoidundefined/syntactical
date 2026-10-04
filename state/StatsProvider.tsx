@@ -208,7 +208,9 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
     async (events: AnswerEvent[], cursor: string | null, userId: string) => {
       if (!isHydrated) return;
       await requirePersisted(changeSlot(eventLogSlot, (current) => mergeDownloaded(current, events, userId)));
-      if (cursor === null) return;
+      // The stats slot's value follows the owner, so a cursor written after
+      // the owner changed would land in the next owner's stats.
+      if (cursor === null || ownerRef.current !== userId) return;
       await requirePersisted(changeSlot(statsSlot, (current) => ({ ...current, syncCursor: cursor, syncCursorOwner: userId })));
     },
     [eventLogSlot, isHydrated, statsSlot],

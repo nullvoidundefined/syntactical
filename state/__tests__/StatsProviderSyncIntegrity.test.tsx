@@ -180,6 +180,26 @@ describe('StatsProvider sync cursor ownership', () => {
     expect(latest.readSyncCursor(userA)).toBeNull();
     expect(await readStoredStats(userA)).toEqual(seeded);
   });
+
+  it('writes no cursor when the owner changes while the event-log write is pending', async () => {
+    const view = await renderHydrated(userA);
+    const hold = holdNextEventLogWrite();
+    const downloaded = buildAnswerEvent();
+    let merge: ReturnType<typeof track> | undefined;
+    await act(async () => {
+      merge = track(latest.mergeDownloadedEvents([downloaded], buildCursor(), userA));
+    });
+    await waitFor(() => expect(hold.isReached()).toBe(true));
+    await view.rerender(<StatsProvider ownerUserId={userB}><IntegrityProbe /></StatsProvider>);
+    await act(async () => hold.release());
+    await waitFor(() => expect(merge?.isSettled).toBe(true));
+    await flushTurns();
+    expect((await readStoredStats(userA))?.syncCursor).toBeUndefined();
+    expect((await readStoredStats(userB))?.syncCursor).toBeUndefined();
+    expect(latest.stats.syncCursor).toBeUndefined();
+    expect(latest.readSyncCursor(userB)).toBeNull();
+    expect(latest.readSyncCursor(userA)).toBeNull();
+  });
 });
 
 describe('StatsProvider sync actions report a failed event-log write', () => {

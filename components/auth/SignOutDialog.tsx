@@ -112,11 +112,12 @@ export function SignOutDialog() {
     setIsBusy(value);
   }
 
-  // The server holds the user's synced history; a failed removal only leaves
-  // events no other owner sees.
+  // The cursor is cleared while the user still owns the stats, before
+  // sign-out loads the guest's. The server holds the user's synced history;
+  // a failed removal only leaves events no other owner sees.
   async function finishSignOut(userId: string) {
-    await signOut();
     clearSyncCursor();
+    await signOut();
     await removeUserEvents(userId).catch(() => undefined);
   }
 
