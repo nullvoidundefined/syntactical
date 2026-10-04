@@ -32,7 +32,10 @@ scan_image() {
         echo "scan: a layer holds a key file or an .ssh directory: $(grep -E -e "$path_pattern" "$work/listing" | head -3 | tr '\n' ' ')" >&2
         found=1
       fi
-      if tar -xOf "$blob" 2>/dev/null | grep -aEq -e "$content_pattern"; then
+      # Extract to a file and grep the file: grep -q on a pipe exits at its first match, the
+      # writer then dies of SIGPIPE, and pipefail turns that into a false "no match".
+      tar -xOf "$blob" >"$work/layer.bytes" 2>/dev/null || true
+      if grep -aEq -e "$content_pattern" "$work/layer.bytes"; then
         echo "scan: a layer holds private key material" >&2
         found=1
       fi
@@ -53,11 +56,13 @@ if [ "${1:-}" = --self-test ]; then
   trap 'docker image rm "$tag" >/dev/null 2>&1 || true' EXIT
   # Both plants are assembled at run time inside the build, so neither this file nor the build
   # history carries a key-shaped literal; only the layer content does. That exercises the layer
-  # scan on its own.
+  # scan on its own. The key sits ahead of 16 MB of filler in the same layer, so a scan that
+  # stops reading at its first match (and trips pipefail on the writer's SIGPIPE) would miss it.
   docker build --quiet --label throwaway=syntactical-scan-selftest -t "$tag" - >/dev/null <<'DOCKERFILE'
 FROM node:22.21.1-bookworm-slim
 RUN d=.ss; n=25519; mkdir -p "/root/${d}h" && : > "/root/${d}h/id_ed${n}" \
-    && a='-----BEGIN OPENSSH PRIV'; b='ATE KEY-----'; printf '%s%s\n' "$a" "$b" > /tmp/planted
+    && a='-----BEGIN OPENSSH PRIV'; b='ATE KEY-----'; printf '%s%s\n' "$a" "$b" > /tmp/a_planted \
+    && head -c 16000000 /dev/zero > /tmp/z_filler
 DOCKERFILE
   output="$(scan_image "$tag" 2>&1 || true)"
   if grep -q 'key file or an .ssh directory' <<<"$output" && grep -q 'a layer holds private key material' <<<"$output"; then
