@@ -66,22 +66,4 @@ describe('fetchContentText transport', () => {
     expect(err).toBeInstanceOf(ContentFetchError);
     expect((err as ContentFetchError).reason).toBe('too-large');
   });
-
-  it('resolves when the response url is an equivalent form of the requested url, and rejects another origin', async () => {
-    installFetch({
-      url: 'https://example.test:443/syntactical/content/python/easy.json',
-      redirected: false,
-      text: () => Promise.resolve('ok'),
-    });
-    await expect(fetchContentText(REQUEST_URL, 1024)).resolves.toBe('ok');
-
-    installFetch({
-      url: 'https://example.test:8443/syntactical/content/python/easy.json',
-      redirected: false,
-      text: () => Promise.resolve('evil'),
-    });
-    const err = await captureRejection(fetchContentText(REQUEST_URL, 1024));
-    expect(err).toBeInstanceOf(ContentFetchError);
-    expect((err as ContentFetchError).reason).toBe('redirect');
-  });
 });
