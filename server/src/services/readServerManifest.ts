@@ -61,10 +61,11 @@ async function readServerManifest(contentDir: string, paidContentDir?: string): 
     for (const [difficulty, entry] of Object.entries(banks)) {
       const root = pickRoot(entry, contentDir, paidContentDir);
       if (root === null) continue;
-      const forbiddenDir = entry.access === 'paid' ? contentDir : undefined;
-      const bank = await readBank(root, language, entry, forbiddenDir);
+      const { access, path } = entry;
+      const isPaid = access === 'paid';
+      const bank = await readBank(root, language, entry, isPaid ? contentDir : undefined);
       if (bank) answerKey.set(`${id}/${difficulty}`, bank);
-      else if (entry.access === 'paid') throw new Error(`Paid bank missing: ${entry.path}`);
+      else if (isPaid) throw new Error(`Paid bank missing: ${path}`);
     }
   }
   return answerKey;

@@ -36,13 +36,14 @@ function createBanksRouter(deps: ResolvedBanksDeps): Router {
         res.status(NOT_FOUND).json(createErrorResponse(ERROR_CODES.ROUTING.NOT_FOUND, 'Not found', requestId));
         return;
       }
-      if (!(await hasEntitlement(database, session.userId, bank.productId))) {
+      const { body, productId } = bank;
+      if (!(await hasEntitlement(database, session.userId, productId))) {
         res
           .status(FORBIDDEN)
           .json(createErrorResponse(ERROR_CODES.ENTITLEMENT.REQUIRED, 'This bank requires a purchase', requestId));
         return;
       }
-      res.status(OK).type('application/json').send(bank.body);
+      res.status(OK).type('application/json').send(body);
     },
   );
 

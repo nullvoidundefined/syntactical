@@ -8,8 +8,12 @@ import type { Manifest } from '@syntactical/content-schema';
 async function readManifest(contentDir: string): Promise<Manifest> {
   const manifestText = await readFile(join(contentDir, 'manifest.json'), 'utf8');
   const manifestResult = validateManifest(JSON.parse(manifestText) as unknown);
-  if ('rule' in manifestResult) throw new Error(`Invalid manifest: ${manifestResult.rule}`);
-  return manifestResult.manifest;
+  if ('rule' in manifestResult) {
+    const { rule } = manifestResult;
+    throw new Error(`Invalid manifest: ${rule}`);
+  }
+  const { manifest } = manifestResult;
+  return manifest;
 }
 
 export { readManifest };
