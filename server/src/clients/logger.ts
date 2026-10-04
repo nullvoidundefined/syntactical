@@ -29,8 +29,19 @@ function serializeError(value: unknown): Record<string, unknown> {
 function createLogger({ destination }: { destination: LoggerDestination }): Logger {
   return pino(
     {
+      hooks: {
+        // With no message argument pino copies the Error's message into msg, whether the
+        // Error is the first argument or under err; log it under err with its name as msg.
+        logMethod(args, method) {
+          const [first, ...rest] = args as unknown[];
+          const err = first instanceof Error ? first : (first as { err?: unknown } | null)?.err;
+          const object = first instanceof Error ? { err: first } : first;
+          const message = rest.length === 0 && err instanceof Error ? [err.name] : rest;
+          method.apply(this, [object, ...message] as Parameters<typeof method>);
+        },
+      },
       redact: { censor: '[REDACTED]', paths: REDACT_PATHS },
-      serializers: { err: serializeError },
+      serializers: { cause: serializeError, err: serializeError },
     },
     destination,
   );

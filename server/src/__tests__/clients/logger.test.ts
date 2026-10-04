@@ -62,4 +62,27 @@ describe('createLogger', () => {
     expect(entry.err).toEqual({ constraint: PG_EMAIL_CONSTRAINT, name: 'Error', pgCode: PG_UNIQUE_VIOLATION });
     expect(lines.join('\n')).not.toContain(email);
   });
+
+  it('never writes the message of a bare Error logged as the first argument', () => {
+    const email = `${runTimeValue()}@example.test`;
+    const { lines, logger } = capture();
+    logger.error(Object.assign(new Error(`duplicate key for ${email}`), { code: PG_UNIQUE_VIOLATION }));
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).not.toContain(email);
+    expect((JSON.parse(lines[0] ?? '{}') as { err?: unknown }).err).toEqual({ name: 'Error', pgCode: PG_UNIQUE_VIOLATION });
+  });
+
+  it('logs an Error under cause by name, pg code, and constraint only', () => {
+    const email = `${runTimeValue()}@example.test`;
+    const error = Object.assign(new Error(`duplicate key for ${email}`), {
+      code: PG_UNIQUE_VIOLATION,
+      constraint: PG_EMAIL_CONSTRAINT,
+      detail: `Key (email)=(${email}) already exists.`,
+    });
+    const { lines, logger } = capture();
+    logger.error({ cause: error }, 'insert failed');
+    const entry = JSON.parse(lines[0] ?? '{}') as { cause?: unknown };
+    expect(entry.cause).toEqual({ constraint: PG_EMAIL_CONSTRAINT, name: 'Error', pgCode: PG_UNIQUE_VIOLATION });
+    expect(lines.join('\n')).not.toContain(email);
+  });
 });
