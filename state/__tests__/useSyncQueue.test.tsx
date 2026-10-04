@@ -33,7 +33,6 @@ jest.mock('../../clients/apiClient', () => ({
     return mockApi.router.request(path, init);
   },
 }));
-jest.mock('../../clients/getLatestRequestSeq', () => ({ getLatestRequestSeq: () => 0 }));
 jest.mock('../../clients/onUnauthorized', () => ({ onUnauthorized: () => () => undefined }));
 
 type NetListener = (state: { isConnected: boolean | null; isInternetReachable: boolean | null }) => void;

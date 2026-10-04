@@ -32,7 +32,6 @@ jest.mock('../../clients/apiClient', () => ({
 jest.mock('../../state/SyncProvider', () => ({
   useSync: () => ({ cancelPass: () => undefined, isSyncing: false, isUploadCapReached: false, syncNow: () => Promise.resolve(true) }),
 }));
-jest.mock('../../clients/getLatestRequestSeq', () => ({ getLatestRequestSeq: () => 0 }));
 jest.mock('../../clients/onUnauthorized', () => ({ onUnauthorized: () => () => undefined }));
 jest.mock('../../components/layout/ReviewDueLink', () => ({ ReviewDueLink: () => null }));
 jest.mock('../../components/layout/DownloadIndicator', () => ({ DownloadIndicator: () => null }));

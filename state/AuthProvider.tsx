@@ -4,10 +4,8 @@
 // the ids that have signed in on this device). The first sign-in of an id on
 // this device raises guestClaimUserId until completeGuestClaim(userId), and
 // only then is the id stored as known, so a claim that never completed is
-// raised again on the next launch. Sign-out clears local state even when the server call fails, a
-// 401 for a request sent after the current sign-in signs the user out locally
-// (an older request's 401 is ignored), and calls made before hydration wait
-// for it. After the server deletes the account, signOutDeletedAccount signs
+// raised again on the next launch. Sign-out clears local state even when the server call fails, any
+// 401 signs the user out locally, and calls made before hydration wait for it. After the server deletes the account, signOutDeletedAccount signs
 // out with no request and names the deleted id in deletedUserId, so the stats
 // layer removes that user's local data. The session value, email, and code
 // are never logged or stored outside the secure store. The RevenueCat purchaser
@@ -29,7 +27,6 @@ import { Platform } from 'react-native';
 
 import { apiFetch } from '../clients/apiClient';
 import { clearSessionToken } from '../clients/clearSessionToken';
-import { getLatestRequestSeq } from '../clients/getLatestRequestSeq';
 import { logWarning } from '../clients/logClient';
 import { onUnauthorized } from '../clients/onUnauthorized';
 import { identifyPurchaser, resetPurchaser } from '../clients/purchasesIdentity';
@@ -89,7 +86,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     hydration.current = { promise, resolve };
   }
-  const signInSeq = useRef(0);
   const signInCount = useRef(0);
   const verifyRun = useRef<Promise<AuthResult> | null>(null);
 
@@ -103,37 +99,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setKnownUserIdsState(next);
   }, []);
 
-  // Writes the identity, merged with what storage holds so ids this session
-  // never read (a failed hydration read) are not lost; a write is skipped when
-  // storage cannot be read at all.
-  const persist = useCallback((nextUserId: string | null, droppedUserId?: string) => {
-    const memoryKnown = knownRef.current.filter((id) => id !== droppedUserId);
-    writeQueue.current = writeQueue.current.then(async () => {
-      const { isReadFailed, value } = await readStoredJson(AUTH_STORAGE_KEY);
-      if (isReadFailed) return;
-      const stored = resolveStoredAuth(value);
-      const merged = Array.from(new Set([...(stored?.knownUserIds ?? []), ...memoryKnown])).filter(
-        (id) => id !== droppedUserId,
-      );
-      await writeJson(AUTH_STORAGE_KEY, { knownUserIds: merged, userId: nextUserId });
-    });
+  // Writes the identity: the current user id and the known ids held in memory.
+  const persist = useCallback((nextUserId: string | null) => {
+    const knownUserIds = knownRef.current;
+    writeQueue.current = writeQueue.current.then(() =>
+      writeJson(AUTH_STORAGE_KEY, { knownUserIds, userId: nextUserId }),
+    );
   }, []);
 
-  const signOutLocally = useCallback(
-    async (droppedUserId?: string) => {
-      setUserId(null);
-      persist(null, droppedUserId);
-      void resetPurchaser();
-      try {
-        await clearSessionToken();
-      } catch (err) {
-        // Local state is already signed out; record the failure without any value.
-        const cause = err instanceof Error ? err : new Error('secure store delete failed');
-        logWarning({ err: cause }, 'session value delete failed on sign-out');
-      }
-    },
-    [persist, setUserId],
-  );
+  const signOutLocally = useCallback(async () => {
+    setUserId(null);
+    persist(null);
+    void resetPurchaser();
+    try {
+      await clearSessionToken();
+    } catch (err) {
+      // Local state is already signed out; record the failure without any value.
+      const cause = err instanceof Error ? err : new Error('secure store delete failed');
+      logWarning({ err: cause }, 'session value delete failed on sign-out');
+    }
+  }, [persist, setUserId]);
 
   useEffect(() => {
     let isActive = true;
@@ -156,8 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(
     () =>
-      onUnauthorized(({ requestSeq }) => {
-        if (requestSeq <= signInSeq.current) return;
+      onUnauthorized(() => {
         void signOutLocally();
       }),
     [signOutLocally],
@@ -197,7 +181,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (isNative && sessionValue !== null) {
           await writeSessionToken(sessionValue);
         }
-        signInSeq.current = getLatestRequestSeq();
         signInCount.current += 1;
         setUserId(sessionUserId);
         persist(sessionUserId);
@@ -247,7 +230,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setDeletedUserId(deletedId);
       // The deleted id is forgotten: it leaves the known ids, in memory and in storage.
       setKnownUserIds(knownRef.current.filter((id) => id !== deletedId));
-      await signOutLocally(deletedId);
+      await signOutLocally();
     },
     [setKnownUserIds, signOutLocally],
   );

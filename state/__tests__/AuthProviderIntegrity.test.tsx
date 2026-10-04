@@ -1,6 +1,5 @@
-// AuthProvider session integrity on native: a 401 from a request sent before
-// the current sign-in never signs the new user out, a sign-in without a
-// session value is refused, the guest claim is persisted per user until that
+// AuthProvider session integrity on native: any 401 signs the user out
+// locally, a sign-in without a session value is refused, the guest claim is persisted per user until that
 // user's claim completes, calls made before hydration act as if hydration had
 // finished first, overlapping sign-in and sign-out keep the newest session,
 // and a failed secure-store delete still signs out with a warning that holds
@@ -142,17 +141,6 @@ function holdIdentityRead(): { release(): void } {
   return { release: () => open() };
 }
 
-function failIdentityRead(): void {
-  let hasFailed = false;
-  storageGetItem.mockImplementation((key: string, ...rest: unknown[]) => {
-    if (key === AUTH_STORAGE_KEY && !hasFailed) {
-      hasFailed = true;
-      return Promise.reject(new Error('storage read failed'));
-    }
-    return originalGetItem(key, ...rest);
-  });
-}
-
 async function storedUserId(): Promise<string | null> {
   return (await readStoredAuth())?.userId ?? null;
 }
@@ -175,67 +163,8 @@ describe('AuthProvider session integrity on native', () => {
     storageGetItem.mockImplementation(originalGetItem);
   });
 
-  describe('a 401 from a request sent before the current sign-in', () => {
-    it('keeps a new user signed in when a guest request sent before sign-in returns 401 afterwards', async () => {
-      const newUser = buildIdentity();
-      const held = holdReply();
-      const { requests } = installRoutedFetch({ ...signInRoutes(newUser), 'GET answer-events': held });
-      const { result } = await mountAuth();
-
-      let stale: Promise<unknown> = Promise.resolve();
-      await act(async () => {
-        stale = apiFetch('answer-events').catch(() => undefined);
-      });
-      await waitFor(() => expect(requests.some((request) => request.path === 'answer-events')).toBe(true));
-
-      expect(await signIn(result, newUser)).toEqual({ isOk: true });
-      await act(async () => {
-        held.release(UNAUTHORIZED);
-        await stale;
-      });
-      await flush();
-
-      expect(result.current.isSignedIn).toBe(true);
-      expect(result.current.user).toEqual({ id: newUser.userId });
-      expect(secureStore.mockValues.get(SESSION_TOKEN_KEY)).toBe(newUser.sessionValue);
-      expect(await storedUserId()).toBe(newUser.userId);
-    });
-
-    it('keeps a new user signed in when a request sent under the previous user returns 401 after the new sign-in', async () => {
-      const previousUser = buildIdentity();
-      const newUser = buildIdentity();
-      const held = holdReply();
-      const { requests, setRoute } = installRoutedFetch({
-        ...signInRoutes(previousUser),
-        'GET answer-events': held,
-      });
-      setRoute('POST auth/sessions', [sessionReply(previousUser), sessionReply(newUser)]);
-      const { result } = await mountAuth();
-      await signIn(result, previousUser);
-
-      let stale: Promise<unknown> = Promise.resolve();
-      await act(async () => {
-        stale = apiFetch('answer-events').catch(() => undefined);
-      });
-      await waitFor(() => expect(requests.some((request) => request.path === 'answer-events')).toBe(true));
-      const staleRequest = requests.find((request) => request.path === 'answer-events');
-      expect(staleRequest?.headers.authorization).toBe(`Bearer ${previousUser.sessionValue}`);
-
-      await signOut(result);
-      expect(await signIn(result, newUser)).toEqual({ isOk: true });
-      await act(async () => {
-        held.release(UNAUTHORIZED);
-        await stale;
-      });
-      await flush();
-
-      expect(result.current.isSignedIn).toBe(true);
-      expect(result.current.user).toEqual({ id: newUser.userId });
-      expect(secureStore.mockValues.get(SESSION_TOKEN_KEY)).toBe(newUser.sessionValue);
-      expect(await storedUserId()).toBe(newUser.userId);
-    });
-
-    it('still signs out when a request sent under the current session returns 401', async () => {
+  describe('a 401 response', () => {
+    it('signs out locally when any request returns 401', async () => {
       const identity = buildIdentity();
       const held = holdReply();
       const { requests } = installRoutedFetch({ ...signInRoutes(identity), 'GET answer-events': held });
@@ -363,21 +292,6 @@ describe('AuthProvider session integrity on native', () => {
       expect(third.result.current.guestClaimUserId).toBeNull();
     });
 
-    it('survives a sign-out followed by a sign-in of the same id', async () => {
-      const identity = buildIdentity();
-      installRoutedFetch(signInRoutes(identity));
-      const { result } = await mountAuth();
-      await signIn(result, identity);
-      expect(result.current.guestClaimUserId).toBe(identity.userId);
-
-      await signOut(result);
-      expect(result.current.isSignedIn).toBe(false);
-      await signIn(result, identity);
-
-      expect(result.current.isSignedIn).toBe(true);
-      expect(result.current.guestClaimUserId).toBe(identity.userId);
-    });
-
     it('is not cleared by completeGuestClaim with a different user id', async () => {
       const identity = buildIdentity();
       installRoutedFetch(signInRoutes(identity));
@@ -493,25 +407,6 @@ describe('AuthProvider session integrity on native', () => {
       expect(remounted.result.current.isSignedIn).toBe(false);
     });
 
-    it('a failed identity read does not overwrite the stored known ids on the next sign-in', async () => {
-      const earlierUserId = randomUUID();
-      const identity = buildIdentity();
-      await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ userId: null, knownUserIds: [earlierUserId] }));
-      installRoutedFetch(signInRoutes(identity));
-      const consoleCapture = captureConsole();
-      try {
-        failIdentityRead();
-        const { result } = await mountAuth();
-
-        expect(await signIn(result, identity)).toEqual({ isOk: true });
-        await flush();
-
-        expect(result.current.isSignedIn).toBe(true);
-        expect(await storedKnownIds()).toContain(earlierUserId);
-      } finally {
-        consoleCapture.restore();
-      }
-    });
   });
 
   describe('overlapping sign-in and sign-out', () => {

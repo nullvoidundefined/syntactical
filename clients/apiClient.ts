@@ -123,7 +123,7 @@ function createTimeoutRace(controller: AbortController): {
   return { clear: () => clearTimeout(timer), promise };
 }
 
-async function handleUnauthorized(sentSession: string | null, requestSeq: number): Promise<void> {
+async function handleUnauthorized(sentSession: string | null): Promise<void> {
   try {
     if (sentSession !== null && (await readSessionToken()) === sentSession) {
       await clearSessionToken();
@@ -133,7 +133,7 @@ async function handleUnauthorized(sentSession: string | null, requestSeq: number
   }
   apiRequestState.unauthorizedHandlers.forEach((handler) => {
     try {
-      handler({ requestSeq });
+      handler();
     } catch {
       // One failing handler never blocks the rest.
     }
@@ -141,7 +141,6 @@ async function handleUnauthorized(sentSession: string | null, requestSeq: number
 }
 
 export async function apiFetch(path: string, init: ApiRequestInit = {}): Promise<ApiResponse> {
-  const requestSeq = (apiRequestState.latestRequestSeq += 1);
   const url = resolveRequestUrl(path);
   const { body, method, responseType = 'json' } = init;
   const hasBody = body !== undefined;
@@ -168,7 +167,7 @@ export async function apiFetch(path: string, init: ApiRequestInit = {}): Promise
     timeout.clear();
   }
   if (result.status === HTTP_STATUS_UNAUTHORIZED) {
-    await handleUnauthorized(sentSession, requestSeq);
+    await handleUnauthorized(sentSession);
   }
   return result;
 }
