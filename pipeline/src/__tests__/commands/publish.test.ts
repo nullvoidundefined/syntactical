@@ -339,16 +339,23 @@ describe('publish: paid banks', () => {
         expect(questions[0]).toMatchObject({ id: 'm-1', topic: 'strings' });
     });
 
-    it('moves a paid bank still in the content dir to the content root and leaves the public copy alone', async () => {
+    // B-60: paid banks live only in the private content repo, so a paid file under content/ is
+    // refused before anything is written, not read as a source.
+    it('refuses a paid bank file under the content dir and writes nothing', async () => {
         await rm(join(dirs.contentRoot, 'python', 'medium.json'));
         const publicPaid = join(dirs.contentDir, 'python', 'medium.json');
         await writeJson(publicPaid, { questions: [buildQuestion('m-1')], schemaVersion: 2 });
         const before = await readFile(publicPaid, 'utf8');
-        await writeReport({ 'm-1': 'passed' });
-        await run();
+        const easyFile = join(dirs.contentDir, 'python', 'easy.json');
+        const easyBefore = await readFile(easyFile, 'utf8');
+        await writeReport({ 'm-1': 'passed', 'q-1': 'passed', 'q-2': 'passed' });
 
-        expect(readIds(await readBank(join(dirs.contentRoot, 'python', 'medium.json')))).toEqual(['m-1']);
+        await expect(run()).rejects.toThrow('paid bank in public content: python/medium');
+
+        const privatePaid = join(dirs.contentRoot, 'python', 'medium.json');
+        expect(await stat(privatePaid).then(() => true, () => false)).toBe(false);
         expect(await readFile(publicPaid, 'utf8')).toBe(before);
+        expect(await readFile(easyFile, 'utf8')).toBe(easyBefore);
     });
 });
 
