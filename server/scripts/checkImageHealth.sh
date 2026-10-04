@@ -15,7 +15,7 @@ image="${1:?usage: checkImageHealth.sh <image>}"
 : "${DATABASE_URL:?DATABASE_URL must be set}"
 network="${DOCKER_NETWORK:-host}"
 root="$(cd "$(dirname "$0")/../.." && pwd)"
-start_command="$(node -e "console.log(require('$root/server/railway.json').deploy.startCommand)")"
+start_command="$(node -e "console.log(require('$root/railway.json').deploy.startCommand)")"
 name="syntactical-image-check-$$"
 
 # Random run-time values, never stored anywhere.
