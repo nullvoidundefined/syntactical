@@ -15,7 +15,12 @@ function buildAbQuestion(criterionType: string, isHumanReviewed: boolean): Recor
         criterion: { evidence: 'Option A says what it does in one call.', statement: 'Easier to read', type: criterionType },
         id: 'q-ab',
         prompt: 'Which is easier to read?',
-        provenance: { isHumanReviewed, source: 'generated', validation: { method: 'judged', status: 'passed' } },
+        // Only readability cards are judged; performance and correctness cards are executed.
+        provenance: {
+            isHumanReviewed,
+            source: 'generated',
+            validation: { method: criterionType === 'readability' ? 'judged' : 'executed', status: 'passed' },
+        },
         query: { explanation: 'e', title: 't' },
         topic: 'iterables',
         type: 'ab',
