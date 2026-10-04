@@ -24,6 +24,9 @@ interface TestClock {
 }
 
 interface AuthTestAppOptions {
+    // The deletion's scrub caps (B-59.13); production defaults when omitted.
+    deletionScrubMaxBytes?: number;
+    deletionScrubMaxRows?: number;
     // The deletion transaction's statement_timeout; production default when omitted.
     deletionStatementTimeoutMs?: number;
     // Probe routes for one test, mounted after the auth routes; they get the test's clock.
@@ -37,6 +40,8 @@ interface AuthTestAppOptions {
 
 export function createAuthTestApp(options: AuthTestAppOptions) {
     const {
+        deletionScrubMaxBytes,
+        deletionScrubMaxRows,
         deletionStatementTimeoutMs,
         extraRoutes,
         isCookieSecure = true,
@@ -68,6 +73,8 @@ export function createAuthTestApp(options: AuthTestAppOptions) {
         allowedOrigins: [ALLOWED_ORIGIN],
         auth: {
             database: pool,
+            deletionScrubMaxBytes,
+            deletionScrubMaxRows,
             deletionStatementTimeoutMs,
             emailClient,
             isCookieSecure,

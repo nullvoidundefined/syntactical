@@ -54,11 +54,20 @@ function createApp(deps: AppDeps) {
 
   if (auth) {
     const {
+      deletionScrubMaxBytes = AUTH.DELETION.SCRUB_MAX_BYTES,
+      deletionScrubMaxRows = AUTH.DELETION.SCRUB_MAX_ROWS,
       deletionStatementTimeoutMs = AUTH.DELETION.STATEMENT_TIMEOUT_MS,
       now = () => new Date(),
       randomInt: codeGenerator = randomInt,
     } = auth;
-    const resolved: ResolvedAuthDeps = { ...auth, deletionStatementTimeoutMs, now, randomInt: codeGenerator };
+    const resolved: ResolvedAuthDeps = {
+      ...auth,
+      deletionScrubMaxBytes,
+      deletionScrubMaxRows,
+      deletionStatementTimeoutMs,
+      now,
+      randomInt: codeGenerator,
+    };
     app.use(
       '/v1/auth',
       createAuthCodesRouter(resolved, logger),

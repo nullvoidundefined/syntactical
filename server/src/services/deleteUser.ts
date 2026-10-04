@@ -11,7 +11,9 @@
 // changed nothing, when no such user exists, including when a concurrent deletion of the same user won the
 // email's advisory lock first (B-59.6: the user row is re-checked after the lock, before the codes go). The row
 // lock's result is checked too and also resolves false, but by then the email's codes are already deleted;
-// only a user row removed outside the advisory lock reaches that branch. Nothing here logs the email or id.
+// only a user row removed outside the advisory lock reaches that branch. The scrub is bounded (B-59.13): before any
+// payload is loaded, the candidate set is measured in SQL, and over the row or byte cap it throws
+// DeletionTooLargeError (the transaction rolls back). Nothing here logs the email or id.
 import type pg from 'pg';
 
 import { AUTH } from '../constants/auth.js';
@@ -19,6 +21,7 @@ import { AUTH } from '../constants/auth.js';
 import { carriesPurchaseIdentity } from './carriesPurchaseIdentity.js';
 import { deleteRateLimitCountersForEmail } from './deleteRateLimitCountersForEmail.js';
 import { deleteRateLimitCountersForUser } from './deleteRateLimitCountersForUser.js';
+import { DeletionTooLargeError } from './deletionTooLargeError.js';
 import { exceedsDepthCap } from './exceedsDepthCap.js';
 import { normalizeEmail } from './normalizeEmail.js';
 import type { PurchaseIdentity } from './purchaseIdentity.js';
@@ -26,6 +29,9 @@ import { scrubPurchasePayload } from './scrubPurchasePayload.js';
 
 interface DeleteUserInput {
   rateLimitKeySecret: string;
+  // The scrub's caps on candidate payload text and rows; default to AUTH.DELETION.SCRUB_MAX_BYTES and SCRUB_MAX_ROWS.
+  scrubMaxBytes?: number;
+  scrubMaxRows?: number;
   // The transaction's statement_timeout in milliseconds; defaults to AUTH.DELETION.STATEMENT_TIMEOUT_MS.
   statementTimeoutMs?: number;
   userId: string;
@@ -53,19 +59,52 @@ function isChosenRow(rowUserId: string | null, payload: unknown, userId: string,
   );
 }
 
-async function scrubPurchaseEvents(client: pg.PoolClient, identity: { email: string; userId: string }): Promise<void> {
-  const { email, userId } = identity;
-  // The SQL is a superset (it also folds NFKC forms and takes every payload holding a `%` or a fullwidth `％`, which
-  // may carry the email or id percent-encoded); it takes no row lock. The JS predicate chooses the rows, and only
-  // those are locked.
-  const { rows: candidates } = await client.query<PurchaseEventRow>(
-    `SELECT provider, provider_event_id, payload, user_id FROM purchase_events
-     WHERE user_id = $1
+interface ScrubCaps {
+  maxBytes: number;
+  maxRows: number;
+}
+
+// The candidate prefilter, shared by the measure and the read ($1 user id, $2 email pattern, $3 id pattern).
+const CANDIDATE_FILTER = `user_id = $1
         OR lower(normalize(payload::text, NFKC)) LIKE $2 ESCAPE '\\'
         OR lower(normalize(payload::text, NFKC)) LIKE $3 ESCAPE '\\'
-        OR normalize(payload::text, NFKC) LIKE '%\\%%' ESCAPE '\\'`,
-    [userId, containsPattern(email), containsPattern(userId)],
+        OR normalize(payload::text, NFKC) LIKE '%\\%%' ESCAPE '\\'`;
+
+// Throws DeletionTooLargeError when the candidate set is over the row or byte cap. Measured in SQL and bounded by
+// LIMIT maxRows + 1, so the count itself is bounded and nothing is loaded into Node over a cap.
+async function assertWithinScrubCaps(client: pg.PoolClient, patterns: string[], caps: ScrubCaps): Promise<void> {
+  const { maxBytes, maxRows } = caps;
+  const { rows: measured } = await client.query<{ bytes: string; row_count: string }>(
+    `SELECT count(*) AS row_count, coalesce(sum(length(payload::text)), 0) AS bytes
+     FROM (SELECT payload FROM purchase_events WHERE ${CANDIDATE_FILTER} LIMIT $4) AS bounded`,
+    [...patterns, maxRows + 1],
   );
+  const [{ bytes, row_count: rowCount }] = measured;
+  if (Number(rowCount) > maxRows || Number(bytes) > maxBytes) {
+    throw new DeletionTooLargeError();
+  }
+}
+
+async function scrubPurchaseEvents(
+  client: pg.PoolClient,
+  identity: { email: string; userId: string },
+  caps: ScrubCaps,
+): Promise<void> {
+  const { email, userId } = identity;
+  const { maxRows } = caps;
+  const patterns = [userId, containsPattern(email), containsPattern(userId)];
+  await assertWithinScrubCaps(client, patterns, caps);
+  // The SQL is a superset (it also folds NFKC forms and takes every payload holding a `%` or a fullwidth `％`, which
+  // may carry the email or id percent-encoded); it takes no row lock. The JS predicate chooses the rows, and only
+  // those are locked. The read stays bounded too: rows committed after the measure cannot push it past the cap.
+  const { rows: candidates } = await client.query<PurchaseEventRow>(
+    `SELECT provider, provider_event_id, payload, user_id FROM purchase_events
+     WHERE ${CANDIDATE_FILTER} LIMIT $4`,
+    [...patterns, maxRows + 1],
+  );
+  if (candidates.length > maxRows) {
+    throw new DeletionTooLargeError();
+  }
   const chosen = candidates.filter(({ payload, user_id: rowUserId }) =>
     isChosenRow(rowUserId, payload, userId, identity),
   );
@@ -112,7 +151,13 @@ async function scrubPurchaseEvents(client: pg.PoolClient, identity: { email: str
 }
 
 async function deleteUser(client: pg.PoolClient, input: DeleteUserInput): Promise<boolean> {
-  const { rateLimitKeySecret, statementTimeoutMs = AUTH.DELETION.STATEMENT_TIMEOUT_MS, userId } = input;
+  const {
+    rateLimitKeySecret,
+    scrubMaxBytes = AUTH.DELETION.SCRUB_MAX_BYTES,
+    scrubMaxRows = AUTH.DELETION.SCRUB_MAX_ROWS,
+    statementTimeoutMs = AUTH.DELETION.STATEMENT_TIMEOUT_MS,
+    userId,
+  } = input;
   // set_config(..., true) is SET LOCAL with bind parameters; a bare number is read as milliseconds.
   await client.query("SELECT set_config('lock_timeout', $1, true), set_config('statement_timeout', $2, true)", [
     String(AUTH.DELETION.LOCK_TIMEOUT_MS),
@@ -136,7 +181,7 @@ async function deleteUser(client: pg.PoolClient, input: DeleteUserInput): Promis
   if (locked.rows.length === 0) {
     return false;
   }
-  await scrubPurchaseEvents(client, { email, userId });
+  await scrubPurchaseEvents(client, { email, userId }, { maxBytes: scrubMaxBytes, maxRows: scrubMaxRows });
   await deleteRateLimitCountersForEmail(client, rateLimitKeySecret, email);
   await deleteRateLimitCountersForUser(client, rateLimitKeySecret, userId);
   await client.query('DELETE FROM users WHERE id = $1', [userId]);

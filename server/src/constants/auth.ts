@@ -16,6 +16,10 @@ const AUTH = {
     // Postgres lock_timeout for the deletion transaction: how long it waits on the email's
     // advisory lock or a row lock before failing (and rolling back).
     LOCK_TIMEOUT_MS: 5_000,
+    // The purchase scrub reads at most this many candidate rows and this much candidate payload text (the sum of
+    // the payload text lengths, in characters); over either cap the deletion rolls back and answers 503 (B-59.13).
+    SCRUB_MAX_BYTES: 5_000_000,
+    SCRUB_MAX_ROWS: 1_000,
     // Postgres statement_timeout for the deletion transaction: the cap on any one statement.
     STATEMENT_TIMEOUT_MS: 15_000,
   },

@@ -8,6 +8,10 @@ interface AuthDeps {
   database: Database;
   // The account deletion transaction's statement_timeout; tests inject a short one. Defaults to
   // AUTH.DELETION.STATEMENT_TIMEOUT_MS.
+  deletionScrubMaxBytes?: number;
+  // The purchase scrub's caps on candidate rows and payload text (B-59.13); tests inject small ones. Default to
+  // AUTH.DELETION.SCRUB_MAX_ROWS and SCRUB_MAX_BYTES.
+  deletionScrubMaxRows?: number;
   deletionStatementTimeoutMs?: number;
   emailClient: EmailClient;
   // Secure on the session cookie; false only under NODE_ENV=test.
