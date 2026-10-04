@@ -1,5 +1,5 @@
 // Settings route: the daily goal (10, 20, or 50 XP, in force from today on)
-// and the account: sign in for a guest, sign out for a signed-in user. A
+// and the account: sign in for a guest, sign out and delete account for a signed-in user. A
 // guest's goal is stored on the device; a signed-in user's goal is sent with
 // PATCH /v1/me and stored on the device once the server accepts it, and a
 // refused or failed change is announced and leaves the goal unchanged.
@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import { DeleteAccountDialog } from '../components/auth/DeleteAccountDialog';
 import { SignOutDialog } from '../components/auth/SignOutDialog';
 import { DailyGoalPicker } from '../components/progress/DailyGoalPicker';
 import { useAuth } from '../state/AuthProvider';
@@ -27,7 +28,10 @@ function AccountSection() {
       <View className="mt-4 flex-row items-center justify-between">
         <Text className="text-sm text-muted">{isSignedIn ? 'Signed in. Your progress syncs across devices.' : 'Sign in to save your progress.'}</Text>
         {isSignedIn ? (
-          <SignOutDialog />
+          <View className="items-end gap-4">
+            <SignOutDialog />
+            <DeleteAccountDialog />
+          </View>
         ) : (
           <Pressable role="link" aria-label="Sign in" onPress={() => router.push('/sign-in')}>
             <Text className="font-mono text-xs uppercase tracking-widest text-ink">Sign in</Text>
