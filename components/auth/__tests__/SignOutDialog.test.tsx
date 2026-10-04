@@ -2,9 +2,9 @@
 // once when the signed-in user has no unsynced events; otherwise it opens a
 // modal dialog offering "Sync now", "Discard", and "Cancel". Sync now signs
 // out only after every event synced and announces a failed pass in an alert;
-// Discard removes that user's unsynced events and signs out. Every sign-out
-// clears the sync cursor, and the guest that follows sees none of the
-// previous user's events. Real AuthProvider, StatsProvider, SyncProvider, and
+// Discard removes that user's events and signs out. Every sign-out clears
+// the sync cursor and removes the user's events from the device, so the guest
+// that follows sees none of them. Real AuthProvider, StatsProvider, SyncProvider, and
 // runSyncPass; apiFetch routed to a fake server per signed-in account.
 import { randomUUID } from 'node:crypto';
 
@@ -27,6 +27,7 @@ import {
   idsOf,
   readStoredLog,
   seedEventLog,
+  seedStats,
   type ApiRouter,
 } from '../../../state/__tests__/syncTestSupport';
 import './preloadNativeModal';
@@ -43,6 +44,10 @@ jest.mock('../../../clients/apiClient', () => ({
 jest.mock('../../../clients/getLatestRequestSeq', () => ({ getLatestRequestSeq: () => 0 }));
 jest.mock('../../../clients/onUnauthorized', () => ({ onUnauthorized: () => () => undefined }));
 
+// How long deleting the session value takes; a delay lets the guest's stats
+// load before sign-out finishes.
+const mockSecureStoreDelete = { delayMs: 0 };
+
 jest.mock('expo-secure-store', () => {
   const values = new Map<string, string>();
   return {
@@ -53,7 +58,7 @@ jest.mock('expo-secure-store', () => {
     },
     deleteItemAsync: (key: string) => {
       values.delete(key);
-      return Promise.resolve();
+      return new Promise((resolve) => setTimeout(resolve, mockSecureStoreDelete.delayMs));
     },
   };
 });
@@ -167,6 +172,7 @@ describe('SignOutDialog', () => {
     await AsyncStorage.clear();
     router = createApiRouter();
     mockApi.router = router;
+    mockSecureStoreDelete.delayMs = 0;
     latest.auth = null;
     latest.stats = null;
     unsynced = buildOwnedLog(3, userId);
@@ -194,9 +200,12 @@ describe('SignOutDialog', () => {
     expect(sessionDeletes(router)).toEqual([]);
   });
 
-  it('Sync now uploads every unsynced event, then signs out, clears the sync cursor, and leaves the guest none of the user\'s events', async () => {
-    await mountSignedIn(router, userId, [...unsynced, ...synced]);
+  it('Sync now uploads every unsynced event that is not held, then signs out, clears the sync cursor, and removes the user\'s events from the device', async () => {
+    const held = buildOwnedLog(1, userId, 20).map((entry) => ({ ...entry, isHeld: true }));
+    await mountSignedIn(router, userId, [...unsynced, ...held, ...synced]);
     const dialog = await openDialog();
+    // A held answer is never uploaded, so the dialog says it goes with sign-out.
+    expect(textOf(dialog)).toContain('Answers the server refused cannot sync and are discarded at sign-out.');
     router.state.isFailing = false;
     fireEvent.press(within(dialog).getByRole('button', { name: 'Sync now' }));
     await waitFor(() => expect(latest.auth?.isSignedIn).toBe(false));
@@ -204,11 +213,11 @@ describe('SignOutDialog', () => {
 
     const server = router.serverFor(userId);
     for (const id of idsOf(unsynced)) expect(server.storedIds().has(id)).toBe(true);
+    for (const id of idsOf(held)) expect(server.storedIds().has(id)).toBe(false);
     const lastUpload = router.sent.map(({ method }) => method).lastIndexOf('POST');
     const signOutAt = router.sent.findIndex(({ method, path }) => method === 'DELETE' && path === 'auth/sessions/current');
     expect(signOutAt).toBeGreaterThan(lastUpload);
-    const stored = await readStoredLog();
-    for (const entry of unsynced) expect(entryIn(stored, entry.eventId)?.isSynced).toBe(true);
+    expect(await readStoredLog()).toEqual([]);
     expect((await readUserStats(userId))?.syncCursor).toBeUndefined();
     expect(latest.stats?.eventLog).toEqual([]);
     expect(queryDialog()).toBeNull();
@@ -230,7 +239,7 @@ describe('SignOutDialog', () => {
     expect((await readUserStats(userId))?.syncCursor).toBeDefined();
   });
 
-  it('Discard removes the user\'s unsynced events without uploading them, signs out, and clears the sync cursor', async () => {
+  it('Discard removes the user\'s events without uploading them, signs out, and clears the sync cursor', async () => {
     await mountSignedIn(router, userId, [...unsynced, ...synced]);
     const dialog = await openDialog();
     router.state.isFailing = false;
@@ -240,9 +249,7 @@ describe('SignOutDialog', () => {
 
     const unsyncedIds = new Set(idsOf(unsynced));
     expect([...router.serverFor(userId).storedIds()].filter((id) => unsyncedIds.has(id))).toEqual([]);
-    const stored = await readStoredLog();
-    expect(stored.filter(({ eventId }) => unsyncedIds.has(eventId))).toEqual([]);
-    for (const entry of synced) expect(entryIn(stored, entry.eventId)).toEqual(entry);
+    expect(await readStoredLog()).toEqual([]);
     expect(sessionDeletes(router)).toHaveLength(1);
     expect((await readUserStats(userId))?.syncCursor).toBeUndefined();
     expect(latest.stats?.eventLog).toEqual([]);
@@ -261,7 +268,7 @@ describe('SignOutDialog', () => {
     for (const entry of unsynced) expect(entryIn(stored, entry.eventId)).toEqual(entry);
   });
 
-  it('with no unsynced events signs out directly, with no dialog, and clears the sync cursor', async () => {
+  it('with no unsynced events signs out directly, with no dialog, clears the sync cursor, and removes the user\'s events', async () => {
     router.state.isFailing = false;
     await mountSignedIn(router, userId, synced);
     fireEvent.press(screen.getByRole('button', { name: SIGN_OUT }));
@@ -272,6 +279,24 @@ describe('SignOutDialog', () => {
     expect(sessionDeletes(router)).toHaveLength(1);
     expect((await readUserStats(userId))?.syncCursor).toBeUndefined();
     expect(latest.stats?.eventLog).toEqual([]);
-    expect(idsOf(await readStoredLog()).sort()).toEqual(idsOf(synced).sort());
+    expect(await readStoredLog()).toEqual([]);
+  });
+
+  it('clears the cursor in the user\'s own stats and never writes the guest\'s stats over them', async () => {
+    router.state.isFailing = false;
+    await seedStats({ totals: { attempted: 4, correct: 1 } });
+    await mountSignedIn(router, userId, synced);
+    expect(latest.stats?.stats.totals.attempted).toBe(0);
+    mockSecureStoreDelete.delayMs = 50;
+
+    fireEvent.press(screen.getByRole('button', { name: SIGN_OUT }));
+    await waitFor(() => expect(latest.auth?.isSignedIn).toBe(false));
+    await waitFor(() => expect(latest.stats?.stats.totals.attempted).toBe(4));
+    await flush();
+
+    mockSecureStoreDelete.delayMs = 0;
+    const stored = await readUserStats(userId);
+    expect(stored?.totals).toEqual({ attempted: 0, correct: 0 });
+    expect(stored?.syncCursor).toBeUndefined();
   });
 });

@@ -201,14 +201,17 @@ describe('AuthProvider on native', () => {
   });
 
   describe('persisted identity', () => {
-    it('persists the userId and known user ids in syntactical.auth.v1 and restores them on the next mount', async () => {
+    it('persists the userId, and the id as known once its guest claim completes, in syntactical.auth.v1 and restores them on the next mount', async () => {
       const identity = buildIdentity();
       installRoutedFetch(signInRoutes(identity));
       const first = await mountAuth();
       await signIn(first.result, identity);
       await waitFor(async () => expect((await readStoredAuth())?.userId).toBe(identity.userId));
-      const stored = await readStoredAuth();
-      expect(stored).toEqual({ userId: identity.userId, knownUserIds: [identity.userId] });
+      expect(await readStoredAuth()).toEqual({ userId: identity.userId, knownUserIds: [] });
+      await act(async () => {
+        first.result.current.completeGuestClaim(identity.userId);
+      });
+      await waitFor(async () => expect(await readStoredAuth()).toEqual({ userId: identity.userId, knownUserIds: [identity.userId] }));
       await first.unmount();
 
       const second = await mountAuth();

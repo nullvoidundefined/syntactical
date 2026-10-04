@@ -1,7 +1,7 @@
 // Mounts the sync queue for the signed-in user and, on a user's first sign-in
 // on this device, hands the guest event log to that user before the first
 // pass. Exposes sync-now and the syncing flag through useSync().
-import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { useAuth } from './AuthProvider';
 import { useQuizStats } from './StatsProvider';
@@ -21,15 +21,18 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const { claimGuestEvents, isHydrated } = useQuizStats();
 
   // The queue waits (no user) until the claim is done, so the first pass
-  // already sees the claimed events.
-  const { cancelPass, isSyncing, isUploadCapReached, syncNow } = useSyncQueue(guestClaimUserId === null ? (user?.id ?? null) : null);
+  // already sees the claimed events. A failed claim stays pending for the
+  // next launch, and the queue runs for the user's own events meanwhile.
+  const [failedClaimUserId, setFailedClaimUserId] = useState<string | null>(null);
+  const isClaimWaiting = guestClaimUserId !== null && guestClaimUserId !== failedClaimUserId;
+  const { cancelPass, isSyncing, isUploadCapReached, syncNow } = useSyncQueue(isClaimWaiting ? null : (user?.id ?? null));
 
   useEffect(() => {
     if (guestClaimUserId === null || !isHydrated) return;
     const userId = guestClaimUserId;
     void claimGuestEvents(userId).then(
       () => completeGuestClaim(userId),
-      () => undefined,
+      () => setFailedClaimUserId(userId),
     );
   }, [claimGuestEvents, completeGuestClaim, guestClaimUserId, isHydrated]);
 

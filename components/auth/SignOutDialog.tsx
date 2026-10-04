@@ -1,8 +1,10 @@
 // The "Sign out" control. Signs out at once when the signed-in user has no
-// unsynced events; otherwise opens a modal dialog offering "Sync now" (upload,
-// then sign out), "Discard" (drop this user's unsynced events, then sign out),
-// and "Cancel". A failed sync stays open and is announced in an alert. Every
-// sign-out clears the sync cursor. No animation; on the web focus moves into
+// unsynced events (held ones count as unsynced); otherwise opens a modal
+// dialog offering "Sync now" (upload, then sign out), "Discard" (drop this
+// user's events, then sign out), and "Cancel"; it says that held answers,
+// which never upload, are discarded at sign-out. A failed sync stays open and is
+// announced in an alert. Every sign-out clears the sync cursor and removes the
+// user's events from this device, so it holds one owner's events at a time. No animation; on the web focus moves into
 // the dialog on open, Escape closes it (and goes no further), and focus returns
 // to "Sign out" on close. While Sync now or Discard runs the dialog cannot be
 // closed, and a failure is announced inside it. Quiz key bindings are inert
@@ -65,7 +67,10 @@ function DialogPanel({ failureMessage, isBusy, onCancel, onDiscard, onSyncNow }:
         <Text role="heading" aria-level={2} nativeID={HEADING_ID} className="font-mono text-sm text-ink">
           {HEADING}
         </Text>
-        <Text className="mt-2 text-sm text-muted">Some of your answers have not synced yet. Sync them before you sign out, or discard them.</Text>
+        <Text className="mt-2 text-sm text-muted">
+          Some of your answers have not synced yet. Sync them before you sign out, or discard them. Answers the server refused cannot sync and
+          are discarded at sign-out.
+        </Text>
         {failureMessage === null ? null : (
           <Text role="alert" className="mt-2 text-sm text-ink">
             {failureMessage}
@@ -81,7 +86,7 @@ function DialogPanel({ failureMessage, isBusy, onCancel, onDiscard, onSyncNow }:
 
 export function SignOutDialog() {
   const { signOut, user } = useAuth();
-  const { clearSyncCursor, discardUnsyncedEvents, eventLog } = useQuizStats();
+  const { clearSyncCursor, eventLog, removeUserEvents } = useQuizStats();
   const { cancelPass, syncNow } = useSync();
   const [isOpen, setIsOpen] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
@@ -111,26 +116,32 @@ export function SignOutDialog() {
     setIsBusy(value);
   }
 
-  async function finishSignOut() {
-    await signOut();
+  // The cursor is cleared while the user still owns the stats, before
+  // sign-out loads the guest's. The server holds the user's synced history;
+  // a failed removal only leaves events no other owner sees.
+  async function finishSignOut(userId: string) {
     clearSyncCursor();
+    await signOut();
+    await removeUserEvents(userId).catch(() => undefined);
   }
 
   function handleSignOut() {
+    if (user === null) return;
     if (hasUnsynced) {
       setIsOpen(true);
       return;
     }
-    void finishSignOut();
+    void finishSignOut(user.id);
   }
 
   async function handleSyncNow() {
+    if (user === null) return;
     setBusy(true);
     setFailureMessage(null);
     try {
       if (await syncNow()) {
         setIsOpen(false);
-        await finishSignOut();
+        await finishSignOut(user.id);
       } else {
         setFailureMessage(SYNC_FAILED);
       }
@@ -147,9 +158,9 @@ export function SignOutDialog() {
     setFailureMessage(null);
     try {
       cancelPass();
-      await discardUnsyncedEvents(user.id);
+      await removeUserEvents(user.id);
       setIsOpen(false);
-      await finishSignOut();
+      await finishSignOut(user.id);
     } catch {
       setFailureMessage(DISCARD_FAILED);
     } finally {

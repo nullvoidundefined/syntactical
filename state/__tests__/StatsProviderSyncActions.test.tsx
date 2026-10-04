@@ -107,8 +107,8 @@ describe('StatsProvider sync actions', () => {
     const ownedByB = buildEntry(userB);
     await seedLog([first, second, third, ownedByB]);
     await renderHydrated(userA);
-    await act(async () => latest.markEventsSynced([first.eventId], userA));
-    await act(async () => latest.markEventsHeld([second.eventId], userA));
+    await act(async () => latest.markEventsSynced([first.eventId]));
+    await act(async () => latest.markEventsHeld([second.eventId]));
     await waitFor(async () => expect(findEntry(await readStoredLog(), second.eventId)?.isHeld).toBe(true));
     expect(await readStoredLog()).toEqual([
       { ...first, isSynced: true },
@@ -140,7 +140,7 @@ describe('StatsProvider sync actions', () => {
     expect(latest.eventLog).toHaveLength(3);
   });
 
-  it('discardUnsyncedEvents removes only that user\'s unsynced entries and persists', async () => {
+  it('removeUserEvents removes every entry of that user, synced or held, and persists', async () => {
     const unsyncedA = buildEntry(userA);
     const heldA = buildEntry(userA, { isHeld: true });
     const syncedA = buildEntry(userA, { isSynced: true });
@@ -148,10 +148,10 @@ describe('StatsProvider sync actions', () => {
     const guest = buildEntry(null);
     await seedLog([unsyncedA, syncedA, unsyncedB, heldA, guest]);
     await renderHydrated(userA);
-    await act(async () => latest.discardUnsyncedEvents(userA));
-    await waitFor(async () => expect(await readStoredLog()).toHaveLength(3));
-    expect(await readStoredLog()).toEqual([syncedA, unsyncedB, guest]);
-    expect(latest.eventLog).toEqual([syncedA]);
+    await act(async () => latest.removeUserEvents(userA));
+    await waitFor(async () => expect(await readStoredLog()).toHaveLength(2));
+    expect(await readStoredLog()).toEqual([unsyncedB, guest]);
+    expect(latest.eventLog).toEqual([]);
   });
 
   it('clearSyncCursor removes the stored cursor and keeps the rest of the stats', async () => {
@@ -198,10 +198,10 @@ describe('StatsProvider sync actions', () => {
     expect(screen.getByTestId('hydrated')).toHaveTextContent('false');
     await act(async () => {
       latest.claimGuestEvents(userA);
-      void latest.markEventsSynced([unsyncedA.eventId], userA).catch(() => undefined);
-      void latest.markEventsHeld([unsyncedA.eventId], userA).catch(() => undefined);
+      void latest.markEventsSynced([unsyncedA.eventId]).catch(() => undefined);
+      void latest.markEventsHeld([unsyncedA.eventId]).catch(() => undefined);
       void latest.mergeDownloadedEvents([buildAnswerEvent()], buildCursor(), userA).catch(() => undefined);
-      latest.discardUnsyncedEvents(userA);
+      latest.removeUserEvents(userA);
       latest.clearSyncCursor();
     });
     await act(async () => releaseReads());
@@ -220,7 +220,7 @@ describe('StatsProvider sync actions', () => {
     await act(async () => {
       latest.claimGuestEvents(userA);
       latest.recordAnswer(correctAnswer);
-      void latest.markEventsSynced([guestOne.eventId, guestTwo.eventId], userA);
+      void latest.markEventsSynced([guestOne.eventId, guestTwo.eventId]);
     });
     await waitFor(async () => expect(await readStoredLog()).toHaveLength(3));
     const stored = await readStoredLog();
@@ -233,7 +233,7 @@ describe('StatsProvider sync actions', () => {
     expect((await readStoredStats(userA))?.totals.attempted).toBe(1);
   });
 
-  it('keeps an answer recorded between mergeDownloadedEvents and discardUnsyncedEvents only until the discard', async () => {
+  it('keeps an answer recorded between mergeDownloadedEvents and removeUserEvents only until the removal', async () => {
     await renderHydrated(userA);
     const downloaded = buildAnswerEvent();
     const cursor = buildCursor();
@@ -242,9 +242,8 @@ describe('StatsProvider sync actions', () => {
       latest.recordAnswer(correctAnswer);
     });
     await waitFor(async () => expect(await readStoredLog()).toHaveLength(2));
-    await act(async () => latest.discardUnsyncedEvents(userA));
-    await waitFor(async () => expect(await readStoredLog()).toHaveLength(1));
-    expect(await readStoredLog()).toEqual([{ ...downloaded, isHeld: false, isSynced: true, ownerUserId: userA }]);
+    await act(async () => latest.removeUserEvents(userA));
+    await waitFor(async () => expect(await readStoredLog()).toEqual([]));
     expect((await readStoredStats(userA))?.syncCursor).toBe(cursor);
   });
 });

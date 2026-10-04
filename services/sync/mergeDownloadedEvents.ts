@@ -1,5 +1,6 @@
 // Merges a downloaded page into the event log: new events arrive synced and
-// owned by the user; one already present is kept and marked synced. The log
+// owned by the user; one already present is kept, and marked synced (and no
+// longer held) only when the user owns it. The log
 // obeys the same cap as appendAnswerEvent.
 import type { AnswerEvent } from '@syntactical/progress';
 
