@@ -16,7 +16,7 @@ npm run build    # content build, then the web export into dist/
 
 Run `npx tsc --noEmit` to type check; CI runs it too.
 
-Formatting follows `.prettierrc.mjs`, but most of the codebase predates it: run `npx prettier --write <file>` only on files you change, never on `.`, so diffs stay free of whole-file reformatting.
+Formatting follows `.prettierrc.mjs`, but most of the codebase predates it: run `npx prettier --write <file>` only on files you change, never on `.`, so diffs stay free of whole-file reformatting. A touched file that still uses 2-space indent gets reindented in full, so call that out in the PR.
 
 ## Keyboard controls (web)
 
