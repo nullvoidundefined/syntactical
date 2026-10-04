@@ -21,6 +21,7 @@ import { readTaxonomy } from '../services/enrich/readTaxonomy.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
 import { validateQuestion } from '../services/validateQuestion.js';
 import { writePipelineReport } from '../services/writePipelineReport.js';
+import { resolveBankFile } from '../services/resolveBankFile.js';
 import type { EnrichBankResult } from '../types/EnrichBankResult.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 import type { OracleSource } from '../types/OracleSource.js';
@@ -72,7 +73,9 @@ export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
         }
         for (const [difficulty, { access, path }] of Object.entries(banks)) {
             const bankKey = `${languageId}/${difficulty}`;
-            const bank = (await readJson(join(contentDir, path))) as { questions: Question[] };
+            const bank = (await readJson(resolveBankFile(contentDir, contentRoot, { access, path }))) as {
+                questions: Question[];
+            };
             const result = await enrichBank({
                 bankKey,
                 difficulty,

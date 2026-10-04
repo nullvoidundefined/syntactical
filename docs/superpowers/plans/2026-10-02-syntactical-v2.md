@@ -85,7 +85,8 @@ Passed 2026-10-02. The owner approved the spec and plan, chose owner-merges-ever
 
 - [ ] DNS for `syntactical.dev`: apex records to GitHub Pages; `api` CNAME to Railway (after Task 3.20 creates the service).
 - [ ] GitHub repo Settings → Pages → custom domain `syntactical.dev`, enforce HTTPS.
-- [ ] Create the private repo `nullvoidundefined/syntactical-content`; add a read-only deploy key; store its private half as the Actions secret `CONTENT_DEPLOY_KEY` in this repo and in Railway.
+- [x] Create the private repo `nullvoidundefined/syntactical-content` (done 2026-10-04, IAN-618; the paid banks moved there).
+- [ ] Add a read-only deploy key to `syntactical-content`; store its private half as the secret `CONTENT_DEPLOY_KEY` for the API image build (Task 3.20). This repo's CI does not need it.
 - [ ] Apple Developer Program, Play Console, tax and banking forms in both.
 - [ ] RevenueCat project linked to both stores and to a Stripe account for Web Billing (test mode first), PostHog project, Resend with SPF and DKIM on `syntactical.dev`, Neon project (`main` and `ci` branches), Railway project.
 - [ ] Secrets in GitHub Actions and Railway: `DATABASE_URL`, `RESEND_API_KEY`, `REVENUECAT_WEBHOOK_AUTH`, `RATE_LIMIT_KEY_SECRET`, `REVENUECAT_WEB_BILLING_PUBLIC_KEY`, `POSTHOG_API_KEY`, `ANTHROPIC_API_KEY` (pipeline CI only).
@@ -358,7 +359,9 @@ it('exports the shared content contract', () => {
 
 **Risk:** high (the guard that keeps paid content out of public outputs). **Behaviors:** B-60.
 
-**Files:** Modify `scripts/buildContentManifest.mjs` (hash free banks from `content/` and paid banks from `CONTENT_PRIVATE_DIR`; bundle only free banks; fail on a paid bank under `content/` or a free bank under the private directory), `package.json` `build` script (copy only free banks into `dist/content`), `.github/workflows/ci.yml` and `deploy.yml` (check out `syntactical-content` with `CONTENT_DEPLOY_KEY` into `../syntactical-content`); tests `scripts/__tests__/buildContentManifest.test.ts`, `scripts/__tests__/packageScripts.test.ts`.
+**Files:** Modify `scripts/buildContentManifest.mjs` (hash free banks from `content/` and paid banks from the content root when given; bundle only free banks; fail on a paid bank under `content/` or a free bank under the private directory), `package.json` `build` script (ends with `node scripts/assertNoPaidBanks.mjs dist`); tests `scripts/__tests__/buildContentManifest*.test.ts`, `scripts/__tests__/publicContentTree.test.ts`, `scripts/__tests__/packageScripts.test.ts`.
+
+**Status (2026-10-04, IAN-618):** the split landed with these changes. Paid banks moved to `syntactical-content`; without the content root the build keeps each paid entry's recorded hash, so `ci.yml` and `deploy.yml` need no checkout of the private repo and no `CONTENT_PRIVATE_DIR`. The pipeline's stages read paid banks from the content root, and `publish` refuses a paid bank under `content/`. The prompt-text scan of `pipeline/` (last behavior below) is still open.
 
 **Interfaces:** `buildContentManifest({ rootDir, privateDir, dryRun? }): { bundledBanks: Record<string, unknown>; staticBankPaths: string[]; manifest: Manifest }`.
 
@@ -919,7 +922,7 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 **Risk:** standard. **Behaviors:** operational.
 
-**Files:** Create `server/Dockerfile` (multi-stage, non-root user; a build stage mounts `CONTENT_DEPLOY_KEY` with BuildKit `--mount=type=secret,id=content_deploy_key`, checks out `syntactical-content`, and copies only the paid bank files to `PAID_CONTENT_DIR`; the key never enters an `ARG`, `ENV`, or layer), `server/railway.json` (start `node-pg-migrate up && node dist/index.js`, health check `/health`), `.github/workflows/server.yml` (vitest with a Postgres service container, `tsc`, image build).
+**Files:** Create `server/Dockerfile` (multi-stage, non-root user; a build stage mounts `CONTENT_DEPLOY_KEY` with BuildKit `--mount=type=secret,id=content_deploy_key`, checks out `syntactical-content`, and copies only its `<language>/<difficulty>.json` paid bank files to `PAID_CONTENT_DIR`, with this repo's `content/` (free banks and manifest) as the server's content dir; the key never enters an `ARG`, `ENV`, or layer. The paid banks are already out of the public tree (IAN-618), so the deploy ships no paid file publicly), `server/railway.json` (start `node-pg-migrate up && node dist/index.js`, health check `/health`), `.github/workflows/server.yml` (vitest with a Postgres service container, `tsc`, image build).
 
 - [ ] Check: `docker history --no-trunc` and every layer of the built image contain no key material and no `.ssh` directory (scripted in `server.yml`).
 - [ ] Steps: `docker build server` → deploy to Railway → the owner adds the `api` CNAME → `curl https://api.syntactical.dev/health` and `/health/ready` return ok → a credentialed fetch from `https://syntactical.dev` in Safari works (spec assumption ledger) → commit `chore(server): container, migrations on deploy, and CI`.
