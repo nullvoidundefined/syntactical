@@ -5,9 +5,10 @@
 // refused or failed change is announced and leaves the goal unchanged.
 import { useState } from 'react';
 
-import { DAILY_GOALS } from '@syntactical/progress';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
+
+import { DAILY_GOALS } from '@syntactical/progress';
 
 import { SignOutDialog } from '../components/auth/SignOutDialog';
 import { useAuth } from '../state/AuthProvider';
