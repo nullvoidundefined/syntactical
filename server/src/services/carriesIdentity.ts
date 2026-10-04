@@ -1,13 +1,14 @@
 // Whether one string carries the identity. Strict mode (B-59.1c, rows linked to another user): the user id
-// anywhere inside it, the email only as a whole address (no letter, digit, `_`, `+`, `-`, or `.` before it, no domain continuation after it), checked
-// on the normalized text; any one bounded occurrence is enough. The raw string and each of its percent-decoded
+// anywhere inside it, the email only as a whole address (no letter, digit, `_`, `+`, `-`, `.`, or apostrophe before
+// it, no domain continuation after it; B-59.9: the apostrophe is a local-part character, so a quote directly before
+// the email keeps the row), checked on the normalized text; any one bounded occurrence is enough. The raw string and each of its percent-decoded
 // forms (B-59.1e) are checked. Loose mode (B-59.7, the deleted user's own and unlinked rows): the email or the id
 // anywhere in the normalized text, no boundary rule. Needles are already normalized.
 import { normalizeEmail } from './normalizeEmail.js';
 import { percentDecodeForms } from './percentDecodeForms.js';
 import type { PurchaseIdentity } from './purchaseIdentity.js';
 
-const LOCAL_PART_CHARACTER = /[\p{L}\p{N}_+.-]/u;
+const LOCAL_PART_CHARACTER = /[\p{L}\p{N}_+.'-]/u;
 const DOMAIN_CONTINUATION = /^(?:[\p{L}\p{N}-]|\.[\p{L}\p{N}])/u;
 
 function isBoundedAt(text: string, start: number, length: number): boolean {

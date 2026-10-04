@@ -64,8 +64,9 @@ function buildAttributeChain(
 describe('scrubPurchasePayload fixes (B-59.1d)', () => {
   it('scrubs the email after a URL, query, path, ref=, &, #, or quote boundary and keeps local-part prefixes', () => {
     const identity = buildIdentity();
-    const bounded = boundedForms(identity.email);
-    const longer = longerAddresses(identity.email);
+    // Since B-59.9 the apostrophe is a local-part character, so `'<email>'` is kept in match-only mode.
+    const { singleQuoted, ...bounded } = boundedForms(identity.email);
+    const longer = { ...longerAddresses(identity.email), singleQuoted };
     const payload = { event: { bounded, longer, list: Object.values(bounded) } };
 
     // Match-only mode: since B-59.7 the local-part prefixes are kept only in other users' rows.
