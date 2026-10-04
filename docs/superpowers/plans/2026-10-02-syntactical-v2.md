@@ -812,11 +812,11 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Files:** Create `services/sync/buildUploadBatches.ts`, `services/sync/mergeDownloadedEvents.ts`, `state/useSyncQueue.ts` (uploads unsynced events owned by the signed-in user, or guest events on that user's first sign-in on this device, in batches of 200 after sign-in, on app foreground, and every 5 minutes when online; backoff up to 15 minutes), `components/auth/SignOutDialog.tsx`; modify `state/StatsProvider.tsx` (mark synced by id; store `syncCursor`); tests.
 
 **Behaviors (RED tests):**
-- First sign-in claims guest events for that user, uploads them in batches of 200, and marks each synced only after a 2xx; a 1,000-event guest log fully syncs.
+- First sign-in claims guest events for that user, uploads them in batches of 200, and marks each synced only after a 2xx; a 1,000-event guest log fully syncs. The guest's stats merge into the user's, then the guest stats reset, in sequence; the pending claim lives in memory only, and a crash between the two steps can at worst count the guest's answers twice (owner decision 2026-10-04, IAN-601).
 - A dropped response after the server stored a batch retries the same batch, and totals stay equal (integration test against a running test server).
-- A 422 for out-of-bounds timestamps marks those events `isHeld`, keeps them, and uploads the rest.
+- A 422 for out-of-bounds timestamps marks those events `isHeld`, keeps them, and uploads the rest; a held event is not uploaded again. A 422 `SYNC_EVENT_CAP_REACHED` stops uploads until the next sign-in, and downloads continue.
 - A second device pages `GET /answer-events?after=` until `nextCursor` is null, merges by `eventId` without duplicates, and derives the same XP, day streak, and review queue as the first; two devices uploading overlapping batches concurrently converge (Review Focus 1).
-- Signing out with unsynced events opens a dialog offering "Sync now" or "Discard"; events owned by user A are never uploaded while user B is signed in.
+- Signing out with unsynced events opens a dialog offering "Sync now" or "Discard"; events owned by user A are never uploaded while user B is signed in. Every sign-out removes the user's events from the device (IAN-601).
 
 - [ ] Gated cycle; R-109 review over PR 15; commit `feat(sync): upload the answer event log and merge a guest's history on sign-in`.
 
