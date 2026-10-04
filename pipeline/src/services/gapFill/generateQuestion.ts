@@ -46,13 +46,14 @@ async function requestStep(args: GenerateQuestionArgs, notes: string[]) {
 
 type Execute = NonNullable<z.infer<typeof generateStepSchema>['execute']>;
 
-// Runs one execute request. Returns the feedback that ends the draft, or null after
-// recording the observation in `notes`.
+// Runs one execute request. The prompt asks the model for the content language id
+// (`languageId`); the program runs in the oracle language. Returns the feedback that ends
+// the draft, or null after recording the observation in `notes`.
 async function runExecute(args: GenerateQuestionArgs, request: Execute, notes: string[]): Promise<string | null> {
-    const { language, run = runOracle } = args;
+    const { language, languageId, run = runOracle } = args;
     const { code, language: requested, setupSql } = request;
-    if (requested !== language) {
-        return `execute must use ${language}`;
+    if (requested !== languageId) {
+        return `execute must use ${languageId}`;
     }
     const oracle = { code, language, ...(setupSql === undefined ? {} : { setupSql }) };
     const { exceptionType, outcome, value } = await runSandboxed(run, oracle);
