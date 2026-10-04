@@ -93,12 +93,17 @@ function sourceOf({ language, setupSql }: Oracle) {
     return { language, ...(setupSql === undefined ? {} : { setupSql }) };
 }
 
-function generateArgs(oracle: Oracle, provider: ModelProvider, run: ReturnType<typeof recordingRun>['run']) {
+function generateArgs(
+    oracle: Oracle,
+    languageId: string,
+    provider: ModelProvider,
+    run: ReturnType<typeof recordingRun>['run'],
+) {
     return {
         difficulty: 'easy',
         existingPrompts: new Set<string>(),
         language: oracle.language,
-        languageId: 'lang',
+        languageId,
         provider,
         run,
         topic: 'topic',
@@ -172,8 +177,8 @@ describe.each(HOSTILE)('a hostile %s program', (_label, { contentLanguageId, ora
 
     it("generateQuestion's execute request reaches the runner once, unchanged, with the fixed limits", async () => {
         const { calls, run } = recordingRun();
-        const provider = scripted((call) => (call === 0 ? { execute: { code, language, ...(setupSql === undefined ? {} : { setupSql }) } } : {}));
-        await generateQuestion(generateArgs(oracle, provider, run));
+        const provider = scripted((call) => (call === 0 ? { execute: { code, language: contentLanguageId, ...(setupSql === undefined ? {} : { setupSql }) } } : {}));
+        await generateQuestion(generateArgs(oracle, contentLanguageId, provider, run));
         expect(calls).toEqual([{ limits: GENERATE_RUN_LIMITS, oracle }]);
     });
 
@@ -188,7 +193,7 @@ describe.each(HOSTILE)('a hostile %s program', (_label, { contentLanguageId, ora
                 type: 'bool',
             },
         };
-        const outcome = await generateQuestion(generateArgs(oracle, scripted(() => draft), run));
+        const outcome = await generateQuestion(generateArgs(oracle, contentLanguageId, scripted(() => draft), run));
         expect(outcome.status).toBe('kept');
         // validateQuestion runs an oracle three times to reject a nondeterministic one.
         expect(calls).toEqual([1, 2, 3].map(() => ({ limits: GENERATE_RUN_LIMITS, oracle })));
