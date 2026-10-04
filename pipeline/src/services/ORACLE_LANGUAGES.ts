@@ -6,4 +6,6 @@ export const ORACLE_LANGUAGES: Record<string, OracleLanguage> = {
     javascript: 'node',
     postgres: 'postgres',
     python: 'python',
+    rails: 'rails',
+    ruby: 'ruby',
 };

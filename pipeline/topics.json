@@ -35,5 +35,29 @@
         "async-and-concurrency",
         "optimization",
         "wtf"
+    ],
+    "rails": [
+        "activerecord-queries",
+        "associations",
+        "callbacks-and-validations",
+        "migrations-and-schema",
+        "routing",
+        "controllers-and-params",
+        "activesupport",
+        "background-jobs",
+        "security",
+        "performance"
+    ],
+    "ruby": [
+        "operators-and-types",
+        "numbers-and-math",
+        "strings",
+        "iterables",
+        "data-structures",
+        "functions-and-scope",
+        "errors-and-control-flow",
+        "async-and-concurrency",
+        "optimization",
+        "wtf"
     ]
 }
