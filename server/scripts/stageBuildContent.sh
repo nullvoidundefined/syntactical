@@ -5,8 +5,9 @@
 #   CONTENT_DEPLOY_KEY=<private key text> server/scripts/stageBuildContent.sh private
 #   server/scripts/stageBuildContent.sh fixture
 #
-#   private  the public content from this repo plus the paid banks cloned from the private
-#            syntactical-content repo with a read-only deploy key.
+#   private  the public content from this repo plus the paid banks fetched from the private
+#            syntactical-content repo with a read-only deploy key, at the exact commit recorded
+#            in content/paid-content.ref (never the moving head of main).
 #   fixture  the tiny content set under server/ci-fixture (no key needed).
 #
 # Output: build/content (manifest and free banks) and build/paid-content (paid banks). Only the
@@ -32,7 +33,13 @@ case "$mode" in
   private)
     : "${CONTENT_DEPLOY_KEY:?CONTENT_DEPLOY_KEY must be set for private mode}"
     repo="${CONTENT_REPO:-git@github.com:nullvoidundefined/syntactical-content.git}"
-    ref="${CONTENT_REF:-main}"
+    ref_file="$root/content/paid-content.ref"
+    [ -f "$ref_file" ] || { echo "stageBuildContent: missing content/paid-content.ref" >&2; exit 1; }
+    ref="$(tr -d '\n' < "$ref_file")"
+    if ! printf '%s' "$ref" | grep -Eq '^[0-9a-f]{40}$'; then
+      echo "stageBuildContent: content/paid-content.ref must be exactly 40 lowercase hex characters" >&2
+      exit 1
+    fi
     work="$(mktemp -d)"
     trap 'rm -rf "$work"' EXIT
     umask 077
@@ -41,8 +48,8 @@ case "$mode" in
     # fingerprint, or staging fails.
     ssh-keyscan -t ed25519 github.com > "$work/known_hosts" 2>/dev/null
     ssh-keygen -lf "$work/known_hosts" | grep -q 'SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU'
-    GIT_SSH_COMMAND="ssh -i $work/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$work/known_hosts" \
-      git clone --quiet --depth 1 --branch "$ref" "$repo" "$work/content"
+    export GIT_SSH_COMMAND="ssh -i $work/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$work/known_hosts"
+    "$root/server/scripts/fetchPinnedCommit.sh" "$repo" "$ref" "$work/content"
     node "$copy" "$root/content/manifest.json" "$root/content" "$out/content" free
     node "$copy" "$root/content/manifest.json" "$work/content" "$out/paid-content" paid
     ;;
