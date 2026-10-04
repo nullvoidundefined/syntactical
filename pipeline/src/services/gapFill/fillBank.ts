@@ -2,7 +2,8 @@
 // what is already staged, so a rerun fills the gap instead of overshooting. Kept questions
 // go to `<outRoot>/generated/<language>/<difficulty>.json`, never into the content bank
 // file (publish does that). A bank with no classification file is skipped: without topic
-// counts every topic would look empty.
+// counts every topic would look empty. A draft dropped for a transient provider failure
+// is counted as failed; MAX_CONSECUTIVE_PROVIDER_FAILURES of them in a row stop the run.
 import { join } from 'node:path';
 
 import { type Question, SUPPORTED_SCHEMA_VERSION } from '@syntactical/content-schema';
@@ -12,6 +13,7 @@ import type { FillBankArgs } from '../../types/FillBankArgs.js';
 import type { FillBankResult } from '../../types/FillBankResult.js';
 import { writeJsonAtomic } from '../classify/writeJsonAtomic.js';
 
+import { MAX_CONSECUTIVE_PROVIDER_FAILURES } from './MAX_CONSECUTIVE_PROVIDER_FAILURES.js';
 import { countQuestionsNeeded } from './countQuestionsNeeded.js';
 import { generateQuestion } from './generateQuestion.js';
 import { normalizePrompt } from './normalizePrompt.js';
@@ -49,6 +51,7 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
     const counts = countByTopic([...questions, ...staged], classified);
     const existingPrompts = new Set([...questions, ...staged].map(({ prompt }) => normalizePrompt(prompt)));
     const added: Question[] = [];
+    let providerFailures = 0;
     let isCompleted = false;
     try {
         for (const topic of topics) {
@@ -66,6 +69,10 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
                     topic,
                     ...(run === undefined ? {} : { run }),
                 });
+                const isProviderFailure =
+                    outcome.status === 'dropped' &&
+                    (outcome.reason === 'model-timeout' || outcome.reason === 'model-error');
+                providerFailures = isProviderFailure ? providerFailures + 1 : 0;
                 if (outcome.status === 'kept') {
                     const { question } = outcome;
                     const { id, prompt } = question;
@@ -77,6 +84,11 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
                     const { reason } = outcome;
                     result[reason === 'duplicate' ? 'duplicate' : 'failed'] += 1;
                     log(`${bankKey} ${topic}: dropped (${reason})`);
+                }
+                if (providerFailures >= MAX_CONSECUTIVE_PROVIDER_FAILURES) {
+                    throw new Error(
+                        `${bankKey}: stopping after ${providerFailures} consecutive model failures (timeout or non-zero exit)`,
+                    );
                 }
             }
         }

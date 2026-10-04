@@ -1,9 +1,11 @@
 // Runs a command as an argument vector with its input on stdin, a hard SIGKILL
 // timeout, and a stdout cap. Failures name the cause only: never argv, the
-// input, or the child's stderr, which may echo the prompt.
+// input, or the child's stderr, which may echo the prompt. A timeout or a non-zero exit
+// is a ProviderTransientError; a command that cannot start or floods stdout is not.
 import { spawn } from 'node:child_process';
 
 import type { ExecFn } from '../types/ExecFn.js';
+import { ProviderTransientError } from '../types/ProviderTransientError.js';
 
 export interface SpawnExecLimits {
     maxStdoutBytes: number;
@@ -23,7 +25,10 @@ export function createSpawnExec(limits: SpawnExecLimits): ExecFn {
                 failure ??= error;
                 child.kill('SIGKILL');
             }
-            const timer = setTimeout(() => fail(new Error(`${file} timed out after ${timeoutMs} ms`)), timeoutMs);
+            const timer = setTimeout(
+                () => fail(new ProviderTransientError('model-timeout', `${file} timed out after ${timeoutMs} ms`)),
+                timeoutMs,
+            );
             child.stdout.on('data', (chunk: Buffer) => {
                 received += chunk.length;
                 if (received > maxStdoutBytes) {
@@ -41,7 +46,7 @@ export function createSpawnExec(limits: SpawnExecLimits): ExecFn {
                 if (failure) {
                     reject(failure);
                 } else if (code !== 0) {
-                    reject(new Error(`${file} exited with status ${String(code)}`));
+                    reject(new ProviderTransientError('model-error', `${file} exited with status ${String(code)}`));
                 } else {
                     resolve({ stdout: Buffer.concat(chunks).toString('utf8') });
                 }
