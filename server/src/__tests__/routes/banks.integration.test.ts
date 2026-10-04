@@ -60,10 +60,13 @@ const paidBanks = new Map<string, PaidBank>([
 let database: Awaited<ReturnType<typeof createMigratedDatabase>>;
 
 // Collects the response body as raw bytes, whatever its Content-Type, so a test compares bytes.
-function rawBody(res: NodeJS.ReadableStream, callback: (error: Error | null, body: Buffer) => void): void {
+// supertest types the parser's first argument as its Response, but at run time it is the
+// incoming message stream.
+function rawBody(res: Response, callback: (error: Error | null, body: Buffer) => void): void {
+    const stream = res as unknown as NodeJS.ReadableStream;
     const chunks: Buffer[] = [];
-    res.on('data', (chunk: Buffer | string) => chunks.push(Buffer.from(chunk)));
-    res.on('end', () => callback(null, Buffer.concat(chunks)));
+    stream.on('data', (chunk: Buffer | string) => chunks.push(Buffer.from(chunk)));
+    stream.on('end', () => callback(null, Buffer.concat(chunks)));
 }
 
 function bodyBytes(response: Response): Buffer {
