@@ -13,10 +13,10 @@ import type { IngestResult } from '../types/IngestResult.js';
 import { lockUserRow } from './lockUserRow.js';
 import { recomputeDailyProgress } from './recomputeDailyProgress.js';
 
-const MINUTE_MS = 60_000;
+const HOUR_MS = 3_600_000;
 const DAY_MS = 86_400_000;
-const { FUTURE_TOLERANCE_MINUTES, MAX_EVENTS_PER_USER, PAST_TOLERANCE_DAYS } = SYNC;
-const FUTURE_TOLERANCE_MS = FUTURE_TOLERANCE_MINUTES * MINUTE_MS;
+const { FUTURE_TOLERANCE_HOURS, MAX_EVENTS_PER_USER, PAST_TOLERANCE_DAYS } = SYNC;
+const FUTURE_TOLERANCE_MS = FUTURE_TOLERANCE_HOURS * HOUR_MS;
 const PAST_TOLERANCE_MS = PAST_TOLERANCE_DAYS * DAY_MS;
 
 function isAnswerable(answerKey: AnswerKey, { bankKey, choiceIndex, questionId }: AnswerEventInput): boolean {
