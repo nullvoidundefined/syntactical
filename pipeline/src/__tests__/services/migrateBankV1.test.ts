@@ -4,7 +4,8 @@
 // query are kept exactly; every question gains an 'original', judged, pending,
 // not-human-reviewed provenance and nothing else (no topic, rationale, or
 // misconceptionId). Input that is not a schema 1 bank throws. The converted
-// committed banks must pass the real v2 validator with zero drops.
+// v1 fixture banks must pass the real v2 validator with zero drops. The medium
+// and hard fixtures are synthetic: paid question text never lives in this repo (B-60).
 import { readFileSync } from 'node:fs';
 
 import { buildBankContext, validateManifest, validateQuestionBank } from '@syntactical/content-schema';
@@ -180,7 +181,7 @@ describe('migrateBankV1', () => {
     });
 });
 
-describe('migrateBankV1 over the committed content', () => {
+describe('migrateBankV1 over the v1 fixture content', () => {
     const manifestV1 = readJson('manifest.json') as {
         languages: { id: string; banks: Record<string, { path: string }> }[];
     };
@@ -192,7 +193,7 @@ describe('migrateBankV1 over the committed content', () => {
         })),
     );
 
-    it('covers all nine committed banks', () => {
+    it('covers all nine fixture banks', () => {
         expect(bankCases).toHaveLength(9);
     });
 

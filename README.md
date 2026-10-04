@@ -40,7 +40,7 @@ Each question is either multiple choice or true/false, and carries a `query` (`t
 
 ```json
 {
-  "id": "py-med-01",
+  "id": "py-easy-01",
   "type": "mc",
   "prompt": "...",
   "code": "...",
