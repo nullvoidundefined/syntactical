@@ -37,11 +37,29 @@ export const WEB_PRICES: Record<string, string> = {
 };
 
 // The server's view: the entitlements GET me returns, and an ordered log of
-// SDK calls and GET me requests.
-export const fakeServer: { entitlements: string[]; events: string[] } = {
+// SDK calls and GET me requests. While meGate is set, every GET me answer waits
+// for it (see holdMe).
+export const fakeServer: {
+    entitlements: string[];
+    events: string[];
+    meGate: Promise<void> | null;
+} = {
     entitlements: [],
     events: [],
+    meGate: null,
 };
+
+// Holds every GET me answer until the returned release function is called.
+export function holdMe(): () => void {
+    let release: () => void = () => undefined;
+    fakeServer.meGate = new Promise<void>((resolve) => {
+        release = () => {
+            fakeServer.meGate = null;
+            resolve();
+        };
+    });
+    return release;
+}
 
 // The signed-in user, or null for a guest.
 export const fakeAuth: { userId: string | null } = { userId: null };
@@ -50,7 +68,8 @@ export const fakeAuth: { userId: string | null } = { userId: null };
 export const fakeNavigation: { calls: unknown[] } = { calls: [] };
 
 export type NativePurchaseBehavior = 'webhook-grants' | 'no-grant' | 'cancel' | 'fail';
-export type NativeRestoreBehavior = 'webhook-grants' | 'fail';
+// no-grant: the store restores, but the server's GET me still lists nothing new.
+export type NativeRestoreBehavior = 'webhook-grants' | 'no-grant' | 'fail';
 
 export const nativeSdk: {
     offeringsError: Error | null;
@@ -68,17 +87,21 @@ export const nativeSdk: {
 
 export type WebPurchaseBehavior = 'purchased' | 'cancelled' | 'unavailable';
 
+// While purchaseGate is set, purchaseWebBillingProduct stays in flight until it resolves.
 export const webBilling: {
     purchaseBehavior: WebPurchaseBehavior;
+    purchaseGate: Promise<void> | null;
     purchasedProductIds: string[];
 } = {
     purchaseBehavior: 'purchased',
+    purchaseGate: null,
     purchasedProductIds: [],
 };
 
 export function resetFakes(): void {
     fakeServer.entitlements = [];
     fakeServer.events = [];
+    fakeServer.meGate = null;
     fakeAuth.userId = null;
     fakeNavigation.calls = [];
     nativeSdk.offeringsError = null;
@@ -87,6 +110,7 @@ export function resetFakes(): void {
     nativeSdk.restoreBehavior = 'webhook-grants';
     nativeSdk.restoreCount = 0;
     webBilling.purchaseBehavior = 'purchased';
+    webBilling.purchaseGate = null;
     webBilling.purchasedProductIds = [];
 }
 
@@ -239,7 +263,8 @@ export function buildNativePurchasesModule() {
             nativeSdk.restoreCount += 1;
             if (nativeSdk.restoreBehavior === 'fail')
                 return Promise.reject(buildStoreError('2', false));
-            fakeServer.entitlements = Object.keys(NATIVE_PRICES);
+            if (nativeSdk.restoreBehavior === 'webhook-grants')
+                fakeServer.entitlements = Object.keys(NATIVE_PRICES);
             return Promise.resolve(buildCustomerInfo());
         }),
     };
@@ -262,7 +287,8 @@ export function buildWebBillingModule() {
         purchaseWebBillingProduct: jest.fn((productId: string) => {
             fakeServer.events.push(`purchaseWebBillingProduct ${productId}`);
             webBilling.purchasedProductIds.push(productId);
-            return Promise.resolve(webBilling.purchaseBehavior);
+            const gate = webBilling.purchaseGate ?? Promise.resolve();
+            return gate.then(() => webBilling.purchaseBehavior);
         }),
         readWebBillingPrices: jest.fn(() => Promise.resolve({ ...WEB_PRICES })),
         resetWebBilling: jest.fn(),
@@ -270,8 +296,9 @@ export function buildWebBillingModule() {
 }
 
 function meRoute(): FetchRoute {
-    return () => {
+    return async () => {
         fakeServer.events.push('GET me');
+        await fakeServer.meGate;
         return Promise.resolve(
             JSON.stringify({
                 data: {

@@ -145,4 +145,21 @@ describe('Restore purchases in Settings on native', () => {
         expect(screen.getByRole('button', { name: /^Medium, locked/ })).toBeTruthy();
         expect(screen.getByRole('button', { name: /^Hard, locked/ })).toBeTruthy();
     });
+
+    it('a restore the store accepts but GET me does not confirm unlocks nothing', async () => {
+        nativeSdk.restoreBehavior = 'no-grant';
+        await renderSettingsWithDifficulty();
+        expect(await screen.findByRole('button', { name: /^Medium, locked/ })).toBeTruthy();
+
+        await fireEvent.press(screen.getByRole('button', { name: 'Restore purchases' }));
+        await settle();
+
+        expect(nativeSdk.restoreCount).toBe(1);
+        const restoreAt = fakeServer.events.indexOf('restorePurchases');
+        expect(restoreAt).toBeGreaterThanOrEqual(0);
+        await waitFor(() => expect(fakeServer.events.slice(restoreAt + 1)).toContain('GET me'));
+        await settle();
+        expect(screen.getByRole('button', { name: /^Medium, locked/ })).toBeTruthy();
+        expect(screen.getByRole('button', { name: /^Hard, locked/ })).toBeTruthy();
+    });
 });
