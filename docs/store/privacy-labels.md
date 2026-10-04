@@ -1,0 +1,67 @@
+# Privacy nutrition label and Play data safety answers
+
+What the app collects, read from the code, so the store forms can be filled in without guessing. Re-check this page against the code if any of the sources below change.
+
+## What the app collects
+
+| Data                                                                                                                                                                                                                                                                                      | Where it comes from                                                                                         | Where it goes                                                            | Linked to the user                                                                         | Purpose                              |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ | ------------------------------------ |
+| Email address                                                                                                                                                                                                                                                                             | Typed at sign-in (`app/sign-in.tsx`)                                                                        | Our API database (`users.email`); one-time code email through Resend     | Yes                                                                                        | Account and sign-in                  |
+| User ID (random UUID)                                                                                                                                                                                                                                                                     | Created by the API at first sign-in                                                                         | API database; RevenueCat (`Purchases.logIn`); PostHog (`identify`)       | Yes                                                                                        | Account, purchases, analytics        |
+| Purchase history (which banks the user owns, store webhook events with product id, timestamps)                                                                                                                                                                                            | RevenueCat webhook to the API (`purchase_events`, `entitlements`)                                           | API database; the stores and RevenueCat hold the underlying transactions | Yes while the account exists; kept with the user id cleared after deletion, for accounting | App functionality (unlocking banks)  |
+| Gameplay data: each answer (question id, bank, chosen index, correct or not, time), daily progress, daily goal, timezone                                                                                                                                                                  | The app, uploaded after sign-in (`answer_events`, `daily_progress`, `daily_goal_changes`, `users.timezone`) | API database                                                             | Yes                                                                                        | App functionality (sync, streak, XP) |
+| Product interaction events: `round_started`, `round_completed`, `signup_prompt_shown`, `signup_prompt_accepted`, `paywall_viewed`, `purchase_completed`, `review_round_completed`, `bank_exhausted`, with properties such as language, difficulty, round kind, question count, product id | `constants/analyticsEvents.ts`, sent by `clients/analyticsClient.ts`                                        | PostHog                                                                  | Only after sign-in (identified by user id). A guest is anonymous                           | Analytics                            |
+| Diagnostics                                                                                                                                                                                                                                                                               | `console.warn` only (`clients/logClient.ts`)                                                                | Stays on the device. No crash reporting SDK is installed                 | No                                                                                         | None collected                       |
+
+Not collected: name, phone number, address, contacts, photos, files, microphone, camera, health, financial information (the stores process card details, never the app), precise or coarse location, advertising identifier, browsing history. The app has no ads and no third-party advertising or tracking SDK.
+
+## Facts the answers rest on
+
+- **Location.** None is requested or sent. PostHog is created with `disableGeoip: true`. The timezone is an IANA zone name such as `America/Chicago`, stored so the server can compute the user's day boundaries. It is not a location. Treat it as "Other user content/data" only if a reviewer asks.
+- **Analytics identity.** `persistence: 'memory'` means no cookie, local storage, or AsyncStorage key is written. A guest gets a fresh anonymous id each launch; after sign-in events carry the server user id, never the email. Event properties named `email`, `code`, or `token` are rejected by `findProblem`.
+- **No tracking.** Nothing is combined with data from other companies' apps or sites for advertising, and no data is shared with data brokers. The app does not show the App Tracking Transparency prompt and does not need to.
+- **Sessions.** Only a SHA-256 hash of the session token is stored (`sessions` table). A native client keeps the token in the device keychain or keystore (`expo-secure-store`); the web client uses a cookie.
+- **Encryption.** Traffic uses HTTPS only (`API_BASE_URL` must be `https://`).
+- **Deletion.** In the app: Settings, Delete account, type DELETE, confirm (`components/auth/DeleteAccountDialog.tsx`, `DELETE /v1/me`). It removes sessions, answer events, daily progress, goal changes, and the email's one-time codes and rate-limit counters in one transaction (B-59). Entitlement and purchase event rows stay with `user_id` cleared for accounting, and hold no email or name. Signing in again with the same email creates a new, empty account.
+- **Owner check, PostHog.** `disableGeoip` stops location lookup, but PostHog still receives the request IP. In the PostHog project settings, turn on "Discard client IP data" so the IP is not stored, and then the "no location" answers below hold.
+
+## App Store Connect: App Privacy answers
+
+"Do you or your third-party partners collect data from this app?" Yes.
+
+| Data type (Apple)                               | Collected | Linked to the user's identity | Used for tracking | Purposes                     |
+| ----------------------------------------------- | --------- | ----------------------------- | ----------------- | ---------------------------- |
+| Contact Info: Email Address                     | Yes       | Yes                           | No                | App Functionality            |
+| Identifiers: User ID                            | Yes       | Yes                           | No                | App Functionality, Analytics |
+| Purchases: Purchase History                     | Yes       | Yes                           | No                | App Functionality            |
+| Usage Data: Product Interaction                 | Yes       | Yes                           | No                | App Functionality, Analytics |
+| Other Data Types: gameplay answers and progress | Yes       | Yes                           | No                | App Functionality            |
+
+Everything else: not collected. Specifically no Location, no Contacts, no User Content, no Search History, no Browsing History, no Diagnostics, no Identifiers: Device ID, no Financial Info, no Sensitive Info.
+
+Note on "Product Interaction" and "linked": a guest's events are anonymous, but the same event types are linked once the user signs in, so the label states the broader case.
+
+## Google Play: Data safety answers
+
+| Question                                                           | Answer                                                                                                                                         |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Does the app collect or share any of the required user data types? | Yes, collects. Nothing is "shared" in Play's sense: RevenueCat, Resend, PostHog, and our host process data on our behalf as service providers. |
+| Is all user data encrypted in transit?                             | Yes (HTTPS only)                                                                                                                               |
+| Do you provide a way for users to request that data is deleted?    | Yes. In-app (Settings, Delete account) and through the account deletion web page the owner publishes                                           |
+| Personal info: Email address                                       | Collected, not shared, required (only to sign in; sign-in is optional for the app), purpose: Account management, App functionality             |
+| Personal info: User IDs                                            | Collected, not shared, required for signed-in use, purpose: Account management, App functionality, Analytics                                   |
+| Financial info: Purchase history                                   | Collected, not shared, purposes: App functionality. (Play calls it "Purchase history" under Financial info.)                                   |
+| App activity: App interactions                                     | Collected, not shared, optional, purposes: App functionality, Analytics                                                                        |
+| App activity: Other user-generated content or activity             | Do not declare. Answers and progress are covered by "App interactions".                                                                        |
+| Location                                                           | Not collected                                                                                                                                  |
+| App info and performance: crash logs, diagnostics                  | Not collected                                                                                                                                  |
+| Device or other IDs                                                | Not collected                                                                                                                                  |
+
+Play "Financial info" is the right place for purchase history; the app never sees card numbers.
+
+## Content rating and other forms
+
+- Play content rating questionnaire: no violence, no sexual content, no gambling, no user-to-user communication, no location sharing. Expected result: Everyone.
+- Play "Ads": the app contains no ads.
+- Play target audience: 18 and over is the safe choice. The content is programming practice questions, and the app is not designed for children. Choose the audience to match the owner's intent; picking under 13 triggers the Families policy.
+- Apple export compliance: the app uses only HTTPS through the platform, which qualifies for the exemption. Answer "No" to non-exempt encryption in the build questions. To skip the prompt on every build, the owner may add `ios.config.usesNonExemptEncryption: false` to `app.config.ts` after confirming this answer.

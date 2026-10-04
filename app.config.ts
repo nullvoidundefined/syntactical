@@ -4,7 +4,7 @@
 import type { ExpoConfig } from 'expo/config';
 
 const CONTENT_ORIGIN = 'https://nullvoidundefined.github.io';
-const API_BASE_URL = 'https://api.syntactical.dev/v1/';
+const DEFAULT_API_BASE_URL = 'https://api.syntactical.dev/v1/';
 
 function readBaseUrl(): string {
   return process.env.EXPO_BASE_URL ?? '/syntactical';
@@ -30,6 +30,17 @@ function readPostHogHost(): string | undefined {
   return value;
 }
 
+// A staging build points at its own API through API_BASE_URL; it must be an https URL that ends in a slash.
+// The error names the variable, never the value.
+function readApiBaseUrl(): string {
+  const value = process.env.API_BASE_URL;
+  if (value === undefined || value === '') return DEFAULT_API_BASE_URL;
+  if (!value.startsWith('https://') || !value.endsWith('/')) {
+    throw new Error('API_BASE_URL must be an https URL that ends with a slash');
+  }
+  return value;
+}
+
 const BASE_URL = readBaseUrl();
 const CONTENT_BASE_URL = new URL(`${BASE_URL}/content/`, CONTENT_ORIGIN).href;
 
@@ -37,7 +48,7 @@ const config: ExpoConfig = {
   android: { package: 'dev.nullvoidundefined.syntactical' },
   experiments: { baseUrl: BASE_URL, typedRoutes: true },
   extra: {
-    apiBaseUrl: API_BASE_URL,
+    apiBaseUrl: readApiBaseUrl(),
     contentBaseUrl: CONTENT_BASE_URL,
     posthogHost: readPostHogHost(),
     posthogKey: readPublicKey('POSTHOG_KEY', 'phc', 'PostHog'),

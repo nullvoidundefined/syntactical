@@ -1,9 +1,30 @@
 {
   "cli": { "appVersionSource": "remote" },
   "build": {
-    "preview": {
+    "development": {
+      "developmentClient": true,
       "distribution": "internal",
       "android": { "buildType": "apk" }
+    },
+    "preview": {
+      "distribution": "internal",
+      "environment": "preview",
+      "android": { "buildType": "apk" },
+      "env": {
+        "API_BASE_URL": "https://staging-api.syntactical.dev/v1/",
+        "EXPO_BASE_URL": "/syntactical/preview"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "environment": "production",
+      "env": {
+        "API_BASE_URL": "https://api.syntactical.dev/v1/",
+        "EXPO_BASE_URL": "/syntactical"
+      }
     }
+  },
+  "submit": {
+    "production": {}
   }
 }
