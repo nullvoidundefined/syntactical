@@ -8,33 +8,14 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import { DAILY_GOALS } from '@syntactical/progress';
-
 import { SignOutDialog } from '../components/auth/SignOutDialog';
+import { DailyGoalPicker } from '../components/progress/DailyGoalPicker';
 import { useAuth } from '../state/AuthProvider';
 import { useQuizStats } from '../state/StatsProvider';
 import { useProfile } from '../state/useProfile';
 import { useProgressSummary } from '../state/useProgressSummary';
 
 const GOAL_SAVE_FAILED = 'Your daily goal was not saved. Check your connection and try again.';
-
-type GoalOptionProps = { goal: number; isBusy: boolean; isSelected: boolean; onSelect: (goal: number) => void };
-
-function GoalOption({ goal, isBusy, isSelected, onSelect }: GoalOptionProps) {
-  return (
-    <Pressable
-      role="radio"
-      aria-checked={isSelected}
-      aria-disabled={isBusy}
-      aria-label={`${goal} XP a day`}
-      disabled={isBusy}
-      onPress={() => onSelect(goal)}
-      className={`flex-1 items-center border px-4 py-3 ${isSelected ? 'border-signal bg-signal' : 'border-line'}`}
-    >
-      <Text className={`font-mono text-sm ${isSelected ? 'text-obsidian' : 'text-ink'}`}>{`${goal} XP`}</Text>
-    </Pressable>
-  );
-}
 
 function AccountSection() {
   const { isSignedIn } = useAuth();
@@ -91,11 +72,7 @@ export default function SettingsScreen() {
             Daily goal
           </Text>
           <Text className="mt-2 text-sm text-muted">XP to earn each day. A new goal applies from today on.</Text>
-          <View role="radiogroup" aria-labelledby="daily-goal-heading" className="mt-4 flex-row gap-2">
-            {DAILY_GOALS.map((goal) => (
-              <GoalOption key={goal} goal={goal} isBusy={isBusy} isSelected={goal === dailyGoal} onSelect={(next) => void chooseGoal(next)} />
-            ))}
-          </View>
+          <DailyGoalPicker isBusy={isBusy} labelledBy="daily-goal-heading" onSelect={(next) => void chooseGoal(next)} selectedGoal={dailyGoal} />
           {errorMessage === null ? null : (
             <Text role="alert" className="mt-3 text-sm text-ink">
               {errorMessage}
