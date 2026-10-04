@@ -10,28 +10,24 @@
 // has such a container), and an own `__proto__` key is kept as a plain own property. In strict mode the id matches anywhere inside a string; the email
 // matches only as a whole address (no local-part character before it, no domain continuation after it),
 // so `jo<email>`, `<email>m`, and `<email>.uk` are kept (see carriesIdentity.ts).
-import { carriesIdentity } from "./carriesIdentity.js";
-import type { PurchaseIdentity } from "./purchaseIdentity.js";
-import { buildNeedles } from "./purchaseNeedles.js";
-import { MAX_DEPTH } from "./purchasePayloadMaxDepth.js";
+import { carriesIdentity } from './carriesIdentity.js';
+import type { PurchaseIdentity } from './purchaseIdentity.js';
+import { buildNeedles } from './purchaseNeedles.js';
+import { MAX_DEPTH } from './purchasePayloadMaxDepth.js';
 
-const DELETED = "[deleted]";
+const DELETED = '[deleted]';
 interface ScrubOptions {
   clearPiiAttributes: boolean;
   isLoose?: boolean;
 }
 
-const PII_ATTRIBUTE_KEYS = new Set(["$displayName", "$email", "$phoneNumber"]);
+const PII_ATTRIBUTE_KEYS = new Set(['$displayName', '$email', '$phoneNumber']);
 
 function isLooseMode({ clearPiiAttributes, isLoose }: ScrubOptions): boolean {
   return isLoose ?? clearPiiAttributes;
 }
 
-function setOwn(
-  target: Record<string, unknown>,
-  key: string,
-  value: unknown,
-): void {
+function setOwn(target: Record<string, unknown>, key: string, value: unknown): void {
   Object.defineProperty(target, key, {
     configurable: true,
     enumerable: true,
@@ -49,26 +45,15 @@ function firstFreeDeletedName(taken: Set<string>): string {
 }
 
 // A PII attribute is cleared whatever its type; an object keeps its shape but its `value` is cleared.
-function clearAttribute(
-  value: unknown,
-  needles: PurchaseIdentity,
-  depth: number,
-  options: ScrubOptions,
-): unknown {
+function clearAttribute(value: unknown, needles: PurchaseIdentity, depth: number, options: ScrubOptions): unknown {
   if (value === null || value === undefined) {
     return value;
   }
-  if (typeof value === "object" && !Array.isArray(value)) {
+  if (typeof value === 'object' && !Array.isArray(value)) {
     if (depth > MAX_DEPTH) {
       return DELETED;
     }
-    return walkObject(
-      value as Record<string, unknown>,
-      needles,
-      depth,
-      true,
-      options,
-    );
+    return walkObject(value as Record<string, unknown>, needles, depth, true, options);
   }
   return DELETED;
 }
@@ -98,12 +83,7 @@ function walkObject(
     let outValue: unknown;
     if (options.clearPiiAttributes && PII_ATTRIBUTE_KEYS.has(key)) {
       outValue = clearAttribute(value, needles, depth + 1, options);
-    } else if (
-      isAttribute &&
-      key === "value" &&
-      value !== null &&
-      value !== undefined
-    ) {
+    } else if (isAttribute && key === 'value' && value !== null && value !== undefined) {
       outValue = DELETED;
     } else {
       outValue = walk(value, needles, depth + 1, options);
@@ -113,18 +93,11 @@ function walkObject(
   return copy;
 }
 
-function walk(
-  node: unknown,
-  needles: PurchaseIdentity,
-  depth: number,
-  options: ScrubOptions,
-): unknown {
-  if (typeof node === "string") {
-    return carriesIdentity(node, needles, { isLoose: isLooseMode(options) })
-      ? DELETED
-      : node;
+function walk(node: unknown, needles: PurchaseIdentity, depth: number, options: ScrubOptions): unknown {
+  if (typeof node === 'string') {
+    return carriesIdentity(node, needles, { isLoose: isLooseMode(options) }) ? DELETED : node;
   }
-  if (node === null || typeof node !== "object") {
+  if (node === null || typeof node !== 'object') {
     return node;
   }
   if (depth > MAX_DEPTH) {
@@ -133,13 +106,7 @@ function walk(
   if (Array.isArray(node)) {
     return node.map((item) => walk(item, needles, depth + 1, options));
   }
-  return walkObject(
-    node as Record<string, unknown>,
-    needles,
-    depth,
-    false,
-    options,
-  );
+  return walkObject(node as Record<string, unknown>, needles, depth, false, options);
 }
 
 function scrubPurchasePayload(

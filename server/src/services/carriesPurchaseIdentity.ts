@@ -3,8 +3,8 @@
 // (B-59.7) when `isLoose` is set, for unlinked rows. Derived from the scrubber's own walker (match-only
 // mode, then compare), so row selection and scrubbing share one walk and one depth cap; a container
 // nested past the cap is returned unchanged in match-only mode (B-59.8) and so does not count as carrying.
-import type { PurchaseIdentity } from "./purchaseIdentity.js";
-import { scrubPurchasePayload } from "./scrubPurchasePayload.js";
+import type { PurchaseIdentity } from './purchaseIdentity.js';
+import { scrubPurchasePayload } from './scrubPurchasePayload.js';
 
 function carriesPurchaseIdentity(
   payload: unknown,
