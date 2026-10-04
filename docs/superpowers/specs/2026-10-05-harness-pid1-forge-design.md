@@ -21,13 +21,14 @@ takes the last non-empty line, so the forged line becomes the result. Reproduced
 
 ## Design
 
-- **Non-dumpable PID 1.** A non-dumpable process's `/proc/<pid>` entries are owned by root and
-  `ptrace_may_access` denies a caller without `CAP_SYS_PTRACE`, so the oracle cannot open `/proc/1/fd/*`
-  or `/proc/1/mem`. Go, Python, and Ruby call `prctl(PR_SET_DUMPABLE, 0)` first thing (Go raw syscall,
+- **Non-dumpable PID 1.** For a non-dumpable process `ptrace_may_access` denies a caller without
+  `CAP_SYS_PTRACE`, so the oracle cannot open `/proc/1/fd/*` or `/proc/1/mem`. Go, Python, and Ruby call `prctl(PR_SET_DUMPABLE, 0)` first thing (Go raw syscall,
   Python `ctypes`, Ruby `Fiddle`). Node and bash have no prctl, so their images run PID 1 from a
   root-owned, execute-only (`0111`) copy of the interpreter: the kernel marks a process non-dumpable when
   it execs a binary it cannot read (`would_dump`, with `fs.suid_dumpable` 0 or 2). Those two harnesses
-  check at startup that `/proc/self` is owned by root and fail closed with `RunnerFailure` otherwise.
+  check at startup that a separate `/bin/ls` of their own `/proc/<pid>/fd` fails, and fail closed with
+  `RunnerFailure` otherwise. (On Docker Desktop's 6.10 kernel the `/proc/<pid>` owner does not change,
+  so ownership is not a usable check.)
 - **Signals.** A pid-namespace init ignores in-namespace signals left at `SIG_DFL`, so only runtime
   handlers that exit are a kill path. Each harness installs no-op handlers (not `SIG_IGN`, which the child
   would inherit across exec) for SIGHUP, SIGINT, SIGQUIT, SIGTERM, SIGUSR1, SIGUSR2. Go uses

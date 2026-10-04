@@ -1,9 +1,17 @@
 // Oracle harness: reads {code, timeoutMs} JSON on stdin, writes one JSON result line.
 // The harness stays PID 1 and never runs user code. The oracle runs in a child process whose
-// stdout and stderr are pipes the harness reads, so nothing the child writes or closes can
-// forge or suppress the result line. The harness owns the timeout and SIGKILLs the child's
-// process group.
-import { spawn } from 'node:child_process';
+// stdout and stderr are pipes the harness reads, so nothing the child writes or closes through
+// them can forge or suppress the result line. The harness owns the timeout and SIGKILLs the
+// child's process group.
+//
+// The child shares uid 10001 with the harness, so PID 1 is hardened against it. The image runs
+// the harness from a root-owned, execute-only copy of node: the kernel marks a process that
+// execs a binary it cannot read as non-dumpable, and the kernel then refuses a same-uid
+// process access to /proc/1/fd, so the child cannot open /proc/1/fd/1. Node has no prctl, so the harness checks that this took
+// effect and fails closed when it did not. The image also passes --disable-sigusr1, so SIGUSR1
+// cannot open an inspector the child could use to run code here, and the catchable termination
+// signals are no-ops, so the child cannot end the harness after a forged write.
+import { spawn, spawnSync } from 'node:child_process';
 import { readFileSync, writeSync } from 'node:fs';
 
 const OUTPUT_CAP_BYTES = 64 * 1024;
@@ -57,6 +65,18 @@ function classify(code, signal, out, err) {
     }
     if (code !== 0) return { outcome: 'exception', exceptionType: 'RunnerFailure' };
     return { outcome: 'value', value: out.endsWith('\n') ? out.slice(0, -1) : out };
+}
+
+const TERMINATION_SIGNALS = ['SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGTERM', 'SIGUSR1', 'SIGUSR2'];
+
+// Listeners reset on exec, unlike an ignored disposition, so the child starts with defaults.
+for (const signal of TERMINATION_SIGNALS) {
+    process.on(signal, () => undefined);
+}
+// A same-uid process can list a dumpable process's descriptors, so a successful listing means
+// the execute-only binary did not take effect.
+if (spawnSync('/bin/ls', [`/proc/${process.pid}/fd`], { stdio: 'ignore' }).status === 0) {
+    finish({ outcome: 'exception', exceptionType: 'RunnerFailure' });
 }
 
 const payload = JSON.parse(readFileSync(0, 'utf8'));

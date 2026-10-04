@@ -2,6 +2,14 @@
 # Oracle harness: reads {code, setupSql, timeoutMs} JSON on stdin, writes one JSON result line.
 # Starts a throwaway Postgres server whose data lives on a tmpfs, runs the setup SQL, then
 # reports the first column of the first row of the code's result.
+#
+# Every process here runs as uid 10001, so PID 1 is hardened against them. The image runs this
+# script under a root-owned, execute-only copy of bash: the kernel marks a process that execs a
+# binary it cannot read as non-dumpable, and the kernel then refuses a same-uid process access
+# to /proc/1/fd, so no other process can open /proc/1/fd/1 to write a result line of its own. bash has no prctl, so the
+# script checks that this took effect and fails closed when it did not. The oracle is SQL in a
+# non-superuser role, so it cannot signal PID 1; the TERM trap below stays for the pipeline's
+# timeout, which `docker run` forwards to PID 1.
 set -u
 export PATH="/usr/lib/postgresql/17/bin:$PATH"
 WORK=/tmp/work
@@ -76,6 +84,13 @@ work() {
 }
 
 trap 'emit_other timeout; exit 0' TERM
+
+# A same-uid process can list a dumpable process's descriptors, so a successful listing means
+# the execute-only binary did not take effect.
+if ls "/proc/$$/fd" > /dev/null 2>&1; then
+    emit_other exception RunnerFailure
+    exit 0
+fi
 
 # The verdict travels only over a pipe this process reads, never through a file the server can write.
 exec 4< <(work)
