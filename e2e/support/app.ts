@@ -61,7 +61,7 @@ async function openRoundByKeys(page: Page, difficultyKey: string): Promise<void>
   await expect(page.getByRole('progressbar', { name: /^Question 1 of/ })).toBeVisible();
 }
 
-// Answers the open question with the first choice (or True) and moves on, `count` times. Returns
+// Answers the open question with the first option (a multiple-choice or A/B option, or True) and moves on, `count` times. Returns
 // when the next question or the results screen is showing.
 async function answerQuestions(page: Page, count: number): Promise<void> {
   for (let answered = 0; answered < count; answered += 1) {
