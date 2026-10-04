@@ -5,6 +5,7 @@ import type { ExpoConfig } from 'expo/config';
 
 const CONTENT_ORIGIN = 'https://nullvoidundefined.github.io';
 const API_BASE_URL = 'https://api.syntactical.dev/v1/';
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
 
 function readBaseUrl(): string {
   return process.env.EXPO_BASE_URL ?? '/syntactical';
@@ -30,14 +31,26 @@ function readPostHogHost(): string | undefined {
   return value;
 }
 
+// The e2e build (E2E_API_BASE_URL, E2E_CONTENT_BASE_URL) points the app at servers on this machine.
+// Only an http URL on a loopback host is accepted, so a real build cannot be redirected by these;
+// the error names the variable, never the value.
+function readLoopbackUrl(envName: string, fallback: string): string {
+  const value = process.env[envName];
+  if (value === undefined || value === '') return fallback;
+  const isLoopback =
+    URL.canParse(value) && new URL(value).protocol === 'http:' && LOOPBACK_HOSTS.has(new URL(value).hostname);
+  if (!isLoopback) throw new Error(`${envName} must be an http URL on a loopback host`);
+  return value;
+}
+
 const BASE_URL = readBaseUrl();
-const CONTENT_BASE_URL = new URL(`${BASE_URL}/content/`, CONTENT_ORIGIN).href;
+const CONTENT_BASE_URL = readLoopbackUrl('E2E_CONTENT_BASE_URL', new URL(`${BASE_URL}/content/`, CONTENT_ORIGIN).href);
 
 const config: ExpoConfig = {
   android: { package: 'dev.nullvoidundefined.syntactical' },
   experiments: { baseUrl: BASE_URL, typedRoutes: true },
   extra: {
-    apiBaseUrl: API_BASE_URL,
+    apiBaseUrl: readLoopbackUrl('E2E_API_BASE_URL', API_BASE_URL),
     contentBaseUrl: CONTENT_BASE_URL,
     posthogHost: readPostHogHost(),
     posthogKey: readPublicKey('POSTHOG_KEY', 'phc', 'PostHog'),
