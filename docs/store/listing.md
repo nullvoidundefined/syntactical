@@ -14,18 +14,18 @@ Drafts for the App Store and Google Play listings. Every claim below matches wha
 
 ## App Store (iOS)
 
-| Field              | Limit | Draft                                                                                                            |
-| ------------------ | ----- | ---------------------------------------------------------------------------------------------------------------- |
-| Name               | 30    | Syntactical                                                                                                      |
-| Subtitle           | 30    | Code quizzes that stick                                                                                          |
-| Keywords           | 100   | python,postgres,javascript,quiz,coding,sql,programming,learn,developer,practice,interview                        |
-| Promotional text   | 170   | Practice the parts of Python, Postgres, and JavaScript that trip people up, one question at a time.              |
-| Support URL        |       | PLACEHOLDER: owner supplies (see `docs/launch-placeholders.md`)                                                  |
-| Privacy policy URL |       | PLACEHOLDER: owner supplies; a hosted policy must exist before submission                                        |
-| Marketing URL      |       | Optional. `https://syntactical.dev`                                                                              |
-| Category           |       | Education (primary), Developer Tools (secondary)                                                                 |
-| Age rating         |       | 4+ expected: no objectionable content, no web browsing, no user-generated content. Confirm in the questionnaire. |
-| Copyright          |       | PLACEHOLDER: owner's name or entity and year                                                                     |
+| Field              | Limit | Draft                                                                                                                           |
+| ------------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Name               | 30    | Syntactical                                                                                                                     |
+| Subtitle           | 30    | Code quizzes that stick                                                                                                         |
+| Keywords           | 100   | python,postgres,javascript,quiz,coding,sql,programming,learn,developer,practice,interview                                       |
+| Promotional text   | 170   | Practice the parts of Python, Postgres, and JavaScript that trip people up, one question at a time.                             |
+| Support URL        |       | PLACEHOLDER: owner supplies (see `docs/launch-placeholders.md`)                                                                 |
+| Privacy policy URL |       | `https://nullvoidundefined.github.io/syntactical/privacy` (app route `app/privacy.tsx`; the owner fills its placeholders first) |
+| Marketing URL      |       | Optional. `https://syntactical.dev`                                                                                             |
+| Category           |       | Education (primary), Developer Tools (secondary)                                                                                |
+| Age rating         |       | 4+ expected: no objectionable content, no web browsing, no user-generated content. Confirm in the questionnaire.                |
+| Copyright          |       | PLACEHOLDER: owner's name or entity and year                                                                                    |
 
 ### Description (iOS and Play full description, limit 4000)
 
@@ -55,16 +55,16 @@ First release. Python, Postgres, and JavaScript quizzes with free Easy banks, pa
 
 ## Google Play
 
-| Field                | Limit | Draft                                                                                                                              |
-| -------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| App name             | 30    | Syntactical                                                                                                                        |
-| Short description    | 80    | Quiz yourself on Python, Postgres, and JavaScript. Learn why each answer is right.                                                 |
-| Full description     | 4000  | Use the description above                                                                                                          |
-| Category             |       | Education                                                                                                                          |
-| Tags                 |       | Education, programming (pick from Play's list)                                                                                     |
-| Contact email        |       | PLACEHOLDER: owner supplies                                                                                                        |
-| Privacy policy       |       | PLACEHOLDER: same URL as the App Store                                                                                             |
-| Account deletion URL |       | PLACEHOLDER: Play requires a web page that explains how to delete an account and data; the in-app path is Settings, Delete account |
+| Field                | Limit | Draft                                                                                                                                   |
+| -------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| App name             | 30    | Syntactical                                                                                                                             |
+| Short description    | 80    | Quiz yourself on Python, Postgres, and JavaScript. Learn why each answer is right.                                                      |
+| Full description     | 4000  | Use the description above                                                                                                               |
+| Category             |       | Education                                                                                                                               |
+| Tags                 |       | Education, programming (pick from Play's list)                                                                                          |
+| Contact email        |       | PLACEHOLDER: owner supplies                                                                                                             |
+| Privacy policy       |       | `https://nullvoidundefined.github.io/syntactical/privacy`                                                                               |
+| Account deletion URL |       | `https://nullvoidundefined.github.io/syntactical/delete-account` (Play requires this page; the in-app path is Settings, Delete account) |
 
 ## Screenshots
 
