@@ -1,0 +1,42 @@
+{
+  "reviewer": "security-reviewer subagent",
+  "model": "claude-fable-5-1",
+  "range": "90dfb70..372429f",
+  "rounds": [
+    { "round": 1, "range": "90dfb70..a5b9a77", "findings": 4 },
+    { "round": 2, "range": "90dfb70..e699a8d", "findings": 6 },
+    { "round": 3, "range": "90dfb70..372429f", "findings": 2 }
+  ],
+  "ownerDecisions": [
+    "2026-10-03: 100,000 stored answer events per user; a batch that would exceed it is refused whole",
+    "2026-10-03: incremental recompute of only affected questions and days, equal to the full replay",
+    "2026-10-03: malformed uploads spending the caller's own rate-limit quota waived under the standing waiver (contained by auth)",
+    "2026-10-04: round 3 LOWs 15 and 16 waived (IAN-626)"
+  ],
+  "findings": [
+    { "id": 1, "severity": "MEDIUM", "control": "per-upload work bound (whole-history recompute, no cap, no timeouts)", "status": "fixed 8dd43a4 c6885a8 e699a8d" },
+    { "id": 2, "severity": "MEDIUM", "control": "upload schema insecure values untested", "status": "fixed 5f8d948" },
+    { "id": 3, "severity": "MEDIUM", "control": "PATCH /v1/me rate limit untested", "status": "fixed 97a895b" },
+    { "id": 4, "severity": "LOW", "control": "download paging invariant (received_at default)", "status": "fixed 406f80c" },
+    { "id": 5, "severity": "MEDIUM", "control": "per-user lock queue and pool exhaustion", "status": "fixed f301090 3297938" },
+    { "id": 6, "severity": "LOW", "control": "two-user /v1/me isolation untested", "status": "fixed 8e7f4f5" },
+    { "id": 7, "severity": "LOW", "control": "malformed uploads spend the caller's own quota", "status": "waived by owner 2026-10-03" },
+    { "id": 9, "severity": "MEDIUM", "control": "statement and idle-in-transaction timeouts untested", "status": "fixed e675e3d 9720779" },
+    { "id": 10, "severity": "LOW", "control": "zone-change replay skipped on an empty insert", "status": "fixed 7775585" },
+    { "id": 11, "severity": "LOW", "control": "one statement per affected date", "status": "fixed c8c3b95" },
+    { "id": 12, "severity": "LOW", "control": "users-table lock_timeout reported as busy", "status": "fixed c7753f9" },
+    { "id": 13, "severity": "LOW", "control": "busy path inside an aborted transaction", "status": "fixed c7753f9" },
+    { "id": 14, "severity": "LOW", "control": "idle-in-transaction FATAL mapped to 500", "status": "fixed 9720779" },
+    { "id": 17, "severity": "LOW", "control": "backend killed mid-transaction could crash the process (R-517)", "status": "fixed f604f72" },
+    { "id": 15, "severity": "LOW", "control": "busy vs lock timeout told apart by English message text", "status": "waived by owner 2026-10-04 (IAN-626)" },
+    { "id": 16, "severity": "LOW", "control": "incremental day sum uses Postgres tzdata while the replay uses Node ICU", "status": "waived by owner 2026-10-04 (IAN-626)" }
+  ],
+  "nothingFound": [
+    "stored-event cap: 100,000 plus 1, 99,999 plus 2, duplicate new ids, stored ids at the cap, another user's rows, parallel batches at the cap",
+    "per-user lock: held row with 12 sequential uploads and PATCHes on a 10-client pool, 8 parallel overlapping uploads, another user's upload under the held lock",
+    "timeouts and 503 mapping: pg_sleep(6), an 11 s idle transaction, table locks on daily_progress, daily_goal_changes, users; settings never leak onto pooled clients",
+    "checkout error listener: backend terminated mid-transaction rejects cleanly and the pool keeps serving",
+    "incremental recompute equals the full replay: seeded shuffled histories in +14, -12, Auckland, Los Angeles, Kolkata zones, backdated flips, goal changes before, among, and after events, zone change with an empty insert",
+    "round 1 controls unchanged: session auth, CSRF, 256 kB body after auth, server-derived correctness, own-events download, opaque cursor, /me validation, 600/600/60 limits, no secrets in logs"
+  ]
+}

@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import type { Logger } from 'pino';
 
 import { HTTP } from '../constants/http.js';
+import { TRANSACTION_TIMEOUTS } from '../constants/transactionTimeouts.js';
 import { createErrorResponse, ERROR_CODES } from '../errors.js';
 
 const { STATUS } = HTTP;
@@ -66,6 +67,19 @@ function createErrorHandler(logger: Logger) {
     }
 
     logUnhandled(err, locals.logger as Logger | undefined, logger, requestId);
+    const { code } = (err ?? {}) as { code?: unknown };
+    const { IDLE_IN_TRANSACTION_TIMEOUT_CODE, LOCK_TIMEOUT_CODE, STATEMENT_TIMEOUT_CODE } = TRANSACTION_TIMEOUTS;
+    if (
+      code === STATEMENT_TIMEOUT_CODE ||
+      code === LOCK_TIMEOUT_CODE ||
+      code === IDLE_IN_TRANSACTION_TIMEOUT_CODE
+    ) {
+      res
+        .status(STATUS.SERVICE_UNAVAILABLE)
+        .set('Retry-After', String(TRANSACTION_TIMEOUTS.BUSY_RETRY_AFTER_SECONDS))
+        .json(createErrorResponse(ERROR_CODES.SERVER.BUSY, 'Server busy, retry shortly', requestId));
+      return;
+    }
     res
       .status(INTERNAL_SERVER_ERROR)
       .json(createErrorResponse(ERROR_CODES.SERVER.INTERNAL_ERROR, 'Internal server error', requestId));
