@@ -7,9 +7,10 @@ import type { NextFunction, Request, Response } from 'express';
 import { HTTP } from '../constants/http.js';
 import { createErrorResponse, ERROR_CODES } from '../errors.js';
 
+import { isJsonMediaType } from './isJsonMediaType.js';
+
 const READ_ONLY_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const WEBHOOK_PATH_PREFIX = '/v1/webhooks/';
-const JSON_MEDIA_TYPE = 'application/json';
 
 function isBodyless(req: Request): boolean {
   const { 'content-length': contentLength, 'transfer-encoding': transferEncoding } = req.headers;
@@ -23,8 +24,7 @@ function requireJson(req: Request, res: Response, next: NextFunction): void {
     return;
   }
   const { 'content-type': contentType } = headers;
-  const [mediaType = ''] = (contentType ?? '').split(';');
-  const isJson = mediaType.trim().toLowerCase() === JSON_MEDIA_TYPE;
+  const isJson = isJsonMediaType(contentType);
   if (isJson || (contentType === undefined && isBodyless(req))) {
     next();
     return;
