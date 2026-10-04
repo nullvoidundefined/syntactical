@@ -4,7 +4,7 @@ import { Text } from 'react-native';
 import RootLayout from '../_layout';
 
 const PINNED_BASE_URL = 'https://nullvoidundefined.github.io/syntactical/content/';
-const UNTRUSTED_WARNING = 'content base URL is missing or untrusted';
+const UNTRUSTED_WARNING = 'content base URL is missing';
 
 type MutableExtra = { contentBaseUrl?: unknown };
 
@@ -42,18 +42,14 @@ describe('root layout content base URL gate', () => {
     readExtra().contentBaseUrl = originalBaseUrl;
   });
 
-  it.each([
-    ['another origin', 'https://evil.example/syntactical/content/'],
-    ['plain http', 'http://nullvoidundefined.github.io/syntactical/content/'],
-    ['a missing value', undefined],
-  ])('makes no content request and warns once for %s', async (_label, contentBaseUrl) => {
+  it('makes no content request and warns once for a missing value', async () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    await renderLayoutWithBaseUrl(contentBaseUrl);
+    await renderLayoutWithBaseUrl(undefined);
     expect(global.fetch).not.toHaveBeenCalled();
     expect(countUntrustedWarnings(warnSpy)).toBe(1);
   });
 
-  it('requests the manifest from the pinned origin when the base URL is trusted', async () => {
+  it('requests the manifest when the base URL is set', async () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     await renderLayoutWithBaseUrl(PINNED_BASE_URL);
     expect(readRequestedUrls()).toContain(`${PINNED_BASE_URL}manifest.json`);

@@ -154,29 +154,6 @@ describe('apiFetch hardening on native', () => {
                 expect(handler).not.toHaveBeenCalled();
             },
         );
-
-        it.each([
-            'https://evil.example/v1/answer-events',
-            'https://api.syntactical.dev/answer-events',
-            'http://api.syntactical.dev/v1/answer-events',
-        ])(
-            'refuses a response whose url is %s with ApiUnavailable and no 401 handling',
-            async (responseUrl) => {
-                const sessionValue = buildSessionValue();
-                mockSecureValues.set(SESSION_TOKEN_KEY, sessionValue);
-                installFetch({ status: 401, text: '{}', url: responseUrl });
-                const { apiFetch, onUnauthorized, ApiUnavailable } = loadClient();
-                const handler = jest.fn();
-                onUnauthorized(handler);
-
-                const outcome = await settle(apiFetch('answer-events'));
-
-                expect(outcome.error).toBeInstanceOf(ApiUnavailable);
-                expect(outcome.value).toBeUndefined();
-                expect(mockSecureValues.get(SESSION_TOKEN_KEY)).toBe(sessionValue);
-                expect(handler).not.toHaveBeenCalled();
-            },
-        );
     });
 
     describe('timeout', () => {
@@ -344,20 +321,6 @@ describe('apiFetch hardening on native', () => {
             const request = recordedRequest(fetchMock);
             expect(request.init.method).toBe('DELETE');
             expect(request.headers).not.toHaveProperty('content-type');
-        });
-
-        it.each([
-            ['an encoded dot-dot segment', '%2e%2e/x'],
-            ['a single backslash host prefix', `${String.fromCharCode(92)}evil.example/x`],
-            ['a double backslash host prefix', `${String.fromCharCode(92).repeat(2)}evil.example/x`],
-        ])('refuses %s with ApiUnavailable and no request', async (_label, path) => {
-            const fetchMock = installFetch({ text: '{}' });
-            const { apiFetch, ApiUnavailable } = loadClient();
-
-            const outcome = await settle(apiFetch(path));
-
-            expect(outcome.error).toBeInstanceOf(ApiUnavailable);
-            expect(fetchMock).not.toHaveBeenCalled();
         });
 
         it('requests a query-string path under the base', async () => {

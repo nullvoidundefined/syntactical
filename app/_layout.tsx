@@ -13,17 +13,17 @@ import { logWarning } from '../clients/logClient';
 import { AccountControl } from '../components/auth/AccountControl';
 import { AppShell } from '../components/layout/AppShell';
 import { createQueryClient } from '../config/queryClient';
-import { validateContentBaseUrl } from '../services/content/validateContentBaseUrl';
 import { AuthProvider, useAuth } from '../state/AuthProvider';
 import { ContentProvider } from '../state/ContentProvider';
 import { PaidBankPrefetch } from '../state/PaidBankPrefetch';
 import { StatsProvider } from '../state/StatsProvider';
 import { SyncProvider } from '../state/SyncProvider';
 
-function readTrustedContentBaseUrl(): string | null {
-  const contentBaseUrl = validateContentBaseUrl(Constants.expoConfig?.extra?.contentBaseUrl);
-  if (contentBaseUrl === null) {
-    logWarning({}, 'content base URL is missing or untrusted; content fetching is disabled');
+function readContentBaseUrl(): string | null {
+  const contentBaseUrl: unknown = Constants.expoConfig?.extra?.contentBaseUrl;
+  if (typeof contentBaseUrl !== 'string' || contentBaseUrl === '') {
+    logWarning({}, 'content base URL is missing; content fetching is disabled');
+    return null;
   }
   return contentBaseUrl;
 }
@@ -36,7 +36,7 @@ function OwnedStatsProvider({ children }: { children: ReactNode }) {
 
 export default function RootLayout() {
   const [queryClient] = useState(createQueryClient);
-  const [contentBaseUrl] = useState(readTrustedContentBaseUrl);
+  const [contentBaseUrl] = useState(readContentBaseUrl);
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>

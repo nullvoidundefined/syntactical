@@ -1,19 +1,13 @@
 // Expo configuration. The web base path and the content URL depend on the
 // build target, so the pre-cutover preview build can live under
-// /syntactical/preview without touching the live site. Only the two known base
-// paths are accepted, so the content URL can never leave the pinned origin.
+// /syntactical/preview without touching the live site.
 import type { ExpoConfig } from 'expo/config';
 
 const CONTENT_ORIGIN = 'https://nullvoidundefined.github.io';
 const API_BASE_URL = 'https://api.syntactical.dev/v1/';
-const ALLOWED_BASE_URLS = ['/syntactical', '/syntactical/preview'];
 
 function readBaseUrl(): string {
-  const { EXPO_BASE_URL: baseUrl = '/syntactical' } = process.env;
-  if (!ALLOWED_BASE_URLS.includes(baseUrl)) {
-    throw new Error(`EXPO_BASE_URL must be one of ${ALLOWED_BASE_URLS.join(', ')}`);
-  }
-  return baseUrl;
+  return process.env.EXPO_BASE_URL ?? '/syntactical';
 }
 
 // A RevenueCat key reaches the bundle only when it carries its public prefix, so
