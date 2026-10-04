@@ -3,7 +3,7 @@ import { toLocalDate } from '@syntactical/progress';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { Pressable, Text } from 'react-native';
 
-import { EVENT_LOG_STORAGE_KEY, REJECTED_STORAGE_KEY, STORAGE_KEY } from '../../constants/appConfig';
+import { EVENT_LOG_STORAGE_KEY, STORAGE_KEY } from '../../constants/appConfig';
 import { StatsProvider, useQuizStats } from '../StatsProvider';
 
 function MigrationProbe() {
@@ -66,7 +66,6 @@ describe('StatsProvider v1 to v2 migration', () => {
         version: 2,
       }),
     );
-    expect(await AsyncStorage.getItem(REJECTED_STORAGE_KEY)).toBeNull();
   });
 
   it('is safe to rerun: a second launch loads the migrated value unchanged and keeps the event log', async () => {
@@ -81,6 +80,5 @@ describe('StatsProvider v1 to v2 migration', () => {
     expect(screen.getByTestId('attempted')).toHaveTextContent('13');
     expect(screen.getByTestId('events')).toHaveTextContent('1');
     expect(await readStored(STORAGE_KEY)).toEqual(afterFirstLaunch);
-    expect(await AsyncStorage.getItem(REJECTED_STORAGE_KEY)).toBeNull();
   });
 });

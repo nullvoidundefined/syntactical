@@ -8,9 +8,6 @@ export const STORAGE_KEY = 'syntactical.stats.v1';
 export function buildUserStatsKey(userId: string): string {
   return `syntactical.stats.v2.user.${userId}`;
 }
-// Holds the last stored stats value that failed validation, so a schema
-// mismatch or corruption never destroys a player's history silently.
-export const REJECTED_STORAGE_KEY = 'syntactical.stats.v1.rejected';
 export const STORAGE_SCHEMA_VERSION = 2;
 // The stored stats shape before the answer event log, migrated on hydrate.
 export const STATS_V1_SCHEMA_VERSION = 1;
@@ -21,7 +18,6 @@ export const DEFAULT_DAILY_GOAL = 20;
 // never slows the stats write. It never exceeds the cap: the oldest synced
 // entries are trimmed first, then the oldest unsynced ones.
 export const EVENT_LOG_STORAGE_KEY = 'syntactical.events.v1';
-export const REJECTED_EVENT_LOG_STORAGE_KEY = 'syntactical.events.v1.rejected';
 export const EVENT_LOG_CAP = 5000;
 
 // The non-secret signed-in identity: the user id and every user id that has

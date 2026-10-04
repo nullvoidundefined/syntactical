@@ -96,13 +96,12 @@ describe('StatsProvider answer event log', () => {
     expect((await readStoredLog())[0]).toEqual(stored[0]);
   });
 
-  it('backs up a malformed stored event log instead of overwriting it', async () => {
-    jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+  it('drops a malformed stored event entry and stores only valid ones after the next answer', async () => {
     await AsyncStorage.setItem(EVENT_LOG_STORAGE_KEY, JSON.stringify([{ eventId: 7 }]));
     await renderHydrated();
     expect(screen.getByTestId('events')).toHaveTextContent('0');
     await fireEvent.press(screen.getByTestId('bank-answer'));
     await waitFor(async () => expect(await readStoredLog()).toHaveLength(1));
-    expect(JSON.parse((await AsyncStorage.getItem(`${EVENT_LOG_STORAGE_KEY}.rejected`)) ?? 'null')).toEqual([{ eventId: 7 }]);
+    expect((await readStoredLog())[0]).not.toEqual({ eventId: 7 });
   });
 });

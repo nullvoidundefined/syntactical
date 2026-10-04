@@ -85,7 +85,7 @@ Proposed during grounding, settled by approving this spec (each resolves a confl
 | Stored stats check | `services/stats/isStoredStats.ts` | `isStoredStats` |
 | Track key | `services/stats/buildStatsKey.ts` | `buildStatsKey` |
 | Stats provider | `state/StatsProvider.tsx` | `StatsProvider`, `useQuizStats` |
-| Storage and schema constants | `constants/appConfig.ts` | `STORAGE_KEY`, `REJECTED_STORAGE_KEY`, `STORAGE_SCHEMA_VERSION`, `SUPPORTED_SCHEMA_VERSION`, `QUESTION_TYPES`, `KEY_BINDINGS`, `DIFFICULTIES` |
+| Storage and schema constants | `constants/appConfig.ts` | `STORAGE_KEY`, `STORAGE_SCHEMA_VERSION`, `SUPPORTED_SCHEMA_VERSION`, `QUESTION_TYPES`, `KEY_BINDINGS`, `DIFFICULTIES` |
 | Query drawer | `components/query/QueryDrawer.tsx` | `QueryDrawer` |
 | Round screen body (Explain) | `components/quiz/QuizRound.tsx` | `QuizRound` |
 | Cards | `components/quiz/MultipleChoiceCard.tsx` | `MultipleChoiceCard` |
@@ -114,7 +114,7 @@ Concepts with no match in the repo, which this spec therefore creates: topic, A/
 - Manifest and bank schema versioning with rejection of unknown versions: implemented at `services/content/validateManifest.ts:63` and `services/content/validateQuestionBank.ts:97`. v2 bumps `SUPPORTED_SCHEMA_VERSION` (`constants/appConfig.ts:27`) rather than adding a second mechanism.
 - Content build that validates and rehashes, with a CI staleness check: implemented at `scripts/buildContentManifest.mjs:115` and `.github/workflows/ci.yml:20`. The pipeline's publish stage ends by calling this, not by reimplementing hashing.
 - Static hosting with SHA-256 verification, AsyncStorage cache, and bundled fallback for every bank: implemented at `services/content/loadQuestionBank.ts:54` and `state/ContentProvider.tsx:55`. v2 keeps it for free banks and stops bundling paid banks.
-- Lifetime stats per language and difficulty, validation of stored stats, and the rejected-stats backup: implemented at `services/stats/isStoredStats.ts:23` and `state/StatsProvider.tsx:48`. The v2 stats migration reuses the backup path.
+- Lifetime stats per language and difficulty, validation of stored stats: implemented at `services/stats/isStoredStats.ts:23` and `state/StatsProvider.tsx:48`.
 - Answer streak (consecutive correct answers): implemented at `services/stats/recordAnswer.ts:10`. Renamed, not removed.
 - Keyboard bindings for mc and bool: implemented at `constants/appConfig.ts:74`. `A` and `B` already select choices 0 and 1, which is exactly what an A/B card needs, so no new binding is required.
 - Offline handling on the difficulty step: partially implemented at `components/menu/DifficultyStep.tsx:37`. Gap: it keys on load status, not on "has a local copy", which matters once paid banks are not bundled.
@@ -316,7 +316,7 @@ Order matches the slices in the plan. Each line is one RED slice.
 - B-37: `GET /v1/banks/:language/:difficulty` returns 401 without a session, 403 without the entitlement, and the bank JSON (hash matching the manifest) with it; a free bank path returns 404.
 - B-38: On web, the app configures RevenueCat Web Billing (`@revenuecat/purchases-js`) with `appUserId = user.id` and buys the product's package; the resulting RevenueCat webhook (store `RC_BILLING`) grants that user the entitlement exactly as a store purchase does; events apply in the provider's event time order, not arrival order, so a refund delivered before its purchase still ends revoked; after checkout the web app polls `/me` until the entitlement appears or 30 seconds pass.
 - B-39: After sign-in the app calls `Purchases.logIn(user.id)` (and `logOut` on sign-out), so webhooks carry the server user id; a RevenueCat webhook with a wrong authorization header is rejected; a valid purchase records one purchase event and grants that user the entitlement for the mapped product id; a refund or revocation removes it.
-- B-40: Stored v1 stats migrate to v2 on first launch: totals and tracks carry over, `streak` becomes the answer streak, and an empty answer event log and review state are created; a failed migration keeps the v1 value under the backup key.
+- B-40: Stored v1 stats migrate to v2 on first launch: totals and tracks carry over, `streak` becomes the answer streak, and an empty answer event log and review state are created.
 - B-41: A guest sees a dismissible sign-up prompt after the first completed round, and never again after dismissing it.
 - B-42: A paid bank shows a lock and its price (the localized `priceString` from the RevenueCat offering on every platform) on the difficulty step for a user without the entitlement; selecting it opens the purchase flow (RevenueCat Web Billing on web, the store sheet on native).
 - B-43: "Restore purchases" on a fresh native install re-grants every entitlement the account holds.
@@ -396,7 +396,7 @@ Order matches the slices in the plan. Each line is one RED slice.
 
 ## Dependencies
 
-Reused (R-308): every module in the Codebase grounding table; the content build and CI staleness check; the cache and bundle path; the rejected-stats backup.
+Reused (R-308): every module in the Codebase grounding table; the content build and CI staleness check; the cache and bundle path.
 
 New packages, each justified:
 

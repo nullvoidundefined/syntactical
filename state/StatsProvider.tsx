@@ -141,7 +141,7 @@ export function StatsProvider({ children, deletedUserId = null, ownerUserId = nu
     let isCancelled = false;
     async function hydrate() {
       const statsRead = await readStoredJson(statsSlot.key);
-      const { isPersistenceBlocked, stats: storedStats } = await resolveStoredStats(statsRead, readLocalToday());
+      const { isPersistenceBlocked, stats: storedStats } = resolveStoredStats(statsRead, readLocalToday());
       if (isCancelled) return;
       loadSlot(statsSlot, storedStats, isPersistenceBlocked);
       setLoadedStatsKey(statsSlot.key);
@@ -156,7 +156,7 @@ export function StatsProvider({ children, deletedUserId = null, ownerUserId = nu
     let isCancelled = false;
     async function hydrate() {
       const eventLogRead = await readStoredJson(EVENT_LOG_STORAGE_KEY);
-      const { eventLog: storedEventLog, isPersistenceBlocked: isEventLogBlocked } = await resolveStoredEventLog(eventLogRead);
+      const { eventLog: storedEventLog, isPersistenceBlocked: isEventLogBlocked } = resolveStoredEventLog(eventLogRead);
       if (isCancelled) return;
       loadSlot(eventLogSlot, storedEventLog, isEventLogBlocked);
       setIsEventLogLoaded(true);
@@ -197,7 +197,7 @@ export function StatsProvider({ children, deletedUserId = null, ownerUserId = nu
       if (!isHydrated) return;
       requireOwner(ownerRef.current, userId);
       await requirePersisted(changeSlot(eventLogSlot, (current) => claimGuest(current, userId)));
-      const { isPersistenceBlocked, stats: guestStats } = await resolveStoredStats(await readStoredJson(STORAGE_KEY), readLocalToday());
+      const { isPersistenceBlocked, stats: guestStats } = resolveStoredStats(await readStoredJson(STORAGE_KEY), readLocalToday());
       if (isPersistenceBlocked) throw new Error('guest stats could not be read');
       requireOwner(ownerRef.current, userId);
       await requirePersisted(changeSlot(statsSlot, (current) => mergeGuestStats(guestStats, current)));

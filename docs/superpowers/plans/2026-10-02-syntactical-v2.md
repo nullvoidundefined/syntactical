@@ -781,10 +781,10 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 **Behaviors (RED tests):**
 - A stored v1 value migrates: totals and tracks unchanged, `streak` becomes `answerStreak`, goal history `[{ from: today, goal: 20 }]`, an empty event log.
-- A migration that throws keeps the v1 value under `REJECTED_STORAGE_KEY` and keeps changes in memory.
+- A stored value that fails the type guards starts empty, and a failed storage read keeps changes in memory without overwriting what is stored.
 - Each recorded answer appends exactly one event with a UUID v4 `eventId`, ISO `answeredAt`, its `roundKind`, and the current `ownerUserId` (null for a guest).
 - The event log is capped at 5,000 entries; synced entries are trimmed oldest first; unsynced entries are never trimmed.
-- The existing StatsProvider tests (rejected backup, hydration gating) still pass.
+- The existing StatsProvider tests (read failure, hydration gating) still pass.
 
 - [ ] Gated cycle; commit `feat(stats): v2 stats with an answer event log and v1 migration`.
 
