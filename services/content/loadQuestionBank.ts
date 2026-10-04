@@ -1,7 +1,7 @@
 // Downloads one bank, verifies its bytes against the manifest hash,
 // validates it, and caches it only if that hash is still the current one.
 // A free bank comes from the static content host and is cached under the shared
-// key; a paid bank comes from the API through apiFetch (origin pinned, with the
+// key; a paid bank comes from the API through apiFetch (with the
 // signed-in session) and is cached only under its owner's key. A paid bank with
 // no owner is refused before any request. Throws on any failure so TanStack
 // Query reports the error state.

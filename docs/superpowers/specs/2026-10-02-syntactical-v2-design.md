@@ -69,8 +69,7 @@ Proposed during grounding, settled by approving this spec (each resolves a confl
 | Bank hash check | `services/content/verifyBankHash.ts` | `verifyBankHash` |
 | Bank URL | `services/content/resolveBankUrl.ts` | `resolveBankUrl` |
 | Content provider | `state/ContentProvider.tsx` | `ContentProvider` |
-| Content base URL pin | `app.config.ts` | `CONTENT_ORIGIN`, `ALLOWED_BASE_URLS` (module constants) |
-| Content base URL allowlist | `services/content/validateContentBaseUrl.ts` | `validateContentBaseUrl` |
+| Content base URL | `app.config.ts` | `CONTENT_ORIGIN` (module constant) |
 | Query client | `config/queryClient.ts` | `createQueryClient` |
 | Manifest hook | `state/useLanguageManifest.ts` | `useLanguageManifest` |
 | Bank hook | `state/useQuestionBank.ts` | `useQuestionBank` |
@@ -137,7 +136,7 @@ Concepts with no match in the repo, which this spec therefore creates: topic, A/
 - New components; R-305 asks for one folder per component, the repo groups by domain at `components/quiz/BooleanCard.tsx:1` (R-305: resolved by decision 22, follow the repo).
 - `pipeline/` is not in the directory vocabulary and existing content tooling lives in `scripts/` at `scripts/buildContentManifest.mjs:1` (R-304: `pipeline/` is its own workspace package; inside it the standard vocabulary applies: `clients/` for the model provider and Docker, `services/` for stages, `prompts/` for prompt text).
 - Tests in `server/` and `pipeline/`; the app uses per-directory `__tests__/` at `services/content/__tests__/validateQuestionBank.test.ts:1` (R-313, R-314: each new package uses one top-level `src/__tests__/` tree mirroring `src/`, with vitest; the app keeps its pattern).
-- The content base URL allowlist pins GitHub Pages at `app.config.ts:7` (R-109: moving to `https://syntactical.dev` changes a security control and gets the R-109 review and an insecure-value test per control).
+- The content base URL is a build-time constant in `app.config.ts` (`CONTENT_ORIGIN`); moving to `https://syntactical.dev` is a one-line config change with no runtime allow-list.
 
 ## Domain vocabulary
 
@@ -221,7 +220,7 @@ Manifest language entry adds `topics: { id, label }[]` and `misconceptions: { id
 - Free banks: unchanged path. Static host (`https://syntactical.dev/content/...`), hash-checked, cached, bundled.
 - Paid banks: not bundled and not on the static host. `GET https://api.syntactical.dev/v1/banks/:language/:difficulty` returns the bank JSON after an entitlement check (401 without a session, 403 without the entitlement). The client verifies the body against the manifest bank hash before caching, exactly as for free banks, so a cached paid bank plays offline.
 - Paid bank sources live in the private `syntactical-content` repo, checked out at `../syntactical-content` locally and in CI. `scripts/buildContentManifest.mjs` hashes free banks from `content/` and paid banks from `CONTENT_PRIVATE_DIR`, writes one manifest listing both, bundles only free banks, and fails when a bank with `access: 'paid'` exists under `content/` or the web export contains one.
-- The client loads a paid bank through `apiFetch` with credentials and prefetches it only when the user holds its entitlement; the API base URL (`https://api.syntactical.dev/v1/`) is pinned by `validateApiBaseUrl`, the analog of `validateContentBaseUrl`. Paid bank loads keep the `['bank', ...]` query key family so the download indicator still shows.
+- The client loads a paid bank through `apiFetch` with credentials and prefetches it only when the user holds its entitlement; the API base URL (`https://api.syntactical.dev/v1/`) is a build-time constant in `app.config.ts`, read from `extra.apiBaseUrl` with no runtime allow-list. Paid bank loads keep the `['bank', ...]` query key family so the download indicator still shows.
 
 ### Server
 
@@ -266,7 +265,7 @@ Order matches the slices in the plan. Each line is one RED slice.
 
 ### Stage 0: domain cutover
 
-- B-55: The web export builds with base path `/` for `https://syntactical.dev`, `app.config.ts` pins `CONTENT_ORIGIN` to `https://syntactical.dev`, and `validateContentBaseUrl` accepts exactly `https://syntactical.dev/content/` and rejects the old GitHub Pages URL, `http://`, other hosts, and lookalike hosts.
+- B-55: The web export builds with base path `/` for `https://syntactical.dev`, and `app.config.ts` sets `CONTENT_ORIGIN` to `https://syntactical.dev`, so `extra.contentBaseUrl` is `https://syntactical.dev/content/`. The content base URL is a build-time constant with no runtime allow-list.
 - B-56: `https://nullvoidundefined.github.io/syntactical/` and its deep links redirect to the same path on `https://syntactical.dev`, so existing links and bookmarks keep working (stats do not carry across origins; the release note says so).
 
 ### Stage 1: workspaces, schema v2, audit
@@ -444,7 +443,7 @@ Security-touching controls, each needing the R-109 review and a test that feeds 
 | 6 | MEDIUM | CSRF relied on SameSite only | Fixed: `X-Requested-With` guard plus JSON-only bodies (B-30, B-63) |
 | 7 | MEDIUM | Health endpoint shape vs R-345 | Fixed: `/health` and `/health/ready` (B-62) |
 | 8 | MEDIUM | Paid bank body must be verbatim bytes | Fixed: decision 20 |
-| 9 | MEDIUM | Paid bank transport, prefetch, API base URL pin | Fixed: Delivery section, `validateApiBaseUrl` |
+| 9 | MEDIUM | Paid bank transport, prefetch, API base URL pin | Fixed: Delivery section; the base URL is a build-time constant, the runtime origin allow-list was removed (IAN-601) |
 | 10 | MEDIUM | Past timestamps can backfill a streak | Accepted limit, stated: decision 23, B-34 bound |
 | 11 | MEDIUM | Rate limit behind Railway proxy | Fixed: `trust proxy` 1, B-63 |
 | 12 | MEDIUM | Event log growth and clearing contradiction | Fixed: events kept and marked synced, own storage key, 5,000-event cap (plan Task 3.9) |
