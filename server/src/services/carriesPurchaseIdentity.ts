@@ -2,7 +2,7 @@
 // PII-attribute clearing the scrub does. Strict (B-59.1c) by default, for rows linked to another user; loose
 // (B-59.7) when `isLoose` is set, for unlinked rows. Derived from the scrubber's own walker (match-only
 // mode, then compare), so row selection and scrubbing share one walk and one depth cap; a container
-// nested past the cap is replaced wholesale and so counts as carrying.
+// nested past the cap is returned unchanged in match-only mode (B-59.8) and so does not count as carrying.
 import type { PurchaseIdentity } from "./purchaseIdentity.js";
 import { scrubPurchasePayload } from "./scrubPurchasePayload.js";
 

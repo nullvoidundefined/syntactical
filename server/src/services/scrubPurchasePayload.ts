@@ -5,16 +5,17 @@
 // (B-59.7: the email or id anywhere in a string, no boundary rule); match-only stays strict unless
 // `isLoose` is set. Returns a copy. A renamed
 // key never overwrites another key (it takes the first free `[deleted]-n`), a blank identity
-// throws, containers nested deeper than 64 levels (on every path, PII attributes included) become `[deleted]`, and an own `__proto__` key
-// is kept as a plain own property. In strict mode the id matches anywhere inside a string; the email
+// throws, containers nested deeper than 64 levels (on every path, PII attributes included) become `[deleted]` in the
+// default mode but are returned unchanged in match-only mode (B-59.8; exceedsDepthCap.ts tells a caller a payload
+// has such a container), and an own `__proto__` key is kept as a plain own property. In strict mode the id matches anywhere inside a string; the email
 // matches only as a whole address (no local-part character before it, no domain continuation after it),
 // so `jo<email>`, `<email>m`, and `<email>.uk` are kept (see carriesIdentity.ts).
 import { carriesIdentity } from "./carriesIdentity.js";
 import type { PurchaseIdentity } from "./purchaseIdentity.js";
 import { buildNeedles } from "./purchaseNeedles.js";
+import { MAX_DEPTH } from "./purchasePayloadMaxDepth.js";
 
 const DELETED = "[deleted]";
-const MAX_DEPTH = 64;
 interface ScrubOptions {
   clearPiiAttributes: boolean;
   isLoose?: boolean;
@@ -127,7 +128,7 @@ function walk(
     return node;
   }
   if (depth > MAX_DEPTH) {
-    return DELETED;
+    return options.clearPiiAttributes ? DELETED : node;
   }
   if (Array.isArray(node)) {
     return node.map((item) => walk(item, needles, depth + 1, options));

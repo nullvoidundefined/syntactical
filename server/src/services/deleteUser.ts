@@ -18,6 +18,7 @@ import { AUTH } from "../constants/auth.js";
 
 import { carriesPurchaseIdentity } from "./carriesPurchaseIdentity.js";
 import { deleteRateLimitCountersForEmail } from "./deleteRateLimitCountersForEmail.js";
+import { exceedsDepthCap } from "./exceedsDepthCap.js";
 import { normalizeEmail } from "./normalizeEmail.js";
 import type { PurchaseIdentity } from "./purchaseIdentity.js";
 import { scrubPurchasePayload } from "./scrubPurchasePayload.js";
@@ -41,7 +42,8 @@ function containsPattern(value: string): string {
   return `%${value.replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
 }
 
-// Own rows are always chosen; unlinked rows by the loose match (B-59.7); another user's rows by the strict one.
+// Own rows are always chosen; unlinked rows by the loose match (B-59.7) or when nested past the depth cap, which
+// match-only reads cannot see into (B-59.8, fail closed); another user's rows by the strict one.
 function isChosenRow(
   rowUserId: string | null,
   payload: unknown,
@@ -50,6 +52,7 @@ function isChosenRow(
 ): boolean {
   return (
     rowUserId === userId ||
+    (rowUserId === null && exceedsDepthCap(payload)) ||
     carriesPurchaseIdentity(payload, identity, { isLoose: rowUserId === null })
   );
 }
