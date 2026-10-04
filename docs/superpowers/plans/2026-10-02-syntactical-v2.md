@@ -24,7 +24,7 @@
 - Session tokens: 32 random bytes, base64url; only `sha256(token)` stored; expiry 30 days absolute or 14 days idle. One-time codes: 6 digits, only `sha256(code)` stored, 10-minute expiry, 5 attempts, a new code invalidates older unused ones, compared with `timingSafeEqual`.
 - Cookie: `syntactical_session`, `HttpOnly; SameSite=Lax; Path=/`, `Secure` except in `NODE_ENV=development`, host-only on `api.syntactical.dev`.
 - CORS: exactly `https://syntactical.dev`, credentials true. Cookie-authenticated non-GET routes require `X-Requested-With: XMLHttpRequest` and `Content-Type: application/json`. `app.set('trust proxy', 1)`.
-- Answer events: batches of at most 200; `answeredAt` within [user `created_at` − 365 days, server now + 5 minutes]; the server derives `isCorrect`.
+- Answer events: batches of at most 200; `answeredAt` within [user `created_at` − 365 days, server now + 24 hours]; the server derives `isCorrect`.
 - Never log email, one-time code, session token, or webhook secrets.
 - Lighthouse accessibility 100 on every route; reduced motion uses `animation: none`; screen readers and web keyboard supported on every new screen; no key binding fires while a text field has focus.
 - Prices come from the RevenueCat offering's `priceString` on every platform; product id `syntactical.<language>.<difficulty>`; $5 list price. The server holds no Stripe code; RevenueCat is the only purchase webhook.
@@ -756,10 +756,10 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 **Behaviors (RED tests):**
 - A batch of 50 events inserts 50 rows; re-posting it inserts 0 and returns identical totals.
 - The server sets `is_correct` from `choiceIndex` against the bank's answer, ignoring any client value; a `choiceIndex` outside the question's choices → 422.
-- An event more than 5 minutes in the future, or before the user's `created_at` minus 365 days, → the whole batch 422 with the offending ids; nothing inserted.
+- An event more than 24 hours in the future, or before the user's `created_at` minus 365 days, → the whole batch 422 with the offending ids; nothing inserted.
 - A batch over 200 events → 413; an unknown `bankKey` or `questionId` → 422.
 - Two concurrent uploads of overlapping batches for one user both succeed and leave each event once; derived XP equals `computeXp` summed over distinct events.
-- `daily_progress` for the affected local dates is recomputed with `@syntactical/progress` in the same transaction.
+- `daily_progress` is rebuilt from all of the user's stored events with `@syntactical/progress` in the same transaction (on every upload and every `PATCH /v1/me`).
 - `GET /v1/answer-events?after=<cursor>` returns at most 500 events ordered by `received_at, event_id` with a `nextCursor`, and never another user's events; the cursor is opaque base64url decoded by zod into `(received_at, event_id)`, and `' OR 1=1 --`, an oversized value, or a non-cursor string returns 400.
 
 - [ ] Gated cycle; commit `feat(sync): idempotent answer event upload and paged download`.

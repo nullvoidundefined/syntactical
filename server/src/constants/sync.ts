@@ -3,7 +3,8 @@ const HOUR_MS = 3_600_000;
 
 const SYNC = {
   BODY_LIMIT: '256kb',
-  FUTURE_TOLERANCE_MINUTES: 5,
+  // Wide enough that a device clock running fast never strands an answer.
+  FUTURE_TOLERANCE_HOURS: 24,
   MAX_BATCH: 200,
   MAX_CURSOR_LENGTH: 200,
   MAX_EVENTS_PER_USER: 100_000,
