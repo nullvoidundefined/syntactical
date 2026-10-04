@@ -33,7 +33,6 @@ export function AppShell({ accountControl = null, children }: { accountControl?:
     <SafeAreaView className="flex-1 bg-obsidian">
       <View
         role="banner"
-        style={{ zIndex: 1 }}
         className="flex-row flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3"
       >
         <Text className="font-mono text-xs tracking-widest text-ink">SYNTACTICAL</Text>

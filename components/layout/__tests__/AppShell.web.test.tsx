@@ -52,13 +52,10 @@ describe('AppShell on the web', () => {
     expect(screen.getByRole('banner').textContent).not.toMatch(/best/i);
   });
 
-  // The sign-out dialog opens from the app bar and draws a fixed overlay. React Native Web views
-  // are stacking contexts, so the bar must stack above the page content or the overlay paints
-  // under it and its buttons cannot be clicked.
-  it('stacks the app bar above the page content', () => {
+  // Dialog overlays are hosted in document.body (ModalOverlay), so the app bar needs no z-index of
+  // its own; one would paint the bar above the paywall and delete-account overlays.
+  it('leaves the app bar unstacked so modal overlays cover it', () => {
     renderShell();
-    const bannerLayer = Number(screen.getByRole('banner').style.zIndex || 0);
-    const mainLayer = Number(screen.getByRole('main').style.zIndex || 0);
-    expect(bannerLayer).toBeGreaterThan(mainLayer);
+    expect(screen.getByRole('banner').style.zIndex).toBe('');
   });
 });

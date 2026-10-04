@@ -16,6 +16,8 @@ import { useSync } from '../../state/SyncProvider';
 import { markModalOpen } from '../../state/modalOpenSignal';
 import { useIsOnline } from '../../state/useIsOnline';
 
+import { ModalOverlay } from '../layout/ModalOverlay';
+
 import { AuthButton } from './AuthButton';
 
 const HEADING = 'Delete account';
@@ -36,7 +38,15 @@ type DialogPanelProps = {
   onConfirm: () => void;
 };
 
-function DialogPanel({ confirmation, isBusy, isOnline, message, onCancel, onChangeConfirmation, onConfirm }: DialogPanelProps) {
+function DialogPanel({
+  confirmation,
+  isBusy,
+  isOnline,
+  message,
+  onCancel,
+  onChangeConfirmation,
+  onConfirm,
+}: DialogPanelProps) {
   const panelRef = useRef<View>(null);
   const isWeb = Platform.OS === 'web';
 
@@ -49,11 +59,17 @@ function DialogPanel({ confirmation, isBusy, isOnline, message, onCancel, onChan
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Tab') {
         const panel = panelRef.current as unknown as HTMLElement | null;
-        const controls = Array.from(panel?.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled])') ?? []);
+        const controls = Array.from(
+          panel?.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled])') ?? [],
+        );
         const [first] = controls;
         const last = controls[controls.length - 1];
         const edge = event.shiftKey ? first : last;
-        if (first === undefined || (document.activeElement !== edge && !(event.shiftKey && document.activeElement === panel))) return;
+        if (
+          first === undefined ||
+          (document.activeElement !== edge && !(event.shiftKey && document.activeElement === panel))
+        )
+          return;
         event.preventDefault();
         (event.shiftKey ? last : first).focus();
         return;
@@ -71,7 +87,10 @@ function DialogPanel({ confirmation, isBusy, isOnline, message, onCancel, onChan
   const canConfirm = isOnline && !isBusy && confirmation === CONFIRMATION;
 
   return (
-    <View className="absolute inset-0 items-center justify-center bg-obsidian/90 p-4" style={isWeb ? { position: 'fixed' as 'absolute' } : undefined}>
+    <View
+      className="absolute inset-0 items-center justify-center bg-obsidian/90 p-4"
+      style={isWeb ? { position: 'fixed' as 'absolute' } : undefined}
+    >
       <View
         ref={panelRef}
         role="dialog"
@@ -178,7 +197,7 @@ export function DeleteAccountDialog() {
 
   const overlay =
     Platform.OS === 'web' ? (
-      panel
+      <ModalOverlay>{panel}</ModalOverlay>
     ) : (
       <Modal transparent animationType="none" visible onRequestClose={close}>
         {panel}

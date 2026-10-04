@@ -18,6 +18,8 @@ import { useQuizStats } from '../../state/StatsProvider';
 import { useSync } from '../../state/SyncProvider';
 import { markModalOpen } from '../../state/modalOpenSignal';
 
+import { ModalOverlay } from '../layout/ModalOverlay';
+
 import { AuthButton } from './AuthButton';
 
 const HEADING = 'Unsynced answers';
@@ -52,7 +54,10 @@ function DialogPanel({ failureMessage, isBusy, onCancel, onDiscard, onSyncNow }:
   }, [isWeb, onCancel]);
 
   return (
-    <View className="absolute inset-0 items-center justify-center bg-obsidian/90 p-4" style={isWeb ? { position: 'fixed' as 'absolute' } : undefined}>
+    <View
+      className="absolute inset-0 items-center justify-center bg-obsidian/90 p-4"
+      style={isWeb ? { position: 'fixed' as 'absolute' } : undefined}
+    >
       <View
         ref={panelRef}
         role="dialog"
@@ -68,8 +73,8 @@ function DialogPanel({ failureMessage, isBusy, onCancel, onDiscard, onSyncNow }:
           {HEADING}
         </Text>
         <Text className="mt-2 text-sm text-muted">
-          Some of your answers have not synced yet. Sync them before you sign out, or discard them. Answers the server refused cannot sync and
-          are discarded at sign-out.
+          Some of your answers have not synced yet. Sync them before you sign out, or discard them. Answers the server
+          refused cannot sync and are discarded at sign-out.
         </Text>
         {failureMessage === null ? null : (
           <Text role="alert" className="mt-2 text-sm text-ink">
@@ -184,7 +189,7 @@ export function SignOutDialog() {
       {panel}
     </Modal>
   ) : (
-    panel
+    <ModalOverlay>{panel}</ModalOverlay>
   );
 
   return (
