@@ -3341,6 +3341,164 @@
         },
         "isHumanReviewed": false
       }
+    },
+    {
+      "id": "py-easy-101",
+      "type": "ab",
+      "prompt": "Which function returns the last item of a list, or None when the list is empty?",
+      "choices": [
+        {
+          "text": "Guard the empty list, then index with -1",
+          "code": "def last(items):\n    return items[-1] if items else None"
+        },
+        {
+          "text": "Index with -1 directly",
+          "code": "def last(items):\n    return items[-1]",
+          "rationale": "Indexing an empty list with -1 raises IndexError instead of returning None."
+        }
+      ],
+      "answerIndex": 0,
+      "criterion": {
+        "type": "correctness",
+        "statement": "Returns the right value for every list, including an empty one.",
+        "evidence": "Fails for input []: IndexError"
+      },
+      "query": {
+        "title": "Negative indexing needs a non-empty list",
+        "explanation": "`items[-1]` reads the last element, but on an empty list there is no element to read and Python raises IndexError. An empty list is falsy, so `items[-1] if items else None` checks for it first.",
+        "tags": [
+          "lists",
+          "indexing"
+        ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "isHumanReviewed": false,
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "py-easy-102",
+      "type": "ab",
+      "prompt": "Which function counts the words in a string of text?",
+      "choices": [
+        {
+          "text": "Split on a single space with split(' ')",
+          "code": "def count_words(text):\n    return len(text.split(' '))",
+          "rationale": "split(' ') keeps an empty string between two adjacent spaces, so 'a  b' counts as 3 words and '' counts as 1."
+        },
+        {
+          "text": "Split on runs of whitespace with split()",
+          "code": "def count_words(text):\n    return len(text.split())"
+        }
+      ],
+      "answerIndex": 1,
+      "criterion": {
+        "type": "correctness",
+        "statement": "Returns the right count for any spacing, including repeated spaces and an empty string.",
+        "evidence": "Fails for input \"a  b\": expected 2, got 3"
+      },
+      "query": {
+        "title": "split() versus split(\" \")",
+        "explanation": "With no argument, `str.split()` splits on runs of whitespace and drops empty strings. With an explicit separator, every occurrence splits, so two adjacent spaces produce an empty word and `''.split(' ')` is `['']`.",
+        "tags": [
+          "strings",
+          "split"
+        ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "isHumanReviewed": false,
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "py-easy-103",
+      "type": "ab",
+      "prompt": "Both snippets count how many of 2,000 numbers are in an allowed collection. Which is faster?",
+      "choices": [
+        {
+          "text": "Look each number up in a set",
+          "code": "allowed = set(range(3000))\nhits = sum(1 for n in range(2000) if n * 2 in allowed)"
+        },
+        {
+          "text": "Look each number up in a list",
+          "code": "allowed = list(range(3000))\nhits = sum(1 for n in range(2000) if n * 2 in allowed)",
+          "rationale": "`in` on a list compares against items one by one, so each lookup can scan all 3,000 items."
+        }
+      ],
+      "answerIndex": 0,
+      "criterion": {
+        "type": "performance",
+        "statement": "Faster median run time on the same input.",
+        "evidence": "A: 0.1 ms, B: 20.3 ms median on Python 3.13.16"
+      },
+      "query": {
+        "title": "Membership tests: list versus set",
+        "explanation": "`x in some_list` is a linear scan, so its cost grows with the list. `x in some_set` hashes `x` and checks one bucket, which takes about the same time however large the set is. For repeated lookups, build a set once.",
+        "tags": [
+          "sets",
+          "lists",
+          "performance"
+        ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "isHumanReviewed": false,
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "py-easy-104",
+      "type": "ab",
+      "prompt": "Both snippets check whether a list of 600 numbers contains a duplicate. Which is faster?",
+      "choices": [
+        {
+          "text": "Compare every pair with nested loops",
+          "code": "values = list(range(600))\nhas_duplicate = False\nfor i in range(len(values)):\n    for j in range(i + 1, len(values)):\n        if values[i] == values[j]:\n            has_duplicate = True",
+          "rationale": "The nested loops compare about 180,000 pairs in Python bytecode; building a set touches each value once."
+        },
+        {
+          "text": "Compare the length with the length of a set",
+          "code": "values = list(range(600))\nhas_duplicate = len(set(values)) != len(values)"
+        }
+      ],
+      "answerIndex": 1,
+      "criterion": {
+        "type": "performance",
+        "statement": "Faster median run time on the same input.",
+        "evidence": "A: 8.6 ms, B: 0.012 ms median on Python 3.13.16"
+      },
+      "query": {
+        "title": "Finding duplicates with a set",
+        "explanation": "Comparing every pair takes n * (n - 1) / 2 comparisons, which grows with the square of the list length. A set drops duplicates as it is built, so `len(set(values)) != len(values)` answers the question in one pass.",
+        "tags": [
+          "sets",
+          "loops",
+          "performance"
+        ]
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "isHumanReviewed": false,
+        "runtimeVersion": "Python 3.13.16"
+      }
     }
   ]
 }
