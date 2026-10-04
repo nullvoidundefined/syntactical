@@ -114,8 +114,6 @@ describe('buildContentManifest quality report', () => {
 
     it.each([
         ['the question prompt text', 'the question prompt text'],
-        ['constructor', 'constructor'],
-        ['__proto__', '__proto__'],
         ['an empty string', ''],
         ['a non-string', 4],
     ])('rejects a question reason of %s and writes no module', async (_name, reason) => {

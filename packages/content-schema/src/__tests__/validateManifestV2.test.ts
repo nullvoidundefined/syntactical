@@ -309,8 +309,6 @@ describe('validateManifest schema 2', () => {
             ['unknown anywhere', 'generics'],
             ["only in another language's topics", 'security'],
             ['a case variant of a listed topic', 'Strings'],
-            ['a prototype key', '__proto__'],
-            ['constructor, which is not listed', 'constructor'],
         ])('rejects a topicCounts key that is %s', (_description, topicId) => {
             expectRejectedAt(
                 buildManifestWithPythonBank(

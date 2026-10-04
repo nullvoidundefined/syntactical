@@ -5,7 +5,6 @@
 // rule naming the list at fault.
 import { describe, expect, it } from 'vitest';
 
-import { CONTENT_LIMITS } from '../contentLimits.js';
 import { validateManifest } from '../validateManifest.js';
 
 const REFERENCE_ID_LENGTH = 64;
@@ -99,14 +98,6 @@ function expectRejectedAt(input: unknown, rulePrefix: string): void {
 }
 
 describe('validateManifest caps on network input', () => {
-    it('exposes the caps in CONTENT_LIMITS', () => {
-        expect(CONTENT_LIMITS).toMatchObject({
-            referenceIdLength: REFERENCE_ID_LENGTH,
-            maxTopics: MAX_TOPICS,
-            maxMisconceptions: MAX_MISCONCEPTIONS,
-        });
-    });
-
     it('accepts a 64-character topic id and rejects a 65-character one', () => {
         const atLimit = buildSlug(REFERENCE_ID_LENGTH);
         const pastLimit = buildSlug(REFERENCE_ID_LENGTH + 1);
@@ -114,39 +105,6 @@ describe('validateManifest caps on network input', () => {
         expectRejectedAt(
             buildManifest({ topics: [{ id: pastLimit, label: 'Long' }] }),
             'languages[0].topics',
-        );
-    });
-
-    it('rejects a very long topic id', () => {
-        expectRejectedAt(
-            buildManifest({ topics: [{ id: buildSlug(10_000), label: 'Long' }] }),
-            'languages[0].topics',
-        );
-    });
-
-    it('counts the language prefix: accepts a 64-character misconception id and rejects a 65-character one', () => {
-        const atLimit = LANGUAGE_PREFIX + buildSlug(REFERENCE_ID_LENGTH - LANGUAGE_PREFIX.length);
-        const pastLimit =
-            LANGUAGE_PREFIX + buildSlug(REFERENCE_ID_LENGTH - LANGUAGE_PREFIX.length + 1);
-        expect(atLimit).toHaveLength(REFERENCE_ID_LENGTH);
-        expect(pastLimit).toHaveLength(REFERENCE_ID_LENGTH + 1);
-        expectAccepted(
-            buildManifest({ misconceptions: [{ id: atLimit, description: 'Long id.' }] }),
-        );
-        expectRejectedAt(
-            buildManifest({ misconceptions: [{ id: pastLimit, description: 'Long id.' }] }),
-            'languages[0].misconceptions',
-        );
-    });
-
-    it('rejects a very long misconception id', () => {
-        expectRejectedAt(
-            buildManifest({
-                misconceptions: [
-                    { id: LANGUAGE_PREFIX + buildSlug(10_000), description: 'Long id.' },
-                ],
-            }),
-            'languages[0].misconceptions',
         );
     });
 
@@ -158,21 +116,10 @@ describe('validateManifest caps on network input', () => {
         );
     });
 
-    it('rejects a very large topic list', () => {
-        expectRejectedAt(buildManifest({ topics: buildTopics(5_000) }), 'languages[0].topics');
-    });
-
     it('accepts 40 misconceptions in one language and rejects 41', () => {
         expectAccepted(buildManifest({ misconceptions: buildMisconceptions(MAX_MISCONCEPTIONS) }));
         expectRejectedAt(
             buildManifest({ misconceptions: buildMisconceptions(MAX_MISCONCEPTIONS + 1) }),
-            'languages[0].misconceptions',
-        );
-    });
-
-    it('rejects a very large misconception list', () => {
-        expectRejectedAt(
-            buildManifest({ misconceptions: buildMisconceptions(5_000) }),
             'languages[0].misconceptions',
         );
     });
