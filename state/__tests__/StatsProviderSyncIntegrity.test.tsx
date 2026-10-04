@@ -259,6 +259,30 @@ describe('StatsProvider claimGuestEvents and removeUserEvents settle with their 
     expect(await readStoredLog()).toEqual([{ ...guest, ownerUserId: userA }]);
   });
 
+  it('claimGuestEvents writes no stats when the owner signs out while the claim is pending', async () => {
+    const guestStats: Stats = { ...createEmptyStats(readLocalToday()), totals: { attempted: 4, correct: 1 } };
+    const userStats: Stats = { ...createEmptyStats(readLocalToday()), totals: { attempted: 9, correct: 7 } };
+    await seedStats(guestStats, null);
+    await seedStats(userStats, userA);
+    await seedLog([buildEntry(null)]);
+    const view = await renderHydrated(userA);
+    const hold = holdNextEventLogWrite();
+    let outcome: ReturnType<typeof track> | undefined;
+    await act(async () => {
+      outcome = track(latest.claimGuestEvents(userA));
+    });
+    await waitFor(() => expect(hold.isReached()).toBe(true));
+    await view.rerender(<StatsProvider ownerUserId={null}><IntegrityProbe /></StatsProvider>);
+    await waitFor(() => expect(screen.getByTestId('hydrated')).toHaveTextContent('true'));
+    await act(async () => hold.release());
+    await waitFor(() => expect(outcome?.isSettled).toBe(true));
+    await flushTurns();
+    expect(outcome?.isRejected).toBe(true);
+    expect((await readStoredStats(userA))?.totals).toEqual(userStats.totals);
+    expect((await readStoredStats(null))?.totals).toEqual(guestStats.totals);
+    expect(latest.stats.totals).toEqual(guestStats.totals);
+  });
+
   it('claimGuestEvents rejects when the write fails', async () => {
     await seedLog([buildEntry(null)]);
     await renderHydrated(userA);

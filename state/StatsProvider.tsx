@@ -100,6 +100,11 @@ function changeSlot<T>(slot: PersistedSlot<T>, fold: (current: T) => T): Promise
   return write;
 }
 
+// The stats slot's value follows the owner, so each write checks the owner first.
+function requireOwner(currentOwner: string | null, userId: string): void {
+  if (currentOwner !== userId) throw new Error('guest claim refused: owner changed');
+}
+
 async function requirePersisted(isPersisted: Promise<boolean>): Promise<void> {
   if (!(await isPersisted)) throw new Error('event log change was not persisted');
 }
@@ -169,11 +174,13 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
   const claimGuestEvents = useCallback(
     async (userId: string) => {
       if (!isHydrated) return;
-      if (ownerRef.current !== userId) throw new Error('guest claim refused: owner changed');
+      requireOwner(ownerRef.current, userId);
       await requirePersisted(changeSlot(eventLogSlot, (current) => claimGuest(current, userId)));
       const { isPersistenceBlocked, stats: guestStats } = await resolveStoredStats(await readStoredJson(STORAGE_KEY), readLocalToday());
       if (isPersistenceBlocked) throw new Error('guest stats could not be read');
+      requireOwner(ownerRef.current, userId);
       await requirePersisted(changeSlot(statsSlot, (current) => mergeGuestStats(guestStats, current)));
+      requireOwner(ownerRef.current, userId);
       await requirePersisted(writeJson(STORAGE_KEY, createEmptyStats(readLocalToday())));
     },
     [eventLogSlot, isHydrated, statsSlot],
