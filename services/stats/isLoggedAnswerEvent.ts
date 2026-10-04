@@ -1,29 +1,21 @@
 // Whether a value read from storage is a well-formed answer event log entry.
 import { isRecord } from '@syntactical/content-schema';
 
+import { isAnswerEvent } from './isAnswerEvent';
+import { HELD_REASONS } from './types/LoggedAnswerEvent';
 import type { LoggedAnswerEvent } from './types/LoggedAnswerEvent';
 
-const ROUND_KINDS: readonly unknown[] = ['bank', 'review', 'topic'];
-
-function isIsoInstant(value: unknown): boolean {
-  return typeof value === 'string' && !Number.isNaN(Date.parse(value));
-}
-
-function hasEventFields(value: Record<string, unknown>): boolean {
-  const { answeredAt, bankKey, choiceIndex, eventId, isCorrect, questionId, roundKind } = value;
-  return (
-    isIsoInstant(answeredAt) &&
-    typeof bankKey === 'string' &&
-    Number.isInteger(choiceIndex) &&
-    typeof eventId === 'string' &&
-    typeof isCorrect === 'boolean' &&
-    typeof questionId === 'string' &&
-    ROUND_KINDS.includes(roundKind)
-  );
+function isHeldReason(value: unknown): boolean {
+  return value === undefined || (HELD_REASONS as readonly unknown[]).includes(value);
 }
 
 export function isLoggedAnswerEvent(value: unknown): value is LoggedAnswerEvent {
-  if (!isRecord(value) || !hasEventFields(value)) return false;
-  const { isHeld, isSynced, ownerUserId } = value;
-  return typeof isHeld === 'boolean' && typeof isSynced === 'boolean' && (ownerUserId === null || typeof ownerUserId === 'string');
+  if (!isRecord(value) || !isAnswerEvent(value)) return false;
+  const { heldReason, isHeld, isSynced, ownerUserId } = value as Record<string, unknown>;
+  return (
+    typeof isHeld === 'boolean' &&
+    typeof isSynced === 'boolean' &&
+    (ownerUserId === null || typeof ownerUserId === 'string') &&
+    isHeldReason(heldReason)
+  );
 }

@@ -9,6 +9,8 @@ import { Platform } from 'react-native';
 
 import { KEY_BINDINGS } from '../constants/appConfig';
 
+import { isModalOpen } from './modalOpenSignal';
+
 type KeyboardHandlers = {
   isEnabled?: boolean;
   onAdvance?: () => void;
@@ -43,12 +45,18 @@ function isBrowserShortcutOrRepeat(event: KeyboardEvent): boolean {
 const NON_TEXT_INPUT_TYPES = new Set(['button', 'checkbox', 'color', 'file', 'image', 'radio', 'range', 'reset', 'submit']);
 
 // A key pressed inside a text field is text, not a command.
+function isTextInput(input: HTMLInputElement): boolean {
+  const { type } = input;
+  return !NON_TEXT_INPUT_TYPES.has(type);
+}
+
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
-  if (target instanceof HTMLInputElement) return !NON_TEXT_INPUT_TYPES.has(target.type);
-  const tagName = target.tagName.toLowerCase();
+  if (target instanceof HTMLInputElement) return isTextInput(target);
+  const { isContentEditable, tagName: rawTagName } = target;
+  const tagName = rawTagName.toLowerCase();
   if (tagName === 'textarea' || tagName === 'select') return true;
-  return target.isContentEditable || target.closest('[contenteditable]:not([contenteditable="false"])') !== null;
+  return isContentEditable || target.closest('[contenteditable]:not([contenteditable="false"])') !== null;
 }
 
 function dispatchKey(key: string, handlers: KeyboardHandlers): void {
@@ -71,8 +79,9 @@ export function useKeyboardNav(handlers: KeyboardHandlers): void {
   useEffect(() => {
     if (Platform.OS !== 'web' || !isEnabled) return undefined;
     function handleKeyDown(event: KeyboardEvent) {
-      if (isBrowserShortcutOrRepeat(event) || isTypingTarget(event.target)) return;
-      dispatchKey(event.key, latestHandlers.current);
+      const { key, target } = event;
+      if (isModalOpen() || isBrowserShortcutOrRepeat(event) || isTypingTarget(target)) return;
+      dispatchKey(key, latestHandlers.current);
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);

@@ -1,5 +1,5 @@
 // The persistent frame: brand mark, the reviews-due link, live answer
-// streak readout, the download indicator, and the content slot every route
+// streak readout, the account control its caller supplies, the download indicator, and the content slot every route
 // renders into, inside the safe area.
 import type { ReactNode } from 'react';
 
@@ -11,7 +11,7 @@ import { useQuizStats } from '../../state/StatsProvider';
 import { DownloadIndicator } from './DownloadIndicator';
 import { ReviewDueLink } from './ReviewDueLink';
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ accountControl = null, children }: { accountControl?: ReactNode; children: ReactNode }) {
   const { stats } = useQuizStats();
   const { best, current } = stats.answerStreak;
   return (
@@ -19,6 +19,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <View role="banner" className="flex-row items-center justify-between border-b border-line px-4 py-3">
         <Text className="font-mono text-xs tracking-widest text-ink">SYNTACTICAL</Text>
         <ReviewDueLink />
+        {accountControl}
         <Text className="font-mono text-xs uppercase tracking-widest text-muted">
           streak <Text className="text-signal">{current}</Text> / best <Text className="text-ink">{best}</Text>
         </Text>

@@ -5,6 +5,7 @@
 import type { ExpoConfig } from 'expo/config';
 
 const CONTENT_ORIGIN = 'https://nullvoidundefined.github.io';
+const API_BASE_URL = 'https://api.syntactical.dev/v1/';
 const ALLOWED_BASE_URLS = ['/syntactical', '/syntactical/preview'];
 
 function readBaseUrl(): string {
@@ -21,7 +22,7 @@ const CONTENT_BASE_URL = new URL(`${BASE_URL}/content/`, CONTENT_ORIGIN).href;
 const config: ExpoConfig = {
   android: { package: 'dev.nullvoidundefined.syntactical' },
   experiments: { baseUrl: BASE_URL, typedRoutes: true },
-  extra: { contentBaseUrl: CONTENT_BASE_URL },
+  extra: { apiBaseUrl: API_BASE_URL, contentBaseUrl: CONTENT_BASE_URL },
   ios: { bundleIdentifier: 'dev.nullvoidundefined.syntactical', supportsTablet: true },
   name: 'Syntactical',
   orientation: 'portrait',
