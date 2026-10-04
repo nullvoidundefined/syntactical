@@ -336,7 +336,26 @@ describe.skipIf(SKIP_DATABASE_TESTS)('POST /v1/auth/sessions', () => {
     const otherClient = await signIn(testApp, { code: '000000', email: buildEmail() }, { ip: '198.51.100.51' });
 
     expect(sameClient.status).toBe(HTTP_TOO_MANY_REQUESTS);
-    expect(otherClient.status).not.toBe(HTTP_TOO_MANY_REQUESTS);
+    expect(otherClient.status).toBe(HTTP_BAD_REQUEST);
+  });
+
+  it('keys the IP by the one trusted proxy hop, so spoofed X-Forwarded-For entries change nothing', async () => {
+    const testApp = createAuthTestApp({ pool: database.pool });
+    const trustedHop = '198.51.100.77';
+    for (let attempt = 0; attempt < VERIFY_PER_IP; attempt += 1) {
+      const rotating = `${ipNumber(attempt)}, 10.0.0.${attempt + 1}, ${trustedHop}`;
+      await signIn(testApp, { code: '000000', email: buildEmail() }, { ip: rotating });
+    }
+
+    const spoofed = await signIn(testApp, { code: '000000', email: buildEmail() }, { ip: `203.0.113.99, ${trustedHop}` });
+    const otherClient = await signIn(
+      testApp,
+      { code: '000000', email: buildEmail() },
+      { ip: `${trustedHop}, 198.51.100.78` },
+    );
+
+    expect(spoofed.status).toBe(HTTP_TOO_MANY_REQUESTS);
+    expect(otherClient.status).toBe(HTTP_BAD_REQUEST);
   });
 
   it('answers a malformed code or email with 400 before touching the code', async () => {
