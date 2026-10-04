@@ -30,7 +30,8 @@ export default function DifficultyScreen() {
   const userId = useSignedInUserId();
   const entitlements = useEntitlements();
   const { buy, confirm, prices } = usePurchases({ shouldLoadPrices: true });
-  const [paywallDifficulty, setPaywallDifficulty] = useState<string | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
+  const [dismissedParam, setDismissedParam] = useState<string | string[] | undefined>(undefined);
   const [isBuying, setIsBuying] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const languageEntry = languages.find(({ id }) => id === language);
@@ -50,14 +51,10 @@ export default function DifficultyScreen() {
     paramProductId !== null &&
     entitlements.status === 'ready' &&
     !entitlements.productIds.has(paramProductId);
-  useEffect(() => {
-    if (canOpenFromParam) setPaywallDifficulty(paywall as string);
-  }, [canOpenFromParam, paywall]);
-
-  // Signing out closes the paywall.
-  useEffect(() => {
-    if (userId === null) setPaywallDifficulty(null);
-  }, [userId]);
+  // Signing out closes the paywall (state adjusted during render, not in an effect).
+  if (userId === null && selectedDifficulty !== null) setSelectedDifficulty(null);
+  const openDifficulty =
+    selectedDifficulty ?? (canOpenFromParam && dismissedParam !== paywall ? (paywall as string) : null);
 
   // A pending purchase is re-checked against GET /me while the screen is mounted.
   const isMountedRef = useRef(true);
@@ -68,12 +65,17 @@ export default function DifficultyScreen() {
     };
   }, []);
 
+  function closeAfterPurchase() {
+    setSelectedDifficulty(null);
+    setDismissedParam(paywall);
+  }
+
   async function recheckPending(productId: string) {
     for (let attempt = 0; attempt < PENDING_RECHECK_COUNT; attempt += 1) {
       await new Promise((resolve) => setTimeout(resolve, PENDING_RECHECK_DELAY_MS));
       if (!isMountedRef.current) return;
       if (await confirm(productId)) {
-        setPaywallDifficulty(null);
+        closeAfterPurchase();
         return;
       }
     }
@@ -81,9 +83,10 @@ export default function DifficultyScreen() {
 
   const closePaywall = useCallback(() => {
     if (isBuying) return;
-    setPaywallDifficulty(null);
+    setSelectedDifficulty(null);
+    setDismissedParam(paywall);
     setMessage(null);
-  }, [isBuying]);
+  }, [isBuying, paywall]);
 
   if (!languageEntry) return <NotFoundScreen />;
 
@@ -95,7 +98,7 @@ export default function DifficultyScreen() {
       });
       return;
     }
-    setPaywallDifficulty(difficultyId);
+    setSelectedDifficulty(difficultyId);
   }
 
   async function buyOpenBank(productId: string) {
@@ -109,16 +112,16 @@ export default function DifficultyScreen() {
         setMessage(PURCHASE_PENDING);
         void recheckPending(productId);
       }
-      if (outcome === 'redirect' || outcome === 'unlocked') setPaywallDifficulty(null);
+      if (outcome === 'redirect' || outcome === 'unlocked') closeAfterPurchase();
     } finally {
       setIsBuying(false);
     }
   }
 
-  const paywallProductId = readPaidProductId(paywallDifficulty ?? undefined);
+  const paywallProductId = readPaidProductId(openDifficulty ?? undefined);
   const isOwned =
     entitlements.status === 'ready' && paywallProductId !== null && entitlements.productIds.has(paywallProductId);
-  const paywallLabel = DIFFICULTIES.find(({ id }) => id === paywallDifficulty)?.label ?? '';
+  const paywallLabel = DIFFICULTIES.find(({ id }) => id === openDifficulty)?.label ?? '';
   return (
     <ScrollView contentContainerClassName="flex-grow items-center justify-center px-4 py-8">
       <View className="w-full max-w-xl">
