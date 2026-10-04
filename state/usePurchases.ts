@@ -20,6 +20,7 @@ export type BuyOutcome = 'cancelled' | 'pending' | 'redirect' | 'unavailable' | 
 
 export type PurchasesState = {
   buy: (productId: string) => Promise<BuyOutcome>;
+  confirm: (productId: string) => Promise<boolean>;
   prices: Readonly<Record<string, string>>;
   restore: () => Promise<boolean>;
 };
@@ -55,19 +56,25 @@ export function usePurchases({ shouldLoadPrices = false } = {}): PurchasesState 
     }
   }, [queryClient, userId]);
 
+  // Refetches GET /me; true (and records purchase_completed) when it lists the product.
+  const confirm = useCallback(
+    async (productId: string): Promise<boolean> => {
+      const entitlements = await refetchEntitlements();
+      if (!entitlements?.includes(productId)) return false;
+      trackEvent('purchase_completed', { productId });
+      return true;
+    },
+    [refetchEntitlements],
+  );
+
   const buy = useCallback(
     async (productId: string): Promise<BuyOutcome> => {
       const outcome = await buyStoreProduct(productId);
       if (outcome !== 'purchased') return outcome;
       if (Platform.OS === 'web') return 'redirect';
-      const entitlements = await refetchEntitlements();
-      if (entitlements?.includes(productId)) {
-        trackEvent('purchase_completed', { productId });
-        return 'unlocked';
-      }
-      return 'pending';
+      return (await confirm(productId)) ? 'unlocked' : 'pending';
     },
-    [refetchEntitlements],
+    [confirm],
   );
 
   const restore = useCallback(async (): Promise<boolean> => {
@@ -75,5 +82,5 @@ export function usePurchases({ shouldLoadPrices = false } = {}): PurchasesState 
     return (await refetchEntitlements()) !== null;
   }, [refetchEntitlements]);
 
-  return { buy, prices: userId === null ? NO_PRICES : prices, restore };
+  return { buy, confirm, prices: userId === null ? NO_PRICES : prices, restore };
 }

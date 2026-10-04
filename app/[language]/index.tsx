@@ -3,7 +3,7 @@
 // signed-in user and sends a guest to sign-in first, returning to this route
 // with ?paywall=<difficulty>. That param opens the paywall only for a paid bank
 // of this language the user does not own (an owned bank shows no paywall).
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { DIFFICULTIES } from '@syntactical/content-schema';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -18,6 +18,8 @@ import { useLanguageManifest } from '../../state/useLanguageManifest';
 import { usePurchases } from '../../state/usePurchases';
 
 const PURCHASE_FAILED = 'The purchase did not go through. Try again.';
+const PENDING_RECHECK_COUNT = 2;
+const PENDING_RECHECK_DELAY_MS = 2000;
 const PURCHASE_PENDING = 'Your purchase is still processing. Check back shortly.';
 
 type SearchParams = { language: string; paywall?: string | string[] };
@@ -27,7 +29,7 @@ export default function DifficultyScreen() {
   const { languages } = useLanguageManifest();
   const userId = useSignedInUserId();
   const entitlements = useEntitlements();
-  const { buy, prices } = usePurchases({ shouldLoadPrices: true });
+  const { buy, confirm, prices } = usePurchases({ shouldLoadPrices: true });
   const [paywallDifficulty, setPaywallDifficulty] = useState<string | null>(null);
   const [isBuying, setIsBuying] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -40,12 +42,42 @@ export default function DifficultyScreen() {
     return bank?.access === 'paid' ? (bank.productId ?? null) : null;
   }
 
+  // The param opens the paywall only for a signed-in user whose entitlements have
+  // loaded and who does not own the bank; closing it sticks (the flag stays true).
+  const paramProductId = readPaidProductId(paywall);
+  const canOpenFromParam =
+    userId !== null &&
+    paramProductId !== null &&
+    entitlements.status === 'ready' &&
+    !entitlements.productIds.has(paramProductId);
   useEffect(() => {
-    const productId = readPaidProductId(paywall);
-    if (productId !== null && userId !== null) setPaywallDifficulty(paywall as string);
-    // Opens only when the param or the signed-in user changes, so closing sticks.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paywall, userId]);
+    if (canOpenFromParam) setPaywallDifficulty(paywall as string);
+  }, [canOpenFromParam, paywall]);
+
+  // Signing out closes the paywall.
+  useEffect(() => {
+    if (userId === null) setPaywallDifficulty(null);
+  }, [userId]);
+
+  // A pending purchase is re-checked against GET /me while the screen is mounted.
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  async function recheckPending(productId: string) {
+    for (let attempt = 0; attempt < PENDING_RECHECK_COUNT; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, PENDING_RECHECK_DELAY_MS));
+      if (!isMountedRef.current) return;
+      if (await confirm(productId)) {
+        setPaywallDifficulty(null);
+        return;
+      }
+    }
+  }
 
   const closePaywall = useCallback(() => {
     if (isBuying) return;
@@ -73,7 +105,10 @@ export default function DifficultyScreen() {
       const outcome = await buy(productId);
       if (outcome === 'redirect') router.push({ params: { product: productId }, pathname: '/purchase-complete' });
       if (outcome === 'unavailable') setMessage(PURCHASE_FAILED);
-      if (outcome === 'pending') setMessage(PURCHASE_PENDING);
+      if (outcome === 'pending') {
+        setMessage(PURCHASE_PENDING);
+        void recheckPending(productId);
+      }
       if (outcome === 'redirect' || outcome === 'unlocked') setPaywallDifficulty(null);
     } finally {
       setIsBuying(false);

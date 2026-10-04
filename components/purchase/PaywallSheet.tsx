@@ -49,6 +49,11 @@ function wrapTab(event: KeyboardEvent, panel: HTMLElement) {
 
 function usePanelKeyboard(panelRef: React.RefObject<View | null>, onClose: () => void) {
   const isWeb = Platform.OS === 'web';
+  // Read through a ref so a new onClose identity does not re-run the focus effect.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
   useEffect(() => {
     if (!isWeb) return undefined;
     const panel = panelRef.current as unknown as HTMLElement | null;
@@ -57,7 +62,7 @@ function usePanelKeyboard(panelRef: React.RefObject<View | null>, onClose: () =>
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         event.stopPropagation();
-        onClose();
+        onCloseRef.current();
       } else if (event.key === 'Tab' && panel) {
         wrapTab(event, panel);
       }
@@ -67,7 +72,7 @@ function usePanelKeyboard(panelRef: React.RefObject<View | null>, onClose: () =>
       document.removeEventListener('keydown', handleKeyDown);
       previouslyFocused?.focus?.();
     };
-  }, [isWeb, onClose, panelRef]);
+  }, [isWeb, panelRef]);
 }
 
 export function PaywallSheet({ difficultyLabel, isBuying, message, onBuy, onClose, price }: PaywallSheetProps) {
