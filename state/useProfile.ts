@@ -59,7 +59,8 @@ export function useProfile(): ProfileState {
   const updateDailyGoal = useCallback(
     async (goal: number): Promise<boolean> => {
       if (userId === null) return false;
-      const key = [PROFILE_QUERY_ROOT, userId, todayRef.current, syncedIdsRef.current.length];
+      const readCurrentKey = () => [PROFILE_QUERY_ROOT, userId, todayRef.current, syncedIdsRef.current.length];
+      const key = readCurrentKey();
       const previous = queryClient.getQueryData<ProfileSnapshot>(key);
       if (previous !== undefined) {
         queryClient.setQueryData<ProfileSnapshot>(key, { ...previous, profile: { ...previous.profile, dailyGoal: goal } });
@@ -68,7 +69,9 @@ export function useProfile(): ProfileState {
         const { body, status } = await apiFetch('me', { body: { dailyGoal: goal }, method: 'PATCH' });
         const profile = status === HTTP_STATUS_OK ? parseProfile(body) : null;
         if (profile === null) throw new Error(`profile update answered ${status}`);
-        queryClient.setQueryData<ProfileSnapshot>(key, { profile, seenEventIds: new Set(syncedIdsRef.current), userId });
+        // A sync or a new day while the request was out moves the query to
+        // another key; the accepted profile goes to the key current now.
+        queryClient.setQueryData<ProfileSnapshot>(readCurrentKey(), { profile, seenEventIds: new Set(syncedIdsRef.current), userId });
         return true;
       } catch {
         if (previous !== undefined) queryClient.setQueryData(key, previous);
