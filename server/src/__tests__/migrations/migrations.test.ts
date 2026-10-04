@@ -146,6 +146,32 @@ describe.skipIf(SKIP_DATABASE_TESTS)('migrations', () => {
     );
 
     it(
+        'stamp answer_events.received_at by default with the insert time, not the transaction start',
+        async () => {
+            migrateUp();
+            const { pool } = scratch;
+            const learner = await insertUser(pool);
+            const client = await pool.connect();
+            try {
+                await client.query('BEGIN');
+                await client.query('SELECT pg_sleep(0.05)');
+                const { rows } = await client.query<{ is_after_start: boolean }>(
+                    `INSERT INTO answer_events
+                       (user_id, event_id, question_id, bank_key, choice_index, is_correct, answered_at, round_kind)
+                     VALUES ($1, $2, 'py-easy-01', 'python/easy', 1, true, now(), 'bank')
+                     RETURNING received_at > now() AS is_after_start`,
+                    [learner, randomUUID()],
+                );
+                await client.query('ROLLBACK');
+                expect(rows).toEqual([{ is_after_start: true }]);
+            } finally {
+                client.release();
+            }
+        },
+        MIGRATION_TIMEOUT_MS,
+    );
+
+    it(
         'accept a daily goal of 10, 20, or 50 and refuse 15',
         async () => {
             migrateUp();
