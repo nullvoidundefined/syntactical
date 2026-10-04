@@ -1,4 +1,6 @@
 // A validated question: multiple choice, A/B, or true/false, sharing a base shape.
+import type { Grammar } from '../grammars.js';
+
 import type { Choice } from './Choice.js';
 import type { Criterion } from './Criterion.js';
 import type { Provenance } from './Provenance.js';
@@ -9,6 +11,7 @@ type QuestionBase = {
   topic?: string;
   prompt: string;
   code?: string;
+  grammar?: Grammar;
   query: Query;
   provenance: Provenance;
 };

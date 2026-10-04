@@ -1,6 +1,7 @@
 // Validates a fetched manifest. Returns the typed manifest, or the first
 // rule it broke so the caller can log it and keep the previous copy.
 import { CONTENT_LIMITS } from './contentLimits.js';
+import { ENTRY_KINDS } from './entryKinds.js';
 import { DIFFICULTIES } from './difficulties.js';
 import { findBankEntryProblem } from './findBankEntryProblem.js';
 import { findMisconceptionsProblem } from './findMisconceptionsProblem.js';
@@ -11,6 +12,7 @@ import { isTextWithin } from './isTextWithin.js';
 import { SUPPORTED_SCHEMA_VERSION } from './supportedSchemaVersion.js';
 import type { Manifest } from './types/Manifest.js';
 
+const KIND_IDS: readonly unknown[] = ENTRY_KINDS;
 const LANGUAGE_ID = /^[a-z0-9-]{1,32}$/;
 const DIFFICULTY_IDS: readonly string[] = DIFFICULTIES.map((difficulty) => difficulty.id);
 const GRAMMAR_IDS: readonly string[] = GRAMMARS;
@@ -34,10 +36,11 @@ function findBankProblem(banks: unknown, languageId: string, topicIds: readonly 
 
 function findLanguageProblem(language: unknown): string | null {
   if (!isRecord(language)) return 'is not an object';
-  const { id, label, glyph, tagline, grammar, banks, topics, misconceptions } = language;
+  const { kind, id, label, glyph, tagline, grammar, banks, topics, misconceptions } = language;
   if (typeof id !== 'string' || !LANGUAGE_ID.test(id)) return 'id is invalid';
   if (![label, glyph, tagline].every(isDisplayText)) return 'a display field is invalid';
   if (typeof grammar !== 'string' || !GRAMMAR_IDS.includes(grammar)) return 'grammar is not supported';
+  if (kind !== undefined && !KIND_IDS.includes(kind)) return 'kind is invalid';
   const topicsProblem = findTopicsProblem(topics);
   if (topicsProblem) return topicsProblem;
   const misconceptionsProblem = findMisconceptionsProblem(misconceptions, id);

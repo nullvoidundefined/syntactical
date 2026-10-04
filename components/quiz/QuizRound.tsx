@@ -8,6 +8,8 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import type { Grammar, Question } from '@syntactical/content-schema';
 
+import { readEvidenceSource } from '../../services/quiz/readEvidenceSource';
+import { resolveQuestionGrammar } from '../../services/quiz/resolveQuestionGrammar';
 import { readChosenRationale } from '../../services/quiz/readChosenRationale';
 import { toChoiceIndex } from '../../services/quiz/toChoiceIndex';
 import type { RecordedAnswer } from '../../services/stats/types/RecordedAnswer';
@@ -61,20 +63,46 @@ function CardBody({ answerState, onAnswer, question }: CardBodyProps) {
   return <BooleanCard question={question} {...answerState} onSelect={onAnswer} />;
 }
 
-function QuestionCard({ answerState, difficultyLabel, languageLabel, onAnswer, onOpenQuery, question }: QuestionCardProps) {
+function QuestionCard({
+  answerState,
+  difficultyLabel,
+  languageLabel,
+  onAnswer,
+  onOpenQuery,
+  question,
+}: QuestionCardProps) {
   const { provenance, type } = question;
   return (
-    <QuestionCardFrame difficultyLabel={difficultyLabel} languageLabel={languageLabel} onOpenQuery={onOpenQuery} provenance={provenance} type={type}>
+    <QuestionCardFrame
+      difficultyLabel={difficultyLabel}
+      languageLabel={languageLabel}
+      onOpenQuery={onOpenQuery}
+      provenance={provenance}
+      type={type}
+    >
       <CardBody answerState={answerState} onAnswer={onAnswer} question={question} />
     </QuestionCardFrame>
   );
 }
 
-function AnswerActions({ onAdvance, onExplain, wasCorrect }: { onAdvance: () => void; onExplain: () => void; wasCorrect: boolean }) {
+function AnswerActions({
+  onAdvance,
+  onExplain,
+  wasCorrect,
+}: {
+  onAdvance: () => void;
+  onExplain: () => void;
+  wasCorrect: boolean;
+}) {
   return (
     <View className="mt-4 gap-3">
       {wasCorrect ? null : (
-        <Pressable role="button" aria-label="Explain" onPress={onExplain} className="rounded-md border border-line py-3">
+        <Pressable
+          role="button"
+          aria-label="Explain"
+          onPress={onExplain}
+          className="rounded-md border border-line py-3"
+        >
           <Text className="text-center font-mono text-sm uppercase tracking-widest text-muted">Explain</Text>
         </Pressable>
       )}
@@ -85,7 +113,15 @@ function AnswerActions({ onAdvance, onExplain, wasCorrect }: { onAdvance: () => 
   );
 }
 
-function RoundHeader({ currentIndex, onExit, totalQuestions }: { currentIndex: number; onExit: () => void; totalQuestions: number }) {
+function RoundHeader({
+  currentIndex,
+  onExit,
+  totalQuestions,
+}: {
+  currentIndex: number;
+  onExit: () => void;
+  totalQuestions: number;
+}) {
   return (
     <>
       <View className="flex-row px-4 pt-3">
@@ -99,9 +135,22 @@ function RoundHeader({ currentIndex, onExit, totalQuestions }: { currentIndex: n
 }
 
 export function QuizRound(props: QuizRoundProps) {
-  const { describeQuestion, difficulty, difficultyLabel, grammar, language, languageLabel, onExit, onRetry, questions, roundKind = 'bank', topic } = props;
+  const {
+    describeQuestion,
+    difficulty,
+    difficultyLabel,
+    grammar,
+    language,
+    languageLabel,
+    onExit,
+    onRetry,
+    questions,
+    roundKind = 'bank',
+    topic,
+  } = props;
   const engine = useQuizEngine(questions, { roundKind, topic });
-  const { advanceQuestion, currentQuestion, isAnswered, isComplete, submitAnswer, submittedAnswer, wasCorrect } = engine;
+  const { advanceQuestion, currentQuestion, isAnswered, isComplete, submitAnswer, submittedAnswer, wasCorrect } =
+    engine;
   const { recordAnswer } = useQuizStats();
   const { explain, isOpen: isQueryOpen, rationale: explainRationale, setOpen: updateQueryOpen } = useQueryDrawer();
   const recordedKind: RecordedAnswer['roundKind'] = roundKind === 'bank' && topic !== undefined ? 'topic' : roundKind;
@@ -131,7 +180,13 @@ export function QuizRound(props: QuizRoundProps) {
     if (isCorrect === null || !currentQuestion) return;
     const { id: questionId } = currentQuestion;
     const { difficulty: questionDifficulty, language: questionLanguage } = source;
-    const answer = { choiceIndex: toChoiceIndex(value), difficulty: questionDifficulty, language: questionLanguage, questionId, roundKind: recordedKind };
+    const answer = {
+      choiceIndex: toChoiceIndex(value),
+      difficulty: questionDifficulty,
+      language: questionLanguage,
+      questionId,
+      roundKind: recordedKind,
+    };
     recordAnswer({ ...answer, wasCorrect: isCorrect });
   }
 
@@ -157,7 +212,12 @@ export function QuizRound(props: QuizRoundProps) {
     return <ResultsScreen {...results} onMenu={onExit} onRetry={onRetry} />;
   }
 
-  const { difficultyLabel: questionDifficultyLabel, grammar: questionGrammar, languageLabel: questionLanguageLabel } = source;
+  const {
+    difficultyLabel: questionDifficultyLabel,
+    grammar: entryGrammar,
+    languageLabel: questionLanguageLabel,
+  } = source;
+  const questionGrammar = resolveQuestionGrammar(currentQuestion, entryGrammar);
   const answerState = { grammar: questionGrammar, isAnswered, submittedAnswer };
   const { currentIndex, totalQuestions } = engine;
   const { query, type } = currentQuestion;
@@ -174,11 +234,20 @@ export function QuizRound(props: QuizRoundProps) {
             onOpenQuery={() => updateQueryOpen(true)}
             question={currentQuestion}
           />
-          {isAnswered ? <AnswerActions onAdvance={handleAdvance} onExplain={handleExplain} wasCorrect={wasCorrect} /> : null}
+          {isAnswered ? (
+            <AnswerActions onAdvance={handleAdvance} onExplain={handleExplain} wasCorrect={wasCorrect} />
+          ) : null}
         </View>
       </ScrollView>
       <KeyboardHintBar questionType={type} isAnswered={isAnswered} />
-      <QueryDrawer chosenRationale={explainRationale} isOpen={isQueryOpen} query={query} grammar={questionGrammar} onClose={() => updateQueryOpen(false)} />
+      <QueryDrawer
+        evidenceSource={readEvidenceSource(currentQuestion)}
+        chosenRationale={explainRationale}
+        isOpen={isQueryOpen}
+        query={query}
+        grammar={questionGrammar}
+        onClose={() => updateQueryOpen(false)}
+      />
     </View>
   );
 }

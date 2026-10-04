@@ -3,11 +3,18 @@
 // questions, or no valid questions rejects the bank as a whole.
 import { collectMisconceptionIds } from './collectMisconceptionIds.js';
 import { CONTENT_LIMITS } from './contentLimits.js';
+import { GRAMMARS } from './grammars.js';
 import { isRecord } from './isRecord.js';
-import { isValidProvenance } from './isValidProvenance.js';
+import { hasValidQuestionProvenance } from './hasValidQuestionProvenance.js';
 import { SUPPORTED_SCHEMA_VERSION } from './supportedSchemaVersion.js';
 import type { BankContext } from './types/BankContext.js';
 import type { Question } from './types/Question.js';
+
+const GRAMMAR_IDS: readonly unknown[] = GRAMMARS;
+
+function isOptionalGrammar(value: unknown): boolean {
+  return value === undefined || GRAMMAR_IDS.includes(value);
+}
 
 const AB_CHOICE_COUNT = 2;
 const QUESTION_ID = /^[a-z0-9-]{1,64}$/;
@@ -94,10 +101,7 @@ function isValidAbShape(question: Record<string, unknown>): boolean {
 
 function isValidBoolExtras(question: Record<string, unknown>): boolean {
   const { misconceptionId, rationale } = question;
-  return (
-    (rationale === undefined || typeof rationale === 'string') &&
-    isOptionalDisplayText(misconceptionId)
-  );
+  return (rationale === undefined || typeof rationale === 'string') && isOptionalDisplayText(misconceptionId);
 }
 
 function isValidAnswerShape(question: Record<string, unknown>): boolean {
@@ -139,9 +143,10 @@ function findBrokenRule(question: unknown, context: BankContext): string | null 
     isOptionalDisplayText(topic) &&
     isValidQuery(query);
   if (!isShapeValid) return 'malformed question';
+  if (!isOptionalGrammar(question.grammar)) return 'unknown-grammar';
   if (hasLongRationale(question)) return 'rationale-too-long';
   if (!isValidAnswerShape(question)) return 'malformed question';
-  if (!isValidProvenance(question.provenance)) return 'missing-provenance';
+  if (!hasValidQuestionProvenance(question)) return 'missing-provenance';
   return findUnknownReferenceRule(question, context);
 }
 
@@ -149,7 +154,10 @@ function describeQuestionId(question: unknown): string {
   return isRecord(question) && typeof question.id === 'string' ? question.id : '(no id)';
 }
 
-function partitionQuestions(entries: unknown[], context: BankContext): {
+function partitionQuestions(
+  entries: unknown[],
+  context: BankContext,
+): {
   dropped: DroppedQuestion[];
   droppedQuestionIds: string[];
   questions: Question[];
