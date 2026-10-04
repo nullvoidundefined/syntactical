@@ -4,7 +4,6 @@
 // touched. stop() removes only the container this run started.
 import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { existsSync } from 'node:fs';
 import { setTimeout as delay } from 'node:timers/promises';
 
 import pg from 'pg';
@@ -14,20 +13,11 @@ const IMAGE = 'postgres:17';
 const PASSPHRASE_BYTES = 24;
 const READY_TIMEOUT_MS = 60_000;
 const READY_POLL_MS = 250;
-const FALLBACK_DOCKER_CONFIG = '/tmp/dcfg';
-
-function dockerEnv(): NodeJS.ProcessEnv {
-  const env = { ...process.env };
-  if (env.DOCKER_CONFIG === undefined && existsSync(FALLBACK_DOCKER_CONFIG)) {
-    env.DOCKER_CONFIG = FALLBACK_DOCKER_CONFIG;
-  }
-  return env;
-}
 
 function docker(args: string[], extraEnv: NodeJS.ProcessEnv = {}): string {
   return execFileSync('docker', args, {
     encoding: 'utf8',
-    env: { ...dockerEnv(), ...extraEnv },
+    env: { ...process.env, ...extraEnv },
     stdio: ['ignore', 'pipe', 'pipe'],
   }).trim();
 }
