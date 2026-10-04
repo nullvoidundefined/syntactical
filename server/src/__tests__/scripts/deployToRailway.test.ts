@@ -57,6 +57,19 @@ describe('deployToRailway.sh upload guard', () => {
     expect(result.stdout).toContain('passed every check');
   });
 
+  // The upload directory lives outside the working directory, and railway up resolves PATH against
+  // the project directory unless --path-as-root is set; without it the CLI fails with
+  // "prefix not found" (first staging deploy, 2026-10-04).
+  it('uploads the staged directory as the archive root', () => {
+    const result = runDeploy(root);
+    const command = result.stdout.split('\n').find((line) => line.startsWith('would run: '));
+    expect(command).toBeDefined();
+    expect(command).toContain(' up ');
+    expect(command).toContain('--path-as-root');
+    expect(command).toContain('--service api');
+    expect(command).toContain('--environment staging');
+  });
+
   it.each([
     'build/paid-content/deploy_key',
     'build/paid-content/id_ed25519',

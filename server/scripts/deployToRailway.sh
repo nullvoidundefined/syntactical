@@ -42,9 +42,15 @@ if [ -n "$forbidden" ]; then
   exit 1
 fi
 
+# --path-as-root makes the upload directory the archive root; without it the CLI resolves the
+# path against the working directory and fails with "prefix not found" for a directory outside it.
+command=(npx --yes "@railway/cli@$cli_version" up "$upload" --path-as-root --ci --no-gitignore
+  --service api --environment "$environment")
+
 if [ "$dry_run" = 1 ]; then
   echo "dry run: the $environment upload passed every check; nothing was sent to Railway."
+  echo "would run: ${command[*]}"
   exit 0
 fi
 
-npx --yes "@railway/cli@$cli_version" up "$upload" --ci --no-gitignore --service api --environment "$environment"
+"${command[@]}"
