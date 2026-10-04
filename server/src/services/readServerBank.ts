@@ -15,8 +15,9 @@ async function readPaidBanks(contentDir: string, paidContentDir: string): Promis
   for (const { banks: entries, id } of manifest.languages) {
     for (const [difficulty, entry] of Object.entries(entries)) {
       const { access, hash, path, productId } = entry;
-      if (access !== 'paid' || !productId) continue;
-      const body = await readBankBytes(paidContentDir, entry);
+      if (access !== 'paid') continue;
+      if (!productId) throw new Error(`Paid bank has no productId: ${path}`);
+      const body = await readBankBytes(paidContentDir, entry, contentDir);
       if (body === null) throw new Error(`Paid bank missing: ${path}`);
       if (sha256(body).toString('hex') !== hash) throw new Error(`Bank hash mismatch: ${path}`);
       banks.set(`${id}/${difficulty}`, { body, productId });

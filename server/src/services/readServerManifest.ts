@@ -30,9 +30,10 @@ async function readBank(
   root: string,
   language: LanguageEntry,
   entry: BankEntry,
+  forbiddenDir?: string,
 ): Promise<Map<string, AnswerKeyEntry> | null> {
   const { hash, path } = entry;
-  const bytes = await readBankBytes(root, entry);
+  const bytes = await readBankBytes(root, entry, forbiddenDir);
   if (bytes === null) return null;
   if (sha256(bytes).toString('hex') !== hash) {
     throw new Error(`Bank hash mismatch: ${path}`);
@@ -60,7 +61,8 @@ async function readServerManifest(contentDir: string, paidContentDir?: string): 
     for (const [difficulty, entry] of Object.entries(banks)) {
       const root = pickRoot(entry, contentDir, paidContentDir);
       if (root === null) continue;
-      const bank = await readBank(root, language, entry);
+      const forbiddenDir = entry.access === 'paid' ? contentDir : undefined;
+      const bank = await readBank(root, language, entry, forbiddenDir);
       if (bank) answerKey.set(`${id}/${difficulty}`, bank);
       else if (entry.access === 'paid') throw new Error(`Paid bank missing: ${entry.path}`);
     }
