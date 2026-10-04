@@ -49,11 +49,7 @@ case "$mode" in
     ssh-keyscan -t ed25519 github.com > "$work/known_hosts" 2>/dev/null
     ssh-keygen -lf "$work/known_hosts" | grep -q 'SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU'
     export GIT_SSH_COMMAND="ssh -i $work/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$work/known_hosts"
-    git init --quiet "$work/content"
-    git -C "$work/content" remote add origin "$repo"
-    git -C "$work/content" fetch --quiet --depth 1 origin "$ref"
-    git -C "$work/content" checkout --quiet --detach FETCH_HEAD
-    [ "$(git -C "$work/content" rev-parse HEAD)" = "$ref" ] || { echo "stageBuildContent: fetched commit does not match the ref" >&2; exit 1; }
+    "$root/server/scripts/fetchPinnedCommit.sh" "$repo" "$ref" "$work/content"
     node "$copy" "$root/content/manifest.json" "$root/content" "$out/content" free
     node "$copy" "$root/content/manifest.json" "$work/content" "$out/paid-content" paid
     ;;
