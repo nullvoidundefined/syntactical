@@ -11,8 +11,7 @@
       "environment": "preview",
       "android": { "buildType": "apk" },
       "env": {
-        "API_BASE_URL": "https://staging-api.syntactical.dev/v1/",
-        "EXPO_BASE_URL": "/syntactical/preview"
+        "API_BASE_URL": "https://staging-api.syntactical.dev/v1/"
       }
     },
     "production": {

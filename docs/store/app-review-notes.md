@@ -23,7 +23,7 @@ How to reach the purchase:
 4. Back on the difficulty step, tap Medium or Hard again. A sheet opens titled Unlock <difficulty> with a Buy button showing the store price. Complete the purchase with your sandbox account.
 5. The bank unlocks and plays. Settings, Restore purchases (signed in, on iOS and Android) restores purchases on a new install.
 
-Account deletion: Settings, then Account, then Delete account. The app asks you to type DELETE to confirm. Deleting removes the account, synced answers, and progress. Settings is reachable from the header on every screen.
+Account deletion: Settings, then Account, then Delete account. The app asks you to type DELETE to confirm. Deleting removes the account, synced answers, and progress. Records that remain at vendors are limited to analytics events tied to the account's random user id (never the email), the RevenueCat customer record, the email provider's send log, and the stores' own transactions. Settings is reachable from the header on every screen.
 
 Sign-in is optional for the free Easy banks. A guest keeps progress on the device.
 

@@ -35,7 +35,7 @@ function readPostHogHost(): string | undefined {
 function readApiBaseUrl(): string {
   const value = process.env.API_BASE_URL;
   if (value === undefined || value === '') return DEFAULT_API_BASE_URL;
-  if (!value.startsWith('https://') || !value.endsWith('/')) {
+  if (!/^https:\/\/[^/\s]+\/(\S*\/)?$/.test(value)) {
     throw new Error('API_BASE_URL must be an https URL that ends with a slash');
   }
   return value;
@@ -56,7 +56,12 @@ const config: ExpoConfig = {
     revenueCatGoogleKey: readPublicKey('REVENUECAT_GOOGLE_KEY', 'goog'),
     revenueCatWebBillingKey: readPublicKey('REVENUECAT_WEB_BILLING_KEY', 'rcb'),
   },
-  ios: { bundleIdentifier: 'dev.nullvoidundefined.syntactical', supportsTablet: true },
+  ios: {
+    bundleIdentifier: 'dev.nullvoidundefined.syntactical',
+    // The app uses only the platform's HTTPS and SHA-256 hashing, which are exempt from export documentation.
+    config: { usesNonExemptEncryption: false },
+    supportsTablet: true,
+  },
   name: 'Syntactical',
   orientation: 'portrait',
   plugins: ['expo-router'],

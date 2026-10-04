@@ -28,8 +28,31 @@ describe('app.config API base URL', () => {
     expect(loadApiBaseUrl()).toBe('https://staging-api.example.test/v1/');
   });
 
-  it.each(['http://api.example.test/v1/', 'https://api.example.test/v1'])('refuses %s without echoing it', (value) => {
-    process.env.API_BASE_URL = value;
-    expect(() => loadApiBaseUrl()).toThrow('API_BASE_URL must be an https URL that ends with a slash');
+  it('falls back to the production API when API_BASE_URL is empty', () => {
+    process.env.API_BASE_URL = '';
+    expect(loadApiBaseUrl()).toBe('https://api.syntactical.dev/v1/');
+  });
+
+  it.each(['http://api.example.test/v1/', 'https://api.example.test/v1', 'https://'])(
+    'refuses %s without echoing it',
+    (value) => {
+      process.env.API_BASE_URL = value;
+      let message = '';
+      try {
+        loadApiBaseUrl();
+      } catch (err) {
+        message = (err as Error).message;
+      }
+      expect(message).toBe('API_BASE_URL must be an https URL that ends with a slash');
+      expect(message).not.toContain(value);
+    },
+  );
+
+  it('declares that the app uses no non-exempt encryption', () => {
+    let config: ExpoConfig | undefined;
+    jest.isolateModules(() => {
+      config = require('../../app.config').default as ExpoConfig;
+    });
+    expect(config?.ios?.config?.usesNonExemptEncryption).toBe(false);
   });
 });

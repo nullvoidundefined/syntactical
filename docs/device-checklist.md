@@ -12,7 +12,7 @@ npx eas-cli@latest build --profile preview --platform android
 npx eas-cli@latest build --profile preview --platform ios
 ```
 
-The preview profile points at the staging API (`API_BASE_URL` in `eas.json`) and the preview content. Store sandbox purchases need the RevenueCat keys in the EAS `preview` environment and the products set up as in `docs/store/in-app-purchases.md`. Before a release, run the same checks on a `production` build (`--profile production`) installed through TestFlight and a Play internal test track, and note in the Runs table which profile the build used.
+The preview profile points at the staging API (`API_BASE_URL` in `eas.json`) and, like production, the live content (nothing publishes separate preview content). It depends on the staging API getting the hostname `staging-api.syntactical.dev`; if the owner uses another host, change `API_BASE_URL` in the preview profile. Store sandbox purchases need the RevenueCat keys in the EAS `preview` environment and the products set up as in `docs/store/in-app-purchases.md`. Before a release, run the same checks on a `production` build (`--profile production`) installed through TestFlight and a Play internal test track, and note in the Runs table which profile the build used.
 
 ## Checks
 
