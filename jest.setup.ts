@@ -43,3 +43,10 @@ jest.mock('@revenuecat/purchases-js', () => ({
   Purchases: { configure: jest.fn(), getSharedInstance: jest.fn(), isConfigured: jest.fn(() => false) },
   PurchasesError: class PurchasesError extends Error {},
 }));
+
+// PostHog stays inert under Jest; no analytics key is configured, so the client
+// never constructs it. Suites that exercise the client install their own mock.
+jest.mock('posthog-react-native', () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));

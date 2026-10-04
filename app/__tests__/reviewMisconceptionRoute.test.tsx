@@ -5,7 +5,7 @@ import ReviewScreen from '../review';
 
 const mockRecordAnswer = jest.fn();
 jest.mock('../../state/StatsProvider', () => ({
-  useQuizStats: () => ({ isHydrated: true, recordAnswer: mockRecordAnswer, recordCompletion: jest.fn() }),
+  useQuizStats: () => ({ eventLog: [], isHydrated: true, recordAnswer: mockRecordAnswer, recordCompletion: jest.fn() }),
 }));
 jest.mock('../../state/useLanguageManifest', () => ({
   useLanguageManifest: () => ({ languages: [{ grammar: 'python', id: 'python', label: 'Python', misconceptions: [] }] }),

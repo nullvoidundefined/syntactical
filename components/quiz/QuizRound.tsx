@@ -14,6 +14,7 @@ import type { RecordedAnswer } from '../../services/stats/types/RecordedAnswer';
 import { useQuizStats } from '../../state/StatsProvider';
 import { useQueryDrawer } from '../../state/useQueryDrawer';
 import { useQuizEngine, type RoundKind } from '../../state/useQuizEngine';
+import { useRoundAnalytics } from '../../state/useRoundAnalytics';
 import { useRoundCompletion } from '../../state/useRoundCompletion';
 import { useRoundKeyboard } from '../../state/useRoundKeyboard';
 import { QueryDrawer } from '../query/QueryDrawer';
@@ -111,6 +112,16 @@ export function QuizRound(props: QuizRoundProps) {
 
   // A round with no questions is not a completion; a review round is not a bank completion.
   useRoundCompletion(isComplete && engine.totalQuestions > 0 && roundKind === 'bank', { difficulty, language });
+  useRoundAnalytics({
+    bankQuestions: questions,
+    correctCount: engine.correctCount,
+    difficulty,
+    isComplete,
+    language,
+    roundKind,
+    topic,
+    totalQuestions: engine.totalQuestions,
+  });
   const roundSource = { difficulty, difficultyLabel, grammar, language, languageLabel };
   const source = currentQuestion && describeQuestion ? describeQuestion(currentQuestion) : roundSource;
 

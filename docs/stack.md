@@ -177,6 +177,15 @@ Last updated: 2026-10-02 (Vite app, gh-pages, and the Tailwind 4 alias removed a
 - **Why chosen:** The standard connectivity module for React Native.
 - **Configured in:** `package.json`.
 
+### posthog-react-native
+
+- **Version:** ^4.78.4
+- **What it is:** The PostHog product analytics SDK for React Native and Expo; it also runs in the web build.
+- **Docs:** https://posthog.com/docs/libraries/react-native
+- **Role here:** Sends the eight events of the fixed registry (`round_started`, `round_completed`, `signup_prompt_shown`, `signup_prompt_accepted`, `paywall_viewed`, `purchase_completed`, `review_round_completed`, `bank_exhausted`). A guest is anonymous: `persistence: 'memory'` writes no cookie and no AsyncStorage key. A signed-in user is identified by the server user id; sign-out resets. No event carries an email, code, or token. With no `POSTHOG_KEY` at build time every call is a no-op.
+- **Why chosen:** The spec names PostHog; this is its one SDK that covers iOS, Android, and the web from the same code, and its memory persistence gives the cookieless guest mode. Its native extras (session replay, device info) are optional peers and are not installed.
+- **Configured in:** `clients/analyticsClient.ts` (the only module that imports it), `constants/analyticsEvents.ts`, `app.config.ts` (`extra.posthogKey` from `POSTHOG_KEY`, a public `phc_` project key; `extra.posthogHost` from `POSTHOG_HOST`).
+
 ## Testing
 
 ### Jest with jest-expo
