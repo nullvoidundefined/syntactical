@@ -119,6 +119,26 @@ describe.skipIf(SKIP_DOCKER)('runOracle ruby and rails (docker)', () => {
         );
 
         it(
+            'records a SyntaxError raised at run time as an exception, not unparseable code',
+            async () => {
+                const run = await runOracle({ language, code: "puts 1\nraise SyntaxError, 'x'" });
+
+                expect(run).toMatchObject({ exceptionType: 'SyntaxError', outcome: 'exception' });
+            },
+            RUN_TIMEOUT_MS,
+        );
+
+        it(
+            'runs the oracle without the wrapper locals in scope',
+            async () => {
+                const run = await runOracle({ language, code: 'puts defined?(code).inspect\nputs defined?(iseq).inspect' });
+
+                expect(run).toMatchObject({ outcome: 'value', value: 'nil\nnil' });
+            },
+            RUN_TIMEOUT_MS,
+        );
+
+        it(
             'runs an oracle far larger than one argv argument',
             async () => {
                 const run = await runOracle({ language, code: `# ${'x'.repeat(200_000)}\nputs 1` });

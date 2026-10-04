@@ -10,17 +10,29 @@ STDERR_CAP_BYTES = 64 * 1024
 MEMORY_LIMIT_BYTES = 200 * 1024 * 1024
 FAILURE_EXIT_CODE = 70
 EXCEPTION_MARKER = "\x00oracle-exception:"
+SYNTAX_MARKER = "\x00oracle-syntax-error"
 VERSION = "Rails #{Gem::Specification.find_by_name('activerecord').version} (Ruby #{RUBY_VERSION})"
 
 CHILD_WRAPPER = <<~'SOURCE'
-    code = STDIN.read
+    # Library setup runs outside the oracle's rescue, so a broken image exits without the
+    # marker and is reported as RunnerFailure, not as an oracle exception.
+    require 'active_support/all'
+    require 'active_record'
+    ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory:')
+    ActiveRecord::Migration.verbose = false
+    ActiveRecord::Base.logger = nil
+    # Parse before running, so only a compile failure is syntax-error; a SyntaxError raised
+    # at run time stays an exception. The iseq runs in its own top-level scope, so the
+    # wrapper's locals are not visible to the oracle.
     begin
-        require 'active_support/all'
-        require 'active_record'
-        ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory:')
-        ActiveRecord::Migration.verbose = false
-        ActiveRecord::Base.logger = nil
-        eval(code, TOPLEVEL_BINDING, '<oracle>')
+        iseq = RubyVM::InstructionSequence.compile(STDIN.read, '<oracle>')
+    rescue SyntaxError
+        STDERR.write("\n\x00oracle-syntax-error\n")
+        STDERR.flush
+        exit! 70
+    end
+    begin
+        iseq.eval
     rescue SystemExit
         # Like the Python runner, a normal exit preserves the printed value.
     rescue Exception => error
@@ -52,10 +64,10 @@ end
 
 def classify(status, out, err)
     if status.exitstatus == FAILURE_EXIT_CODE
+        return { outcome: 'syntax-error' } if err.include?(SYNTAX_MARKER)
         marker = err.lines.reverse.find { |line| line.start_with?(EXCEPTION_MARKER) }
         if marker
             exception_type = marker.delete_prefix(EXCEPTION_MARKER).chomp
-            return { outcome: 'syntax-error' } if exception_type == 'SyntaxError'
             return { outcome: 'resource-limit' } if exception_type == 'NoMemoryError'
             return { outcome: 'exception', exceptionType: exception_type }
         end
