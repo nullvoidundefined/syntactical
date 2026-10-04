@@ -79,30 +79,12 @@ Railway project `syntactical` (id `2ffc74bd-badb-47f1-9985-4d606dfa12ee`) has th
 
 ### Environment patch
 
-Read the ids first: `railway status --json` prints the project, environment, and service ids. Then commit a patch with `railway api`. The shape below is the one used on 2026-10-04 (ids are placeholders; check the field names against Railway's current schema if the call is rejected):
+Read the ids first: `railway status --json` prints the project, environment, and service ids. Then commit a patch with `railway api` (ids are placeholders; verified with Railway CLI 5.62.1 on 2026-10-04):
 
 ```
-railway api --input - <<'JSON'
-{
-  "query": "mutation($environmentId: String!, $patch: EnvironmentConfig!) { environmentPatchCommit(environmentId: $environmentId, patch: $patch) }",
-  "variables": {
-    "environmentId": "<environment-id>",
-    "patch": {
-      "services": {
-        "<service-id>": {
-          "build": { "builder": "DOCKERFILE", "dockerfilePath": "server/Dockerfile" },
-          "deploy": {
-            "healthcheckPath": "/health",
-            "healthcheckTimeout": 60,
-            "restartPolicyType": "ON_FAILURE",
-            "restartPolicyMaxRetries": 5
-          }
-        }
-      }
-    }
-  }
-}
-JSON
+railway api --raw-var environmentId=<environment-id> \
+  --var patch='{"services":{"<service-id>":{"build":{"builder":"DOCKERFILE","dockerfilePath":"server/Dockerfile"},"deploy":{"healthcheckPath":"/health","healthcheckTimeout":60,"restartPolicyType":"ON_FAILURE","restartPolicyMaxRetries":5}}}}' \
+  'mutation($environmentId: String!, $patch: EnvironmentConfig) { environmentPatchCommit(environmentId: $environmentId, patch: $patch, commitMessage: "api settings", skipDeploys: true) }'
 ```
 
 A `services.<service-id>` entry for a service with no instance in that environment creates the instance; the same entry on an existing instance updates its settings. Confirm with `railway environment config --environment <env> --json`.
@@ -112,14 +94,14 @@ A `services.<service-id>` entry for a service with no instance in that environme
 1. `railway environment new <name>`.
 2. Run the environment patch above for the new environment, with its `<environment-id>` and the `api` `<service-id>`.
 3. Set `NODE_ENV=production` and `RAILWAY_DOCKERFILE_PATH=server/Dockerfile` on the service in that environment.
-4. Set `DATABASE_URL` from the matching Neon branch, piped so nothing is printed: `neonctl connection-string <branch> --ssl verify-full | railway variables --set DATABASE_URL --stdin --service api --environment <name>` (check `railway variables --help` for the stdin flag in your CLI version).
+4. Set `DATABASE_URL` from the matching Neon branch, piped so nothing is printed: `neonctl connection-string <branch> --project-id <neon-project-id> --database-name neondb --role-name neondb_owner --ssl verify-full | railway variable set DATABASE_URL --stdin --service api --environment <name> --skip-deploys`.
 5. Create an environment-scoped project token and store it as a GitHub Actions secret, as below, then add the environment to `server-deploy.yml`.
 
 ### How the secrets were set (no copy-paste, nothing printed)
 
 Every secret moved from its source to its destination through a pipe, so no human handled the value and nothing was echoed:
 
-- Neon connection strings: `neonctl connection-string <branch> --ssl verify-full` piped into `railway variables --set` (the `staging` branch for the staging environment, `main` for production).
+- Neon connection strings: `neonctl connection-string <branch> --project-id <neon-project-id> --database-name neondb --role-name neondb_owner --ssl verify-full` piped into `railway variable set DATABASE_URL --stdin --service api --environment <env> --skip-deploys` (the `staging` branch for the staging environment, `main` for production).
 - Railway tokens: an environment-scoped project token created with `railway api` (the `projectTokenCreate` mutation) and piped into `gh secret set RAILWAY_TOKEN_STAGING` or `gh secret set RAILWAY_TOKEN_PRODUCTION`.
 - The content deploy key: generated with `ssh-keygen`; the public half added as a read-only deploy key on `syntactical-content`, the private half piped into `gh secret set CONTENT_DEPLOY_KEY`.
 
