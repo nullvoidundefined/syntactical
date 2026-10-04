@@ -1,8 +1,8 @@
 // Reads a JSON value from AsyncStorage for a caller that must tell "nothing
 // stored" from "could not read": an absent key reads as null, a read that
 // throws is reported as failed and logged, and text that is not JSON is
-// returned as the raw string, so the caller's rejected-value backup keeps
-// it rather than treating the key as empty and overwriting it.
+// returned as the raw string, so the caller's type guard rejects it rather
+// than treating the key as empty.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { logWarning } from './logClient';

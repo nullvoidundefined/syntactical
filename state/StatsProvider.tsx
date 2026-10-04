@@ -1,13 +1,11 @@
 // Owns lifetime stats and the answer event log for the whole app: reads
 // both once at startup, migrates v1 stats to v2 in memory (written with the
-// first change), backs up any malformed stored value before replacing it,
-// keeps a key whose read failed untouched (its changes stay in memory),
-// refuses changes until that read completes, and keeps changes in memory
-// only when a backup or the migration failed, so a stored value is never
-// destroyed unseen. Each recorded answer folds into the stats and appends
-// one answer event with a fresh UUID. Every change persists through one
-// ordered write queue per key; in-memory state stays authoritative when a
-// write fails.
+// first change), starts empty from a malformed stored value (the next change
+// replaces it), keeps a key whose read failed untouched (its changes stay in
+// memory), and refuses changes until that read completes. Each recorded
+// answer folds into the stats and appends one answer event with a fresh UUID.
+// Every change persists through one ordered write queue per key; in-memory
+// state stays authoritative when a write fails.
 import {
   createContext,
   useCallback,
@@ -141,7 +139,7 @@ export function StatsProvider({ children, deletedUserId = null, ownerUserId = nu
     let isCancelled = false;
     async function hydrate() {
       const statsRead = await readStoredJson(statsSlot.key);
-      const { isPersistenceBlocked, stats: storedStats } = await resolveStoredStats(statsRead, readLocalToday());
+      const { isPersistenceBlocked, stats: storedStats } = resolveStoredStats(statsRead, readLocalToday());
       if (isCancelled) return;
       loadSlot(statsSlot, storedStats, isPersistenceBlocked);
       setLoadedStatsKey(statsSlot.key);
@@ -156,7 +154,7 @@ export function StatsProvider({ children, deletedUserId = null, ownerUserId = nu
     let isCancelled = false;
     async function hydrate() {
       const eventLogRead = await readStoredJson(EVENT_LOG_STORAGE_KEY);
-      const { eventLog: storedEventLog, isPersistenceBlocked: isEventLogBlocked } = await resolveStoredEventLog(eventLogRead);
+      const { eventLog: storedEventLog, isPersistenceBlocked: isEventLogBlocked } = resolveStoredEventLog(eventLogRead);
       if (isCancelled) return;
       loadSlot(eventLogSlot, storedEventLog, isEventLogBlocked);
       setIsEventLogLoaded(true);
@@ -197,7 +195,7 @@ export function StatsProvider({ children, deletedUserId = null, ownerUserId = nu
       if (!isHydrated) return;
       requireOwner(ownerRef.current, userId);
       await requirePersisted(changeSlot(eventLogSlot, (current) => claimGuest(current, userId)));
-      const { isPersistenceBlocked, stats: guestStats } = await resolveStoredStats(await readStoredJson(STORAGE_KEY), readLocalToday());
+      const { isPersistenceBlocked, stats: guestStats } = resolveStoredStats(await readStoredJson(STORAGE_KEY), readLocalToday());
       if (isPersistenceBlocked) throw new Error('guest stats could not be read');
       requireOwner(ownerRef.current, userId);
       await requirePersisted(changeSlot(statsSlot, (current) => mergeGuestStats(guestStats, current)));
