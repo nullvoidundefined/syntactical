@@ -1,6 +1,6 @@
 // B-39c (B-38, B-39, security section): resilience of POST /v1/webhooks/revenuecat.
 // A delivery that waits on a user row another transaction holds FOR UPDATE (as account deletion
-// would) answers 503 with Retry-After within a few seconds, stores nothing, and records on
+// would) answers 503 SERVER_BUSY within a few seconds, stores nothing, and records on
 // redelivery once the lock is released. product_id and store must be non-empty and at most 200
 // characters, app_user_id at most 200, else 400 INPUT_INVALID_BODY with nothing stored. The
 // unmapped-product warning carries the request's requestId, the same id as X-Request-Id.
@@ -109,7 +109,7 @@ describe.skipIf(SKIP_DATABASE_TESTS)('POST /v1/webhooks/revenuecat resilience (B
     });
 
     it(
-        'answers 503 with Retry-After within a few seconds while the user row is held FOR UPDATE, then records on redelivery',
+        'answers 503 SERVER_BUSY within a few seconds while the user row is held FOR UPDATE, then records on redelivery',
         async () => {
             const { app, revenueCatAuth } = createWebhookTestApp({
                 paidProductIds,
@@ -143,7 +143,7 @@ describe.skipIf(SKIP_DATABASE_TESTS)('POST /v1/webhooks/revenuecat resilience (B
                 return;
             }
             expect(outcome.status).toBe(HTTP_SERVICE_UNAVAILABLE);
-            expect(outcome.headers['retry-after']).toMatch(/^\d+$/);
+            expect(outcome.body.error.code).toBe('SERVER_BUSY');
             expect(elapsedMs).toBeLessThan(BOUNDED_WAIT_MS);
             expect(eventsWhileLocked).toBe(0);
             expect(redelivered.status).toBe(HTTP_OK);
