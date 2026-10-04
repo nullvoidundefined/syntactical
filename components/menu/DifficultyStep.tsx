@@ -1,6 +1,7 @@
 // Step 2 of the launch flow: the difficulties the chosen language's
 // manifest entry names, labeled from the app's registry, each showing
-// whether its bank is ready, downloading, failed, or needs a connection.
+// whether its bank is ready, downloading, failed, locked (a paid bank without
+// its entitlement), or needs a connection (no local copy while offline).
 import { DIFFICULTIES } from '@syntactical/content-schema';
 import { Pressable, Text, View } from 'react-native';
 
@@ -16,6 +17,7 @@ type DifficultyStepProps = { language: string; onBack: () => void; onSelectDiffi
 
 function describeBankStatus(bankState: QuestionBankState, isOnline: boolean): string | undefined {
   if (bankState.status === 'ready') return undefined;
+  if (bankState.status === 'locked') return 'Locked';
   if (!isOnline) return 'Needs a connection to load';
   if (bankState.status === 'error') return 'Download failed. Tap to retry';
   return 'Downloading';

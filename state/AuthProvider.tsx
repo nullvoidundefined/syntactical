@@ -297,3 +297,9 @@ export function useAuth(): AuthContextValue {
   }
   return context;
 }
+
+// The signed-in user's id, or null for a guest or outside AuthProvider, for
+// hooks that also run where no AuthProvider is mounted (content loading).
+export function useSignedInUserId(): string | null {
+  return useContext(AuthContext)?.user?.id ?? null;
+}

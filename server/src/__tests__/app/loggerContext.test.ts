@@ -34,6 +34,7 @@ function envWith(publicBaseUrl: string | undefined): NodeJS.ProcessEnv {
     ALLOWED_ORIGINS: 'https://syntactical.dev',
     DATABASE_URL: `postgres-url-${secret()}`,
     EMAIL_FROM: 'Syntactical <sign-in@syntactical.dev>',
+    PAID_CONTENT_DIR: '/srv/syntactical-content',
     PUBLIC_BASE_URL: publicBaseUrl,
     RATE_LIMIT_KEY_SECRET: secret(),
     RESEND_API_KEY: secret(),
