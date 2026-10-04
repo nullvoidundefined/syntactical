@@ -171,7 +171,7 @@ export function StatsProvider({ children, deletedUserId = null, ownerUserId = nu
   // included) is removed behind any stats write already queued for it.
   useEffect(() => {
     if (deletedUserId === null || deletedUserId === ownerUserId || !isEventLogLoaded) return;
-    void changeSlot(eventLogSlot, (current) => current.filter((entry) => entry.ownerUserId !== deletedUserId));
+    void changeSlot(eventLogSlot, (current) => removeOwned(current, deletedUserId));
     queueKeyRemoval(statsSlot, buildUserStatsKey(deletedUserId));
   }, [deletedUserId, eventLogSlot, isEventLogLoaded, ownerUserId, statsSlot]);
 

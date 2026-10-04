@@ -106,29 +106,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Writes the identity, merged with what storage holds so ids this session
   // never read (a failed hydration read) are not lost; a write is skipped when
   // storage cannot be read at all.
-  const persist = useCallback((nextUserId: string | null) => {
-    const memoryKnown = [...knownRef.current];
+  const persist = useCallback((nextUserId: string | null, droppedUserId?: string) => {
+    const memoryKnown = knownRef.current.filter((id) => id !== droppedUserId);
     writeQueue.current = writeQueue.current.then(async () => {
       const { isReadFailed, value } = await readStoredJson(AUTH_STORAGE_KEY);
       if (isReadFailed) return;
       const stored = resolveStoredAuth(value);
-      const merged = Array.from(new Set([...(stored?.knownUserIds ?? []), ...memoryKnown]));
+      const merged = Array.from(new Set([...(stored?.knownUserIds ?? []), ...memoryKnown])).filter(
+        (id) => id !== droppedUserId,
+      );
       await writeJson(AUTH_STORAGE_KEY, { knownUserIds: merged, userId: nextUserId });
     });
   }, []);
 
-  const signOutLocally = useCallback(async () => {
-    setUserId(null);
-    persist(null);
-    void resetPurchaser();
-    try {
-      await clearSessionToken();
-    } catch (err) {
-      // Local state is already signed out; record the failure without any value.
-      const cause = err instanceof Error ? err : new Error('secure store delete failed');
-      logWarning({ err: cause }, 'session value delete failed on sign-out');
-    }
-  }, [persist, setUserId]);
+  const signOutLocally = useCallback(
+    async (droppedUserId?: string) => {
+      setUserId(null);
+      persist(null, droppedUserId);
+      void resetPurchaser();
+      try {
+        await clearSessionToken();
+      } catch (err) {
+        // Local state is already signed out; record the failure without any value.
+        const cause = err instanceof Error ? err : new Error('secure store delete failed');
+        logWarning({ err: cause }, 'session value delete failed on sign-out');
+      }
+    },
+    [persist, setUserId],
+  );
 
   useEffect(() => {
     let isActive = true;
@@ -236,9 +241,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // The account is already gone on the server, so no session request is sent.
   const signOutDeletedAccount = useCallback(async () => {
-    setDeletedUserId(userIdRef.current);
-    await signOutLocally();
-  }, [signOutLocally]);
+    const deletedId = userIdRef.current;
+    setDeletedUserId(deletedId);
+    if (deletedId === null) {
+      await signOutLocally();
+      return;
+    }
+    // The deleted id is forgotten: it leaves the known ids, in memory and in storage.
+    setKnownUserIds(knownRef.current.filter((id) => id !== deletedId));
+    await signOutLocally(deletedId);
+  }, [setKnownUserIds, signOutLocally]);
 
   const completeGuestClaim = useCallback(
     (claimedUserId: string) => {
