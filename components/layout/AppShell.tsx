@@ -20,7 +20,8 @@ function ProgressReadout() {
     <View className="flex-row items-center gap-2">
       <Text className="sr-only">{`Day streak ${dayStreak}, ${xpToday} of ${dailyGoal} XP today`}</Text>
       <Text aria-hidden className="font-mono text-xs uppercase tracking-widest text-muted">
-        day <Text className="text-signal">{dayStreak}</Text> / <Text className="text-ink">{`${xpToday}/${dailyGoal}`}</Text> xp
+        day <Text className="text-signal">{dayStreak}</Text> /{' '}
+        <Text className="text-ink">{`${xpToday}/${dailyGoal}`}</Text> xp
       </Text>
       <DailyGoalRing dailyGoal={dailyGoal} xpToday={xpToday} />
     </View>
@@ -30,7 +31,10 @@ function ProgressReadout() {
 export function AppShell({ accountControl = null, children }: { accountControl?: ReactNode; children: ReactNode }) {
   return (
     <SafeAreaView className="flex-1 bg-obsidian">
-      <View role="banner" className="flex-row flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
+      <View
+        role="banner"
+        className="flex-row flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3"
+      >
         <Text className="font-mono text-xs tracking-widest text-ink">SYNTACTICAL</Text>
         <ReviewDueLink />
         <ProgressReadout />

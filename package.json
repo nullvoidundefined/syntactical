@@ -9,6 +9,8 @@
     "content:build": "npm run build -w @syntactical/content-schema && tsx scripts/buildContentManifest.mjs",
     "lint": "oxlint",
     "test": "jest",
+    "e2e": "playwright test -c e2e",
+    "typecheck:e2e": "tsc --noEmit -p e2e",
     "preview": "npx serve dist",
     "test:workspaces": "npm test --workspaces --if-present",
     "typecheck:workspaces": "npm run typecheck --workspaces --if-present",
@@ -40,6 +42,7 @@
     "react-native-web": "^0.21.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@testing-library/react": "^16.3.3",
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "^30.0.0",

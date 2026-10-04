@@ -34,5 +34,9 @@ expo-env.d.ts
 # Plan execution workspace
 .superpowers/
 
+# Playwright
+/test-results/
+/playwright-report/
+
 # Content staged for the API image build (scripts/stageBuildContent.sh); never committed.
 /build/

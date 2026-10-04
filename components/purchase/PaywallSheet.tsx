@@ -12,6 +12,7 @@ import { trackEvent } from '../../clients/analyticsClient';
 import { markModalOpen } from '../../state/modalOpenSignal';
 import { useIsReducedMotion } from '../../state/useIsReducedMotion';
 import { AuthButton } from '../auth/AuthButton';
+import { ModalOverlay } from '../layout/ModalOverlay';
 
 const HEADING_ID = 'paywall-sheet-heading';
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -126,7 +127,7 @@ export function PaywallSheet({ difficultyLabel, isBuying, message, onBuy, onClos
     </View>
   );
 
-  if (isWeb) return panel;
+  if (isWeb) return <ModalOverlay>{panel}</ModalOverlay>;
   return (
     <Modal transparent animationType={isReducedMotion ? 'none' : 'slide'} visible onRequestClose={onClose}>
       {panel}

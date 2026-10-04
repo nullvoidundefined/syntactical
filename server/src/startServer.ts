@@ -11,6 +11,7 @@ import { createApp } from './app.js';
 import { createDatabasePool } from './clients/createDatabasePool.js';
 import { createEmailClient } from './clients/emailClient.js';
 import { createLogger } from './clients/logger.js';
+import type { EmailClient } from './clients/emailTypes.js';
 import { createStubEmailClient } from './clients/stubEmailClient.js';
 import { loadEnv } from './config/env.js';
 import { isCookieSecure } from './config/isCookieSecure.js';
@@ -29,6 +30,9 @@ interface RunningServer {
 }
 
 interface StartOptions {
+  // Test-only seam: replaces the email client so a test can read the sign-in codes. Accepted only
+  // when NODE_ENV is exactly `test`; the production entrypoint never passes it.
+  emailClient?: EmailClient;
   logger?: Logger;
 }
 
@@ -61,7 +65,10 @@ function closeServer(server: Server): Promise<void> {
 }
 
 async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}): Promise<RunningServer> {
-  const { logger = createLogger({ destination: process.stdout }) } = options;
+  const { emailClient: injectedEmailClient, logger = createLogger({ destination: process.stdout }) } = options;
+  if (injectedEmailClient !== undefined && source.NODE_ENV !== 'test') {
+    throw new Error('An injected email client is allowed only when NODE_ENV is test');
+  }
   const env = loadEnv(source);
   const port = readPort(source);
   const contentDir = source.CONTENT_DIR?.trim() || DEFAULT_CONTENT_DIR;
@@ -85,9 +92,10 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
     auth: {
       database: pool,
       emailClient:
-        RESEND_API_KEY === undefined
+        injectedEmailClient ??
+        (RESEND_API_KEY === undefined
           ? createStubEmailClient(logger)
-          : createEmailClient({ from: EMAIL_FROM, logger, resend: new Resend(RESEND_API_KEY) }),
+          : createEmailClient({ from: EMAIL_FROM, logger, resend: new Resend(RESEND_API_KEY) })),
       isCookieSecure: isCookieSecure(NODE_ENV),
       rateLimitKeySecret: env.RATE_LIMIT_KEY_SECRET,
     },

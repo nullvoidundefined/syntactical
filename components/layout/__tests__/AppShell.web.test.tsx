@@ -4,14 +4,21 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AppShell } from '../AppShell';
 
-jest.mock('../../../state/useProgressSummary', () => ({ useProgressSummary: () => ({ dailyGoal: 20, dayStreak: 3, xpToday: 12 }) }));
+jest.mock('../../../state/useProgressSummary', () => ({
+  useProgressSummary: () => ({ dailyGoal: 20, dayStreak: 3, xpToday: 12 }),
+}));
 jest.mock('../../../state/useIsReducedMotion', () => ({ useIsReducedMotion: () => false }));
 jest.mock('../DownloadIndicator', () => ({ DownloadIndicator: () => null }));
 jest.mock('../ReviewDueLink', () => ({ ReviewDueLink: () => null }));
 
 function renderShell() {
   return render(
-    <SafeAreaProvider initialMetrics={{ frame: { height: 800, width: 400, x: 0, y: 0 }, insets: { bottom: 0, left: 0, right: 0, top: 0 } }}>
+    <SafeAreaProvider
+      initialMetrics={{
+        frame: { height: 800, width: 400, x: 0, y: 0 },
+        insets: { bottom: 0, left: 0, right: 0, top: 0 },
+      }}
+    >
       <AppShell>
         <Text>route content</Text>
       </AppShell>
@@ -43,5 +50,12 @@ describe('AppShell on the web', () => {
     renderShell();
     expect(screen.getByRole('link', { name: 'Settings' })).toBeTruthy();
     expect(screen.getByRole('banner').textContent).not.toMatch(/best/i);
+  });
+
+  // Dialog overlays are hosted in document.body (ModalOverlay), so the app bar needs no z-index of
+  // its own; one would paint the bar above the paywall and delete-account overlays.
+  it('leaves the app bar unstacked so modal overlays cover it', () => {
+    renderShell();
+    expect(screen.getByRole('banner').style.zIndex).toBe('');
   });
 });
