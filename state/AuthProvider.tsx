@@ -8,7 +8,9 @@
 // 401 for a request sent after the current sign-in signs the user out locally
 // (an older request's 401 is ignored), and calls made before hydration wait
 // for it. signOutLocally is also exposed for the device-side step after the
-// server deletes the account: it signs out with no network request. The session value, email, and code are never logged or stored
+// server deletes the account: it signs out with no network request and resolves
+// only after the signed-out render has committed, so the stats provider below
+// has already seen the guest owner. The session value, email, and code are never logged or stored
 // outside the secure store.
 import {
   createContext,
@@ -39,6 +41,20 @@ import {
   HTTP_STATUS_TOO_MANY_REQUESTS,
 } from '../constants/appConfig';
 import { resolveStoredAuth } from '../services/auth/resolveStoredAuth';
+
+// Upper bound, in event-loop turns, on how long signOutLocally waits for the
+// signed-out render to commit. A render never commits while a caller holds
+// React's test act scope open, so the wait gives up instead of hanging that
+// caller. Turns are counted, not timed, so fake timers cannot stall it.
+const SIGN_OUT_COMMIT_WAIT_TURNS = 200;
+
+// One event-loop turn; the browser has no setImmediate.
+function yieldTurn(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof setImmediate === 'function') setImmediate(resolve);
+    else setTimeout(resolve, 0);
+  });
+}
 
 const PENDING_CLAIMS_STORAGE_KEY = 'syntactical.auth.pending-claims.v1';
 
@@ -90,6 +106,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     hydration.current = { promise, resolve };
   }
+  // Callers of signOutLocally waiting for the signed-out render to commit.
+  const signOutWaiters = useRef<Array<() => void>>([]);
+  const committedUserId = useRef<string | null>(null);
   const signInSeq = useRef(0);
   const signInCount = useRef(0);
   const verifyRun = useRef<Promise<AuthResult> | null>(null);
@@ -135,6 +154,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOutLocally = useCallback(async () => {
+    const isCommitPending = userIdRef.current !== null || committedUserId.current !== null;
+    const committed = isCommitPending
+      ? new Promise<void>((resolve) => {
+          signOutWaiters.current.push(resolve);
+        })
+      : Promise.resolve();
     setUserId(null);
     persist(null);
     try {
@@ -144,7 +169,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const cause = err instanceof Error ? err : new Error('secure store delete failed');
       logWarning({ err: cause }, 'session value delete failed on sign-out');
     }
+    let isCommitted = false;
+    void committed.then(() => {
+      isCommitted = true;
+    });
+    for (let turn = 0; turn < SIGN_OUT_COMMIT_WAIT_TURNS && !isCommitted; turn += 1) {
+      await yieldTurn();
+    }
   }, [persist, setUserId]);
+
+  // Child effects run before this one, so the stats provider has already
+  // reacted to the signed-out identity when the waiters resolve.
+  useEffect(() => {
+    committedUserId.current = userId;
+    if (userId !== null) return;
+    const waiters = signOutWaiters.current;
+    signOutWaiters.current = [];
+    waiters.forEach((resolve) => resolve());
+  }, [userId]);
 
   useEffect(() => {
     let isActive = true;

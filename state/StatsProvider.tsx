@@ -9,7 +9,8 @@
 // ordered write queue per key; in-memory state stays authoritative when a
 // write fails. deleteLocalUserData(userId) removes a deleted account's events
 // and stats key (sync cursor included) from the device, refuses while that user
-// owns the provider, and queues the key removal behind any write already queued.
+// owns the provider or the stored event log has not loaded (a guest stats key
+// still loading does not block it), and queues the key removal behind any write already queued.
 import {
   createContext,
   useCallback,
@@ -128,6 +129,8 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
   const [loadedStats, statsSlot] = usePersistedSlot<Stats>(statsKey, () => createEmptyStats(readLocalToday()));
   const [eventLog, eventLogSlot] = usePersistedSlot<LoggedAnswerEvent[]>(EVENT_LOG_STORAGE_KEY, () => []);
   const [isEventLogLoaded, setIsEventLogLoaded] = useState(false);
+  // Current in any closure: deleteLocalUserData reads it, never the hydrated state.
+  const isEventLogLoadedRef = useRef(false);
   const [loadedStatsKey, setLoadedStatsKey] = useState<string | null>(null);
   // Stats of the previous owner stay hidden and unwritable until the new owner's load finishes.
   const isStatsLoaded = loadedStatsKey === statsKey;
@@ -195,6 +198,7 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
       const { eventLog: storedEventLog, isPersistenceBlocked: isEventLogBlocked } = await resolveStoredEventLog(eventLogRead);
       if (isCancelled) return;
       loadSlot(eventLogSlot, storedEventLog, isEventLogBlocked);
+      isEventLogLoadedRef.current = true;
       setIsEventLogLoaded(true);
     }
     void hydrate();
@@ -278,13 +282,13 @@ export function StatsProvider({ children, ownerUserId = null }: { children: Reac
   const deleteLocalUserData = useCallback(
     async (userId: string) => {
       if (ownerRef.current === userId) throw new Error('local data deletion refused: user is still the owner');
-      if (!isHydrated) throw new Error('local data deletion refused: stats not hydrated');
+      if (!isEventLogLoadedRef.current) throw new Error('local data deletion refused: event log not loaded');
       await requirePersisted(changeSlot(eventLogSlot, (current) => removeUserEvents(current, userId)));
       const removal = statsSlot.queue.current.then(() => removeStoredKey(buildUserStatsKey(userId)));
       statsSlot.queue.current = removal;
       if (!(await removal)) throw new Error('stats key removal was not persisted');
     },
-    [eventLogSlot, isHydrated, statsSlot],
+    [eventLogSlot, statsSlot],
   );
 
   const clearSyncCursor = useCallback(() => {
