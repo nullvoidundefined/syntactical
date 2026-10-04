@@ -1,6 +1,8 @@
 // Privacy policy route (web and native). DRAFT: the owner must review it and fill in the three
 // bracketed placeholders before the store listings point at it. Every statement is read from the
 // code and docs/store/privacy-labels.md; it promises nothing the code does not do.
+// The "no location" statements hold only once the owner turns on PostHog "Discard client IP data"
+// (PostHog still receives the request IP otherwise). Verify that before publishing.
 import { LegalList, LegalPage, LegalParagraph, LegalSection } from '../components/legal/LegalPage';
 
 export default function PrivacyScreen() {
