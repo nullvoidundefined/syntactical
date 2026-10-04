@@ -1,12 +1,12 @@
 // Runs work inside one Postgres transaction on a pooled client: COMMIT when the work resolves,
-// ROLLBACK when it throws. By default the transaction is bounded by a transaction-local statement
-// and lock timeout (the error handler answers either with 503 SERVER_BUSY), so nothing leaks onto
-// the pooled connection; hasTimeouts: false skips them for a transaction that must wait out
-// slow work, such as the sign-in code issue holding its lock across the email send. A client whose ROLLBACK fails is destroyed instead of returned to the pool,
-// so a broken connection never serves the next request. The pool drops its idle error listener
-// on checkout, so a listener lives here for the checkout: a backend that dies mid-work
-// (pg_terminate_backend) would otherwise emit an unhandled error and crash the process. The
-// failure still surfaces on the pending or next query, and release(error) destroys the client.
+// ROLLBACK when it throws. With hasTimeouts: true (the sync upload and profile update) the
+// transaction is bounded by a transaction-local statement and lock timeout, which the error
+// handler answers with 503 SERVER_BUSY; nothing leaks onto the pooled connection. A client
+// whose ROLLBACK fails is destroyed instead of returned to the pool, so a broken connection
+// never serves the next request. The pool drops its idle error listener on checkout, so a
+// listener lives here for the checkout: a backend that dies mid-work (pg_terminate_backend)
+// would otherwise emit an unhandled error and crash the process. The failure still surfaces on
+// the pending or next query, and release(error) destroys the client.
 import type pg from 'pg';
 
 import type { Database } from './database.js';
@@ -21,7 +21,7 @@ function ignoreClientError(): void {
 async function withTransaction<T>(
   database: Database,
   work: (client: pg.PoolClient) => Promise<T>,
-  { hasTimeouts = true }: { hasTimeouts?: boolean } = {},
+  { hasTimeouts = false }: { hasTimeouts?: boolean } = {},
 ): Promise<T> {
   const client = await database.connect();
   client.on('error', ignoreClientError);

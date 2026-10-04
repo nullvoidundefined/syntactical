@@ -41,7 +41,7 @@ async function updateProfile(
     await recomputeDailyProgress(client, userId, timezone, now);
     const profile = await readProfile(client, userId, now);
     return profile ? { kind: 'updated', profile } : { kind: 'missing' };
-  });
+  }, { hasTimeouts: true });
 }
 
 export { updateProfile };

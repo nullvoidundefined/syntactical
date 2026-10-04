@@ -31,7 +31,6 @@ async function issueOneTimeCode(input: IssueOneTimeCodeInput): Promise<boolean> 
   const code = String(randomInt(0, UPPER_BOUND)).padStart(DIGITS, '0');
   const expiresAt = new Date(now.getTime() + TTL_MS);
   try {
-    // No timeouts: a concurrent issue for this email waits out the send (up to the email deadline).
     await withTransaction(database, async (client) => {
       // Serializes issues for one email until commit: under READ COMMITTED two concurrent issues
       // would each find no committed live code to invalidate and both leave one live. The key is
@@ -50,7 +49,7 @@ async function issueOneTimeCode(input: IssueOneTimeCodeInput): Promise<boolean> 
       await sendSignInCode(email, code).catch(() => {
         throw new EmailSendFailure('sign-in email failed');
       });
-    }, { hasTimeouts: false });
+    });
     return true;
   } catch (error) {
     if (error instanceof EmailSendFailure) {

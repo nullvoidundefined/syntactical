@@ -88,7 +88,7 @@ async function ingestAnswerEvents(
     );
     const totals = await recomputeDailyProgress(client, userId, user.timezone, now);
     return { kind: 'stored', totals: { ...totals, insertedCount: rowCount ?? 0 } };
-  });
+  }, { hasTimeouts: true });
 }
 
 export { ingestAnswerEvents };
