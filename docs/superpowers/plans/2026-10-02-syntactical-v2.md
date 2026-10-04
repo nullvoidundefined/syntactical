@@ -92,20 +92,18 @@ Passed 2026-10-02. The owner approved the spec and plan, chose owner-merges-ever
 
 ### Task 0.1: move the web build and content origin to syntactical.dev
 
-**Risk:** high (the content base URL allowlist is a security control). **Behaviors:** B-55.
+**Risk:** standard (the content base URL is a build-time constant). **Behaviors:** B-55.
 
 **Files:**
-- Modify: `app.config.ts` (`CONTENT_ORIGIN`, `ALLOWED_BASE_URLS`, `experiments.baseUrl`)
-- Modify: `services/content/validateContentBaseUrl.ts`
+- Modify: `app.config.ts` (`CONTENT_ORIGIN`, `experiments.baseUrl`)
 - Create: `public/CNAME` (contains `syntactical.dev`)
 - Modify: `.github/workflows/deploy.yml` (no base path), `scripts/copySpaFallback.mjs` if it assumes `/syntactical`
-- Test: `app/__tests__/appConfigOrigin.test.ts`, `services/content/__tests__/validateContentBaseUrl.test.ts`, `scripts/__tests__/packageScripts.test.ts`
+- Test: `app/__tests__/appConfigOrigin.test.ts`, `scripts/__tests__/packageScripts.test.ts`
 
-**Interfaces:** Produces `extra.contentBaseUrl === 'https://syntactical.dev/content/'`; `validateContentBaseUrl(value: unknown): string | null` keeps its signature.
+**Interfaces:** Produces `extra.contentBaseUrl === 'https://syntactical.dev/content/'`; the app reads it from `extra.contentBaseUrl` with no runtime allow-list (`validateContentBaseUrl` was removed in IAN-601).
 
 **Behaviors (RED tests):**
-- `appConfigOrigin.test.ts`: an unset `EXPO_BASE_URL` resolves the content base URL to `https://syntactical.dev/content/`; `experiments.baseUrl` is `''`; any set value throws at config load (the preview path is removed).
-- `validateContentBaseUrl.test.ts`: returns the input for exactly `https://syntactical.dev/content/`; returns `null` for the old GitHub Pages content URL, the `http://` form, `https://syntactical.dev.evil.com/content/`, `https://evilsyntactical.dev/content/`, the form without a trailing slash, a URL with userinfo (assembled at run time from parts so no credential-shaped literal is committed), `''`, `null`, and `42`.
+- `appConfigOrigin.test.ts`: an unset `EXPO_BASE_URL` resolves the content base URL to `https://syntactical.dev/content/`; `experiments.baseUrl` is `''`.
 - `packageScripts.test.ts`: `public/CNAME` contains exactly `syntactical.dev`.
 
 **Steps:**
@@ -790,13 +788,12 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 ### Task 3.10: client API and session storage
 
-**Risk:** high (client session handling; API origin pin). **Behaviors:** B-28 client side, sign-in half of B-36, B-64 (sign-in route).
+**Risk:** high (client session handling). **Behaviors:** B-28 client side, sign-in half of B-36, B-64 (sign-in route).
 
-**Files:** Create `services/content/validateApiBaseUrl.ts` (accepts exactly `https://api.syntactical.dev/v1/`), `clients/apiClient.ts` (`apiFetch(path, init)`: base from `extra.apiBaseUrl` validated; `credentials: 'include'` and `X-Requested-With: XMLHttpRequest` on web; `Authorization: Bearer` from SecureStore and `X-Client: native` on native; JSON only), `clients/sessionTokenStore.ts`, `state/AuthProvider.tsx` (`useAuth()`: `{ user, isSignedIn, requestCode, verifyCode, signOut }`; sends the device IANA timezone with `verifyCode`), `app/sign-in.tsx` (`SignInScreen`), `components/auth/{EmailStep,CodeStep}.tsx`; modify `app.config.ts` (`extra.apiBaseUrl`); tests.
+**Files:** Create `clients/apiClient.ts` (`apiFetch(path, init)`: base from `extra.apiBaseUrl`, a build-time constant with no runtime allow-list; `credentials: 'include'` and `X-Requested-With: XMLHttpRequest` on web; `Authorization: Bearer` from SecureStore and `X-Client: native` on native; JSON only), `clients/sessionTokenStore.ts`, `state/AuthProvider.tsx` (`useAuth()`: `{ user, isSignedIn, requestCode, verifyCode, signOut }`; sends the device IANA timezone with `verifyCode`), `app/sign-in.tsx` (`SignInScreen`), `components/auth/{EmailStep,CodeStep}.tsx`; modify `app.config.ts` (`extra.apiBaseUrl`); tests.
 
 **Behaviors (RED tests):**
-- `validateApiBaseUrl` accepts exactly `https://api.syntactical.dev/v1/` and rejects `http://`, other hosts, lookalike hosts, a missing trailing slash, a URL with userinfo (assembled at run time), `''`, and `null`.
-- With an invalid `extra.apiBaseUrl`, `apiFetch` throws `ApiUnavailable` and makes no network request (never falls back to a literal URL).
+- With a missing `extra.apiBaseUrl`, `apiFetch` throws `ApiUnavailable` and makes no network request (never falls back to a literal URL).
 - On web, `apiFetch` sends `credentials: 'include'` and `X-Requested-With: XMLHttpRequest`, and never reads or writes a token.
 - On native, a successful `verifyCode` stores the token in SecureStore (mocked); later calls send `Authorization: Bearer <token>`; `signOut` deletes it even when the network call fails.
 - A 401 response clears the stored token and sets `isSignedIn` false.

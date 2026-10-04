@@ -1,12 +1,10 @@
-// The API client: every request goes to the one pinned API origin. An invalid
-// base URL, a path that would leave the base, or a failed fetch throws
-// ApiUnavailable; a refused request never reaches the network. Redirects,
-// off-base responses, timeouts, and stream failures are ApiUnavailable too.
+// The API client: every request goes to the build-time API base URL, with a
+// path from the app's own code. A missing base URL or a failed fetch throws
+// ApiUnavailable. Redirects, timeouts, and stream failures are ApiUnavailable too.
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 import { API_FETCH_TIMEOUT_MS, HTTP_STATUS_UNAUTHORIZED } from '../constants/appConfig';
-import { validateApiBaseUrl } from '../services/content/validateApiBaseUrl';
 
 import { ApiUnavailable } from './ApiUnavailable';
 import { apiRequestState } from './apiRequestState';
@@ -24,18 +22,11 @@ type ApiRequestInit = {
 };
 
 function resolveRequestUrl(path: string): string {
-  const base = validateApiBaseUrl(Constants.expoConfig?.extra?.apiBaseUrl);
-  if (base === null) {
+  const base: unknown = Constants.expoConfig?.extra?.apiBaseUrl;
+  if (typeof base !== 'string' || base === '') {
     throw new ApiUnavailable('API base URL is not configured');
   }
-  if (path.startsWith('/') || /^[a-z][a-z0-9+.-]*:/i.test(path)) {
-    throw new ApiUnavailable('API path must be relative to the base');
-  }
-  const url = new URL(path, base).href;
-  if (!url.startsWith(base)) {
-    throw new ApiUnavailable('API path resolves outside the base');
-  }
-  return url;
+  return `${base}${path}`;
 }
 
 // The headers to send and the session value they carry (null when none), so a
@@ -62,17 +53,6 @@ async function buildRequest(hasBody: boolean): Promise<BuiltRequest> {
     headers.Authorization = `Bearer ${stored}`;
   }
   return { headers, sentSession: stored || null };
-}
-
-// A response with no url (a transport that does not report one) is not judged
-// by url; `redirect: 'error'` and the redirected flag still guard it.
-function isOffBase(responseUrl: string | undefined, requestedUrl: string): boolean {
-  if (!responseUrl) return false;
-  try {
-    return new URL(responseUrl).href !== new URL(requestedUrl).href;
-  } catch {
-    return true;
-  }
 }
 
 async function parseBody(response: Response, responseType: 'json' | 'text'): Promise<unknown> {
@@ -102,8 +82,8 @@ async function requestAndRead(
   } catch (cause) {
     throw new ApiUnavailable('API request failed', { cause });
   }
-  const { redirected, status, url: responseUrl } = response;
-  if (redirected || isOffBase(responseUrl, url)) {
+  const { redirected, status } = response;
+  if (redirected) {
     throw new ApiUnavailable('API response was redirected');
   }
   return { body: await parseBody(response, responseType), status };

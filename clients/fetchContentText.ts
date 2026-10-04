@@ -1,5 +1,4 @@
-// Thin wrapper around fetch for remote content files: refuses redirects
-// (an empty response url is unverifiable and counts as one), bounds the whole
+// Thin wrapper around fetch for remote content files: refuses redirects, bounds the whole
 // request (headers and body) by a timer, and enforces a UTF-8 byte-size limit
 // on the body text.
 
@@ -12,18 +11,9 @@ function countUtf8Bytes(text: string): number {
   return new TextEncoder().encode(text).length;
 }
 
-function isSameUrl(responseUrl: string, requestedUrl: string): boolean {
-  if (responseUrl === '') return false;
-  try {
-    return new URL(responseUrl).href === new URL(requestedUrl).href;
-  } catch {
-    return false;
-  }
-}
-
-function assertDirectOkResponse(response: Response, requestedUrl: string): void {
-  const { ok, redirected, status, url } = response;
-  if (redirected || !isSameUrl(url, requestedUrl)) {
+function assertDirectOkResponse(response: Response): void {
+  const { ok, redirected, status } = response;
+  if (redirected) {
     throw new ContentFetchError('redirect', 'Content request was redirected');
   }
   if (!ok) {
@@ -44,7 +34,7 @@ async function requestAndReadText(
   signal: AbortSignal,
 ): Promise<string> {
   const response = await fetch(url, { cache: 'no-cache', redirect: 'error', signal });
-  assertDirectOkResponse(response, url);
+  assertDirectOkResponse(response);
   assertDeclaredLengthWithinLimit(response, maxBytes);
   const text = await response.text();
   if (countUtf8Bytes(text) > maxBytes) {
