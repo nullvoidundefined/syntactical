@@ -7,10 +7,13 @@
 // raised again on the next launch. Sign-out clears local state even when the server call fails, a
 // 401 for a request sent after the current sign-in signs the user out locally
 // (an older request's 401 is ignored), and calls made before hydration wait
-// for it. The session value, email, and code are never logged or stored
-// outside the secure store. The RevenueCat purchaser identity follows the
-// signed-in user (identified after sign-in and hydration, reset on every
-// sign-out path, never for a guest); its failures never change a result.
+// for it. After the server deletes the account, signOutDeletedAccount signs
+// out with no request and names the deleted id in deletedUserId, so the stats
+// layer removes that user's local data. The session value, email, and code
+// are never logged or stored outside the secure store. The RevenueCat purchaser
+// identity follows the signed-in user (identified after sign-in and hydration,
+// reset on every sign-out path, never for a guest); its failures never change
+// a result.
 import {
   createContext,
   useCallback,
@@ -48,11 +51,13 @@ export type AuthResult =
 
 type AuthContextValue = {
   completeGuestClaim: (userId: string) => void;
+  deletedUserId: string | null;
   guestClaimUserId: string | null;
   isHydrated: boolean;
   isSignedIn: boolean;
   requestCode: (email: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
+  signOutDeletedAccount: (deletedUserId: string) => Promise<void>;
   user: { id: string } | null;
   verifyCode: (email: string, code: string) => Promise<AuthResult>;
 };
@@ -72,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userId, setUserIdState] = useState<string | null>(null);
   const [knownUserIds, setKnownUserIdsState] = useState<string[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [deletedUserId, setDeletedUserId] = useState<string | null>(null);
   const userIdRef = useRef<string | null>(null);
   const knownRef = useRef<string[]>([]);
   const writeQueue = useRef<Promise<unknown>>(Promise.resolve());
@@ -100,29 +106,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Writes the identity, merged with what storage holds so ids this session
   // never read (a failed hydration read) are not lost; a write is skipped when
   // storage cannot be read at all.
-  const persist = useCallback((nextUserId: string | null) => {
-    const memoryKnown = [...knownRef.current];
+  const persist = useCallback((nextUserId: string | null, droppedUserId?: string) => {
+    const memoryKnown = knownRef.current.filter((id) => id !== droppedUserId);
     writeQueue.current = writeQueue.current.then(async () => {
       const { isReadFailed, value } = await readStoredJson(AUTH_STORAGE_KEY);
       if (isReadFailed) return;
       const stored = resolveStoredAuth(value);
-      const merged = Array.from(new Set([...(stored?.knownUserIds ?? []), ...memoryKnown]));
+      const merged = Array.from(new Set([...(stored?.knownUserIds ?? []), ...memoryKnown])).filter(
+        (id) => id !== droppedUserId,
+      );
       await writeJson(AUTH_STORAGE_KEY, { knownUserIds: merged, userId: nextUserId });
     });
   }, []);
 
-  const signOutLocally = useCallback(async () => {
-    setUserId(null);
-    persist(null);
-    void resetPurchaser();
-    try {
-      await clearSessionToken();
-    } catch (err) {
-      // Local state is already signed out; record the failure without any value.
-      const cause = err instanceof Error ? err : new Error('secure store delete failed');
-      logWarning({ err: cause }, 'session value delete failed on sign-out');
-    }
-  }, [persist, setUserId]);
+  const signOutLocally = useCallback(
+    async (droppedUserId?: string) => {
+      setUserId(null);
+      persist(null, droppedUserId);
+      void resetPurchaser();
+      try {
+        await clearSessionToken();
+      } catch (err) {
+        // Local state is already signed out; record the failure without any value.
+        const cause = err instanceof Error ? err : new Error('secure store delete failed');
+        logWarning({ err: cause }, 'session value delete failed on sign-out');
+      }
+    },
+    [persist, setUserId],
+  );
 
   useEffect(() => {
     let isActive = true;
@@ -228,6 +239,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signOutLocally();
   }, [signOutLocally]);
 
+  // The account is already gone on the server, so no session request is sent.
+  // The caller names the deleted id, since a concurrent 401 may already have
+  // signed the device out and cleared the current user.
+  const signOutDeletedAccount = useCallback(
+    async (deletedId: string) => {
+      setDeletedUserId(deletedId);
+      // The deleted id is forgotten: it leaves the known ids, in memory and in storage.
+      setKnownUserIds(knownRef.current.filter((id) => id !== deletedId));
+      await signOutLocally(deletedId);
+    },
+    [setKnownUserIds, signOutLocally],
+  );
+
   const completeGuestClaim = useCallback(
     (claimedUserId: string) => {
       if (userIdRef.current !== claimedUserId || knownRef.current.includes(claimedUserId)) return;
@@ -242,15 +266,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       completeGuestClaim,
+      deletedUserId,
       guestClaimUserId,
       isHydrated,
       isSignedIn: userId !== null,
       requestCode,
       signOut,
+      signOutDeletedAccount,
       user: userId === null ? null : { id: userId },
       verifyCode,
     }),
-    [completeGuestClaim, guestClaimUserId, isHydrated, requestCode, signOut, userId, verifyCode],
+    [
+      completeGuestClaim,
+      deletedUserId,
+      guestClaimUserId,
+      isHydrated,
+      requestCode,
+      signOut,
+      signOutDeletedAccount,
+      userId,
+      verifyCode,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

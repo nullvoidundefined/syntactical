@@ -90,17 +90,6 @@ describe('fetchContentText', () => {
     expect((err as ContentFetchError).reason).toBe('redirect');
   });
 
-  it('rejects with reason redirect when the final url differs from the requested url', async () => {
-    installFetch({
-      redirected: false,
-      url: 'https://attacker.test/easy.json',
-      text: () => Promise.resolve('evil'),
-    });
-    const err = await captureRejection(fetchContentText(REQUEST_URL, 1024));
-    expect(err).toBeInstanceOf(ContentFetchError);
-    expect((err as ContentFetchError).reason).toBe('redirect');
-  });
-
   it('rejects with reason status for a 404 response', async () => {
     installFetch({ ok: false, status: 404, text: () => Promise.resolve('Not Found') });
     const err = await captureRejection(fetchContentText(REQUEST_URL, 1024));

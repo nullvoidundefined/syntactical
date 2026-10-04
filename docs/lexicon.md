@@ -23,7 +23,7 @@ One line per domain noun used in this codebase's names (files, functions, variab
 - content version - planned - `bankEntry.contentVersion`, a human-facing counter the pipeline increments on each publish of a bank, shown on the quality page - chosen over: reusing the bank hash, which is not readable by people.
 - bundled bank - in code - the copy of a bank shipped inside the app build (`BUNDLED_BANKS`), used when no cached bank exists; planned: free banks only - chosen over: `default bank`, `seed`, because `seed` implies a database.
 - cached bank - in code - the last verified bank downloaded at runtime and stored on the device with its bank hash (`CachedBank`) - chosen over: `stored bank`, `local bank`.
-- content base URL - in code - the absolute URL the manifest and free banks are fetched from, `extra.contentBaseUrl`, checked by `validateContentBaseUrl`; planned value `https://syntactical.dev/content/` - chosen over: `api url`, because paid banks come from the API base URL, which is a separate setting.
+- content base URL - in code - the absolute URL the manifest and free banks are fetched from, `extra.contentBaseUrl`, a build-time constant from `app.config.ts`; planned value `https://syntactical.dev/content/` - chosen over: `api url`, because paid banks come from the API base URL, which is a separate setting.
 - download indicator - in code - the status line shown while a bank transfers (`DownloadIndicator`) - chosen over: `spinner`, `loader`, because it names what is happening rather than how it looks.
 
 ### Play

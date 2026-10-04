@@ -60,6 +60,7 @@ describe('root layout with auth and sync', () => {
     await renderRouter(routes, { initialUrl: '/' });
     const signOut = await screen.findByRole('button', { name: 'Sign out' });
     expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Delete account' })).toBeNull();
     fireEvent.press(signOut);
     await waitFor(() => expect(queryDialog()).not.toBeNull());
   });

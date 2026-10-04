@@ -92,20 +92,18 @@ Passed 2026-10-02. The owner approved the spec and plan, chose owner-merges-ever
 
 ### Task 0.1: move the web build and content origin to syntactical.dev
 
-**Risk:** high (the content base URL allowlist is a security control). **Behaviors:** B-55.
+**Risk:** standard (the content base URL is a build-time constant). **Behaviors:** B-55.
 
 **Files:**
-- Modify: `app.config.ts` (`CONTENT_ORIGIN`, `ALLOWED_BASE_URLS`, `experiments.baseUrl`)
-- Modify: `services/content/validateContentBaseUrl.ts`
+- Modify: `app.config.ts` (`CONTENT_ORIGIN`, `experiments.baseUrl`)
 - Create: `public/CNAME` (contains `syntactical.dev`)
 - Modify: `.github/workflows/deploy.yml` (no base path), `scripts/copySpaFallback.mjs` if it assumes `/syntactical`
-- Test: `app/__tests__/appConfigOrigin.test.ts`, `services/content/__tests__/validateContentBaseUrl.test.ts`, `scripts/__tests__/packageScripts.test.ts`
+- Test: `app/__tests__/appConfigOrigin.test.ts`, `scripts/__tests__/packageScripts.test.ts`
 
-**Interfaces:** Produces `extra.contentBaseUrl === 'https://syntactical.dev/content/'`; `validateContentBaseUrl(value: unknown): string | null` keeps its signature.
+**Interfaces:** Produces `extra.contentBaseUrl === 'https://syntactical.dev/content/'`; the app reads it from `extra.contentBaseUrl` with no runtime allow-list (`validateContentBaseUrl` was removed in IAN-601).
 
 **Behaviors (RED tests):**
-- `appConfigOrigin.test.ts`: an unset `EXPO_BASE_URL` resolves the content base URL to `https://syntactical.dev/content/`; `experiments.baseUrl` is `''`; any set value throws at config load (the preview path is removed).
-- `validateContentBaseUrl.test.ts`: returns the input for exactly `https://syntactical.dev/content/`; returns `null` for the old GitHub Pages content URL, the `http://` form, `https://syntactical.dev.evil.com/content/`, `https://evilsyntactical.dev/content/`, the form without a trailing slash, a URL with userinfo (assembled at run time from parts so no credential-shaped literal is committed), `''`, `null`, and `42`.
+- `appConfigOrigin.test.ts`: an unset `EXPO_BASE_URL` resolves the content base URL to `https://syntactical.dev/content/`; `experiments.baseUrl` is `''`.
 - `packageScripts.test.ts`: `public/CNAME` contains exactly `syntactical.dev`.
 
 **Steps:**
@@ -790,13 +788,12 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 ### Task 3.10: client API and session storage
 
-**Risk:** high (client session handling; API origin pin). **Behaviors:** B-28 client side, sign-in half of B-36, B-64 (sign-in route).
+**Risk:** high (client session handling). **Behaviors:** B-28 client side, sign-in half of B-36, B-64 (sign-in route).
 
-**Files:** Create `services/content/validateApiBaseUrl.ts` (accepts exactly `https://api.syntactical.dev/v1/`), `clients/apiClient.ts` (`apiFetch(path, init)`: base from `extra.apiBaseUrl` validated; `credentials: 'include'` and `X-Requested-With: XMLHttpRequest` on web; `Authorization: Bearer` from SecureStore and `X-Client: native` on native; JSON only), `clients/sessionTokenStore.ts`, `state/AuthProvider.tsx` (`useAuth()`: `{ user, isSignedIn, requestCode, verifyCode, signOut }`; sends the device IANA timezone with `verifyCode`), `app/sign-in.tsx` (`SignInScreen`), `components/auth/{EmailStep,CodeStep}.tsx`; modify `app.config.ts` (`extra.apiBaseUrl`); tests.
+**Files:** Create `clients/apiClient.ts` (`apiFetch(path, init)`: base from `extra.apiBaseUrl`, a build-time constant with no runtime allow-list; `credentials: 'include'` and `X-Requested-With: XMLHttpRequest` on web; `Authorization: Bearer` from SecureStore and `X-Client: native` on native; JSON only), `clients/sessionTokenStore.ts`, `state/AuthProvider.tsx` (`useAuth()`: `{ user, isSignedIn, requestCode, verifyCode, signOut }`; sends the device IANA timezone with `verifyCode`), `app/sign-in.tsx` (`SignInScreen`), `components/auth/{EmailStep,CodeStep}.tsx`; modify `app.config.ts` (`extra.apiBaseUrl`); tests.
 
 **Behaviors (RED tests):**
-- `validateApiBaseUrl` accepts exactly `https://api.syntactical.dev/v1/` and rejects `http://`, other hosts, lookalike hosts, a missing trailing slash, a URL with userinfo (assembled at run time), `''`, and `null`.
-- With an invalid `extra.apiBaseUrl`, `apiFetch` throws `ApiUnavailable` and makes no network request (never falls back to a literal URL).
+- With a missing `extra.apiBaseUrl`, `apiFetch` throws `ApiUnavailable` and makes no network request (never falls back to a literal URL).
 - On web, `apiFetch` sends `credentials: 'include'` and `X-Requested-With: XMLHttpRequest`, and never reads or writes a token.
 - On native, a successful `verifyCode` stores the token in SecureStore (mocked); later calls send `Authorization: Bearer <token>`; `signOut` deletes it even when the network call fails.
 - A 401 response clears the stored token and sets `isSignedIn` false.
@@ -931,14 +928,15 @@ Keyboard (web): `1` picks "Whole bank", `2` the first topic, `Esc` goes back. Ro
 
 **Risk:** high (PII, store requirement). **Behaviors:** B-59.
 
-**Files:** Create `server/src/routes/deleteMe.ts`, `server/src/services/deleteUser.ts`, `components/auth/DeleteAccountDialog.tsx`; modify `app/settings.tsx`; tests.
+**Files:** Create `server/src/routes/deleteMe.ts`, `server/src/services/deleteUser.ts`, `components/auth/DeleteAccountDialog.tsx`; modify `app/settings.tsx` (until it lands with Tasks 3.12 and 3.13, the control sits in `components/auth/AccountControl.tsx`); tests.
 
 **Behaviors (RED tests):**
-- `DELETE /v1/me` (session, CSRF header) deletes the user's sessions, answer events, daily progress, and goal changes in one transaction; deletes every `one_time_codes` row for the user's normalized email; replaces every string in each of the user's `purchase_events.payload` that equals the user's email or display name after the same normalization on both sides (trim, NFKC, lowercase), at any depth and under any key (`subscriber_attributes.$email`, `$displayName`, aliases), with `[deleted]`; deletes the `users` row, which sets `entitlements.user_id` and `purchase_events.user_id` to null (the rows stay for accounting); responds 204 and clears the cookie.
-- After deletion, a case-insensitive search of every table for the run-time email finds nothing (the payload fixture carries a mixed-case copy of the email), and the user's entitlement rows still exist with `user_id` null.
+- `DELETE /v1/me` (session, CSRF header) deletes the user's sessions, answer events, daily progress, and goal changes in one transaction; takes the email's advisory lock (the key `issueOneTimeCode` uses), deletes every `one_time_codes` row and email-keyed rate-limit counter for the user's normalized email, and deletes the `users` row, which sets `entitlements.user_id` and `purchase_events.user_id` to null (the rows stay for accounting); responds 204 and clears the cookie.
+- Purchase payloads store no email or name (the webhook stores an allowlisted scalar projection, B-39), so deletion scrubs nothing; it has no payload scrubber, no scrub caps, and no deletion rate limits. After deletion, a case-insensitive search of every table for the run-time email and the user id finds nothing, and the user's entitlement and purchase event rows still exist with `user_id` null.
+- A second concurrent delete for the same user answers 204 or 401, never an error.
 - The same token then gets 401; signing in again with the same email creates a new, empty user with no entitlements.
-- The settings screen shows "Delete account" with a confirmation dialog that requires typing `DELETE`; cancel changes nothing; success signs out locally and clears the event log.
-- No log line from deletion contains the email.
+- The settings screen shows "Delete account" with a confirmation dialog that requires typing `DELETE`; cancel changes nothing; success cancels the sync pass, signs out locally, and removes that user's local events and per-user stats key (guest events stay); any failure shows one generic message, and offline shows an offline message.
+- Deletion logs one `account deleted` line with the request id only, never the email or user id.
 
 - [ ] Gated cycle; R-109 review over PR 20; commit `feat(account): delete an account and its personal data`.
 

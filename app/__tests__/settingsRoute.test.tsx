@@ -114,15 +114,29 @@ describe('SettingsScreen', () => {
     expect(screen.getByText('Day streak 3, 12 of 50 XP today')).toBeTruthy();
   });
 
-  it('when signed in and the server refuses the change, announces it and keeps the goal', async () => {
+  it('when signed in and the server answers 503 SERVER_BUSY, announces it and keeps the goal', async () => {
     await signInAs(randomUUID());
     mockServer.routes.set('GET me', { body: profileBody(20), status: 200 });
-    mockServer.routes.set('PATCH me', { body: { error: { code: 'SYNC_USER_BUSY' } }, status: 429 });
+    mockServer.routes.set('PATCH me', { body: { error: { code: 'SERVER_BUSY' } }, status: 503 });
     await renderSettings();
     await waitFor(() => expect(readRing().props['aria-valuemax']).toBe(20));
     fireEvent.press(screen.getByRole('radio', { name: '50 XP a day' }));
     await waitFor(() => expect(screen.getByRole('alert').props.children).toMatch(/not saved/));
     expect(readRing().props['aria-valuemax']).toBe(20);
     expect(screen.getByRole('radio', { name: '20 XP a day' })).toBeChecked();
+  });
+
+  it('shows a signed-in user "Sign out" and "Delete account" controls in the account section', async () => {
+    await signInAs(randomUUID());
+    mockServer.routes.set('GET me', { body: profileBody(20), status: 200 });
+    await renderSettings();
+    expect(await screen.findByRole('button', { name: 'Delete account' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Sign out' })).toBeTruthy();
+  });
+
+  it('shows a guest "Sign in" and no "Delete account" control', async () => {
+    await renderSettings();
+    expect(await screen.findByRole('link', { name: 'Sign in' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Delete account' })).toBeNull();
   });
 });
