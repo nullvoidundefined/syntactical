@@ -9,6 +9,7 @@ on:
     paths:
       - 'server/**'
       - 'packages/**'
+      - 'content/**'
       - 'package-lock.json'
       - '.github/workflows/server.yml'
 
