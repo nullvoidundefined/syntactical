@@ -61,7 +61,7 @@ function RestorePurchases() {
 
 function AccountSection() {
   const { isSignedIn } = useAuth();
-  const { snapshot } = useProfile();
+  const { markPasswordSet, snapshot } = useProfile();
   const { form } = useLocalSearchParams<{ form?: string | string[] }>();
   const account = snapshot?.account;
   return (
@@ -88,6 +88,7 @@ function AccountSection() {
         <PasswordSettingsForm
           email={account.email}
           hasPassword={account.hasPassword}
+          onPasswordSaved={markPasswordSet}
           shouldFocusFirstField={form === 'password'}
         />
       ) : null}

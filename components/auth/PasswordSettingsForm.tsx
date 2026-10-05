@@ -37,6 +37,7 @@ import { PasswordField } from './PasswordField';
 type PasswordSettingsFormProps = {
   email: string;
   hasPassword: boolean;
+  onPasswordSaved?: (hasPassword: boolean) => void;
   shouldFocusFirstField?: boolean;
 };
 
@@ -59,6 +60,10 @@ const POLICY_REFUSALS: Record<string, string> = {
 function readErrorCode(body: unknown): string | null {
   const code = (body as { error?: { code?: unknown } } | null)?.error?.code;
   return typeof code === 'string' ? code : null;
+}
+
+function readHasPassword(body: unknown): boolean {
+  return (body as { data?: { hasPassword?: unknown } } | null)?.data?.hasPassword === true;
 }
 
 // The field a body the server called invalid belongs to: the current password when it is
@@ -93,7 +98,12 @@ function useClearOnBlur(onBlur: () => void) {
   useEffect(() => navigation?.addListener('blur', onBlur), [navigation, onBlur]);
 }
 
-export function PasswordSettingsForm({ email, hasPassword, shouldFocusFirstField = false }: PasswordSettingsFormProps) {
+export function PasswordSettingsForm({
+  email,
+  hasPassword,
+  onPasswordSaved,
+  shouldFocusFirstField = false,
+}: PasswordSettingsFormProps) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [isCodeStep, setIsCodeStep] = useState(false);
@@ -137,6 +147,7 @@ export function PasswordSettingsForm({ email, hasPassword, shouldFocusFirstField
         setCurrentPassword('');
         setNewPassword('');
         setIsSaved(true);
+        onPasswordSaved?.(readHasPassword(replyBody));
       } else if (status === HTTP_STATUS_FORBIDDEN && readErrorCode(replyBody) === 'AUTH_REAUTH_REQUIRED') {
         setIsCodeStep(true);
       } else {

@@ -29,6 +29,7 @@ export type ProfileSnapshot = {
 };
 
 type ProfileState = {
+  markPasswordSet: (hasPassword: boolean) => void;
   snapshot: ProfileSnapshot | null;
   updateDailyGoal: (goal: number) => Promise<boolean>;
 };
@@ -105,6 +106,18 @@ export function useProfile(): ProfileState {
     [queryClient, userId],
   );
 
+  // A saved password changes the account fact at once, on the key current now, without a refetch.
+  const markPasswordSet = useCallback(
+    (hasPassword: boolean) => {
+      if (userId === null) return;
+      const key = [PROFILE_QUERY_ROOT, userId, todayRef.current, syncedIdsRef.current.length];
+      const previous = queryClient.getQueryData<ProfileSnapshot>(key);
+      if (previous?.account === undefined) return;
+      queryClient.setQueryData<ProfileSnapshot>(key, { ...previous, account: { ...previous.account, hasPassword } });
+    },
+    [queryClient, userId],
+  );
+
   // A placeholder kept from another user's query is never shown.
-  return { snapshot: data !== undefined && data.userId === userId ? data : null, updateDailyGoal };
+  return { markPasswordSet, snapshot: data !== undefined && data.userId === userId ? data : null, updateDailyGoal };
 }
