@@ -2,7 +2,8 @@
 // stored data; PATCH /v1/me changes the timezone (a known IANA zone only) and the daily goal
 // (10, 20, or 50 only), a goal change applying from today in the user's timezone on. Task 7.6
 // (B-82): the profile carries hasPassword, true exactly when a password hash is stored, and never
-// the hash itself.
+// the hash itself. Admin access (IAN-601): the profile carries isAdmin, false by default and true
+// only when users.is_admin is set directly in the database; no PATCH field sets it.
 import { randomBytes, randomUUID } from 'node:crypto';
 
 import { toLocalDate } from '@syntactical/progress';
@@ -147,6 +148,7 @@ describe.skipIf(SKIP_DATABASE_TESTS)('/v1/me', () => {
                 email: rows[0].email,
                 entitlements: ['syntactical.python.medium'],
                 hasPassword: false,
+                isAdmin: false,
                 timezone: 'UTC',
                 xpToday,
                 xpTotal: 20 + xpToday,
@@ -165,10 +167,44 @@ describe.skipIf(SKIP_DATABASE_TESTS)('/v1/me', () => {
             dayStreak: 0,
             entitlements: [],
             hasPassword: false,
+            isAdmin: false,
             timezone: null,
             xpToday: 0,
             xpTotal: 0,
         });
+    });
+
+    it('GET reports isAdmin true once users.is_admin is set in the database, and false again once cleared', async () => {
+        const signedIn = await signIn('UTC');
+
+        const before = await getMe(signedIn);
+        await database.pool.query('UPDATE users SET is_admin = true WHERE id = $1', [signedIn.userId]);
+        const flagged = await getMe(signedIn);
+        await database.pool.query('UPDATE users SET is_admin = false WHERE id = $1', [signedIn.userId]);
+        const cleared = await getMe(signedIn);
+
+        expect(before.status).toBe(HTTP_OK);
+        expect(before.body.data.isAdmin).toBe(false);
+        expect(flagged.status).toBe(HTTP_OK);
+        expect(flagged.body.data.isAdmin).toBe(true);
+        expect(cleared.body.data.isAdmin).toBe(false);
+    });
+
+    it('PATCH refuses isAdmin and is_admin with 400 and leaves the flag false', async () => {
+        const signedIn = await signIn('UTC');
+
+        const camel = await patchMe(signedIn, { dailyGoal: 10, isAdmin: true });
+        const snake = await patchMe(signedIn, { dailyGoal: 10, is_admin: true });
+        const alone = await patchMe(signedIn, { isAdmin: true });
+        const profile = await getMe(signedIn);
+        const { rows } = await database.pool.query('SELECT is_admin FROM users WHERE id = $1', [signedIn.userId]);
+
+        for (const response of [camel, snake, alone]) {
+            expect(response.status).toBe(HTTP_BAD_REQUEST);
+            expect(response.body.error.code).toBe('INPUT_INVALID_BODY');
+        }
+        expect(profile.body.data.isAdmin).toBe(false);
+        expect(rows).toEqual([{ is_admin: false }]);
     });
 
     it('GET and PATCH report hasPassword true exactly when a hash is stored, and no body carries the hash', async () => {
