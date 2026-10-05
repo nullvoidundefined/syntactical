@@ -2,7 +2,8 @@ Write exactly the requested number of simple, clear multiple-choice or true/fals
 COUNT: {{COUNT}}
 TOPIC: {{TOPIC}}
 
-Return only JSON: {"cards": [...]}.
+You cannot run any code or commands. Do not write shell commands or test steps.
+Reply with only the JSON object, starting with `{`: {"cards": [...]}.
 Each card has type "mc" or "bool", prompt, optional code shown to the learner, query {title, explanation, syntax?, tags?}, and oracle {code, language, setupSql?}.
 Use one of the runners in the context for oracle.language.
 An mc card has exactly four choices {text, rationale?} and a zero-based answerIndex. Every wrong choice needs a clear one-line rationale of at most 280 characters.
