@@ -43,6 +43,7 @@ type QuizRoundProps = QuestionSource & {
   onRetry: () => void;
   questions: readonly Question[];
   roundKind?: RoundKind;
+  sampleSize?: number;
   topic?: string;
 };
 
@@ -146,9 +147,10 @@ export function QuizRound(props: QuizRoundProps) {
     onRetry,
     questions,
     roundKind = 'bank',
+    sampleSize,
     topic,
   } = props;
-  const engine = useQuizEngine(questions, { roundKind, topic });
+  const engine = useQuizEngine(questions, { roundKind, sampleSize, topic });
   const { advanceQuestion, currentQuestion, isAnswered, isComplete, submitAnswer, submittedAnswer, wasCorrect } =
     engine;
   const { recordAnswer } = useQuizStats();

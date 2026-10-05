@@ -2,7 +2,8 @@
 // and the difficulty registry, waits for stats hydration and a ready
 // bank, and remounts the round under a new key on Retry so every piece
 // of round state resets. `?topic=<id>` plays one topic of the bank; a topic
-// the bank has no questions for falls back to the whole bank.
+// the bank has no questions for falls back to the whole bank. `?count=20|50`
+// plays a random sample of that many from the pool, when smaller than it.
 import { useState } from 'react';
 
 import { router, useLocalSearchParams } from 'expo-router';
@@ -12,6 +13,7 @@ import { DIFFICULTIES } from '@syntactical/content-schema';
 
 import NotFoundScreen from '../../+not-found';
 import { QuizRound } from '../../../components/quiz/QuizRound';
+import { readRoundCount } from '../../../services/quiz/roundLength';
 import { useQuizStats } from '../../../state/StatsProvider';
 import { useLanguageManifest } from '../../../state/useLanguageManifest';
 import { useQuestionBank } from '../../../state/useQuestionBank';
@@ -28,7 +30,12 @@ function DownloadFailed({ onRetry }: { onRetry: () => void }) {
 }
 
 export default function RoundScreen() {
-  const { difficulty, language, topic } = useLocalSearchParams<{ difficulty: string; language: string; topic?: string }>();
+  const { count, difficulty, language, topic } = useLocalSearchParams<{
+    count?: string | string[];
+    difficulty: string;
+    language: string;
+    topic?: string;
+  }>();
   const [roundKey, setRoundKey] = useState(0);
   const { isHydrated } = useQuizStats();
   const { languages } = useLanguageManifest();
@@ -49,6 +56,7 @@ export default function RoundScreen() {
     bank: { questions },
   } = bankState;
   const playedTopic = questions.some((question) => question.topic === topic) ? topic : undefined;
+  const poolSize = questions.filter((question) => playedTopic === undefined || question.topic === playedTopic).length;
   return (
     <QuizRound
       key={roundKey}
@@ -60,6 +68,7 @@ export default function RoundScreen() {
       onExit={() => router.replace('/')}
       onRetry={() => setRoundKey((key) => key + 1)}
       questions={questions}
+      sampleSize={readRoundCount(count, poolSize)}
       topic={playedTopic}
     />
   );
