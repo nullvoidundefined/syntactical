@@ -32,13 +32,18 @@ function buildMc(id: string): Question {
 
 // Answers every write and judge call; `failOn` makes calls for that question time out, and
 // `crashAfter` throws a non-transient error once that many questions have been written.
-function scriptedProvider(options: { failOn?: string; crashAfter?: number; prompts?: string[] } = {}): ModelProvider {
+function scriptedProvider(
+    options: { failOn?: string; failJudgeOn?: string; crashAfter?: number; prompts?: string[] } = {},
+): ModelProvider {
     const written = new Set<string>();
     return {
         async generate(request) {
             const id = /prompt (q-\d+)/.exec(request.prompt)?.[1] ?? '';
             options.prompts?.push(id);
             if (id === options.failOn) {
+                throw new ProviderTransientError('model-timeout', 'claude timed out after 300000 ms');
+            }
+            if (request.promptVersion === 'judge-rationale-v1' && id === options.failJudgeOn) {
                 throw new ProviderTransientError('model-timeout', 'claude timed out after 300000 ms');
             }
             if (request.promptVersion === 'judge-rationale-v1') {
@@ -102,5 +107,10 @@ describe('enrichBank resilience', () => {
         await run(scriptedProvider({ prompts }), [buildMc('q-1'), buildMc('q-2')]);
         expect(prompts.filter((id) => id === 'q-1')).toEqual([]);
         expect(await saved()).toEqual(['q-1', 'q-2']);
+    });
+
+    it('saves nothing for a question whose judge call times out after its rationales were written', async () => {
+        await run(scriptedProvider({ failJudgeOn: 'q-2' }), [buildMc('q-1'), buildMc('q-2'), buildMc('q-3')]);
+        expect(await saved()).toEqual(['q-1', 'q-3']);
     });
 });
