@@ -21,6 +21,15 @@ function loadAppConfig(baseUrl: string | undefined): ExpoConfig {
   return loadedConfig as ExpoConfig;
 }
 
+function readLoadError(baseUrl: string): unknown {
+  try {
+    loadAppConfig(baseUrl);
+  } catch (error) {
+    return error;
+  }
+  return undefined;
+}
+
 function readContentBaseUrl(config: ExpoConfig): unknown {
   return (config.extra as Record<string, unknown> | undefined)?.contentBaseUrl;
 }
@@ -72,14 +81,10 @@ describe('app.config content base URL', () => {
     ['a segment starting with a hyphen', '/-x'],
     ['an empty middle segment', '/a//b'],
   ])('rejects %s at config load without echoing the value', (_label, badValue) => {
-    let thrown: unknown;
-    try {
-      loadAppConfig(badValue);
-    } catch (error) {
-      thrown = error;
-    }
+    const thrown = readLoadError(badValue);
     expect(thrown).toBeInstanceOf(Error);
     expect((thrown as Error).message).toContain('EXPO_BASE_URL');
-    expect((thrown as Error).message).not.toContain(badValue);
+    // The message is the same for every rejected value, so it cannot carry the value.
+    expect((thrown as Error).message).toBe((readLoadError('//evil.example') as Error).message);
   });
 });
