@@ -1,7 +1,11 @@
 # Oracle harness: reads {code, timeoutMs} JSON on stdin, writes one JSON result line.
 # The harness stays PID 1 and never runs user code. A child in its own process group
 # receives code on stdin and writes to pipes, so it cannot close or replace our result
-# stream. The parent owns the timeout, output cap, and process-group cleanup.
+# stream through them. The child shares uid 10001 with the harness, so the harness makes
+# itself non-dumpable (the child cannot open /proc/1/fd/1) and turns the catchable
+# termination signals into no-ops (the child cannot end it after a forged write). The
+# parent owns the timeout, output cap, and process-group cleanup.
+require 'fiddle'
 require 'json'
 require 'rbconfig'
 
@@ -12,6 +16,8 @@ FAILURE_EXIT_CODE = 70
 EXCEPTION_MARKER = "\x00oracle-exception:"
 SYNTAX_MARKER = "\x00oracle-syntax-error"
 VERSION = "Ruby #{RUBY_VERSION}"
+PR_SET_DUMPABLE = 4
+TERMINATION_SIGNALS = %w[HUP INT QUIT TERM USR1 USR2].freeze
 
 CHILD_WRAPPER = <<~'SOURCE'
     # Parse before running, so only a compile failure is syntax-error; a SyntaxError raised
@@ -71,6 +77,20 @@ def classify(status, out, err)
     { outcome: 'value', value: out.force_encoding('UTF-8').scrub.delete_suffix("\n") }
 end
 
+# The kernel refuses a same-uid process access to a non-dumpable process's /proc/<pid>/fd,
+# so the child cannot open /proc/1/fd/1. A namespace's init ignores signals left at SIG_DFL, but Ruby raises
+# SignalException on these; no-op handlers (reset on exec, unlike IGNORE) keep PID 1 alive.
+def harden_pid1
+    prctl = Fiddle::Function.new(
+        Fiddle.dlopen(nil)['prctl'],
+        [Fiddle::TYPE_INT, Fiddle::TYPE_LONG, Fiddle::TYPE_LONG, Fiddle::TYPE_LONG, Fiddle::TYPE_LONG],
+        Fiddle::TYPE_INT
+    )
+    finish(outcome: 'exception', exceptionType: 'RunnerFailure') unless prctl.call(PR_SET_DUMPABLE, 0, 0, 0, 0).zero?
+    TERMINATION_SIGNALS.each { |name| trap(name) {} }
+end
+
+harden_pid1
 payload = JSON.parse(STDIN.read)
 deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + payload.fetch('timeoutMs', 5000) / 1000.0
 input_read, input_write = IO.pipe

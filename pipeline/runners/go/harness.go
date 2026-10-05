@@ -3,8 +3,11 @@
 // The harness stays PID 1 and never runs user code itself. It writes the oracle to /work,
 // builds it with the image's toolchain, and runs the binary as a child in its own process
 // group whose stdout and stderr are pipes the harness reads, so nothing the child writes or
-// closes can forge or suppress the result line on the harness's own stdout. One deadline
-// covers the build and the run; past it the harness SIGKILLs the process group.
+// closes through those pipes can forge or suppress the result line on the harness's own
+// stdout. The child shares uid 10001 with the harness, so the harness also makes itself
+// non-dumpable (the kernel then refuses it /proc/1/fd/1 and /proc/1/mem) and
+// takes every signal on a channel, so the child cannot end it after a forged write. One
+// deadline covers the build and the run; past it the harness SIGKILLs the process group.
 //
 // The image ships a build cache warmed for the standard library. Go needs a writable cache,
 // so each run copies it into /work, the only mount that allows exec.
@@ -16,6 +19,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -206,7 +210,21 @@ func classifyFailure(stderr string) result {
 	}
 }
 
+// hardenPid1 closes the two paths a same-uid child has to the harness. The kernel refuses a
+// same-uid process access to a non-dumpable process's /proc/<pid>/fd and /proc/<pid>/mem, so
+// the child cannot open /proc/1/fd/1 to write a line of its own. A namespace's init ignores signals left at
+// SIG_DFL, but the Go runtime installs handlers that exit or crash on SIGTERM, SIGINT,
+// SIGQUIT, SIGABRT, and others; delivering every signal to a channel nobody reads keeps the
+// harness alive. Handlers reset on exec, so the child starts with default dispositions.
+func hardenPid1() {
+	if _, _, errno := syscall.RawSyscall(syscall.SYS_PRCTL, syscall.PR_SET_DUMPABLE, 0, 0); errno != 0 {
+		runnerFailure()
+	}
+	signal.Notify(make(chan os.Signal, 1))
+}
+
 func main() {
+	hardenPid1()
 	var input payload
 	if err := json.NewDecoder(os.Stdin).Decode(&input); err != nil {
 		runnerFailure()

@@ -1,10 +1,13 @@
 """Oracle harness: reads {code, timeoutMs} JSON on stdin, writes one JSON result line.
 
 The harness stays PID 1 and never runs user code. The oracle runs in a child process whose
-stdout and stderr are pipes the harness reads, so nothing the child writes or closes can
-forge or suppress the result line the harness writes to its own stdout. The harness owns the
-timeout and SIGKILLs the child's process group.
+stdout and stderr are pipes the harness reads, so nothing the child writes or closes through
+them can forge or suppress the result line the harness writes to its own stdout. The child
+shares uid 10001 with the harness, so the harness makes itself non-dumpable (the child cannot
+open /proc/1/fd/1) and turns the catchable termination signals into no-ops (the child cannot
+end it after a forged write). The harness owns the timeout and SIGKILLs the child's process group.
 """
+import ctypes
 import json
 import os
 import platform
@@ -24,6 +27,15 @@ VERSION = "Python " + platform.python_version()
 EXCEPTION_MARKER = "\x00oracle-exception:"
 SYNTAX_MARKER = "\x00oracle-syntax-error"
 FAILURE_EXIT_CODE = 70
+PR_SET_DUMPABLE = 4
+TERMINATION_SIGNALS = (
+    signal.SIGHUP,
+    signal.SIGINT,
+    signal.SIGQUIT,
+    signal.SIGTERM,
+    signal.SIGUSR1,
+    signal.SIGUSR2,
+)
 
 CHILD_WRAPPER = """
 import os, sys
@@ -91,7 +103,23 @@ def classify(child, out, err):
     return {"outcome": "value", "value": text}
 
 
+def ignore_signal(_signum, _frame):
+    pass
+
+
+def harden_pid1():
+    # The kernel refuses a same-uid process access to a non-dumpable process's /proc/<pid>/fd,
+    # so the child cannot open /proc/1/fd/1. A namespace's init ignores signals left at SIG_DFL, but Python's
+    # SIGINT handler raises; no-op handlers (reset on exec, unlike SIG_IGN) keep PID 1 alive.
+    libc = ctypes.CDLL(None, use_errno=True)
+    if libc.prctl(PR_SET_DUMPABLE, 0, 0, 0, 0) != 0:
+        finish({"outcome": "exception", "exceptionType": "RunnerFailure"})
+    for signum in TERMINATION_SIGNALS:
+        signal.signal(signum, ignore_signal)
+
+
 def main():
+    harden_pid1()
     payload = json.loads(sys.stdin.read())
     deadline = time.monotonic() + payload.get("timeoutMs", 5000) / 1000
     child = subprocess.Popen(
