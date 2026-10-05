@@ -33,7 +33,8 @@ describe('buildContentManifest with a private content root', () => {
     await cp(REPOSITORY_CONTENT_DIR, contentDir, { recursive: true });
     // The real paid banks live in the private syntactical-content repo, never in this one (B-60),
     // so each paid bank here is a stand-in: the same language's free bank bytes.
-    for (const language of ['javascript', 'postgres', 'python']) {
+    const { languages } = await readManifest(contentDir);
+    for (const { id: language } of languages) {
       await mkdir(join(contentRoot, language), { recursive: true });
       for (const difficulty of ['medium', 'hard']) {
         await cp(join(contentDir, language, 'easy.json'), join(contentRoot, language, `${difficulty}.json`));

@@ -116,7 +116,9 @@ describe('useQuestionBank with the unmodified bundled manifest', () => {
   });
 
   it('bundles no paid bank, so an entitled owner requests it from the API and never the static host', async () => {
-    expect(Object.keys(BUNDLED_BANKS).sort()).toEqual(['javascript/easy', 'postgres/easy', 'python/easy']);
+    // Only the free easy bank of each language is bundled; the list grows as languages are added.
+    expect(Object.keys(BUNDLED_BANKS).length).toBeGreaterThan(0);
+    expect(Object.keys(BUNDLED_BANKS).every((key) => key.endsWith('/easy'))).toBe(true);
     mockOwner.current = OWNER_A;
     respond({ [ME_URL]: meRoute([MEDIUM_PRODUCT]) });
 
