@@ -4,6 +4,7 @@ interface Profile {
   email: string;
   entitlements: string[];
   hasPassword: boolean;
+  isAdmin: boolean;
   timezone: string | null;
   xpToday: number;
   xpTotal: number;
