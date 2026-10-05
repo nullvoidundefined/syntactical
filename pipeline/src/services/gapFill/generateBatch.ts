@@ -15,6 +15,7 @@ import { fillTemplate } from '../enrich/fillTemplate.js';
 import { validateQuestion } from '../validateQuestion.js';
 
 import { findMissingRationale } from './findMissingRationale.js';
+import { MAX_PROMPT_LENGTH } from './MAX_PROMPT_LENGTH.js';
 import { normalizePrompt } from './normalizePrompt.js';
 import { runSandboxed } from './runSandboxed.js';
 
@@ -95,6 +96,10 @@ export async function generateBatch(
             continue;
         }
         const { oracle: rawOracle, ...draft } = parsed.data;
+        if (draft.prompt.length > MAX_PROMPT_LENGTH) {
+            drop('prompt-too-long');
+            continue;
+        }
         const language = args.language ?? args.runners.find((runner) => runner === rawOracle.language);
         if (!language || (args.language && rawOracle.language !== undefined && rawOracle.language !== args.language)) {
             drop('disallowed-runner');
