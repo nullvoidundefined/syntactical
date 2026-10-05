@@ -72,7 +72,6 @@
 5. **Carried over:**
    - IAN-596: Lighthouse, VoiceOver, and reduced motion on the live site.
    - IAN-595: EAS device builds. The prep shipped in #57; no builds have run.
-   - Narrowing the `app.config.ts` base-URL allowlist: still open, and its tests still cover `/preview`.
    - Monetization is in effect per-bank products (#36, #37, #52). No decision record exists.
 
 ## Next session
