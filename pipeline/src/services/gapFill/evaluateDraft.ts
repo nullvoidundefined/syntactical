@@ -1,6 +1,7 @@
 // Checks one finished draft: duplicate, content schema, then execution
 // through the sandboxed runner. Returns the kept question, a drop, or the feedback that
 // goes into the next revision.
+// Topic generation supplies its card so grammar, provenance and rationales survive the same checks.
 import { createHash } from 'node:crypto';
 
 import { type Question, SUPPORTED_SCHEMA_VERSION, validateQuestionBank } from '@syntactical/content-schema';
@@ -14,6 +15,7 @@ import { validateQuestion } from '../validateQuestion.js';
 
 import { GENERATE_PROMPT_VERSION } from './GENERATE_PROMPT_VERSION.js';
 import { generateStepSchema } from './generateStepSchema.js';
+import { findMissingRationale } from './findMissingRationale.js';
 import { normalizePrompt } from './normalizePrompt.js';
 import { runSandboxed } from './runSandboxed.js';
 
@@ -56,12 +58,13 @@ export async function evaluateDraft(
     draft: Draft,
     args: GenerateQuestionArgs,
     model: string,
+    topicQuestion?: Question,
 ): Promise<DraftEvaluation> {
     const { existingPrompts, run = runOracle, topic } = args;
     if (existingPrompts.has(normalizePrompt(draft.prompt))) {
         return { reason: 'duplicate', status: 'dropped' };
     }
-    const question = buildQuestion(draft, args, model);
+    const question = topicQuestion ?? buildQuestion(draft, args, model);
     const checked = validateQuestionBank(
         { questions: [question], schemaVersion: SUPPORTED_SCHEMA_VERSION },
         { misconceptionIds: [], topicIds: [topic] },
@@ -69,11 +72,20 @@ export async function evaluateDraft(
     if (!checked.isValid) {
         return { feedback: 'the draft breaks the question schema (shape, lengths, or answer index)', status: 'revise' };
     }
+    if (topicQuestion) {
+        const missing = findMissingRationale(question);
+        if (missing) {
+            return { feedback: missing, status: 'revise' };
+        }
+    }
     const oracle = buildOracle(draft, args);
     const result = await validateQuestion(question, oracle, (each) => runSandboxed(run, each));
     const { reason, runtimeVersion, status } = result;
     if (status !== 'passed') {
-        return { feedback: `validation ${reason ?? status}: the oracle output did not match your answer`, status: 'revise' };
+        return {
+            feedback: `validation ${reason ?? status}: the oracle output did not match your answer`,
+            status: 'revise',
+        };
     }
     return {
         question: {
