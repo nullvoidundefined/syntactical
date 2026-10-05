@@ -1,5 +1,8 @@
 // Machine-readable error codes; clients switch on these, never on messages.
 const ERROR_CODES = {
+  ADMIN: {
+    REQUIRED: 'ADMIN_REQUIRED',
+  },
   AUTH: {
     INVALID_CODE: 'AUTH_INVALID_CODE',
     INVALID_CREDENTIALS: 'AUTH_INVALID_CREDENTIALS',

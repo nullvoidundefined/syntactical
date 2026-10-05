@@ -17,6 +17,8 @@ import { createErrorHandler, createNotFoundHandler } from './middleware/errorHan
 import { requestId } from './middleware/requestId.js';
 import { createRequestLogger } from './middleware/requestLogger.js';
 import { requireJson } from './middleware/requireJson.js';
+import { createAdminAccessRouter } from './routes/adminAccess.js';
+import type { AdminDeps } from './routes/adminDeps.js';
 import { createAnswerEventsRouter } from './routes/answerEvents.js';
 import { createAuthCodesRouter } from './routes/authCodes.js';
 import type { AuthDeps, ResolvedAuthDeps } from './routes/authDeps.js';
@@ -37,6 +39,8 @@ import type { SyncDeps } from './routes/syncDeps.js';
 import type { WebhookDeps } from './routes/webhookDeps.js';
 
 interface AppDeps {
+  // The /v1/admin routes; omitted, they are not mounted.
+  admin?: AdminDeps;
   allowedOrigins?: string[];
   // The /v1/auth routes; omitted, they are not mounted.
   auth?: AuthDeps;
@@ -59,6 +63,7 @@ interface AppDeps {
 // Builds the Express app without listening or reading env; callers inject everything.
 function createApp(deps: AppDeps) {
   const {
+    admin,
     allowedOrigins = [],
     auth,
     banks,
@@ -135,6 +140,11 @@ function createApp(deps: AppDeps) {
   if (banks) {
     const { now = () => new Date() } = banks;
     app.use('/v1', createBanksRouter({ ...banks, now }));
+  }
+
+  if (admin) {
+    const { now = () => new Date() } = admin;
+    app.use('/v1', createAdminAccessRouter({ ...admin, now }));
   }
 
   if (extraRoutes) {
