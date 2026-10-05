@@ -45,6 +45,7 @@ export type AuthResult =
 type SignUpFailure = {
   isOk: false;
   reason:
+    | 'busy'
     | 'invalid-code'
     | 'invalid-email'
     | 'password-breached'
@@ -97,12 +98,15 @@ const SIGN_UP_REFUSALS: Record<string, SignUpFailure['reason']> = {
 };
 
 // The refusal of a sign-up request by status and error code; null when the status is not a refusal.
-function readSignUpRefusal(status: number, body: unknown): SignUpFailure | null {
+// A 400 with no known code is a bad email at the first step and a bad code at verify.
+function readSignUpRefusal(status: number, body: unknown, isVerify: boolean): SignUpFailure | null {
   if (status === HTTP_STATUS_TOO_MANY_REQUESTS) return { isOk: false, reason: 'rate-limited' };
-  if (status !== HTTP_STATUS_BAD_REQUEST) return null;
   const code = readErrorCode(body);
+  if (status === HTTP_STATUS_SERVICE_UNAVAILABLE && code === 'SERVER_BUSY') return { isOk: false, reason: 'busy' };
+  if (status !== HTTP_STATUS_BAD_REQUEST) return null;
   const reason = code === null ? undefined : SIGN_UP_REFUSALS[code];
-  return { isOk: false, reason: reason ?? 'invalid-email' };
+  if (reason !== undefined) return { isOk: false, reason };
+  return { isOk: false, reason: isVerify ? 'invalid-code' : 'invalid-email' };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -270,7 +274,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { body, status } = await apiFetch('auth/signups', { body: { email, password }, method: 'POST' });
       if (status === HTTP_STATUS_ACCEPTED) return { isOk: true };
-      return readSignUpRefusal(status, body) ?? { isOk: false, reason: 'unavailable' };
+      return readSignUpRefusal(status, body, false) ?? { isOk: false, reason: 'unavailable' };
     } catch {
       return { isOk: false, reason: 'unavailable' };
     }
@@ -286,7 +290,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           body: { code, email, password, timezone },
           method: 'POST',
         });
-        const refusal = readSignUpRefusal(status, body);
+        const refusal = readSignUpRefusal(status, body, true);
         if (refusal !== null) return refusal;
         const signedIn = await completeSignIn(status, body);
         if (!signedIn.isOk) return { isOk: false, reason: 'unavailable' };

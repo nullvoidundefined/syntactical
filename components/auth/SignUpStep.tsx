@@ -2,10 +2,10 @@
 // Both values are held by the screen and never trimmed. On web the fields sit in a real
 // <form> (the sign-in pattern) so browsers offer to save the new password; the form has no
 // action and every submit is cancelled so the password never reaches a URL.
-import { createElement, type FormEvent, type ReactNode } from 'react';
-import { Platform, Text, TextInput, View } from 'react-native';
+import { Platform, Text, TextInput } from 'react-native';
 
 import { AuthButton } from './AuthButton';
+import { AuthForm } from './AuthForm';
 import { PasswordField } from './PasswordField';
 
 type SignUpStepProps = {
@@ -21,21 +21,6 @@ type SignUpStepProps = {
 const HINT_ID = 'sign-up-password-hint';
 const HINT_TEXT = 'At least 12 characters. Spaces are fine.';
 const IS_WEB = Platform.OS === 'web';
-
-function SignUpForm({ children, onSubmit }: { children: ReactNode; onSubmit: () => void }) {
-  if (!IS_WEB) return <View>{children}</View>;
-  return createElement(
-    'form',
-    {
-      method: 'post',
-      onSubmit: (event: FormEvent) => {
-        event.preventDefault();
-        onSubmit();
-      },
-    },
-    children,
-  );
-}
 
 export function SignUpStep({
   email,
@@ -53,7 +38,7 @@ export function SignUpStep({
   // that implicit submission if onSubmitEditing were set.
   const onSubmitEditing = IS_WEB ? undefined : submit;
   return (
-    <SignUpForm onSubmit={submit}>
+    <AuthForm onSubmit={submit}>
       <TextInput
         aria-label="Email address"
         autoComplete="email"
@@ -79,6 +64,6 @@ export function SignUpStep({
         {HINT_TEXT}
       </Text>
       <AuthButton label="Create account" isDisabled={isBusy} isSubmit onPress={submit} />
-    </SignUpForm>
+    </AuthForm>
   );
 }

@@ -2,11 +2,12 @@
 // in one role="alert" region by reason only; the email, the password, and the code are never
 // echoed or logged. The password lives in this component's memory only: it is sent in the sign-up
 // requests, cleared on success, and gone when the route is left.
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import { router, useLocalSearchParams, type Href } from 'expo-router';
+import { router, useLocalSearchParams, useNavigation, type Href } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 
+import { AuthButton } from '../components/auth/AuthButton';
 import { AuthLink } from '../components/auth/AuthLink';
 import { CodeStep } from '../components/auth/CodeStep';
 import { SignUpStep } from '../components/auth/SignUpStep';
@@ -22,6 +23,7 @@ const ALREADY_HAD_ACCOUNT =
   'You already had an account, so we signed you in. Your password was not changed; you can set one in Settings.';
 
 const ERROR_MESSAGES: Record<FailureReason, string> = {
+  busy: 'The server is busy. Try again in a moment.',
   'invalid-code': 'That code did not work. Check the newest email and try again.',
   'invalid-email': 'That email address does not look right. Check it and try again.',
   'password-breached': 'That password appeared in a data breach. Choose another password.',
@@ -33,6 +35,18 @@ const ERROR_MESSAGES: Record<FailureReason, string> = {
 
 function isPasswordFailure(reason: FailureReason): boolean {
   return reason.startsWith('password-');
+}
+
+// Runs onBlur when the screen loses focus, e.g. when another route is pushed over it in a
+// stack. Outside a navigator there is no focus to lose, so nothing is subscribed.
+function useClearOnBlur(onBlur: () => void) {
+  let navigation: { addListener: (type: 'blur', callback: () => void) => () => void } | null = null;
+  try {
+    navigation = useNavigation();
+  } catch {
+    navigation = null;
+  }
+  useEffect(() => navigation?.addListener('blur', onBlur), [navigation, onBlur]);
 }
 
 export default function SignUpScreen() {
@@ -67,6 +81,8 @@ export default function SignUpScreen() {
     return null;
   }
 
+  useClearOnBlur(() => setTypedPassword(''));
+
   async function sendCode(isResend: boolean) {
     await runExclusive(async () => {
       const lengthFailure = readLengthFailure();
@@ -78,6 +94,8 @@ export default function SignUpScreen() {
       if (isResend) setCooldownRestartKey((key) => key + 1);
       if (!result.isOk) {
         setErrorMessage(ERROR_MESSAGES[result.reason]);
+        // A refused password is fixed on the password step, so a resend returns to it.
+        if (isPasswordFailure(result.reason)) setIsCodeStep(false);
         return;
       }
       setIsCodeStep(true);
@@ -114,7 +132,10 @@ export default function SignUpScreen() {
           </View>
         )}
         {isAccountExisting ? (
-          <Text className="mt-4 font-mono text-sm text-ink">{ALREADY_HAD_ACCOUNT}</Text>
+          <View role="status" className="mt-4">
+            <Text className="font-mono text-sm text-ink">{ALREADY_HAD_ACCOUNT}</Text>
+            <AuthButton label="Continue" onPress={() => router.replace(readReturnTo(returnTo) as Href)} />
+          </View>
         ) : isCodeStep ? (
           <CodeStep
             cooldownRestartKey={cooldownRestartKey}
@@ -133,7 +154,7 @@ export default function SignUpScreen() {
             onSubmit={() => void sendCode(false)}
           />
         )}
-        <AuthLink href={buildAuthHref('/sign-in', returnTo)} label="Sign in" />
+        {isAccountExisting ? null : <AuthLink href={buildAuthHref('/sign-in', returnTo)} label="Sign in" />}
       </View>
     </ScrollView>
   );

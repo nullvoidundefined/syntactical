@@ -2,11 +2,11 @@
 // forgot-password flow, and sign-up one control away. Both values are held by
 // the screen; no length rule applies here and nothing is trimmed, since only
 // the server judges a sign-in.
-import { createElement, type FormEvent, type ReactNode } from 'react';
-import { Platform, TextInput, View } from 'react-native';
+import { Platform, TextInput } from 'react-native';
 
 import { buildAuthHref } from '../../services/auth/readReturnTo';
 import { AuthButton } from './AuthButton';
+import { AuthForm } from './AuthForm';
 import { AuthLink } from './AuthLink';
 import { PasswordField } from './PasswordField';
 
@@ -24,24 +24,6 @@ type PasswordSignInStepProps = {
 };
 
 const IS_WEB = Platform.OS === 'web';
-
-// On web the fields sit in a real <form> so Safari and Firefox offer to save the password;
-// native keeps a View. The form has no action, and every submit is cancelled so
-// the browser never navigates or puts the password in a URL.
-function SignInForm({ children, onSubmit }: { children: ReactNode; onSubmit: () => void }) {
-  if (!IS_WEB) return <View>{children}</View>;
-  return createElement(
-    'form',
-    {
-      method: 'post',
-      onSubmit: (event: FormEvent) => {
-        event.preventDefault();
-        onSubmit();
-      },
-    },
-    children,
-  );
-}
 
 export function PasswordSignInStep({
   email,
@@ -63,7 +45,7 @@ export function PasswordSignInStep({
   // that implicit submission if onSubmitEditing were set.
   const onSubmitEditing = IS_WEB ? undefined : submit;
   return (
-    <SignInForm onSubmit={submit}>
+    <AuthForm onSubmit={submit}>
       <TextInput
         aria-label="Email address"
         autoComplete="email"
@@ -89,6 +71,6 @@ export function PasswordSignInStep({
       <AuthButton label="Use a code instead" isPrimary={false} onPress={onUseCode} />
       <AuthButton label="Forgot password?" isPrimary={false} onPress={onForgotPassword} />
       <AuthLink href={signUpHref} label="Create an account" />
-    </SignInForm>
+    </AuthForm>
   );
 }
