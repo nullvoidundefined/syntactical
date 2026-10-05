@@ -322,6 +322,24 @@ describe('generateBatch', () => {
             expect(asked).toHaveLength(1);
         });
 
+        it('reads a batch the model surrounded with a bash block and prose', async () => {
+            const body = JSON.stringify({ cards: [boolCard('chatty')] });
+            const { provider } = textProvider(
+                `\`\`\`bash\ncd /tmp && ruby check.rb\n\`\`\`\nHere you go:\n\`\`\`json\n${body}\n\`\`\``,
+            );
+            const result = await generateBatch(languageArgs(provider, buildFakeRunner()));
+            expect(result.cards.map(({ question }) => question.prompt)).toEqual([
+                'Does payload chatty return every row?',
+            ]);
+        });
+
+        it('tells the model it cannot run code and must answer with the JSON object only', async () => {
+            const { calls, provider } = buildProvider(() => []);
+            await generateBatch(languageArgs(provider, buildFakeRunner()));
+            expect(calls[0]?.prompt).toMatch(/cannot run/i);
+            expect(calls[0]?.prompt).toMatch(/only the JSON object/i);
+        });
+
         it('reads a batch wrapped in a code fence', async () => {
             const body = JSON.stringify({ cards: [boolCard('fenced')] });
             const { provider } = textProvider(`\`\`\`json\n${body}\n\`\`\``);

@@ -76,4 +76,33 @@ describe('generateWithRetries', () => {
         await expect(generateWithRetries(REQUEST, ask)).rejects.toBeInstanceOf(ModelOutputInvalid);
         expect(asked).toHaveLength(3);
     });
+
+    describe('lenient JSON for batch answers', () => {
+        // Real batch answers on 2026-10-05 wrapped the JSON in prose and ```bash blocks the model
+        // wrote as if it could run the code; about 75% of Ruby and Go batches failed to parse.
+        const LENIENT = { ...REQUEST, lenientJson: true };
+
+        it.each([
+            ['prose before one json fence', 'Here are the cards:\n```json\n{"answerIndex": 2}\n```'],
+            [
+                'a bash block, then a json fence',
+                '```bash\ncd /tmp && ruby -e "p 1"\n```\n```json\n{"answerIndex": 2}\n```',
+            ],
+            ['a bash block, then bare JSON', '```bash\ncd /tmp\n```\nResult:\n{"answerIndex": 2}\nDone.'],
+        ])('reads the answer from %s', async (_name, text) => {
+            const { ask, asked } = answering(text);
+            expect((await generateWithRetries(LENIENT, ask)).value).toEqual({ answerIndex: 2 });
+            expect(asked).toHaveLength(1);
+        });
+
+        it('does not guess between two json fences', async () => {
+            const { ask } = answering('```json\n{"answerIndex": 1}\n```\n```json\n{"answerIndex": 2}\n```');
+            await expect(generateWithRetries(LENIENT, ask)).rejects.toBeInstanceOf(ModelOutputInvalid);
+        });
+
+        it('keeps strict parsing for requests that do not ask for leniency', async () => {
+            const { ask } = answering('Here are the cards:\n```json\n{"answerIndex": 2}\n```');
+            await expect(generateWithRetries(REQUEST, ask)).rejects.toBeInstanceOf(ModelOutputInvalid);
+        });
+    });
 });
