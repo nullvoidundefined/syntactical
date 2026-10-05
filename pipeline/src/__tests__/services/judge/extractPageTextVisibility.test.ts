@@ -142,6 +142,23 @@ describe('extractPageText follows the HTML parsing rules for hidden content', ()
         expect(Date.now() - startedAt).toBeLessThan(1000);
     });
 
+    // Security review round 1: the parser rebuilds every open formatting element at each <p>, so a
+    // shallow page can still create millions of nodes; and depth times a stack-walking tag stays slow.
+    it('refuses a page that rebuilds formatting elements at every paragraph, quickly', () => {
+        const formatting = Array.from({ length: 254 }, (_, index) => `<b a="${index}">`).join('');
+        const body = `<p>${formatting}</p>${'<p>x</p>'.repeat(50_000)}${Q}`;
+        const startedAt = Date.now();
+        expect(visible(body)).toBe('');
+        expect(Date.now() - startedAt).toBeLessThan(1000);
+    });
+
+    it('parses a page at the depth limit followed by 1 MB of list items quickly', () => {
+        const body = `${'<div>'.repeat(MAX_NESTING_DEPTH - 1)}${Q}${'<li>'.repeat(250_000)}`;
+        const startedAt = Date.now();
+        expect(visible(body)).toContain(normalizeQuoteText(Q));
+        expect(Date.now() - startedAt).toBeLessThan(1000);
+    });
+
     it('keeps a quote after many self-closing void elements', () => {
         const body = `${'<br/>'.repeat(60_000)}${Q}`;
         expect(visible(body)).toContain(normalizeQuoteText(Q));

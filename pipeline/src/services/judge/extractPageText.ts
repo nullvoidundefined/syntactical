@@ -16,12 +16,17 @@ type Element = DefaultTreeAdapterMap['element'];
 type ParentNode = DefaultTreeAdapterMap['parentNode'];
 
 // parse5's cost grows with the nesting depth times the number of tags: 4,999 open spans followed by
-// 2 MB of unmatched end tags take 10 s, 256 take about 0.5 s. The deepest allowlisted page measured
-// (MDN, OWASP, rfc-editor.org, 2026-10-05) opens 25 elements at once, so a page deeper than this is
-// treated as having no visible text: the quote fails and the draft is dropped, never verified.
-export const MAX_NESTING_DEPTH = 256;
+// 2 MB of unmatched end tags take 10 s, 256 take about 0.5 s, and 256 levels of <div> followed by
+// <li> tags take over 1 s. The deepest allowlisted page measured (MDN, OWASP, rfc-editor.org,
+// 2026-10-05) opens 25 elements at once, so a page deeper than this is treated as having no
+// visible text: the quote fails and the draft is dropped, never verified.
+export const MAX_NESTING_DEPTH = 128;
 // html and body are always open beneath the page's own elements.
 const DOCUMENT_ELEMENTS = 2;
+// A start tag takes at least 3 bytes, so a page whose parse opens more elements than half its
+// length is the parser rebuilding open formatting elements (<b><i>... reopened at every <p>), which
+// grows the tree by hundreds of nodes per tag. Such a page is refused like a too-deep one.
+const MAX_ELEMENTS_PER_BYTE = 0.5;
 const HIDDEN_ELEMENTS = new Set(['head', 'noscript', 'script', 'style', 'template']);
 const CHROME_ELEMENTS = new Set(['aside', 'footer', 'header', 'nav']);
 const CHROME_ROLES = new Set(['banner', 'contentinfo', 'navigation']);
@@ -52,7 +57,12 @@ const INLINE_ELEMENTS = new Set([
     'var',
 ]);
 
-class NestingTooDeep extends Error {}
+// Marks where dropped text was, so a quote cannot join the visible prose on either side of a nav or
+// a hidden block. parse5 never passes a NUL through from the page, so the mark is unambiguous;
+// verifySources matches a quote within one segment between marks.
+export const DROPPED_TEXT_BREAK = '\u0000';
+
+class PageTooCostly extends Error {}
 
 function roles(element: Element): string[] {
     const role = element.attrs.find(({ name }) => name === 'role')?.value ?? '';
@@ -78,15 +88,15 @@ type Pending = Walk & ({ node: Node } | { separator: string });
 // An explicit stack, not recursion: a page nested to the depth limit would overflow the call
 // stack. The whole page and the main landmark are collected in one walk; the main text wins when
 // the page has one. Dropped subtrees emit no text but are still walked, so a main landmark inside
-// one (hidden, or under aside) still marks the rest of the page as chrome.
+// one (hidden, or under aside) still marks the rest of the page as chrome. Dropped text, and text
+// outside main when the page has one, leaves a DROPPED_TEXT_BREAK in its place.
 function collectText(root: ParentNode): string {
     const all: string[] = [];
     const main: string[] = [];
     let hasMain = false;
     function emit(text: string, { inMain, dropped }: Walk): void {
-        if (dropped) return;
-        all.push(text);
-        if (inMain) main.push(text);
+        all.push(dropped ? DROPPED_TEXT_BREAK : text);
+        main.push(dropped || !inMain ? DROPPED_TEXT_BREAK : text);
     }
     const stack: Pending[] = [...root.childNodes].reverse().map((node) => ({ node, inMain: false, dropped: false }));
     while (stack.length > 0) {
@@ -117,8 +127,10 @@ function collectText(root: ParentNode): string {
 // every push and pop. Counting tags in the source instead can be fooled by markup the parser
 // reads differently: an end tag it ignores (`<div></span>`), a self-closing non-void tag
 // (`<div/>`), or a `<` inside a quoted attribute.
-function parseWithDepthLimit(body: string): ParentNode {
+function parseWithCostLimit(body: string): ParentNode {
     let depth = 0;
+    let pushes = 0;
+    const maxPushes = DOCUMENT_ELEMENTS + 1 + body.length * MAX_ELEMENTS_PER_BYTE;
     const treeAdapter: TreeAdapter<DefaultTreeAdapterMap> = {
         ...defaultTreeAdapter,
         onItemPop() {
@@ -126,7 +138,8 @@ function parseWithDepthLimit(body: string): ParentNode {
         },
         onItemPush() {
             depth += 1;
-            if (depth > MAX_NESTING_DEPTH + DOCUMENT_ELEMENTS) throw new NestingTooDeep();
+            pushes += 1;
+            if (depth > MAX_NESTING_DEPTH + DOCUMENT_ELEMENTS || pushes > maxPushes) throw new PageTooCostly();
         },
     };
     return parse(body, { treeAdapter });
@@ -135,9 +148,9 @@ function parseWithDepthLimit(body: string): ParentNode {
 export function extractPageText(body: string, contentType: string): string {
     if (contentType === 'text/plain') return body;
     try {
-        return collectText(parseWithDepthLimit(body));
+        return collectText(parseWithCostLimit(body));
     } catch (error) {
-        if (error instanceof NestingTooDeep) return '';
+        if (error instanceof PageTooCostly) return '';
         throw error;
     }
 }

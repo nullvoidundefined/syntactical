@@ -179,6 +179,21 @@ describe('site chrome cannot back a quote', () => {
         });
     });
 
+    // Security review round 1: a dropped block still separates the words on either side of it.
+    it.each(['<nav>Site navigation</nav>', '<div role="banner">Site title</div>', '<div hidden>Hidden</div>'])(
+        'rejects a quote stitched across %s',
+        async (dropped) => {
+            const fetch = pages({
+                [URL_A]: `<main><span>Use prepared </span>${dropped}<span>statements with parameterized queries</span></main>`,
+            });
+            expect(await verifySources([source(URL_A, quote)], fetch)).toEqual({
+                ok: false,
+                reason: 'quote-not-found',
+                url: URL_A,
+            });
+        },
+    );
+
     it('accepts a quote in main content on a page with site chrome', async () => {
         const fetch = pages({
             [URL_A]: [
