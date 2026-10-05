@@ -25,7 +25,16 @@ type PasswordSignInStepProps = {
 const WEB_LINK_PROPS = { href: '/sign-up' } as object;
 
 // The press handler owns navigation, so the browser's own link navigation is cancelled.
-function openSignUp(event?: { preventDefault?: () => void }) {
+// A modified or non-primary click (new tab or window) is left to the browser.
+function openSignUp(event?: {
+  button?: number;
+  ctrlKey?: boolean;
+  metaKey?: boolean;
+  preventDefault?: () => void;
+  shiftKey?: boolean;
+}) {
+  if (event?.metaKey || event?.ctrlKey || event?.shiftKey) return;
+  if (typeof event?.button === 'number' && event.button !== 0) return;
   event?.preventDefault?.();
   router.push('/sign-up');
 }
@@ -55,7 +64,8 @@ export function PasswordSignInStep({
         keyboardType="email-address"
         value={email}
         onChangeText={onChangeEmail}
-        returnKeyType="next"
+        returnKeyType="go"
+        onSubmitEditing={submit}
         className="mt-4 border border-ink px-3 py-2 font-mono text-base text-ink"
       />
       <PasswordField
