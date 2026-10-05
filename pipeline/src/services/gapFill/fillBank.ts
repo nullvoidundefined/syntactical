@@ -1,9 +1,3 @@
-// Tops up every thin topic of one bank. Topic counts come from the classify output plus
-// what is already staged, so a rerun fills the gap instead of overshooting. Kept questions
-// go to `<outRoot>/generated/<language>/<difficulty>.json`, never into the content bank
-// file (publish does that). A bank with no classification file is skipped: without topic
-// counts every topic would look empty. A draft dropped for a transient provider failure
-// is counted as failed; MAX_CONSECUTIVE_PROVIDER_FAILURES of them in a row stop the run.
 import { join } from 'node:path';
 
 import { type Question, SUPPORTED_SCHEMA_VERSION } from '@syntactical/content-schema';
@@ -11,16 +5,13 @@ import { z } from 'zod';
 
 import type { FillBankArgs } from '../../types/FillBankArgs.js';
 import type { FillBankResult } from '../../types/FillBankResult.js';
-import type { GenerateOutcome } from '../../types/GenerateOutcome.js';
-import type { DisputedCard } from '../../types/judge/DisputedCard.js';
-import { readDisputedCards } from '../judge/readDisputedCards.js';
 import { writeJsonAtomic } from '../classify/writeJsonAtomic.js';
 import { readExistingOracles } from '../readExistingOracles.js';
 
-import { MAX_CONSECUTIVE_PROVIDER_FAILURES } from './MAX_CONSECUTIVE_PROVIDER_FAILURES.js';
+import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
+import { ProviderTransientError } from '../../types/ProviderTransientError.js';
 import { countQuestionsNeeded } from './countQuestionsNeeded.js';
-import { generateQuestion } from './generateQuestion.js';
-import { generateTopicQuestion } from './generateTopicQuestion.js';
+import { generateBatch } from './generateBatch.js';
 import { normalizePrompt } from './normalizePrompt.js';
 import { readJsonIfPresent } from './readJsonIfPresent.js';
 
@@ -41,21 +32,9 @@ function countByTopic(questions: Question[], classified: Map<string, { topic: st
     return counts;
 }
 
-function generateFor(
-    args: FillBankArgs,
-    topic: string,
-    existingPrompts: ReadonlySet<string>,
-): Promise<GenerateOutcome> {
-    const { difficulty, languageId, provider, run } = args;
-    const shared = { difficulty, existingPrompts, languageId, provider, topic, ...(run === undefined ? {} : { run }) };
-    return args.runners === undefined
-        ? generateQuestion({ ...shared, language: args.language })
-        : generateTopicQuestion({ ...shared, runners: args.runners, ...(args.judge ? { judge: args.judge } : {}) });
-}
-
 export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
     const { bankKey, difficulty, languageId, log, outRoot, questions, topics } = args;
-    const result: FillBankResult = { duplicate: 0, failed: 0, generated: 0, ...(args.judge ? { disputed: 0 } : {}) };
+    const result: FillBankResult = { duplicate: 0, failed: 0, generated: 0 };
     const rawClassified = await readJsonIfPresent(join(outRoot, 'classifications', languageId, `${difficulty}.json`));
     if (rawClassified === undefined) {
         log(`skipping bank ${bankKey}: no classifications, run classify first`);
@@ -65,70 +44,50 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
     const stagedFile = join(outRoot, 'generated', languageId, `${difficulty}.json`);
     const rawStaged = await readJsonIfPresent(stagedFile);
     const staged = (rawStaged === undefined ? [] : stagedSchema.parse(rawStaged).questions) as Question[];
-    const disputedFile = join(outRoot, 'disputed', languageId, `${difficulty}.json`);
-    const stagedDisputed = await readDisputedCards(disputedFile);
-    const disputedAdded: DisputedCard[] = [];
     const oracleFile = join(outRoot, 'oracles', languageId, `${difficulty}.json`);
     const oracles = await readExistingOracles(oracleFile);
     const counts = countByTopic([...questions, ...staged], classified);
     const existingPrompts = new Set([...questions, ...staged].map(({ prompt }) => normalizePrompt(prompt)));
-    for (const { question } of stagedDisputed) existingPrompts.add(normalizePrompt(question.prompt));
     const added: Question[] = [];
-    let providerFailures = 0;
     let isCompleted = false;
     try {
         for (const topic of topics) {
-            const needed = countQuestionsNeeded(counts.get(topic) ?? 0);
-            if (needed > 0) {
-                log(`${bankKey} ${topic}: requesting ${needed}`);
-            }
-            for (let index = 0; index < needed; index += 1) {
-                const outcome = await generateFor(args, topic, existingPrompts);
-                const isProviderFailure =
-                    outcome.status === 'dropped' &&
-                    (outcome.reason === 'model-timeout' || outcome.reason === 'model-error');
-                providerFailures = isProviderFailure ? providerFailures + 1 : 0;
-                if (outcome.status === 'disputed') {
-                    const { card } = outcome;
-                    disputedAdded.push(card);
-                    existingPrompts.add(normalizePrompt(card.question.prompt));
-                    result.disputed = (result.disputed ?? 0) + 1;
-                    log(`${bankKey} ${topic}: disputed ${card.question.id}`);
-                } else if (outcome.status === 'kept') {
-                    const { oracle, question } = outcome;
-                    const { id, prompt } = question;
-                    existingPrompts.add(normalizePrompt(prompt));
+            let needed = countQuestionsNeeded(counts.get(topic) ?? 0);
+            for (let batch = 0; batch < 2 && needed > 0; batch += 1) {
+                const requested = Math.min(10, needed);
+                let outcome;
+                try {
+                    outcome = await generateBatch({ ...args, count: requested, existingPrompts, topic });
+                } catch (error) {
+                    if (!(error instanceof ModelOutputInvalid) && !(error instanceof ProviderTransientError))
+                        throw error;
+                    const reason = error instanceof ProviderTransientError ? error.reason : 'model-output-invalid';
+                    result.failed += requested;
+                    log(`${bankKey} ${topic}: batch of ${requested}, kept 0 (${reason}: ${requested})`);
+                    break;
+                }
+                const { cards, drops } = outcome;
+                for (const { oracle, question } of cards) {
+                    existingPrompts.add(normalizePrompt(question.prompt));
                     added.push(question);
-                    if (oracle) oracles.set(id, oracle);
-                    result.generated += 1;
-                    log(`${bankKey} ${topic}: generated ${id}`);
-                } else {
-                    const { reason } = outcome;
-                    result[reason === 'duplicate' ? 'duplicate' : 'failed'] += 1;
-                    log(`${bankKey} ${topic}: dropped (${reason})`);
+                    oracles.set(question.id, oracle);
                 }
-                if (providerFailures >= MAX_CONSECUTIVE_PROVIDER_FAILURES) {
-                    throw new Error(
-                        `${bankKey}: stopping after ${providerFailures} consecutive model failures (timeout or non-zero exit)`,
-                    );
-                }
+                result.generated += cards.length;
+                for (const [reason, count] of Object.entries(drops))
+                    result[reason === 'duplicate' ? 'duplicate' : 'failed'] += count;
+                needed -= cards.length;
+                const reasons = Object.entries(drops)
+                    .map(([reason, count]) => `${reason}: ${count}`)
+                    .join(', ');
+                log(
+                    `${bankKey} ${topic}: batch of ${requested}, kept ${cards.length}${reasons ? ` (${reasons})` : ''}`,
+                );
             }
         }
         isCompleted = true;
     } finally {
         // An error that stops the run still stages what this bank generated so far. If that
         // write fails too, log it and let the original error stay the one that propagates.
-        if (disputedAdded.length > 0) {
-            const body = { cards: [...stagedDisputed, ...disputedAdded], schemaVersion: 1 };
-            if (isCompleted) await writeJsonAtomic(disputedFile, body);
-            else {
-                try {
-                    await writeJsonAtomic(disputedFile, body);
-                } catch (writeError) {
-                    log(`${bankKey}: could not stage partial disputes (${String(writeError)})`);
-                }
-            }
-        }
         if (added.length > 0) {
             const stagedBody = { questions: [...staged, ...added], schemaVersion: SUPPORTED_SCHEMA_VERSION };
             if (isCompleted) {

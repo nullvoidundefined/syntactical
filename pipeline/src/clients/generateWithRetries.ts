@@ -23,9 +23,9 @@ export async function generateWithRetries<T>(
     request: ModelRequest<T>,
     ask: AskModel,
 ): Promise<{ model: string; value: T }> {
-    const { promptVersion, schema } = request;
+    const { maxAttempts = MAX_ATTEMPTS, promptVersion, schema } = request;
     let lastIssue = 'no attempt made';
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
         const { model, text } = await ask();
         let json: unknown;
         try {

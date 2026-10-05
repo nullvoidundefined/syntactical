@@ -1,5 +1,5 @@
-// The feedback for a topic-track draft whose wrong answers lack rationales, or null. Publish
-// refuses a bank with a missing rationale, and topic tracks skip enrich, so the draft must carry them.
+// Reports a missing or oversized wrong-answer rationale. Batch cards must carry their
+// rationales so they can be published without enrich.
 import { CONTENT_LIMITS, type Question } from '@syntactical/content-schema';
 
 const FEEDBACK = `every wrong choice needs a rationale of at most ${CONTENT_LIMITS.rationaleLength} characters`;

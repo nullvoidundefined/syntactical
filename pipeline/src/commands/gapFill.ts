@@ -1,7 +1,6 @@
 // `pipeline gap-fill`: tops up every topic that has fewer than TARGET_QUESTIONS_PER_TOPIC
 // questions with model-generated questions, each kept only when its claimed answer matches
-// its executed oracle or passes source, blind-answer, and consistency checks. Disputes are staged
-// for owner review. Generated code runs only through the sandboxed `runOracle`.
+// its executed oracle. Generated code runs only through the sandboxed `runOracle`.
 // Topic entries (`kind: 'topic'`) use TRACK_RUNNERS; language entries use ORACLE_LANGUAGES.
 // Content bank files are only read, never written: kept questions are staged in
 // `generated/<language>/<difficulty>.json` and publish moves them into banks.
@@ -13,7 +12,6 @@ import { join } from 'node:path';
 
 import { type Question, validateManifest } from '@syntactical/content-schema';
 
-import type { GapFillJudge } from '../types/judge/GapFillJudge.js';
 import type { FillBankResult } from '../types/FillBankResult.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 import type { OracleLanguage } from '../types/OracleLanguage.js';
@@ -32,7 +30,6 @@ import { sanitizeLogText } from '../services/sanitizeLogText.js';
 import { writePipelineReport } from '../services/writePipelineReport.js';
 
 export interface GapFillOptions {
-    judge?: GapFillJudge;
     contentDir: string;
     contentRoot: string;
     log: (line: string) => void;
@@ -87,10 +84,6 @@ export async function gapFill(options: GapFillOptions): Promise<PipelineReport> 
     if (hasPaidBanks) {
         await assertContentRootUsable(contentRoot, pipelineDir, contentDir);
     }
-    const { judge } = options;
-    const hasTopicTrack = languages.some(({ id, kind }) => kind === 'topic' && Object.hasOwn(TRACK_RUNNERS, id));
-    if (hasTopicTrack && judge) await judge.assertReady();
-    if (hasTopicTrack && !judge) log('judged route off: no judge configured, not-executable drafts are dropped');
     const fallbackTopics = await readFallbackTopics(join(pipelineDir, 'topics.json'));
     // Reports hold ids and verdicts only; every command shares one report chain in the pipeline dir.
     const reportsDir = join(pipelineDir, 'reports');
@@ -121,7 +114,7 @@ export async function gapFill(options: GapFillOptions): Promise<PipelineReport> 
                 const result = await fillBank({
                     bankKey,
                     difficulty,
-                    ...(runners ? { runners, ...(judge ? { judge } : {}) } : { language: language as OracleLanguage }),
+                    ...(runners ? { runners } : { language: language as OracleLanguage }),
                     languageId,
                     log,
                     // Free output stays in the public tree; paid output goes to the private content root.
