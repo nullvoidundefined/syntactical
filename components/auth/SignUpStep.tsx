@@ -1,34 +1,28 @@
-// First sign-in step: email, password, and "Sign in", with the code flow, the
-// forgot-password flow, and sign-up one control away. Both values are held by
-// the screen; no length rule applies here and nothing is trimmed, since only
-// the server judges a sign-in.
+// First sign-up step: email, a new-password field with its hint, and "Create account".
+// Both values are held by the screen and never trimmed. On web the fields sit in a real
+// <form> (the sign-in pattern) so browsers offer to save the new password; the form has no
+// action and every submit is cancelled so the password never reaches a URL.
 import { createElement, type FormEvent, type ReactNode } from 'react';
-import { Platform, TextInput, View } from 'react-native';
+import { Platform, Text, TextInput, View } from 'react-native';
 
-import { buildAuthHref } from '../../services/auth/readReturnTo';
 import { AuthButton } from './AuthButton';
-import { AuthLink } from './AuthLink';
 import { PasswordField } from './PasswordField';
 
-type PasswordSignInStepProps = {
+type SignUpStepProps = {
   email: string;
   errorId?: string;
   isBusy: boolean;
   onChangeEmail: (email: string) => void;
   onChangePassword: (password: string) => void;
-  onForgotPassword: () => void;
   onSubmit: () => void;
-  onUseCode: () => void;
   password: string;
-  returnTo?: string | string[];
 };
 
+const HINT_ID = 'sign-up-password-hint';
+const HINT_TEXT = 'At least 12 characters. Spaces are fine.';
 const IS_WEB = Platform.OS === 'web';
 
-// On web the fields sit in a real <form> so Safari and Firefox offer to save the password;
-// native keeps a View. The form has no action, and every submit is cancelled so
-// the browser never navigates or puts the password in a URL.
-function SignInForm({ children, onSubmit }: { children: ReactNode; onSubmit: () => void }) {
+function SignUpForm({ children, onSubmit }: { children: ReactNode; onSubmit: () => void }) {
   if (!IS_WEB) return <View>{children}</View>;
   return createElement(
     'form',
@@ -43,19 +37,15 @@ function SignInForm({ children, onSubmit }: { children: ReactNode; onSubmit: () 
   );
 }
 
-export function PasswordSignInStep({
+export function SignUpStep({
   email,
   errorId,
   isBusy,
   onChangeEmail,
   onChangePassword,
-  onForgotPassword,
   onSubmit,
-  onUseCode,
   password,
-  returnTo,
-}: PasswordSignInStepProps) {
-  const signUpHref = buildAuthHref('/sign-up', returnTo);
+}: SignUpStepProps) {
   function submit() {
     if (!isBusy) onSubmit();
   }
@@ -63,7 +53,7 @@ export function PasswordSignInStep({
   // that implicit submission if onSubmitEditing were set.
   const onSubmitEditing = IS_WEB ? undefined : submit;
   return (
-    <SignInForm onSubmit={submit}>
+    <SignUpForm onSubmit={submit}>
       <TextInput
         aria-label="Email address"
         autoComplete="email"
@@ -73,22 +63,22 @@ export function PasswordSignInStep({
         keyboardType="email-address"
         value={email}
         onChangeText={onChangeEmail}
-        returnKeyType="go"
+        returnKeyType="next"
         onSubmitEditing={onSubmitEditing}
         className="mt-4 border border-ink px-3 py-2 font-mono text-base text-ink"
       />
       <PasswordField
         label="Password"
-        autoComplete="current-password"
+        autoComplete="new-password"
         value={password}
         onChangeText={onChangePassword}
-        errorId={errorId}
+        errorId={errorId === undefined ? HINT_ID : `${HINT_ID} ${errorId}`}
         onSubmitEditing={onSubmitEditing}
       />
-      <AuthButton label="Sign in" isDisabled={isBusy} isSubmit onPress={submit} />
-      <AuthButton label="Use a code instead" isPrimary={false} onPress={onUseCode} />
-      <AuthButton label="Forgot password?" isPrimary={false} onPress={onForgotPassword} />
-      <AuthLink href={signUpHref} label="Create an account" />
-    </SignInForm>
+      <Text nativeID={HINT_ID} className="mt-2 font-mono text-xs text-muted">
+        {HINT_TEXT}
+      </Text>
+      <AuthButton label="Create account" isDisabled={isBusy} isSubmit onPress={submit} />
+    </SignUpForm>
   );
 }
