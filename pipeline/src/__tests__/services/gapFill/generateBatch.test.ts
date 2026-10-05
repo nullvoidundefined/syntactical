@@ -253,6 +253,27 @@ describe('generateBatch', () => {
         expect(calls).toHaveLength(1);
     });
 
+    // Owner rule (2026-10-05): simple questions. Reviewed Ruby banks had median prompts of 259 and
+    // 289 characters in medium and hard, many explaining the concept and so leaking the answer.
+    it('drops a card whose prompt is longer than 160 characters, without running it', async () => {
+        const long = { ...boolCard('long'), prompt: `Does payload long return every row? ${'x'.repeat(140)}` };
+        const atLimit = { ...boolCard('limit'), prompt: 'Does payload limit return every row?'.padEnd(160, '?') };
+        const { provider } = buildProvider(() => [long, atLimit, boolCard('good')]);
+        const runner = buildFakeRunner();
+        const result = await generateBatch(languageArgs(provider, runner));
+        expect(result.cards).toHaveLength(2);
+        expect(result.drops['prompt-too-long']).toBe(1);
+        // The validator runs each kept card three times; the long card never runs.
+        expect(runner.oracles).toHaveLength(6);
+    });
+
+    it('asks for one short question of at most 120 characters that does not explain the concept', async () => {
+        const { calls, provider } = buildProvider(() => []);
+        await generateBatch(languageArgs(provider, buildFakeRunner()));
+        expect(calls[0]?.prompt).toMatch(/120 characters/);
+        expect(calls[0]?.prompt).toMatch(/do not explain/i);
+    });
+
     it('drops a card duplicating an existing prompt and a card repeating an earlier card of the batch', async () => {
         const { provider } = buildProvider(() => [
             boolCard('existing'),
