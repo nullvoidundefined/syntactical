@@ -6,7 +6,7 @@
 
 ## Production state
 
-- Web: https://syntactical.dev/ (GitHub Pages custom domain since #76). The deploy.yml runs succeeded for every `main` commit from `dcd0a4d` through `34161b9`.
+- Web: https://syntactical.dev/ (GitHub Pages custom domain since #76). The deploy.yml runs succeeded for every `main` commit from `dcd0a4d` through `34161b9` except `e1faeca`, which was cancelled by the next push.
 - API on Railway (`server/DEPLOY.md`):
   - Staging is https://api-staging-accd.up.railway.app. It deploys on pushes to `main` that touch `server/`, `packages/`, `content/`, or `package-lock.json`; the server-deploy.yml runs for `a255513` (#93), `5f99b8f` (#97), and `a5352ce` (#99) succeeded, so staging serves the password endpoints through Task 7.6.
   - Production is https://api-production-9973.up.railway.app. It deploys only by manual run, and no production run has been confirmed since #76.
@@ -84,7 +84,7 @@
   - After a security review, any further commit needs another security round. Waive LOWs under the standing waiver instead of fixing them late.
   - Railway rejects BuildKit secret mounts, `railway up` needs `--path-as-root`, and service settings live in Railway, not `railway.json` (#58, #65, #67).
   - Docker-backed tests and e2e need `DOCKER_CONFIG=/tmp/dcfg`. A stale Metro cache in `$TMPDIR` can bake production URLs into local e2e runs (#60, #76).
-  - Pipeline runs are live in the `backend-track`, `frontend-track`, `go-track`, `rails-track`, and `ruby-track` worktrees (gap-fill and enrich). Check `pgrep -fl "src/cli.ts"` before starting another run on the same content root.
+  - Pipeline runs (gap-fill and enrich) are live in six worktrees, all on the same content root: `backend-track` and `frontend-track` (slices 4 and 6), `go-track`, `rails-track`, and `ruby-track` (the Go, Rails, and Ruby bank generation on `feat/{go,rails,ruby}-track`), and `sleepy-robinson-a67b97` (on `fix/model-json-fence`, after #94 merged). Check `pgrep -fl "src/cli.ts"` before starting another run on the same content root.
   - 13 remote branches remain after their PRs merged (#1, #70 to #72, #75, #77, #79, #87, #91, #92, and #94 to #96), plus `feat/account-deletion` from #34, which was closed unmerged. Safe to delete; none is in use.
   - The macOS `sed` does not support `\|` alternation; use `sed -E` with `|`. A mutation check written with `\|` silently changes nothing and passes.
   - A guard blocks force pushes. After rebasing a pushed branch, push it under a new name and delete the old remote branch (#92 did this).
