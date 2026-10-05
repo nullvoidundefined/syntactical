@@ -1,0 +1,9 @@
+{
+  "name": "syntactical-runner-jsdom",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "dompurify": "3.2.6",
+    "jsdom": "26.1.0"
+  }
+}

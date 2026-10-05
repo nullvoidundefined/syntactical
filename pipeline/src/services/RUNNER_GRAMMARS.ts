@@ -5,6 +5,7 @@ import type { OracleLanguage } from '../types/OracleLanguage.js';
 
 export const RUNNER_GRAMMARS: Record<OracleLanguage, Grammar> = {
     go: 'go',
+    jsdom: 'javascript',
     node: 'javascript',
     postgres: 'sql',
     python: 'python',
