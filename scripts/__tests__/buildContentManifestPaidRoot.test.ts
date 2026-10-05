@@ -46,7 +46,7 @@ describe('buildContentManifest with a private content root', () => {
   });
 
   it('hashes a paid bank from the content root and leaves paid banks out of the bundle', async () => {
-    await buildContentManifest(contentDir, outputs, undefined, undefined, contentRoot);
+    await buildContentManifest(contentDir, outputs, undefined, contentRoot);
 
     const bundle = await readFile(outputs.banksPath, 'utf8');
     expect(bundle).toContain("'python/easy'");
@@ -68,7 +68,7 @@ describe('buildContentManifest with a private content root', () => {
 
     // Versions are read from the copied repository manifest, so the test holds as content ships.
     const before = (await readManifest(contentDir)).languages[0].banks;
-    await buildContentManifest(contentDir, outputs, undefined, undefined, contentRoot);
+    await buildContentManifest(contentDir, outputs, undefined, contentRoot);
     const changed = (await readManifest(contentDir)).languages[0].banks;
     expect(changed.medium).toMatchObject({
       contentVersion: before.medium.contentVersion + 1,
@@ -76,7 +76,7 @@ describe('buildContentManifest with a private content root', () => {
     });
     expect(changed.easy.contentVersion).toBe(before.easy.contentVersion);
 
-    await buildContentManifest(contentDir, outputs, undefined, undefined, contentRoot);
+    await buildContentManifest(contentDir, outputs, undefined, contentRoot);
     expect((await readManifest(contentDir)).languages[0].banks).toEqual(changed);
   });
 });

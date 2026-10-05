@@ -35,4 +35,19 @@ describe('menu routes', () => {
     await renderRouter(ROUTES, { initialUrl: '/cobol' });
     await waitFor(() => expect(screen.queryByText('Not found')).not.toBeNull());
   });
+
+  it('renders the not-found screen for /quality, the removed Content quality page', async () => {
+    await renderRouter(ROUTES, { initialUrl: '/quality' });
+    await waitFor(() => expect(screen.queryByText('Not found')).not.toBeNull());
+    expect(screen.queryByText('Content quality')).toBeNull();
+  });
+
+  it('shows no Content quality link on the home page and keeps one h1', async () => {
+    await renderRouter(ROUTES, { initialUrl: '/' });
+    await waitFor(() => expect(screen.queryByText('Python')).not.toBeNull());
+    expect(screen.queryByRole('link', { name: 'Content quality' })).toBeNull();
+    expect(screen.queryByText('Content quality')).toBeNull();
+    const h1s = screen.getAllByRole('heading').filter((heading) => heading.props['aria-level'] === 1);
+    expect(h1s).toHaveLength(1);
+  });
 });

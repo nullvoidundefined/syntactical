@@ -534,7 +534,7 @@ describe('ModelProvider', () => {
 - [ ] Re-run until no failure is unexplained; `validate --stamp-provenance` writes `provenance.validation` and `runtimeVersion` onto passed questions (publish takes this over in Task 2.6).
 - [ ] Commit (both repos): `fix(content): correct audit failures found by execution validation`.
 
-### Task 1.13: quality page
+### Task 1.13: quality page (dropped by owner decision 2026-10-05; the route, its components, and the build-time report bundling were removed)
 
 **Risk:** standard. **Behaviors:** B-15, B-64 (route).
 
