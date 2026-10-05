@@ -58,7 +58,14 @@ describe('DownloadIndicator', () => {
     const client = buildClient();
     await renderWithClient(client);
     let failDownload: (err: Error) => void = () => {};
-    await act(async () => startBankFetch(client, new Promise((_resolve, reject) => { failDownload = reject; })));
+    await act(async () =>
+      startBankFetch(
+        client,
+        new Promise((_resolve, reject) => {
+          failDownload = reject;
+        }),
+      ),
+    );
     await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeNull());
     await act(async () => failDownload(new Error('offline')));
     await waitFor(() => expect(screen.queryByRole('progressbar')).toBeNull());

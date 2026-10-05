@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { render, screen } from '@testing-library/react';
 import { Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -57,5 +60,25 @@ describe('AppShell on the web', () => {
   it('leaves the app bar unstacked so modal overlays cover it', () => {
     renderShell();
     expect(screen.getByRole('banner').style.zIndex).toBe('');
+  });
+
+  // The bar's background and border stay full width; its contents share the page column's width
+  // and horizontal padding so the logo and the account control line up with the column. Jest stubs
+  // the stylesheet, so class names are not in the DOM here: the structure is checked in the DOM,
+  // the class names in the source, and the real geometry in e2e/specs/appBarLayout.spec.ts.
+  it('keeps the app bar contents in one container inside the banner', () => {
+    renderShell();
+    const banner = screen.getByRole('banner');
+    const inner = screen.getByText('SYNTACTICAL').parentElement as HTMLElement;
+    expect(inner).not.toBe(banner);
+    expect(inner.parentElement).toBe(banner);
+    expect(inner.contains(screen.getByRole('link', { name: 'Settings' }))).toBe(true);
+  });
+
+  it('gives the contents container the page column max width and the bar its padding', () => {
+    const source = readFileSync(join(__dirname, '..', 'AppShell.tsx'), 'utf8');
+    expect(source).toMatch(/role="banner" className="[^"]*\bpx-4\b[^"]*"/);
+    expect(source).not.toMatch(/role="banner" className="[^"]*max-w-/);
+    expect(source).toMatch(/className="mx-auto w-full max-w-xl [^"]*flex-row/);
   });
 });
