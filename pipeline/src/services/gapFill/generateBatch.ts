@@ -73,6 +73,7 @@ export async function generateBatch(
         EXISTING_PROMPTS: escapeForPrompt(JSON.stringify([...existingPrompts].slice(0, MAX_EXISTING_PROMPTS))),
     });
     const { model, value } = await provider.generate({
+        lenientJson: true,
         maxAttempts: 1,
         prompt,
         promptVersion: PROMPT_VERSION,
