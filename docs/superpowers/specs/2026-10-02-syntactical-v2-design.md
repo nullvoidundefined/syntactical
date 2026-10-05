@@ -465,3 +465,237 @@ Security-touching controls, each needing the R-109 review and a test that feeds 
 | 28 | LOW | Report path; `ab` choice code | Fixed: B-15, `Choice.code` |
 
 Stack options: keep npm workspaces, Express 5, node-pg-migrate, custom sessions, Resend, PostHog, Docker runners; add `zod`, `helmet`, `cookie-parser` per convention. The three owner options were decided at Gate 1 (decision 25).
+
+## Password sign-in (2026-10-05)
+
+**Ticket:** IAN-601
+**Status:** draft for owner review (spec and plan only; no implementation yet)
+**Plan:** `docs/superpowers/plans/2026-10-02-syntactical-v2.md`, Stage 7
+
+This section adds email-and-password sign-in beside the existing one-time code sign-in (B-25 to B-31). Everything above stays in force unless this section says otherwise; decision 9 ("Auth: email one-time code via Resend") is extended, not replaced.
+
+### Owner decisions (2026-10-05, binding)
+
+26. Sign-in methods are email + password and the existing email code. No Google or Apple sign-in (the "Social login" non-goal stands).
+27. Accounts link by verified email: one person has one account, whichever method they use.
+28. Password rules follow NIST SP 800-63B: 12 to 128 characters, any characters including spaces, no composition rules.
+29. Breached passwords are rejected at sign-up and at password change through the Have I Been Pwned (HIBP) range API with k-anonymity: only the first 5 hex characters of the password's SHA-1 leave the server, suffixes are compared locally, and when HIBP is unreachable or slow the password is allowed and a warning is logged by event name only. The password and its full hash are never logged.
+30. Flows: sign-up is email + password, then a one-time code verifies the email before the account is usable, and an unverified sign-up never links to or takes over an existing account. Sign-in is email + password or the email code. Forgot password is: sign in with a code, then set a new password in Settings (no separate reset-token system). A code-only account can add a password in Settings. Changing a password requires the current password or a fresh code sign-in, and revokes the user's other sessions.
+
+### Decisions made while writing this section (owner to confirm)
+
+31. **Sign-up holds no pending password.** `POST /v1/auth/signups` checks the password and sends a code but stores nothing derived from the password. The client keeps the password in memory and sends it again with the code to `POST /v1/auth/signups/verify`, which creates the account. The person who holds the code is therefore the person who chooses the password, so a stranger's sign-up for someone else's email never leaves a password waiting to attach. Rejected alternative: a `pending_signups` table holding the hash until the code arrives, which adds a table, an expiry sweep, and a takeover path if a pending row ever attached on a plain code sign-in. A side effect: today a `users` row exists only for an email that passed a code check, and this design keeps that true, so no `email_verified_at` column is needed.
+32. **Sign-up for an email that already has an account signs the code holder in and changes nothing.** The code proves control of the email, so the verify step signs that person in, but it never writes the password onto the existing account (`isPasswordApplied: false`); the app tells them to set a password in Settings. Only the code holder learns the account existed, and they control the email.
+33. **"Fresh code sign-in" means a session created by a one-time code within the last 10 minutes.** A session records how it was created (`sessions.auth_method`, `'code'` or `'password'`). A password session is never fresh, so a stolen password cannot be used to set a new one without knowing the current one, and a stolen session older than 10 minutes cannot add or change a password.
+34. **Adding a password follows the same rule as changing one.** A code-only account has no current password, so adding one needs a fresh code sign-in, and it revokes other sessions. This stops a stolen session from planting a durable credential. The owner's design named this rule for changes only.
+35. **scrypt with the owner's parameters, N = 2^17, r = 8, p = 1, a 32-byte salt and a 64-byte key**, kept as specified. Each derivation needs 128 MiB (128 x N x r bytes), above Node's 32 MiB `maxmem` default, so `maxmem` is set to 256 MiB and the server caps concurrent derivations at 2 (`PASSWORD_HASH_CONCURRENCY`, default 2, 256 MiB peak). The Railway service needs at least 512 MB of memory; the owner confirms the plan size before Stage 7 deploys. If memory is short, OWASP's equal-cost alternative N = 2^16, r = 8, p = 2 halves the memory per derivation and needs only a parameter change (the rehash rule, B-68, upgrades stored hashes).
+36. **Passwords are normalized with NFKC before the length check, the breach check, and hashing**, as NIST SP 800-63B recommends, so one password typed on two keyboards matches. Length is counted in Unicode code points after normalization. A password containing a lone UTF-16 surrogate is rejected as malformed, because UTF-8 encoding would replace it and let different passwords collide.
+37. **Password sign-in limits are 10 per normalized email and 30 per IP per hour**, on new rate-limit scopes, so they never consume the code limits and the code path stays open while the password path is limited. Password changes are limited to 10 per user per hour.
+
+### Codebase grounding (additions)
+
+| Concept                        | Real path                                                                          | Exported name                                           |
+| ------------------------------ | ---------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Code issue route               | `server/src/routes/authCodes.ts`                                                   | `createAuthCodesRouter`                                 |
+| Code sign-in route             | `server/src/routes/authSessions.ts`                                                | `createAuthSessionsRouter`                              |
+| Route dependencies             | `server/src/routes/authDeps.ts`                                                    | `AuthDeps`, `ResolvedAuthDeps`                          |
+| Code issue                     | `server/src/services/issueOneTimeCode.ts`                                          | `issueOneTimeCode`                                      |
+| Code verify                    | `server/src/services/verifyOneTimeCode.ts`                                         | `verifyOneTimeCode`                                     |
+| User upsert and session insert | `server/src/services/createSession.ts`                                             | `createSession`                                         |
+| Session middleware             | `server/src/middleware/requireSession.ts`                                          | sets `res.locals.session` (`{ id, transport, userId }`) |
+| Rate limiter                   | `server/src/middleware/rateLimit.ts`                                               | `createRateLimit`                                       |
+| Rate-limit key                 | `server/src/services/rateLimitKey.ts`                                              | `rateLimitKey`                                          |
+| Auth constants                 | `server/src/constants/auth.ts`                                                     | `AUTH`                                                  |
+| Error codes                    | `server/src/errors.ts`                                                             | `ERROR_CODES`, `createErrorResponse`                    |
+| Request schemas                | `server/src/schemas/authSchemas.ts`                                                | `authSchemas`                                           |
+| Email normalization            | `server/src/services/normalizeEmail.ts`                                            | `normalizeEmail`                                        |
+| User row lock                  | `server/src/services/lockUserRow.ts`                                               | `lockUserRow`                                           |
+| Account deletion               | `server/src/services/deleteUser.ts`                                                | `deleteUser`                                            |
+| Profile (`GET /me`)            | `server/src/services/readProfile.ts`, `server/src/types/Profile.ts`                | `readProfile`, `Profile`                                |
+| Log redaction                  | `server/src/clients/logger.ts`                                                     | `SENSITIVE_KEYS`                                        |
+| Stub email client guard        | `server/src/__tests__/startServerEmailClientGuard.test.ts`                         | pattern reused for the breach client                    |
+| Sign-in screen                 | `app/sign-in.tsx`, `components/auth/EmailStep.tsx`, `components/auth/CodeStep.tsx` | `SignInScreen`, `EmailStep`, `CodeStep`                 |
+| Auth state                     | `state/AuthProvider.tsx`                                                           | `AuthProvider`, `useAuth`, `AuthResult`                 |
+| Settings                       | `app/settings.tsx`                                                                 | `AccountSection`                                        |
+| Privacy page                   | `app/privacy.tsx`                                                                  | `PrivacyScreen`                                         |
+| Store privacy answers          | `docs/store/privacy-labels.md`                                                     | none                                                    |
+
+Concepts with no match in the repo, which this section creates: password, password hash, password policy, breach check, sign-up, auth method, fresh code sign-in.
+
+### Domain vocabulary (additions, mirrored into `docs/lexicon.md`)
+
+- password - the secret a user may set beside the email code; 12 to 128 code points after NFKC; never stored, logged, or kept on the device - chosen over: `passphrase`, `PIN`, because platform autofill and the HTML `autocomplete` values say password.
+- password hash - `users.password_hash`, a PHC-format string `$scrypt$v=1$ln=17,r=8,p=1$<salt>$<key>` (salt and key in unpadded base64) - chosen over: `password digest`, and `credential`, which would also cover codes and session tokens.
+- password policy - the length rule plus the breach check, applied at sign-up and at every password write, never at sign-in - chosen over: `password strength`, because there is no strength meter or composition rule.
+- breach check - the HIBP range lookup of a password's SHA-1 prefix, result `'breached' | 'clear' | 'unknown'` - chosen over: `pwned check`, `HIBP check`, because the vendor sits behind an interface.
+- sign-up - creating an account with an email and a password, finished by a one-time code (`signUp` in identifiers, `signups` in route paths) - chosen over: `register`, `registration`.
+- auth method - `sessions.auth_method`, how a session was created: `'code'` or `'password'` - chosen over: `login type`, `provider`, because there is no identity provider.
+- fresh code sign-in - a session whose `auth_method` is `'code'` and whose `created_at` is at most 10 minutes old; the only way to set a password without the current one - chosen over: `step-up`, `sudo mode`, `reauth`, because it names exactly what qualifies.
+
+### Data model
+
+One migration, `server/migrations/<timestamp>_users-password-and-session-auth-method.js` (node-pg-migrate, ESM, `up` and `down`):
+
+- `users.password_hash text NULL` with `CHECK (password_hash IS NULL OR password_hash LIKE '$scrypt$%')`. Null means a code-only account. The algorithm, version, and parameters live inside the string, so a parameter change needs no migration.
+- `users.password_updated_at timestamptz NULL`, set on every password write.
+- `sessions.auth_method text NOT NULL DEFAULT 'code'` with `CHECK (auth_method IN ('code', 'password'))`. Every existing session came from a code, so the default is correct for them.
+
+Hashing (`server/src/services/passwordHash.ts`, exporting `hashPassword`, `verifyPassword`, `needsRehash`):
+
+- Algorithm: `node:crypto` `scrypt` (async, on the libuv thread pool), N = 2^17 (`ln=17`), r = 8, p = 1, `maxmem` 256 MiB, 32-byte salt from `crypto.randomBytes`, 64-byte derived key. No new dependency.
+- Input: the NFKC-normalized password encoded as UTF-8.
+- Compare: derive with the stored salt and parameters, then `crypto.timingSafeEqual` on the two 64-byte keys. A stored string that does not parse, or names another algorithm or version, verifies as false and never throws.
+- Rehash: after a successful password check, when the stored parameters (`ln`, `r`, `p`, salt length, key length) differ from the current ones, the server writes a new hash with the current parameters in the same transaction (`UPDATE users SET password_hash = $new WHERE id = $1 AND password_hash = $old`, so a concurrent password change wins).
+- Concurrency: a process-wide semaphore (`server/src/services/passwordHashSlots.ts`) admits at most `PASSWORD_HASH_CONCURRENCY` derivations; a request that waits longer than 5 seconds for a slot gets 503 `SERVER_BUSY`.
+- Dummy hash: at startup the server hashes 32 random bytes with the current parameters and keeps the string in memory. A password sign-in for an unknown email or a code-only account verifies against it, so every password sign-in runs exactly one derivation.
+
+`AUTH` in `server/src/constants/auth.ts` gains `PASSWORD: { MIN_LENGTH: 12, MAX_LENGTH: 128, RAW_MAX_LENGTH: 512, REAUTH_WINDOW_MS: 600_000, HASH_QUEUE_TIMEOUT_MS: 5_000, HASH: { LOG_N: 17, R: 8, P: 1, SALT_BYTES: 32, KEY_BYTES: 64, MAXMEM: 268_435_456 } }`, `BREACH_CHECK: { TIMEOUT_MS: 2_000, MAX_RESPONSE_BYTES: 262_144 }`, rate limits `PASSWORD_PER_EMAIL: 10`, `PASSWORD_PER_IP: 30`, `PASSWORD_CHANGE_PER_USER: 10`, and scopes `PASSWORD_EMAIL: 'password-sign-in:email'`, `PASSWORD_IP: 'password-sign-in:ip'`, `PASSWORD_CHANGE_USER: 'password-change:user'`. `PASSWORD_HASH_CONCURRENCY` is an optional env variable in `server/src/config/env.ts` (integer 1 to 8, default 2).
+
+Account deletion: `deleteUser` already deletes the `users` row, which holds the hash, and sessions cascade. Nothing else stores a password or its hash, so deletion needs no new code; B-84 pins it with a test.
+
+### Breach check
+
+`server/src/clients/passwordBreachClient.ts` defines the interface and the HTTP implementation; `server/src/clients/fakePasswordBreachClient.ts` is the test double; `server/src/services/checkPasswordBreach.ts` holds the logic.
+
+```ts
+interface PasswordBreachClient {
+  // Resolves the raw range body for a 5-character uppercase hex SHA-1 prefix, or rejects.
+  fetchRange(prefix: string, signal: AbortSignal): Promise<string>;
+}
+type BreachCheckResult = 'breached' | 'clear' | 'unknown';
+```
+
+- The HTTP client calls `GET https://api.pwnedpasswords.com/range/<prefix>` with `Add-Padding: true` and `User-Agent: syntactical-api` through the global `fetch`, and reads at most 256 KB of body.
+- `checkPasswordBreach(password, { client, logger })` computes the SHA-1 of the normalized password's UTF-8 bytes, sends only the first 5 uppercase hex characters, splits the response into `SUFFIX:COUNT` lines, and returns `'breached'` only when the 35-character suffix matches a line whose count is greater than 0 (padding lines carry count 0).
+- A rejection, a non-200 status, a body over the cap, or no answer within 2 seconds returns `'unknown'`, logs one warning `{ event: 'breach_check_unavailable' }`, and the password is accepted. The warning carries no password, hash, prefix, email, or response body.
+- `createApp` takes the client in its deps. Tests use the fake; production startup fails if the fake is configured, mirroring the stub email client guard.
+
+### API
+
+All routes are under `/v1`, JSON only (`requireJson`), and use the `{ data }` and `{ error: { code, message, requestId } }` envelopes. Cookie and bearer transport, CORS, `csrfGuard` (`X-Requested-With: XMLHttpRequest` on cookie-authenticated non-GET routes), the cookie attributes, and the session lifetimes are unchanged. A web client gets the session token only as the `syntactical_session` cookie; a native client (`X-Client: native`) gets `token` in the body and no cookie, exactly as B-28.
+
+New error codes in `ERROR_CODES.AUTH`: `INVALID_CREDENTIALS: 'AUTH_INVALID_CREDENTIALS'`, `PASSWORD_TOO_SHORT: 'AUTH_PASSWORD_TOO_SHORT'`, `PASSWORD_TOO_LONG: 'AUTH_PASSWORD_TOO_LONG'`, `PASSWORD_BREACHED: 'AUTH_PASSWORD_BREACHED'`, `REAUTH_REQUIRED: 'AUTH_REAUTH_REQUIRED'`. Reused: `AUTH_INVALID_CODE`, `AUTH_SESSION_REQUIRED`, `INPUT_INVALID_BODY`, `RATE_LIMIT_EXCEEDED`, `SERVER_EMAIL_UNAVAILABLE`, `SERVER_BUSY`, `CSRF_HEADER_MISSING`, `INPUT_UNSUPPORTED_MEDIA_TYPE`.
+
+| Method and path                | Request body                           | Success                                                                                 | Errors                                                                                                                                                                                        |
+| ------------------------------ | -------------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /auth/signups`           | `{ email, password }`                  | 202 `{ data: { status: 'code-sent' } }`                                                 | 400 `INPUT_INVALID_BODY`, `AUTH_PASSWORD_TOO_SHORT`, `AUTH_PASSWORD_TOO_LONG`, `AUTH_PASSWORD_BREACHED`; 429 `RATE_LIMIT_EXCEEDED`; 503 `SERVER_EMAIL_UNAVAILABLE`                            |
+| `POST /auth/signups/verify`    | `{ email, code, password, timezone? }` | 201 `{ data: { userId, isPasswordApplied } }`; native adds `token`; web gets the cookie | 400 `INPUT_INVALID_BODY`, `AUTH_INVALID_CODE`, the three password policy codes; 429; 503 `SERVER_BUSY`                                                                                        |
+| `POST /auth/sessions/password` | `{ email, password, timezone? }`       | 201 `{ data: { userId } }`; native adds `token`; web gets the cookie                    | 400 `INPUT_INVALID_BODY`, `AUTH_INVALID_CREDENTIALS`; 429; 503 `SERVER_BUSY`                                                                                                                  |
+| `PUT /me/password`             | `{ newPassword, currentPassword? }`    | 200 `{ data: { hasPassword: true } }`                                                   | 400 `INPUT_INVALID_BODY`, `AUTH_INVALID_CREDENTIALS`, the three password policy codes; 401 `AUTH_SESSION_REQUIRED`; 403 `AUTH_REAUTH_REQUIRED`, `CSRF_HEADER_MISSING`; 429; 503 `SERVER_BUSY` |
+| `GET /me` (changed)            | none                                   | the profile adds `hasPassword: boolean`                                                 | unchanged                                                                                                                                                                                     |
+
+Request schemas (`server/src/schemas/authSchemas.ts`): `password`, `currentPassword`, and `newPassword` are strings of at most 512 UTF-16 units before normalization, which bounds the NFKC work; the length rule is checked after normalization by `checkPasswordPolicy` (`server/src/services/checkPasswordPolicy.ts`), so its two codes stay distinct from `INPUT_INVALID_BODY`. `email`, `code`, and `timezone` reuse the existing schemas.
+
+Order of checks:
+
+- `POST /auth/signups`: per-IP limit (scope `code-issue:ip`, shared with `POST /auth/codes`), body, per-email limit (scope `code-issue:email`, shared), password policy, breach check, then `issueOneTimeCode` with `sendSignInCode`. Sharing the scopes means sign-up cannot send more codes than `POST /auth/codes` allows. Nothing in the path reads whether the email has an account.
+- `POST /auth/signups/verify`: per-IP and per-email verify limits (scopes `session-verify:ip` and `session-verify:email`, shared with `POST /auth/sessions`), body, password policy, breach check (the server kept no copy from the first step, so it cannot know the password is the same), then one transaction: `verifyOneTimeCode`; `INSERT INTO users (email, timezone, password_hash, password_updated_at) ... ON CONFLICT (email) DO NOTHING RETURNING id`. A returned id is a new account (`isPasswordApplied: true`). No id means the account existed: the existing user gets a session and no password write (`isPasswordApplied: false`). The hash is computed before the transaction opens, so no row lock is held during a derivation. The session's `auth_method` is `'code'`.
+- `POST /auth/sessions/password`: per-IP limit before the body is parsed (scope `password-sign-in:ip`), body, per-email limit (scope `password-sign-in:email`), load the user by normalized email, verify against the stored hash or the dummy hash, rehash when due, insert a session with `auth_method 'password'`, and store the timezone when the user has none. It never creates a user.
+- `PUT /me/password`: `requireSession`, `csrfGuard` (cookie transport), per-user limit (scope `password-change:user`), body, password policy and breach check on `newPassword`, then one transaction under `lockUserRow`: with `currentPassword` present it must verify (else 400 `AUTH_INVALID_CREDENTIALS`); without it the session must be a fresh code sign-in (else 403 `AUTH_REAUTH_REQUIRED`); then write the hash and `password_updated_at`, and set `revoked_at` on every other unrevoked session of the user. The current session stays valid.
+
+`createSession` splits into `upsertUserByEmail` (the code path, unchanged behavior) and `insertSession(client, { userId, authMethod, now })`, so the password path reuses session creation without the upsert. `requireSession` adds `authMethod` and `createdAt` to `res.locals.session`.
+
+### Sessions, CSRF, and cookies
+
+Unchanged: one `sessions` table for both transports, 30-day absolute and 14-day idle expiry, SHA-256 token hashes, the `syntactical_session` cookie attributes, the `X-Requested-With` CSRF guard, JSON-only bodies, the exact-origin CORS allowlist. The only additions are the `auth_method` column, the revocation of other sessions on a password write, and the 10-minute freshness rule.
+
+### Acceptance criteria
+
+#### Stage 7: password sign-in
+
+Server:
+
+- B-65: The migration adds `users.password_hash` (nullable text with the `$scrypt$` prefix check), `users.password_updated_at` (nullable), and `sessions.auth_method` (not null, default `'code'`, check in `'code'` and `'password'`); `up`, `down`, `up` succeeds on a database holding users and sessions, which end with a null hash and `auth_method = 'code'`.
+- B-66: `hashPassword` returns `$scrypt$v=1$ln=17,r=8,p=1$<salt>$<key>` with a 32-byte salt from `crypto.randomBytes` and a 64-byte key; hashing one password twice gives two different strings that both verify.
+- B-67: `verifyPassword` returns true only for the matching password, compares derived keys with `crypto.timingSafeEqual`, and returns false without throwing for a stored string that is malformed, truncated, or names another algorithm or version.
+- B-68: A successful password sign-in against a hash with parameters other than the current ones rewrites it with the current parameters in the same transaction; a hash with current parameters is not rewritten; a rehash never overwrites a hash that changed concurrently.
+- B-69: The password policy normalizes with NFKC and counts code points: 11 is rejected with `AUTH_PASSWORD_TOO_SHORT`, 12 and 128 pass, 129 is rejected with `AUTH_PASSWORD_TOO_LONG`; inner, leading, and trailing spaces (never trimmed), emoji, and non-Latin scripts are accepted with no composition rule; a lone surrogate, or a raw string over 512 UTF-16 units, is rejected with `INPUT_INVALID_BODY`.
+- B-70: `checkPasswordBreach` gives the client only the first 5 uppercase hex characters of the SHA-1 of the normalized UTF-8 password, returns `'breached'` when a response line matches the 35-character suffix with a count above 0, and `'clear'` when the suffix is absent or present only as a count-0 padding line.
+- B-71: A breach client that rejects, returns non-200, returns a body over 256 KB, or does not answer within 2 seconds yields `'unknown'`, the password is accepted, and exactly one warning `{ event: 'breach_check_unavailable' }` is logged containing no password, SHA-1, prefix, or email; production startup fails when the fake breach client is configured.
+- B-72: `POST /v1/auth/signups` with a policy-passing, unbreached password issues a one-time code through `issueOneTimeCode` and returns 202 `{ data: { status: 'code-sent' } }` with the same status and body for an existing and a new email; it creates no `users` row and stores nothing derived from the password; a breached password gets 400 `AUTH_PASSWORD_BREACHED` and sends no email; its counters are the `POST /v1/auth/codes` counters (5 issues per email per hour across both routes).
+- B-73: `POST /v1/auth/signups/verify` with a valid code and no existing user policy-checks and breach-checks the password, creates the user with a hash of it, creates a session with `auth_method 'code'`, and returns 201 `{ data: { userId, isPasswordApplied: true } }`, with the cookie on web and `token` on native (B-28).
+- B-74: `POST /v1/auth/signups/verify` for an email that already has a user signs that user in and returns `isPasswordApplied: false`, and the user's `password_hash` is unchanged byte for byte, whether it was null or set.
+- B-75: `POST /v1/auth/signups/verify` with a wrong, expired, invalidated, or reused code returns the B-27 400 body (`AUTH_INVALID_CODE`), counts toward the code's 5 attempts, and creates no user, session, or hash; two concurrent verifies with one correct code create exactly one user and one session.
+- B-76: `POST /v1/auth/sessions/password` with the right password returns 201, creates a session with `auth_method 'password'`, sets the cookie on web and returns `token` on native, stores the timezone only when the user has none, and never creates a `users` row.
+- B-77: An unknown email, a code-only account (null hash), and a wrong password each get 400 with a byte-identical body (`AUTH_INVALID_CREDENTIALS`, same message), and each runs exactly one scrypt derivation (the first two against the startup dummy hash), observed through a counting wrapper on the injected derivation function.
+- B-78: `POST /v1/auth/sessions/password` returns 429 on the 11th request for one normalized email or the 31st from one IP in an hour, through `createRateLimit` with HMAC keys; the IP limit runs before the body is parsed; exhausting the password limits leaves `POST /v1/auth/codes` and `POST /v1/auth/sessions` for that email and IP unaffected.
+- B-79: With `PASSWORD_HASH_CONCURRENCY` 2, a third concurrent derivation waits for a slot, and one that waits longer than 5 seconds returns 503 `SERVER_BUSY` with nothing stored.
+- B-80: `PUT /v1/me/password` sets the hash when `currentPassword` verifies, or, without `currentPassword`, when the session is a fresh code sign-in; a password session, or a code session older than 10 minutes, without `currentPassword` gets 403 `AUTH_REAUTH_REQUIRED`; a wrong `currentPassword` gets 400 `AUTH_INVALID_CREDENTIALS`; a code-only account follows the same rules, so adding a password needs a fresh code sign-in; a cookie request without `X-Requested-With` gets 403 and a request without a session gets 401.
+- B-81: A successful `PUT /v1/me/password` applies the B-69 policy and B-70 breach check to `newPassword`, writes the hash and `password_updated_at`, revokes every other session of the user (each then gets 401) while the current session keeps working, and returns 200 `{ data: { hasPassword: true } }`; the 11th request for one user in an hour gets 429.
+- B-82: `GET /v1/me` includes `hasPassword`, true exactly when `password_hash` is not null, and no response from any route includes a hash.
+- B-83: For every new route, a request whose password fields hold a value built at run time leaves no log line, error body, or response containing that value, its SHA-1, its 5-character prefix, or its stored hash, including when the handler throws; the logger redacts `password`, `currentPassword`, and `newPassword` at the top level and one level down.
+- B-84: After `DELETE /v1/me`, no table holds the user's password hash, a password sign-in with the deleted email and old password gets the B-77 400 body, and signing up again with the same email creates a new, empty user.
+- B-85: A code sign-in to an account with a password leaves the hash unchanged and creates a session with `auth_method 'code'`; a password sign-in session never counts as a fresh code sign-in.
+
+App:
+
+- B-86: The sign-in screen shows an email field and a password field (`autoComplete="current-password"`, `textContentType="password"`, hidden by default) with a "Sign in" button; "Use a code instead" switches to the existing code steps with the email kept; "Forgot password?" starts the code steps and, after sign-in, opens Settings with the password form focused; every credential failure shows one message, "That email and password do not match. Try again, or use a code instead."
+- B-87: A new `app/sign-up.tsx` route takes an email and a new password (`autoComplete="new-password"`, `textContentType="newPassword"`) with the hint "At least 12 characters. Spaces are fine.", checks the length on device before sending, then shows the code step; on `isPasswordApplied: false` it says "You already had an account, so we signed you in. Your password was not changed; you can set one in Settings."; sign-in links to sign-up and sign-up links back.
+- B-88: Settings shows "Add a password" when `hasPassword` is false and "Change password" when true; the change form asks for the current password and offers "Use a code instead", which runs the code steps inline and returns to the form with the new password still entered; an `AUTH_REAUTH_REQUIRED` response opens the same code steps; success announces "Password saved. Other devices were signed out."
+- B-89: Every password field has a visible label and a show-password toggle that is a real button (`Pressable` with `role="button"`), labeled "Show password" or "Hide password", with `aria-pressed` matching its state; toggling keeps the typed value and returns focus to the field; each error (too short, too long, breached, wrong credentials, rate limited, reauth required, busy, unavailable) is announced in a `role="alert"` region and tied to its field with `aria-describedby`; key bindings stay inert while a password field has focus (B-57); sign-in, sign-up, and the settings password form meet B-64.
+- B-90: The app never writes a password to AsyncStorage, SecureStore, analytics, or `logWarning`; password state is cleared on success and when the screen unmounts.
+
+Docs:
+
+- B-91: `app/privacy.tsx` drops "There is no password" and states that a password is optional, that only a salted scrypt hash is stored, that choosing a password sends only the first 5 characters of its SHA-1 hash to Have I Been Pwned so the password never leaves our server, and that deleting the account deletes the hash; `docs/store/privacy-labels.md` records the same facts, and its Apple and Play answers are unchanged because neither form has a password data type.
+
+### Threat model
+
+| Threat                             | Control                                                                                                                                                                   | Acceptance boundary (accepted)                                                                                                                                       | Failure boundary (must never happen)                                                                               | Tests            |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------- |
+| Credential stuffing                | Breach check at every password write; 10 per email and 30 per IP per hour; scrypt cost; the code path stays open                                                          | A distributed attacker can try 10 passwords per email per hour; a password that enters a breach list after it was set stays until changed                            | Unbounded guesses per email; a breached password accepted while HIBP answered                                      | B-70, B-78       |
+| Account enumeration                | Identical 400 body for unknown email, code-only account, and wrong password; sign-up 202 identical for existing and new emails; sign-up never touches an existing account | The code holder learns their own email has an account (`isPasswordApplied: false`)                                                                                   | A status, body, header, or cookie difference that tells a non-holder whether an email has an account or a password | B-72, B-74, B-77 |
+| Timing side channel                | One scrypt derivation on every password sign-in, against the dummy hash when there is no real one; `timingSafeEqual` on keys                                              | A database lookup difference far below the cost of one derivation                                                                                                    | A path that skips the derivation for an unknown email or a code-only account                                       | B-67, B-77       |
+| Unverified-email takeover          | No pending password; the password travels with the code; sign-up never writes a password onto an existing account; user rows exist only after a code check                | Whoever controls the email controls the account, by either method                                                                                                    | A sign-up by someone without the code attaching a password to, or signing into, any account                        | B-72, B-74, B-75 |
+| Password in logs                   | Redacted keys `password`, `currentPassword`, `newPassword`; the error serializer keeps name, pg code, and constraint only; breach warning by event name                   | none                                                                                                                                                                 | A password, its SHA-1, its prefix, or its stored hash in any log line, error body, or response                     | B-71, B-83       |
+| HIBP outage or slowness            | 2-second timeout, 256 KB cap, fail open with one warning                                                                                                                  | During an outage a breached password can be set and is not re-checked later                                                                                          | A sign-up or password change blocked by HIBP or delayed past the timeout; password material in the warning         | B-71             |
+| Downgrade via code sign-in         | Email control is the root of trust for both methods; a fresh code sign-in may set a password, a password session may not                                                  | Anyone who controls the email can sign in by code and set a new password (the forgot-password flow); the password is an alternative to the code, not a second factor | A code sign-in revealing or removing a password; a password session setting a password without the current one     | B-80, B-85       |
+| Stolen session planting a password | Current password or fresh code sign-in for every password write; other sessions revoked on each write                                                                     | A holder of a code session under 10 minutes old can set a password (they passed the email check)                                                                     | A session over 10 minutes old, or any password session, setting a password without the current one                 | B-80, B-81       |
+| Hashing as denial of service       | Per-IP limit before body parsing; concurrency cap 2; 5-second queue timeout                                                                                               | Under a flood, password sign-ins may get 503 `SERVER_BUSY` and fall back to the code                                                                                 | Unbounded concurrent 128 MiB derivations exhausting memory                                                         | B-78, B-79       |
+
+Each server PR in Stage 7 gets the R-109 security review on `securityReviewModel` (password hashing, the breach check, the new auth routes, the session change, redaction).
+
+### Privacy wording
+
+`app/privacy.tsx`, "What we collect", first item becomes: "Your email address, only if you sign in. It is used to send you one-time sign-in codes and to identify your account. You can also set a password. We store only a salted scrypt hash of it, never the password itself. When you choose a password, our server checks it against the Have I Been Pwned list of breached passwords by sending only the first 5 characters of the password's SHA-1 hash, so neither the password nor its full hash leaves our server." "What deleting your account removes" adds "your password hash". "Who processes it for us" is unchanged, because Have I Been Pwned receives no personal data, only a 5-character prefix shared by many passwords (owner to confirm).
+
+`docs/store/privacy-labels.md`: the "Email address" row's source reads "Typed at sign-in or sign-up (`app/sign-in.tsx`, `app/sign-up.tsx`)"; "Facts the answers rest on" gains a **Passwords** bullet (optional; only a scrypt hash in `users.password_hash`; never on the device; breach check by 5-character SHA-1 prefix; deleted with the account); the **Deletion** bullet lists the password hash. The Apple and Play tables are unchanged.
+
+### App screens
+
+- `app/sign-in.tsx`: the first step becomes `PasswordSignInStep` (email, password, "Sign in"), with "Use a code instead" (the existing `EmailStep` and `CodeStep`, email prefilled), "Forgot password?" (the code steps, then `router.replace('/settings?form=password')`, which the existing `readReturnTo` pattern accepts), and "Create an account" linking to `/sign-up`. `returnTo` handling is unchanged.
+- `app/sign-up.tsx` (new route, `h1` "Create an account"): `SignUpStep` (email, new password, hint), then `CodeStep`; the password stays in component state between the two steps only.
+- `app/settings.tsx`: `AccountSection` gains `PasswordSettingsForm` ("Add a password" or "Change password" from `hasPassword`), with inline code steps for the fresh-code path.
+- `components/auth/PasswordField.tsx`: the shared labeled field with the show-password toggle; props `label`, `autoComplete: 'current-password' | 'new-password'`, `value`, `onChangeText`, `errorId?`, `onSubmitEditing?`.
+- `state/AuthProvider.tsx` adds `signInWithPassword(email, password)`, `startSignUp(email, password)`, `completeSignUp(email, code, password)`, and `setPassword({ newPassword, currentPassword? })`; `AuthResult` failure reasons add `'invalid-credentials' | 'password-too-short' | 'password-too-long' | 'password-breached' | 'reauth-required' | 'busy'`. A successful `completeSignUp` or `signInWithPassword` takes the existing sign-in path (guest claim, RevenueCat `logIn`, analytics identify).
+- `constants/appConfig.ts` adds `PASSWORD_MIN_LENGTH` (12) and `PASSWORD_MAX_LENGTH` (128) for the on-device check, counting code points after `normalize('NFKC')`; the server stays authoritative.
+
+### Invariants (additions)
+
+- Every `users` row's email passed a one-time code check before the row existed.
+- No password, password SHA-1, or SHA-1 prefix is stored, logged, or returned; the only stored form is the scrypt hash in `users.password_hash`.
+- A sign-up never writes a password onto an existing account.
+- Every password write revokes the user's other sessions.
+
+### Failure modes (additions)
+
+- HIBP down or slow: the breach check returns `'unknown'` within 2 seconds, the password is accepted, one warning is logged.
+- Hash slots exhausted: 503 `SERVER_BUSY` after 5 seconds in the queue; the app shows "Sign-in is busy. Try again, or use a code instead."
+- Resend down during sign-up: 503 `SERVER_EMAIL_UNAVAILABLE`, as for `POST /auth/codes`; nothing is stored.
+
+### Non-goals (additions)
+
+- Password reset links or reset tokens (forgot password is a code sign-in, decision 30).
+- Removing a password once set.
+- Multi-factor sign-in, passkeys, Google or Apple sign-in.
+- Composition rules, password expiry, or a strength meter.
+- Re-checking stored passwords against later breach lists.
+
+### Assumption ledger (additions)
+
+| Claim                                                                                                                | Source                | Verification command or check                                                     | Status     | Owner              | Next action           |
+| -------------------------------------------------------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------- | ---------- | ------------------ | --------------------- |
+| The Railway service has memory for 2 concurrent 128 MiB scrypt derivations                                           | Railway plan          | Read the service memory limit; run 2 concurrent password sign-ins on staging      | unverified | Ian                | before Stage 7 deploy |
+| The HIBP range API stays free, keyless, and honors `Add-Padding`                                                     | HIBP API docs         | `curl -sH 'Add-Padding: true' https://api.pwnedpasswords.com/range/21BD1 \| head` | unverified | breach check slice | Task 7.3              |
+| One N = 2^17 derivation takes 100 ms to 500 ms on the Railway CPU                                                    | scrypt cost model     | Time `hashPassword` in a staging one-off                                          | unverified | hashing slice      | Task 7.2              |
+| React Native Web renders `autoComplete="current-password"` and `"new-password"` as the HTML `autocomplete` attribute | react-native-web docs | DOM assertion in the web Jest project                                             | unverified | app sign-in slice  | Task 7.7              |
