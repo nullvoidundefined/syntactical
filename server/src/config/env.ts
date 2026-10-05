@@ -22,6 +22,18 @@ const httpsUrl = z
   })
   .transform((value) => new URL(value).href.replace(/\/$/, ''));
 
+const HASH_CONCURRENCY_MIN = 1;
+const HASH_CONCURRENCY_MAX = 8;
+const HASH_CONCURRENCY_DEFAULT = 2;
+
+// An integer from 1 to 8 written as plain digits, so `2.5` and `-1` fail.
+const hashConcurrency = z
+  .string()
+  .trim()
+  .regex(/^\d+$/)
+  .transform(Number)
+  .refine((value) => value >= HASH_CONCURRENCY_MIN && value <= HASH_CONCURRENCY_MAX);
+
 const envSchema = z.object({
   ALLOWED_ORIGINS: z.string().min(1),
   DATABASE_URL: z.string().min(1),
@@ -34,6 +46,8 @@ const envSchema = z.object({
     .trim()
     .min(1)
     .refine((value) => isAbsolute(value)),
+  // The cap on concurrent scrypt derivations; each holds about 128 MiB while it runs.
+  PASSWORD_HASH_CONCURRENCY: hashConcurrency.default(HASH_CONCURRENCY_DEFAULT),
   PUBLIC_BASE_URL: httpsUrl,
   RATE_LIMIT_KEY_SECRET: strongSecret,
   RESEND_API_KEY: z.string().trim().min(1),
