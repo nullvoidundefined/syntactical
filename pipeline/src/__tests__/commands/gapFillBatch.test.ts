@@ -267,7 +267,8 @@ describe('gapFill batch generation', () => {
 
         it('budgets calls per topic', async () => {
             await seed({ topics: ['strings', 'lists'] });
-            const provider = buildProvider(({ count }) => validCards(count, 'a'));
+            // Each topic's cards get their own prompts, so the duplicate filter keeps them all.
+            const provider = buildProvider(({ count, topic }) => validCards(count, topic));
             await run(provider);
             expect(provider.calls.map(({ topic }) => topic)).toEqual(['strings', 'lists']);
         });
