@@ -12,16 +12,7 @@
 // identity follows the signed-in user (identified after sign-in and hydration,
 // reset on every sign-out path, never for a guest); its failures never change
 // a result.
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { Platform } from 'react-native';
 
@@ -39,13 +30,17 @@ import {
   HTTP_STATUS_ACCEPTED,
   HTTP_STATUS_BAD_REQUEST,
   HTTP_STATUS_CREATED,
+  HTTP_STATUS_SERVICE_UNAVAILABLE,
   HTTP_STATUS_TOO_MANY_REQUESTS,
 } from '../constants/appConfig';
 import { resolveStoredAuth } from '../services/auth/resolveStoredAuth';
 
 export type AuthResult =
   | { isOk: true }
-  | { isOk: false; reason: 'invalid-code' | 'invalid-email' | 'rate-limited' | 'unavailable' };
+  | {
+      isOk: false;
+      reason: 'busy' | 'invalid-code' | 'invalid-credentials' | 'invalid-email' | 'rate-limited' | 'unavailable';
+    };
 
 type AuthContextValue = {
   completeGuestClaim: (userId: string) => void;
@@ -54,6 +49,7 @@ type AuthContextValue = {
   isHydrated: boolean;
   isSignedIn: boolean;
   requestCode: (email: string) => Promise<AuthResult>;
+  signInWithPassword: (email: string, password: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
   signOutDeletedAccount: (deletedUserId: string) => Promise<void>;
   user: { id: string } | null;
@@ -69,6 +65,11 @@ function readSessionResponse(body: unknown): { sessionValue: string | null; user
     sessionValue: typeof token === 'string' ? token : null,
     userId: typeof userId === 'string' ? userId : null,
   };
+}
+
+function readErrorCode(body: unknown): string | null {
+  const code = (body as { error?: { code?: unknown } } | null)?.error?.code;
+  return typeof code === 'string' ? code : null;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -164,6 +165,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // The shared end of every sign-in: a 201 with the session value (native) and
+  // user id persists the identity and identifies the user; anything else is unavailable.
+  const completeSignIn = useCallback(
+    async (status: number, body: unknown): Promise<AuthResult> => {
+      const { sessionValue, userId: sessionUserId } = readSessionResponse(body);
+      const isNative = Platform.OS !== 'web';
+      if (status !== HTTP_STATUS_CREATED || sessionUserId === null) {
+        return { isOk: false, reason: 'unavailable' };
+      }
+      if (isNative && sessionValue === null) {
+        return { isOk: false, reason: 'unavailable' };
+      }
+      if (isNative && sessionValue !== null) {
+        await writeSessionToken(sessionValue);
+      }
+      signInCount.current += 1;
+      setUserId(sessionUserId);
+      persist(sessionUserId);
+      void identifyPurchaser(sessionUserId);
+      identifyAnalyticsUser(sessionUserId);
+      return { isOk: true };
+    },
+    [persist, setUserId],
+  );
+
   const runVerify = useCallback(
     async (email: string, code: string): Promise<AuthResult> => {
       try {
@@ -175,28 +201,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         if (status === HTTP_STATUS_BAD_REQUEST) return { isOk: false, reason: 'invalid-code' };
         if (status === HTTP_STATUS_TOO_MANY_REQUESTS) return { isOk: false, reason: 'rate-limited' };
-        const { sessionValue, userId: sessionUserId } = readSessionResponse(body);
-        const isNative = Platform.OS !== 'web';
-        if (status !== HTTP_STATUS_CREATED || sessionUserId === null) {
-          return { isOk: false, reason: 'unavailable' };
-        }
-        if (isNative && sessionValue === null) {
-          return { isOk: false, reason: 'unavailable' };
-        }
-        if (isNative && sessionValue !== null) {
-          await writeSessionToken(sessionValue);
-        }
-        signInCount.current += 1;
-        setUserId(sessionUserId);
-        persist(sessionUserId);
-        void identifyPurchaser(sessionUserId);
-        identifyAnalyticsUser(sessionUserId);
-        return { isOk: true };
+        return await completeSignIn(status, body);
       } catch {
         return { isOk: false, reason: 'unavailable' };
       }
     },
-    [persist, setUserId],
+    [completeSignIn],
+  );
+
+  // The password travels only in this request body; it is never stored or logged here.
+  const signInWithPassword = useCallback(
+    async (email: string, password: string): Promise<AuthResult> => {
+      try {
+        await hydration.current?.promise;
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const { body, status } = await apiFetch('auth/sessions/password', {
+          body: { email, password, timezone },
+          method: 'POST',
+        });
+        if (status === HTTP_STATUS_BAD_REQUEST) return { isOk: false, reason: 'invalid-credentials' };
+        if (status === HTTP_STATUS_TOO_MANY_REQUESTS) return { isOk: false, reason: 'rate-limited' };
+        if (status === HTTP_STATUS_SERVICE_UNAVAILABLE && readErrorCode(body) === 'SERVER_BUSY') {
+          return { isOk: false, reason: 'busy' };
+        }
+        return await completeSignIn(status, body);
+      } catch {
+        return { isOk: false, reason: 'unavailable' };
+      }
+    },
+    [completeSignIn],
   );
 
   const verifyCode = useCallback(
@@ -260,6 +293,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isHydrated,
       isSignedIn: userId !== null,
       requestCode,
+      signInWithPassword,
       signOut,
       signOutDeletedAccount,
       user: userId === null ? null : { id: userId },
@@ -271,6 +305,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       guestClaimUserId,
       isHydrated,
       requestCode,
+      signInWithPassword,
       signOut,
       signOutDeletedAccount,
       userId,
