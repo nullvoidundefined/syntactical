@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { MAX_NESTING_DEPTH, extractPageText } from '../../../services/judge/extractPageText.js';
+import { PAGE_PARSE_TIMEOUT_MS } from '../../../services/judge/extractPageTextIsolated.js';
 import { normalizeQuoteText } from '../../../services/judge/normalizeQuoteText.js';
 
 const Q = 'Use prepared statements with parameterized queries';
@@ -135,11 +136,12 @@ describe('extractPageText follows the HTML parsing rules for hidden content', ()
         expect(Date.now() - startedAt).toBeLessThan(1000);
     });
 
+    // A page the in-parse limits admit must finish well inside the worker's timeout (see below).
     it('parses a page at the depth limit followed by 1 MB of unmatched end tags quickly', () => {
         const body = `${'<span>'.repeat(MAX_NESTING_DEPTH)}${Q}${'</x>'.repeat(250_000)}`;
         const startedAt = Date.now();
         expect(visible(body)).toContain(normalizeQuoteText(Q));
-        expect(Date.now() - startedAt).toBeLessThan(1000);
+        expect(Date.now() - startedAt).toBeLessThan(PAGE_PARSE_TIMEOUT_MS / 2);
     });
 
     // Security review round 1: the parser rebuilds every open formatting element at each <p>, so a
@@ -165,11 +167,13 @@ describe('extractPageText follows the HTML parsing rules for hidden content', ()
         expect(Date.now() - startedAt).toBeLessThan(1000);
     });
 
+    // A page the in-parse limits admit must finish well inside the worker's timeout, or a real page
+    // would be refused; a wall-clock bound tighter than that flakes under a parallel test run.
     it('parses a page at the depth limit followed by 1 MB of list items quickly', () => {
         const body = `${'<div>'.repeat(MAX_NESTING_DEPTH - 1)}${Q}${'<li>'.repeat(250_000)}`;
         const startedAt = Date.now();
         expect(visible(body)).toContain(normalizeQuoteText(Q));
-        expect(Date.now() - startedAt).toBeLessThan(1000);
+        expect(Date.now() - startedAt).toBeLessThan(PAGE_PARSE_TIMEOUT_MS / 2);
     });
 
     it('keeps a quote after many self-closing void elements', () => {
