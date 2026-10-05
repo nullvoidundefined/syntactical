@@ -43,6 +43,9 @@ const AUTH = {
   RATE_LIMIT: {
     ISSUE_PER_EMAIL: 5,
     ISSUE_PER_IP: 20,
+    // Password sign-in: a wrong password is a guess, so the email cap is the guessing cap.
+    PASSWORD_SIGN_IN_PER_EMAIL: 10,
+    PASSWORD_SIGN_IN_PER_IP: 30,
     // A person mistypes a code a few times; 10 guesses an hour keeps a guess at 1 in 100,000.
     VERIFY_PER_EMAIL: 10,
     VERIFY_PER_IP: 30,
@@ -51,6 +54,8 @@ const AUTH = {
   RATE_LIMIT_SCOPE: {
     ISSUE_EMAIL: 'code-issue:email',
     ISSUE_IP: 'code-issue:ip',
+    PASSWORD_SIGN_IN_EMAIL: 'password-sign-in:email',
+    PASSWORD_SIGN_IN_IP: 'password-sign-in:ip',
     VERIFY_EMAIL: 'session-verify:email',
     VERIFY_IP: 'session-verify:ip',
   },

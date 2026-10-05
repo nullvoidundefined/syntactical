@@ -14,6 +14,10 @@ interface AuthDeps {
   database: Database;
   // Replaces scrypt for password hashing; tests use it to count or hold derivations.
   deriveKey?: DeriveKey;
+  // A current-parameter hash nobody can match, built once at startup; password sign-in verifies
+  // against it when no usable stored hash exists, so every attempt costs one derivation.
+  // Password sign-in is mounted only when this and passwordHashSlots are given.
+  dummyPasswordHash?: string;
   emailClient: EmailClient;
   // Secure on the session cookie; false only under NODE_ENV=test.
   isCookieSecure: boolean;
@@ -25,10 +29,12 @@ interface AuthDeps {
   rateLimitKeySecret: string;
 }
 
-type OptionalKeys = 'deriveKey' | 'passwordBreachClient' | 'passwordHashSlots';
+type OptionalKeys = 'deriveKey' | 'dummyPasswordHash' | 'passwordBreachClient' | 'passwordHashSlots';
 
 type ResolvedAuthDeps = Required<Omit<AuthDeps, OptionalKeys>> & Pick<AuthDeps, OptionalKeys>;
 
+type PasswordSessionsAuthDeps = ResolvedAuthDeps & Required<Pick<AuthDeps, 'dummyPasswordHash' | 'passwordHashSlots'>>;
+
 type SignUpAuthDeps = ResolvedAuthDeps & Required<Pick<AuthDeps, 'passwordBreachClient' | 'passwordHashSlots'>>;
 
-export type { AuthDeps, PasswordHashSlots, ResolvedAuthDeps, SignUpAuthDeps };
+export type { AuthDeps, PasswordHashSlots, PasswordSessionsAuthDeps, ResolvedAuthDeps, SignUpAuthDeps };
