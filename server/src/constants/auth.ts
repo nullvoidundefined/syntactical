@@ -23,6 +23,18 @@ const AUTH = {
     SEND_TIMEOUT_MS: 8_000,
   },
   PASSWORD: {
+    HASH: {
+      KEY_BYTES: 64,
+      // log2 of the scrypt cost N: 2^17 = 131072.
+      LOG_N: 17,
+      // 256 MiB: scrypt needs about 128 * N * r bytes (128 MiB here), so this leaves headroom.
+      MAXMEM: 268_435_456,
+      P: 1,
+      R: 8,
+      SALT_BYTES: 32,
+    },
+    // How long a derivation waits for a free hash slot before the request fails as busy.
+    HASH_QUEUE_TIMEOUT_MS: 5_000,
     MAX_LENGTH: 128,
     MIN_LENGTH: 12,
     // UTF-16 units of the raw string, measured before NFKC, so normalization cannot be fed a huge input.
