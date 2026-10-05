@@ -152,6 +152,19 @@ describe('extractPageText follows the HTML parsing rules for hidden content', ()
         expect(Date.now() - startedAt).toBeLessThan(1000);
     });
 
+    // Security review round 2: content inside an open table is moved before it one node at a time,
+    // and each move scans the parent's children.
+    it.each([
+        ['text and line breaks', 'a<br>'],
+        ['line breaks', '<br>'],
+        ['empty inline elements', '<b></b>'],
+    ])('refuses a table that foster-parents 512 KB of %s, quickly', (_name, unit) => {
+        const body = `<table>${unit.repeat(Math.floor(512_000 / unit.length))}${Q}`;
+        const startedAt = Date.now();
+        expect(visible(body)).toBe('');
+        expect(Date.now() - startedAt).toBeLessThan(1000);
+    });
+
     it('parses a page at the depth limit followed by 1 MB of list items quickly', () => {
         const body = `${'<div>'.repeat(MAX_NESTING_DEPTH - 1)}${Q}${'<li>'.repeat(250_000)}`;
         const startedAt = Date.now();

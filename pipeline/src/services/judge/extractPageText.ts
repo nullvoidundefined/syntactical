@@ -17,16 +17,21 @@ type ParentNode = DefaultTreeAdapterMap['parentNode'];
 
 // parse5's cost grows with the nesting depth times the number of tags: 4,999 open spans followed by
 // 2 MB of unmatched end tags take 10 s, 256 take about 0.5 s, and 256 levels of <div> followed by
-// <li> tags take over 1 s. The deepest allowlisted page measured (MDN, OWASP, rfc-editor.org,
-// 2026-10-05) opens 25 elements at once, so a page deeper than this is treated as having no
-// visible text: the quote fails and the draft is dropped, never verified.
-export const MAX_NESTING_DEPTH = 128;
+// <li> tags take over 1 s (128 levels, 0.8 s alone and 1.5 s under a parallel test run). The
+// deepest allowlisted page measured (MDN, OWASP, rfc-editor.org, 2026-10-05) opens 25 elements at
+// once, so a page deeper than this is treated as having no visible text: the quote fails and the
+// draft is dropped, never verified.
+export const MAX_NESTING_DEPTH = 64;
 // html and body are always open beneath the page's own elements.
 const DOCUMENT_ELEMENTS = 2;
 // A start tag takes at least 3 bytes, so a page whose parse opens more elements than half its
 // length is the parser rebuilding open formatting elements (<b><i>... reopened at every <p>), which
 // grows the tree by hundreds of nodes per tag. Such a page is refused like a too-deep one.
 const MAX_ELEMENTS_PER_BYTE = 0.5;
+// Content inside an open table that does not belong there is moved before the table one node at a
+// time ("foster parenting"), and parse5 finds the table among its parent's children by a linear
+// scan each time, so the cost is quadratic. Real pages foster-parent a handful of nodes at most.
+const MAX_FOSTER_PARENTED = 1000;
 const HIDDEN_ELEMENTS = new Set(['head', 'noscript', 'script', 'style', 'template']);
 const CHROME_ELEMENTS = new Set(['aside', 'footer', 'header', 'nav']);
 const CHROME_ROLES = new Set(['banner', 'contentinfo', 'navigation']);
@@ -130,9 +135,23 @@ function collectText(root: ParentNode): string {
 function parseWithCostLimit(body: string): ParentNode {
     let depth = 0;
     let pushes = 0;
+    let fosterParented = 0;
+    function fosterParent(): void {
+        fosterParented += 1;
+        if (fosterParented > MAX_FOSTER_PARENTED) throw new PageTooCostly();
+    }
     const maxPushes = DOCUMENT_ELEMENTS + 1 + body.length * MAX_ELEMENTS_PER_BYTE;
     const treeAdapter: TreeAdapter<DefaultTreeAdapterMap> = {
         ...defaultTreeAdapter,
+        // parse5 calls these two only to foster-parent.
+        insertBefore(parent, node, reference) {
+            fosterParent();
+            defaultTreeAdapter.insertBefore(parent, node, reference);
+        },
+        insertTextBefore(parent, text, reference) {
+            fosterParent();
+            defaultTreeAdapter.insertTextBefore(parent, text, reference);
+        },
         onItemPop() {
             depth -= 1;
         },
