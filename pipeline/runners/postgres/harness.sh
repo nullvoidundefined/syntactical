@@ -85,9 +85,9 @@ work() {
 
 trap 'emit_other timeout; exit 0' TERM
 
-# A same-uid process can list a dumpable process's descriptors, so a successful listing means
-# the execute-only binary did not take effect.
-if ls "/proc/$$/fd" > /dev/null 2>&1; then
+# A same-uid process can list a dumpable process's descriptors. Only a listing the kernel
+# refused proves the execute-only binary took effect; any other outcome fails closed.
+if fd_probe=$(ls "/proc/$$/fd" 2>&1 > /dev/null) || [[ "$fd_probe" != *"Permission denied"* ]]; then
     emit_other exception RunnerFailure
     exit 0
 fi

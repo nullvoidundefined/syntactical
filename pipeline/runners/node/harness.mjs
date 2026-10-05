@@ -73,9 +73,10 @@ const TERMINATION_SIGNALS = ['SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGTERM', 'SIGUSR1'
 for (const signal of TERMINATION_SIGNALS) {
     process.on(signal, () => undefined);
 }
-// A same-uid process can list a dumpable process's descriptors, so a successful listing means
-// the execute-only binary did not take effect.
-if (spawnSync('/bin/ls', [`/proc/${process.pid}/fd`], { stdio: 'ignore' }).status === 0) {
+// A same-uid process can list a dumpable process's descriptors. Only a listing the kernel
+// refused proves the execute-only binary took effect; any other outcome fails closed.
+const fdProbe = spawnSync('/bin/ls', [`/proc/${process.pid}/fd`], { encoding: 'utf8' });
+if (fdProbe.status === 0 || fdProbe.status === null || !/Permission denied/.test(fdProbe.stderr)) {
     finish({ outcome: 'exception', exceptionType: 'RunnerFailure' });
 }
 
