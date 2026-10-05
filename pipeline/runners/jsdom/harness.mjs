@@ -4,6 +4,11 @@
 // them can forge or suppress the result line. The harness owns the timeout and SIGKILLs the
 // child's process group.
 //
+// The window is closed once the oracle settles, cancelling callbacks still pending on
+// window.setTimeout and window.setInterval, so their output is lost. Node's global setTimeout
+// keeps the process alive and is unaffected. requestAnimationFrame is not defined because
+// JSDOM is not created with pretendToBeVisual.
+//
 // The child shares uid 10001 with the harness, so PID 1 is hardened against it. The image runs
 // the harness from a root-owned, execute-only copy of node: the kernel marks a process that
 // execs a binary it cannot read as non-dumpable, and the kernel then refuses a same-uid
@@ -52,7 +57,11 @@ if (compiled) {
         fail(${JSON.stringify(EXCEPTION_MARKER)} + name);
         await new Promise(() => {});
     }
-    dom.window.close();
+    try {
+        dom.window.close();
+    } catch {
+        // Cleanup failures must not change the oracle outcome.
+    }
 }
 `;
 }

@@ -59,4 +59,7 @@ Rules:
 - Exactly one choice is right, and the program's printed output (or the quoted source) must decide it.
 - Programs are deterministic and self-contained: no network, no subprocesses, no files outside
   a temporary directory, no randomness, no clock.
+- For jsdom oracles, window, document, DOMParser, and DOMPurify are ready as globals. Print
+  synchronously or after awaiting; output from window.setTimeout callbacks still pending when the
+  program ends is dropped, and requestAnimationFrame is not defined.
 - Nothing but those keys: any other key makes the whole answer invalid.
