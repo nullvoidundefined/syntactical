@@ -2,7 +2,8 @@
 // with one correct code create one user and one session; with every hash slot held, a verify
 // answers 503 SERVER_BUSY after the queue timeout, stores nothing, and leaves the code usable;
 // and a verify waiting for a slot, or running its derivation, holds no pooled client (a pool
-// with max 1 still serves /health/ready). Every password is built at run time.
+// with max 1 still serves /health/ready); and the breach check runs before a verify waits for a
+// slot. Every password is built at run time.
 import { randomBytes, scrypt } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
@@ -11,6 +12,7 @@ import pg from 'pg';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, inject, it } from 'vitest';
 
+import type { PasswordBreachClient } from '../../clients/passwordBreachClient.js';
 import { AUTH } from '../../constants/auth.js';
 import type { DeriveKey } from '../../services/passwordHash.js';
 import { createPasswordHashSlots } from '../../services/passwordHashSlots.js';
@@ -247,6 +249,46 @@ describe.skipIf(SKIP_DATABASE_TESTS)('POST /v1/auth/signups/verify under concurr
       } finally {
         finish.open();
         await singleClientPool.end();
+      }
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'runs the breach check before waiting for a hash slot: the breach client is asked while every slot is held',
+    async () => {
+      const passwordHashSlots = createPasswordHashSlots({
+        concurrency: ONE_SLOT,
+        queueTimeoutMs: AUTH.PASSWORD.HASH_QUEUE_TIMEOUT_MS,
+      });
+      const { held, release } = holdSlot(passwordHashSlots);
+      let isSlotHeld = true;
+      const askedWhileHeld: boolean[] = [];
+      const breachAsked = createGate();
+      const passwordBreachClient: PasswordBreachClient = {
+        fetchRange() {
+          askedWhileHeld.push(isSlotHeld);
+          breachAsked.open();
+          return Promise.resolve('');
+        },
+      };
+      const testApp = createAuthTestApp({ passwordBreachClient, passwordHashSlots, pool: database.pool });
+      const email = buildEmail();
+      try {
+        const code = await issueCode(testApp, email);
+        const verifying = postVerify(testApp, { code, email, ...withPassword(buildPassword()) });
+        const hasAsked = await within(breachAsked.opened, RESPONSE_DEADLINE_MS);
+        isSlotHeld = false;
+        release();
+        const verified = await within(verifying, TEST_TIMEOUT_MS / 2);
+
+        expect(hasAsked).not.toBe(DEADLINE_PASSED);
+        expect(askedWhileHeld).toEqual([true]);
+        expect((verified as request.Response).status).toBe(HTTP_CREATED);
+      } finally {
+        isSlotHeld = false;
+        release();
+        await held;
       }
     },
     TEST_TIMEOUT_MS,

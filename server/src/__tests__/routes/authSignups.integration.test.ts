@@ -13,6 +13,7 @@ import type { Database } from '../../clients/database.js';
 import { createFakePasswordBreachClient } from '../../clients/fakePasswordBreachClient.js';
 import { createLogger } from '../../clients/logger.js';
 import { withTransaction } from '../../clients/withTransaction.js';
+import { AUTH } from '../../constants/auth.js';
 import { insertSession } from '../../services/insertSession.js';
 import type { DeriveKey } from '../../services/passwordHash.js';
 import { hashPassword, verifyPassword } from '../../services/passwordHash.js';
@@ -54,6 +55,12 @@ const TIMEZONE = 'Europe/London';
 const OTHER_TIMEZONE = 'Pacific/Auckland';
 const BASE64URL_TOKEN = /^[A-Za-z0-9_-]{43}$/;
 const SIGN_UP_BODY = JSON.stringify({ data: { status: 'code-sent' } });
+const PINO_WARN_LEVEL = 40;
+const FIRST_SPREAD_IP = 10;
+
+const {
+  RATE_LIMIT: { VERIFY_PER_EMAIL, VERIFY_PER_IP },
+} = AUTH;
 
 const realDeriveKey = promisify(scrypt) as DeriveKey;
 
@@ -726,6 +733,66 @@ describe.skipIf(SKIP_DATABASE_TESTS)('sign-up routes', () => {
     );
   });
 
+  describe('verify rate limits shared with code sign-in', () => {
+    it(
+      'counts wrong codes on /sessions and /signups/verify against one per-email limit: the next verify gets 429',
+      async () => {
+        const testApp = createAuthTestApp({ pool: database.pool });
+        const email = buildEmail();
+        const code = await issueCode(testApp, email);
+        const wrongCode = otherCode(code);
+
+        const statuses: number[] = [];
+        for (let attempt = 0; attempt < VERIFY_PER_EMAIL; attempt += 1) {
+          const ip = ipNumber(FIRST_SPREAD_IP + attempt);
+          const response =
+            attempt % 2 === 0
+              ? await signIn(testApp, { code: wrongCode, email }, ip)
+              : await postVerify(testApp, { code: wrongCode, email, ...withPassword(buildPassword()) }, { ip });
+          statuses.push(response.status);
+        }
+        const limited = await postVerify(
+          testApp,
+          { code: wrongCode, email, ...withPassword(buildPassword()) },
+          { ip: ipNumber(FIRST_SPREAD_IP + VERIFY_PER_EMAIL) },
+        );
+
+        expect(statuses).toEqual(Array.from({ length: VERIFY_PER_EMAIL }, () => HTTP_BAD_REQUEST));
+        expect(errorShape(limited)).toMatchObject({ code: 'RATE_LIMIT_EXCEEDED', status: HTTP_TOO_MANY_REQUESTS });
+        expect(await countRows('users')).toBe(0);
+      },
+      TEST_TIMEOUT_MS,
+    );
+
+    it(
+      'counts /sessions and /signups/verify from one IP against one per-IP limit across emails: the next verify gets 429',
+      async () => {
+        const testApp = createAuthTestApp({ pool: database.pool });
+        const ip = ipNumber(FIRST_SPREAD_IP);
+        const code = '0'.repeat(CODE_DIGITS);
+
+        const statuses: number[] = [];
+        for (let attempt = 0; attempt < VERIFY_PER_IP; attempt += 1) {
+          const email = buildEmail();
+          const response =
+            attempt % 2 === 0
+              ? await signIn(testApp, { code, email }, ip)
+              : await postVerify(testApp, { code, email, ...withPassword(buildPassword()) }, { ip });
+          statuses.push(response.status);
+        }
+        const limited = await postVerify(
+          testApp,
+          { code, email: buildEmail(), ...withPassword(buildPassword()) },
+          { ip },
+        );
+
+        expect(statuses).toEqual(Array.from({ length: VERIFY_PER_IP }, () => HTTP_BAD_REQUEST));
+        expect(errorShape(limited)).toMatchObject({ code: 'RATE_LIMIT_EXCEEDED', status: HTTP_TOO_MANY_REQUESTS });
+      },
+      TEST_TIMEOUT_MS,
+    );
+  });
+
   describe('POST /v1/auth/sessions after the createSession split', () => {
     it('still creates the user on first code sign-in and records the session as a code session', async () => {
       const testApp = createAuthTestApp({ pool: database.pool });
@@ -762,6 +829,32 @@ describe.skipIf(SKIP_DATABASE_TESTS)('sign-up routes', () => {
   });
 
   describe('logs', () => {
+    it(
+      'log exactly one warn line with event sign_in_code_unsent, holding no secret, when the email fails',
+      async () => {
+        const { lines, logger } = captureLogs();
+        const testApp = createAuthTestApp({
+          logger,
+          pool: database.pool,
+          sendSignInCode: () => Promise.reject(new Error('send failed')),
+        });
+        const password = buildPassword();
+
+        const response = await postSignUp(testApp, { email: buildEmail(), password });
+
+        expect(errorShape(response)).toMatchObject({
+          code: 'SERVER_EMAIL_UNAVAILABLE',
+          status: HTTP_SERVICE_UNAVAILABLE,
+        });
+        const unsent = lines.filter((line) => (JSON.parse(line) as { event?: string }).event === 'sign_in_code_unsent');
+        expect(unsent).toHaveLength(1);
+        expect((JSON.parse(unsent[0] ?? '{}') as { level?: number }).level).toBe(PINO_WARN_LEVEL);
+        expectNoSecret(unsent, password);
+        expectNoSecret(lines, password);
+      },
+      TEST_TIMEOUT_MS,
+    );
+
     it(
       'keep the password, its SHA-1, its prefix, and the stored hash out of every log line and response',
       async () => {
