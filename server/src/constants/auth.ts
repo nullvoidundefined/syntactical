@@ -27,8 +27,6 @@ const AUTH = {
       KEY_BYTES: 64,
       // log2 of the scrypt cost N: 2^17 = 131072.
       LOG_N: 17,
-      // Cap on the scrypt cost N * r * p (2^20) a stored string may claim; it keeps 128 * N * r within MAXMEM.
-      MAX_COST: 2 ** 20,
       // 256 MiB: scrypt needs about 128 * N * r bytes (128 MiB here), so this leaves headroom.
       MAXMEM: 268_435_456,
       P: 1,

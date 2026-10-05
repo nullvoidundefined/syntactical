@@ -43,9 +43,11 @@ const CURRENT_PARAMS: PasswordHashParams = {
 };
 
 // Upper bounds on what a stored string may ask for, so a corrupt row cannot demand unbounded work.
+// The cost cap keeps 128 * N * r within HASH.MAXMEM, so raising the parameters means raising both.
 const MAX_LOG_N = 20;
 const MAX_R = 32;
 const MAX_P = 16;
+const MAX_COST = 2 ** 20;
 const MIN_BYTES = 16;
 const MAX_BYTES = 128;
 // Salt and key lengths are whole 16-byte blocks, so a truncated or padded field fails closed.
@@ -73,6 +75,22 @@ function isInRange(value: number, max: number): boolean {
   return Number.isInteger(value) && value >= 1 && value <= max;
 }
 
+function isValidSize(bytes: number): boolean {
+  return bytes >= MIN_BYTES && bytes <= MAX_BYTES && bytes % BYTES_STEP === 0;
+}
+
+// The one rule for what a hash may be made with and a stored string may claim.
+function areParamsValid({ keyBytes, logN, p, r, saltBytes }: PasswordHashParams): boolean {
+  return (
+    isInRange(logN, MAX_LOG_N) &&
+    isInRange(r, MAX_R) &&
+    isInRange(p, MAX_P) &&
+    2 ** logN * r * p <= MAX_COST &&
+    isValidSize(saltBytes) &&
+    isValidSize(keyBytes)
+  );
+}
+
 function parseStored(stored: string): ParsedHash | undefined {
   const match = STORED_PATTERN.exec(stored);
   if (!match) {
@@ -83,13 +101,11 @@ function parseStored(stored: string): ParsedHash | undefined {
   const p = Number(match[3]);
   const salt = decodeBase64(match[4]!);
   const key = decodeBase64(match[5]!);
-  if (!isInRange(logN, MAX_LOG_N) || !isInRange(r, MAX_R) || !isInRange(p, MAX_P) || !salt || !key) {
+  if (!salt || !key) {
     return undefined;
   }
-  const sizesOk = [salt, key].every(
-    (bytes) => bytes.length >= MIN_BYTES && bytes.length <= MAX_BYTES && bytes.length % BYTES_STEP === 0,
-  );
-  return sizesOk ? { key, logN, p, r, salt } : undefined;
+  const valid = areParamsValid({ keyBytes: key.length, logN, p, r, saltBytes: salt.length });
+  return valid ? { key, logN, p, r, salt } : undefined;
 }
 
 async function deriveWith(
@@ -105,6 +121,9 @@ async function deriveWith(
 
 async function hashPassword(normalized: string, deps: HashDeps = {}): Promise<string> {
   const { deriveKey = defaultDeriveKey, params = CURRENT_PARAMS, randomBytes = cryptoRandomBytes } = deps;
+  if (!areParamsValid(params)) {
+    throw new Error('Password hash parameters are outside the accepted bounds');
+  }
   const salt = randomBytes(params.saltBytes);
   const key = await deriveWith(deriveKey, normalized, salt, params.keyBytes, params);
   return `$scrypt$v=1$ln=${params.logN},r=${params.r},p=${params.p}$${encodeBase64(salt)}$${encodeBase64(key)}`;
