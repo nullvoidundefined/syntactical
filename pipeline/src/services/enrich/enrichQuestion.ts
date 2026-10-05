@@ -1,6 +1,7 @@
 // Enriches one question: writes the rationales twice, keeps a rationale only when both
 // runs tag the same misconception for that choice and the judge finds it consistent with
 // the oracle's observed output. Output the schema rejects drops the whole question.
+// Provider errors propagate to enrichBank, which skips transient failures and stops on others.
 import type { Question } from '@syntactical/content-schema';
 
 import type { EnrichQuestionOutcome } from '../../types/EnrichQuestionOutcome.js';
