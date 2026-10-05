@@ -104,7 +104,7 @@ describe('verifySources', () => {
         expect(
             await verifySources(
                 [source(URL_A, 'Use prepared statements with parameterized queries', title)],
-                pages({}),
+                fetch,
             ),
         ).toEqual({ ok: false, reason: 'title-empty', url: URL_A });
     });

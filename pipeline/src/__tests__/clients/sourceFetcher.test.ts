@@ -249,7 +249,7 @@ describe('createSourceFetcher', () => {
     });
 
     it.each([['application/json'], ['image/png'], [undefined]])('refuses content type %j', async (contentType) => {
-        const headers = contentType === undefined ? {} : { 'content-type': contentType };
+        const headers: Record<string, string> = contentType === undefined ? {} : { 'content-type': contentType };
         const { fetchSource, states } = harness({ [PAGE]: { chunks: text('{}'), headers, status: 200 } });
         expect(await fetchSource(PAGE)).toEqual({ ok: false, reason: 'content-type' });
         expect(states[0]?.consumed).toBe(false);
