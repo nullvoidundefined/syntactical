@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 
 import { AUTH } from '../../constants/auth.js';
 import { ERROR_CODES } from '../../errors.js';
-import { checkPasswordPolicy } from '../../services/checkPasswordPolicy.js';
+import { checkPasswordPolicy, normalizePassword } from '../../services/checkPasswordPolicy.js';
 
 const LOWERCASE = 'abcdefghijklmnopqrstuvwxyz';
 const DIGITS = '0123456789';
@@ -186,5 +186,91 @@ describe('checkPasswordPolicy rejects malformed input', () => {
       code: 'INPUT_INVALID_BODY',
       isOk: false,
     });
+  });
+});
+
+// normalizePassword is the first step of every password route: NFKC, malformed-input
+// rejection, and the raw 512-unit cap, with no length rule of its own.
+describe('normalizePassword', () => {
+  const COMBINING_ACUTE = String.fromCodePoint(0x301);
+  const PRECOMPOSED_E_ACUTE = String.fromCodePoint(0xe9);
+  const FULLWIDTH_OFFSET = 0xfee0;
+
+  function toFullwidth(ascii: string): string {
+    return Array.from(ascii, (char) => String.fromCodePoint((char.codePointAt(0) ?? 0) + FULLWIDTH_OFFSET)).join('');
+  }
+
+  it('returns the NFKC form of a string containing U+FB01', () => {
+    const raw = buildAscii(6) + FI_LIGATURE + buildAscii(6);
+    const result = normalizePassword(raw);
+    expect(result).toEqual({ isOk: true, normalized: raw.normalize('NFKC') });
+    expect(result.isOk && result.normalized.includes(FI_LIGATURE)).toBe(false);
+  });
+
+  it('gives one normalized form for a decomposed and a precomposed e-acute', () => {
+    const head = buildAscii(8);
+    const decomposed = normalizePassword(`${head}e${COMBINING_ACUTE}`);
+    const precomposed = normalizePassword(`${head}${PRECOMPOSED_E_ACUTE}`);
+    expect(decomposed).toEqual({ isOk: true, normalized: `${head}${PRECOMPOSED_E_ACUTE}` });
+    expect(precomposed).toEqual(decomposed);
+  });
+
+  it('gives one normalized form for fullwidth and ASCII letters', () => {
+    const ascii = buildFrom(LOWERCASE + DIGITS, 12);
+    expect(normalizePassword(toFullwidth(ascii))).toEqual({ isOk: true, normalized: ascii });
+  });
+
+  it('is idempotent', () => {
+    const raw = `${buildAscii(4)}${FI_LIGATURE}e${COMBINING_ACUTE} ${buildEmoji(2)}`;
+    const first = normalizePassword(raw);
+    if (!first.isOk) throw new Error('expected the first pass to succeed');
+    expect(normalizePassword(first.normalized)).toEqual(first);
+  });
+
+  it('applies no length rule: a short string and a 300-code-point string are accepted', () => {
+    const short = buildAscii(3);
+    const long = buildAscii(300);
+    expect(normalizePassword(short)).toEqual({ isOk: true, normalized: short });
+    expect(normalizePassword(long)).toEqual({ isOk: true, normalized: long });
+  });
+
+  it('keeps leading, inner, and trailing spaces', () => {
+    const raw = ` ${buildAscii(5)} ${buildAscii(5)} `;
+    expect(normalizePassword(raw)).toEqual({ isOk: true, normalized: raw });
+  });
+
+  it('accepts exactly 512 UTF-16 units', () => {
+    const raw = buildAscii(RAW_MAX_UTF16_UNITS);
+    expect(normalizePassword(raw)).toEqual({ isOk: true, normalized: raw });
+  });
+
+  it('rejects 513 UTF-16 units as an invalid body', () => {
+    expect(normalizePassword(buildAscii(RAW_MAX_UTF16_UNITS + 1))).toEqual({
+      code: 'INPUT_INVALID_BODY',
+      isOk: false,
+    });
+  });
+
+  it('rejects 257 emoji (514 UTF-16 units, 257 code points) as an invalid body', () => {
+    const raw = buildEmoji(257);
+    expect(raw.length).toBe(514);
+    expect(normalizePassword(raw)).toEqual({ code: 'INPUT_INVALID_BODY', isOk: false });
+  });
+
+  it('caps the raw string before normalization: 512 ligatures that expand to 1024 units are accepted', () => {
+    const raw = FI_LIGATURE.repeat(RAW_MAX_UTF16_UNITS);
+    const normalized = raw.normalize('NFKC');
+    expect(normalized.length).toBe(RAW_MAX_UTF16_UNITS * 2);
+    expect(normalizePassword(raw)).toEqual({ isOk: true, normalized });
+  });
+
+  it.each([
+    ['a lone low surrogate', () => buildAscii(6) + LONE_LOW_SURROGATE + buildAscii(6)],
+    ['a lone high surrogate', () => buildAscii(6) + LONE_HIGH_SURROGATE + buildAscii(6)],
+    ['a leading lone low surrogate', () => LONE_LOW_SURROGATE + buildAscii(12)],
+    ['a trailing lone high surrogate', () => buildAscii(12) + LONE_HIGH_SURROGATE],
+    ['reversed surrogates', () => buildAscii(6) + LONE_LOW_SURROGATE + LONE_HIGH_SURROGATE + buildAscii(6)],
+  ])('rejects %s as an invalid body', (_label, build) => {
+    expect(normalizePassword(build())).toEqual({ code: 'INPUT_INVALID_BODY', isOk: false });
   });
 });
