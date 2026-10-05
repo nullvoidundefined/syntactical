@@ -13,6 +13,7 @@ import type { Question } from '@syntactical/content-schema';
 import { calculateAccuracy } from '../services/quiz/calculateAccuracy';
 import { isAnswerCorrect } from '../services/quiz/isAnswerCorrect';
 import { sampleQuestions } from '../services/quiz/sampleQuestions';
+import { shuffleChoices } from '../services/quiz/shuffleChoices';
 import { shuffleQuestions } from '../services/quiz/shuffleQuestions';
 
 type SubmittedAnswer = number | boolean | null;
@@ -25,9 +26,14 @@ export function useQuizEngine(bankQuestions: readonly Question[], options: Engin
   const { roundKind = 'bank', sampleSize, topic } = options;
   const [questions] = useState(() => {
     const inTopic = bankQuestions.filter((question) => topic === undefined || question.topic === topic);
-    if (roundKind === 'review') return inTopic;
-    if (sampleSize !== undefined && sampleSize < inTopic.length) return sampleQuestions(inTopic, sampleSize);
-    return shuffleQuestions(inTopic);
+    let selectedQuestions = inTopic;
+    if (roundKind !== 'review') {
+      selectedQuestions =
+        sampleSize !== undefined && sampleSize < inTopic.length
+          ? sampleQuestions(inTopic, sampleSize)
+          : shuffleQuestions(inTopic);
+    }
+    return selectedQuestions.map((question) => shuffleChoices(question));
   });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [submittedAnswer, setSubmittedAnswer] = useState<SubmittedAnswer>(null);

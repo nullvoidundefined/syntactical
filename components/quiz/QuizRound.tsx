@@ -182,8 +182,10 @@ export function QuizRound(props: QuizRoundProps) {
     if (isCorrect === null || !currentQuestion) return;
     const { id: questionId } = currentQuestion;
     const { difficulty: questionDifficulty, language: questionLanguage } = source;
+    const displayedChoiceIndex = toChoiceIndex(value);
     const answer = {
-      choiceIndex: toChoiceIndex(value),
+      choiceIndex:
+        currentQuestion.type === 'mc' ? currentQuestion.bankChoiceIndexes[displayedChoiceIndex] : displayedChoiceIndex,
       difficulty: questionDifficulty,
       language: questionLanguage,
       questionId,
