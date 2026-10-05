@@ -10,6 +10,7 @@ import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { gapFill } from '../../commands/gapFill.js';
+import { ProviderTransientError } from '../../types/ProviderTransientError.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 
 const HASH = '0123456789abcdef'.repeat(4);
@@ -209,6 +210,25 @@ describe('gapFill judged route', () => {
         expect(await listFiles(join(pipelineDir, 'disputed'))).toEqual([]);
         expect(await listFiles(join(pipelineDir, 'generated'))).toEqual([]);
         expect(await listFiles(join(contentRoot, 'disputed'))).toEqual([]);
+    });
+
+    it('drops one card when its Codex call times out and keeps filling', async () => {
+        await seed([buildEntry('backend-security', { kind: 'topic' })]);
+        const judge = readyJudge(0, 0);
+        let codexCalls = 0;
+        const codex = judge.codex;
+        judge.codex = {
+            async generate(request) {
+                codexCalls += 1;
+                if (codexCalls === 1) {
+                    throw new ProviderTransientError('model-timeout', 'codex timed out after 300000 ms');
+                }
+                return codex.generate(request);
+            },
+        } as ModelProvider;
+        const report = await run(judge);
+        expect(logs.some((line) => line.endsWith('dropped (model-timeout)'))).toBe(true);
+        expect(report.counts['gap-fill-generated']).toBeGreaterThan(0);
     });
 
     it('checks the judge once before filling a topic track', async () => {

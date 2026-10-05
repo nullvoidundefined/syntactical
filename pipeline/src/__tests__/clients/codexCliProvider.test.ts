@@ -97,14 +97,29 @@ describe('createCodexCliProvider', () => {
         );
     });
 
-    it.each(FAILURES)('turns %s into a plain error naming codex login', async (_name, make) => {
-        const error = await createCodexCliProvider(failing(make))
+    // A CLI that cannot start stops the run. A timeout or non-zero exit on one card stays transient,
+    // so gap-fill drops that card and moves on: login was already checked before the run, and
+    // gap-fill stops by itself after a streak of consecutive provider failures.
+    it('turns a command that cannot start into a plain error naming codex login', async () => {
+        const error = await createCodexCliProvider(
+            failing(() => new Error('codex could not start: spawn codex ENOENT')),
+        )
             .generate(REQUEST)
             .catch((caught: unknown) => caught);
         expect(error).toBeInstanceOf(Error);
         expect(error).not.toBeInstanceOf(ModelOutputInvalid);
         expect(error).not.toBeInstanceOf(ProviderTransientError);
         expect((error as Error).message).toMatch(/codex login/);
+    });
+
+    it.each([
+        ['a non-zero exit', () => new ProviderTransientError('model-error', 'codex exited with status 1')],
+        ['a timeout', () => new ProviderTransientError('model-timeout', 'codex timed out after 300000 ms')],
+    ] as [string, () => Error][])('keeps %s transient so one card is dropped, not the run', async (_name, make) => {
+        const error = await createCodexCliProvider(failing(make))
+            .generate(REQUEST)
+            .catch((caught: unknown) => caught);
+        expect(error).toBeInstanceOf(ProviderTransientError);
     });
 });
 
