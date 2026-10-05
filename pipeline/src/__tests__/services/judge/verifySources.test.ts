@@ -129,6 +129,59 @@ describe('verifySources', () => {
     });
 });
 
+describe('site chrome cannot back a quote', () => {
+    const quote = 'Use prepared statements with parameterized queries';
+
+    it.each([
+        ['nav', `<nav>${quote}</nav>`],
+        ['header', `<header>${quote}</header>`],
+        ['footer', `<footer>${quote}</footer>`],
+        ['aside', `<aside>${quote}</aside>`],
+        ['role navigation', `<div role="region navigation">${quote}</div>`],
+        ['role banner', `<div role="banner region">${quote}</div>`],
+        ['role contentinfo', `<div role="region contentinfo region">${quote}</div>`],
+    ])('rejects a quote found only in %s', async (_name, body) => {
+        const fetch = pages({ [URL_A]: `${body}<p>Other page content.</p>` });
+        expect(await verifySources([source(URL_A, quote)], fetch)).toEqual({
+            ok: false,
+            reason: 'quote-not-found',
+            url: URL_A,
+        });
+    });
+
+    it.each([
+        ['main element', '<main id="content">Other page content.</main>'],
+        ['main role', '<div id="content" role="region main">Other page content.</div>'],
+    ])('rejects a skip-link quote outside the %s', async (_name, main) => {
+        const skipQuote = 'Skip to main content of this page';
+        const fetch = pages({
+            [URL_A]: `<a href="#content">${skipQuote}</a><header>Site title</header>${main}`,
+        });
+        expect(await verifySources([source(URL_A, skipQuote)], fetch)).toEqual({
+            ok: false,
+            reason: 'quote-not-found',
+            url: URL_A,
+        });
+    });
+
+    it('accepts a quote in main content on a page with site chrome', async () => {
+        const fetch = pages({
+            [URL_A]: [
+                '<a href="#content">Skip to main content of this page</a>',
+                '<header>Site title</header><nav>Site navigation</nav>',
+                `<main id="content"><p>${quote}</p></main>`,
+                '<aside>Related pages</aside><footer>Site footer</footer>',
+            ].join(''),
+        });
+        expect(await verifySources([source(URL_A, quote)], fetch)).toEqual({ ok: true });
+    });
+
+    it('accepts a quote on a simple page without main or chrome landmarks', async () => {
+        const fetch = pages({ [URL_A]: `<div><p>${quote}</p></div>` });
+        expect(await verifySources([source(URL_A, quote)], fetch)).toEqual({ ok: true });
+    });
+});
+
 describe('visible text and quote boundaries', () => {
     const quote = 'Use prepared statements with parameterized queries';
     it.each([

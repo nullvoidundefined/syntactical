@@ -110,4 +110,24 @@ describe('extractPageText follows the HTML parsing rules for hidden content', ()
         expect(visible(body)).toBe('');
         expect(Date.now() - startedAt).toBeLessThan(1000);
     });
+
+    it('refuses deeply nested self-closing non-void elements, quickly', () => {
+        const depth = 60_000;
+        const body = `${'<div/>'.repeat(depth)}${Q}${'</div>'.repeat(depth)}`;
+        const startedAt = Date.now();
+        expect(visible(body)).toBe('');
+        expect(Date.now() - startedAt).toBeLessThan(1000);
+    });
+
+    it('refuses deep nesting with a less-than sign in a quoted attribute, quickly', () => {
+        const body = `${'<div title="<">'.repeat(60_000)}${Q}`;
+        const startedAt = Date.now();
+        expect(visible(body)).toBe('');
+        expect(Date.now() - startedAt).toBeLessThan(1000);
+    });
+
+    it('keeps a quote after many self-closing void elements', () => {
+        const body = `${'<br/>'.repeat(60_000)}${Q}`;
+        expect(visible(body)).toContain(normalizeQuoteText(Q));
+    });
 });
