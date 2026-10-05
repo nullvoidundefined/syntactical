@@ -3,7 +3,7 @@
 // CDATA.
 import { describe, expect, it } from 'vitest';
 
-import { extractPageText } from '../../../services/judge/extractPageText.js';
+import { MAX_NESTING_DEPTH, extractPageText } from '../../../services/judge/extractPageText.js';
 import { normalizeQuoteText } from '../../../services/judge/normalizeQuoteText.js';
 
 const Q = 'Use prepared statements with parameterized queries';
@@ -67,11 +67,47 @@ describe('extractPageText keeps what a reader can see', () => {
         expect(extractPageText('<p>a &mdash; b</p>', HTML)).toContain(`a ${String.fromCodePoint(0x2014)} b`);
     });
 
-    it('reads CDATA text in an XHTML page', () => {
-        expect(visible(`<p><![CDATA[${Q}]]></p>`, 'application/xhtml+xml')).toContain(normalizeQuoteText(Q));
+    it.each([HTML, 'application/xhtml+xml'])(
+        'drops CDATA text, which an HTML parse treats as a comment (%s)',
+        (type) => {
+            expect(visible(`<p><![CDATA[${Q}]]></p><p>after</p>`, type)).not.toContain(normalizeQuoteText(Q));
+        },
+    );
+});
+
+// Round 2 of the same review: parser edge cases a hand-written scanner missed. parse5 applies the
+// HTML tokenizer rules, so each stays hidden.
+describe('extractPageText follows the HTML parsing rules for hidden content', () => {
+    it.each([
+        ['a self-closing hidden div', `<div hidden/>${Q}</div><p>after</p>`],
+        [
+            'a self-closing template inside a template',
+            `<template><template/>inner</template>${Q}</template><p>after</p>`,
+        ],
+        ['hidden after a slash', `<p/hidden>${Q}</p><p>after</p>`],
+        ['hidden right after a quoted value', `<p title="x"hidden>${Q}</p><p>after</p>`],
+        ['a script closer followed by a non-breaking space', `<script>x = "</script\u00a0>${Q}";</script><p>after</p>`],
+        ['an end tag with a longer name', `<div hidden></div.foo>${Q}</div><p>after</p>`],
+        ['a textarea inside a template', `<template><textarea></template>${Q}</textarea></template><p>after</p>`],
+    ])('keeps the quote hidden: %s', (_name, body) => {
+        expect(visible(body)).not.toContain(normalizeQuoteText(Q));
+        expect(visible(body)).toContain('after');
     });
 
-    it('drops CDATA text in an HTML page, where it is a comment', () => {
-        expect(visible(`<p><![CDATA[${Q}]]></p>`)).not.toContain(normalizeQuoteText(Q));
+    it('keeps visible text whose attribute value is the word hidden', () => {
+        expect(visible(`<p title= hidden>${Q}</p>`)).toContain(normalizeQuoteText(Q));
+    });
+
+    it('reads a quote nested to the depth limit', () => {
+        const body = `${'<div>'.repeat(MAX_NESTING_DEPTH)}${Q}${'</div>'.repeat(MAX_NESTING_DEPTH)}`;
+        expect(visible(body)).toContain(normalizeQuoteText(Q));
+    });
+
+    it('treats a page nested past the depth limit as having no visible text, quickly', () => {
+        const depth = 200_000;
+        const body = `${'<div>'.repeat(depth)}${Q}${'</div>'.repeat(depth)}`;
+        const startedAt = Date.now();
+        expect(visible(body)).toBe('');
+        expect(Date.now() - startedAt).toBeLessThan(1000);
     });
 });
