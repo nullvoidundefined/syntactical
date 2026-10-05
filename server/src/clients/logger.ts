@@ -2,7 +2,18 @@ import { pino } from 'pino';
 import type { Logger } from 'pino';
 
 // Keys whose values never reach a log line, at the top level or one level down.
-const SENSITIVE_KEYS = ['authorization', 'code', 'cookie', 'email', 'otp', 'password', 'secret', 'token'];
+const SENSITIVE_KEYS = [
+  'authorization',
+  'code',
+  'cookie',
+  'currentPassword',
+  'email',
+  'newPassword',
+  'otp',
+  'password',
+  'secret',
+  'token',
+];
 
 const REDACT_PATHS = [
   ...SENSITIVE_KEYS.flatMap((key) => [key, `*.${key}`]),

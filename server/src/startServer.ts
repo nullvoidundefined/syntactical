@@ -12,10 +12,14 @@ import { createDatabasePool } from './clients/createDatabasePool.js';
 import { createEmailClient } from './clients/emailClient.js';
 import { createLogger } from './clients/logger.js';
 import type { EmailClient } from './clients/emailTypes.js';
+import { createHttpPasswordBreachClient } from './clients/passwordBreachClient.js';
 import type { PasswordBreachClient } from './clients/passwordBreachClient.js';
 import { createStubEmailClient } from './clients/stubEmailClient.js';
 import { loadEnv } from './config/env.js';
 import { isCookieSecure } from './config/isCookieSecure.js';
+import { AUTH } from './constants/auth.js';
+import { createDummyPasswordHash } from './services/passwordHash.js';
+import { createPasswordHashSlots } from './services/passwordHashSlots.js';
 import { readPaidBanks } from './services/readServerBank.js';
 import { readServerManifest } from './services/readServerManifest.js';
 
@@ -91,6 +95,7 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
     logger.warn({ stubbed }, 'running with stubbed integrations');
   }
 
+  const dummyPasswordHash = await createDummyPasswordHash();
   const pool = createDatabasePool(DATABASE_URL, NODE_ENV, logger);
   const app = createApp({
     allowedOrigins: ALLOWED_ORIGINS.split(',')
@@ -98,12 +103,18 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
       .filter(Boolean),
     auth: {
       database: pool,
+      dummyPasswordHash,
       emailClient:
         injectedEmailClient ??
         (RESEND_API_KEY === undefined
           ? createStubEmailClient(logger)
           : createEmailClient({ from: EMAIL_FROM, logger, resend: new Resend(RESEND_API_KEY) })),
       isCookieSecure: isCookieSecure(NODE_ENV),
+      passwordBreachClient: options.passwordBreachClient ?? createHttpPasswordBreachClient(),
+      passwordHashSlots: createPasswordHashSlots({
+        concurrency: env.PASSWORD_HASH_CONCURRENCY,
+        queueTimeoutMs: AUTH.PASSWORD.HASH_QUEUE_TIMEOUT_MS,
+      }),
       rateLimitKeySecret: env.RATE_LIMIT_KEY_SECRET,
     },
     banks: { database: pool, paidBanks },

@@ -3,6 +3,7 @@ interface Profile {
   dayStreak: number;
   email: string;
   entitlements: string[];
+  hasPassword: boolean;
   timezone: string | null;
   xpToday: number;
   xpTotal: number;

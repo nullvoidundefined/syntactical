@@ -3,6 +3,7 @@
 // one-time codes and email-keyed rate-limit counters go; entitlements and purchase events stay
 // with user_id null. Afterwards no public table holds the email or the user id. The route needs
 // a session and, for a cookie caller, the CSRF header; it logs one line with the request id only.
+// Task 7.6 (B-84): the password hash goes with the user row, and nothing else keeps it.
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 
 import request from 'supertest';
@@ -10,6 +11,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, inject, it } from 'v
 
 import { createLogger } from '../../clients/logger.js';
 import { AUTH } from '../../constants/auth.js';
+import { hashPassword } from '../../services/passwordHash.js';
 import { rateLimitKey } from '../../services/rateLimitKey.js';
 import { createAuthTestApp } from '../integration/createAuthTestApp.js';
 import { createMigratedDatabase } from '../integration/createMigratedDatabase.js';
@@ -20,8 +22,14 @@ const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.en
 const DELETE_ME_ROUTE = '/v1/me';
 const CODES_ROUTE = '/v1/auth/codes';
 const SESSIONS_ROUTE = '/v1/auth/sessions';
+const PASSWORD_SIGN_IN_ROUTE = '/v1/auth/sessions/password';
+const SIGNUPS_ROUTE = '/v1/auth/signups';
+const SIGNUPS_VERIFY_ROUTE = '/v1/auth/signups/verify';
 const COOKIE_NAME = AUTH.SESSION.COOKIE_NAME;
 const HTTP_CREATED = 201;
+const HTTP_ACCEPTED = 202;
+const HTTP_BAD_REQUEST = 400;
+const PASSWORD_BYTES = 12;
 const HTTP_NO_CONTENT = 204;
 const HTTP_UNAUTHORIZED = 401;
 const HTTP_FORBIDDEN = 403;
@@ -67,7 +75,12 @@ async function insertUser(email: string): Promise<string> {
 async function insertCode(email: string, now: Date): Promise<void> {
   await database.pool.query(
     'INSERT INTO one_time_codes (email, code_hash, created_at, expires_at) VALUES ($1, $2, $3, $4)',
-    [email, createHash('sha256').update(randomBytes(CODE_SEED_BYTES)).digest(), now, new Date(now.getTime() + AUTH.CODE.TTL_MS)],
+    [
+      email,
+      createHash('sha256').update(randomBytes(CODE_SEED_BYTES)).digest(),
+      now,
+      new Date(now.getTime() + AUTH.CODE.TTL_MS),
+    ],
   );
 }
 
@@ -156,6 +169,38 @@ async function tablesHolding(needle: string): Promise<string[]> {
   return holding;
 }
 
+// Every text-like and bytea column of every public table that holds `needle` (bytea columns are
+// searched for its UTF-8 bytes), as `table.column`.
+async function columnsHolding(needle: string): Promise<string[]> {
+  const { rows: columns } = await database.pool.query<{ column_name: string; data_type: string; table_name: string }>(
+    `SELECT c.table_name, c.column_name, c.data_type FROM information_schema.columns c
+     JOIN information_schema.tables t ON t.table_schema = c.table_schema AND t.table_name = c.table_name
+     WHERE c.table_schema = 'public' AND t.table_type = 'BASE TABLE'
+       AND c.data_type IN ('text', 'character varying', 'character', 'bytea', 'json', 'jsonb')
+     ORDER BY c.table_name, c.column_name`,
+  );
+  const holding: string[] = [];
+  for (const { column_name: columnName, data_type: dataType, table_name: tableName } of columns) {
+    const isBytes = dataType === 'bytea';
+    const condition = isBytes ? `position($1::bytea in "${columnName}") > 0` : `strpos("${columnName}"::text, $1) > 0`;
+    const count = await countWhere(`SELECT count(*) FROM public."${tableName}" WHERE ${condition}`, [
+      isBytes ? Buffer.from(needle, 'utf8') : needle,
+    ]);
+    if (count > 0) {
+      holding.push(`${tableName}.${columnName}`);
+    }
+  }
+  return holding;
+}
+
+function withPassword(value: string): Record<'password', string> {
+  return { password: value };
+}
+
+function postPasswordSignIn({ app }: TestApp, body: object) {
+  return request(app).post(PASSWORD_SIGN_IN_ROUTE).set('X-Requested-With', 'XMLHttpRequest').send(body);
+}
+
 function deleteWithCookie({ app }: TestApp, sessionToken: string) {
   return request(app)
     .delete(DELETE_ME_ROUTE)
@@ -239,6 +284,58 @@ describe.skipIf(SKIP_DATABASE_TESTS)('DELETE /v1/me', () => {
     expect(await countWhere('SELECT count(*) FROM answer_events WHERE user_id = $1', [rows[0].id])).toBe(0);
   });
 
+  it(
+    'leaves no text or bytea column holding the former password hash; the old password gets the B-77 400 and a new sign-up is a new empty user (B-84)',
+    async () => {
+      const testApp = createAuthTestApp({ pool: database.pool });
+      const { email, sessionToken, userId } = await seedAccount(testApp);
+      const oldValue = randomBytes(PASSWORD_BYTES).toString('hex');
+      const storedHash = await hashPassword(oldValue);
+      await database.pool.query('UPDATE users SET password_hash = $2, password_updated_at = now() WHERE id = $1', [
+        userId,
+        storedHash,
+      ]);
+      const holdingBefore = await columnsHolding(storedHash);
+
+      const response = await deleteWithBearer(testApp, sessionToken);
+      const holdingAfter = await columnsHolding(storedHash);
+      const oldSignIn = await postPasswordSignIn(testApp, { email, ...withPassword(oldValue) });
+      const unknownSignIn = await postPasswordSignIn(testApp, {
+        email: buildEmails().email,
+        ...withPassword(randomBytes(PASSWORD_BYTES).toString('hex')),
+      });
+      const newValue = randomBytes(PASSWORD_BYTES).toString('hex');
+      const started = await request(testApp.app)
+        .post(SIGNUPS_ROUTE)
+        .send({ email, ...withPassword(newValue) });
+      const { code } = testApp.sentCodes[testApp.sentCodes.length - 1] ?? { code: '' };
+      const verified = await request(testApp.app)
+        .post(SIGNUPS_VERIFY_ROUTE)
+        .set('X-Requested-With', 'XMLHttpRequest')
+        .set('X-Client', 'native')
+        .send({ code, email, ...withPassword(newValue) });
+
+      expect(holdingBefore).toEqual(['users.password_hash']);
+      expect(response.status).toBe(HTTP_NO_CONTENT);
+      expect(holdingAfter).toEqual([]);
+      expect(oldSignIn.status).toBe(HTTP_BAD_REQUEST);
+      expect(oldSignIn.body.error.code).toBe('AUTH_INVALID_CREDENTIALS');
+      expect({ ...oldSignIn.body.error, requestId: undefined }).toEqual({
+        ...unknownSignIn.body.error,
+        requestId: undefined,
+      });
+      expect(started.status).toBe(HTTP_ACCEPTED);
+      expect(verified.status).toBe(HTTP_CREATED);
+      const data = verified.body.data as Record<string, unknown>;
+      const newUserId = String(data.userId);
+      expect(data.isPasswordApplied).toBe(true);
+      expect(newUserId).not.toBe(userId);
+      expect(await countWhere('SELECT count(*) FROM answer_events WHERE user_id = $1', [newUserId])).toBe(0);
+      expect(await countWhere('SELECT count(*) FROM entitlements WHERE user_id = $1', [newUserId])).toBe(0);
+    },
+    BUSY_TEST_TIMEOUT_MS,
+  );
+
   it('answers 401 without a session', async () => {
     const testApp = createAuthTestApp({ pool: database.pool });
     await seedAccount(testApp);
@@ -253,9 +350,7 @@ describe.skipIf(SKIP_DATABASE_TESTS)('DELETE /v1/me', () => {
     const testApp = createAuthTestApp({ pool: database.pool });
     const { sessionToken, userId } = await seedAccount(testApp);
 
-    const response = await request(testApp.app)
-      .delete(DELETE_ME_ROUTE)
-      .set('Cookie', `${COOKIE_NAME}=${sessionToken}`);
+    const response = await request(testApp.app).delete(DELETE_ME_ROUTE).set('Cookie', `${COOKIE_NAME}=${sessionToken}`);
 
     expect(response.status).toBe(HTTP_FORBIDDEN);
     expect(await countWhere('SELECT count(*) FROM users WHERE id = $1', [userId])).toBe(1);
@@ -328,26 +423,30 @@ describe.skipIf(SKIP_DATABASE_TESTS)('DELETE /v1/me', () => {
     }
   });
 
-  it('answers 503 SERVER_BUSY at the lock timeout while another connection holds the user row, deleting nothing, then 204 after release', async () => {
-    const testApp = createAuthTestApp({ pool: database.pool });
-    const { sessionToken, userId } = await seedAccount(testApp);
-    const holder = await database.pool.connect();
-    let busy: request.Response;
-    try {
-      await holder.query('BEGIN');
-      await holder.query('SELECT id FROM users WHERE id = $1 FOR UPDATE', [userId]);
-      busy = await deleteWithBearer(testApp, sessionToken);
-    } finally {
-      await holder.query('ROLLBACK');
-      holder.release();
-    }
+  it(
+    'answers 503 SERVER_BUSY at the lock timeout while another connection holds the user row, deleting nothing, then 204 after release',
+    async () => {
+      const testApp = createAuthTestApp({ pool: database.pool });
+      const { sessionToken, userId } = await seedAccount(testApp);
+      const holder = await database.pool.connect();
+      let busy: request.Response;
+      try {
+        await holder.query('BEGIN');
+        await holder.query('SELECT id FROM users WHERE id = $1 FOR UPDATE', [userId]);
+        busy = await deleteWithBearer(testApp, sessionToken);
+      } finally {
+        await holder.query('ROLLBACK');
+        holder.release();
+      }
 
-    expect(busy.status).toBe(HTTP_SERVICE_UNAVAILABLE);
-    expect(busy.body.error.code).toBe('SERVER_BUSY');
-    expect(await countWhere('SELECT count(*) FROM users WHERE id = $1', [userId])).toBe(1);
+      expect(busy.status).toBe(HTTP_SERVICE_UNAVAILABLE);
+      expect(busy.body.error.code).toBe('SERVER_BUSY');
+      expect(await countWhere('SELECT count(*) FROM users WHERE id = $1', [userId])).toBe(1);
 
-    const retry = await deleteWithBearer(testApp, sessionToken);
-    expect(retry.status).toBe(HTTP_NO_CONTENT);
-    expect(await countWhere('SELECT count(*) FROM users WHERE id = $1', [userId])).toBe(0);
-  }, BUSY_TEST_TIMEOUT_MS);
+      const retry = await deleteWithBearer(testApp, sessionToken);
+      expect(retry.status).toBe(HTTP_NO_CONTENT);
+      expect(await countWhere('SELECT count(*) FROM users WHERE id = $1', [userId])).toBe(0);
+    },
+    BUSY_TEST_TIMEOUT_MS,
+  );
 });

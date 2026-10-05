@@ -74,6 +74,18 @@ describe('createHttpPasswordBreachClient', () => {
     expect(passed?.aborted).toBe(true);
   });
 
+  // Task 7.4 (PR #90 review): a redirect could carry the prefix to another host, so fetch must
+  // treat any redirect as an error rather than follow it.
+  it("calls fetch with redirect: 'error'", async () => {
+    const { fetchImpl, requests } = createRecordingFetch(() => new Response('', { status: 200 }));
+    const client = createHttpPasswordBreachClient({ fetch: fetchImpl });
+
+    await client.fetchRange(buildPrefix(), new AbortController().signal);
+
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.init?.redirect).toBe('error');
+  });
+
   it.each([[500], [404], [429], [301]])('rejects on status %i', async (status) => {
     const { fetchImpl } = createRecordingFetch(() => new Response('', { status }));
     const client = createHttpPasswordBreachClient({ fetch: fetchImpl });

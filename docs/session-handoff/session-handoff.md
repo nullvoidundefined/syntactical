@@ -1,23 +1,22 @@
-# Session Handoff: topic tracks through slice 3, judge quote check hardened
+# Session Handoff: jsdom runner shipped, password sign-in through Task 7.3
 
 ## Last commit
 
-- `chore/refresh-session-handoff`: rewrites this handoff, which had not changed since IAN-564 (2026-10-02, #5). Before it, `main` was at `6c65354` (#86, which parses cited pages in a worker with a hard timeout).
+- `chore/handoff-through-92`: refreshes this handoff through #92. Before it, `main` was at `b97f221` (#92, the jsdom runner review follow-ups).
 
 ## Production state
 
-- Web: https://syntactical.dev/ (GitHub Pages custom domain since #76). The deploy.yml runs succeeded for `6c65354`, `0a6a4c4`, and `9af5085`.
+- Web: https://syntactical.dev/ (GitHub Pages custom domain since #76). The deploy.yml runs succeeded for `b97f221`, `7da1e47`, and `dcd0a4d`; the runs for `e1faeca` and `3c9a311` were cancelled by the next push.
 - API on Railway (`server/DEPLOY.md`):
-  - Staging is https://api-staging-accd.up.railway.app. It deploys on pushes to `main` that touch `server/`, `packages/`, `content/`, or `package-lock.json`; the server-deploy.yml run for `3189f57` succeeded.
+  - Staging is https://api-staging-accd.up.railway.app. It deploys on pushes to `main` that touch `server/`, `packages/`, `content/`, or `package-lock.json`; the server-deploy.yml runs for `dcd0a4d`, `e1faeca`, and `3a85705` (the password migration and services) succeeded.
   - Production is https://api-production-9973.up.railway.app. It deploys only by manual run, and no production run has been confirmed since #76.
 - When `server/DEPLOY.md` and `docs/launch-placeholders.md` were written, the `api.syntactical.dev` and `staging-api.syntactical.dev` DNS records did not exist.
 - `content/manifest.json` still lists only Python, Postgres, and JavaScript (9 banks). Paid banks live in the private syntactical-content repo, pinned by `content/paid-content.ref` (#54, #62).
 
 ## Session metrics
 
-- This session merged #74 (slice 3a), #81 (parser-stack depth guard and site-chrome exclusion), and #86 (worker parse), and opened this docs PR.
-- #81 needed 2 general-review rounds and 3 security rounds. Each security round found another parse5 cost path, so the owner chose a worker with a hard timeout (#86). #86 needed 1 round of each.
-- Since the last handoff, 78 commits landed (PRs #6 to #86) across several parallel sessions.
+- Since the #87 handoff, 6 PRs landed across parallel sessions: #85 (password sign-in spec and plan), #88, #90, and #89 (Tasks 7.1 to 7.3), #91 (slice 5, the jsdom runner), and #92 (its review follow-ups).
+- #92 fixed the three LOWs from the #91 review in one round: a throwing `window.close()` no longer turns a printed value into RunnerFailure, pending `window.setTimeout` output being dropped is documented and pinned, and a DOM-heavy oracle is tested to stop as `resource-limit`.
 
 ## What shipped
 
@@ -38,15 +37,19 @@
   - Oracle runners for Python, Postgres, JS, Ruby, Rails, and Go (#14, #63, #64).
   - Gap-fill, enrich, and review (#24, #25, #27, #70, #77).
   - Topic tracks, slices 1 to 3: #71, #72, #74 (3a), and #79 (3b).
+  - Topic tracks, slice 5: the jsdom runner with `jsdom` 26.1.0, `dompurify` 3.2.6, and an 18-entry golden set (#91, #92). `TRACK_RUNNERS['frontend-security']` is `['jsdom', 'node']`.
   - Hardening: #73 (harness PID 1), #81, and #86.
+- Password sign-in (`docs/superpowers/plans/2026-10-02-syntactical-v2.md`, Tasks 7.1 to 7.10, spec in #85):
+  - 7.1: password and session auth-method columns (#88).
+  - 7.2: scrypt hashing and hash slots (#89).
+  - 7.3: password rules and breach check (#90).
 - Tests: a Playwright e2e suite against the real API and Postgres (#60, IAN-601), and A/B cards for every bank (#61).
 
 ## Pending
 
-1. **Topic tracks, slices 4 to 6** (`docs/superpowers/plans/2026-10-04-topic-tracks.md`):
+1. **Topic tracks, slices 4 and 6** (`docs/superpowers/plans/2026-10-04-topic-tracks.md`; slice 5 shipped in #91):
    - Slice 4: Backend Security content.
-   - Slice 5: the jsdom runner and golden set.
-   - Slice 6: Frontend Security content.
+   - Slice 6: Frontend Security content. Its oracles run on the jsdom runner: they must print synchronously, because `window.setTimeout` callbacks still pending at the end are dropped and `requestAnimationFrame` is not defined (#92, also stated in `generateSecurityQuestion.md`).
 
    Before running a slice, decide the pending disputed cards: they do not count toward the gap-fill quota (#79 LOW).
 
@@ -57,7 +60,10 @@
 3. **Owner review:**
    - 9 readability A/B cards await human approval (#61). An agent must not set `isHumanReviewed`.
    - The privacy and deletion pages are drafts with `[OWNER NAME]`, `[CONTACT EMAIL]`, and `[EFFECTIVE DATE]` placeholders (#59).
-4. **Open PR:** #85, the spec and plan for email and password sign-in (Tasks 7.1 to 7.10). Its review is pending, the owner must confirm spec decisions 31 to 37, and CI on its head `eb194b5` was passing or pending when this was written (an earlier run on `dedf140` failed).
+4. **Password sign-in, Tasks 7.4 to 7.10:**
+   - Open PR: #93, Task 7.4 (sign-up with email and password, verified by a one-time code), head `08efbb9`, `**Risk:** high`. It touches auth, so the owner reads and merges it. When this was written, all checks passed except `oracle-runners`, which was pending.
+   - Not started: 7.5 (password sign-in), 7.6 (set and change a password, `hasPassword` on `/me`), 7.7 to 7.9 (app screens and settings form), 7.10 (privacy page, store answers, lexicon).
+   - The owner confirmed spec decisions 31 to 37 on 2026-10-05, keeping scrypt N = 2^17. The Railway API service allows 24 GB in staging and production (Pro plan, no override), above decision 35's 512 MB minimum.
 5. **Carried over:**
    - IAN-596: Lighthouse, VoiceOver, and reduced motion on the live site.
    - IAN-595: EAS device builds. The prep shipped in #57; no builds have run.
@@ -74,4 +80,7 @@
   - After a security review, any further commit needs another security round. Waive LOWs under the standing waiver instead of fixing them late.
   - Railway rejects BuildKit secret mounts, `railway up` needs `--path-as-root`, and service settings live in Railway, not `railway.json` (#58, #65, #67).
   - Docker-backed tests and e2e need `DOCKER_CONFIG=/tmp/dcfg`. A stale Metro cache in `$TMPDIR` can bake production URLs into local e2e runs (#60, #76).
+  - The remote branch `feat/jsdom-runner` was not deleted when #91 merged.
+  - A guard blocks force pushes. After rebasing a pushed branch, push it under a new name and delete the old remote branch (#92 did this).
+  - `pr-reviewer` must run in the background (R-708), with `~/.claude/enforce/agent-watchdog.sh` on its output file.
   - The judge's page parse runs in a `.ts` worker loaded directly by Node, so the pipeline needs Node 22.18 or later. On an older Node, every quote check fails closed (#86).
