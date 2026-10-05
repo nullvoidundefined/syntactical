@@ -39,7 +39,6 @@ test.describe('a paid bank', () => {
     await expect(page.getByRole('button', { name: 'Medium, locked' })).toBeHidden();
     await page.getByRole('button', { name: /^Medium/ }).click();
     await expect(page.getByText('Step 3 / Select topic')).toBeVisible();
-    await page.keyboard.press('1');
     await pickAllQuestions(page);
     await expect(page.getByRole('progressbar', { name: /^Question 1 of 5$/ })).toBeVisible();
     await answerQuestions(page, PAID_BANK_SIZE);

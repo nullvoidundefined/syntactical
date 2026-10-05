@@ -50,27 +50,23 @@ async function signIn(page: Page, email: string): Promise<void> {
   await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
 }
 
-// Opens a bank's round from the menu with keys only: language 1, difficulty by position, whole bank.
+// Opens a bank's round from the menu: language 1 and difficulty by key, then all questions.
 async function openRoundByKeys(page: Page, difficultyKey: string): Promise<void> {
   await page.goto('./');
   await expect(page.getByRole('heading', { level: 1, name: /syntactical/ })).toBeVisible();
   await page.keyboard.press('1');
   await expect(page.getByText('Step 2 / Select difficulty')).toBeVisible();
   await page.keyboard.press(difficultyKey);
-  await expect(page.getByText('Step 3 / Select topic')).toBeVisible();
-  await page.keyboard.press('1');
   await pickAllQuestions(page);
 }
 
-// After the whole bank or a topic is chosen, plays every question: when the length step shows
-// (the manifest has no count for the pool, or the pool is over 20), picks "All"; when it is
-// skipped the round is already open. Returns once the round's first question shows.
+// On the topic step, plays every question of the whole bank: the "All questions" card (named "All
+// 100 questions" when the manifest gives a count) is the only length card for a small bank and the
+// last of the length cards otherwise. Returns once the round's first question shows.
 async function pickAllQuestions(page: Page): Promise<void> {
-  const lengthStep = page.getByText('Step 4 / Select length');
-  const round = page.getByRole('progressbar', { name: /^Question 1 of/ });
-  await expect(lengthStep.or(round)).toBeVisible();
-  if (await lengthStep.isVisible()) await page.getByRole('button', { name: /^All/ }).click();
-  await expect(round).toBeVisible();
+  await expect(page.getByText('Step 3 / Select topic')).toBeVisible();
+  await page.getByRole('button', { name: /^All (\d+ )?questions/ }).click();
+  await expect(page.getByRole('progressbar', { name: /^Question 1 of/ })).toBeVisible();
 }
 
 // Answers the open question with the first option (a multiple-choice or A/B option, or True) and moves on, `count` times. Returns

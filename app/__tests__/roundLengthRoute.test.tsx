@@ -65,26 +65,30 @@ const routes = {
 };
 
 describe('the length step in the menu flow', () => {
-  it('goes from the whole bank (100 questions) to the length step, then plays 20 of them', async () => {
+  it('plays 20 of the whole bank (100 questions) straight from the topic step', async () => {
     await renderRouter(routes, { initialUrl: '/python/easy' });
-    await fireEvent.press(await screen.findByRole('button', { name: /Whole bank/ }));
-    expect(await screen.findByRole('heading', { name: /Select length/ })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /50 questions/ })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /All 100 questions/ })).toBeTruthy();
-    await fireEvent.press(screen.getByRole('button', { name: /20 questions/ }));
+    expect(await screen.findByRole('button', { name: /^50 questions/ })).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: /^20 questions/ }));
     expect(await screen.findByText('Q1 / 20')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: /Select length/ })).toBeNull();
+  });
+
+  it('plays 50 of the whole bank when 50 is chosen', async () => {
+    await renderRouter(routes, { initialUrl: '/python/easy' });
+    await fireEvent.press(await screen.findByRole('button', { name: /^50 questions/ }));
+    expect(await screen.findByText('Q1 / 50')).toBeTruthy();
   });
 
   it('plays all 100 when All is chosen', async () => {
     await renderRouter(routes, { initialUrl: '/python/easy' });
-    await fireEvent.press(await screen.findByRole('button', { name: /Whole bank/ }));
-    await fireEvent.press(await screen.findByRole('button', { name: /All 100 questions/ }));
+    await fireEvent.press(await screen.findByRole('button', { name: /^All 100 questions/ }));
     expect(await screen.findByText('Q1 / 100')).toBeTruthy();
   });
 
   it('keeps the chosen topic with the count: a topic of 30 offers 20 and all, and plays 20 of the topic', async () => {
     await renderRouter(routes, { initialUrl: '/python/easy' });
     await fireEvent.press(await screen.findByRole('button', { name: /Strings, 30 questions/ }));
+    expect(await screen.findByRole('heading', { name: /Select length/ })).toBeTruthy();
     expect(await screen.findByRole('button', { name: /All 30 questions/ })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /50 questions/ })).toBeNull();
     await fireEvent.press(screen.getByRole('button', { name: /20 questions/ }));
