@@ -42,6 +42,23 @@ describe('jsdom runner build context', () => {
         expect(manifest.dependencies.dompurify).toMatch(EXACT_VERSION);
         expect(readRunnerFile('package-lock.json')).toContain('"lockfileVersion"');
     });
+
+    it('documents that window timers pending when the oracle settles are dropped', () => {
+        const header = readRunnerFile('harness.mjs').split('\nimport ')[0];
+
+        expect(header).toMatch(/window\.setTimeout/);
+        expect(header).toMatch(/requestAnimationFrame/);
+    });
+});
+
+describe('security generation prompt', () => {
+    it('tells jsdom oracles to print synchronously, not from window timers', () => {
+        const prompt = readFileSync(new URL('../../../prompts/generateSecurityQuestion.md', import.meta.url), 'utf8');
+
+        expect(prompt).toMatch(/jsdom/);
+        expect(prompt).toMatch(/window\.setTimeout/);
+        expect(prompt).toMatch(/requestAnimationFrame/);
+    });
 });
 
 describe('jsdom docker args', () => {
@@ -136,6 +153,32 @@ describe.skipIf(SKIP_DOCKER)('runOracle jsdom (docker)', () => {
                 expect(await runOracle({ code, language: JSDOM })).toMatchObject({
                     outcome: 'value',
                     value: 'false',
+                });
+            },
+            RUN_TIMEOUT_MS,
+        );
+
+        it(
+            'reports the value when closing the window throws after the oracle printed',
+            async () => {
+                const code = "window.close = () => { throw new Error('close failed'); }; console.log('done')";
+
+                expect(await runOracle({ code, language: JSDOM })).toMatchObject({
+                    outcome: 'value',
+                    value: 'done',
+                });
+            },
+            RUN_TIMEOUT_MS,
+        );
+
+        it(
+            'drops output from window.setTimeout callbacks still pending when the oracle settles',
+            async () => {
+                const code = ["window.setTimeout(() => console.log('timeout'), 0);", "console.log('sync');"].join('\n');
+
+                expect(await runOracle({ code, language: JSDOM })).toMatchObject({
+                    outcome: 'value',
+                    value: 'sync',
                 });
             },
             RUN_TIMEOUT_MS,
@@ -252,6 +295,24 @@ describe.skipIf(SKIP_DOCKER)('runOracle jsdom (docker)', () => {
 
                 expect(run.outcome).toBe('resource-limit');
                 expect(run.exceptionType).toBeUndefined();
+            },
+            RUN_TIMEOUT_MS,
+        );
+
+        it(
+            'stops an oracle that builds a DOM past the heap cap',
+            async () => {
+                const code = [
+                    'for (let i = 0; ; i++) {',
+                    "    const el = document.createElement('div');",
+                    "    el.textContent = String(i).padStart(1024, 'x');",
+                    '    document.body.appendChild(el);',
+                    '}',
+                ].join('\n');
+                const run = await runOracle({ code, language: JSDOM }, { timeoutMs: 30_000 });
+
+                expect(run.outcome).toBe('resource-limit');
+                expect(run.value).toBeUndefined();
             },
             RUN_TIMEOUT_MS,
         );
