@@ -19,7 +19,11 @@ import { useReviewQueue } from '../../state/useReviewQueue';
 const PERCENT = 100;
 
 function buildDescriptions(manifest: Manifest): Map<string, string> {
-  return new Map(manifest.languages.flatMap(({ misconceptions }) => misconceptions.map(({ description, id }) => [id, description] as const)));
+  return new Map(
+    manifest.languages.flatMap(({ misconceptions }) =>
+      misconceptions.map(({ description, id }) => [id, description] as const),
+    ),
+  );
 }
 
 function WeakSpotLink({ spot }: { spot: WeakSpot }) {
