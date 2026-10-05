@@ -6,12 +6,13 @@ import { Text, TextInput, View } from 'react-native';
 import { AuthButton } from './AuthButton';
 
 type EmailStepProps = {
+  initialEmail?: string;
   isBusy: boolean;
   onSubmit: (email: string) => void;
 };
 
-export function EmailStep({ isBusy, onSubmit }: EmailStepProps) {
-  const [email, setEmail] = useState('');
+export function EmailStep({ initialEmail = '', isBusy, onSubmit }: EmailStepProps) {
+  const [email, setEmail] = useState(initialEmail);
   function submit() {
     if (!isBusy) onSubmit(email.trim());
   }
