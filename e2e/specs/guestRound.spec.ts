@@ -16,6 +16,7 @@ test('a guest plays an easy round end to end and sees the stats update', async (
   };
   const bankSize = bank.questions.length;
   await page.goto('./');
+  await expect(page.getByText('Python')).toBeVisible();
   await expect(page.getByText('Lifetime accuracy')).toBeHidden();
 
   await openRoundByKeys(page, '1');
