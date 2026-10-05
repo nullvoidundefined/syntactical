@@ -7,8 +7,9 @@
 // - a toggle sends one PUT admin/access { productId, isGranted }, keeps the switch disabled while
 //   it is in flight, and shows what the response says; a 400, 429, 503, or network failure puts
 //   the switch back and shows one alert with no code, message, request id, or status;
-// - a non-admin, a guest, and an admin the server answers 403 ADMIN_REQUIRED see a "not available"
-//   (or not found) state with no switch and send no PUT;
+// - a signed-in non-admin and an admin the server answers 403 ADMIN_REQUIRED see a "not available"
+//   state with no switch and send no PUT; a guest, or an admin who signs out, is sent to "/" with
+//   one router.replace, sees no not-available text, and sends no GET admin/access and no PUT;
 // - after a toggle the signed-in user's entitlements (the source of the paid bank locks) change
 //   without a reload.
 // - a malformed GET admin/access reply shows the not-available state, while an extra field on an
@@ -95,13 +96,15 @@ jest.mock('../../state/SyncProvider', () => ({
   }),
 }));
 
+const mockReplace = jest.fn();
+
 jest.mock('expo-router', () => {
   const router = {
     back: () => undefined,
     dismissTo: () => undefined,
     navigate: () => undefined,
     push: () => undefined,
-    replace: () => undefined,
+    replace: (...args: unknown[]) => mockReplace(...args),
   };
   return {
     ...jest.requireActual('expo-router'),
@@ -216,6 +219,7 @@ beforeEach(async () => {
   secureStore.mockValues.clear();
   queryClient = createQueryClient();
   latestEntitlements.current = '';
+  mockReplace.mockClear();
 });
 
 afterEach(async () => {
@@ -408,11 +412,30 @@ describe('admin route for anyone who is not an admin', () => {
     await expectNotAvailable(requests);
   });
 
-  it('shows a guest the not-available state with no switches and no PUT', async () => {
+  it('sends a guest to the home page with one replace, no GET admin/access, and no PUT', async () => {
     const unauthorized = buildErrorReply(401, 'SESSION_REQUIRED', 'Sign-in required');
     const { requests } = installRoutedFetch({ [ACCESS_ROUTE]: unauthorized.reply });
     await renderAdmin();
-    await expectNotAvailable(requests);
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledTimes(1));
+    await settle();
+    expect(mockReplace).toHaveBeenCalledWith('/');
+    expect(screen.queryByText(NOT_AVAILABLE_TEXT)).toBeNull();
+    expect(screen.queryAllByRole('switch')).toHaveLength(0);
+    expect(requests.some(({ method, path }) => method === 'GET' && path === ACCESS_PATH)).toBe(false);
+    expect(listAccessUpdates(requests)).toHaveLength(0);
+  });
+
+  it('keeps a signed-in non-admin on the page: no replace', async () => {
+    const identity = buildIdentity();
+    installRoutedFetch({
+      [ACCESS_ROUTE]: buildErrorReply(403, 'ADMIN_REQUIRED', 'Admin required').reply,
+      [PROFILE_ROUTE]: meReply(identity.email, { isAdmin: false }),
+    });
+    await signIn(identity);
+    await renderAdmin();
+    await screen.findByText(NOT_AVAILABLE_TEXT);
+    await settle();
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 
   it('shows the same state when GET me says admin but GET admin/access answers 403 ADMIN_REQUIRED', async () => {
@@ -549,6 +572,48 @@ describe('admin route with malformed server data', () => {
     await settle();
     expect(listAccessUpdates(requests).map(({ body }) => body)).toEqual([{ isGranted: true, productId: unknownId }]);
     expect(screen.queryByRole('alert')).toBeNull();
+  });
+});
+
+describe('admin route when the admin signs out', () => {
+  const authHandle: { current: ReturnType<typeof useAuth> | null } = { current: null };
+
+  function AuthHandle() {
+    authHandle.current = useAuth();
+    return null;
+  }
+
+  it('replaces to the home page once and stays off /admin, with no not-available text', async () => {
+    const identity = buildIdentity();
+    installRoutedFetch({
+      [ACCESS_ROUTE]: accessReply(mixedProducts()),
+      [PROFILE_ROUTE]: meReply(identity.email, { isAdmin: true }),
+      'DELETE auth/sessions/current': { status: 204 },
+    });
+    await signIn(identity);
+    await render(
+      <QueryClientProvider client={queryClient}>
+        <ContentProvider contentBaseUrl={null}>
+          <AuthProvider>
+            <OwnedStatsProvider>
+              <AuthHandle />
+              <AdminScreen />
+            </OwnedStatsProvider>
+          </AuthProvider>
+        </ContentProvider>
+      </QueryClientProvider>,
+    );
+    await screen.findByRole('switch', { name: PYTHON_MEDIUM_NAME });
+    expect(mockReplace).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await authHandle.current?.signOut();
+    });
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledTimes(1));
+    await settle();
+    expect(mockReplace).toHaveBeenCalledTimes(1);
+    expect(mockReplace).toHaveBeenCalledWith('/');
+    expect(screen.queryByText(NOT_AVAILABLE_TEXT)).toBeNull();
   });
 });
 
