@@ -29,7 +29,10 @@ describe('DownloadIndicator live region on the web', () => {
     await act(async () => {
       void client
         .fetchQuery({
-          queryFn: () => new Promise((_resolve, reject) => { failDownload = reject; }),
+          queryFn: () =>
+            new Promise((_resolve, reject) => {
+              failDownload = reject;
+            }),
           queryKey: ['bank', 'python', 'easy', 'h'],
         })
         .catch(() => undefined);
