@@ -8,6 +8,7 @@ import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 import type { Oracle } from '../../types/Oracle.js';
 import type { OracleRun } from '../../types/OracleRun.js';
+import { ProviderTransientError } from '../../types/ProviderTransientError.js';
 
 const RUNNERS = ['python', 'node', 'postgres'] as const;
 const QUERY = { explanation: 'Formatting splices the payload into SQL.', title: 'Tautology injection' };
@@ -17,7 +18,10 @@ function mcDraft(overrides: Record<string, unknown> = {}): { question: Record<st
         question: {
             answerIndex: 1,
             choices: [
-                { rationale: 'The payload rewrites the WHERE clause, so the filter no longer holds.', text: 'Only alice' },
+                {
+                    rationale: 'The payload rewrites the WHERE clause, so the filter no longer holds.',
+                    text: 'Only alice',
+                },
                 { text: 'alice and bob' },
                 { rationale: 'The quotes in the payload balance, so the SQL still parses.', text: 'A syntax error' },
             ],
@@ -80,7 +84,10 @@ function pickTheFix(choiceCode: string[], answerIndex: number): { question: Reco
     return mcDraft({
         answerIndex,
         choices: [
-            { rationale: 'Escaping quotes by hand misses backslashes and encodings.', text: 'name.replace("\'", "\'\'")' },
+            {
+                rationale: 'Escaping quotes by hand misses backslashes and encodings.',
+                text: 'name.replace("\'", "\'\'")',
+            },
             { text: 'cursor.execute(sql, params)' },
         ],
         oracle: { choiceCode, code: 'print("BLOCKED")', language: 'python' },
@@ -96,6 +103,28 @@ function markerRun() {
 }
 
 describe('generateTopicQuestion', () => {
+    it('drops a question on a transient provider failure instead of throwing', async () => {
+        const provider: ModelProvider = {
+            async generate() {
+                throw new ProviderTransientError('model-timeout', 'claude timed out after 300000 ms');
+            },
+        };
+        await expect(generateTopicQuestion(baseArgs(provider, recordingRun().run))).resolves.toEqual({
+            reason: 'model-timeout',
+            status: 'dropped',
+        });
+    });
+
+    it('propagates a provider error that is not transient', async () => {
+        const failure = new Error('claude could not start');
+        const provider: ModelProvider = {
+            async generate() {
+                throw failure;
+            },
+        };
+        await expect(generateTopicQuestion(baseArgs(provider, recordingRun().run))).rejects.toBe(failure);
+    });
+
     it('keeps a python-executed draft with the python grammar and an executed, passed provenance', async () => {
         const { calls, run } = recordingRun();
         const outcome = await generateTopicQuestion(baseArgs(scripted([mcDraft()]), run));
@@ -117,7 +146,11 @@ describe('generateTopicQuestion', () => {
     it('gives a postgres-executed draft the sql grammar and passes setupSql to the runner', async () => {
         const { calls, run } = recordingRun();
         const draft = mcDraft({
-            oracle: { code: "SELECT 'alice and bob';", language: 'postgres', setupSql: 'CREATE TABLE users (name text);' },
+            oracle: {
+                code: "SELECT 'alice and bob';",
+                language: 'postgres',
+                setupSql: 'CREATE TABLE users (name text);',
+            },
         });
         const outcome = await generateTopicQuestion(baseArgs(scripted([draft]), run));
         expect(outcome.status === 'kept' && outcome.question.grammar).toBe('sql');
@@ -216,10 +249,7 @@ describe('generateTopicQuestion', () => {
     it('never runs an mc draft whose wrong-choice rationale is over 280 characters', async () => {
         const { calls, run } = recordingRun();
         const tooLong = mcDraft({
-            choices: [
-                { rationale: 'x'.repeat(281), text: 'Only alice' },
-                { text: 'alice and bob' },
-            ],
+            choices: [{ rationale: 'x'.repeat(281), text: 'Only alice' }, { text: 'alice and bob' }],
         });
         const outcome = await generateTopicQuestion(baseArgs(scripted([tooLong]), run));
         expect(outcome).toEqual({ reason: 'generation-failed', status: 'dropped' });

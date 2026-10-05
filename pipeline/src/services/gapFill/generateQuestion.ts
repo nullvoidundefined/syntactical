@@ -6,6 +6,8 @@
 // Generated code runs ONLY through `runSandboxed` (the Docker runner `runOracle`, fixed
 // limits). A schema-invalid answer or an oracle that disagrees with the claimed answer
 // costs one of MAX_REVISIONS drafts; a draft that still fails is dropped as `generation-failed`.
+// A ProviderTransientError (the model call timed out or exited non-zero) drops the question
+// at once with its reason; any other provider error propagates.
 import type { z } from 'zod';
 
 import { runOracle } from '../../clients/dockerRunner.js';
@@ -13,6 +15,7 @@ import type { DraftEvaluation } from '../../types/DraftEvaluation.js';
 import type { GenerateOutcome } from '../../types/GenerateOutcome.js';
 import type { GenerateQuestionArgs } from '../../types/GenerateQuestionArgs.js';
 import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
+import { ProviderTransientError } from '../../types/ProviderTransientError.js';
 
 import { GENERATE_PROMPT_VERSION } from './GENERATE_PROMPT_VERSION.js';
 import { MAX_EXECUTES_PER_DRAFT } from './MAX_EXECUTES_PER_DRAFT.js';
@@ -87,7 +90,15 @@ async function attemptDraft(args: GenerateQuestionArgs, notes: string[]): Promis
 export async function generateQuestion(args: GenerateQuestionArgs): Promise<GenerateOutcome> {
     const notes: string[] = [];
     for (let revision = 0; revision < MAX_REVISIONS; revision += 1) {
-        const outcome = await attemptDraft(args, notes);
+        let outcome: DraftEvaluation;
+        try {
+            outcome = await attemptDraft(args, notes);
+        } catch (error) {
+            if (error instanceof ProviderTransientError) {
+                return { reason: error.reason, status: 'dropped' };
+            }
+            throw error;
+        }
         if (outcome.status !== 'revise') {
             return outcome;
         }

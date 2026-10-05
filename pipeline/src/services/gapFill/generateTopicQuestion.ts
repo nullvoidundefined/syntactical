@@ -9,6 +9,7 @@ import { runOracle } from '../../clients/dockerRunner.js';
 import type { GenerateOutcome } from '../../types/GenerateOutcome.js';
 import type { GenerateTopicQuestionArgs } from '../../types/GenerateTopicQuestionArgs.js';
 import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
+import { ProviderTransientError } from '../../types/ProviderTransientError.js';
 import type { OracleLanguage } from '../../types/OracleLanguage.js';
 import { RUNNER_GRAMMARS } from '../RUNNER_GRAMMARS.js';
 
@@ -101,7 +102,14 @@ async function attemptDraft(args: GenerateTopicQuestionArgs, notes: string[]): P
 export async function generateTopicQuestion(args: GenerateTopicQuestionArgs): Promise<GenerateOutcome> {
     const notes: string[] = [];
     for (let revision = 0; revision < MAX_REVISIONS; revision += 1) {
-        const outcome = await attemptDraft(args, notes);
+        let outcome: TopicAttempt;
+        try {
+            outcome = await attemptDraft(args, notes);
+        } catch (error) {
+            // A timeout or non-zero exit from the model drops this question; fillBank caps the streak.
+            if (error instanceof ProviderTransientError) return { reason: error.reason, status: 'dropped' };
+            throw error;
+        }
         if (outcome.status !== 'revise') return outcome;
         notes.push(`draft ${revision + 1} rejected: ${outcome.feedback}`);
     }
