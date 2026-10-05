@@ -90,19 +90,45 @@ describe('loadEnv', () => {
     expect(() => loadEnv(empty)).toThrow(/RATE_LIMIT_KEY_SECRET/);
   });
 
-  it.each(REQUIRED_VARIABLES)('fails when %s is missing, naming it and echoing no provided value', (missingVariable) => {
-    const source = buildValidSource();
-    delete source[missingVariable];
-    const providedValues = Object.values(source).filter(
-      (value): value is string => typeof value === 'string' && value !== 'test',
-    );
+  it.each(REQUIRED_VARIABLES)(
+    'fails when %s is missing, naming it and echoing no provided value',
+    (missingVariable) => {
+      const source = buildValidSource();
+      delete source[missingVariable];
+      const providedValues = Object.values(source).filter(
+        (value): value is string => typeof value === 'string' && value !== 'test',
+      );
 
-    const error = captureError(() => loadEnv(source));
+      const error = captureError(() => loadEnv(source));
 
-    expect(error.message).toContain(missingVariable);
-    const text = errorText(error);
-    for (const value of providedValues) {
-      expect(text).not.toContain(value);
-    }
+      expect(error.message).toContain(missingVariable);
+      const text = errorText(error);
+      for (const value of providedValues) {
+        expect(text).not.toContain(value);
+      }
+    },
+  );
+});
+
+// Task 7.2: the cap on concurrent scrypt derivations, an optional integer from 1 to 8.
+describe('loadEnv PASSWORD_HASH_CONCURRENCY', () => {
+  it('defaults to 2 when absent', () => {
+    expect(loadEnv(buildValidSource()).PASSWORD_HASH_CONCURRENCY).toBe(2);
+  });
+
+  it.each([
+    ['1', 1],
+    ['3', 3],
+    ['8', 8],
+  ])('accepts %s as the integer %i', (value, expected) => {
+    const source = { ...buildValidSource(), PASSWORD_HASH_CONCURRENCY: value };
+
+    expect(loadEnv(source).PASSWORD_HASH_CONCURRENCY).toBe(expected);
+  });
+
+  it.each(['0', '9', 'two', '2.5', '-1'])('fails startup for %s, naming the variable', (value) => {
+    const source = { ...buildValidSource(), PASSWORD_HASH_CONCURRENCY: value };
+
+    expect(() => loadEnv(source)).toThrow(/PASSWORD_HASH_CONCURRENCY/);
   });
 });
