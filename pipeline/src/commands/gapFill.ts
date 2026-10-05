@@ -1,6 +1,7 @@
 // `pipeline gap-fill`: tops up every topic that has fewer than TARGET_QUESTIONS_PER_TOPIC
 // questions with model-generated questions, each kept only when its claimed answer matches
 // its executed oracle. Generated code runs only through the sandboxed `runOracle`.
+// Topic entries (`kind: 'topic'`) use TRACK_RUNNERS; language entries use ORACLE_LANGUAGES.
 // Content bank files are only read, never written: kept questions are staged in
 // `generated/<language>/<difficulty>.json` and publish moves them into banks.
 //
@@ -13,6 +14,7 @@ import { type Question, validateManifest } from '@syntactical/content-schema';
 
 import type { runOracle } from '../clients/dockerRunner.js';
 import { ORACLE_LANGUAGES } from '../services/ORACLE_LANGUAGES.js';
+import { TRACK_RUNNERS } from '../services/TRACK_RUNNERS.js';
 import { assertContentRootUsable } from '../services/classify/assertContentRootUsable.js';
 import { pickTopics } from '../services/classify/pickTopics.js';
 import { readFallbackTopics } from '../services/classify/readFallbackTopics.js';
@@ -23,6 +25,7 @@ import { writePipelineReport } from '../services/writePipelineReport.js';
 import { resolveBankFile } from '../services/resolveBankFile.js';
 import type { FillBankResult } from '../types/FillBankResult.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
+import type { OracleLanguage } from '../types/OracleLanguage.js';
 import type { PipelineReport } from '../types/PipelineReport.js';
 
 export interface GapFillOptions {
@@ -85,15 +88,19 @@ export async function gapFill(options: GapFillOptions): Promise<PipelineReport> 
     let isCompleted = false;
     let report: PipelineReport;
     try {
-        for (const { banks, id: languageId, topics: manifestTopics } of languages) {
-            const language = Object.hasOwn(ORACLE_LANGUAGES, languageId) ? ORACLE_LANGUAGES[languageId] : undefined;
+        for (const { banks, id: languageId, kind, topics: manifestTopics } of languages) {
+            const isTopicTrack = kind === 'topic';
+            const runners =
+                isTopicTrack && Object.hasOwn(TRACK_RUNNERS, languageId) ? TRACK_RUNNERS[languageId] : undefined;
+            const language =
+                !isTopicTrack && Object.hasOwn(ORACLE_LANGUAGES, languageId) ? ORACLE_LANGUAGES[languageId] : undefined;
             const topics = pickTopics(
                 manifestTopics,
                 Object.hasOwn(fallbackTopics, languageId) ? fallbackTopics[languageId] : undefined,
             );
             for (const [difficulty, { access, path }] of Object.entries(banks)) {
                 const bankKey = `${languageId}/${difficulty}`;
-                if (!language || topics.length === 0) {
+                if ((!language && !runners) || topics.length === 0) {
                     log(`skipping bank ${bankKey}: no oracle runner or topic list for language ${languageId}`);
                     continue;
                 }
@@ -103,7 +110,7 @@ export async function gapFill(options: GapFillOptions): Promise<PipelineReport> 
                 const result = await fillBank({
                     bankKey,
                     difficulty,
-                    language,
+                    ...(runners ? { runners } : { language: language as OracleLanguage }),
                     languageId,
                     log,
                     // Free output stays in the public tree; paid output goes to the private content root.
