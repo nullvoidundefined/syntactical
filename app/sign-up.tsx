@@ -2,11 +2,12 @@
 // in one role="alert" region by reason only; the email, the password, and the code are never
 // echoed or logged. The password lives in this component's memory only: it is sent in the sign-up
 // requests, cleared on success, and gone when the route is left.
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { router, useLocalSearchParams, type Href } from 'expo-router';
+// useFocusEffect from expo-router throws outside a navigator, and the screen is rendered bare in many tests; the path is internal to expo-router ~57 and the CI web bundle (e2e job) verifies it resolves.
 import { NavigationContext } from 'expo-router/build/react-navigation/core';
-import { ScrollView, Text, View } from 'react-native';
+import { Platform, ScrollView, Text, View } from 'react-native';
 
 import { AuthButton } from '../components/auth/AuthButton';
 import { AuthLink } from '../components/auth/AuthLink';
@@ -77,7 +78,20 @@ export default function SignUpScreen() {
     return null;
   }
 
-  useClearOnBlur(() => setTypedPassword(''));
+  // Leaving resets to the password step, keeping the email: the code step cannot verify without
+  // the cleared password. The setters are stable, so the blur listener subscribes once.
+  const resetOnBlur = useCallback(() => {
+    setTypedPassword('');
+    setIsCodeStep(false);
+  }, []);
+  useClearOnBlur(resetOnBlur);
+
+  const screenRef = useRef<View>(null);
+  useEffect(() => {
+    if (!isAccountExisting || Platform.OS !== 'web') return;
+    const root = screenRef.current as unknown as HTMLElement | null;
+    root?.querySelector<HTMLElement>('[role="button"], button')?.focus();
+  }, [isAccountExisting]);
 
   async function sendCode(isResend: boolean) {
     await runExclusive(async () => {
@@ -118,7 +132,7 @@ export default function SignUpScreen() {
 
   return (
     <ScrollView contentContainerClassName="flex-grow items-center px-4 py-8">
-      <View className="w-full max-w-xl">
+      <View ref={screenRef} className="w-full max-w-xl">
         <Text role="heading" aria-level={1} className="font-mono text-3xl text-ink">
           Create an account
         </Text>
@@ -128,10 +142,12 @@ export default function SignUpScreen() {
           </View>
         )}
         {isAccountExisting ? (
-          <View role="status" className="mt-4">
-            <Text className="font-mono text-sm text-ink">{ALREADY_HAD_ACCOUNT}</Text>
+          <>
+            <View role="status" className="mt-4">
+              <Text className="font-mono text-sm text-ink">{ALREADY_HAD_ACCOUNT}</Text>
+            </View>
             <AuthButton label="Continue" onPress={() => router.replace(readReturnTo(returnTo) as Href)} />
-          </View>
+          </>
         ) : isCodeStep ? (
           <CodeStep
             cooldownRestartKey={cooldownRestartKey}
