@@ -31,7 +31,7 @@ export function AuthButton({
         'aria-label': label,
         'aria-disabled': isDisabled,
         disabled: isDisabled,
-        className: `mt-4 flex w-full cursor-pointer flex-col items-center border-0 px-4 py-3 ${surface} ${isDisabled ? 'opacity-60' : ''}`,
+        className: `mt-4 flex w-full flex-col items-center border-0 px-4 py-3 ${surface} ${isDisabled ? 'opacity-60' : 'cursor-pointer'}`,
       },
       createElement('span', { className: `font-mono text-sm ${textColor}` }, label),
     );

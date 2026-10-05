@@ -43,13 +43,14 @@ function openSignUp(event?: {
 const IS_WEB = Platform.OS === 'web';
 
 // On web the fields sit in a real <form> so Safari and Firefox offer to save the password;
-// native keeps a View. The form has no action or method, and every submit is cancelled so
+// native keeps a View. The form has no action, and every submit is cancelled so
 // the browser never navigates or puts the password in a URL.
 function SignInForm({ children, onSubmit }: { children: ReactNode; onSubmit: () => void }) {
   if (!IS_WEB) return <View>{children}</View>;
   return createElement(
     'form',
     {
+      method: 'post',
       onSubmit: (event: FormEvent) => {
         event.preventDefault();
         onSubmit();
@@ -73,6 +74,9 @@ export function PasswordSignInStep({
   function submit() {
     if (!isBusy) onSubmit();
   }
+  // On web Enter submits the form (the single submit path); react-native-web would cancel
+  // that implicit submission if onSubmitEditing were set.
+  const onSubmitEditing = IS_WEB ? undefined : submit;
   return (
     <SignInForm onSubmit={submit}>
       <TextInput
@@ -85,7 +89,7 @@ export function PasswordSignInStep({
         value={email}
         onChangeText={onChangeEmail}
         returnKeyType="go"
-        onSubmitEditing={submit}
+        onSubmitEditing={onSubmitEditing}
         className="mt-4 border border-ink px-3 py-2 font-mono text-base text-ink"
       />
       <PasswordField
@@ -94,7 +98,7 @@ export function PasswordSignInStep({
         value={password}
         onChangeText={onChangePassword}
         errorId={errorId}
-        onSubmitEditing={submit}
+        onSubmitEditing={onSubmitEditing}
       />
       <AuthButton label="Sign in" isDisabled={isBusy} isSubmit onPress={submit} />
       <AuthButton label="Use a code instead" isPrimary={false} onPress={onUseCode} />
