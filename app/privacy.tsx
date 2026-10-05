@@ -19,7 +19,7 @@ export default function PrivacyScreen() {
       <LegalSection title="What we collect">
         <LegalList
           items={[
-            'Your email address, only if you sign in. It is used to send you a one-time sign-in code and to identify your account. There is no password.',
+            "Your email address, only if you sign in. It is used to send you one-time sign-in codes and to identify your account. You can also set a password. We store only a salted scrypt hash of it, never the password itself. When you choose a password, our server checks it against the Have I Been Pwned list of breached passwords by sending only the first 5 characters of the password's SHA-1 hash, so neither the password nor its full hash leaves our server.",
             'If you are signed in: your answers (which question, your choice, whether it was correct, and how long it took), your daily progress and daily goal, and your timezone (a name such as America/Chicago, used to decide when your day starts). This is not your location.',
             'A random user ID that we create for your account.',
             'Purchase history: which question banks you own, and the purchase events the app stores and RevenueCat send us. We never see your card number; Apple or Google handles payment.',
@@ -76,9 +76,9 @@ export default function PrivacyScreen() {
 
       <LegalSection title="What deleting your account removes">
         <LegalParagraph>
-          Deleting your account removes your email, sessions, answers, progress, goal changes, and unused sign-in codes
-          from our database. Records of purchases stay for accounting, with your account link removed; they hold no
-          email or name. Signing in again with the same email starts a new, empty account.
+          Deleting your account removes your email, your password hash, sessions, answers, progress, goal changes, and
+          unused sign-in codes from our database. Records of purchases stay for accounting, with your account link
+          removed; they hold no email or name. Signing in again with the same email starts a new, empty account.
         </LegalParagraph>
         <LegalParagraph>
           Deleting in the app does not reach our vendors. These remain with them under their own policies: PostHog usage
