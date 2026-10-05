@@ -1,6 +1,7 @@
 // The answer streak (consecutive correct answers, current and best),
 // lifetime accuracy, and a per-language, per-difficulty breakdown for the
 // languages the manifest currently lists, then the weekly weakness report.
+// Renders nothing until the current owner has answered at least one question.
 import { DIFFICULTIES } from '@syntactical/content-schema';
 import type { Manifest } from '@syntactical/content-schema';
 import { Text, View } from 'react-native';
@@ -22,18 +23,26 @@ function buildBreakdown(stats: Stats, manifest: Manifest): BreakdownEntry[] {
       const entry = tracks[buildStatsKey({ difficulty, language })];
       if (!entry || entry.attempted === 0) return [];
       const { attempted, correct } = entry;
-      return [{ accuracy: calculateAccuracy(correct, attempted), key: `${language}:${difficulty}`, label: `${glyph} / ${label}` }];
+      return [
+        {
+          accuracy: calculateAccuracy(correct, attempted),
+          key: `${language}:${difficulty}`,
+          label: `${glyph} / ${label}`,
+        },
+      ];
     }),
   );
 }
 
 export function StatsPanel() {
-  const { stats } = useQuizStats();
+  const { eventLog, stats } = useQuizStats();
   const manifest = useLanguageManifest();
   const { answerStreak, totals } = stats;
   const { attempted, correct } = totals;
   const { best: bestStreak, current: currentStreak } = answerStreak;
   const hasHistory = attempted > 0;
+  // Hidden until the current owner has answered: locally, or in synced history already downloaded.
+  if (!hasHistory && eventLog.length === 0) return null;
   return (
     <View className="mt-10 border-t border-line pt-6">
       <View className="mb-4 flex-row items-center justify-between">
@@ -42,7 +51,9 @@ export function StatsPanel() {
       </View>
       <View className="flex-row items-center justify-between">
         <Text className="font-mono text-xs uppercase tracking-widest text-muted">Lifetime accuracy</Text>
-        <Text className="font-mono text-xs text-ink">{hasHistory ? `${calculateAccuracy(correct, attempted)}%` : 'none yet'}</Text>
+        <Text className="font-mono text-xs text-ink">
+          {hasHistory ? `${calculateAccuracy(correct, attempted)}%` : 'none yet'}
+        </Text>
       </View>
       {hasHistory ? (
         <View className="mt-4 flex-row flex-wrap gap-2">

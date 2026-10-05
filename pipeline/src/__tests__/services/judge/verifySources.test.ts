@@ -129,6 +129,89 @@ describe('verifySources', () => {
     });
 });
 
+describe('site chrome cannot back a quote', () => {
+    const quote = 'Use prepared statements with parameterized queries';
+
+    it.each([
+        ['nav', `<nav>${quote}</nav>`],
+        ['header', `<header>${quote}</header>`],
+        ['footer', `<footer>${quote}</footer>`],
+        ['aside', `<aside>${quote}</aside>`],
+        ['role navigation', `<div role="region navigation">${quote}</div>`],
+        ['role banner', `<div role="banner region">${quote}</div>`],
+        ['role contentinfo', `<div role="region contentinfo region">${quote}</div>`],
+    ])('rejects a quote found only in %s', async (_name, body) => {
+        const fetch = pages({ [URL_A]: `${body}<p>Other page content.</p>` });
+        expect(await verifySources([source(URL_A, quote)], fetch)).toEqual({
+            ok: false,
+            reason: 'quote-not-found',
+            url: URL_A,
+        });
+    });
+
+    it.each([
+        ['main element', '<main id="content">Other page content.</main>'],
+        ['main role', '<div id="content" role="region main">Other page content.</div>'],
+    ])('rejects a skip-link quote outside the %s', async (_name, main) => {
+        const skipQuote = 'Skip to main content of this page';
+        const fetch = pages({
+            [URL_A]: `<a href="#content">${skipQuote}</a><header>Site title</header>${main}`,
+        });
+        expect(await verifySources([source(URL_A, skipQuote)], fetch)).toEqual({
+            ok: false,
+            reason: 'quote-not-found',
+            url: URL_A,
+        });
+    });
+
+    // Review round 1: a main landmark that is itself dropped still means the rest of the page is chrome.
+    it.each([
+        ['a hidden main', '<main hidden>Other page content.</main>'],
+        ['a main inside aside', '<aside><main>Other page content.</main></aside>'],
+        ['a main with a chrome role', '<main role="contentinfo">Other page content.</main>'],
+    ])('rejects a skip-link quote on a page with %s', async (_name, main) => {
+        const skipQuote = 'Skip to main content of this page';
+        const fetch = pages({ [URL_A]: `<a href="#content">${skipQuote}</a>${main}` });
+        expect(await verifySources([source(URL_A, skipQuote)], fetch)).toEqual({
+            ok: false,
+            reason: 'quote-not-found',
+            url: URL_A,
+        });
+    });
+
+    // Security review round 1: a dropped block still separates the words on either side of it.
+    it.each(['<nav>Site navigation</nav>', '<div role="banner">Site title</div>', '<div hidden>Hidden</div>'])(
+        'rejects a quote stitched across %s',
+        async (dropped) => {
+            const fetch = pages({
+                [URL_A]: `<main><span>Use prepared </span>${dropped}<span>statements with parameterized queries</span></main>`,
+            });
+            expect(await verifySources([source(URL_A, quote)], fetch)).toEqual({
+                ok: false,
+                reason: 'quote-not-found',
+                url: URL_A,
+            });
+        },
+    );
+
+    it('accepts a quote in main content on a page with site chrome', async () => {
+        const fetch = pages({
+            [URL_A]: [
+                '<a href="#content">Skip to main content of this page</a>',
+                '<header>Site title</header><nav>Site navigation</nav>',
+                `<main id="content"><p>${quote}</p></main>`,
+                '<aside>Related pages</aside><footer>Site footer</footer>',
+            ].join(''),
+        });
+        expect(await verifySources([source(URL_A, quote)], fetch)).toEqual({ ok: true });
+    });
+
+    it('accepts a quote on a simple page without main or chrome landmarks', async () => {
+        const fetch = pages({ [URL_A]: `<div><p>${quote}</p></div>` });
+        expect(await verifySources([source(URL_A, quote)], fetch)).toEqual({ ok: true });
+    });
+});
+
 describe('visible text and quote boundaries', () => {
     const quote = 'Use prepared statements with parameterized queries';
     it.each([

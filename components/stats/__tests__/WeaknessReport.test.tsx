@@ -23,7 +23,9 @@ const mockQuestionIndex = new Map([['py-easy-01', { difficulty: 'easy', language
 jest.mock('../../../state/useReviewQueue', () => ({ useReviewQueue: () => ({ questionIndex: mockQuestionIndex }) }));
 jest.mock('../../../state/useLanguageManifest', () => ({
   useLanguageManifest: () => ({
-    languages: [{ misconceptions: [{ description: 'Mutable default arguments are shared', id: 'python.mutable-default-args' }] }],
+    languages: [
+      { misconceptions: [{ description: 'Mutable default arguments are shared', id: 'python.mutable-default-args' }] },
+    ],
   }),
 }));
 
@@ -57,7 +59,10 @@ describe('WeaknessReport', () => {
     const link = screen.getByRole('link', { name: 'Review Mutable default arguments are shared, missed 20 of 20' });
     expect(screen.queryByText('Mutable default arguments are shared')).not.toBeNull();
     await fireEvent.press(link);
-    expect(mockPush).toHaveBeenCalledWith({ params: { misconception: 'python.mutable-default-args' }, pathname: '/review' });
+    expect(mockPush).toHaveBeenCalledWith({
+      params: { misconception: 'python.mutable-default-args' },
+      pathname: '/review',
+    });
   });
 
   it('says so when nothing was missed this week', async () => {
