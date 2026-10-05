@@ -309,6 +309,7 @@ describe.skipIf(SKIP_DATABASE_TESTS)('migrations', () => {
             const { pool } = scratch;
 
             expect(await columnsOf(pool, 'sessions')).toEqual({
+                auth_method: 'text',
                 created_at: 'timestamptz',
                 expires_at: 'timestamptz',
                 id: 'uuid',
