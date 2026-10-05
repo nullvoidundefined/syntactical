@@ -1,5 +1,5 @@
 // The publish stage's pipeline report. It carries the previous report's validate verdicts,
-// counts, and agreement rates forward (the quality build needs every bank's verdicts) and adds
+// counts, and agreement rates forward (later stages need every bank's verdicts) and adds
 // how many banks and questions this run wrote and refused.
 import type { PipelineReport } from '../../types/PipelineReport.js';
 import type { PublishBankResult } from '../../types/publish/PublishBankResult.js';
