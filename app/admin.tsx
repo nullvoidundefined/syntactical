@@ -1,10 +1,15 @@
 // Admin route: an admin turns paid question banks on or off for their own account. The server
-// decides who is an admin; anyone else, a guest, and a failed load see the not-available text.
+// decides who is an admin; a signed-in non-admin and a failed load see the not-available text. With
+// no signed-in user (a guest, or after sign-out) the screen replaces itself with the home page.
 // A bank bought through the store shows as purchased and cannot be switched here. A refused or
 // failed change is announced in one fixed message.
+import { useEffect } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import { router } from 'expo-router';
+
 import { describeProduct } from '../services/admin/describeProduct';
+import { useAuth, useSignedInUserId } from '../state/AuthProvider';
 import { useAdminAccess } from '../state/useAdminAccess';
 import { useLanguageManifest } from '../state/useLanguageManifest';
 
@@ -14,6 +19,15 @@ const NOT_AVAILABLE = 'This page is not available.';
 export default function AdminScreen() {
   const manifest = useLanguageManifest();
   const { isFailed, pendingIds, setAccess, state } = useAdminAccess();
+  const { isHydrated } = useAuth();
+  const isSignedOut = useSignedInUserId() === null;
+  const shouldLeave = isHydrated && isSignedOut;
+
+  useEffect(() => {
+    if (shouldLeave) router.replace('/');
+  }, [shouldLeave]);
+
+  if (shouldLeave) return null;
 
   return (
     <ScrollView contentContainerClassName="flex-grow items-center px-4 py-8">
