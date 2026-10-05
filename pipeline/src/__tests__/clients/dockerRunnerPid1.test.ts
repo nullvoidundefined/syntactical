@@ -8,6 +8,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
+import { buildDockerArgs } from '../../clients/buildDockerArgs.js';
 import { runOracle } from '../../clients/dockerRunner.js';
 import { ensureRunnerImage } from '../../clients/ensureRunnerImage.js';
 import { runnerImageTag } from '../../clients/runnerImageTag.js';
@@ -206,6 +207,60 @@ console.log(word);
 
             expect.soft(output).toBe('denied');
             expect(run, JSON.stringify(run)).toMatchObject({ outcome: 'value', value: 'honest' });
+        },
+        RUN_TIMEOUT_MS,
+    );
+});
+
+// The Node and Postgres images make PID 1 non-dumpable only by running it from an execute-only
+// interpreter. Started from the image's ordinary, readable interpreter, PID 1 stays dumpable,
+// and the harness must refuse to run the oracle rather than run it unprotected.
+describe.skipIf(SKIP_DOCKER)('PID 1 startup probe fails closed (docker)', () => {
+    beforeAll(async () => {
+        await acquireDockerTestLock();
+        await ensureRunnerImage('node');
+        await ensureRunnerImage('postgres');
+    }, DOCKER_LOCK_WAIT_MS + 600_000);
+
+    afterEach(() => {
+        killLeftoverRunnerContainers();
+    });
+
+    afterAll(() => {
+        releaseDockerTestLock();
+    });
+
+    async function runDumpableHarness(
+        language: 'node' | 'postgres',
+        interpreter: string,
+        script: string,
+        code: string,
+    ): Promise<string> {
+        const args = buildDockerArgs({ language, code }, runnerImageTag(language));
+        const image = args.pop() as string;
+        const child = execFile('docker', [...args, '--entrypoint', interpreter, image, script]);
+        child.stdin?.end(JSON.stringify({ code, timeoutMs: 5000 }));
+        let stdout = '';
+        child.stdout?.on('data', (chunk: string) => {
+            stdout += chunk;
+        });
+        await new Promise((resolve) => child.on('close', resolve));
+        return stdout.trim();
+    }
+
+    it.each([
+        ['node', 'node', '/harness/harness.mjs', 'console.log("ran")'],
+        ['postgres', 'bash', '/harness/harness.sh', "SELECT 'ran'"],
+    ] as const)(
+        '%s reports RunnerFailure when PID 1 is dumpable',
+        async (language, interpreter, script, code) => {
+            const stdout = await runDumpableHarness(language, interpreter, script, code);
+
+            expect(JSON.parse(stdout), stdout).toMatchObject({
+                outcome: 'exception',
+                exceptionType: 'RunnerFailure',
+            });
+            expect(stdout).not.toContain('ran');
         },
         RUN_TIMEOUT_MS,
     );
