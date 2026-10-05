@@ -241,6 +241,39 @@ describe('Settings password form', () => {
   });
 });
 
+describe('Settings password form after the first password is added (B-88, PR 109 review)', () => {
+  it('switches to "Change password" with a current-password field after a successful add, and the next save sends currentPassword', async () => {
+    const identity = buildIdentity();
+    const first = buildPassword();
+    const current = buildPassword();
+    const next = buildPassword();
+    // GET me answers hasPassword false every time: the switch must come from the save itself,
+    // not from a later GET me that says hasPassword true.
+    const { requests } = installRoutedFetch({
+      [PASSWORD_ROUTE]: savedReply(),
+      [PROFILE_ROUTE]: profileReply(identity.email, false),
+    });
+    await renderSignedInSettings(identity);
+    expect(listHeadings().map(({ text }) => text)).toContain(ADD_HEADING);
+
+    await fireEvent.changeText(screen.getByLabelText(NEW_LABEL), first);
+    await fireEvent.press(screen.getByRole('button', { name: SAVE_BUTTON }));
+    await screen.findByText(SAVED_MESSAGE);
+
+    await waitFor(() => expect(listHeadings().map(({ text }) => text)).toContain(CHANGE_HEADING));
+    expect(listHeadings().map(({ text }) => text)).not.toContain(ADD_HEADING);
+    expect(screen.getByLabelText(CURRENT_LABEL).props.autoComplete).toBe('current-password');
+
+    await fireEvent.changeText(screen.getByLabelText(CURRENT_LABEL), current);
+    await fireEvent.changeText(screen.getByLabelText(NEW_LABEL), next);
+    await fireEvent.press(screen.getByRole('button', { name: SAVE_BUTTON }));
+    await waitFor(() => expect(requests.filter((request) => request.path === 'me/password')).toHaveLength(2));
+    const passwordRequests = requests.filter((request) => request.path === 'me/password');
+    expect(passwordRequests[0].body).toEqual({ newPassword: first });
+    expect(passwordRequests[1].body).toEqual({ currentPassword: current, newPassword: next });
+  });
+});
+
 describe('Settings password form keeps passwords in memory only (B-90)', () => {
   function serialiseCalls(mock: jest.Mock): string {
     return JSON.stringify(mock.mock.calls);
