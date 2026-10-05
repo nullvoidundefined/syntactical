@@ -1,5 +1,6 @@
 // B-62b: the pino logger client redacts emails, one-time codes, secrets, session tokens,
 // cookies, and auth headers, and logs an Error by name, pg code, and constraint only.
+// B-83 (Task 7.4): it also redacts newPassword and currentPassword, top level and one level down.
 import { randomBytes } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
@@ -30,6 +31,10 @@ describe('createLogger', () => {
     ['code', (value: string) => ({ code: value })],
     ['otp', (value: string) => ({ otp: value })],
     ['password', (value: string) => ({ password: value })],
+    ['newPassword', (value: string) => ({ newPassword: value })],
+    ['nested newPassword', (value: string) => ({ body: { newPassword: value } })],
+    ['currentPassword', (value: string) => ({ currentPassword: value })],
+    ['nested currentPassword', (value: string) => ({ body: { currentPassword: value } })],
     ['secret', (value: string) => ({ webhook: { secret: value } })],
     ['token', (value: string) => ({ session: { token: value } })],
     ['cookie', (value: string) => ({ cookie: value })],
