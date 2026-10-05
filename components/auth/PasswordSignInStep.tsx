@@ -3,7 +3,8 @@
 // the screen; no length rule applies here and nothing is trimmed, since only
 // the server judges a sign-in.
 import { router } from 'expo-router';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { createElement, type FormEvent, type ReactNode } from 'react';
+import { Platform, Pressable, Text, TextInput, View } from 'react-native';
 
 import { AuthButton } from './AuthButton';
 import { PasswordField } from './PasswordField';
@@ -39,6 +40,25 @@ function openSignUp(event?: {
   router.push('/sign-up');
 }
 
+const IS_WEB = Platform.OS === 'web';
+
+// On web the fields sit in a real <form> so Safari and Firefox offer to save the password;
+// native keeps a View. The form has no action or method, and every submit is cancelled so
+// the browser never navigates or puts the password in a URL.
+function SignInForm({ children, onSubmit }: { children: ReactNode; onSubmit: () => void }) {
+  if (!IS_WEB) return <View>{children}</View>;
+  return createElement(
+    'form',
+    {
+      onSubmit: (event: FormEvent) => {
+        event.preventDefault();
+        onSubmit();
+      },
+    },
+    children,
+  );
+}
+
 export function PasswordSignInStep({
   email,
   errorId,
@@ -54,7 +74,7 @@ export function PasswordSignInStep({
     if (!isBusy) onSubmit();
   }
   return (
-    <View>
+    <SignInForm onSubmit={submit}>
       <TextInput
         aria-label="Email address"
         autoComplete="email"
@@ -76,12 +96,12 @@ export function PasswordSignInStep({
         errorId={errorId}
         onSubmitEditing={submit}
       />
-      <AuthButton label="Sign in" isDisabled={isBusy} onPress={submit} />
+      <AuthButton label="Sign in" isDisabled={isBusy} isSubmit onPress={submit} />
       <AuthButton label="Use a code instead" isPrimary={false} onPress={onUseCode} />
       <AuthButton label="Forgot password?" isPrimary={false} onPress={onForgotPassword} />
       <Pressable role="link" aria-label="Create an account" {...WEB_LINK_PROPS} onPress={openSignUp} className="mt-4">
         <Text className="font-mono text-xs uppercase tracking-widest text-ink">Create an account</Text>
       </Pressable>
-    </View>
+    </SignInForm>
   );
 }
