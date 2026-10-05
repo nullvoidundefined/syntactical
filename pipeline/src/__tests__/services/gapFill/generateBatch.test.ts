@@ -231,7 +231,18 @@ describe('generateBatch', () => {
     it('drops a card whose oracle output does not prove the claimed answer, with no further model call', async () => {
         const { calls, provider } = buildProvider(() => [
             boolCard('wrong', { answer: false }),
-            { ...mcCard('wrong2'), answerIndex: 0 },
+            // Claims choice 0 while the oracle prints choice 1; every wrong choice keeps a rationale,
+            // so the card is well formed and fails only on its output.
+            {
+                ...mcCard('wrong2'),
+                answerIndex: 0,
+                choices: [
+                    { text: 'wrong-wrong2-a' },
+                    { rationale: 'Tempting but it is the real output.', text: 'ans-wrong2' },
+                    { rationale: 'Tempting but it throws.', text: 'wrong-wrong2-b' },
+                    { rationale: 'Tempting but it is empty.', text: 'wrong-wrong2-c' },
+                ],
+            },
             boolCard('good'),
         ]);
         const result = await generateBatch(languageArgs(provider, buildFakeRunner()));
