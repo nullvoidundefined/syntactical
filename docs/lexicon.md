@@ -4,6 +4,8 @@ One line per domain noun used in this codebase's names (files, functions, variab
 
 `language` and `difficulty` are not listed separately. A language is an entry in `content/manifest.json`'s `languages` list (`LanguageEntry`, id such as `python`); a difficulty is one of `DIFFICULTIES` in `@syntactical/content-schema` (`packages/content-schema/src/difficulties.ts`) (`easy`, `medium`, `hard`, type `DifficultyId`). Never introduce `level`, `subject`, or `tier` as synonyms for either. `track` is not a synonym: it names the stats record for a language and difficulty pair (below).
 
+`kind` (`LanguageEntry.kind`, `'language'` or `'topic'`, missing means `'language'`) tells a language track from a topic track. A topic track such as `backend-security` occupies the `language` slot: its manifest entry is a `LanguageEntry`, it plays under `app/[language]`, and its stats record is the track `backend-security:easy`.
+
 ### Content
 
 - bank - in code - the questions for one language and difficulty pair, stored as `content/<language>/<difficulty>.json` (`{ schemaVersion, questions }`) and loaded through `useQuestionBank` - chosen over: `deck`, `pool`, `set` because the original data module named it `getQuestionBank`, and the content files, the manifest's `banks` map, and `useQuestionBank` kept the noun.

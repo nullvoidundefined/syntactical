@@ -234,6 +234,25 @@ describe('generateQuestion', () => {
         expect(calls).toHaveLength(0);
     });
 
+    it('runs an execute request in the content language id the prompt asks for, in the oracle language', async () => {
+        const provider = scripted((call) =>
+            call === 0 ? { execute: { code: 'console.log(1)', language: 'javascript' } } : buildDraft(),
+        );
+        const { calls, run } = fakeRun();
+        const args = { ...baseArgs(provider, run), language: 'node' as const, languageId: 'javascript' };
+        await generateQuestion(args);
+        expect(calls[0]?.oracle).toEqual({ code: 'console.log(1)', language: 'node' });
+        expect(provider.prompts[1]).not.toContain('execute must use');
+    });
+
+    it('still refuses an execute request in another language for a javascript bank', async () => {
+        const provider = scripted(() => ({ execute: { code: 'print(1)', language: 'python' } }));
+        const { calls, run } = fakeRun();
+        const args = { ...baseArgs(provider, run), language: 'node' as const, languageId: 'javascript' };
+        await generateQuestion(args);
+        expect(calls).toHaveLength(0);
+    });
+
     it('bounds execute requests per draft so a model cannot loop forever', async () => {
         const provider = scripted(() => ({ execute: { code: 'print(1)', language: 'python' } }));
         const { calls, run } = fakeRun();

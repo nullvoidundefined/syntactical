@@ -5,4 +5,7 @@ import type { ProviderTransientReason } from './ProviderTransientError.js';
 
 export type GenerateOutcome =
     | { question: Question; status: 'kept' }
-    | { reason: 'duplicate' | 'generation-failed' | ProviderTransientReason; status: 'dropped' };
+    | {
+          reason: 'disallowed-runner' | 'duplicate' | 'generation-failed' | 'not-executable' | ProviderTransientReason;
+          status: 'dropped';
+      };

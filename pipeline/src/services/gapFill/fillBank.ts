@@ -11,11 +11,13 @@ import { z } from 'zod';
 
 import type { FillBankArgs } from '../../types/FillBankArgs.js';
 import type { FillBankResult } from '../../types/FillBankResult.js';
+import type { GenerateOutcome } from '../../types/GenerateOutcome.js';
 import { writeJsonAtomic } from '../classify/writeJsonAtomic.js';
 
 import { MAX_CONSECUTIVE_PROVIDER_FAILURES } from './MAX_CONSECUTIVE_PROVIDER_FAILURES.js';
 import { countQuestionsNeeded } from './countQuestionsNeeded.js';
 import { generateQuestion } from './generateQuestion.js';
+import { generateTopicQuestion } from './generateTopicQuestion.js';
 import { normalizePrompt } from './normalizePrompt.js';
 import { readJsonIfPresent } from './readJsonIfPresent.js';
 
@@ -36,8 +38,20 @@ function countByTopic(questions: Question[], classified: Map<string, { topic: st
     return counts;
 }
 
+function generateFor(
+    args: FillBankArgs,
+    topic: string,
+    existingPrompts: ReadonlySet<string>,
+): Promise<GenerateOutcome> {
+    const { difficulty, languageId, provider, run } = args;
+    const shared = { difficulty, existingPrompts, languageId, provider, topic, ...(run === undefined ? {} : { run }) };
+    return args.runners === undefined
+        ? generateQuestion({ ...shared, language: args.language })
+        : generateTopicQuestion({ ...shared, runners: args.runners });
+}
+
 export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
-    const { bankKey, difficulty, language, languageId, log, outRoot, provider, questions, run, topics } = args;
+    const { bankKey, difficulty, languageId, log, outRoot, questions, topics } = args;
     const result: FillBankResult = { duplicate: 0, failed: 0, generated: 0 };
     const rawClassified = await readJsonIfPresent(join(outRoot, 'classifications', languageId, `${difficulty}.json`));
     if (rawClassified === undefined) {
@@ -60,15 +74,7 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
                 log(`${bankKey} ${topic}: requesting ${needed}`);
             }
             for (let index = 0; index < needed; index += 1) {
-                const outcome = await generateQuestion({
-                    difficulty,
-                    existingPrompts,
-                    language,
-                    languageId,
-                    provider,
-                    topic,
-                    ...(run === undefined ? {} : { run }),
-                });
+                const outcome = await generateFor(args, topic, existingPrompts);
                 const isProviderFailure =
                     outcome.status === 'dropped' &&
                     (outcome.reason === 'model-timeout' || outcome.reason === 'model-error');
