@@ -35,6 +35,25 @@ describe('LengthStep', () => {
     expect(hasHint('3')).toBe(false);
   });
 
+  it('offers 20, 50, and "All questions" with no count when the pool size is unknown', async () => {
+    const onSelectLength = jest.fn();
+    await render(
+      <LengthStep
+        language="python"
+        difficulty="easy"
+        poolSize={undefined}
+        onSelectLength={onSelectLength}
+        onBack={jest.fn()}
+      />,
+    );
+    expect(screen.getByRole('button', { name: /20 questions/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /50 questions/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^All questions/ })).toBeTruthy();
+    expect(screen.queryByText(/of undefined/)).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: /^All questions/ }));
+    expect(onSelectLength).toHaveBeenCalledWith(undefined);
+  });
+
   it('reports the chosen length, or undefined for all questions', async () => {
     const onSelectLength = jest.fn();
     await render(

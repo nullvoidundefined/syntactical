@@ -59,7 +59,18 @@ async function openRoundByKeys(page: Page, difficultyKey: string): Promise<void>
   await page.keyboard.press(difficultyKey);
   await expect(page.getByText('Step 3 / Select topic')).toBeVisible();
   await page.keyboard.press('1');
-  await expect(page.getByRole('progressbar', { name: /^Question 1 of/ })).toBeVisible();
+  await pickAllQuestions(page);
+}
+
+// After the whole bank or a topic is chosen, plays every question: when the length step shows
+// (the manifest has no count for the pool, or the pool is over 20), picks "All"; when it is
+// skipped the round is already open. Returns once the round's first question shows.
+async function pickAllQuestions(page: Page): Promise<void> {
+  const lengthStep = page.getByText('Step 4 / Select length');
+  const round = page.getByRole('progressbar', { name: /^Question 1 of/ });
+  await expect(lengthStep.or(round)).toBeVisible();
+  if (await lengthStep.isVisible()) await page.getByRole('button', { name: /^All/ }).click();
+  await expect(round).toBeVisible();
 }
 
 // Answers the open question with the first option (a multiple-choice or A/B option, or True) and moves on, `count` times. Returns
@@ -89,4 +100,13 @@ async function readUserId(email: string): Promise<string | undefined> {
   return row?.id;
 }
 
-export { answerQuestions, createUniqueEmail, openRoundByKeys, queryDatabase, readSignInCode, readUserId, signIn };
+export {
+  answerQuestions,
+  createUniqueEmail,
+  openRoundByKeys,
+  pickAllQuestions,
+  queryDatabase,
+  readSignInCode,
+  readUserId,
+  signIn,
+};

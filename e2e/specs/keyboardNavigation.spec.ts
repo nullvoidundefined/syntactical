@@ -49,7 +49,15 @@ test('a round can be played with the keyboard alone', async ({ page }) => {
   await expect(page.getByText('Step 3 / Select topic')).toBeVisible();
   await tabTo(page, /^\s*Whole bank/);
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('progressbar', { name: /^Question 1 of/ })).toBeVisible();
+  // With no question count in the manifest the length step shows; Tab to "All questions".
+  const lengthStep = page.getByText('Step 4 / Select length');
+  const round = page.getByRole('progressbar', { name: /^Question 1 of/ });
+  await expect(lengthStep.or(round)).toBeVisible();
+  if (await lengthStep.isVisible()) {
+    await tabTo(page, /^\s*All/);
+    await page.keyboard.press('Enter');
+  }
+  await expect(round).toBeVisible();
 
   // Question 1: Tab to a choice, answer with Enter, then Continue with Enter.
   await tabToAnswerOption(page);

@@ -17,7 +17,8 @@ type LengthStepProps = {
   onBack: () => void;
   // A fixed length, or undefined for every question in the pool.
   onSelectLength: (count: number | undefined) => void;
-  poolSize: number;
+  // Undefined when the manifest gives no question count for the pool.
+  poolSize: number | undefined;
 };
 
 export function LengthStep({ difficulty, language, onBack, onSelectLength, poolSize }: LengthStepProps) {
@@ -51,13 +52,13 @@ export function LengthStep({ difficulty, language, onBack, onSelectLength, poolS
             key={length}
             keyHint={index + 1}
             title={`${length} questions`}
-            subtitle={`A random ${length} of ${poolSize}`}
+            subtitle={poolSize === undefined ? `A random ${length}` : `A random ${length} of ${poolSize}`}
             onSelect={() => onSelectLength(length)}
           />
         ))}
         <SelectionCard
           keyHint={lengths.length + 1}
-          title={`All ${poolSize} questions`}
+          title={poolSize === undefined ? 'All questions' : `All ${poolSize} questions`}
           subtitle="Every question in this pool"
           onSelect={() => onSelectLength(undefined)}
         />

@@ -12,6 +12,11 @@ describe('listRoundLengths', () => {
     expect(isLengthChoiceOffered(30)).toBe(true);
     expect(isLengthChoiceOffered(20)).toBe(false);
   });
+
+  it('offers every fixed length when the pool size is unknown', () => {
+    expect(listRoundLengths(undefined)).toEqual([20, 50]);
+    expect(isLengthChoiceOffered(undefined)).toBe(true);
+  });
 });
 
 describe('readRoundCount', () => {
@@ -35,10 +40,11 @@ describe('readRoundCount', () => {
 });
 
 describe('readPoolSize', () => {
-  it('sums the bank, or reads one topic, treating an unknown topic as empty', () => {
+  it('sums the bank, or reads one topic, and is undefined when the manifest gives no count', () => {
     expect(readPoolSize({ a: 60, b: 40 }, undefined)).toBe(100);
     expect(readPoolSize({ a: 60, b: 40 }, 'a')).toBe(60);
-    expect(readPoolSize({ a: 60 }, 'zzz')).toBe(0);
+    expect(readPoolSize({ a: 60 }, 'zzz')).toBeUndefined();
+    expect(readPoolSize({}, undefined)).toBeUndefined();
   });
 });
 
