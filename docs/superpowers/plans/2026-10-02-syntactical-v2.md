@@ -1201,17 +1201,18 @@ function hashPassword(
   normalized: string,
   deps?: { deriveKey?: DeriveKey; randomBytes?: (size: number) => Buffer; params?: PasswordHashParams },
 ): Promise<string>;
-type CompareKeys = (a: Buffer, b: Buffer) => boolean; // default: crypto.timingSafeEqual
+// hashPassword and verifyPassword apply NFKC themselves, so passing a normalizePassword result is harmless (idempotent).
+type Compare = (a: Buffer, b: Buffer) => boolean; // default: crypto.timingSafeEqual
 function verifyPassword(
   normalized: string,
   stored: string,
-  deps?: { deriveKey?: DeriveKey; compareKeys?: CompareKeys },
+  deps?: { deriveKey?: DeriveKey; compare?: Compare },
 ): Promise<boolean>;
 function needsRehash(stored: string, params?: PasswordHashParams): boolean;
 function createDummyPasswordHash(deps?: { deriveKey?: DeriveKey }): Promise<string>;
 interface PasswordHashSlots {
   run<T>(task: () => Promise<T>): Promise<T>;
-} // rejects with HashSlotsBusy after the queue timeout
+} // rejects with HashSlotsBusy (code SERVER_BUSY) after the queue timeout
 function createPasswordHashSlots(options: { concurrency: number; queueTimeoutMs: number }): PasswordHashSlots;
 ```
 
@@ -1221,10 +1222,11 @@ function createPasswordHashSlots(options: { concurrency: number; queueTimeoutMs:
 - The injected `randomBytes` is called with 32, and the injected `deriveKey` receives `N` 131072, `r` 8, `p` 1, `maxmem` 268435456, and key length 64.
 - Hashing one run-time password twice gives two different strings, and `verifyPassword` returns true for both.
 - `verifyPassword` returns false for a different password, for the same password plus a trailing space, and for stored strings that are empty, truncated, carry a non-base64 salt, name `$argon2id$`, or name `v=2`; none of these throw.
-- `verifyPassword` with an injected `compareKeys` calls it exactly once, with two 64-byte buffers, for a well-formed stored hash, and returns its result; it never calls it for a malformed stored hash. The module's exported default `DEFAULT_COMPARE_KEYS` is `crypto.timingSafeEqual` (identity check).
+- `verifyPassword` with an injected `compare` calls it exactly once, with two 64-byte buffers, for a well-formed stored hash, and returns its result. The default `compare` (`crypto.timingSafeEqual`) is checked by behavior: an equal-length key mismatch returns false, and keys of unequal length fail closed (false) without throwing.
+- `hashPassword` and `verifyPassword` apply NFKC themselves: a hash of a string containing U+FB01 verifies against its NFKC form and vice versa, and passing an already normalized string gives the same result.
 - `needsRehash` is false for a hash made with the current parameters and true for one made with `ln=16` or `p=2` (built in the test with injected parameters), and `verifyPassword` still verifies the old-parameter hash.
 - `createDummyPasswordHash` returns a well-formed current-parameter hash.
-- `PasswordHashSlots` with concurrency 2 runs at most 2 tasks at once (a third starts only after one settles), and a task that waits longer than the queue timeout rejects with `HashSlotsBusy` without running.
+- `PasswordHashSlots` with concurrency 2 runs at most 2 tasks at once (a third starts only after one settles), and a task that waits longer than the queue timeout rejects with `HashSlotsBusy` (code `SERVER_BUSY`) without running.
 - `PASSWORD_HASH_CONCURRENCY` of `0`, `9`, or `two` fails startup with a message naming the variable; absent means 2.
 - One real (uninjected) `hashPassword` and `verifyPassword` round trip succeeds, so `maxmem` is high enough for N = 2^17.
 
