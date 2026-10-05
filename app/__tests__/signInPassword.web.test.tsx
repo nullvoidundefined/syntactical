@@ -40,7 +40,7 @@ type AuthResult =
       reason: 'busy' | 'invalid-code' | 'invalid-credentials' | 'invalid-email' | 'rate-limited' | 'unavailable';
     };
 
-const mockSignInWithPassword = jest.fn<Promise<AuthResult>, [string, string]>();
+const mockCredentialSignIn = jest.fn<Promise<AuthResult>, [string, string]>();
 const mockRequestCode = jest.fn<Promise<AuthResult>, [string]>();
 const mockVerifyCode = jest.fn<Promise<AuthResult>, [string, string]>();
 jest.mock('../../state/AuthProvider', () => ({
@@ -50,7 +50,7 @@ jest.mock('../../state/AuthProvider', () => ({
     isHydrated: true,
     isSignedIn: false,
     requestCode: (email: string) => mockRequestCode(email),
-    signInWithPassword: (...args: [string, string]) => mockSignInWithPassword(...args),
+    signInWithPassword: (...args: [string, string]) => mockCredentialSignIn(...args),
     signOut: () => Promise.resolve(),
     user: null,
     verifyCode: (email: string, code: string) => mockVerifyCode(email, code),
@@ -167,14 +167,14 @@ describe('sign-in route with a password on the web', () => {
   it('signs in when Enter is pressed in the password field', async () => {
     const email = buildEmail();
     const password = buildPassword();
-    mockSignInWithPassword.mockResolvedValue({ isOk: true });
+    mockCredentialSignIn.mockResolvedValue({ isOk: true });
     render(<SignInScreen />);
     typeInto(getEmailInput(), email);
     typeInto(getPasswordInput(), password);
     await act(async () => {
       fireEvent.keyDown(getPasswordInput(), { key: 'Enter' });
     });
-    expect(mockSignInWithPassword).toHaveBeenCalledWith(email, password);
+    expect(mockCredentialSignIn).toHaveBeenCalledWith(email, password);
     expect(mockReplacedRoutes).toEqual(['/']);
   });
 
@@ -182,7 +182,7 @@ describe('sign-in route with a password on the web', () => {
     ['invalid-credentials', INVALID_CREDENTIALS_MESSAGE],
     ['busy', BUSY_MESSAGE],
   ] as const)('ties the %s alert to the password input through aria-describedby', async (reason, message) => {
-    mockSignInWithPassword.mockResolvedValue({ isOk: false, reason });
+    mockCredentialSignIn.mockResolvedValue({ isOk: false, reason });
     render(<SignInScreen />);
     typeInto(getEmailInput(), buildEmail());
     typeInto(getPasswordInput(), buildPassword());
@@ -201,7 +201,7 @@ describe('sign-in route with a password on the web', () => {
     it.each(['a', 't', 'f', 'q', '1', 'Escape', 'Enter'])(
       'pressing %p in the password field fires none',
       async (key) => {
-        mockSignInWithPassword.mockResolvedValue({ isOk: false, reason: 'invalid-credentials' });
+        mockCredentialSignIn.mockResolvedValue({ isOk: false, reason: 'invalid-credentials' });
         render(
           <>
             <SignInScreen />
@@ -257,13 +257,13 @@ describe('sign-in route with a password on the web', () => {
     it('signs in with Enter on "Sign in"', async () => {
       const email = buildEmail();
       const password = buildPassword();
-      mockSignInWithPassword.mockResolvedValue({ isOk: true });
+      mockCredentialSignIn.mockResolvedValue({ isOk: true });
       render(<SignInScreen />);
       typeInto(getEmailInput(), email);
       typeInto(getPasswordInput(), password);
       await pressEnterOn(screen.getByRole('button', { name: SIGN_IN }));
-      expect(mockSignInWithPassword).toHaveBeenCalledTimes(1);
-      expect(mockSignInWithPassword).toHaveBeenCalledWith(email, password);
+      expect(mockCredentialSignIn).toHaveBeenCalledTimes(1);
+      expect(mockCredentialSignIn).toHaveBeenCalledWith(email, password);
     });
 
     it.each([USE_CODE, FORGOT])('opens the code steps with Enter on "%s", with the email kept', async (name) => {

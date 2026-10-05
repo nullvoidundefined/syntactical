@@ -37,7 +37,7 @@ type AuthResult =
       reason: 'busy' | 'invalid-code' | 'invalid-credentials' | 'invalid-email' | 'rate-limited' | 'unavailable';
     };
 
-const mockSignInWithPassword = jest.fn<Promise<AuthResult>, [string, string]>();
+const mockCredentialSignIn = jest.fn<Promise<AuthResult>, [string, string]>();
 const mockRequestCode = jest.fn<Promise<AuthResult>, [string]>();
 const mockVerifyCode = jest.fn<Promise<AuthResult>, [string, string]>();
 jest.mock('../../state/AuthProvider', () => ({
@@ -47,7 +47,7 @@ jest.mock('../../state/AuthProvider', () => ({
     isHydrated: true,
     isSignedIn: false,
     requestCode: (email: string) => mockRequestCode(email),
-    signInWithPassword: (...args: [string, string]) => mockSignInWithPassword(...args),
+    signInWithPassword: (...args: [string, string]) => mockCredentialSignIn(...args),
     signOut: () => Promise.resolve(),
     user: null,
     verifyCode: (email: string, code: string) => mockVerifyCode(email, code),
@@ -141,11 +141,11 @@ describe('sign-in route, password step', () => {
   it('signs in with the typed email and password and replaces the route with home', async () => {
     const email = buildEmail();
     const password = buildPassword();
-    mockSignInWithPassword.mockResolvedValue({ isOk: true });
+    mockCredentialSignIn.mockResolvedValue({ isOk: true });
     await render(<SignInScreen />);
     await signInWith(email, password);
-    expect(mockSignInWithPassword).toHaveBeenCalledTimes(1);
-    expect(mockSignInWithPassword).toHaveBeenCalledWith(email, password);
+    expect(mockCredentialSignIn).toHaveBeenCalledTimes(1);
+    expect(mockCredentialSignIn).toHaveBeenCalledWith(email, password);
     expect(mockReplace).toHaveBeenCalledWith('/');
     expect(screen.queryByRole('alert')).toBeNull();
   });
@@ -153,17 +153,17 @@ describe('sign-in route, password step', () => {
   it('signs in from the return key in the password field', async () => {
     const email = buildEmail();
     const password = buildPassword();
-    mockSignInWithPassword.mockResolvedValue({ isOk: true });
+    mockCredentialSignIn.mockResolvedValue({ isOk: true });
     await render(<SignInScreen />);
     await typeCredentials(email, password);
     await fireEvent(screen.getByLabelText(PASSWORD_LABEL), 'submitEditing');
-    expect(mockSignInWithPassword).toHaveBeenCalledWith(email, password);
+    expect(mockCredentialSignIn).toHaveBeenCalledWith(email, password);
     expect(mockReplace).toHaveBeenCalledWith('/');
   });
 
   it('returns to the paid bank paywall in returnTo after a password sign-in', async () => {
     mockParams.current = { returnTo: '/python?paywall=medium' };
-    mockSignInWithPassword.mockResolvedValue({ isOk: true });
+    mockCredentialSignIn.mockResolvedValue({ isOk: true });
     await render(<SignInScreen />);
     await signInWith(buildEmail(), buildPassword());
     expect(mockReplace).toHaveBeenCalledTimes(1);
@@ -172,14 +172,14 @@ describe('sign-in route, password step', () => {
 
   it('ignores a returnTo naming another origin and goes home', async () => {
     mockParams.current = { returnTo: '//evil.example/python' };
-    mockSignInWithPassword.mockResolvedValue({ isOk: true });
+    mockCredentialSignIn.mockResolvedValue({ isOk: true });
     await render(<SignInScreen />);
     await signInWith(buildEmail(), buildPassword());
     expect(mockReplace).toHaveBeenCalledWith('/');
   });
 
   it('empties the password field after a successful sign-in', async () => {
-    mockSignInWithPassword.mockResolvedValue({ isOk: true });
+    mockCredentialSignIn.mockResolvedValue({ isOk: true });
     await render(<SignInScreen />);
     await signInWith(buildEmail(), buildPassword());
     expect(mockReplace).toHaveBeenCalled();
@@ -189,10 +189,10 @@ describe('sign-in route, password step', () => {
   it('sends a password shorter than 12 characters, since only the server judges a sign-in', async () => {
     const email = buildEmail();
     const shortPassword = randomBytes(3).toString('hex');
-    mockSignInWithPassword.mockResolvedValue({ isOk: false, reason: 'invalid-credentials' });
+    mockCredentialSignIn.mockResolvedValue({ isOk: false, reason: 'invalid-credentials' });
     await render(<SignInScreen />);
     await signInWith(email, shortPassword);
-    expect(mockSignInWithPassword).toHaveBeenCalledWith(email, shortPassword);
+    expect(mockCredentialSignIn).toHaveBeenCalledWith(email, shortPassword);
   });
 
   it.each([
@@ -205,7 +205,7 @@ describe('sign-in route, password step', () => {
     async (reason, message) => {
       const email = buildEmail();
       const password = buildPassword();
-      mockSignInWithPassword.mockResolvedValue({ isOk: false, reason });
+      mockCredentialSignIn.mockResolvedValue({ isOk: false, reason });
       await render(<SignInScreen />);
       await signInWith(email, password);
       const alerts = screen.getAllByRole('alert');
@@ -221,10 +221,10 @@ describe('sign-in route, password step', () => {
   it('shows only the fixed message for an oversized password the server rejects, never the value', async () => {
     const email = buildEmail();
     const oversized = randomBytes(400).toString('hex');
-    mockSignInWithPassword.mockResolvedValue({ isOk: false, reason: 'invalid-credentials' });
+    mockCredentialSignIn.mockResolvedValue({ isOk: false, reason: 'invalid-credentials' });
     await render(<SignInScreen />);
     await signInWith(email, oversized);
-    expect(mockSignInWithPassword).toHaveBeenCalledWith(email, oversized);
+    expect(mockCredentialSignIn).toHaveBeenCalledWith(email, oversized);
     const alert = screen.getByRole('alert');
     expect(within(alert).getByText(INVALID_CREDENTIALS_MESSAGE)).toBeTruthy();
     expectAlertOmits(alert, [oversized.slice(0, 40)]);
@@ -232,7 +232,7 @@ describe('sign-in route, password step', () => {
 
   it('sends one request when "Sign in" is pressed again while the first is in flight', async () => {
     let settle: (result: AuthResult) => void = () => undefined;
-    mockSignInWithPassword.mockReturnValue(
+    mockCredentialSignIn.mockReturnValue(
       new Promise<AuthResult>((resolve) => {
         settle = resolve;
       }),
@@ -242,9 +242,9 @@ describe('sign-in route, password step', () => {
     expect(screen.getByRole('button', { name: SIGN_IN })).toBeDisabled();
     await fireEvent.press(screen.getByRole('button', { name: SIGN_IN }));
     await fireEvent(screen.getByLabelText(PASSWORD_LABEL), 'submitEditing');
-    expect(mockSignInWithPassword).toHaveBeenCalledTimes(1);
+    expect(mockCredentialSignIn).toHaveBeenCalledTimes(1);
     await act(async () => settle({ isOk: false, reason: 'invalid-credentials' }));
-    expect(mockSignInWithPassword).toHaveBeenCalledTimes(1);
+    expect(mockCredentialSignIn).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('button', { name: SIGN_IN })).toBeEnabled();
   });
 });
@@ -259,7 +259,7 @@ describe('sign-in route, "Use a code instead"', () => {
     expect(screen.queryByLabelText(PASSWORD_LABEL)).toBeNull();
     expect(screen.getByRole('button', { name: SEND_BUTTON })).toBeTruthy();
     expect(listLevelOneHeadings()).toEqual(['Sign in']);
-    expect(mockSignInWithPassword).not.toHaveBeenCalled();
+    expect(mockCredentialSignIn).not.toHaveBeenCalled();
   });
 
   it('runs the code steps with the kept email and then returns to returnTo', async () => {
@@ -289,7 +289,7 @@ describe('sign-in route, "Forgot password?"', () => {
     expect(screen.getByLabelText(EMAIL_LABEL).props.value).toBe(email);
     expect(screen.queryByLabelText(PASSWORD_LABEL)).toBeNull();
     expect(screen.getByRole('button', { name: SEND_BUTTON })).toBeTruthy();
-    expect(mockSignInWithPassword).not.toHaveBeenCalled();
+    expect(mockCredentialSignIn).not.toHaveBeenCalled();
   });
 
   it('runs the code steps and then opens Settings with the password form, even with a returnTo', async () => {
