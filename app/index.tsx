@@ -17,7 +17,7 @@ export default function LanguageScreen() {
             syntactical<Text className="text-signal">_</Text>
           </Text>
           <Text className="mt-2 text-center text-sm text-muted">
-            High-velocity drills for developers who think they already know the answer.
+            High-velocity drills for developers
           </Text>
         </View>
         <LanguageStep languages={languages} onSelectLanguage={(language) => router.push(`/${language}`)} />
