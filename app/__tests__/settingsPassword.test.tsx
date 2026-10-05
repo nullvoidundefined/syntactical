@@ -252,12 +252,17 @@ describe('Settings password form keeps passwords in memory only (B-90)', () => {
     const current = buildPassword();
     const next = buildPassword();
     const consoleCapture = captureConsole();
-    const storageSpies = [
-      jest.spyOn(AsyncStorage, 'setItem'),
-      jest.spyOn(AsyncStorage, 'multiSet'),
-      jest.spyOn(AsyncStorage, 'mergeItem'),
-      jest.spyOn(AsyncStorage, 'multiMerge'),
-    ];
+    // The AsyncStorage jest mock's methods are already jest.fn, so jest.spyOn would hand back the
+    // same mock and mockRestore would strip its implementation for later tests. Each write method
+    // is wrapped in a recording pass-through instead, and the saved original is put back after.
+    const storage = AsyncStorage as unknown as Record<string, (...args: unknown[]) => unknown>;
+    const writeMethods = ['setItem', 'multiSet', 'mergeItem', 'multiMerge'];
+    const originals = writeMethods.map((name) => storage[name]);
+    const storageSpies = writeMethods.map((name, index) => {
+      const spy = jest.fn((...args: unknown[]) => originals[index](...args));
+      storage[name] = spy;
+      return spy;
+    });
     try {
       const { requests } = installRoutedFetch({
         [CODES_ROUTE]: codeSentReply(),
@@ -315,7 +320,9 @@ describe('Settings password form keeps passwords in memory only (B-90)', () => {
       }
       expect(secureStore.setItemAsync.mock.calls).toEqual([[SESSION_TOKEN_KEY, reauthed.sessionValue]]);
     } finally {
-      for (const spy of storageSpies) spy.mockRestore();
+      writeMethods.forEach((name, index) => {
+        storage[name] = originals[index];
+      });
       consoleCapture.restore();
     }
   });
