@@ -383,6 +383,17 @@ describe('gapFill batch generation', () => {
             },
         );
 
+        it('merges new oracles into the entries already in the oracle file', async () => {
+            await seed();
+            const earlier = { code: 'print(1)', language: 'python' };
+            await writeJson(join(outRoot, `oracles/${id}/easy.json`), { 'earlier-question': earlier });
+            const provider = buildProvider(({ n }) => (n === 1 ? [boolCard('good')] : []));
+            await run(provider);
+            const oracles = await readJson<Record<string, Oracle>>(join(outRoot, `oracles/${id}/easy.json`));
+            expect(oracles['earlier-question']).toEqual(earlier);
+            expect(Object.keys(oracles)).toHaveLength(2);
+        });
+
         it('gives a topic card the grammar of its runner and keeps its setupSql in the oracle', async () => {
             await seed({ kind: 'topic' });
             const card = { ...mcCard('db', 'postgres', 'SELECT 1') };
