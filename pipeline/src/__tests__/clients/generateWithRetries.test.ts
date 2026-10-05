@@ -88,6 +88,7 @@ describe('generateWithRetries', () => {
                 'a bash block, then a json fence',
                 '```bash\ncd /tmp && ruby -e "p 1"\n```\n```json\n{"answerIndex": 2}\n```',
             ],
+            ['CRLF line endings around a json fence', 'Cards:\r\n```json\r\n{"answerIndex": 2}\r\n```\r\n'],
             ['a bash block, then bare JSON', '```bash\ncd /tmp\n```\nResult:\n{"answerIndex": 2}\nDone.'],
         ])('reads the answer from %s', async (_name, text) => {
             const { ask, asked } = answering(text);
