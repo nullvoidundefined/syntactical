@@ -163,3 +163,142 @@ describe('PasswordSignInStep on the web', () => {
     );
   });
 });
+
+// The real <form> on the web (PR 104, owner decision): Safari and Firefox offer
+// to save a password only after a form submission, so the email and password
+// inputs sit in exactly one <form>, "Sign in" is its submit button, every
+// other control is a non-submit button, and each submit has its default
+// prevented so the browser never navigates or puts the password in a URL.
+describe('PasswordSignInStep on the web, inside a real form', () => {
+  const SHOW = 'Show password';
+
+  // Every submit event that reaches the document, with whether its default was
+  // prevented. React handles events at its root, so this listener runs after it.
+  let submits: boolean[] = [];
+  function recordSubmit(event: Event) {
+    submits.push(event.defaultPrevented);
+  }
+  beforeEach(() => {
+    submits = [];
+    document.addEventListener('submit', recordSubmit);
+  });
+  afterEach(() => {
+    document.removeEventListener('submit', recordSubmit);
+  });
+
+  function getOnlyForm(): HTMLFormElement {
+    const forms = document.querySelectorAll('form');
+    expect(forms).toHaveLength(1);
+    return forms[0];
+  }
+
+  function getButton(name: string): HTMLButtonElement {
+    return screen.getByRole('button', { name }) as HTMLButtonElement;
+  }
+
+  // What a browser does for Enter in a text field: keydown reaches the field,
+  // and unless its default is prevented the browser submits the field's form
+  // (implicit submission). jsdom does not, so the submit is sent here.
+  function pressEnterInField(input: HTMLInputElement) {
+    act(() => input.focus());
+    act(() => {
+      const isNotPrevented = fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+      if (isNotPrevented && input.form !== null) fireEvent.submit(input.form);
+    });
+  }
+
+  it('puts the email and password inputs in exactly one <form>, with "Sign in" as its submit button', () => {
+    renderStep(buildHandlers());
+    const form = getOnlyForm();
+    expect(form.contains(getEmailInput())).toBe(true);
+    expect(form.contains(getPasswordInput())).toBe(true);
+    const signIn = getButton(SIGN_IN);
+    expect(signIn.tagName).toBe('BUTTON');
+    expect(signIn.type).toBe('submit');
+    expect(form.contains(signIn)).toBe(true);
+  });
+
+  it.each([USE_CODE, FORGOT, SHOW])('makes "%s" a non-submit button: type="button" or outside the form', (name) => {
+    renderStep(buildHandlers());
+    const form = getOnlyForm();
+    const button = getButton(name);
+    expect(button.type === 'button' || !form.contains(button)).toBe(true);
+  });
+
+  it('gives the form no action and no GET method, so the password can never land in a URL', () => {
+    renderStep(buildHandlers());
+    const form = getOnlyForm();
+    expect(form.hasAttribute('action')).toBe(false);
+    expect((form.getAttribute('method') ?? '').toLowerCase()).not.toBe('get');
+  });
+
+  it('calls onSubmit once when the form is submitted, with the default prevented', () => {
+    const handlers = buildHandlers();
+    renderStep(handlers);
+    act(() => {
+      fireEvent.submit(getOnlyForm());
+    });
+    expect(handlers.onSubmit).toHaveBeenCalledTimes(1);
+    expect(submits).toEqual([true]);
+  });
+
+  it('submits the form once when "Sign in" is clicked: one onSubmit call and one prevented submit event', () => {
+    const handlers = buildHandlers();
+    renderStep(handlers);
+    act(() => {
+      fireEvent.click(getButton(SIGN_IN));
+    });
+    expect(handlers.onSubmit).toHaveBeenCalledTimes(1);
+    expect(submits).toEqual([true]);
+  });
+
+  it.each([
+    ['email', getEmailInput],
+    ['password', getPasswordInput],
+  ] as const)('calls onSubmit once for Enter in the %s field, with any submit prevented', (_label, getInput) => {
+    const handlers = buildHandlers();
+    renderStep(handlers);
+    expect(getOnlyForm().contains(getInput())).toBe(true);
+    pressEnterInField(getInput());
+    expect(handlers.onSubmit).toHaveBeenCalledTimes(1);
+    expect(submits.every((isPrevented) => isPrevented)).toBe(true);
+  });
+
+  it('does not call onSubmit while busy when the form is submitted, and still prevents the default', () => {
+    const handlers = buildHandlers();
+    renderStep(handlers, true);
+    act(() => {
+      fireEvent.submit(getOnlyForm());
+    });
+    expect(handlers.onSubmit).not.toHaveBeenCalled();
+    expect(submits).toEqual([true]);
+  });
+
+  it('toggles the password with "Show password" inside the form without submitting it', () => {
+    const handlers = buildHandlers();
+    renderStep(handlers);
+    expect(getOnlyForm().contains(getPasswordInput())).toBe(true);
+    act(() => {
+      fireEvent.click(getButton(SHOW));
+    });
+    expect(getButton('Hide password').getAttribute('aria-pressed')).toBe('true');
+    expect(getPasswordInput().getAttribute('type')).not.toBe('password');
+    expect(handlers.onSubmit).not.toHaveBeenCalled();
+    expect(submits).toEqual([]);
+  });
+
+  it.each([
+    [USE_CODE, 'onUseCode'],
+    [FORGOT, 'onForgotPassword'],
+  ] as const)('clicking "%s" calls only its handler and never submits the form', (name, handlerName) => {
+    const handlers = buildHandlers();
+    renderStep(handlers);
+    expect(getOnlyForm().contains(getEmailInput())).toBe(true);
+    act(() => {
+      fireEvent.click(getButton(name));
+    });
+    expect(handlers[handlerName]).toHaveBeenCalledTimes(1);
+    expect(handlers.onSubmit).not.toHaveBeenCalled();
+    expect(submits).toEqual([]);
+  });
+});
