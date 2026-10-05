@@ -62,4 +62,18 @@ describe('generateWithRetries', () => {
         expect((error as Error).message).not.toContain('malformed JSON');
         expect((error as Error).message).toContain('answerIndex');
     });
+
+    it('makes one attempt when a request asks for one', async () => {
+        const { ask, asked } = answering('not json');
+        await expect(generateWithRetries({ ...REQUEST, maxAttempts: 1 }, ask)).rejects.toBeInstanceOf(
+            ModelOutputInvalid,
+        );
+        expect(asked).toHaveLength(1);
+    });
+
+    it('still makes three attempts by default', async () => {
+        const { ask, asked } = answering('not json');
+        await expect(generateWithRetries(REQUEST, ask)).rejects.toBeInstanceOf(ModelOutputInvalid);
+        expect(asked).toHaveLength(3);
+    });
 });
