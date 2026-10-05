@@ -1,7 +1,8 @@
 // The app with its auth routes wired to a real database for one integration
 // test: an injectable clock, a recording email client, a rate-limit key secret
 // generated at run time, a fake breach client (every range empty unless the
-// test passes one), password hash slots, and an optional derivation wrapper.
+// test passes one), password hash slots, an optional derivation wrapper, and the dummy password
+// hash that password sign-in verifies against when no stored hash applies.
 import { randomBytes } from 'node:crypto';
 
 import type { Router } from 'express';
@@ -20,6 +21,16 @@ import { createPasswordHashSlots } from '../../services/passwordHashSlots.js';
 const SECRET_BYTES = 32;
 const ALLOWED_ORIGIN = 'https://syntactical.dev';
 const DEFAULT_HASH_CONCURRENCY = 2;
+
+// A current-parameter stored string whose salt and key are random bytes, so no password is known
+// to match it. Built without a derivation, so a test's derivation counter starts at zero.
+function buildRandomDummyPasswordHash(): string {
+    const { KEY_BYTES, LOG_N, P, R, SALT_BYTES } = AUTH.PASSWORD.HASH;
+    const encode = (bytes: Buffer) => bytes.toString('base64').replace(/=+$/, '');
+    const salt = encode(randomBytes(SALT_BYTES));
+    const key = encode(randomBytes(KEY_BYTES));
+    return `$scrypt$v=1$ln=${LOG_N},r=${R},p=${P}$${salt}$${key}`;
+}
 
 interface SentCode {
     code: string;
@@ -40,6 +51,8 @@ interface AuthTestAppOptions {
     database?: Database;
     // Wraps the scrypt derivation the auth routes use, to count or hold derivations.
     deriveKey?: DeriveKey;
+    // The startup dummy hash for password sign-in; defaults to a random current-parameter string.
+    dummyPasswordHash?: string;
     // Probe routes for one test, mounted after the auth routes; they get the test's clock.
     extraRoutes?: (router: Router, clock: TestClock) => void;
     isCookieSecure?: boolean;
@@ -55,6 +68,7 @@ export function createAuthTestApp(options: AuthTestAppOptions) {
     const {
         database,
         deriveKey,
+        dummyPasswordHash = buildRandomDummyPasswordHash(),
         extraRoutes,
         isCookieSecure = true,
         logger = pino({ level: 'silent' }),
@@ -91,6 +105,7 @@ export function createAuthTestApp(options: AuthTestAppOptions) {
         auth: {
             database: database ?? pool,
             ...(deriveKey ? { deriveKey } : {}),
+            dummyPasswordHash,
             emailClient,
             isCookieSecure,
             now: clock.now,
@@ -103,5 +118,5 @@ export function createAuthTestApp(options: AuthTestAppOptions) {
         extraRoutes: extraRoutes ? (router: Router) => extraRoutes(router, clock) : undefined,
         logger,
     });
-    return { app, clock, passwordBreachClient, rateLimitKeySecret, sentCodes };
+    return { app, clock, dummyPasswordHash, passwordBreachClient, rateLimitKeySecret, sentCodes };
 }

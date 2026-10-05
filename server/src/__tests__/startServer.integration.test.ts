@@ -222,6 +222,29 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
     }
   });
 
+  // Task 7.5: startup creates the dummy password hash and mounts password sign-in, so an unknown
+  // email gets the ordinary credentials 400 rather than a 404 or a crash.
+  it('mounts password sign-in with a startup dummy hash: an unknown email gets 400 AUTH_INVALID_CREDENTIALS', async () => {
+    await writeContent(contentDir, paidDir);
+    running = await startServer(buildSource(), {
+      emailClient: { sendSignInCode: () => Promise.resolve() },
+      logger,
+    });
+
+    const response = await fetch(`http://127.0.0.1:${running.port}/v1/auth/sessions/password`, {
+      body: JSON.stringify({
+        email: `learner-${randomBytes(6).toString('hex')}@example.com`,
+        password: randomBytes(12).toString('hex'),
+      }),
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      method: 'POST',
+    });
+
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { error?: { code?: string } };
+    expect(body.error?.code).toBe('AUTH_INVALID_CREDENTIALS');
+  });
+
   it('stops accepting connections after close', async () => {
     await writeContent(contentDir, paidDir);
     const started = await startServer(buildSource(), { logger });
