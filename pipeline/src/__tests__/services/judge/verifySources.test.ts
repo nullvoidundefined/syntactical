@@ -164,6 +164,21 @@ describe('site chrome cannot back a quote', () => {
         });
     });
 
+    // Review round 1: a main landmark that is itself dropped still means the rest of the page is chrome.
+    it.each([
+        ['a hidden main', '<main hidden>Other page content.</main>'],
+        ['a main inside aside', '<aside><main>Other page content.</main></aside>'],
+        ['a main with a chrome role', '<main role="contentinfo">Other page content.</main>'],
+    ])('rejects a skip-link quote on a page with %s', async (_name, main) => {
+        const skipQuote = 'Skip to main content of this page';
+        const fetch = pages({ [URL_A]: `<a href="#content">${skipQuote}</a>${main}` });
+        expect(await verifySources([source(URL_A, skipQuote)], fetch)).toEqual({
+            ok: false,
+            reason: 'quote-not-found',
+            url: URL_A,
+        });
+    });
+
     it('accepts a quote in main content on a page with site chrome', async () => {
         const fetch = pages({
             [URL_A]: [

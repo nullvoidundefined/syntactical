@@ -72,38 +72,42 @@ function isMain(element: Element): boolean {
     return element.tagName === 'main' || roles(element).includes('main');
 }
 
-type Pending = { node: Node; inMain: boolean } | { separator: string; inMain: boolean };
+type Walk = { inMain: boolean; dropped: boolean };
+type Pending = Walk & ({ node: Node } | { separator: string });
 
 // An explicit stack, not recursion: a page nested to the depth limit would overflow the call
 // stack. The whole page and the main landmark are collected in one walk; the main text wins when
-// the page has one.
+// the page has one. Dropped subtrees emit no text but are still walked, so a main landmark inside
+// one (hidden, or under aside) still marks the rest of the page as chrome.
 function collectText(root: ParentNode): string {
     const all: string[] = [];
     const main: string[] = [];
     let hasMain = false;
-    const stack: Pending[] = [...root.childNodes].reverse().map((node) => ({ node, inMain: false }));
+    function emit(text: string, { inMain, dropped }: Walk): void {
+        if (dropped) return;
+        all.push(text);
+        if (inMain) main.push(text);
+    }
+    const stack: Pending[] = [...root.childNodes].reverse().map((node) => ({ node, inMain: false, dropped: false }));
     while (stack.length > 0) {
         const item = stack.pop() as Pending;
         if ('separator' in item) {
-            all.push(item.separator);
-            if (item.inMain) main.push(item.separator);
+            emit(item.separator, item);
             continue;
         }
         const { node } = item;
         if (node.nodeName === '#text' && 'value' in node) {
-            all.push(node.value);
-            if (item.inMain) main.push(node.value);
+            emit(node.value, item);
             continue;
         }
-        if (!('tagName' in node) || isDropped(node)) continue;
-        const inMain = item.inMain || isMain(node);
-        hasMain ||= inMain;
+        if (!('tagName' in node)) continue;
+        const walk = { inMain: item.inMain || isMain(node), dropped: item.dropped || isDropped(node) };
+        hasMain ||= walk.inMain;
         const separator = INLINE_ELEMENTS.has(node.tagName) ? '' : ' ';
-        all.push(separator);
-        if (inMain) main.push(separator);
-        stack.push({ separator, inMain });
+        emit(separator, walk);
+        stack.push({ separator, ...walk });
         for (let index = node.childNodes.length - 1; index >= 0; index -= 1) {
-            stack.push({ node: node.childNodes[index] as Node, inMain });
+            stack.push({ node: node.childNodes[index] as Node, ...walk });
         }
     }
     return (hasMain ? main : all).join('');
