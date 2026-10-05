@@ -16,7 +16,7 @@ type ApiResponse = { status: number; body: unknown };
 // responseType 'text' hands back the body exactly as received (a string), for a
 // caller that verifies the bytes, such as a paid bank checked against its hash.
 type ApiRequestInit = {
-  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   body?: unknown;
   responseType?: 'json' | 'text';
 };
@@ -120,7 +120,19 @@ async function handleUnauthorized(sentSession: string | null): Promise<void> {
   });
 }
 
+// PUT is sent by apiPut alone, so the shape callers and test doubles of apiFetch see is unchanged.
+type SentRequestInit = Omit<ApiRequestInit, 'method'> & { method?: ApiRequestInit['method'] | 'PUT' };
+
 export async function apiFetch(path: string, init: ApiRequestInit = {}): Promise<ApiResponse> {
+  return sendRequest(path, init);
+}
+
+// PUT with a JSON body; the same URL, headers, credentials, timeout, and 401 handling as apiFetch.
+export async function apiPut(path: string, body: unknown): Promise<ApiResponse> {
+  return sendRequest(path, { body, method: 'PUT' });
+}
+
+async function sendRequest(path: string, init: SentRequestInit): Promise<ApiResponse> {
   const url = resolveRequestUrl(path);
   const { body, method, responseType = 'json' } = init;
   const hasBody = body !== undefined;

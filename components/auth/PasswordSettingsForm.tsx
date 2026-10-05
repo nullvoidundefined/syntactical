@@ -11,7 +11,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { NavigationContext } from 'expo-router/build/react-navigation/core';
 import { Platform, Text, View } from 'react-native';
 
-import { apiFetch } from '../../clients/apiClient';
+import { apiPut } from '../../clients/apiClient';
 import {
   HTTP_STATUS_BAD_REQUEST,
   HTTP_STATUS_FORBIDDEN,
@@ -132,7 +132,7 @@ export function PasswordSettingsForm({ email, hasPassword, shouldFocusFirstField
         return;
       }
       const body = currentPassword === '' ? { newPassword } : { currentPassword, newPassword };
-      const { body: replyBody, status } = await apiFetch('me/password', { body, method: 'PUT' });
+      const { body: replyBody, status } = await apiPut('me/password', body);
       if (status === HTTP_STATUS_OK) {
         setCurrentPassword('');
         setNewPassword('');

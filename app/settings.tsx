@@ -63,7 +63,7 @@ function AccountSection() {
   const { isSignedIn } = useAuth();
   const { snapshot } = useProfile();
   const { form } = useLocalSearchParams<{ form?: string | string[] }>();
-  const profile = snapshot?.profile;
+  const account = snapshot?.account;
   return (
     <View className="mt-10 border-t border-line pt-6">
       <Text role="heading" aria-level={2} className="font-mono text-sm uppercase tracking-widest text-ink">
@@ -84,10 +84,10 @@ function AccountSection() {
           </Pressable>
         )}
       </View>
-      {isSignedIn && profile?.email !== undefined && profile.hasPassword !== undefined ? (
+      {isSignedIn && account !== undefined ? (
         <PasswordSettingsForm
-          email={profile.email}
-          hasPassword={profile.hasPassword}
+          email={account.email}
+          hasPassword={account.hasPassword}
           shouldFocusFirstField={form === 'password'}
         />
       ) : null}
