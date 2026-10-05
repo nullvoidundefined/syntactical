@@ -175,6 +175,9 @@ describe('useQuestionBank inside ContentProvider', () => {
             await AsyncStorage.setItem(MANIFEST_KEY, JSON.stringify(buildManifestWithGo()));
 
             const { result } = await renderHook(() => useLanguageManifest(), { wrapper: ContentWrapper });
+            // A loaded CI runner can settle background work before the first
+            // check; the cached manifest must still be what the hook serves.
+            await settleBackgroundWork();
 
             await waitFor(() => expect(result.current).toEqual(buildManifestWithGo()));
         });
