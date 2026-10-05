@@ -2,10 +2,17 @@ import type { Question } from '@syntactical/content-schema';
 
 import { shuffleQuestions } from './shuffleQuestions';
 
-export function shuffleChoices(question: Question, random: () => number = Math.random): Question {
+export type RoundQuestion =
+  | (Extract<Question, { type: 'mc' }> & { bankChoiceIndexes: number[] })
+  | Exclude<Question, { type: 'mc' }>;
+
+export function shuffleChoices(question: Question, random: () => number = Math.random): RoundQuestion {
   if (question.type !== 'mc') return question;
 
-  const correctChoice = question.choices[question.answerIndex];
-  const choices = shuffleQuestions(question.choices, random);
-  return { ...question, choices, answerIndex: choices.indexOf(correctChoice) };
+  const bankChoiceIndexes = shuffleQuestions(
+    question.choices.map((_, index) => index),
+    random,
+  );
+  const choices = bankChoiceIndexes.map((index) => question.choices[index]);
+  return { ...question, choices, answerIndex: bankChoiceIndexes.indexOf(question.answerIndex), bankChoiceIndexes };
 }
