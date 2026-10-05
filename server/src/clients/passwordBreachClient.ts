@@ -33,13 +33,15 @@ async function readBoundedBody(response: Response): Promise<string> {
   return Buffer.concat(chunks).toString('utf8');
 }
 
-function createHttpPasswordBreachClient({ fetch: fetchImpl = fetch }: HttpClientDeps = {}): PasswordBreachClient {
+function createHttpPasswordBreachClient({ fetch: fetchImpl }: HttpClientDeps = {}): PasswordBreachClient {
   return {
     async fetchRange(prefix, signal) {
       if (!PREFIX_PATTERN.test(prefix)) throw new Error('Breach range prefix must be 5 uppercase hex characters');
-      const response = await fetchImpl(`${RANGE_URL}${prefix}`, {
+      const response = await (fetchImpl ?? fetch)(`${RANGE_URL}${prefix}`, {
         headers: { 'Add-Padding': 'true', 'User-Agent': 'syntactical-api' },
         method: 'GET',
+        // A redirect could carry the prefix to another host.
+        redirect: 'error',
         signal,
       });
       if (response.status !== 200) {

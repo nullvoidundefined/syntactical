@@ -19,6 +19,14 @@ const authSchemas = {
     timezone: z.string().max(TIMEZONE_MAX_LENGTH).optional(),
   }),
   issueCode: z.object({ email }),
+  // The password's rules (length, normalization) are checked after parsing, so each failure gets its own code.
+  startSignUp: z.object({ email, password: z.string() }),
+  verifySignUp: z.object({
+    code: z.string().regex(/^\d{6}$/),
+    email,
+    password: z.string(),
+    timezone: z.string().max(TIMEZONE_MAX_LENGTH).optional(),
+  }),
 };
 
 export { authSchemas };
