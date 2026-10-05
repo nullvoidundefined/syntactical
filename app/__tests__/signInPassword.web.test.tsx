@@ -114,6 +114,16 @@ async function pressEnterOn(element: HTMLElement): Promise<void> {
   });
 }
 
+// A browser's implicit submission: Enter in a text field submits its form
+// unless the keydown's default is prevented. jsdom does not, so it is sent here.
+async function pressEnterInField(input: HTMLInputElement): Promise<void> {
+  act(() => input.focus());
+  await act(async () => {
+    const isNotPrevented = fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+    if (isNotPrevented && input.form !== null) fireEvent.submit(input.form);
+  });
+}
+
 // Elements the browser puts in the Tab order, in document order.
 function listTabbable(container: HTMLElement): HTMLElement[] {
   const candidates = container.querySelectorAll<HTMLElement>('input, button, a[href], select, textarea, [tabindex]');
@@ -171,9 +181,7 @@ describe('sign-in route with a password on the web', () => {
     render(<SignInScreen />);
     typeInto(getEmailInput(), email);
     typeInto(getPasswordInput(), password);
-    await act(async () => {
-      fireEvent.keyDown(getPasswordInput(), { key: 'Enter' });
-    });
+    await pressEnterInField(getPasswordInput());
     expect(mockCredentialSignIn).toHaveBeenCalledWith(email, password);
     expect(mockReplacedRoutes).toEqual(['/']);
   });
@@ -185,9 +193,7 @@ describe('sign-in route with a password on the web', () => {
     render(<SignInScreen />);
     typeInto(getEmailInput(), email);
     typeInto(getPasswordInput(), password);
-    await act(async () => {
-      fireEvent.keyDown(getEmailInput(), { key: 'Enter' });
-    });
+    await pressEnterInField(getEmailInput());
     expect(mockCredentialSignIn).toHaveBeenCalledTimes(1);
     expect(mockCredentialSignIn).toHaveBeenCalledWith(email, password);
     expect(mockReplacedRoutes).toEqual(['/']);
@@ -330,16 +336,6 @@ describe('sign-in route with a password on the web, inside a real form', () => {
     return screen.getByRole('button', { name }) as HTMLButtonElement;
   }
 
-  // A browser's implicit submission: Enter in a text field submits its form
-  // unless the keydown's default is prevented. jsdom does not, so it is sent here.
-  async function pressEnterInField(input: HTMLInputElement): Promise<void> {
-    act(() => input.focus());
-    await act(async () => {
-      const isNotPrevented = fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
-      if (isNotPrevented && input.form !== null) fireEvent.submit(input.form);
-    });
-  }
-
   function fillFields(): { email: string; password: string } {
     const email = buildEmail();
     const password = buildPassword();
@@ -365,11 +361,12 @@ describe('sign-in route with a password on the web, inside a real form', () => {
     }
   });
 
-  it('gives the form no action and no GET method', () => {
+  // An absent method attribute means GET to the browser, so the method must be set to POST.
+  it('gives the form no action and method POST', () => {
     render(<SignInScreen />);
     const form = getOnlyForm();
     expect(form.hasAttribute('action')).toBe(false);
-    expect((form.getAttribute('method') ?? '').toLowerCase()).not.toBe('get');
+    expect(form.method).toBe('post');
   });
 
   it('sends one request with the typed email and password when the form is submitted, with the default prevented', async () => {
@@ -399,17 +396,47 @@ describe('sign-in route with a password on the web, inside a real form', () => {
     ['email', getEmailInput],
     ['password', getPasswordInput],
   ] as const)(
-    'sends one request for Enter in the %s field inside the form, with any submit prevented',
+    'submits the form exactly once for Enter in the %s field: one prevented submit event and one request with the typed values',
     async (_label, getInput) => {
       mockCredentialSignIn.mockResolvedValue({ isOk: true });
       render(<SignInScreen />);
       const { email, password } = fillFields();
       expect(getOnlyForm().contains(getInput())).toBe(true);
       await pressEnterInField(getInput());
+      // Safari and Firefox offer to save the password only on a real submit event.
+      expect(submits).toEqual([true]);
       expect(mockCredentialSignIn.mock.calls).toEqual([[email, password]]);
-      expect(submits.every((isPrevented) => isPrevented)).toBe(true);
     },
   );
+
+  it('sends no further request for Enter in either field while a sign-in is in flight, with any submit prevented', async () => {
+    mockCredentialSignIn.mockReturnValue(new Promise(() => {}));
+    render(<SignInScreen />);
+    const { email, password } = fillFields();
+    await act(async () => {
+      fireEvent.click(getButton(SIGN_IN));
+    });
+    submits = [];
+    await pressEnterInField(getEmailInput());
+    await pressEnterInField(getPasswordInput());
+    expect(mockCredentialSignIn.mock.calls).toEqual([[email, password]]);
+    expect(submits.every((isPrevented) => isPrevented)).toBe(true);
+  });
+
+  it('sends exactly one request for a double click on "Sign in", leaving it disabled with no pointer cursor', async () => {
+    mockCredentialSignIn.mockReturnValue(new Promise(() => {}));
+    render(<SignInScreen />);
+    const { email, password } = fillFields();
+    await act(async () => {
+      fireEvent.click(getButton(SIGN_IN));
+    });
+    await act(async () => {
+      fireEvent.click(getButton(SIGN_IN));
+    });
+    expect(mockCredentialSignIn.mock.calls).toEqual([[email, password]]);
+    expect(getButton(SIGN_IN).disabled).toBe(true);
+    expect(getButton(SIGN_IN).classList.contains('cursor-pointer')).toBe(false);
+  });
 
   it('sends nothing for a second submit while the first request is in flight', async () => {
     mockCredentialSignIn.mockReturnValue(new Promise(() => {}));

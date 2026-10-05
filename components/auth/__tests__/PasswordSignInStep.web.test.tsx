@@ -76,6 +76,17 @@ function clickIsDefaultPrevented(element: HTMLElement, init: MouseEventInit = {}
   return !isNotPrevented;
 }
 
+// What a browser does for Enter in a text field: keydown reaches the field,
+// and unless its default is prevented the browser submits the field's form
+// (implicit submission). jsdom does not, so the submit is sent here.
+function pressEnterInField(input: HTMLInputElement) {
+  act(() => input.focus());
+  act(() => {
+    const isNotPrevented = fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+    if (isNotPrevented && input.form !== null) fireEvent.submit(input.form);
+  });
+}
+
 beforeEach(() => {
   mockPush.mockReset();
 });
@@ -102,18 +113,16 @@ describe('PasswordSignInStep on the web', () => {
     renderStep(handlers, true);
     act(() => {
       fireEvent.click(screen.getByRole('button', { name: SIGN_IN }));
-      fireEvent.keyDown(getPasswordInput(), { key: 'Enter' });
-      fireEvent.keyDown(getEmailInput(), { key: 'Enter' });
     });
+    pressEnterInField(getPasswordInput());
+    pressEnterInField(getEmailInput());
     expect(handlers.onSubmit).not.toHaveBeenCalled();
   });
 
   it('calls onSubmit once from Enter in the email field', () => {
     const handlers = buildHandlers();
     renderStep(handlers);
-    act(() => {
-      fireEvent.keyDown(getEmailInput(), { key: 'Enter' });
-    });
+    pressEnterInField(getEmailInput());
     expect(handlers.onSubmit).toHaveBeenCalledTimes(1);
   });
 
@@ -196,17 +205,6 @@ describe('PasswordSignInStep on the web, inside a real form', () => {
     return screen.getByRole('button', { name }) as HTMLButtonElement;
   }
 
-  // What a browser does for Enter in a text field: keydown reaches the field,
-  // and unless its default is prevented the browser submits the field's form
-  // (implicit submission). jsdom does not, so the submit is sent here.
-  function pressEnterInField(input: HTMLInputElement) {
-    act(() => input.focus());
-    act(() => {
-      const isNotPrevented = fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
-      if (isNotPrevented && input.form !== null) fireEvent.submit(input.form);
-    });
-  }
-
   it('puts the email and password inputs in exactly one <form>, with "Sign in" as its submit button', () => {
     renderStep(buildHandlers());
     const form = getOnlyForm();
@@ -225,11 +223,12 @@ describe('PasswordSignInStep on the web, inside a real form', () => {
     expect(button.type === 'button' || !form.contains(button)).toBe(true);
   });
 
-  it('gives the form no action and no GET method, so the password can never land in a URL', () => {
+  // An absent method attribute means GET to the browser, so the method must be set to POST.
+  it('gives the form no action and method POST, so the password can never land in a URL', () => {
     renderStep(buildHandlers());
     const form = getOnlyForm();
     expect(form.hasAttribute('action')).toBe(false);
-    expect((form.getAttribute('method') ?? '').toLowerCase()).not.toBe('get');
+    expect(form.method).toBe('post');
   });
 
   it('calls onSubmit once when the form is submitted, with the default prevented', () => {
@@ -255,13 +254,38 @@ describe('PasswordSignInStep on the web, inside a real form', () => {
   it.each([
     ['email', getEmailInput],
     ['password', getPasswordInput],
-  ] as const)('calls onSubmit once for Enter in the %s field, with any submit prevented', (_label, getInput) => {
-    const handlers = buildHandlers();
-    renderStep(handlers);
-    expect(getOnlyForm().contains(getInput())).toBe(true);
-    pressEnterInField(getInput());
-    expect(handlers.onSubmit).toHaveBeenCalledTimes(1);
-    expect(submits.every((isPrevented) => isPrevented)).toBe(true);
+  ] as const)(
+    'submits the form exactly once for Enter in the %s field: one prevented submit event and one onSubmit call',
+    (_label, getInput) => {
+      const handlers = buildHandlers();
+      renderStep(handlers);
+      expect(getOnlyForm().contains(getInput())).toBe(true);
+      pressEnterInField(getInput());
+      // Safari and Firefox offer to save the password only on a real submit event.
+      expect(submits).toEqual([true]);
+      expect(handlers.onSubmit).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each([
+    ['email', getEmailInput],
+    ['password', getPasswordInput],
+  ] as const)(
+    'does not call onSubmit for Enter in the %s field while busy, with any submit prevented',
+    (_label, getInput) => {
+      const handlers = buildHandlers();
+      renderStep(handlers, true);
+      pressEnterInField(getInput());
+      expect(handlers.onSubmit).not.toHaveBeenCalled();
+      expect(submits.every((isPrevented) => isPrevented)).toBe(true);
+    },
+  );
+
+  it('gives the disabled "Sign in" button no pointer cursor while busy', () => {
+    renderStep(buildHandlers(), true);
+    const signIn = getButton(SIGN_IN);
+    expect(signIn.disabled).toBe(true);
+    expect(signIn.classList.contains('cursor-pointer')).toBe(false);
   });
 
   it('does not call onSubmit while busy when the form is submitted, and still prevents the default', () => {
