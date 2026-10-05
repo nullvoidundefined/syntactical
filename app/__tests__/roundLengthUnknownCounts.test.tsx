@@ -50,30 +50,29 @@ const routes = {
   '[language]/[difficulty]/play': RoundScreen,
 };
 
-describe('the length step when the manifest has no question counts', () => {
-  it('shows 20, 50, and All questions (no count) after the whole bank', async () => {
+describe('the round lengths when the manifest has no question counts', () => {
+  it('shows 20, 50, and All questions (no count) on the topic step', async () => {
     await renderRouter(routes, { initialUrl: '/python/easy' });
-    await fireEvent.press(await screen.findByRole('button', { name: /Whole bank/ }));
-    expect(await screen.findByRole('heading', { name: /Select length/ })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: /Select topic/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: /20 questions/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: /50 questions/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^All questions/ })).toBeTruthy();
   });
 
   it('choosing 50 on a 30-question bank plays all 30', async () => {
-    await renderRouter(routes, { initialUrl: '/python/easy/length' });
-    await fireEvent.press(await screen.findByRole('button', { name: /50 questions/ }));
+    await renderRouter(routes, { initialUrl: '/python/easy' });
+    await fireEvent.press(await screen.findByRole('button', { name: /^50 questions/ }));
     expect(await screen.findByText('Q1 / 30')).toBeTruthy();
   });
 
   it('choosing 20 plays 20, and All questions plays all 30', async () => {
-    await renderRouter(routes, { initialUrl: '/python/easy/length' });
+    await renderRouter(routes, { initialUrl: '/python/easy' });
     await fireEvent.press(await screen.findByRole('button', { name: /20 questions/ }));
     expect(await screen.findByText('Q1 / 20')).toBeTruthy();
   });
 
   it('All questions plays all 30', async () => {
-    await renderRouter(routes, { initialUrl: '/python/easy/length' });
+    await renderRouter(routes, { initialUrl: '/python/easy' });
     await fireEvent.press(await screen.findByRole('button', { name: /^All questions/ }));
     expect(await screen.findByText('Q1 / 30')).toBeTruthy();
   });

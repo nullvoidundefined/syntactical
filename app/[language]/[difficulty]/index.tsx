@@ -21,6 +21,7 @@ export default function TopicScreen() {
           difficulty={difficulty}
           language={language}
           onBack={() => router.replace(`/${language}`)}
+          onSelectLength={(count) => router.push(buildPlayHref({ count, difficulty, language }))}
           onSelectTopic={(topic) => {
             const bank = (languageEntry.banks as Record<string, { topicCounts?: Record<string, number> }>)[difficulty];
             const poolSize = readPoolSize(bank.topicCounts ?? {}, topic);

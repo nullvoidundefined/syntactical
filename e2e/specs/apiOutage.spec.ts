@@ -27,7 +27,6 @@ test.describe('an API outage', () => {
     await expect(page.getByText('Download failed. Tap to retry')).toHaveCount(2);
     await expect(page.getByRole('button', { name: /^Easy/ })).toBeEnabled();
     await page.getByRole('button', { name: /^Easy/ }).click();
-    await page.keyboard.press('1');
     await pickAllQuestions(page);
     await answerQuestions(page, 2);
     await page.keyboard.press('Escape');
