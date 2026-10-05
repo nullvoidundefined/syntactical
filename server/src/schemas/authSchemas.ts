@@ -19,6 +19,12 @@ const authSchemas = {
     timezone: z.string().max(TIMEZONE_MAX_LENGTH).optional(),
   }),
   issueCode: z.object({ email }),
+  // Sign-in has no length policy; the password's size and form are checked by normalizePassword.
+  passwordSignIn: z.object({
+    email,
+    password: z.string(),
+    timezone: z.string().max(TIMEZONE_MAX_LENGTH).optional(),
+  }),
   // The password's rules (length, normalization) are checked after parsing, so each failure gets its own code.
   startSignUp: z.object({ email, password: z.string() }),
   verifySignUp: z.object({

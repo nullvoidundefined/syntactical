@@ -21,6 +21,7 @@ import { createAnswerEventsRouter } from './routes/answerEvents.js';
 import { createAuthCodesRouter } from './routes/authCodes.js';
 import type { AuthDeps, ResolvedAuthDeps } from './routes/authDeps.js';
 import { createAuthSessionsRouter } from './routes/authSessions.js';
+import { createAuthPasswordSessionsRouter } from './routes/authPasswordSessions.js';
 import { createAuthSignupsRouter } from './routes/authSignups.js';
 import { createBanksRouter } from './routes/banks.js';
 import type { BanksDeps } from './routes/banksDeps.js';
@@ -105,11 +106,14 @@ function createApp(deps: AppDeps) {
   if (auth) {
     const { now = () => new Date(), randomInt: codeGenerator = randomInt } = auth;
     const resolved: ResolvedAuthDeps = { ...auth, now, randomInt: codeGenerator };
-    const { passwordBreachClient, passwordHashSlots } = resolved;
+    const { dummyPasswordHash, passwordBreachClient, passwordHashSlots } = resolved;
     app.use(
       '/v1/auth',
       createAuthCodesRouter(resolved, logger),
       createAuthSessionsRouter(resolved),
+      ...(dummyPasswordHash && passwordHashSlots
+        ? [createAuthPasswordSessionsRouter({ ...resolved, dummyPasswordHash, passwordHashSlots })]
+        : []),
       ...(passwordBreachClient && passwordHashSlots
         ? [createAuthSignupsRouter({ ...resolved, passwordBreachClient, passwordHashSlots }, logger)]
         : []),
