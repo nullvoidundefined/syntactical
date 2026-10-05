@@ -3,7 +3,8 @@
 // the screen; no length rule applies here and nothing is trimmed, since only
 // the server judges a sign-in.
 import { router } from 'expo-router';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { createElement, type FormEvent, type ReactNode } from 'react';
+import { Platform, Pressable, Text, TextInput, View } from 'react-native';
 
 import { AuthButton } from './AuthButton';
 import { PasswordField } from './PasswordField';
@@ -25,9 +26,38 @@ type PasswordSignInStepProps = {
 const WEB_LINK_PROPS = { href: '/sign-up' } as object;
 
 // The press handler owns navigation, so the browser's own link navigation is cancelled.
-function openSignUp(event?: { preventDefault?: () => void }) {
+// A modified or non-primary click (new tab or window) is left to the browser.
+function openSignUp(event?: {
+  button?: number;
+  ctrlKey?: boolean;
+  metaKey?: boolean;
+  preventDefault?: () => void;
+  shiftKey?: boolean;
+}) {
+  if (event?.metaKey || event?.ctrlKey || event?.shiftKey) return;
+  if (typeof event?.button === 'number' && event.button !== 0) return;
   event?.preventDefault?.();
   router.push('/sign-up');
+}
+
+const IS_WEB = Platform.OS === 'web';
+
+// On web the fields sit in a real <form> so Safari and Firefox offer to save the password;
+// native keeps a View. The form has no action, and every submit is cancelled so
+// the browser never navigates or puts the password in a URL.
+function SignInForm({ children, onSubmit }: { children: ReactNode; onSubmit: () => void }) {
+  if (!IS_WEB) return <View>{children}</View>;
+  return createElement(
+    'form',
+    {
+      method: 'post',
+      onSubmit: (event: FormEvent) => {
+        event.preventDefault();
+        onSubmit();
+      },
+    },
+    children,
+  );
 }
 
 export function PasswordSignInStep({
@@ -44,8 +74,11 @@ export function PasswordSignInStep({
   function submit() {
     if (!isBusy) onSubmit();
   }
+  // On web Enter submits the form (the single submit path); react-native-web would cancel
+  // that implicit submission if onSubmitEditing were set.
+  const onSubmitEditing = IS_WEB ? undefined : submit;
   return (
-    <View>
+    <SignInForm onSubmit={submit}>
       <TextInput
         aria-label="Email address"
         autoComplete="email"
@@ -55,7 +88,8 @@ export function PasswordSignInStep({
         keyboardType="email-address"
         value={email}
         onChangeText={onChangeEmail}
-        returnKeyType="next"
+        returnKeyType="go"
+        onSubmitEditing={onSubmitEditing}
         className="mt-4 border border-ink px-3 py-2 font-mono text-base text-ink"
       />
       <PasswordField
@@ -64,14 +98,14 @@ export function PasswordSignInStep({
         value={password}
         onChangeText={onChangePassword}
         errorId={errorId}
-        onSubmitEditing={submit}
+        onSubmitEditing={onSubmitEditing}
       />
-      <AuthButton label="Sign in" isDisabled={isBusy} onPress={submit} />
+      <AuthButton label="Sign in" isDisabled={isBusy} isSubmit onPress={submit} />
       <AuthButton label="Use a code instead" isPrimary={false} onPress={onUseCode} />
       <AuthButton label="Forgot password?" isPrimary={false} onPress={onForgotPassword} />
       <Pressable role="link" aria-label="Create an account" {...WEB_LINK_PROPS} onPress={openSignUp} className="mt-4">
         <Text className="font-mono text-xs uppercase tracking-widest text-ink">Create an account</Text>
       </Pressable>
-    </View>
+    </SignInForm>
   );
 }

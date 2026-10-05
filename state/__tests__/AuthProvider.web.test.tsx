@@ -2,16 +2,13 @@
 // signs in from the returned userId alone, nothing reaches expo-secure-store,
 // requests go with credentials: 'include', and AsyncStorage holds only the
 // non-secret identity.
+import { randomBytes } from 'node:crypto';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, renderHook, waitFor } from '@testing-library/react';
 
 import { AuthProvider, useAuth } from '../AuthProvider';
-import {
-  buildIdentity,
-  installRoutedFetch,
-  readAllStoredValues,
-  readStoredAuth,
-} from './authTestSupport';
+import { buildIdentity, installRoutedFetch, readAllStoredValues, readStoredAuth } from './authTestSupport';
 
 jest.mock('expo-constants', () => ({
   expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
@@ -73,6 +70,46 @@ describe('AuthProvider on web', () => {
     expect(storedValues).not.toContain(identity.code);
   });
 
+  it('signs in with a password from a 201 that carries a token, writing it nowhere: no expo-secure-store, no localStorage, no sessionStorage, no AsyncStorage', async () => {
+    const identity = buildIdentity();
+    const password = [randomBytes(6).toString('hex'), randomBytes(6).toString('base64url')].join(' ');
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+    const { requests } = installRoutedFetch({
+      'POST auth/sessions/password': {
+        status: 201,
+        body: { data: { token: identity.sessionValue, userId: identity.userId } },
+      },
+    });
+    const { result } = await mountAuth();
+
+    let outcome: unknown;
+    await act(async () => {
+      outcome = await result.current.signInWithPassword(identity.email, password);
+    });
+
+    expect(outcome).toEqual({ isOk: true });
+    expect(result.current.isSignedIn).toBe(true);
+    expect(result.current.user).toEqual({ id: identity.userId });
+    const posted = requests.filter((request) => request.path === 'auth/sessions/password');
+    expect(posted).toHaveLength(1);
+    expect(posted[0].credentials).toBe('include');
+    expect(posted[0].body).toMatchObject({ email: identity.email, password });
+    expect(secureStore.setItemAsync).not.toHaveBeenCalled();
+    expect(secureStoreCallCount()).toBe(0);
+    await waitFor(async () => expect((await readStoredAuth())?.userId).toBe(identity.userId));
+    for (const storage of [window.localStorage, window.sessionStorage]) {
+      const stored = Object.keys(storage)
+        .map((key) => `${key}=${storage.getItem(key) ?? ''}`)
+        .join('\n');
+      expect(stored).not.toContain(identity.sessionValue);
+      expect(stored).not.toContain(password);
+    }
+    const storedValues = (await readAllStoredValues()).join('\n');
+    expect(storedValues).not.toContain(identity.sessionValue);
+    expect(storedValues).not.toContain(password);
+  });
+
   it('signs out through DELETE auth/sessions/current without touching expo-secure-store', async () => {
     const identity = buildIdentity();
     const { requests } = installRoutedFetch({
@@ -88,7 +125,9 @@ describe('AuthProvider on web', () => {
       await result.current.signOut();
     });
 
-    const deletes = requests.filter((request) => request.method === 'DELETE' && request.path === 'auth/sessions/current');
+    const deletes = requests.filter(
+      (request) => request.method === 'DELETE' && request.path === 'auth/sessions/current',
+    );
     expect(deletes).toHaveLength(1);
     expect(deletes[0].credentials).toBe('include');
     expect(result.current.isSignedIn).toBe(false);

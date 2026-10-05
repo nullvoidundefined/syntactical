@@ -100,6 +100,7 @@ const secureStore = jest.requireMock('expo-secure-store') as SecureStoreMock;
 
 const PASSWORD_ROUTE = 'POST auth/sessions/password';
 const INVALID_CREDENTIALS_MESSAGE = 'That email and password do not match. Try again, or use a code instead.';
+const UNAVAILABLE_MESSAGE = 'Sign-in is unavailable right now. Try again later.';
 
 type AuthValue = ReturnType<typeof useAuth>;
 
@@ -292,6 +293,65 @@ describe('the password never leaves memory except in the sign-in request (B-90)'
       expect(serialiseCalls(mockResetAnalytics)).not.toContain(password);
       expect(serialiseCalls(mockTrackEvent)).not.toContain(password);
       expect(serialiseCalls(mockIdentifyPurchaser)).not.toContain(password);
+      expect(consoleCapture.serialised()).not.toContain(password);
+    } finally {
+      for (const spy of storageSpies) spy.mockRestore();
+      consoleCapture.restore();
+    }
+  });
+
+  it('reports a network rejection as unavailable and the password reaches no AsyncStorage, SecureStore, logWarning, analytics, purchaser, or console call', async () => {
+    const identity = buildIdentity();
+    const password = buildPassword();
+    const consoleCapture = captureConsole();
+    const storageSpies = [
+      jest.spyOn(AsyncStorage, 'setItem'),
+      jest.spyOn(AsyncStorage, 'multiSet'),
+      jest.spyOn(AsyncStorage, 'mergeItem'),
+      jest.spyOn(AsyncStorage, 'multiMerge'),
+    ];
+    try {
+      const { requests } = installRoutedFetch({ [PASSWORD_ROUTE]: 'reject' });
+
+      // The provider's own result for a rejected fetch.
+      const hook = await mountAuth();
+      const outcome = await signInWithPassword(hook.result, identity.email, password);
+      expect(outcome).toEqual({ isOk: false, reason: 'unavailable' });
+      expect(hook.result.current.isSignedIn).toBe(false);
+      await hook.unmount();
+
+      // The same rejection through the real screen.
+      const rendered = await render(
+        <AuthProvider>
+          <SignInScreen />
+        </AuthProvider>,
+      );
+      await screen.findByLabelText('Email address');
+      await fireEvent.changeText(screen.getByLabelText('Email address'), identity.email);
+      await fireEvent.changeText(screen.getByLabelText('Password'), password);
+      await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+      expect(await screen.findByText(UNAVAILABLE_MESSAGE)).toBeTruthy();
+      expect(mockReplace).not.toHaveBeenCalled();
+      await rendered.unmount();
+      await act(async () => undefined);
+
+      // Control: both attempts did try to send the password.
+      const passwordRequests = requests.filter((request) => request.path === 'auth/sessions/password');
+      expect(passwordRequests).toHaveLength(2);
+      for (const request of passwordRequests) expect(request.body).toMatchObject({ password });
+      const otherRequests = requests.filter((request) => request.path !== 'auth/sessions/password');
+      expect(JSON.stringify(otherRequests)).not.toContain(password);
+
+      for (const spy of storageSpies) expect(JSON.stringify(spy.mock.calls)).not.toContain(password);
+      expect((await readAllStoredValues()).join('\n')).not.toContain(password);
+      expect(secureStore.setItemAsync).not.toHaveBeenCalled();
+      expect(secureStore.mockValues.has(SESSION_TOKEN_KEY)).toBe(false);
+      expect(serialiseCalls(mockLogWarning)).not.toContain(password);
+      expect(serialiseCalls(mockIdentifyAnalytics)).not.toContain(password);
+      expect(serialiseCalls(mockResetAnalytics)).not.toContain(password);
+      expect(serialiseCalls(mockTrackEvent)).not.toContain(password);
+      expect(serialiseCalls(mockIdentifyPurchaser)).not.toContain(password);
+      expect(serialiseCalls(mockResetPurchaser)).not.toContain(password);
       expect(consoleCapture.serialised()).not.toContain(password);
     } finally {
       for (const spy of storageSpies) spy.mockRestore();

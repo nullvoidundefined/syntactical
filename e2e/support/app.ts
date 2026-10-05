@@ -40,6 +40,7 @@ async function readSignInCode(email: string, knownCount = 0): Promise<string> {
 
 async function signIn(page: Page, email: string): Promise<void> {
   await page.goto('sign-in');
+  await page.getByRole('button', { name: 'Use a code instead' }).click();
   await page.getByLabel('Email address').fill(email);
   const knownCount = (await listSentCodes(email)).length;
   await page.getByRole('button', { name: 'Send code' }).click();

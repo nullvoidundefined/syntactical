@@ -114,6 +114,16 @@ async function pressEnterOn(element: HTMLElement): Promise<void> {
   });
 }
 
+// A browser's implicit submission: Enter in a text field submits its form
+// unless the keydown's default is prevented. jsdom does not, so it is sent here.
+async function pressEnterInField(input: HTMLInputElement): Promise<void> {
+  act(() => input.focus());
+  await act(async () => {
+    const isNotPrevented = fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
+    if (isNotPrevented && input.form !== null) fireEvent.submit(input.form);
+  });
+}
+
 // Elements the browser puts in the Tab order, in document order.
 function listTabbable(container: HTMLElement): HTMLElement[] {
   const candidates = container.querySelectorAll<HTMLElement>('input, button, a[href], select, textarea, [tabindex]');
@@ -171,9 +181,20 @@ describe('sign-in route with a password on the web', () => {
     render(<SignInScreen />);
     typeInto(getEmailInput(), email);
     typeInto(getPasswordInput(), password);
-    await act(async () => {
-      fireEvent.keyDown(getPasswordInput(), { key: 'Enter' });
-    });
+    await pressEnterInField(getPasswordInput());
+    expect(mockCredentialSignIn).toHaveBeenCalledWith(email, password);
+    expect(mockReplacedRoutes).toEqual(['/']);
+  });
+
+  it('signs in when Enter is pressed in the email field, sending one request with the typed email and password', async () => {
+    const email = buildEmail();
+    const password = buildPassword();
+    mockCredentialSignIn.mockResolvedValue({ isOk: true });
+    render(<SignInScreen />);
+    typeInto(getEmailInput(), email);
+    typeInto(getPasswordInput(), password);
+    await pressEnterInField(getEmailInput());
+    expect(mockCredentialSignIn).toHaveBeenCalledTimes(1);
     expect(mockCredentialSignIn).toHaveBeenCalledWith(email, password);
     expect(mockReplacedRoutes).toEqual(['/']);
   });
@@ -283,5 +304,192 @@ describe('sign-in route with a password on the web', () => {
       expect(mockPushedRoutes).toHaveLength(1);
       expect(mockPushedRoutes[0]).toBe('/sign-up');
     });
+  });
+});
+
+// The real <form> on the web (PR 104, owner decision): the email and password
+// inputs sit in one <form> so Safari and Firefox recognize the submission and
+// offer to save the password. Every way of submitting sends exactly one
+// request, the submit default is always prevented (no page navigation, no
+// password in a URL), and the heading, Tab order, and alert wiring hold.
+describe('sign-in route with a password on the web, inside a real form', () => {
+  let submits: boolean[] = [];
+  function recordSubmit(event: Event) {
+    submits.push(event.defaultPrevented);
+  }
+  beforeEach(() => {
+    submits = [];
+    mockCredentialSignIn.mockReset();
+    document.addEventListener('submit', recordSubmit);
+  });
+  afterEach(() => {
+    document.removeEventListener('submit', recordSubmit);
+  });
+
+  function getOnlyForm(): HTMLFormElement {
+    const forms = document.querySelectorAll('form');
+    expect(forms).toHaveLength(1);
+    return forms[0];
+  }
+
+  function getButton(name: string): HTMLButtonElement {
+    return screen.getByRole('button', { name }) as HTMLButtonElement;
+  }
+
+  function fillFields(): { email: string; password: string } {
+    const email = buildEmail();
+    const password = buildPassword();
+    typeInto(getEmailInput(), email);
+    typeInto(getPasswordInput(), password);
+    return { email, password };
+  }
+
+  it('puts both inputs in one <form> whose only submit button is "Sign in"', () => {
+    render(<SignInScreen />);
+    const form = getOnlyForm();
+    expect(form.contains(getEmailInput())).toBe(true);
+    expect(form.contains(getPasswordInput())).toBe(true);
+    const signIn = getButton(SIGN_IN);
+    expect(signIn.type).toBe('submit');
+    expect(form.contains(signIn)).toBe(true);
+    for (const name of [SHOW, USE_CODE, FORGOT]) {
+      const button = getButton(name);
+      expect({ name, isNonSubmit: button.type === 'button' || !form.contains(button) }).toEqual({
+        name,
+        isNonSubmit: true,
+      });
+    }
+  });
+
+  // An absent method attribute means GET to the browser, so the method must be set to POST.
+  it('gives the form no action and method POST', () => {
+    render(<SignInScreen />);
+    const form = getOnlyForm();
+    expect(form.hasAttribute('action')).toBe(false);
+    expect(form.method).toBe('post');
+  });
+
+  it('sends one request with the typed email and password when the form is submitted, with the default prevented', async () => {
+    mockCredentialSignIn.mockResolvedValue({ isOk: true });
+    render(<SignInScreen />);
+    const { email, password } = fillFields();
+    await act(async () => {
+      fireEvent.submit(getOnlyForm());
+    });
+    expect(mockCredentialSignIn.mock.calls).toEqual([[email, password]]);
+    expect(submits).toEqual([true]);
+    expect(mockReplacedRoutes).toEqual(['/']);
+  });
+
+  it('sends one request and fires one prevented submit when "Sign in" is clicked', async () => {
+    mockCredentialSignIn.mockResolvedValue({ isOk: true });
+    render(<SignInScreen />);
+    const { email, password } = fillFields();
+    await act(async () => {
+      fireEvent.click(getButton(SIGN_IN));
+    });
+    expect(mockCredentialSignIn.mock.calls).toEqual([[email, password]]);
+    expect(submits).toEqual([true]);
+  });
+
+  it.each([
+    ['email', getEmailInput],
+    ['password', getPasswordInput],
+  ] as const)(
+    'submits the form exactly once for Enter in the %s field: one prevented submit event and one request with the typed values',
+    async (_label, getInput) => {
+      mockCredentialSignIn.mockResolvedValue({ isOk: true });
+      render(<SignInScreen />);
+      const { email, password } = fillFields();
+      expect(getOnlyForm().contains(getInput())).toBe(true);
+      await pressEnterInField(getInput());
+      // Safari and Firefox offer to save the password only on a real submit event.
+      expect(submits).toEqual([true]);
+      expect(mockCredentialSignIn.mock.calls).toEqual([[email, password]]);
+    },
+  );
+
+  it('sends no further request for Enter in either field while a sign-in is in flight, with any submit prevented', async () => {
+    mockCredentialSignIn.mockReturnValue(new Promise(() => {}));
+    render(<SignInScreen />);
+    const { email, password } = fillFields();
+    await act(async () => {
+      fireEvent.click(getButton(SIGN_IN));
+    });
+    submits = [];
+    await pressEnterInField(getEmailInput());
+    await pressEnterInField(getPasswordInput());
+    expect(mockCredentialSignIn.mock.calls).toEqual([[email, password]]);
+    expect(submits.every((isPrevented) => isPrevented)).toBe(true);
+  });
+
+  it('sends exactly one request for a double click on "Sign in", leaving it disabled with no pointer cursor', async () => {
+    mockCredentialSignIn.mockReturnValue(new Promise(() => {}));
+    render(<SignInScreen />);
+    const { email, password } = fillFields();
+    await act(async () => {
+      fireEvent.click(getButton(SIGN_IN));
+    });
+    await act(async () => {
+      fireEvent.click(getButton(SIGN_IN));
+    });
+    expect(mockCredentialSignIn.mock.calls).toEqual([[email, password]]);
+    expect(getButton(SIGN_IN).disabled).toBe(true);
+    expect(getButton(SIGN_IN).classList.contains('cursor-pointer')).toBe(false);
+  });
+
+  it('sends nothing for a second submit while the first request is in flight', async () => {
+    mockCredentialSignIn.mockReturnValue(new Promise(() => {}));
+    render(<SignInScreen />);
+    fillFields();
+    await act(async () => {
+      fireEvent.submit(getOnlyForm());
+    });
+    await act(async () => {
+      fireEvent.submit(getOnlyForm());
+    });
+    expect(mockCredentialSignIn).toHaveBeenCalledTimes(1);
+    expect(submits).toEqual([true, true]);
+  });
+
+  it('toggles "Show password" inside the form without sending a request or submitting', async () => {
+    render(<SignInScreen />);
+    const { password } = fillFields();
+    expect(getOnlyForm().contains(getButton(SHOW)) || getOnlyForm().contains(getPasswordInput())).toBe(true);
+    await act(async () => {
+      fireEvent.click(getButton(SHOW));
+    });
+    expect(getButton('Hide password').getAttribute('aria-pressed')).toBe('true');
+    expect(getPasswordInput().value).toBe(password);
+    expect(mockCredentialSignIn).not.toHaveBeenCalled();
+    expect(submits).toEqual([]);
+  });
+
+  it('keeps one h1 and the Tab order email, password, Show password, Sign in, Use a code instead, Forgot password?, Create an account', () => {
+    const { container } = render(<SignInScreen />);
+    expect(document.querySelectorAll('h1')).toHaveLength(1);
+    const expected = [
+      getEmailInput(),
+      getPasswordInput(),
+      getButton(SHOW),
+      getButton(SIGN_IN),
+      getButton(USE_CODE),
+      getButton(FORGOT),
+      getCreateAccount(),
+    ];
+    expect(listTabbable(container).filter((element) => expected.includes(element))).toEqual(expected);
+  });
+
+  it('keeps the failure alert tied to the password input by aria-describedby after a form submit', async () => {
+    mockCredentialSignIn.mockResolvedValue({ isOk: false, reason: 'invalid-credentials' });
+    render(<SignInScreen />);
+    fillFields();
+    await act(async () => {
+      fireEvent.click(getButton(SIGN_IN));
+    });
+    const alert = await screen.findByRole('alert');
+    expect(alert.id).not.toBe('');
+    expect((getPasswordInput().getAttribute('aria-describedby') ?? '').split(/\s+/)).toContain(alert.id);
+    expect(readDescription(getPasswordInput())).toContain(INVALID_CREDENTIALS_MESSAGE);
   });
 });
