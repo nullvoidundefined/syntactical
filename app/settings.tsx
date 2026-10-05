@@ -5,10 +5,11 @@
 // refused or failed change is announced and leaves the goal unchanged.
 import { useState } from 'react';
 
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { DeleteAccountDialog } from '../components/auth/DeleteAccountDialog';
+import { PasswordSettingsForm } from '../components/auth/PasswordSettingsForm';
 import { SignOutDialog } from '../components/auth/SignOutDialog';
 import { DailyGoalPicker } from '../components/progress/DailyGoalPicker';
 import { useAuth } from '../state/AuthProvider';
@@ -60,6 +61,9 @@ function RestorePurchases() {
 
 function AccountSection() {
   const { isSignedIn } = useAuth();
+  const { snapshot } = useProfile();
+  const { form } = useLocalSearchParams<{ form?: string | string[] }>();
+  const profile = snapshot?.profile;
   return (
     <View className="mt-10 border-t border-line pt-6">
       <Text role="heading" aria-level={2} className="font-mono text-sm uppercase tracking-widest text-ink">
@@ -80,6 +84,13 @@ function AccountSection() {
           </Pressable>
         )}
       </View>
+      {isSignedIn && profile?.email !== undefined && profile.hasPassword !== undefined ? (
+        <PasswordSettingsForm
+          email={profile.email}
+          hasPassword={profile.hasPassword}
+          shouldFocusFirstField={form === 'password'}
+        />
+      ) : null}
       {isSignedIn && Platform.OS !== 'web' ? <RestorePurchases /> : null}
     </View>
   );

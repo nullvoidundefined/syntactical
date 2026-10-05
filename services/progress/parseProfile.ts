@@ -11,5 +11,12 @@ export function parseProfile(body: unknown): Profile | null {
   if (data === null || typeof data !== 'object') return null;
   const { dailyGoal, dayStreak, xpToday } = data as Record<string, unknown>;
   if (!isCount(dailyGoal) || !isCount(dayStreak) || !isCount(xpToday)) return null;
-  return { dailyGoal, dayStreak, xpToday };
+  const { email, hasPassword } = data as Record<string, unknown>;
+  return {
+    dailyGoal,
+    dayStreak,
+    ...(typeof email === 'string' ? { email } : {}),
+    ...(typeof hasPassword === 'boolean' ? { hasPassword } : {}),
+    xpToday,
+  };
 }

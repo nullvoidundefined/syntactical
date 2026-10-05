@@ -16,7 +16,7 @@ type ApiResponse = { status: number; body: unknown };
 // responseType 'text' hands back the body exactly as received (a string), for a
 // caller that verifies the bytes, such as a paid bank checked against its hash.
 type ApiRequestInit = {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   responseType?: 'json' | 'text';
 };
