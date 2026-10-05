@@ -33,6 +33,7 @@ describe('generateWithRetries', () => {
         ['a bare fence', '```\n{"answerIndex": 2}\n```'],
         ['a fence with surrounding whitespace', '\n  ```json\n{"answerIndex": 2}\n```  \n'],
         ['an uppercase language tag', '```JSON\n{"answerIndex": 2}\n```'],
+        ['CRLF line endings', '```json\r\n{"answerIndex": 2}\r\n```'],
     ])('reads JSON wrapped in %s on the first attempt', async (_name, text) => {
         const { ask, asked } = answering(text);
         expect(await generateWithRetries(REQUEST, ask)).toEqual({ model: 'fake', value: { answerIndex: 2 } });
@@ -56,6 +57,9 @@ describe('generateWithRetries', () => {
 
     it('still applies the schema to fenced JSON', async () => {
         const { ask } = answering('```json\n{"answerIndex": "two"}\n```');
-        await expect(generateWithRetries(REQUEST, ask)).rejects.toBeInstanceOf(ModelOutputInvalid);
+        const error = await generateWithRetries(REQUEST, ask).catch((caught: unknown) => caught);
+        expect(error).toBeInstanceOf(ModelOutputInvalid);
+        expect((error as Error).message).not.toContain('malformed JSON');
+        expect((error as Error).message).toContain('answerIndex');
     });
 });
