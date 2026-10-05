@@ -1,12 +1,15 @@
 // Task 3.8 (B-35, timezone storage): GET /v1/me returns the profile with progress computed from
 // stored data; PATCH /v1/me changes the timezone (a known IANA zone only) and the daily goal
-// (10, 20, or 50 only), a goal change applying from today in the user's timezone on.
-import { randomUUID } from 'node:crypto';
+// (10, 20, or 50 only), a goal change applying from today in the user's timezone on. Task 7.6
+// (B-82): the profile carries hasPassword, true exactly when a password hash is stored, and never
+// the hash itself.
+import { randomBytes, randomUUID } from 'node:crypto';
 
 import { toLocalDate } from '@syntactical/progress';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, inject, it } from 'vitest';
 
+import { hashPassword } from '../../services/passwordHash.js';
 import type { AnswerKey } from '../../types/AnswerKey.js';
 import type { AnswerKeyEntry } from '../../types/AnswerKeyEntry.js';
 import { createMigratedDatabase } from '../integration/createMigratedDatabase.js';
@@ -30,6 +33,7 @@ const QUESTION_COUNT = 40;
 const QUESTION_IDS = Array.from({ length: QUESTION_COUNT }, (_unused, index) => `py-easy-${index}`);
 const ANSWER_INDEX = 1;
 const AUCKLAND = 'Pacific/Auckland';
+const PASSWORD_BYTES = 12;
 
 const answerKey: AnswerKey = new Map([
     [
@@ -142,6 +146,7 @@ describe.skipIf(SKIP_DATABASE_TESTS)('/v1/me', () => {
                 dayStreak: 1,
                 email: rows[0].email,
                 entitlements: ['syntactical.python.medium'],
+                hasPassword: false,
                 timezone: 'UTC',
                 xpToday,
                 xpTotal: 20 + xpToday,
@@ -159,10 +164,35 @@ describe.skipIf(SKIP_DATABASE_TESTS)('/v1/me', () => {
             dailyGoal: 20,
             dayStreak: 0,
             entitlements: [],
+            hasPassword: false,
             timezone: null,
             xpToday: 0,
             xpTotal: 0,
         });
+    });
+
+    it('GET and PATCH report hasPassword true exactly when a hash is stored, and no body carries the hash', async () => {
+        const signedIn = await signIn('UTC');
+        const storedHash = await hashPassword(randomBytes(PASSWORD_BYTES).toString('hex'));
+
+        const before = await getMe(signedIn);
+        await database.pool.query('UPDATE users SET password_hash = $2, password_updated_at = now() WHERE id = $1', [
+            signedIn.userId,
+            storedHash,
+        ]);
+        const after = await getMe(signedIn);
+        const patched = await patchMe(signedIn, { dailyGoal: 10 });
+
+        expect(before.status).toBe(HTTP_OK);
+        expect(before.body.data.hasPassword).toBe(false);
+        expect(after.status).toBe(HTTP_OK);
+        expect(after.body.data.hasPassword).toBe(true);
+        expect(patched.status).toBe(HTTP_OK);
+        expect(patched.body.data.hasPassword).toBe(true);
+        for (const response of [before, after, patched]) {
+            expect(response.text).not.toContain('$scrypt$');
+            expect(response.text).not.toContain(storedHash);
+        }
     });
 
     it('answers GET and PATCH with 401 without a session', async () => {

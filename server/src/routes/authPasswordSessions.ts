@@ -1,5 +1,5 @@
 // POST /v1/auth/sessions/password (B-68, B-76, B-79, B-83, B-85): signs in with an email and a
-// password. Limits run first, per client IP before the body is read and per normalized email
+// password. Limits run first, per client IP before validation and any derivation and per normalized email
 // after. Then the password's form is checked (no length policy, so any password that fits the
 // raw cap is derived like a wrong one), then verifyUserPassword derives exactly once whatever the
 // account is, holding no pooled client. Only then one transaction re-reads the user's hash and
@@ -9,7 +9,6 @@ import { Router } from 'express';
 import type { NextFunction, Request, Response } from 'express';
 import type { z } from 'zod';
 
-import { withTransaction } from '../clients/withTransaction.js';
 import { AUTH } from '../constants/auth.js';
 import { HTTP } from '../constants/http.js';
 import { createErrorResponse, ERROR_CODES } from '../errors.js';
@@ -17,8 +16,7 @@ import type { ErrorCode } from '../errors.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
 import { authSchemas } from '../schemas/authSchemas.js';
 import { normalizePassword } from '../services/checkPasswordPolicy.js';
-import { insertSession } from '../services/insertSession.js';
-import { isValidTimeZone } from '../services/isValidTimeZone.js';
+import { createPasswordSession } from '../services/createPasswordSession.js';
 import { HashSlotsBusy } from '../services/passwordHashSlots.js';
 import { verifyUserPassword } from '../services/verifyUserPassword.js';
 import type { VerifiedUserPassword } from '../services/verifyUserPassword.js';
@@ -73,27 +71,6 @@ function createAuthPasswordSessionsRouter(deps: PasswordSessionsAuthDeps): Route
     scope: PASSWORD_SIGN_IN_EMAIL,
   });
 
-  // Resolves the session token, or undefined when the stored hash is no longer the verified one.
-  async function openSession(verified: VerifiedUserPassword, timezone: string | undefined, at: Date) {
-    const { rehash, userId, verifiedHash } = verified;
-    return withTransaction(database, async (client) => {
-      const { rows } = await client.query<{ password_hash: string | null }>(
-        'SELECT password_hash FROM users WHERE id = $1 FOR UPDATE',
-        [userId],
-      );
-      if (rows[0]?.password_hash !== verifiedHash) {
-        return undefined;
-      }
-      if (rehash !== undefined) {
-        await client.query('UPDATE users SET password_hash = $2 WHERE id = $1', [userId, rehash]);
-      }
-      if (timezone !== undefined && isValidTimeZone(timezone)) {
-        await client.query('UPDATE users SET timezone = $2 WHERE id = $1 AND timezone IS NULL', [userId, timezone]);
-      }
-      return insertSession(client, { authMethod: 'password', now: at, userId });
-    });
-  }
-
   router.post('/sessions/password', perIp, validateSignIn, perEmail, async (req, res) => {
     const { email, password, timezone } = (res.locals as { signIn: SignInBody }).signIn;
     const normalized = normalizePassword(password);
@@ -121,12 +98,13 @@ function createAuthPasswordSessionsRouter(deps: PasswordSessionsAuthDeps): Route
       sendInvalidCredentials(res);
       return;
     }
-    const opened = await openSession(verified, timezone, now());
+    const { rehash, userId, verifiedHash } = verified;
+    const opened = await createPasswordSession(database, { now: now(), rehash, timezone, userId, verifiedHash });
     if (!opened) {
       sendInvalidCredentials(res);
       return;
     }
-    sendSessionResponse(req, res, { isCookieSecure, sessionToken: opened.sessionToken, userId: verified.userId });
+    sendSessionResponse(req, res, { isCookieSecure, sessionToken: opened.sessionToken, userId });
   });
 
   return router;
