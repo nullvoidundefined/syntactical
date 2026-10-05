@@ -82,9 +82,13 @@ export async function evaluateDraft(
     const result = await validateQuestion(question, oracle, (each) => runSandboxed(run, each));
     const { reason, runtimeVersion, status } = result;
     if (status !== 'passed') {
-        return { feedback: `validation ${reason ?? status}: the oracle output did not match your answer`, status: 'revise' };
+        return {
+            feedback: `validation ${reason ?? status}: the oracle output did not match your answer`,
+            status: 'revise',
+        };
     }
     return {
+        oracle,
         question: {
             ...question,
             provenance: {

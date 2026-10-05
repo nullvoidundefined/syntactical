@@ -2,12 +2,11 @@
 // entry path can be tested: `validate [--content-root <path>]`, `draft-oracles [--api]`, or
 // `classify`, `gap-fill`, or `enrich [--api] [--content-root <path>]`, `review [--content-root <path>]`, or `publish [--content-root <path>]`.
 import { randomUUID } from 'node:crypto';
+import { join } from 'node:path';
 
 import { readContentRootFlag } from '../services/classify/readContentRootFlag.js';
-import { createOracleSource } from '../services/createOracleSource.js';
 import { exitCodeFor } from '../services/exitCodeFor.js';
 import { pickProviderKind } from '../services/pickProviderKind.js';
-import { validateQuestion } from '../services/validateQuestion.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 
 import type { classify } from './classify.js';
@@ -81,13 +80,10 @@ async function runReview(argv: string[], deps: CliDeps): Promise<number> {
         stderr(`${(error as Error).message}\n`);
         return 1;
     }
-    const oracleSource = createOracleSource(`${pipelineDir}oracles`);
     const result = await run({
         contentDir,
         contentRoot: flagRoot ?? (env.SYNTACTICAL_CONTENT_ROOT || defaultContentRoot),
         log: (line) => stdout(`${line}\n`),
-        observe: async (bankKey, question) =>
-            (await validateQuestion(question, await oracleSource(bankKey, question.id))).observed,
         pipelineDir,
     });
     return result.problems > 0 ? 1 : 0;
@@ -105,7 +101,6 @@ async function runEnrich(argv: string[], deps: CliDeps): Promise<number> {
         log: (line) => stdout(`${line}\n`),
         newRunId: randomUUID,
         now: () => new Date().toISOString(),
-        oracleSource: createOracleSource(`${pipelineDir}oracles`),
         pipelineDir,
         provider: createProvider(pickProviderKind(argv)),
     });
@@ -150,7 +145,7 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
         await draft({
             contentDir,
             log: (line) => stdout(`${line}\n`),
-            oraclesDir: `${pipelineDir}oracles`,
+            oraclesDir: join(pipelineDir, 'oracles'),
             provider: createProvider(pickProviderKind(argv)),
         });
         return 0;
@@ -197,8 +192,8 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
         contentRoot,
         newRunId: randomUUID,
         now: () => new Date().toISOString(),
-        oracleSource: createOracleSource(`${pipelineDir}oracles`),
-        reportsDir: `${pipelineDir}reports`,
+        pipelineDir,
+        reportsDir: join(pipelineDir, 'reports'),
     });
     stdout(`${JSON.stringify(report.counts)}\n`);
     return exitCodeFor(report.counts);

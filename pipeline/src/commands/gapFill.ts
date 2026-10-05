@@ -12,21 +12,22 @@ import { join } from 'node:path';
 
 import { type Question, validateManifest } from '@syntactical/content-schema';
 
-import type { runOracle } from '../clients/dockerRunner.js';
-import { ORACLE_LANGUAGES } from '../services/ORACLE_LANGUAGES.js';
-import { TRACK_RUNNERS } from '../services/TRACK_RUNNERS.js';
-import { assertContentRootUsable } from '../services/classify/assertContentRootUsable.js';
-import { pickTopics } from '../services/classify/pickTopics.js';
-import { readFallbackTopics } from '../services/classify/readFallbackTopics.js';
-import { readLatestReport } from '../services/classify/readLatestReport.js';
-import { fillBank } from '../services/gapFill/fillBank.js';
-import { sanitizeLogText } from '../services/sanitizeLogText.js';
-import { writePipelineReport } from '../services/writePipelineReport.js';
-import { resolveBankFile } from '../services/resolveBankFile.js';
 import type { FillBankResult } from '../types/FillBankResult.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 import type { OracleLanguage } from '../types/OracleLanguage.js';
 import type { PipelineReport } from '../types/PipelineReport.js';
+import type { runOracle } from '../clients/dockerRunner.js';
+import { ORACLE_LANGUAGES } from '../services/ORACLE_LANGUAGES.js';
+import { TRACK_RUNNERS } from '../services/TRACK_RUNNERS.js';
+import { assertContentRootUsable } from '../services/classify/assertContentRootUsable.js';
+import { fillBank } from '../services/gapFill/fillBank.js';
+import { pickTopics } from '../services/classify/pickTopics.js';
+import { readFallbackTopics } from '../services/classify/readFallbackTopics.js';
+import { readLatestReport } from '../services/classify/readLatestReport.js';
+import { resolveBankFile } from '../services/resolveBankFile.js';
+import { resolveBankOutputRoot } from '../services/resolveBankOutputRoot.js';
+import { sanitizeLogText } from '../services/sanitizeLogText.js';
+import { writePipelineReport } from '../services/writePipelineReport.js';
 
 export interface GapFillOptions {
     contentDir: string;
@@ -78,13 +79,15 @@ export async function gapFill(options: GapFillOptions): Promise<PipelineReport> 
     }
     const { manifest } = checked;
     const { languages } = manifest;
-    if (languages.some(({ banks }) => Object.values(banks).some(({ access }) => access !== 'free'))) {
+    const hasPaidBanks = languages.some(({ banks }) => Object.values(banks).some(({ access }) => access !== 'free'));
+    if (hasPaidBanks) {
         await assertContentRootUsable(contentRoot, pipelineDir, contentDir);
     }
     const fallbackTopics = await readFallbackTopics(join(pipelineDir, 'topics.json'));
-    const previous = await readLatestReport(join(pipelineDir, 'reports'));
-    const totals: FillBankResult = { duplicate: 0, failed: 0, generated: 0 };
+    // Reports hold ids and verdicts only; every command shares one report chain in the pipeline dir.
     const reportsDir = join(pipelineDir, 'reports');
+    const previous = await readLatestReport(reportsDir);
+    const totals: FillBankResult = { duplicate: 0, failed: 0, generated: 0 };
     let isCompleted = false;
     let report: PipelineReport;
     try {
@@ -114,7 +117,7 @@ export async function gapFill(options: GapFillOptions): Promise<PipelineReport> 
                     languageId,
                     log,
                     // Free output stays in the public tree; paid output goes to the private content root.
-                    outRoot: access === 'free' ? pipelineDir : contentRoot,
+                    outRoot: resolveBankOutputRoot(pipelineDir, contentRoot, { access }),
                     provider,
                     questions: bank.questions,
                     topics,

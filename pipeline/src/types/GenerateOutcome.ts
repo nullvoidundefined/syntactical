@@ -2,9 +2,10 @@
 import type { Question } from '@syntactical/content-schema';
 
 import type { ProviderTransientReason } from './ProviderTransientError.js';
+import type { Oracle } from './Oracle.js';
 
 export type GenerateOutcome =
-    | { question: Question; status: 'kept' }
+    | { oracle: Oracle; question: Question; status: 'kept' }
     | {
           reason: 'disallowed-runner' | 'duplicate' | 'generation-failed' | 'not-executable' | ProviderTransientReason;
           status: 'dropped';
