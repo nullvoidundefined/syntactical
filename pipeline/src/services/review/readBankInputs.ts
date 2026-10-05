@@ -12,6 +12,7 @@ import { z } from 'zod';
 
 import type { ReviewBankInputs } from '../../types/review/ReviewBankInputs.js';
 
+import { readDisputedCards } from '../judge/readDisputedCards.js';
 import { isSafeItemId } from './isSafeItemId.js';
 import { readOptionalJson } from './readOptionalJson.js';
 
@@ -75,10 +76,19 @@ export async function readBankInputs(
     return {
         classifications: rawClassifications === undefined ? {} : classificationsSchema.parse(rawClassifications),
         enrichment,
+        disputed: keepSafe(
+            await readDisputedCards(join(outRoot, 'disputed', languageId, bankFile)),
+            (card) => card.question.id,
+            'disputed cards',
+        ),
         generated:
             rawGenerated === undefined
                 ? []
-                : (keepSafe(generatedSchema.parse(rawGenerated).questions, ({ id }) => id, 'generated questions') as Question[]),
+                : (keepSafe(
+                      generatedSchema.parse(rawGenerated).questions,
+                      ({ id }) => id,
+                      'generated questions',
+                  ) as Question[]),
         queue: keepSafe(queue, ({ id }) => id, 'review-queue entries'),
     };
 }

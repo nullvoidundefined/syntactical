@@ -10,6 +10,7 @@ import { isSafeItemId } from './isSafeItemId.js';
 import { pickSample } from './pickSample.js';
 
 interface BuildReviewItemsArgs {
+    scope?: 'all' | 'disputed';
     bank: Question[];
     bankKey: string;
     inputs: ReviewBankInputs;
@@ -23,7 +24,8 @@ const PASSED = 'passed';
 
 export async function buildReviewItems(args: BuildReviewItemsArgs): Promise<ReviewItem[]> {
     const { bank, bankKey, inputs, log, observe, statuses } = args;
-    const { classifications, enrichment, generated, queue } = inputs;
+    const { classifications, disputed = [], enrichment, generated, queue } = inputs;
+    const disputedFacts = new Map<string, NonNullable<ReviewItem['disputed']>>();
     const questions = new Map<string, Question>();
     const kinds = new Map<string, string[]>();
     const tag = (id: string, kind: string): void => {
@@ -46,6 +48,12 @@ export async function buildReviewItems(args: BuildReviewItemsArgs): Promise<Revi
         questions.set(question.id, question);
         tag(question.id, 'generated');
     }
+    for (const card of disputed) {
+        const { question, ...facts } = card;
+        questions.set(question.id, question);
+        tag(question.id, 'disputed');
+        disputedFacts.set(question.id, { ...facts, sources: question.provenance.validation.evidence?.sources ?? [] });
+    }
     for (const { id, reason, suggestedTopic } of queue) {
         tag(id, `review-queue (${reason ?? 'no reason'})`);
         if (suggestedTopic !== undefined) {
@@ -61,14 +69,16 @@ export async function buildReviewItems(args: BuildReviewItemsArgs): Promise<Revi
     }
     const items: ReviewItem[] = [];
     for (const [id, itemKinds] of [...kinds.entries()].sort(([left], [right]) => (left < right ? -1 : 1))) {
+        if (args.scope === 'disputed' && !itemKinds.includes('disputed')) continue;
         const question = questions.get(id);
-        const observed = question === undefined ? undefined : await observe(bankKey, question);
+        const observed = question === undefined || disputedFacts.has(id) ? undefined : await observe(bankKey, question);
         const { provenance, topic: ownTopic } = question ?? ({} as Partial<Question>);
         const topic = proposed.get(id) ?? classifications[id]?.topic ?? ownTopic;
         const rationales = Object.hasOwn(enrichment, id) ? enrichment[id] : undefined;
         items.push({
             id,
             kinds: itemKinds,
+            ...(disputedFacts.has(id) ? { disputed: disputedFacts.get(id) } : {}),
             ...(observed === undefined ? {} : { observed }),
             ...(topic === undefined ? {} : { proposedTopic: topic }),
             ...(question === undefined ? {} : { question }),

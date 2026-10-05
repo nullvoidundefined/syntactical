@@ -21,6 +21,7 @@ import { renderDecisionLines } from './renderDecisionLines.js';
 import { renderReviewItem } from './renderReviewItem.js';
 
 interface ReviewBankArgs {
+    scope?: 'all' | 'disputed';
     bank: Question[];
     difficulty: string;
     languageId: string;
@@ -62,6 +63,7 @@ export async function reviewBank(args: ReviewBankArgs): Promise<ReviewResult> {
         log,
         observe,
         statuses,
+        scope: args.scope ?? 'all',
     });
     const { kept, problems } = mergeDecisions(
         new Map(items.map((item) => [item.id, fingerprintItem(item)])),

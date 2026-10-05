@@ -1,6 +1,6 @@
 // Decides whether one question may be published (B-22). A rejection by the owner refuses it.
 // A `failed` validation refuses it even when a human approved it: review never overrides a
-// failed oracle. A `passed` validation publishes it as executed and passed. Anything else
+// failed oracle. A passed verdict preserves its execution or judged evidence. Anything else
 // (`not-executable`, or not in the report) publishes only when a human approved it, and stays
 // `pending`, so the client never shows the verified badge for it.
 import type { Question } from '@syntactical/content-schema';
@@ -19,7 +19,8 @@ export function decideQuestion(
     const { runtimeVersion, status } = verdict;
     const { decision: verdictOfOwner, isHumanReviewed: isMarkedReviewed } = decision ?? {};
     // A decision file entry wins; with none, a review already recorded on the question stands.
-    const isHumanReviewed = decision === undefined ? wasReviewed : isMarkedReviewed === true && verdictOfOwner === 'approve';
+    const isHumanReviewed =
+        decision === undefined ? wasReviewed : isMarkedReviewed === true && verdictOfOwner === 'approve';
     if (verdictOfOwner === 'reject') {
         return { reason: 'rejected' };
     }
@@ -27,7 +28,10 @@ export function decideQuestion(
         return { reason: 'validation-failed' };
     }
     if (status === 'passed') {
-        const validation = { method: 'executed', status: 'passed' } as const;
+        const validation =
+            verdict.method === 'judged' && verdict.evidence !== undefined
+                ? ({ evidence: verdict.evidence, method: 'judged', status: 'passed' } as const)
+                : ({ method: 'executed', status: 'passed' } as const);
         return {
             question: {
                 ...question,

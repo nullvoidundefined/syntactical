@@ -16,9 +16,7 @@ function describeChoices(question: Question): string {
         return `answer: ${String(question.answer)}`;
     }
     const { answerIndex, choices } = question;
-    return choices
-        .map(({ text }, index) => `${index === answerIndex ? '*' : ' '} ${index}: ${text}`)
-        .join('\n');
+    return choices.map(({ text }, index) => `${index === answerIndex ? '*' : ' '} ${index}: ${text}`).join('\n');
 }
 
 function renderQuestion(question: Question): string[] {
@@ -32,6 +30,27 @@ function renderQuestion(question: Question): string[] {
     ];
 }
 
+function renderDisputed(facts: NonNullable<ReviewItem['disputed']>): string[] {
+    const { blindAnswers, claimedIndex, consistency, failure, sources } = facts;
+    return [
+        `Claimed answer: ${claimedIndex}`,
+        `Blind answers: claude ${blindAnswers.claude ?? 'invalid'}, codex ${blindAnswers.codex ?? 'invalid'}`,
+        `Failure: ${oneLine(failure)}`,
+        'Consistency:',
+        fenceText(consistency?.reason ?? '(not run)'),
+        // Indent quoted lines inside the fence so source text cannot resemble review controls even as raw Markdown.
+        ...sources.flatMap(({ title, url, quote }) => [
+            `Source: ${oneLine(title)} (${oneLine(url)})`,
+            fenceText(
+                quote
+                    .split(/\r?\n/)
+                    .map((line) => `    ${line}`)
+                    .join('\n'),
+            ),
+        ]),
+    ];
+}
+
 export function renderReviewItem(item: ReviewItem, decisionLines: string[]): string {
     const { id, kinds, observed, proposedTopic, question, rationales, status } = item;
     return [
@@ -40,7 +59,10 @@ export function renderReviewItem(item: ReviewItem, decisionLines: string[]): str
         `Why it is here: ${oneLine(kinds.join(', '))}`,
         `Validation: ${oneLine(status ?? 'unknown')}`,
         `Proposed topic: ${oneLine(proposedTopic ?? 'none')}`,
-        ...(question === undefined ? ['Question: not found in the bank or the generated file'] : renderQuestion(question)),
+        ...(question === undefined
+            ? ['Question: not found in the bank or the generated file']
+            : renderQuestion(question)),
+        ...(item.disputed ? renderDisputed(item.disputed) : []),
         'Oracle output:',
         fenceText(observed ?? '(none: the oracle did not pass)'),
         ...(rationales === undefined

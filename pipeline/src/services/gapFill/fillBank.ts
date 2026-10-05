@@ -12,6 +12,8 @@ import { z } from 'zod';
 import type { FillBankArgs } from '../../types/FillBankArgs.js';
 import type { FillBankResult } from '../../types/FillBankResult.js';
 import type { GenerateOutcome } from '../../types/GenerateOutcome.js';
+import type { DisputedCard } from '../../types/judge/DisputedCard.js';
+import { readDisputedCards } from '../judge/readDisputedCards.js';
 import { writeJsonAtomic } from '../classify/writeJsonAtomic.js';
 import { readExistingOracles } from '../readExistingOracles.js';
 
@@ -48,12 +50,12 @@ function generateFor(
     const shared = { difficulty, existingPrompts, languageId, provider, topic, ...(run === undefined ? {} : { run }) };
     return args.runners === undefined
         ? generateQuestion({ ...shared, language: args.language })
-        : generateTopicQuestion({ ...shared, runners: args.runners });
+        : generateTopicQuestion({ ...shared, runners: args.runners, ...(args.judge ? { judge: args.judge } : {}) });
 }
 
 export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
     const { bankKey, difficulty, languageId, log, outRoot, questions, topics } = args;
-    const result: FillBankResult = { duplicate: 0, failed: 0, generated: 0 };
+    const result: FillBankResult = { duplicate: 0, failed: 0, generated: 0, ...(args.judge ? { disputed: 0 } : {}) };
     const rawClassified = await readJsonIfPresent(join(outRoot, 'classifications', languageId, `${difficulty}.json`));
     if (rawClassified === undefined) {
         log(`skipping bank ${bankKey}: no classifications, run classify first`);
@@ -63,10 +65,14 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
     const stagedFile = join(outRoot, 'generated', languageId, `${difficulty}.json`);
     const rawStaged = await readJsonIfPresent(stagedFile);
     const staged = (rawStaged === undefined ? [] : stagedSchema.parse(rawStaged).questions) as Question[];
+    const disputedFile = join(outRoot, 'disputed', languageId, `${difficulty}.json`);
+    const stagedDisputed = await readDisputedCards(disputedFile);
+    const disputedAdded: DisputedCard[] = [];
     const oracleFile = join(outRoot, 'oracles', languageId, `${difficulty}.json`);
     const oracles = await readExistingOracles(oracleFile);
     const counts = countByTopic([...questions, ...staged], classified);
     const existingPrompts = new Set([...questions, ...staged].map(({ prompt }) => normalizePrompt(prompt)));
+    for (const { question } of stagedDisputed) existingPrompts.add(normalizePrompt(question.prompt));
     const added: Question[] = [];
     let providerFailures = 0;
     let isCompleted = false;
@@ -82,12 +88,18 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
                     outcome.status === 'dropped' &&
                     (outcome.reason === 'model-timeout' || outcome.reason === 'model-error');
                 providerFailures = isProviderFailure ? providerFailures + 1 : 0;
-                if (outcome.status === 'kept') {
+                if (outcome.status === 'disputed') {
+                    const { card } = outcome;
+                    disputedAdded.push(card);
+                    existingPrompts.add(normalizePrompt(card.question.prompt));
+                    result.disputed = (result.disputed ?? 0) + 1;
+                    log(`${bankKey} ${topic}: disputed ${card.question.id}`);
+                } else if (outcome.status === 'kept') {
                     const { oracle, question } = outcome;
                     const { id, prompt } = question;
                     existingPrompts.add(normalizePrompt(prompt));
                     added.push(question);
-                    oracles.set(id, oracle);
+                    if (oracle) oracles.set(id, oracle);
                     result.generated += 1;
                     log(`${bankKey} ${topic}: generated ${id}`);
                 } else {
@@ -106,6 +118,17 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
     } finally {
         // An error that stops the run still stages what this bank generated so far. If that
         // write fails too, log it and let the original error stay the one that propagates.
+        if (disputedAdded.length > 0) {
+            const body = { cards: [...stagedDisputed, ...disputedAdded], schemaVersion: 1 };
+            if (isCompleted) await writeJsonAtomic(disputedFile, body);
+            else {
+                try {
+                    await writeJsonAtomic(disputedFile, body);
+                } catch (writeError) {
+                    log(`${bankKey}: could not stage partial disputes (${String(writeError)})`);
+                }
+            }
+        }
         if (added.length > 0) {
             const stagedBody = { questions: [...staged, ...added], schemaVersion: SUPPORTED_SCHEMA_VERSION };
             if (isCompleted) {
