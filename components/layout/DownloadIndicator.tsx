@@ -18,7 +18,12 @@ function SweepingLine() {
   const progress = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     const sweep = Animated.loop(
-      Animated.timing(progress, { duration: SWEEP_DURATION_MS, easing: Easing.linear, toValue: 1, useNativeDriver: true }),
+      Animated.timing(progress, {
+        duration: SWEEP_DURATION_MS,
+        easing: Easing.linear,
+        toValue: 1,
+        useNativeDriver: true,
+      }),
     );
     sweep.start();
     return () => sweep.stop();
@@ -40,7 +45,11 @@ export function DownloadIndicator() {
       {Platform.OS === 'web' ? <WebStatusRegion isDownloading={isDownloading} /> : null}
       {isDownloading ? (
         <View accessible role="progressbar" aria-label={STATUS_LABEL} className="h-px w-full overflow-hidden bg-line">
-          {isReducedMotion ? <View testID="download-indicator-static" className="h-full w-full bg-signal/30" /> : <SweepingLine />}
+          {isReducedMotion ? (
+            <View testID="download-indicator-static" className="h-full w-full bg-signal/30" />
+          ) : (
+            <SweepingLine />
+          )}
         </View>
       ) : null}
     </>

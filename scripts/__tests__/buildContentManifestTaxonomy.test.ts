@@ -32,7 +32,7 @@ describe('buildContentManifest taxonomy', () => {
     }
 
     function build(): Promise<void> {
-        return buildContentManifest(contentDir, generatedPath, undefined, taxonomyDir);
+        return buildContentManifest(contentDir, generatedPath, taxonomyDir);
     }
 
     it('copies the approved file into the manifest and ignores the draft', async () => {

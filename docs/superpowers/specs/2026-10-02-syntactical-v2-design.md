@@ -106,7 +106,7 @@ Proposed during grounding, settled by approving this spec (each resolves a confl
 | Jest projects | `jest.config.js` | `native`, `web` |
 | Lexicon | `docs/lexicon.md` | Domain vocabulary |
 
-Concepts with no match in the repo, which this spec therefore creates: topic, A/B question and criterion, choice rationale, misconception and misconception taxonomy, provenance, oracle, runner, sandbox, model provider, pipeline report, quality page, verified badge, bank access (free or paid), product id, user, sign-in session, one-time code, answer event, day streak, XP, daily goal, daily progress, review round, review state, weakness report, entitlement, purchase event, analytics event, the `server/`, `pipeline/`, `packages/content-schema`, and `packages/progress` workspaces.
+Concepts with no match in the repo, which this spec therefore creates: topic, A/B question and criterion, choice rationale, misconception and misconception taxonomy, provenance, oracle, runner, sandbox, model provider, pipeline report, verified badge, bank access (free or paid), product id, user, sign-in session, one-time code, answer event, day streak, XP, daily goal, daily progress, review round, review state, weakness report, entitlement, purchase event, analytics event, the `server/`, `pipeline/`, `packages/content-schema`, and `packages/progress` workspaces.
 
 ## Already exists
 
@@ -152,8 +152,7 @@ Every term below is mirrored into `docs/lexicon.md` in the same PR as this spec.
 - oracle - the code (and optional setup SQL) whose execution output decides a question's answer - chosen over: `check`, `test`, `probe` because "test" collides with the repo's test suites.
 - runner - the per-language Docker image plus harness that executes an oracle with no network and fixed CPU, memory, and time limits - chosen over: `sandbox` as an identifier; "sandbox" stays prose for the isolation property.
 - model provider - the pipeline's interface over `claude -p` and the Anthropic API key path - chosen over: `llm client`, `ai service` because it is the seam that swaps providers.
-- pipeline report - the JSON a pipeline run writes: per-question outcome, rejection reasons, agreement metrics; it feeds the quality page - chosen over: `stats file`, because `stats` names learner stats.
-- quality page - the static app route showing current pipeline report numbers - chosen over: `trust page`, `audit page`.
+- pipeline report - the JSON a pipeline run writes: per-question outcome, rejection reasons, agreement metrics; chosen over: `stats file`, because `stats` names learner stats.
 - verified badge - the card label "Output verified on <runtime> <version>", shown only when `provenance.validation.method === 'executed'` and `status === 'passed'` - chosen over: `checkmark`, `trusted`.
 - bank access - `bankEntry.access`, `'free'` or `'paid'` - chosen over: `tier` (reserved: the lexicon forbids it as a difficulty synonym) and `plan` (implies a subscription).
 - product id - `bankEntry.productId`, the product for a paid bank (`syntactical.<language>.<difficulty>`) - chosen over: `sku`, `price id` because one id maps to App Store, Play, and web billing products through RevenueCat.
@@ -253,11 +252,11 @@ One `requireSession` middleware reads the `syntactical_session` cookie or an `Au
 
 ### Client additions
 
-Topic view inside the difficulty step, review round, header with day streak, XP, and daily goal ring, `AbCard`, sign-in screen, purchase flow (RevenueCat Web Billing on web, the store sheet on native), choice rationale first in the query drawer, verified badge, quality page route, weakness report, analytics events, and an on-device answer event log with a sync queue. Review scheduling runs on device so review works offline.
+Topic view inside the difficulty step, review round, header with day streak, XP, and daily goal ring, `AbCard`, sign-in screen, purchase flow (RevenueCat Web Billing on web, the store sheet on native), choice rationale first in the query drawer, verified badge, weakness report, analytics events, and an on-device answer event log with a sync queue. Review scheduling runs on device so review works offline.
 
 ### Pipeline
 
-`pipeline/` CLI stages, each a separate command: `validate`, `classify`, `gap-fill`, `enrich`, `review`, `publish`. Every model call goes through `ModelProvider` (`claude -p` or the Anthropic API) with structured JSON output. Every oracle runs in a runner: `docker run --rm --network none --cpus 1 --memory 256m --memory-swap 256m --pids-limit 64 --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m --user 10001:10001 --cap-drop ALL --security-opt no-new-privileges` with a wall-clock timeout (the Postgres runner adds a tmpfs data directory), three runs, any disagreement rejects. `packages/content-schema` owns `CONTENT_LIMITS`, `DIFFICULTIES`, `GRAMMARS`, and `SUPPORTED_SCHEMA_VERSION` (no import from the app), and builds with `tsc` to `dist/` with an `exports` map; Metro resolves its TypeScript source through `react-native` in its `package.json`. The quality page bundles the committed `pipeline/reports/latest.json`. Every run writes a pipeline report. Nothing reaches `content/` or `server/content/` except through `publish`, which refuses any question without passed validation or recorded human review.
+`pipeline/` CLI stages, each a separate command: `validate`, `classify`, `gap-fill`, `enrich`, `review`, `publish`. Every model call goes through `ModelProvider` (`claude -p` or the Anthropic API) with structured JSON output. Every oracle runs in a runner: `docker run --rm --network none --cpus 1 --memory 256m --memory-swap 256m --pids-limit 64 --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m --user 10001:10001 --cap-drop ALL --security-opt no-new-privileges` with a wall-clock timeout (the Postgres runner adds a tmpfs data directory), three runs, any disagreement rejects. `packages/content-schema` owns `CONTENT_LIMITS`, `DIFFICULTIES`, `GRAMMARS`, and `SUPPORTED_SCHEMA_VERSION` (no import from the app), and builds with `tsc` to `dist/` with an `exports` map; Metro resolves its TypeScript source through `react-native` in its `package.json`. Every run writes a pipeline report. Nothing reaches `content/` or `server/content/` except through `publish`, which refuses any question without passed validation or recorded human review.
 
 ## Acceptance criteria
 
@@ -284,7 +283,7 @@ Order matches the slices in the plan. Each line is one RED slice.
 - B-12: An oracle that raises is recorded with the exception type as its outcome, so "raises TypeError" questions validate.
 - B-13: `pipeline validate` over all 9 banks writes a pipeline report listing every question as `passed`, `failed` (with reason), or `not-executable`, and changes no content file.
 - B-14: `ModelProvider` returns parsed structured output from either the `claude -p` path or the API path, and a response that fails the JSON schema raises `ModelOutputInvalid` without retrying more than twice.
-- B-15: The quality page renders the counts from the committed `pipeline/reports/latest.json`, including audit failures found in the original banks, and the build fails if a published bank has no report entry.
+- B-15: Dropped by owner decision 2026-10-05 (the public content quality page was removed from the app; the pipeline reports under `pipeline/reports/` remain for the owner).
 - B-16: A card whose question has `provenance.validation` `executed` and `passed` shows "Output verified on <runtime> <version>"; any other provenance shows no badge.
 
 ### Stage 2: topics and enrichment
@@ -329,7 +328,7 @@ Order matches the slices in the plan. Each line is one RED slice.
 - B-61: Signing out with unsynced events asks to sync or discard them; events recorded under one user are never uploaded under another. Every sign-out then removes that user's events from the device, so it holds one owner's events at a time; the server keeps the synced history (IAN-601).
 - B-62: `GET /health` returns 200 with no database call; `GET /health/ready` returns 503 when the database is unreachable.
 - B-63: A cookie-authenticated non-GET request without `X-Requested-With: XMLHttpRequest` is rejected with 403; a spoofed `X-Forwarded-For` beyond the one trusted proxy hop does not change the rate-limit key.
-- B-64: Each new route (sign-in, settings, topic list, review, quality, paywall) has one `h1`, labeled controls, full keyboard operation on web, `animation: none` under reduced motion (the daily goal ring included, exposed as `role="progressbar"` with its value), and scores 100 on Lighthouse accessibility.
+- B-64: Each new route (sign-in, settings, topic list, review, paywall) has one `h1`, labeled controls, full keyboard operation on web, `animation: none` under reduced motion (the daily goal ring included, exposed as `role="progressbar"` with its value), and scores 100 on Lighthouse accessibility.
 
 ### Stage 4: learning loop
 

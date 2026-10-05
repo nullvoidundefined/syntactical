@@ -4,7 +4,9 @@ import { ReviewDueLink } from '../ReviewDueLink';
 
 let mockDueCount = 0;
 jest.mock('../../../state/useReviewQueue', () => ({
-  useReviewQueue: () => ({ dueQuestions: Array.from({ length: mockDueCount }, (_unused, index) => ({ question: { id: `q-${index}` } })) }),
+  useReviewQueue: () => ({
+    dueQuestions: Array.from({ length: mockDueCount }, (_unused, index) => ({ question: { id: `q-${index}` } })),
+  }),
 }));
 
 describe('ReviewDueLink', () => {

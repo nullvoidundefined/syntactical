@@ -1,7 +1,7 @@
-// The pipeline report shape that each run writes and the quality page reads.
+// The pipeline report shape that each run writes for the owner to read.
 import type { PipelineReportQuestion } from './PipelineReportQuestion.js';
 
-// The JSON each pipeline run writes under `pipeline/reports/`; it feeds the quality page.
+// The JSON each pipeline run writes under `pipeline/reports/`.
 export interface PipelineReport {
     runId: string;
     stage: string;
