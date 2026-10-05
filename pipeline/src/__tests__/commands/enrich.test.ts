@@ -251,15 +251,18 @@ describe('enrich', () => {
     describe('rerun over an existing staging file', () => {
         const earlier = { choiceIndex: 0, misconceptionId: SECOND_TAG, rationale: 'earlier' };
 
-        it('keeps earlier rationales for a question this run skipped, and replaces one it re-enriched', async () => {
-            await seed({ 'easy:free': [buildBool('q-1', 'p1'), buildBool('q-2', 'p2')] });
+        // A rerun resumes: a question that already has rationales is kept as is, with no model
+        // call. To refresh one, delete its entry from the enrichment file first.
+        it('keeps earlier rationales for every question that has them, and enriches the rest', async () => {
+            await seed({ 'easy:free': [buildBool('q-1', 'p1'), buildBool('q-2', 'p2'), buildBool('q-3', 'p3')] });
             await writeTree(pipelineDir, {
                 'enrichment/python/easy.json': { 'q-1': [earlier], 'q-2': [earlier] },
             });
             await run(scripted({ tag: () => FIRST_TAG }), ['q-2']);
             expect(await readJson(join(pipelineDir, 'enrichment/python/easy.json'))).toEqual({
-                'q-1': [{ choiceIndex: 0, misconceptionId: FIRST_TAG, rationale: 'rationale-0' }],
+                'q-1': [earlier],
                 'q-2': [earlier],
+                'q-3': [{ choiceIndex: 0, misconceptionId: FIRST_TAG, rationale: 'rationale-0' }],
             });
         });
 
