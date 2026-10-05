@@ -13,19 +13,22 @@ import { join } from 'node:path';
 
 import { type Question, validateManifest } from '@syntactical/content-schema';
 
-import { assertContentRootUsable } from '../services/classify/assertContentRootUsable.js';
-import { readLatestReport } from '../services/classify/readLatestReport.js';
-import { buildEnrichReport } from '../services/enrich/buildEnrichReport.js';
-import { enrichBank } from '../services/enrich/enrichBank.js';
-import { readTaxonomy } from '../services/enrich/readTaxonomy.js';
-import { sanitizeLogText } from '../services/sanitizeLogText.js';
-import { validateQuestion } from '../services/validateQuestion.js';
-import { writePipelineReport } from '../services/writePipelineReport.js';
-import { resolveBankFile } from '../services/resolveBankFile.js';
 import type { EnrichBankResult } from '../types/EnrichBankResult.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 import type { OracleSource } from '../types/OracleSource.js';
 import type { PipelineReport } from '../types/PipelineReport.js';
+import { assertContentRootUsable } from '../services/classify/assertContentRootUsable.js';
+import { buildEnrichReport } from '../services/enrich/buildEnrichReport.js';
+import { createOracleSource } from '../services/createOracleSource.js';
+import { enrichBank } from '../services/enrich/enrichBank.js';
+import { readJsonIfPresent } from '../services/gapFill/readJsonIfPresent.js';
+import { readLatestReport } from '../services/classify/readLatestReport.js';
+import { readTaxonomy } from '../services/enrich/readTaxonomy.js';
+import { resolveBankFile } from '../services/resolveBankFile.js';
+import { resolveBankOutputRoot } from '../services/resolveBankOutputRoot.js';
+import { sanitizeLogText } from '../services/sanitizeLogText.js';
+import { validateQuestion } from '../services/validateQuestion.js';
+import { writePipelineReport } from '../services/writePipelineReport.js';
 
 import type { QuestionValidator } from './validate.js';
 
@@ -35,7 +38,7 @@ export interface EnrichOptions {
     log: (line: string) => void;
     newRunId: () => string;
     now: () => string;
-    oracleSource: OracleSource;
+    oracleSource?: OracleSource;
     pipelineDir: string;
     provider: ModelProvider;
     validate?: QuestionValidator;
@@ -46,7 +49,7 @@ async function readJson(path: string): Promise<unknown> {
 }
 
 export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
-    const { contentDir, contentRoot, newRunId, oracleSource, pipelineDir, provider } = options;
+    const { contentDir, contentRoot, newRunId, pipelineDir, provider } = options;
     const validate = options.validate ?? validateQuestion;
     const log = (line: string): void => options.log(sanitizeLogText(line));
     const startedAt = options.now();
@@ -60,10 +63,12 @@ export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
     const {
         manifest: { languages },
     } = checked;
-    if (languages.some(({ banks }) => Object.values(banks).some(({ access }) => access !== 'free'))) {
+    const hasPaidBanks = languages.some(({ banks }) => Object.values(banks).some(({ access }) => access !== 'free'));
+    if (hasPaidBanks) {
         await assertContentRootUsable(contentRoot, pipelineDir, contentDir);
     }
-    const previous = await readLatestReport(join(pipelineDir, 'reports'));
+    const reportsDir = join(hasPaidBanks ? contentRoot : pipelineDir, 'reports');
+    const previous = await readLatestReport(reportsDir);
     const totals: EnrichBankResult = { accepted: 0, agreed: 0, compared: 0, contradicted: 0, dropped: 0 };
     for (const { banks, id: languageId } of languages) {
         const taxonomy = await readTaxonomy(pipelineDir, languageId);
@@ -76,6 +81,11 @@ export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
             const bank = (await readJson(resolveBankFile(contentDir, contentRoot, { access, path }))) as {
                 questions: Question[];
             };
+            const outRoot = resolveBankOutputRoot(pipelineDir, contentRoot, { access });
+            const oracleSource = options.oracleSource ?? createOracleSource(join(outRoot, 'oracles'));
+            const staged = (await readJsonIfPresent(join(outRoot, 'generated', languageId, `${difficulty}.json`))) as
+                | { questions: Question[] }
+                | undefined;
             const result = await enrichBank({
                 bankKey,
                 difficulty,
@@ -86,9 +96,9 @@ export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
                     return status === 'passed' ? observed : undefined;
                 },
                 // Free output stays in the public tree; paid output goes to the private content root.
-                outRoot: access === 'free' ? pipelineDir : contentRoot,
+                outRoot,
                 provider,
-                questions: bank.questions,
+                questions: [...bank.questions, ...(staged?.questions ?? [])],
                 taxonomy,
             });
             const { accepted, agreed, compared, contradicted, dropped } = result;
@@ -104,6 +114,6 @@ export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
         runId: newRunId(),
         startedAt,
     });
-    await writePipelineReport(join(pipelineDir, 'reports'), report);
+    await writePipelineReport(reportsDir, report);
     return report;
 }

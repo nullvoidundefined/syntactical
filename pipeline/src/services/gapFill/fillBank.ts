@@ -13,6 +13,7 @@ import type { FillBankArgs } from '../../types/FillBankArgs.js';
 import type { FillBankResult } from '../../types/FillBankResult.js';
 import type { GenerateOutcome } from '../../types/GenerateOutcome.js';
 import { writeJsonAtomic } from '../classify/writeJsonAtomic.js';
+import { readExistingOracles } from '../readExistingOracles.js';
 
 import { MAX_CONSECUTIVE_PROVIDER_FAILURES } from './MAX_CONSECUTIVE_PROVIDER_FAILURES.js';
 import { countQuestionsNeeded } from './countQuestionsNeeded.js';
@@ -62,6 +63,8 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
     const stagedFile = join(outRoot, 'generated', languageId, `${difficulty}.json`);
     const rawStaged = await readJsonIfPresent(stagedFile);
     const staged = (rawStaged === undefined ? [] : stagedSchema.parse(rawStaged).questions) as Question[];
+    const oracleFile = join(outRoot, 'oracles', languageId, `${difficulty}.json`);
+    const oracles = await readExistingOracles(oracleFile);
     const counts = countByTopic([...questions, ...staged], classified);
     const existingPrompts = new Set([...questions, ...staged].map(({ prompt }) => normalizePrompt(prompt)));
     const added: Question[] = [];
@@ -80,10 +83,11 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
                     (outcome.reason === 'model-timeout' || outcome.reason === 'model-error');
                 providerFailures = isProviderFailure ? providerFailures + 1 : 0;
                 if (outcome.status === 'kept') {
-                    const { question } = outcome;
+                    const { oracle, question } = outcome;
                     const { id, prompt } = question;
                     existingPrompts.add(normalizePrompt(prompt));
                     added.push(question);
+                    oracles.set(id, oracle);
                     result.generated += 1;
                     log(`${bankKey} ${topic}: generated ${id}`);
                 } else {
@@ -105,9 +109,11 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
         if (added.length > 0) {
             const stagedBody = { questions: [...staged, ...added], schemaVersion: SUPPORTED_SCHEMA_VERSION };
             if (isCompleted) {
+                await writeJsonAtomic(oracleFile, Object.fromEntries(oracles));
                 await writeJsonAtomic(stagedFile, stagedBody);
             } else {
                 try {
+                    await writeJsonAtomic(oracleFile, Object.fromEntries(oracles));
                     await writeJsonAtomic(stagedFile, stagedBody);
                 } catch (writeError) {
                     log(`${bankKey}: could not stage partial results (${String(writeError)})`);

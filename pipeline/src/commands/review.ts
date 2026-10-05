@@ -18,20 +18,26 @@ import { join } from 'node:path';
 
 import { type Question, validateManifest } from '@syntactical/content-schema';
 
+import type { ReviewResult } from '../types/review/ReviewResult.js';
 import { assertContentRootUsable } from '../services/classify/assertContentRootUsable.js';
+import { createOracleSource } from '../services/createOracleSource.js';
 import { readLatestReport } from '../services/classify/readLatestReport.js';
+import { resolveBankFile } from '../services/resolveBankFile.js';
+import { resolveBankOutputRoot } from '../services/resolveBankOutputRoot.js';
 import { reviewBank } from '../services/review/reviewBank.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
-import { resolveBankFile } from '../services/resolveBankFile.js';
-import type { ReviewResult } from '../types/review/ReviewResult.js';
+
+import { validateQuestion } from '../services/validateQuestion.js';
+import type { QuestionValidator } from './validate.js';
 
 export interface ReviewOptions {
     contentDir: string;
     contentRoot: string;
     log: (line: string) => void;
     // The oracle's observed output for a question, or undefined when it has none.
-    observe: (bankKey: string, question: Question) => Promise<string | undefined>;
+    observe?: (bankKey: string, question: Question) => Promise<string | undefined>;
     pipelineDir: string;
+    validate?: QuestionValidator;
 }
 
 async function readJson(path: string): Promise<unknown> {
@@ -39,7 +45,8 @@ async function readJson(path: string): Promise<unknown> {
 }
 
 export async function review(options: ReviewOptions): Promise<ReviewResult> {
-    const { contentDir, contentRoot, observe, pipelineDir } = options;
+    const { contentDir, contentRoot, pipelineDir } = options;
+    const validate = options.validate ?? validateQuestion;
     const log = (line: string): void => options.log(sanitizeLogText(line));
     // The manifest is untrusted: language ids, difficulty keys, and bank paths are joined
     // into file paths below, so nothing is read or written before it validates.
@@ -64,14 +71,19 @@ export async function review(options: ReviewOptions): Promise<ReviewResult> {
             const bank = (await readJson(resolveBankFile(contentDir, contentRoot, { access, path }))) as {
                 questions: Question[];
             };
+            const outRoot = resolveBankOutputRoot(pipelineDir, contentRoot, { access });
+            const oracleSource = createOracleSource(join(outRoot, 'oracles'));
             const counts = await reviewBank({
                 bank: bank.questions,
                 difficulty,
                 languageId,
                 log,
-                observe,
+                observe:
+                    options.observe ??
+                    (async (key, question) =>
+                        (await validate(question, await oracleSource(key, question.id))).observed),
                 // Free output stays in the public tree; paid output goes to the private content root.
-                outRoot: access === 'free' ? pipelineDir : contentRoot,
+                outRoot,
                 statuses: new Map(
                     report.questions.filter((each) => each.bankKey === bankKey).map(({ id, status }) => [id, status]),
                 ),

@@ -1,18 +1,20 @@
 // `pipeline validate`: runs every question's oracle through `validateQuestion`
 // and writes a pipeline report. It reads content files and never writes them.
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import type { Manifest, Question } from '@syntactical/content-schema';
 
-import { validateQuestion } from '../services/validateQuestion.js';
-import { writePipelineReport } from '../services/writePipelineReport.js';
-import { resolveBankFile } from '../services/resolveBankFile.js';
 import type { Oracle } from '../types/Oracle.js';
 import type { OracleSource } from '../types/OracleSource.js';
 import type { PipelineReport } from '../types/PipelineReport.js';
 import type { PipelineReportQuestion } from '../types/PipelineReportQuestion.js';
 import type { ValidationResult, ValidationStatus } from '../types/ValidationResult.js';
+import { createOracleSource } from '../services/createOracleSource.js';
+import { resolveBankFile } from '../services/resolveBankFile.js';
+import { resolveBankOutputRoot } from '../services/resolveBankOutputRoot.js';
+import { validateQuestion } from '../services/validateQuestion.js';
+import { writePipelineReport } from '../services/writePipelineReport.js';
 
 export type QuestionValidator = (question: Question, oracle: Oracle | null) => Promise<ValidationResult>;
 
@@ -21,7 +23,8 @@ export interface ValidateOptions {
     // The private content repo that holds paid banks (B-60).
     contentRoot: string;
     reportsDir: string;
-    oracleSource: OracleSource;
+    oracleSource?: OracleSource;
+    pipelineDir?: string;
     newRunId: () => string;
     now: () => string;
     validate?: QuestionValidator;
@@ -47,7 +50,8 @@ function toReportQuestion(id: string, bankKey: string, result: ValidationResult)
 }
 
 export async function validateContent(options: ValidateOptions): Promise<PipelineReport> {
-    const { contentDir, contentRoot, newRunId, now, oracleSource, reportsDir } = options;
+    const { contentDir, contentRoot, newRunId, now, reportsDir } = options;
+    const pipelineDir = options.pipelineDir ?? dirname(reportsDir);
     const validate = options.validate ?? validateQuestion;
     const startedAt = now();
     const manifest = (await readJson(join(contentDir, 'manifest.json'))) as Manifest;
@@ -55,6 +59,8 @@ export async function validateContent(options: ValidateOptions): Promise<Pipelin
     for (const language of manifest.languages) {
         const { banks, id: languageId } = language;
         for (const [difficulty, entry] of Object.entries(banks)) {
+            const outRoot = resolveBankOutputRoot(pipelineDir, contentRoot, entry);
+            const oracleSource = options.oracleSource ?? createOracleSource(join(outRoot, 'oracles'));
             const bankKey = `${languageId}/${difficulty}`;
             const bank = (await readJson(resolveBankFile(contentDir, contentRoot, entry))) as { questions: Question[] };
             // Paid banks are validated like free ones; only ids and verdicts leave this loop.
