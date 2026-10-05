@@ -7,7 +7,8 @@ import type { EvidenceSource } from '@syntactical/content-schema';
 import type { SourceFetcher } from '../../clients/sourceFetcher.js';
 import type { SourceFetchFailure } from '../../types/SourceFetchResult.js';
 
-import { DROPPED_TEXT_BREAK, extractPageText } from './extractPageText.js';
+import { DROPPED_TEXT_BREAK } from './extractPageText.js';
+import { extractPageTextIsolated } from './extractPageTextIsolated.js';
 import { normalizeQuoteText } from './normalizeQuoteText.js';
 
 export const MIN_QUOTE_LENGTH = 20;
@@ -27,7 +28,7 @@ export async function verifySources(
         if (wanted.length < MIN_QUOTE_LENGTH) return { ok: false, reason: 'quote-too-short', url };
         const page = await fetchSource(url);
         if (!page.ok) return { ok: false, reason: page.reason, url };
-        const segments = extractPageText(page.text, page.contentType).split(DROPPED_TEXT_BREAK);
+        const segments = (await extractPageTextIsolated(page.text, page.contentType)).split(DROPPED_TEXT_BREAK);
         if (!segments.some((segment) => normalizeQuoteText(segment).includes(wanted)))
             return { ok: false, reason: 'quote-not-found', url };
     }
