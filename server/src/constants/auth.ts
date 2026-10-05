@@ -4,6 +4,11 @@
 const HOUR_MS = 3_600_000;
 
 const AUTH = {
+  BREACH_CHECK: {
+    // The k-anonymity range lookup fails open, so it must not hold a sign-up for longer than this.
+    MAX_RESPONSE_BYTES: 262_144,
+    TIMEOUT_MS: 2_000,
+  },
   CODE: {
     DIGITS: 6,
     MAX_ATTEMPTS: 5,
@@ -16,6 +21,12 @@ const AUTH = {
     // The sign-in email is sent inside the issue transaction, so a stalled send must not hold
     // its pooled client and row locks for longer than this.
     SEND_TIMEOUT_MS: 8_000,
+  },
+  PASSWORD: {
+    MAX_LENGTH: 128,
+    MIN_LENGTH: 12,
+    // UTF-16 units of the raw string, measured before NFKC, so normalization cannot be fed a huge input.
+    RAW_MAX_LENGTH: 512,
   },
   RATE_LIMIT: {
     ISSUE_PER_EMAIL: 5,
