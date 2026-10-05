@@ -51,7 +51,20 @@ describe('extractPageTextIsolated', () => {
     it('resolves empty on heap exhaustion and can parse an ordinary page afterward', async () => {
         const paragraph = '<p>short text</p>';
         const body = paragraph.repeat(Math.floor(PAGE_BYTES / paragraph.length));
-        await expect(extractPageTextIsolated(body, HTML, { maxHeapMb: 4 })).resolves.toBe('');
+        const startedAt = Date.now();
+        await expect(extractPageTextIsolated(body, HTML, { maxHeapMb: 4, timeoutMs: 8000 })).resolves.toBe('');
+        // Review r1: well under the timeout, so the heap cap and not the timer refused the page.
+        expect(Date.now() - startedAt).toBeLessThan(PAGE_PARSE_TIMEOUT_MS);
         await expect(extractPageTextIsolated(ORDINARY_PAGE, HTML)).resolves.toBe(extractPageText(ORDINARY_PAGE, HTML));
     }, 10_000);
+
+    // Review r1: a heap limit Node cannot use kills the whole process instead of the worker, so the
+    // call refuses it and resolves empty without starting a worker.
+    it.each([Number.NaN, 0, -1, 1.5])('resolves empty for an unusable heap limit (%s)', async (maxHeapMb) => {
+        await expect(extractPageTextIsolated(ORDINARY_PAGE, HTML, { maxHeapMb })).resolves.toBe('');
+    });
+
+    it.each([Number.NaN, 0, -1])('resolves empty for an unusable timeout (%s)', async (timeoutMs) => {
+        await expect(extractPageTextIsolated(ORDINARY_PAGE, HTML, { timeoutMs })).resolves.toBe('');
+    });
 });

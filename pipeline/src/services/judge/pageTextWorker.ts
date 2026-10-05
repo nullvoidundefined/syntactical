@@ -1,6 +1,8 @@
 // The worker side of extractPageTextIsolated: extract one page's visible text and post it back.
 // It imports with a .ts extension because a worker is loaded by Node itself (type stripping under
-// Vitest, tsx's hooks under the CLI), not by the bundler that maps .js to .ts.
+// Vitest, tsx's hooks under the CLI), not by the bundler that maps .js to .ts. Type stripping
+// needs Node 22.18 or later; on an older Node every worker fails and every quote check fails
+// closed, with a warning per page.
 import { parentPort, workerData } from 'node:worker_threads';
 
 import { extractPageText } from './extractPageText.ts';
