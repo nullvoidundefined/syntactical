@@ -15,6 +15,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
     "@syntactical/content-schema": "*",
+    "parse5": "^7.3.0",
     "zod": "^4.6.5"
   }
 }
