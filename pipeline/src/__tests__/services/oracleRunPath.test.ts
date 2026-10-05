@@ -17,7 +17,7 @@ import { buildBenchOracle } from '../../services/ab/buildBenchOracle.js';
 import { validateCorrectnessAb } from '../../services/ab/validateCorrectnessAb.js';
 import { draftOracle } from '../../services/draftOracle.js';
 import { GENERATE_RUN_LIMITS } from '../../services/gapFill/GENERATE_RUN_LIMITS.js';
-import { generateQuestion } from '../../services/gapFill/generateQuestion.js';
+import { generateBatch } from '../../services/gapFill/generateBatch.js';
 import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 import type { Oracle } from '../../types/Oracle.js';
@@ -101,6 +101,7 @@ function generateArgs(
 ) {
     return {
         difficulty: 'easy',
+        count: 1,
         existingPrompts: new Set<string>(),
         language: oracle.language,
         languageId,
@@ -132,7 +133,15 @@ async function writeBank(contentDir: string, languageId: string): Promise<void> 
         'manifest.json': {
             languages: [
                 {
-                    banks: { easy: { access: 'free', contentVersion: 1, hash: HASH, path: `${languageId}/easy.json`, topicCounts: {} } },
+                    banks: {
+                        easy: {
+                            access: 'free',
+                            contentVersion: 1,
+                            hash: HASH,
+                            path: `${languageId}/easy.json`,
+                            topicCounts: {},
+                        },
+                    },
                     glyph: 'G',
                     grammar: 'plain',
                     id: languageId,
@@ -161,8 +170,21 @@ describe.each(HOSTILE)('a hostile %s program', (_label, { contentLanguageId, ora
     const draftReply = { code, isExecutable: true, ...(setupSql === undefined ? {} : { setupSql }) };
 
     it('draftOracle returns it unchanged and runs nothing', async () => {
-        const question = { answer: true, id: 'q-1', prompt: 'p', provenance: PROVENANCE, query: { explanation: 'e', title: 't' }, type: 'bool' } as const;
-        expect(await draftOracle(question, language, scripted(() => draftReply))).toEqual(oracle);
+        const question = {
+            answer: true,
+            id: 'q-1',
+            prompt: 'p',
+            provenance: PROVENANCE,
+            query: { explanation: 'e', title: 't' },
+            type: 'bool',
+        } as const;
+        expect(
+            await draftOracle(
+                question,
+                language,
+                scripted(() => draftReply),
+            ),
+        ).toEqual(oracle);
     });
 
     it('draftOracles saves it unchanged and runs nothing', async () => {
@@ -175,26 +197,20 @@ describe.each(HOSTILE)('a hostile %s program', (_label, { contentLanguageId, ora
         expect(saved).toEqual({ 'q-1': oracle });
     });
 
-    it("generateQuestion's execute request reaches the runner once, unchanged, with the fixed limits", async () => {
-        const { calls, run } = recordingRun();
-        const provider = scripted((call) => (call === 0 ? { execute: { code, language: contentLanguageId, ...(setupSql === undefined ? {} : { setupSql }) } } : {}));
-        await generateQuestion(generateArgs(oracle, contentLanguageId, provider, run));
-        expect(calls).toEqual([{ limits: GENERATE_RUN_LIMITS, oracle }]);
-    });
-
-    it("evaluateDraft's answer oracle reaches the runner only unchanged, with the fixed limits", async () => {
+    it("generateBatch's card oracle reaches the runner only unchanged, with the fixed limits", async () => {
         const { calls, run } = recordingRun({ outcome: 'value', runtimeVersion: 'v', value: 'true' });
-        const draft = {
-            question: {
-                answer: true,
-                oracle: { code, ...(setupSql === undefined ? {} : { setupSql }) },
-                prompt: 'Is it true?',
-                query: { explanation: 'e', title: 't' },
-                type: 'bool',
-            },
+        const card = {
+            answer: true,
+            oracle: { code, ...(setupSql === undefined ? {} : { setupSql }) },
+            prompt: 'Is it true?',
+            query: { explanation: 'e', title: 't' },
+            rationale: 'The program prints true, so the statement holds.',
+            type: 'bool',
         };
-        const outcome = await generateQuestion(generateArgs(oracle, contentLanguageId, scripted(() => draft), run));
-        expect(outcome.status).toBe('kept');
+        const provider = scripted(() => ({ cards: [card] }));
+        const { cards, drops } = await generateBatch(generateArgs(oracle, contentLanguageId, provider, run));
+        expect(drops).toEqual({});
+        expect(cards).toHaveLength(1);
         // validateQuestion runs an oracle three times to reject a nondeterministic one.
         expect(calls).toEqual([1, 2, 3].map(() => ({ limits: GENERATE_RUN_LIMITS, oracle })));
     });

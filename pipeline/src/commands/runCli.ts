@@ -7,7 +7,6 @@ import { join } from 'node:path';
 import { readContentRootFlag } from '../services/classify/readContentRootFlag.js';
 import { exitCodeFor } from '../services/exitCodeFor.js';
 import { pickProviderKind } from '../services/pickProviderKind.js';
-import type { GapFillJudge } from '../types/judge/GapFillJudge.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 
 import type { classify } from './classify.js';
@@ -20,7 +19,6 @@ import type { review } from './review.js';
 import type { validateContent } from './validate.js';
 
 export interface CliDeps {
-    createJudge?: (kind: 'api' | 'cli') => GapFillJudge;
     buildManifest: (contentRoot: string) => Promise<void>;
     classify: typeof classify;
     contentDir: string;
@@ -69,8 +67,7 @@ async function runContentRootCommand(command: 'classify' | 'gap-fill', argv: str
         pipelineDir,
         provider: createProvider(kind),
     };
-    if (command === 'gap-fill')
-        await runGapFill({ ...shared, ...(deps.createJudge ? { judge: deps.createJudge(kind) } : {}) });
+    if (command === 'gap-fill') await runGapFill(shared);
     else await runClassify(shared);
     return 0;
 }

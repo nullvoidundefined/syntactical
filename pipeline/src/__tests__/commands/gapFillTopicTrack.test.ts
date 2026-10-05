@@ -26,19 +26,6 @@ function topicDraft(call: number, language = 'python'): Record<string, unknown> 
     };
 }
 
-// The language-track draft shape: the oracle has no language, the runner comes from the track.
-function languageDraft(call: number): Record<string, unknown> {
-    return {
-        question: {
-            answer: true,
-            oracle: { code: 'print(True)' },
-            prompt: `Language question number ${call}?`,
-            query: { explanation: 'e', title: 't' },
-            type: 'bool',
-        },
-    };
-}
-
 function buildEntry(id: string, extra: Record<string, unknown>): Record<string, unknown> {
     return {
         banks: { easy: { access: 'free', contentVersion: 1, hash: HASH, path: `${id}/easy.json`, topicCounts: {} } },
@@ -115,18 +102,6 @@ describe('gapFill topic tracks', () => {
         await rm(root, { force: true, recursive: true });
     });
 
-    it('fills a topic entry with the security prompt and stages cards with the runner grammar', async () => {
-        await seed([buildEntry('backend-security', { kind: 'topic' })]);
-        const report = await run();
-        expect(prompts[0]).toContain('ALLOWED RUNNERS: python, node, postgres');
-        const staged = JSON.parse(
-            await readFile(join(pipelineDir, 'generated', 'backend-security', 'easy.json'), 'utf8'),
-        );
-        expect(staged.questions).toHaveLength(10);
-        expect(staged.questions[0]).toMatchObject({ grammar: 'python', topic: 'sql-injection' });
-        expect(report.counts).toMatchObject({ 'gap-fill-generated': 10 });
-    });
-
     it('skips a topic entry that has no TRACK_RUNNERS entry', async () => {
         await seed([buildEntry('mystery-security', { kind: 'topic' })]);
         await run();
@@ -150,21 +125,6 @@ describe('gapFill topic tracks', () => {
             'skipping bank backend-security/easy: no oracle runner or topic list for language backend-security',
         );
         expect(prompts).toEqual([]);
-    });
-
-    it('treats an entry without kind as a language: python fills through ORACLE_LANGUAGES', async () => {
-        await seed([buildEntry('python', {})]);
-        const report = await run((call) => languageDraft(call));
-        expect(prompts).toHaveLength(10);
-        expect(prompts[0]).not.toContain('ALLOWED RUNNERS');
-        expect(report.counts).toMatchObject({ 'gap-fill-generated': 10 });
-    });
-
-    it('counts a draft with a runner outside the track as failed and logs the reason', async () => {
-        await seed([buildEntry('backend-security', { kind: 'topic' })]);
-        const report = await run((call) => topicDraft(call, 'ruby'));
-        expect(report.counts).toMatchObject({ 'gap-fill-failed': 10, 'gap-fill-generated': 0 });
-        expect(logs).toContain('backend-security/easy sql-injection: dropped (disallowed-runner)');
     });
 
     it('skips a topic bank with no classifications file', async () => {

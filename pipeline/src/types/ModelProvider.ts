@@ -3,6 +3,7 @@
 import type { z } from 'zod';
 
 export interface ModelRequest<T> {
+    maxAttempts?: number;
     prompt: string;
     promptVersion: string;
     schema: z.ZodType<T>;

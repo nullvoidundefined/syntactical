@@ -5,12 +5,10 @@ import type { Question } from '@syntactical/content-schema';
 
 import type { runOracle } from '../clients/dockerRunner.js';
 
-import type { JudgeDeps } from './judge/JudgeDeps.js';
 import type { ModelProvider } from './ModelProvider.js';
 import type { OracleLanguage } from './OracleLanguage.js';
 
 interface FillBankBase {
-    judge?: JudgeDeps;
     bankKey: string;
     difficulty: string;
     languageId: string;
