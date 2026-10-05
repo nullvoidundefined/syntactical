@@ -102,6 +102,82 @@
           "topicCounts": {}
         }
       }
+    },
+    {
+      "id": "frontend-security",
+      "kind": "topic",
+      "label": "Frontend Security",
+      "glyph": "FSEC",
+      "tagline": "XSS sinks, sanitizers, and what the browser does and does not block.",
+      "grammar": "plain",
+      "topics": [
+        {
+          "id": "dom-xss",
+          "label": "DOM XSS"
+        },
+        {
+          "id": "html-sanitization",
+          "label": "HTML sanitization"
+        },
+        {
+          "id": "url-handling",
+          "label": "URL parsing and handling"
+        },
+        {
+          "id": "postmessage",
+          "label": "postMessage"
+        },
+        {
+          "id": "prototype-pollution",
+          "label": "Prototype pollution"
+        },
+        {
+          "id": "open-redirect",
+          "label": "Open redirects"
+        },
+        {
+          "id": "csp",
+          "label": "Content Security Policy"
+        },
+        {
+          "id": "cookies",
+          "label": "Cookies"
+        },
+        {
+          "id": "cors",
+          "label": "CORS"
+        },
+        {
+          "id": "framing",
+          "label": "Framing and clickjacking"
+        }
+      ],
+      "misconceptions": [],
+      "banks": {
+        "easy": {
+          "path": "frontend-security/easy.json",
+          "hash": "9ab361ada589f01ef78623925e17c943f3ef406a6752ca0fea5fcff77bcb4156",
+          "access": "free",
+          "contentVersion": 1,
+          "topicCounts": {}
+        },
+        "medium": {
+          "path": "frontend-security/medium.json",
+          "hash": "9ab361ada589f01ef78623925e17c943f3ef406a6752ca0fea5fcff77bcb4156",
+          "access": "paid",
+          "productId": "syntactical.frontend-security.medium",
+          "contentVersion": 1,
+          "topicCounts": {}
+        },
+        "hard": {
+          "path": "frontend-security/hard.json",
+          "hash": "9ab361ada589f01ef78623925e17c943f3ef406a6752ca0fea5fcff77bcb4156",
+          "access": "paid",
+          "productId": "syntactical.frontend-security.hard",
+          "contentVersion": 1,
+          "topicCounts": {}
+        }
+      }
     }
   ]
 }
