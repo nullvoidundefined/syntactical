@@ -38,7 +38,7 @@ jest.mock('../../state/SyncProvider', () => ({
 }));
 jest.mock('../../components/layout/ReviewDueLink', () => ({ ReviewDueLink: () => null }));
 jest.mock('../../components/layout/DownloadIndicator', () => ({ DownloadIndicator: () => null }));
-jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
+jest.mock('expo-router', () => ({ router: { push: jest.fn() }, useLocalSearchParams: () => ({}) }));
 
 function OwnedStats({ children }: { children: ReactNode }) {
   const { user } = useAuth();
