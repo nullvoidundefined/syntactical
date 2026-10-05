@@ -2,7 +2,8 @@
 // test: an injectable clock, a recording email client, a rate-limit key secret
 // generated at run time, a fake breach client (every range empty unless the
 // test passes one), password hash slots, an optional derivation wrapper, and the dummy password
-// hash that password sign-in verifies against when no stored hash applies.
+// hash that password sign-in verifies against when no stored hash applies. Given an answer key,
+// it also mounts the /v1 sync routes (GET and PATCH /v1/me among them) on the same clock.
 import { randomBytes } from 'node:crypto';
 
 import type { Router } from 'express';
@@ -17,6 +18,7 @@ import type { PasswordBreachClient } from '../../clients/passwordBreachClient.js
 import { AUTH } from '../../constants/auth.js';
 import type { DeriveKey } from '../../services/passwordHash.js';
 import { createPasswordHashSlots } from '../../services/passwordHashSlots.js';
+import type { AnswerKey } from '../../types/AnswerKey.js';
 
 const SECRET_BYTES = 32;
 const ALLOWED_ORIGIN = 'https://syntactical.dev';
@@ -47,6 +49,8 @@ interface PasswordHashSlots {
 }
 
 interface AuthTestAppOptions {
+    // Mounts the /v1 sync routes too (GET /v1/me reads the profile), on `pool` and the test's clock.
+    answerKey?: AnswerKey;
     // Replaces the pool for the auth routes only (health still uses `pool`), e.g. to make a query fail.
     database?: Database;
     // Wraps the scrypt derivation the auth routes use, to count or hold derivations.
@@ -66,6 +70,7 @@ interface AuthTestAppOptions {
 
 export function createAuthTestApp(options: AuthTestAppOptions) {
     const {
+        answerKey,
         database,
         deriveKey,
         dummyPasswordHash = buildRandomDummyPasswordHash(),
@@ -117,6 +122,7 @@ export function createAuthTestApp(options: AuthTestAppOptions) {
         db: pool,
         extraRoutes: extraRoutes ? (router: Router) => extraRoutes(router, clock) : undefined,
         logger,
+        ...(answerKey ? { sync: { answerKey, database: pool, now: clock.now, rateLimitKeySecret } } : {}),
     });
     return { app, clock, dummyPasswordHash, passwordBreachClient, rateLimitKeySecret, sentCodes };
 }
