@@ -1,6 +1,6 @@
 import { expect, test } from '../support/test';
 
-import { answerQuestions, createUniqueEmail, signIn } from '../support/app';
+import { answerQuestions, createUniqueEmail, pickAllQuestions, signIn } from '../support/app';
 
 const API_PATTERN = '**/v1/**';
 
@@ -28,7 +28,7 @@ test.describe('an API outage', () => {
     await expect(page.getByRole('button', { name: /^Easy/ })).toBeEnabled();
     await page.getByRole('button', { name: /^Easy/ }).click();
     await page.keyboard.press('1');
-    await expect(page.getByRole('progressbar', { name: /^Question 1 of/ })).toBeVisible();
+    await pickAllQuestions(page);
     await answerQuestions(page, 2);
     await page.keyboard.press('Escape');
 

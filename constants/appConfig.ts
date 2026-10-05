@@ -49,6 +49,9 @@ export const KEY_BINDINGS = {
   query: ['Q'],
 } as const;
 
+// The fixed round lengths offered besides the whole pool; one is offered only when the pool is larger.
+export const ROUND_LENGTHS = [20, 50] as const;
+
 // The most events one answer-events upload carries (the server limit).
 export const SYNC_BATCH_SIZE = 200;
 
