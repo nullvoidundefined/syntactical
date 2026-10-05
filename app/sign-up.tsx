@@ -2,9 +2,10 @@
 // in one role="alert" region by reason only; the email, the password, and the code are never
 // echoed or logged. The password lives in this component's memory only: it is sent in the sign-up
 // requests, cleared on success, and gone when the route is left.
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 
-import { router, useLocalSearchParams, useNavigation, type Href } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
+import { NavigationContext } from 'expo-router/build/react-navigation/core';
 import { ScrollView, Text, View } from 'react-native';
 
 import { AuthButton } from '../components/auth/AuthButton';
@@ -40,12 +41,7 @@ function isPasswordFailure(reason: FailureReason): boolean {
 // Runs onBlur when the screen loses focus, e.g. when another route is pushed over it in a
 // stack. Outside a navigator there is no focus to lose, so nothing is subscribed.
 function useClearOnBlur(onBlur: () => void) {
-  let navigation: { addListener: (type: 'blur', callback: () => void) => () => void } | null = null;
-  try {
-    navigation = useNavigation();
-  } catch {
-    navigation = null;
-  }
+  const navigation = useContext(NavigationContext);
   useEffect(() => navigation?.addListener('blur', onBlur), [navigation, onBlur]);
 }
 
