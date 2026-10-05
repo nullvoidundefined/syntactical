@@ -2,9 +2,10 @@
 // Both values are held by the screen and never trimmed. On web the fields sit in a real
 // <form> (the sign-in pattern) so browsers offer to save the new password; the form has no
 // action and every submit is cancelled so the password never reaches a URL.
-import { Platform, Text, TextInput } from 'react-native';
+import { Platform, Text } from 'react-native';
 
 import { AuthButton } from './AuthButton';
+import { EmailField } from './EmailField';
 import { AuthForm } from './AuthForm';
 import { PasswordField } from './PasswordField';
 
@@ -39,19 +40,7 @@ export function SignUpStep({
   const onSubmitEditing = IS_WEB ? undefined : submit;
   return (
     <AuthForm onSubmit={submit}>
-      <TextInput
-        aria-label="Email address"
-        autoComplete="email"
-        autoCapitalize="none"
-        autoCorrect={false}
-        inputMode="email"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={onChangeEmail}
-        returnKeyType="next"
-        onSubmitEditing={onSubmitEditing}
-        className="mt-4 border border-ink px-3 py-2 font-mono text-base text-ink"
-      />
+      <EmailField value={email} onChangeText={onChangeEmail} returnKeyType="next" onSubmitEditing={onSubmitEditing} />
       <PasswordField
         label="Password"
         autoComplete="new-password"
@@ -60,7 +49,7 @@ export function SignUpStep({
         errorId={errorId === undefined ? HINT_ID : `${HINT_ID} ${errorId}`}
         onSubmitEditing={onSubmitEditing}
       />
-      <Text nativeID={HINT_ID} className="mt-2 font-mono text-xs text-muted">
+      <Text nativeID={HINT_ID} className="mt-3 font-mono text-xs text-muted">
         {HINT_TEXT}
       </Text>
       <AuthButton label="Create account" isDisabled={isBusy} isSubmit onPress={submit} />

@@ -32,7 +32,7 @@ export function PasswordField({
     if (Platform.OS === 'web') inputRef.current?.focus();
   }
   return (
-    <View className="mt-4">
+    <View className="mt-5">
       <Text className="font-mono text-sm text-ink">{label}</Text>
       <TextInput
         ref={inputRef}
@@ -49,7 +49,13 @@ export function PasswordField({
         returnKeyType="done"
         className="mt-1 border border-ink px-3 py-2 font-mono text-base text-ink"
       />
-      <Pressable role="button" aria-label={toggleLabel} aria-pressed={isShown} onPress={toggle} className="mt-2">
+      <Pressable
+        role="button"
+        aria-label={toggleLabel}
+        aria-pressed={isShown}
+        onPress={toggle}
+        className="mt-3 self-start py-1"
+      >
         <Text className="font-mono text-xs uppercase tracking-widest text-ink">{isShown ? 'Hide' : 'Show'}</Text>
       </Pressable>
     </View>

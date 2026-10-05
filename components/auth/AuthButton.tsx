@@ -22,6 +22,7 @@ export function AuthButton({
 }: AuthButtonProps) {
   const surface = isPrimary ? 'bg-ink' : 'border border-ink';
   const textColor = isPrimary ? 'text-surface' : 'text-ink';
+  const spacing = isPrimary ? 'mt-6' : 'mt-4';
   if (isSubmit && Platform.OS === 'web') {
     // react-native-web's Pressable cannot set type="submit", so the button is a DOM element.
     return createElement(
@@ -31,7 +32,7 @@ export function AuthButton({
         'aria-label': label,
         'aria-disabled': isDisabled,
         disabled: isDisabled,
-        className: `mt-4 flex w-full flex-col items-center border-0 px-4 py-3 ${surface} ${isDisabled ? 'opacity-60' : 'cursor-pointer'}`,
+        className: `${spacing} flex w-full flex-col items-center border-0 px-4 py-3 ${surface} ${isDisabled ? 'opacity-60' : 'cursor-pointer'}`,
       },
       createElement('span', { className: `font-mono text-sm ${textColor}` }, label),
     );
@@ -43,7 +44,7 @@ export function AuthButton({
       aria-disabled={isDisabled}
       disabled={isDisabled}
       onPress={onPress}
-      className={`mt-4 items-center px-4 py-3 ${surface} ${isDisabled ? 'opacity-60' : ''}`}
+      className={`${spacing} items-center px-4 py-3 ${surface} ${isDisabled ? 'opacity-60' : ''}`}
     >
       <Text className={`font-mono text-sm ${textColor}`}>{label}</Text>
     </Pressable>

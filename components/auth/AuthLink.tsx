@@ -33,7 +33,7 @@ export function AuthLink({ href, label }: AuthLinkProps) {
       aria-label={label}
       {...webLinkProps}
       onPress={(event) => openLink(href, event)}
-      className="mt-4"
+      className="mt-6 self-start py-1"
     >
       <Text className="font-mono text-xs uppercase tracking-widest text-ink">{label}</Text>
     </Pressable>
