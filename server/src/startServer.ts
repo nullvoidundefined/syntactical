@@ -12,6 +12,7 @@ import { createDatabasePool } from './clients/createDatabasePool.js';
 import { createEmailClient } from './clients/emailClient.js';
 import { createLogger } from './clients/logger.js';
 import type { EmailClient } from './clients/emailTypes.js';
+import type { PasswordBreachClient } from './clients/passwordBreachClient.js';
 import { createStubEmailClient } from './clients/stubEmailClient.js';
 import { loadEnv } from './config/env.js';
 import { isCookieSecure } from './config/isCookieSecure.js';
@@ -34,6 +35,9 @@ interface StartOptions {
   // when NODE_ENV is exactly `test`; the production entrypoint never passes it.
   emailClient?: EmailClient;
   logger?: Logger;
+  // Test-only seam: replaces the HIBP client. Refused outside NODE_ENV test, so a deployed
+  // server cannot skip the real breach check.
+  passwordBreachClient?: PasswordBreachClient;
 }
 
 function readPort(source: NodeJS.ProcessEnv): number {
@@ -68,6 +72,9 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
   const { emailClient: injectedEmailClient, logger = createLogger({ destination: process.stdout }) } = options;
   if (injectedEmailClient !== undefined && source.NODE_ENV !== 'test') {
     throw new Error('An injected email client is allowed only when NODE_ENV is test');
+  }
+  if (options.passwordBreachClient !== undefined && source.NODE_ENV !== 'test') {
+    throw new Error('An injected fake password breach client is allowed only when NODE_ENV is test');
   }
   const env = loadEnv(source);
   const port = readPort(source);

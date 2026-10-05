@@ -8,7 +8,7 @@
 
 **Tech Stack:** Expo SDK 57, Expo Router, React Native + react-native-web, NativeWind, TanStack Query, AsyncStorage, expo-secure-store, posthog-react-native, react-native-purchases; Node 22, TypeScript, Express 5, zod, helmet, cors, cookie-parser, pg, node-pg-migrate, pino, Resend, vitest, supertest, ts-fsrs; RevenueCat (`react-native-purchases`, `@revenuecat/purchases-js` Web Billing); Docker; Anthropic SDK and `claude -p`.
 
-**Spec:** `docs/superpowers/specs/2026-10-02-syntactical-v2-design.md` (behaviors B-1 to B-64; decisions 1 to 25). Vocabulary: `docs/lexicon.md`.
+**Spec:** `docs/superpowers/specs/2026-10-02-syntactical-v2-design.md` (behaviors B-1 to B-91; decisions 1 to 37; B-65 to B-91 and decisions 26 to 37 are the "Password sign-in (2026-10-05)" section). Vocabulary: `docs/lexicon.md`.
 
 **Merge mode:** owner reads and merges every PR (Gate 1, 2026-10-02, R-514).
 
@@ -76,6 +76,16 @@ Passed 2026-10-02. The owner approved the spec and plan, chose owner-merges-ever
 | 22  | 4.1, 4.2, 4.3              | standard                                                        |
 | 23  | 5.1 to 5.5                 | standard                                                        |
 | 24  | 6.1                        | standard                                                        |
+| 25  | 7.1                        | high (auth schema: password hash, session auth method)          |
+| 26  | 7.2                        | high (password hashing)                                         |
+| 27  | 7.3                        | high (password policy, breach check at a trust boundary)        |
+| 28  | 7.4                        | high (sign-up: account creation and email verification)         |
+| 29  | 7.5                        | high (password sign-in, enumeration, rate limits)               |
+| 30  | 7.6                        | high (password set and change, session revocation)              |
+| 31  | 7.7                        | high (client credentials handling on sign-in)                   |
+| 32  | 7.8                        | high (client sign-up)                                           |
+| 33  | 7.9                        | high (client password change and forgot-password path)          |
+| 34  | 7.10                       | standard (privacy page, store answers, lexicon)                 |
 
 ---
 
@@ -1136,8 +1146,299 @@ it('replays the same events to the same review state whatever their arrival orde
 
 ---
 
+## Stage 7: password sign-in
+
+Spec: "Password sign-in (2026-10-05)" in `docs/superpowers/specs/2026-10-02-syntactical-v2-design.md` (B-65 to B-91, decisions 26 to 37). Order: server slices, then app slices, then docs. Every auth slice is **Risk: high** and runs under `tdd-gated-dispatch` (TDD lock, the spec's threat model rows, R-109 security review on `securityReviewModel` for the server slices); the test author gets the behaviors below and the spec section, never implementation code. Server tests are vitest under `server/src/__tests__/` (integration tests against the real Postgres container, `*.integration.test.ts`); app tests are Jest per-directory `__tests__/` (`native` and `web` projects). Tests build every password and email at run time, never as literals. Each task is one PR.
+
+Stage 7 constraints, on top of the Global Constraints:
+
+- Password: NFKC, 12 to 128 code points, any characters, never trimmed, raw string at most 512 UTF-16 units, lone surrogates rejected.
+- Hash: `node:crypto` scrypt, `ln=17`, `r=8`, `p=1`, 32-byte salt, 64-byte key, `maxmem` 256 MiB, stored as `$scrypt$v=1$ln=17,r=8,p=1$<salt>$<key>` in `users.password_hash`; at most `PASSWORD_HASH_CONCURRENCY` (default 2) derivations at once, 5-second queue timeout.
+- Breach check: only the 5-character uppercase SHA-1 prefix leaves the server; 2-second timeout; fail open with one `breach_check_unavailable` warning.
+- Never log, return, or store a password, its SHA-1, or its prefix.
+- Fresh code sign-in: `sessions.auth_method` is `'code'` and `created_at` is at most 10 minutes old.
+
+### Task 7.1: migration for the password hash and the session auth method
+
+**Risk:** high (auth schema). **Behaviors:** B-65.
+
+**Files:** Create `server/migrations/<next timestamp after 1790985600013>_users-password-and-session-auth-method.js`; test `server/src/__tests__/migrations/passwordColumns.integration.test.ts`.
+
+**Interfaces:** `users.password_hash text NULL CHECK (password_hash IS NULL OR password_hash LIKE '$scrypt$%')`, `users.password_updated_at timestamptz NULL`, `sessions.auth_method text NOT NULL DEFAULT 'code' CHECK (auth_method IN ('code', 'password'))`.
+
+**Behaviors (RED tests, real Postgres):**
+
+- With one user and one session inserted before the migration runs, `up` leaves the user with a null `password_hash` and a null `password_updated_at`, and the session with `auth_method` `'code'`.
+- Storing a `password_hash` that does not start with `$scrypt$` fails the check constraint; null and a `$scrypt$`-prefixed string succeed.
+- Storing `auth_method` `'oauth'` fails the check constraint; inserting a session without `auth_method` stores `'code'`.
+- `up`, `down`, `up` succeeds, and after `down` the three columns are gone.
+
+- [ ] Gated cycle; commit `feat(auth): password hash and session auth method columns`.
+
+### Task 7.2: password hashing service
+
+**Risk:** high. **Behaviors:** B-66, B-67; supports B-68 (`needsRehash`) and B-79 (`PasswordHashSlots`).
+
+**Files:** Create `server/src/services/passwordHash.ts`, `server/src/services/passwordHashSlots.ts`, `server/src/types/PasswordHashParams.ts`; modify `server/src/constants/auth.ts` (`AUTH.PASSWORD`), `server/src/config/env.ts` (`PASSWORD_HASH_CONCURRENCY`, optional integer 1 to 8, default 2); tests `server/src/__tests__/services/passwordHash.test.ts`, `server/src/__tests__/services/passwordHashSlots.test.ts`, `server/src/__tests__/config/env.test.ts` (extended).
+
+**Interfaces:**
+
+```ts
+interface PasswordHashParams {
+  logN: number;
+  r: number;
+  p: number;
+  saltBytes: number;
+  keyBytes: number;
+}
+type DeriveKey = (
+  input: Buffer,
+  salt: Buffer,
+  keyBytes: number,
+  options: { N: number; r: number; p: number; maxmem: number },
+) => Promise<Buffer>;
+function hashPassword(
+  normalized: string,
+  deps?: { deriveKey?: DeriveKey; randomBytes?: (size: number) => Buffer; params?: PasswordHashParams },
+): Promise<string>;
+// hashPassword and verifyPassword apply NFKC themselves, so passing a normalizePassword result is harmless (idempotent).
+type Compare = (a: Buffer, b: Buffer) => boolean; // default: crypto.timingSafeEqual
+function verifyPassword(
+  normalized: string,
+  stored: string,
+  deps?: { deriveKey?: DeriveKey; compare?: Compare },
+): Promise<boolean>;
+function needsRehash(stored: string, params?: PasswordHashParams): boolean;
+function createDummyPasswordHash(deps?: { deriveKey?: DeriveKey }): Promise<string>;
+interface PasswordHashSlots {
+  run<T>(task: () => Promise<T>): Promise<T>;
+} // rejects with HashSlotsBusy (code SERVER_BUSY) after the queue timeout
+function createPasswordHashSlots(options: { concurrency: number; queueTimeoutMs: number }): PasswordHashSlots;
+```
+
+**Behaviors (RED tests):**
+
+- `hashPassword` output matches `^\$scrypt\$v=1\$ln=17,r=8,p=1\$[A-Za-z0-9+/]{43}\$[A-Za-z0-9+/]{86}$` (32-byte salt and 64-byte key in unpadded base64).
+- The injected `randomBytes` is called with 32, and the injected `deriveKey` receives `N` 131072, `r` 8, `p` 1, `maxmem` 268435456, and key length 64.
+- Hashing one run-time password twice gives two different strings, and `verifyPassword` returns true for both.
+- `verifyPassword` returns false for a different password, for the same password plus a trailing space, and for stored strings that are empty, truncated, carry a non-base64 salt, name `$argon2id$`, or name `v=2`; none of these throw.
+- `verifyPassword` with an injected `compare` calls it exactly once, with two 64-byte buffers, for a well-formed stored hash, and returns its result. The default `compare` (`crypto.timingSafeEqual`) is checked by behavior: an equal-length key mismatch returns false, and keys of unequal length fail closed (false) without throwing.
+- `hashPassword` and `verifyPassword` apply NFKC themselves: a hash of a string containing U+FB01 verifies against its NFKC form and vice versa, and passing an already normalized string gives the same result.
+- `needsRehash` is false for a hash made with the current parameters and true for one made with `ln=16` or `p=2` (built in the test with injected parameters), and `verifyPassword` still verifies the old-parameter hash.
+- `createDummyPasswordHash` returns a well-formed current-parameter hash.
+- `PasswordHashSlots` with concurrency 2 runs at most 2 tasks at once (a third starts only after one settles), and a task that waits longer than the queue timeout rejects with `HashSlotsBusy` (code `SERVER_BUSY`) without running.
+- `PASSWORD_HASH_CONCURRENCY` of `0`, `9`, or `two` fails startup with a message naming the variable; absent means 2.
+- One real (uninjected) `hashPassword` and `verifyPassword` round trip succeeds, so `maxmem` is high enough for N = 2^17.
+
+- [ ] Gated cycle; R-109 review; commit `feat(auth): scrypt password hashing with rehash detection and a concurrency cap`.
+
+### Task 7.3: password policy and breach check
+
+**Risk:** high (trust-boundary input, outbound call to a third party). **Behaviors:** B-69, B-70, B-71.
+
+**Files:** Create `server/src/services/checkPasswordPolicy.ts`, `server/src/services/checkPasswordBreach.ts`, `server/src/clients/passwordBreachClient.ts` (interface and HTTP implementation), `server/src/clients/fakePasswordBreachClient.ts`; modify `server/src/constants/auth.ts` (`AUTH.BREACH_CHECK`), `server/src/errors.ts` (`AUTH.PASSWORD_TOO_SHORT`, `AUTH.PASSWORD_TOO_LONG`, `AUTH.PASSWORD_BREACHED`), `server/src/app.ts` and `server/src/startServer.ts` (breach client in deps; production refuses the fake); tests `server/src/__tests__/services/checkPasswordPolicy.test.ts`, `server/src/__tests__/services/checkPasswordBreach.test.ts`, `server/src/__tests__/clients/passwordBreachClient.test.ts`, `server/src/__tests__/startServerBreachClientGuard.test.ts`.
+
+**Interfaces:**
+
+```ts
+type PasswordPolicyResult =
+  | { isOk: true; normalized: string }
+  | { isOk: false; code: 'AUTH_PASSWORD_TOO_SHORT' | 'AUTH_PASSWORD_TOO_LONG' | 'INPUT_INVALID_BODY' };
+function normalizePassword(
+  raw: string,
+): { isOk: true; normalized: string } | { isOk: false; code: 'INPUT_INVALID_BODY' }; // NFKC; rejects lone surrogates
+function checkPasswordPolicy(raw: string): PasswordPolicyResult; // normalizePassword, then the 12 to 128 code point rule
+interface PasswordBreachClient {
+  fetchRange(prefix: string, signal: AbortSignal): Promise<string>;
+}
+function createHttpPasswordBreachClient(deps?: { fetch?: typeof fetch }): PasswordBreachClient;
+function createFakePasswordBreachClient(options: {
+  ranges?: Record<string, string>;
+  failure?: 'reject' | 'status-500' | 'oversize' | 'hang';
+}): PasswordBreachClient & { requestedPrefixes: string[] };
+function checkPasswordBreach(
+  normalized: string,
+  deps: { client: PasswordBreachClient; logger: Logger; timeoutMs?: number },
+): Promise<'breached' | 'clear' | 'unknown'>;
+```
+
+**Behaviors (RED tests):**
+
+- `checkPasswordPolicy`: 11 code points gives `AUTH_PASSWORD_TOO_SHORT`; 12 and 128 pass; 129 gives `AUTH_PASSWORD_TOO_LONG`; 12 four-byte emoji pass; a string that is 11 code points before NFKC and 12 after (it contains U+FB01) passes and `normalized` is the NFKC form; leading and trailing spaces are kept in `normalized`; 12 spaces pass; all-lowercase and all-digit strings of valid length pass; a lone high surrogate gives `INPUT_INVALID_BODY`.
+- `checkPasswordBreach` with the fake: `requestedPrefixes` holds exactly one 5-character uppercase hex string, equal to the first 5 characters of the SHA-1 of the normalized UTF-8 password, and no request carries more of the hash.
+- A fake range holding the password's 35-character suffix with count 3 gives `'breached'`; with count 0 (padding) gives `'clear'`; a range without the suffix gives `'clear'`; matching is case-insensitive and tolerates `\r\n` line endings.
+- Each fake failure mode (`reject`, `status-500`, `oversize` over 256 KB, `hang` past the 2-second timeout under fake timers) gives `'unknown'` and logs exactly one warning whose object is `{ event: 'breach_check_unavailable' }`; the captured log holds neither the password, its SHA-1, nor its prefix.
+- The HTTP client, with an injected `fetch`, requests `https://api.pwnedpasswords.com/range/<prefix>` with headers `Add-Padding: true` and a `User-Agent`, passes the abort signal, and rejects on a non-200 status and on a body over 256 KB.
+- `normalizePassword` returns the NFKC form for a string containing U+FB01 and for a decomposed `e` plus U+0301, applies no length rule (a 300-code-point string is accepted), and rejects a lone low surrogate with `INPUT_INVALID_BODY`.
+- Starting the server with `NODE_ENV=production` and the fake breach client fails startup.
+
+- [ ] Gated cycle; R-109 review; commit `feat(auth): NIST password policy and k-anonymity breach check`.
+
+### Task 7.4: sign-up endpoints
+
+**Risk:** high (account creation, email verification, enumeration). **Behaviors:** B-72, B-73, B-74, B-75, B-83 (primary owner: the logger keys and these routes); supports B-69 (normalization at these routes) and B-79 (slots at sign-up).
+
+**Files:** Create `server/src/routes/authSignups.ts`, `server/src/services/upsertUserByEmail.ts`, `server/src/services/insertSession.ts`, `server/src/services/createUserWithPassword.ts`; modify `server/src/services/createSession.ts` (composes the two new services; code sign-in behavior unchanged), `server/src/schemas/authSchemas.ts` (`startSignUp`, `verifySignUp`), `server/src/routes/authDeps.ts` (`passwordBreachClient`, `passwordHashSlots`), `server/src/app.ts` (mount), `server/src/clients/logger.ts` (`SENSITIVE_KEYS` adds `currentPassword` and `newPassword`); tests `server/src/__tests__/routes/authSignups.integration.test.ts`, `server/src/__tests__/routes/authSignupsEnumeration.integration.test.ts`, `server/src/__tests__/routes/authSignupsConcurrency.integration.test.ts`, `server/src/__tests__/clients/logger.test.ts` (extended).
+
+**Interfaces:** `POST /v1/auth/signups` with `{ email, password }` gives 202 `{ data: { status: 'code-sent' } }`. `POST /v1/auth/signups/verify` with `{ email, code, password, timezone? }` gives 201 `{ data: { userId, isPasswordApplied } }`, plus `token` for `X-Client: native` or the `syntactical_session` cookie on web. `insertSession(client, { userId, authMethod, now })` resolves `{ sessionToken }`, with `authMethod` `'code'` or `'password'`.
+
+**Behaviors (RED tests, real Postgres, stub email client, fake breach client):**
+
+- `POST /v1/auth/signups` for a new email, for an existing code-only email, and for an existing email with a password returns 202 with byte-identical bodies and the same header names, sends one code each time, and leaves the `users` table and every `password_hash` unchanged.
+- After `POST /v1/auth/signups`, no column of any table holds the run-time password, its SHA-1, or its prefix.
+- A breached password (the fake reports it) gets 400 `AUTH_PASSWORD_BREACHED` and sends no email; a short one gets 400 `AUTH_PASSWORD_TOO_SHORT` and sends no email.
+- Three `POST /v1/auth/codes` then three `POST /v1/auth/signups` for one email in an hour: the 6th request overall gets 429 (shared `code-issue:email` scope).
+- `POST /v1/auth/signups/verify` with the emailed code and no existing user returns 201 with `isPasswordApplied: true`; the new user's hash verifies against the password; the session row has `auth_method` `'code'`; on web the response sets the B-28 cookie and has no `token`; with `X-Client: native` the body has `token` and no cookie.
+- `POST /v1/auth/signups/verify` for an email whose user already has a hash returns 201 and `isPasswordApplied: false`, signs that user in, and the stored hash is unchanged byte for byte; for a code-only user the hash stays null.
+- Wrong, expired, invalidated, and reused codes each return the same 400 body `POST /v1/auth/sessions` returns for a bad code, increment `attempts`, and create no user, session, or hash; a policy-failing password sent with a valid code gets the policy error and leaves the code unused.
+- Two concurrent `POST /v1/auth/signups/verify` requests with one correct code create exactly one user and one session.
+- `POST /v1/auth/signups/verify` runs the breach check (the fake records one prefix).
+- A raw password of 513 UTF-16 units gets 400 `INPUT_INVALID_BODY` on `POST /v1/auth/signups` and on `POST /v1/auth/signups/verify`, with no email sent, no derivation, and no row written.
+- An account created through `signups/verify` with a password containing U+FB01 signs in through `POST /v1/auth/sessions/password` with the NFKC-equivalent string (the two letters `fi`).
+- With the email client failing, `POST /v1/auth/signups` returns 503 `SERVER_EMAIL_UNAVAILABLE` and leaves no `one_time_codes` row for the email.
+- With every hash slot held (`PASSWORD_HASH_CONCURRENCY` 1, a derivation wrapper that holds its slot, fake timers past 5 seconds), `POST /v1/auth/signups/verify` with the correct code returns 503 `SERVER_BUSY`, creates no user or session, leaves the code's `used_at` null and `attempts` unchanged, and the same code then succeeds once the slot frees.
+- When the email has no live code (none issued, expired, used, or exhausted), `POST /v1/auth/signups/verify` returns the B-27 400 body without calling the derivation function (counting wrapper).
+- While a `signups/verify` request waits for a held slot, a database pool created with `max: 1` still serves `GET /health/ready` with 200 (the pattern of `authCodesEmailDeadline.integration.test.ts`), so no pooled client is held during the wait.
+- `POST /v1/auth/sessions` (code sign-in) still creates the user on first sign-in, and its sessions get `auth_method` `'code'` (regression for the `createSession` split).
+- For both routes, a captured pino destination holds no line containing the run-time password, its SHA-1, or its prefix, including a run where the database throws mid-request; objects logged with a run-time value under the keys `newPassword` and `currentPassword`, at the top level and one level down, are redacted.
+
+- [ ] Gated cycle; R-109 review; commit `feat(auth): sign up with email and password, verified by a one-time code`.
+
+### Task 7.5: password sign-in endpoint
+
+**Risk:** high (credential check, enumeration, timing, rate limits). **Behaviors:** B-68, B-76, B-77, B-78, B-79, B-85; supports B-83 (this route).
+
+**Files:** Create `server/src/routes/authPasswordSessions.ts`, `server/src/services/verifyUserPassword.ts` (loads the user, verifies against the stored or dummy hash, rehashes when due); modify `server/src/errors.ts` (`AUTH.INVALID_CREDENTIALS`), `server/src/constants/auth.ts` (password rate limits and scopes), `server/src/schemas/authSchemas.ts` (`passwordSignIn`), `server/src/app.ts` (mount; the dummy hash is created once at startup and passed in deps); tests `server/src/__tests__/routes/authPasswordSessions.integration.test.ts`, `server/src/__tests__/routes/authPasswordSessionsEnumeration.integration.test.ts`, `server/src/__tests__/routes/authPasswordSessionsRateLimit.integration.test.ts`, `server/src/__tests__/services/verifyUserPassword.integration.test.ts`.
+
+**Interfaces:** `POST /v1/auth/sessions/password` with `{ email, password, timezone? }` gives 201 `{ data: { userId } }`, plus `token` for native or the cookie on web. `verifyUserPassword(database, { email, normalizedPassword, dummyHash, deriveKey?, slots })` takes the pool (autocommit reads only, never a transaction client), runs the derivation and any rehash derivation outside a transaction, and resolves `{ userId, verifiedHash, rehash? }` or `null`. `createPasswordSession(database, { userId, verifiedHash, rehash, timezone, now })` then opens the one short transaction (lock the user row, re-check the stored hash equals `verifiedHash`, compare-and-set the rehash, insert the session, store a missing timezone) and resolves `{ sessionToken }`, or `null` when the hash changed.
+
+**Behaviors (RED tests, real Postgres):**
+
+- The right password returns 201; the session row has `auth_method` `'password'`; web gets the B-28 cookie and no `token`; native gets `token` and no cookie; a user's null timezone is set from a valid IANA `timezone`, and an existing timezone is kept.
+- An unknown email, a code-only user, and a wrong password each return 400 with JSON bodies identical apart from `requestId`, the same headers apart from `X-Request-Id`, and no `Set-Cookie`; the `users` table is unchanged.
+- Each of those three cases calls the injected derivation function exactly once (counting wrapper), and the correct-password case also calls it exactly once when no rehash is due.
+- A user whose hash was made with `ln=16` signs in, after which the stored hash has `ln=17` and still verifies; a user with a current-parameter hash keeps a byte-identical hash; when the hash changes between the check and the rehash (the derivation wrapper updates the row), the newer hash survives.
+- The 11th request in an hour for one email (mixed casing, surrounding spaces) gets 429; the 31st from one IP gets 429 even with a malformed body (the IP limit runs first); after both limits are exhausted, `POST /v1/auth/codes` and `POST /v1/auth/sessions` for the same email and IP still succeed.
+- With `PASSWORD_HASH_CONCURRENCY` 1 and a derivation wrapper that holds its slot, a second request returns 503 `SERVER_BUSY` after the queue timeout (fake timers) and creates no session.
+- A code sign-in for a user with a password leaves the hash unchanged and stores `auth_method` `'code'`.
+- A password set as a decomposed `e` plus U+0301 signs in when sent as the precomposed U+00E9 (NFKC round trip at sign-in).
+- A raw password of 513 UTF-16 units, or one with a lone surrogate, gets 400 `INPUT_INVALID_BODY` with no derivation; a 200-code-point password gets the ordinary `AUTH_INVALID_CREDENTIALS` 400 after exactly one derivation.
+- With every hash slot held, a pool created with `max: 1` still serves `GET /health/ready` with 200 while a password sign-in waits, and the waiting request then gets 503 `SERVER_BUSY` (no pooled client is held while waiting or deriving).
+- When the stored hash changes between the derivation and the transaction (the derivation wrapper updates the row), the sign-in gets the `AUTH_INVALID_CREDENTIALS` 400 and creates no session.
+- A captured pino destination holds no line containing the run-time password or its SHA-1, for a success, a failure, and a thrown database error.
+
+- [ ] Gated cycle; R-109 review; commit `feat(auth): sign in with email and password`.
+
+### Task 7.6: set and change a password; hasPassword on /me
+
+**Risk:** high (credential change, session revocation, reauthentication). **Behaviors:** B-80, B-81, B-82, B-84; supports B-83 (this route), B-79 (slots on this route), and B-85 (freshness part).
+
+**Files:** Create `server/src/routes/mePassword.ts`, `server/src/services/setUserPassword.ts`, `server/src/services/isFreshCodeSession.ts`; modify `server/src/middleware/requireSession.ts` (`res.locals.session` adds `authMethod` and `createdAt`), `server/src/errors.ts` (`AUTH.REAUTH_REQUIRED`), `server/src/schemas/authSchemas.ts` (`setPassword`), `server/src/services/readProfile.ts` and `server/src/types/Profile.ts` (`hasPassword`), `server/src/app.ts` (mount); tests `server/src/__tests__/routes/mePassword.integration.test.ts`, `server/src/__tests__/routes/mePasswordGuards.integration.test.ts`, `server/src/__tests__/services/isFreshCodeSession.test.ts`, `server/src/__tests__/routes/me.integration.test.ts` (extended), `server/src/__tests__/routes/deleteMe.integration.test.ts` (extended).
+
+**Interfaces:** `PUT /v1/me/password` with `{ newPassword, currentPassword? }` gives 200 `{ data: { hasPassword: true } }`. `isFreshCodeSession(session, now)` takes `{ authMethod, createdAt }` and returns a boolean. `setUserPassword(database, { userId, sessionId, newHash, verifiedHash?, now })` runs only the short transaction (lock the user row, re-check the stored hash equals `verifiedHash` when the current password was used, write the hash and `password_updated_at`, revoke other sessions); the route verifies `currentPassword` and derives `newHash` before calling it, and no pg client is passed into any verify or derive step. `Profile` adds `hasPassword: boolean`.
+
+**Behaviors (RED tests, real Postgres):**
+
+- `isFreshCodeSession` is true for a code session created 9 minutes 59 seconds ago, false at 10 minutes 1 second, and false for a password session created 1 second ago.
+- A user with a password, signed in by password, sending the right current password and a new one gets 200; the new password verifies, the old one does not, and `password_updated_at` is set.
+- The same user without a current password gets 403 `AUTH_REAUTH_REQUIRED`; with a wrong one gets 400 `AUTH_INVALID_CREDENTIALS`; the hash is unchanged in both cases.
+- A code session 5 minutes old (injected clock) without a current password sets the password for a user with a password (forgot-password path) and for a code-only user (add path); a code session 11 minutes old gets 403 `AUTH_REAUTH_REQUIRED` in both cases.
+- A code-only user who sends any current password gets 400 `AUTH_INVALID_CREDENTIALS`.
+- NFKC round trip: a new password containing U+FB01 set here signs in with the NFKC-equivalent string, and the NFKC-equivalent string is accepted as `currentPassword` on the next change.
+- A raw `newPassword` or `currentPassword` of 513 UTF-16 units gets 400 `INPUT_INVALID_BODY` with no derivation and nothing written.
+- With every hash slot held, the request gets 503 `SERVER_BUSY` after the queue timeout, the hash is unchanged, and no session is revoked; while it waits, a pool created with `max: 1` still serves `GET /health/ready` with 200.
+- A change whose slot wait lasts just under the 5-second cap (real database, slot held then released) succeeds and is not terminated by `idle_in_transaction_session_timeout`: the transaction opens only after the derivation.
+- When the stored hash changes between verifying `currentPassword` and the transaction, the request gets 400 `AUTH_INVALID_CREDENTIALS` and writes and revokes nothing.
+- Logs (supports B-83): with a captured pino destination, no line contains either run-time password, its SHA-1, its 5-character prefix, or the stored hash, for a 200, for each 4xx above, and for a database error thrown inside the transaction.
+- After a successful change, the user's two other sessions (one cookie, one bearer) get 401 on `GET /v1/me`, the current session still gets 200, and another user's sessions are untouched.
+- A new password that is too short, too long, or breached gets the matching 400 code and changes nothing; the breach check sends only a prefix.
+- A cookie-authenticated request without `X-Requested-With` gets 403 `CSRF_HEADER_MISSING` from the existing global CSRF guard; a request with no cookie and no bearer token gets 401 `AUTH_SESSION_REQUIRED`; `Content-Type: text/plain` gets 415.
+- The 11th request for one user in an hour gets 429, whatever the outcome of the first ten.
+- Two concurrent changes for one user both finish without a 500, and the stored hash verifies against exactly one of the two new passwords.
+- `GET /v1/me` returns `hasPassword: false` for a code-only user and `true` after a set, and no response body contains `$scrypt$`.
+- After `DELETE /v1/me`, a search of every text and bytea column for the user's former hash finds nothing; a password sign-in with the old email and password gets the B-77 400 body; `POST /v1/auth/signups/verify` for the same email creates a new user id with no answer events or entitlements.
+
+- [ ] Gated cycle; R-109 review; commit `feat(auth): set or change a password with reauthentication and revoke other sessions`.
+
+### Task 7.7: app password field, auth state, and the sign-in screen
+
+**Risk:** high (client credential handling). **Behaviors:** B-86, B-89, B-90 (primary owner: `PasswordField` and the sign-in screen).
+
+**Files:** Create `components/auth/PasswordField.tsx`, `components/auth/PasswordSignInStep.tsx`, `services/auth/countPasswordLength.ts`; modify `state/AuthProvider.tsx` (`signInWithPassword`, `setPassword`, `startSignUp`, `completeSignUp`, new `AuthResult` reasons), `app/sign-in.tsx` (password step first, "Use a code instead", "Forgot password?", "Create an account"), `constants/appConfig.ts` (`PASSWORD_MIN_LENGTH`, `PASSWORD_MAX_LENGTH`); tests `components/auth/__tests__/PasswordField.test.tsx`, `components/auth/__tests__/PasswordField.web.test.tsx`, `components/auth/__tests__/PasswordSignInStep.test.tsx`, `state/__tests__/AuthProviderPassword.test.tsx`, `app/__tests__/signInPassword.test.tsx`, `app/__tests__/signInPassword.web.test.tsx`, `services/auth/__tests__/countPasswordLength.test.ts`.
+
+**Interfaces:** `PasswordField({ label, autoComplete, value, onChangeText, errorId?, onSubmitEditing? })`, `autoComplete` being `'current-password'` or `'new-password'`. `AuthResult` failure reasons add `'invalid-credentials' | 'password-too-short' | 'password-too-long' | 'password-breached' | 'reauth-required' | 'busy'`. `signInWithPassword(email, password)` resolves an `AuthResult` and calls `apiFetch('auth/sessions/password', ...)`.
+
+**Behaviors (RED tests):**
+
+- `PasswordField` renders a visible label, hides the value by default, and its toggle is a button named "Show password" with `aria-pressed` false; pressing it shows the value, renames it "Hide password" with `aria-pressed` true, keeps the value, and returns focus to the input (web).
+- On web the rendered input has `autocomplete="current-password"` (or `new-password` when passed) and `type="password"` while hidden.
+- With an error, the input's `aria-describedby` names the `role="alert"` element holding the message.
+- A `KEY_BINDINGS` key pressed while the password field has focus does nothing (B-57).
+- The sign-in screen shows email and password fields and "Sign in"; a 201 runs the existing post-sign-in path (guest claim raised for a new id, purchaser identified) and navigates to `returnTo`.
+- A 400 `AUTH_INVALID_CREDENTIALS` shows "That email and password do not match. Try again, or use a code instead." in the alert region; 429 and 503 `SERVER_BUSY` show their own messages.
+- "Use a code instead" shows the email step with the typed email prefilled and no password field; "Forgot password?" runs the code steps and then navigates to `/settings?form=password`.
+- Across a sign-in, a failure, and an unmount, no AsyncStorage, SecureStore, `logWarning`, or analytics call receives the run-time password (spies on each client), and the field is empty after success.
+- `countPasswordLength` counts code points after NFKC (an emoji counts 1, U+FB01 counts 2).
+- The sign-in screen keeps one `h1`, and every control is reachable and operable by Tab and Enter on web.
+- The test author updates the existing sign-in tests (`app/__tests__/signInRoute.test.tsx`, `signInRoute.web.test.tsx`, `signInRouteFlow.test.tsx`, `signInRouteFocus.web.test.tsx`, `signInReturnTo.test.tsx`) in the same RED commit so they reach the code steps through "Use a code instead"; their assertions about the code flow and `returnTo` stay otherwise unchanged.
+
+- [ ] Gated cycle; commit `feat(app): sign in with email and password`.
+
+### Task 7.8: app sign-up screen
+
+**Risk:** high (client account creation). **Behaviors:** B-87; supports B-89 and B-90 (sign-up screen).
+
+**Files:** Create `app/sign-up.tsx`, `components/auth/SignUpStep.tsx`; tests `app/__tests__/signUp.test.tsx`, `app/__tests__/signUp.web.test.tsx`, `components/auth/__tests__/SignUpStep.test.tsx`.
+
+**Behaviors (RED tests):**
+
+- The route has one `h1` "Create an account", an email field, and a password field with `autocomplete="new-password"` and the hint "At least 12 characters. Spaces are fine." tied to it by `aria-describedby`.
+- An 11-code-point password shows the too-short message and sends no request; a 12-code-point password calls `POST auth/signups` and shows the code step.
+- `AUTH_PASSWORD_BREACHED` announces, in the alert region, that the password appeared in a data breach and another is needed, and the user stays on the password step.
+- Submitting the code calls `POST auth/signups/verify` with the email, the code, and the same password held in memory; `isPasswordApplied: true` signs in and navigates to `returnTo` (or `/`).
+- `isPasswordApplied: false` signs in and shows "You already had an account, so we signed you in. Your password was not changed; you can set one in Settings."
+- "Resend code" calls `POST auth/signups` again with the same password and restarts the cooldown.
+- No storage, log, or analytics spy receives the password; leaving the route clears it.
+- Sign-in links to `/sign-up` and sign-up links to `/sign-in`, each reachable by keyboard.
+
+- [ ] Gated cycle; commit `feat(app): create an account with email and password`.
+
+### Task 7.9: settings password form and the forgot-password return
+
+**Risk:** high (client credential change, reauthentication). **Behaviors:** B-88; supports B-89 and B-90 (settings form).
+
+**Files:** Create `components/auth/PasswordSettingsForm.tsx`, `components/auth/InlineCodeSignIn.tsx` (the code steps for the signed-in email, no email field); modify `app/settings.tsx` (`AccountSection` renders the form; the `form=password` search param focuses it), `state/useProfile.ts` (`hasPassword`); tests `components/auth/__tests__/PasswordSettingsForm.test.tsx`, `components/auth/__tests__/PasswordSettingsForm.web.test.tsx`, `app/__tests__/settingsPassword.test.tsx`.
+
+**Behaviors (RED tests):**
+
+- A profile with `hasPassword: false` shows the heading "Add a password" with one new-password field; `hasPassword: true` shows "Change password" with a current-password field (`autocomplete="current-password"`) and a new-password field (`autocomplete="new-password"`).
+- Saving calls `PUT me/password` with the CSRF header on web; 200 announces "Password saved. Other devices were signed out." and clears both fields.
+- 403 `AUTH_REAUTH_REQUIRED` opens the inline code steps for the signed-in email; after a successful code sign-in the form shows again with the new password still entered, and saving without a current password succeeds.
+- "Use a code instead" opens the same inline code steps without a save attempt.
+- 400 `AUTH_INVALID_CREDENTIALS` shows "That current password is not right." tied to the current-password field; too-short, too-long, and breached errors are tied to the new-password field.
+- Navigating to `/settings?form=password` moves focus to the form's first field.
+- No storage, log, or analytics spy receives either password; leaving Settings clears them.
+- The form is operable by keyboard alone on web and the page keeps one `h1`.
+
+- [ ] Gated cycle; commit `feat(app): add or change a password in Settings`.
+
+### Task 7.10: privacy page, store answers, and lexicon
+
+**Risk:** standard (docs and static copy). **Behaviors:** B-91.
+
+**Files:** Modify `app/privacy.tsx` (the first "What we collect" item and the deletion paragraph, wording from the spec's "Privacy wording"), `docs/store/privacy-labels.md` (Email address row source, **Passwords** fact, **Deletion** fact), `docs/lexicon.md` (mark the Stage 7 terms in code as their tasks land); test `app/__tests__/privacyPage.test.tsx` (create or extend).
+
+**Behaviors (tests alongside the change):**
+
+- The rendered privacy page does not contain "There is no password" and contains "scrypt", "Have I Been Pwned", and "first 5 characters".
+- The deletion paragraph lists the password hash.
+
+- [ ] Commit `docs(privacy): describe optional passwords and the breach check`.
+
+---
+
 ## Self-review
 
-- Spec coverage: B-1 (1.1), B-2 (1.2), B-3/B-4/B-6 (1.3), B-5 (1.4), B-7 (1.5), B-8/B-12 (1.7), B-9/B-10/B-11 (1.8), B-13 (1.11, 1.12), B-14 (1.9), B-15 (1.13), B-16 (1.14), B-17/B-18 (2.1), B-19 (2.3), B-20/B-21 (2.4, 2.2), B-22 (2.6), B-23 (2.7), B-24 (2.8), B-25/B-26 (3.3), B-27/B-28 (3.4, 3.10), B-29/B-30/B-31 (3.5), B-32/B-33 (3.7), B-34/B-35 (3.6, 3.7, 3.8), B-36 (3.7, 3.11), B-37 (3.14), B-38 (3.16, 3.17), B-39 (3.17), B-40 (3.9), B-41 (3.13), B-42/B-43 (3.18), B-44 (3.15), B-45 (3.19), B-46 (4.1), B-47/B-48 (4.1, 4.2), B-49 (4.3), B-50/B-51 (5.1, 5.2), B-52 (5.3), B-53 (5.4), B-54 (6.1), B-55 (0.1), B-56 (0.2), B-57/B-58 (1.0, 5.1), B-59 (3.21), B-60 (1.5, 1.6), B-61 (3.11), B-62 (3.1), B-63 (3.3, 3.5), B-64 (1.13, 2.7, 3.10, 3.12, 3.18, 4.2).
+- Spec coverage: B-1 (1.1), B-2 (1.2), B-3/B-4/B-6 (1.3), B-5 (1.4), B-7 (1.5), B-8/B-12 (1.7), B-9/B-10/B-11 (1.8), B-13 (1.11, 1.12), B-14 (1.9), B-15 (1.13), B-16 (1.14), B-17/B-18 (2.1), B-19 (2.3), B-20/B-21 (2.4, 2.2), B-22 (2.6), B-23 (2.7), B-24 (2.8), B-25/B-26 (3.3), B-27/B-28 (3.4, 3.10), B-29/B-30/B-31 (3.5), B-32/B-33 (3.7), B-34/B-35 (3.6, 3.7, 3.8), B-36 (3.7, 3.11), B-37 (3.14), B-38 (3.16, 3.17), B-39 (3.17), B-40 (3.9), B-41 (3.13), B-42/B-43 (3.18), B-44 (3.15), B-45 (3.19), B-46 (4.1), B-47/B-48 (4.1, 4.2), B-49 (4.3), B-50/B-51 (5.1, 5.2), B-52 (5.3), B-53 (5.4), B-54 (6.1), B-55 (0.1), B-56 (0.2), B-57/B-58 (1.0, 5.1), B-59 (3.21), B-60 (1.5, 1.6), B-61 (3.11), B-62 (3.1), B-63 (3.3, 3.5), B-64 (1.13, 2.7, 3.10, 3.12, 3.18, 4.2), B-65 (7.1), B-66/B-67 (7.2), B-68 (7.5), B-69/B-70/B-71 (7.3), B-72/B-73/B-74/B-75 (7.4), B-76/B-77/B-78/B-79 (7.5), B-80/B-81/B-82/B-84 (7.6), B-83 (7.4), B-85 (7.5), B-86 (7.7), B-87 (7.8), B-88 (7.9), B-89/B-90 (7.7), B-91 (7.10). Each Stage 7 behavior has one primary owner listed here; other tasks that add tests for it name it as "supports".
 - Placeholders: none. High-risk tasks deliberately carry behaviors instead of implementation code (R-411).
 - Type consistency: `AnswerEvent`, `BankContext`, `Choice`, `Oracle`, `OracleRun`, `ValidationResult`, `ModelProvider`, `PipelineReport`, and `ReviewItem` (wrapping the `ts-fsrs` `Card`) are each defined once and reused by name.

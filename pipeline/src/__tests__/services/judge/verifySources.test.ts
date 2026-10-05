@@ -132,6 +132,21 @@ describe('verifySources', () => {
 describe('site chrome cannot back a quote', () => {
     const quote = 'Use prepared statements with parameterized queries';
 
+    it('rejects a quote in main when an adoption-agency cycle exceeds the page parse timeout', async () => {
+        const { PAGE_PARSE_TIMEOUT_MS } = await import('../../../services/judge/extractPageTextIsolated.js');
+        const prefix = `<main>${quote}</main><b><div>`;
+        const suffix = '</b>';
+        const body = `${prefix}${'<br>'.repeat(Math.floor((2_000_000 - prefix.length - suffix.length) / 4))}${suffix}`;
+        const fetch = pages({ [URL_A]: body });
+        const startedAt = Date.now();
+        expect(await verifySources([source(URL_A, quote)], fetch)).toEqual({
+            ok: false,
+            reason: 'quote-not-found',
+            url: URL_A,
+        });
+        expect(Date.now() - startedAt).toBeLessThan(PAGE_PARSE_TIMEOUT_MS + 1000);
+    }, 10_000);
+
     it.each([
         ['nav', `<nav>${quote}</nav>`],
         ['header', `<header>${quote}</header>`],

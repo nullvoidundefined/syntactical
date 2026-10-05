@@ -4,6 +4,11 @@
 const HOUR_MS = 3_600_000;
 
 const AUTH = {
+  BREACH_CHECK: {
+    // The k-anonymity range lookup fails open, so it must not hold a sign-up for longer than this.
+    MAX_RESPONSE_BYTES: 262_144,
+    TIMEOUT_MS: 2_000,
+  },
   CODE: {
     DIGITS: 6,
     MAX_ATTEMPTS: 5,
@@ -22,6 +27,8 @@ const AUTH = {
       KEY_BYTES: 64,
       // log2 of the scrypt cost N: 2^17 = 131072.
       LOG_N: 17,
+      // Cap on the scrypt cost N * r * p (2^20) a stored string may claim; it keeps 128 * N * r within MAXMEM.
+      MAX_COST: 2 ** 20,
       // 256 MiB: scrypt needs about 128 * N * r bytes (128 MiB here), so this leaves headroom.
       MAXMEM: 268_435_456,
       P: 1,
@@ -30,6 +37,10 @@ const AUTH = {
     },
     // How long a derivation waits for a free hash slot before the request fails as busy.
     HASH_QUEUE_TIMEOUT_MS: 5_000,
+    MAX_LENGTH: 128,
+    MIN_LENGTH: 12,
+    // UTF-16 units of the raw string, measured before NFKC, so normalization cannot be fed a huge input.
+    RAW_MAX_LENGTH: 512,
   },
   RATE_LIMIT: {
     ISSUE_PER_EMAIL: 5,
