@@ -29,6 +29,7 @@ import { createDeleteMeRouter } from './routes/deleteMe.js';
 import { createHealthRouter } from './routes/health.js';
 import type { HealthDb } from './routes/health.js';
 import { createMeRouter } from './routes/me.js';
+import { createMePasswordRouter } from './routes/mePassword.js';
 import { createDisabledWebhookRouter } from './routes/disabledWebhook.js';
 import { createRevenueCatWebhookRouter } from './routes/revenueCatWebhook.js';
 import { createSignOutRouter } from './routes/signOut.js';
@@ -120,6 +121,9 @@ function createApp(deps: AppDeps) {
       createSignOutRouter(resolved),
     );
     app.use('/v1', createDeleteMeRouter(resolved, logger));
+    if (passwordBreachClient && passwordHashSlots) {
+      app.use('/v1', createMePasswordRouter({ ...resolved, passwordBreachClient, passwordHashSlots }, logger));
+    }
   }
 
   if (sync) {

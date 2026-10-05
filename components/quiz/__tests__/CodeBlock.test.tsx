@@ -18,6 +18,9 @@ const IMG_INJECTION = '<img src=x onerror=alert(1)>';
 const CODE_BREAKOUT = '</code><script>1</script>';
 const WHITESPACE_CODE = 'def f():\n    return  1\n\n\tx = "a  b"  \n';
 const ALLOWED_HOST_TYPES = new Set(['Text', 'View', 'RCTScrollView', 'ScrollView']);
+const KEYWORD_COLOR = '#b98ee8';
+const STRING_COLOR = '#39e88f';
+const FUNCTION_COLOR = '#5fb8e0';
 
 function collectText(node: RenderedNode | string): string {
     if (typeof node === 'string') return node;
@@ -33,6 +36,11 @@ function collectNodes(node: RenderedNode): RenderedNode[] {
 
 function findCodeBlock(): RenderedNode {
     return screen.getByTestId('code-block') as unknown as RenderedNode;
+}
+
+function findRunColor(text: string): unknown {
+    const style = screen.getByText(text).props.style as { color?: string } | undefined;
+    return style?.color;
 }
 
 function countNestedTextRuns(codeBlock: RenderedNode): number {
@@ -57,6 +65,18 @@ describe('CodeBlock', () => {
         await render(<CodeBlock code={code} grammar={grammar} />);
         expect(collectText(findCodeBlock())).toBe(code);
         expect(screen.getByText(keyword)).toBeTruthy();
+    });
+
+    it('colors a keyword run and a string run differently, each with its own color', async () => {
+        await render(<CodeBlock code={'def f(): return "s"'} grammar="python" />);
+        expect(findRunColor('def')).toBe(KEYWORD_COLOR);
+        expect(findRunColor('"s"')).toBe(STRING_COLOR);
+    });
+
+    it('colors a nested token by its innermost mapped type', async () => {
+        // In bash, `ls` inside "$(ls)" is typed string > variable > function: the function color wins.
+        await render(<CodeBlock code={'echo "$(ls)"'} grammar="bash" />);
+        expect(findRunColor('ls')).toBe(FUNCTION_COLOR);
     });
 
     it.each([['plain'], ['cobol']] as const)(

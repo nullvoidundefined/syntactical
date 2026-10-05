@@ -1,14 +1,20 @@
 // Expo configuration. The web app is served from the root of https://syntactical.dev (B-55), which
-// is same-site with the API so the SameSite=Lax session cookie works. EXPO_BASE_URL can still move a
-// build under a sub-path (for example /preview) and the content URL follows it.
+// is same-site with the API so the SameSite=Lax session cookie works. EXPO_BASE_URL may only be a
+// lowercase sub-path such as /preview, and the content URL follows it.
 import type { ExpoConfig } from 'expo/config';
 
 const CONTENT_ORIGIN = 'https://syntactical.dev';
 const DEFAULT_API_BASE_URL = 'https://api.syntactical.dev/v1/';
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
 
+// The base URL must be empty or a lowercase sub-path; the error names the variable, never the value.
 function readBaseUrl(): string {
-  return process.env.EXPO_BASE_URL ?? '';
+  const value = process.env.EXPO_BASE_URL;
+  if (value === undefined || value === '') return '';
+  if (!/^(\/[a-z0-9][a-z0-9-]*)+$/.test(value)) {
+    throw new Error('EXPO_BASE_URL must be empty or a lowercase path such as /preview');
+  }
+  return value;
 }
 
 // A vendor key reaches the bundle only when it carries its public prefix, so
