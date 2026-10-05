@@ -28,7 +28,7 @@ import {
 
 const SKIP_DOCKER = process.env.SKIP_DOCKER_TESTS === '1';
 
-const LANGUAGES: OracleLanguage[] = ['python', 'node', 'postgres', 'ruby', 'rails', 'go'];
+const LANGUAGES: OracleLanguage[] = ['python', 'node', 'postgres', 'ruby', 'rails', 'go', 'jsdom'];
 
 const MIN_ENTRIES = 10;
 

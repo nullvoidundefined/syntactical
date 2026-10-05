@@ -17,15 +17,9 @@ const RAW_OUTPUT_CAP_KIBIBYTES = 512;
 const VALUE_CAP_BYTES = VALUE_CAP_KIBIBYTES * KIBIBYTE;
 const RAW_OUTPUT_CAP_BYTES = RAW_OUTPUT_CAP_KIBIBYTES * KIBIBYTE;
 const OOM_EXIT_CODE = 137;
-const LANGUAGES: readonly string[] = ['python', 'node', 'postgres', 'ruby', 'rails', 'go'];
+const LANGUAGES: readonly string[] = ['python', 'node', 'postgres', 'ruby', 'rails', 'go', 'jsdom'];
 
-const OUTCOMES: OracleOutcome[] = [
-    'value',
-    'exception',
-    'syntax-error',
-    'timeout',
-    'resource-limit',
-];
+const OUTCOMES: OracleOutcome[] = ['value', 'exception', 'syntax-error', 'timeout', 'resource-limit'];
 
 function parseResult(stdout: string): OracleRun | undefined {
     const lines = stdout.split('\n').filter((line) => line.trim() !== '');

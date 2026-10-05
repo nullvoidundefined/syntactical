@@ -11,8 +11,8 @@ import { runnerImageTag } from '../../clients/runnerImageTag.js';
 import type { OracleLanguage } from '../../types/OracleLanguage.js';
 
 const TAG_HASH_LENGTH = 12;
-const LANGUAGES: OracleLanguage[] = ['python', 'node', 'postgres', 'ruby', 'rails', 'go'];
-const TAG_PATTERN = /^syntactical-runner-(python|node|postgres|ruby|rails|go):[0-9a-f]{12}$/;
+const LANGUAGES: OracleLanguage[] = ['python', 'node', 'postgres', 'ruby', 'rails', 'go', 'jsdom'];
+const TAG_PATTERN = /^syntactical-runner-(python|node|postgres|ruby|rails|go|jsdom):[0-9a-f]{12}$/;
 
 function runnerContextDir(language: OracleLanguage): string {
     return fileURLToPath(new URL(`../../../runners/${language}`, import.meta.url));

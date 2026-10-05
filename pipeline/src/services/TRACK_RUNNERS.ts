@@ -4,4 +4,5 @@ import type { OracleLanguage } from '../types/OracleLanguage.js';
 
 export const TRACK_RUNNERS: Record<string, readonly OracleLanguage[]> = {
     'backend-security': ['python', 'node', 'postgres'],
+    'frontend-security': ['jsdom', 'node'],
 };

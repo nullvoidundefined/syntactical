@@ -56,7 +56,7 @@ export function runningRunnerContainers(language: OracleLanguage): string {
 // cannot leak into the next case's container check. Safe only while the lock
 // is held.
 export function killLeftoverRunnerContainers(): void {
-    for (const language of ['python', 'node', 'postgres', 'ruby', 'rails', 'go'] as const) {
+    for (const language of ['python', 'node', 'postgres', 'ruby', 'rails', 'go', 'jsdom'] as const) {
         const ids = runningRunnerContainers(language).split('\n').filter(Boolean);
         if (ids.length > 0) {
             try {
