@@ -31,17 +31,16 @@ function ProgressReadout() {
 export function AppShell({ accountControl = null, children }: { accountControl?: ReactNode; children: ReactNode }) {
   return (
     <SafeAreaView className="flex-1 bg-obsidian">
-      <View
-        role="banner"
-        className="flex-row flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3"
-      >
-        <Text className="font-mono text-xs tracking-widest text-ink">SYNTACTICAL</Text>
-        <ReviewDueLink />
-        <ProgressReadout />
-        <Pressable role="link" aria-label="Settings" onPress={() => router.push('/settings')}>
-          <Text className="font-mono text-xs uppercase tracking-widest text-ink">Settings</Text>
-        </Pressable>
-        {accountControl}
+      <View role="banner" className="border-b border-line px-4 py-3">
+        <View className="mx-auto w-full max-w-xl flex-row flex-wrap items-center justify-between gap-2">
+          <Text className="font-mono text-xs tracking-widest text-ink">SYNTACTICAL</Text>
+          <ReviewDueLink />
+          <ProgressReadout />
+          <Pressable role="link" aria-label="Settings" onPress={() => router.push('/settings')}>
+            <Text className="font-mono text-xs uppercase tracking-widest text-ink">Settings</Text>
+          </Pressable>
+          {accountControl}
+        </View>
       </View>
       <View role="main" className="flex-1">
         <DownloadIndicator />
