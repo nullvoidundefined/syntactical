@@ -159,6 +159,25 @@ describe('sign-up on the web for an email that already had an account', () => {
     expect(mockNavigations).toEqual([]);
   });
 
+  it('keeps "Continue" outside the role="status" region, as a sibling of it, and moves focus to "Continue" or the notice', async () => {
+    const identity = buildIdentity();
+    installRoutedFetch({ [SIGNUPS_ROUTE]: codeSentReply(), [VERIFY_ROUTE]: verifiedReplyWithToken(identity, false) });
+    await renderSignUp();
+    await signUpThroughCode(identity, buildPassword());
+    await screen.findByText(ALREADY_HAD_ACCOUNT);
+    const region = Array.from(document.querySelectorAll('[role="status"]')).find((node) =>
+      (node.textContent ?? '').includes(ALREADY_HAD_ACCOUNT),
+    );
+    expect(region).toBeDefined();
+    const continueButton = screen.getByRole('button', { name: CONTINUE_BUTTON });
+    expect(region?.contains(continueButton)).toBe(false);
+    expect(continueButton.parentElement).toBe(region?.parentElement);
+    await waitFor(() => {
+      const focused = document.activeElement;
+      expect(focused === continueButton || (focused !== null && region?.contains(focused) === true)).toBe(true);
+    });
+  });
+
   it('goes once to a safe returnTo when "Continue" is clicked', async () => {
     const identity = buildIdentity();
     mockParams.current = { returnTo: '/python?paywall=medium' };
@@ -186,6 +205,7 @@ describe('sign-up on the web keeps a token in the verify body out of storage', (
     expect(dumpWebStorage(window.sessionStorage)).not.toContain(identity.sessionValue);
     expect((await readAllStoredValues()).join('\n')).not.toContain(identity.sessionValue);
     expect(JSON.stringify(secureStore.setItemAsync.mock.calls)).not.toContain(identity.sessionValue);
+    expect(document.cookie).not.toContain(identity.sessionValue);
   });
 });
 
