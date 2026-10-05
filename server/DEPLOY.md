@@ -115,3 +115,7 @@ The `api.syntactical.dev` record (Cloudflare) does not exist yet. First add the 
 2. `curl -i https://api.syntactical.dev/health/ready` returns 200 with `{"database":"ok","status":"ok"}`.
 3. In Safari, open `https://syntactical.dev` and confirm a credentialed fetch to the API works: sign in with an emailed code, then reload; the session cookie must be sent on the second request (the spec's Safari cookie assumption).
 4. The Railway deploy log shows `Migrations complete!` and `server listening`, and no line naming a missing variable or a paid bank.
+
+## Web app origin
+
+The web app is served from the root of `https://syntactical.dev` by GitHub Pages (`.github/workflows/deploy.yml`, `actions/deploy-pages`; the custom domain is a repository Pages setting, so the artifact needs no `CNAME` file). It must be same-site with `api.syntactical.dev` because the session cookie is `SameSite=Lax`. The API's `ALLOWED_ORIGINS` must hold exactly `https://syntactical.dev`.

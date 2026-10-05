@@ -6,7 +6,7 @@ import { join } from 'node:path';
 const LOOPBACK = '127.0.0.1';
 const DEFAULT_WEB_PORT = 4710;
 const DEFAULT_API_PORT = 4711;
-const BASE_PATH = '/syntactical';
+const BASE_PATH = '';
 const STATE_DIR_VARIABLE = 'E2E_STATE_DIR';
 
 interface E2eState {

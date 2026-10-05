@@ -27,7 +27,7 @@ Account deletion: Settings, then Account, then Delete account. The app asks you 
 
 Sign-in is optional for the free Easy banks. A guest keeps progress on the device.
 
-Data collection: email (sign-in), purchase history, and anonymous product analytics through PostHog (no location, no advertising identifier, no tracking). The privacy policy is at https://nullvoidundefined.github.io/syntactical/privacy.
+Data collection: email (sign-in), purchase history, and anonymous product analytics through PostHog (no location, no advertising identifier, no tracking). The privacy policy is at https://syntactical.dev/privacy.
 
 Purchases are processed by Apple and Google through RevenueCat. The app never handles card details.
 ```

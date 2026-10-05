@@ -1,7 +1,7 @@
 import type { ExpoConfig } from 'expo/config';
 
-const LIVE_CONTENT_URL = 'https://nullvoidundefined.github.io/syntactical/content/';
-const PREVIEW_CONTENT_URL = 'https://nullvoidundefined.github.io/syntactical/preview/content/';
+const LIVE_CONTENT_URL = 'https://syntactical.dev/content/';
+const PREVIEW_CONTENT_URL = 'https://syntactical.dev/preview/content/';
 const originalBaseUrl = process.env.EXPO_BASE_URL;
 
 function setBaseUrl(baseUrl: string | undefined): void {
@@ -30,19 +30,16 @@ describe('app.config content base URL', () => {
     setBaseUrl(originalBaseUrl);
   });
 
-  it('uses the live content URL when EXPO_BASE_URL is unset or /syntactical', () => {
+  it('serves from the root with the production content URL when EXPO_BASE_URL is unset', () => {
     const defaultConfig = loadAppConfig(undefined);
     expect(readContentBaseUrl(defaultConfig)).toBe(LIVE_CONTENT_URL);
-    expect(defaultConfig.experiments?.baseUrl).toBe('/syntactical');
-
-    const explicitConfig = loadAppConfig('/syntactical');
-    expect(readContentBaseUrl(explicitConfig)).toBe(LIVE_CONTENT_URL);
-    expect(explicitConfig.experiments?.baseUrl).toBe('/syntactical');
+    expect(defaultConfig.experiments?.baseUrl).toBe('');
+    expect((defaultConfig.extra as Record<string, unknown>).apiBaseUrl).toBe('https://api.syntactical.dev/v1/');
   });
 
-  it('uses the preview content URL for /syntactical/preview', () => {
-    const previewConfig = loadAppConfig('/syntactical/preview');
+  it('uses the preview content URL for /preview', () => {
+    const previewConfig = loadAppConfig('/preview');
     expect(readContentBaseUrl(previewConfig)).toBe(PREVIEW_CONTENT_URL);
-    expect(previewConfig.experiments?.baseUrl).toBe('/syntactical/preview');
+    expect(previewConfig.experiments?.baseUrl).toBe('/preview');
   });
 });

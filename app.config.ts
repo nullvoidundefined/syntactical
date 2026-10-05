@@ -1,14 +1,14 @@
-// Expo configuration. The web base path and the content URL depend on the
-// build target, so the pre-cutover preview build can live under
-// /syntactical/preview without touching the live site.
+// Expo configuration. The web app is served from the root of https://syntactical.dev (B-55), which
+// is same-site with the API so the SameSite=Lax session cookie works. EXPO_BASE_URL can still move a
+// build under a sub-path (for example /preview) and the content URL follows it.
 import type { ExpoConfig } from 'expo/config';
 
-const CONTENT_ORIGIN = 'https://nullvoidundefined.github.io';
+const CONTENT_ORIGIN = 'https://syntactical.dev';
 const DEFAULT_API_BASE_URL = 'https://api.syntactical.dev/v1/';
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
 
 function readBaseUrl(): string {
-  return process.env.EXPO_BASE_URL ?? '/syntactical';
+  return process.env.EXPO_BASE_URL ?? '';
 }
 
 // A vendor key reaches the bundle only when it carries its public prefix, so
