@@ -38,21 +38,12 @@ async function renderRound() {
   return render(<QuizRound {...props} questions={questions} onExit={jest.fn()} onRetry={jest.fn()} />);
 }
 
+// The choice buttons render in display order; read that order from their accessible names
+// (the choice text, then ", correct" or ", incorrect" once answered).
 function readShownOrder(): string[] {
-  return ['right', 'wrong-1', 'wrong-2', 'wrong-3']
-    .map((text) => ({ text, position: screen.getAllByText(text)[0] }))
-    .sort((left, right) => readLabelRank(left.text) - readLabelRank(right.text))
-    .map((entry) => entry.text);
-}
-
-// The choice buttons render in display order; read that order from the button names.
-function readLabelRank(text: string): number {
-  const names = screen
-    .getAllByRole('button')
-    .map((button) => String(button.props['aria-label'] ?? ''))
-    .filter((name) => /^(right|wrong-\d)(,|$)/.test(name))
-    .map((name) => name.split(',')[0]);
-  return names.indexOf(text);
+  return screen
+    .getAllByLabelText(/^(right|wrong-\d)(,|$)/)
+    .map((element) => String(element.props['aria-label'] ?? element.props.accessibilityLabel ?? '').split(',')[0]);
 }
 
 afterEach(() => jest.restoreAllMocks());

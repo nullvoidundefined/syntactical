@@ -39,11 +39,14 @@ const boolQuestion = {
   type: 'bool',
 } as Question;
 
+// mulberry32: well mixed even for small consecutive seeds (a plain LCG's first outputs are not).
 function buildSeededRandom(seed: number): () => number {
-  let state = seed;
+  let state = seed >>> 0;
   return () => {
-    state = (state * 1664525 + 1013904223) % 4294967296;
-    return state / 4294967296;
+    state = (state + 0x6d2b79f5) >>> 0;
+    let mixed = Math.imul(state ^ (state >>> 15), 1 | state);
+    mixed = (mixed + Math.imul(mixed ^ (mixed >>> 7), 61 | mixed)) ^ mixed;
+    return ((mixed ^ (mixed >>> 14)) >>> 0) / 4294967296;
   };
 }
 
@@ -77,7 +80,7 @@ describe('shuffleChoices', () => {
 
   it('puts the correct answer in each of the four positions across a fixed set of seeds', () => {
     const positions = new Set<number>();
-    for (let seed = 1; seed <= 40; seed += 1) {
+    for (let seed = 1; seed <= 200; seed += 1) {
       const shuffled = shuffleChoices(mcQuestion, buildSeededRandom(seed)) as McQuestion;
       expect(readCorrectChoice(shuffled).text).toBe('right');
       positions.add(shuffled.answerIndex);
