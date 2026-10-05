@@ -1,43 +1,36 @@
-// First sign-in step: email, password, and "Sign in", with the code flow, the
-// forgot-password flow, and sign-up one control away. Both values are held by
-// the screen; no length rule applies here and nothing is trimmed, since only
-// the server judges a sign-in.
-import { Platform, TextInput } from 'react-native';
+// First sign-up step: email, a new-password field with its hint, and "Create account".
+// Both values are held by the screen and never trimmed. On web the fields sit in a real
+// <form> (the sign-in pattern) so browsers offer to save the new password; the form has no
+// action and every submit is cancelled so the password never reaches a URL.
+import { Platform, Text, TextInput } from 'react-native';
 
-import { buildAuthHref } from '../../services/auth/readReturnTo';
 import { AuthButton } from './AuthButton';
 import { AuthForm } from './AuthForm';
-import { AuthLink } from './AuthLink';
 import { PasswordField } from './PasswordField';
 
-type PasswordSignInStepProps = {
+type SignUpStepProps = {
   email: string;
   errorId?: string;
   isBusy: boolean;
   onChangeEmail: (email: string) => void;
   onChangePassword: (password: string) => void;
-  onForgotPassword: () => void;
   onSubmit: () => void;
-  onUseCode: () => void;
   password: string;
-  returnTo?: string | string[];
 };
 
+const HINT_ID = 'sign-up-password-hint';
+const HINT_TEXT = 'At least 12 characters. Spaces are fine.';
 const IS_WEB = Platform.OS === 'web';
 
-export function PasswordSignInStep({
+export function SignUpStep({
   email,
   errorId,
   isBusy,
   onChangeEmail,
   onChangePassword,
-  onForgotPassword,
   onSubmit,
-  onUseCode,
   password,
-  returnTo,
-}: PasswordSignInStepProps) {
-  const signUpHref = buildAuthHref('/sign-up', returnTo);
+}: SignUpStepProps) {
   function submit() {
     if (!isBusy) onSubmit();
   }
@@ -55,22 +48,22 @@ export function PasswordSignInStep({
         keyboardType="email-address"
         value={email}
         onChangeText={onChangeEmail}
-        returnKeyType="go"
+        returnKeyType="next"
         onSubmitEditing={onSubmitEditing}
         className="mt-4 border border-ink px-3 py-2 font-mono text-base text-ink"
       />
       <PasswordField
         label="Password"
-        autoComplete="current-password"
+        autoComplete="new-password"
         value={password}
         onChangeText={onChangePassword}
-        errorId={errorId}
+        errorId={errorId === undefined ? HINT_ID : `${HINT_ID} ${errorId}`}
         onSubmitEditing={onSubmitEditing}
       />
-      <AuthButton label="Sign in" isDisabled={isBusy} isSubmit onPress={submit} />
-      <AuthButton label="Use a code instead" isPrimary={false} onPress={onUseCode} />
-      <AuthButton label="Forgot password?" isPrimary={false} onPress={onForgotPassword} />
-      <AuthLink href={signUpHref} label="Create an account" />
+      <Text nativeID={HINT_ID} className="mt-2 font-mono text-xs text-muted">
+        {HINT_TEXT}
+      </Text>
+      <AuthButton label="Create account" isDisabled={isBusy} isSubmit onPress={submit} />
     </AuthForm>
   );
 }

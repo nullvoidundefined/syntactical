@@ -42,8 +42,25 @@ export type AuthResult =
       reason: 'busy' | 'invalid-code' | 'invalid-credentials' | 'invalid-email' | 'rate-limited' | 'unavailable';
     };
 
+type SignUpFailure = {
+  isOk: false;
+  reason:
+    | 'busy'
+    | 'invalid-code'
+    | 'invalid-email'
+    | 'password-breached'
+    | 'password-too-long'
+    | 'password-too-short'
+    | 'rate-limited'
+    | 'unavailable';
+};
+
+export type StartSignUpResult = { isOk: true } | SignUpFailure;
+export type CompleteSignUpResult = { isOk: true; isPasswordApplied: boolean } | SignUpFailure;
+
 type AuthContextValue = {
   completeGuestClaim: (userId: string) => void;
+  completeSignUp: (email: string, code: string, password: string) => Promise<CompleteSignUpResult>;
   deletedUserId: string | null;
   guestClaimUserId: string | null;
   isHydrated: boolean;
@@ -52,6 +69,7 @@ type AuthContextValue = {
   signInWithPassword: (email: string, password: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
   signOutDeletedAccount: (deletedUserId: string) => Promise<void>;
+  startSignUp: (email: string, password: string) => Promise<StartSignUpResult>;
   user: { id: string } | null;
   verifyCode: (email: string, code: string) => Promise<AuthResult>;
 };
@@ -70,6 +88,25 @@ function readSessionResponse(body: unknown): { sessionValue: string | null; user
 function readErrorCode(body: unknown): string | null {
   const code = (body as { error?: { code?: unknown } } | null)?.error?.code;
   return typeof code === 'string' ? code : null;
+}
+
+const SIGN_UP_REFUSALS: Record<string, SignUpFailure['reason']> = {
+  AUTH_INVALID_CODE: 'invalid-code',
+  AUTH_PASSWORD_BREACHED: 'password-breached',
+  AUTH_PASSWORD_TOO_LONG: 'password-too-long',
+  AUTH_PASSWORD_TOO_SHORT: 'password-too-short',
+};
+
+// The refusal of a sign-up request by status and error code; null when the status is not a refusal.
+// A 400 with no known code is a bad email at the first step and a bad code at verify.
+function readSignUpRefusal(status: number, body: unknown, isVerify: boolean): SignUpFailure | null {
+  if (status === HTTP_STATUS_TOO_MANY_REQUESTS) return { isOk: false, reason: 'rate-limited' };
+  const code = readErrorCode(body);
+  if (status === HTTP_STATUS_SERVICE_UNAVAILABLE && code === 'SERVER_BUSY') return { isOk: false, reason: 'busy' };
+  if (status !== HTTP_STATUS_BAD_REQUEST) return null;
+  const reason = code === null ? undefined : SIGN_UP_REFUSALS[code];
+  if (reason !== undefined) return { isOk: false, reason };
+  return { isOk: false, reason: isVerify ? 'invalid-code' : 'invalid-email' };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -232,6 +269,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [completeSignIn],
   );
 
+  // The password travels only in this request body; it is never stored or logged here.
+  const startSignUp = useCallback(async (email: string, password: string): Promise<StartSignUpResult> => {
+    try {
+      const { body, status } = await apiFetch('auth/signups', { body: { email, password }, method: 'POST' });
+      if (status === HTTP_STATUS_ACCEPTED) return { isOk: true };
+      return readSignUpRefusal(status, body, false) ?? { isOk: false, reason: 'unavailable' };
+    } catch {
+      return { isOk: false, reason: 'unavailable' };
+    }
+  }, []);
+
+  // The 201 runs the same sign-in as every other path; isPasswordApplied says whether the password was set.
+  const completeSignUp = useCallback(
+    async (email: string, code: string, password: string): Promise<CompleteSignUpResult> => {
+      try {
+        await hydration.current?.promise;
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const { body, status } = await apiFetch('auth/signups/verify', {
+          body: { code, email, password, timezone },
+          method: 'POST',
+        });
+        const refusal = readSignUpRefusal(status, body, true);
+        if (refusal !== null) return refusal;
+        const signedIn = await completeSignIn(status, body);
+        if (!signedIn.isOk) return { isOk: false, reason: 'unavailable' };
+        const applied = (body as { data?: { isPasswordApplied?: unknown } } | null)?.data?.isPasswordApplied;
+        return { isOk: true, isPasswordApplied: applied === true };
+      } catch {
+        return { isOk: false, reason: 'unavailable' };
+      }
+    },
+    [completeSignIn],
+  );
+
   const verifyCode = useCallback(
     async (email: string, code: string): Promise<AuthResult> => {
       if (verifyRun.current !== null) return { isOk: false, reason: 'unavailable' };
@@ -288,6 +359,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       completeGuestClaim,
+      completeSignUp,
       deletedUserId,
       guestClaimUserId,
       isHydrated,
@@ -296,11 +368,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithPassword,
       signOut,
       signOutDeletedAccount,
+      startSignUp,
       user: userId === null ? null : { id: userId },
       verifyCode,
     }),
     [
       completeGuestClaim,
+      completeSignUp,
       deletedUserId,
       guestClaimUserId,
       isHydrated,
@@ -308,6 +382,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithPassword,
       signOut,
       signOutDeletedAccount,
+      startSignUp,
       userId,
       verifyCode,
     ],
