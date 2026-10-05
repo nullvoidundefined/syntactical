@@ -15,6 +15,13 @@ import { CodeStep } from '../components/auth/CodeStep';
 import { SignUpStep } from '../components/auth/SignUpStep';
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '../constants/appConfig';
 import { countPasswordLength } from '../services/auth/countPasswordLength';
+import {
+  PASSWORD_BREACHED_MESSAGE,
+  PASSWORD_TOO_LONG_MESSAGE,
+  PASSWORD_TOO_SHORT_MESSAGE,
+  RATE_LIMITED_MESSAGE,
+  SERVER_BUSY_MESSAGE,
+} from '../services/auth/passwordFailureMessages';
 import { buildAuthHref, readReturnTo } from '../services/auth/readReturnTo';
 import { useAuth, type StartSignUpResult } from '../state/AuthProvider';
 
@@ -25,13 +32,13 @@ const ALREADY_HAD_ACCOUNT =
   'You already had an account, so we signed you in. Your password was not changed; you can set one in Settings.';
 
 const ERROR_MESSAGES: Record<FailureReason, string> = {
-  busy: 'The server is busy. Try again in a moment.',
+  busy: SERVER_BUSY_MESSAGE,
   'invalid-code': 'That code did not work. Check the newest email and try again.',
   'invalid-email': 'That email address does not look right. Check it and try again.',
-  'password-breached': 'That password appeared in a data breach. Choose another password.',
-  'password-too-long': `That password is too long. Use at most ${PASSWORD_MAX_LENGTH} characters.`,
-  'password-too-short': `That password is too short. Use at least ${PASSWORD_MIN_LENGTH} characters.`,
-  'rate-limited': 'Too many attempts. Wait a few minutes, then try again.',
+  'password-breached': PASSWORD_BREACHED_MESSAGE,
+  'password-too-long': PASSWORD_TOO_LONG_MESSAGE,
+  'password-too-short': PASSWORD_TOO_SHORT_MESSAGE,
+  'rate-limited': RATE_LIMITED_MESSAGE,
   unavailable: 'Sign-up is unavailable right now. Try again later.',
 };
 
