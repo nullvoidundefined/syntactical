@@ -39,11 +39,19 @@ const CODE_LABEL = 'Sign-in code';
 const SEND_BUTTON = 'Send code';
 const VERIFY_BUTTON = 'Verify code';
 const RESEND_BUTTON = 'Resend code';
+const USE_CODE_BUTTON = 'Use a code instead';
 const INVALID_CODE_MESSAGE = 'That code did not work. Check the newest email and try again.';
 const INVALID_EMAIL_MESSAGE = 'That email address does not look right. Check it and try again.';
 const RATE_LIMITED_MESSAGE = 'Too many attempts. Wait a few minutes, then try again.';
 const UNAVAILABLE_MESSAGE = 'Sign-in is unavailable right now. Try again later.';
 const RESEND_COOLDOWN_SECONDS = 60;
+
+// The screen opens on the password step (Task 7.7); these tests cover the
+// code steps, which "Use a code instead" opens.
+async function renderCodeSteps(): Promise<void> {
+  await render(<SignInScreen />);
+  await fireEvent.press(screen.getByRole('button', { name: USE_CODE_BUTTON }));
+}
 
 // Built at run time: neither value is a literal in the source.
 function buildEmail(): string {
@@ -86,7 +94,7 @@ function buildDeferred(): Deferred {
 
 async function reachCodeStep(email: string): Promise<void> {
   mockRequestCode.mockResolvedValue({ isOk: true });
-  await render(<SignInScreen />);
+  await renderCodeSteps();
   await fireEvent.changeText(screen.getByLabelText(EMAIL_LABEL), email);
   await fireEvent.press(screen.getByRole('button', { name: SEND_BUTTON }));
   expect(screen.getByLabelText(CODE_LABEL)).toBeTruthy();
@@ -108,7 +116,7 @@ describe('sign-in route flow fixes', () => {
   it('announces an invalid email in an alert without echoing it, and stays on the email step', async () => {
     const email = buildEmail();
     mockRequestCode.mockResolvedValue({ isOk: false, reason: 'invalid-email' });
-    await render(<SignInScreen />);
+    await renderCodeSteps();
     await fireEvent.changeText(screen.getByLabelText(EMAIL_LABEL), email);
     await fireEvent.press(screen.getByRole('button', { name: SEND_BUTTON }));
     const alert = screen.getByRole('alert');
@@ -161,7 +169,7 @@ describe('sign-in route flow fixes', () => {
     it('sends one request when Enter is pressed twice in the email field across a re-render', async () => {
       const pending = buildDeferred();
       mockRequestCode.mockReturnValue(pending.promise);
-      await render(<SignInScreen />);
+      await renderCodeSteps();
       const emailInput = screen.getByLabelText(EMAIL_LABEL);
       await fireEvent.changeText(emailInput, buildEmail());
       await fireEvent(emailInput, 'submitEditing');
@@ -178,7 +186,7 @@ describe('sign-in route flow fixes', () => {
     it('sends one request when Enter is pressed twice in the email field before React re-renders', async () => {
       const pending = buildDeferred();
       mockRequestCode.mockReturnValue(pending.promise);
-      await render(<SignInScreen />);
+      await renderCodeSteps();
       const emailInput = screen.getByLabelText(EMAIL_LABEL);
       await fireEvent.changeText(emailInput, buildEmail());
       await act(async () => {

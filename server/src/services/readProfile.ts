@@ -1,4 +1,4 @@
-// The /v1/me profile (B-35): the user's email and timezone, the daily goal in force today, the
+// The /v1/me profile (B-35): the user's email, whether they have a password (never the hash), their timezone, the daily goal in force today, the
 // day streak, XP today and in total from stored daily_progress, and the product ids of the
 // entitlements currently granted. Today is the current date in the user's timezone (UTC when
 // none is stored).
@@ -41,15 +41,15 @@ async function readEntitlements(queryable: Queryable, userId: string): Promise<s
 
 // Undefined when the user no longer exists.
 async function readProfile(queryable: Queryable, userId: string, now: Date): Promise<Profile | undefined> {
-  const { rows } = await queryable.query<{ email: string; timezone: string | null }>(
-    'SELECT email, timezone FROM users WHERE id = $1',
+  const { rows } = await queryable.query<{ email: string; has_password: boolean; timezone: string | null }>(
+    'SELECT email, password_hash IS NOT NULL AS has_password, timezone FROM users WHERE id = $1',
     [userId],
   );
   const [user] = rows;
   if (!user) {
     return undefined;
   }
-  const { email, timezone } = user;
+  const { email, has_password: hasPassword, timezone } = user;
   const today = toLocalDate(now.toISOString(), timezone ?? PROGRESS_DEFAULTS.TIMEZONE);
   const [dailyGoal, progress, entitlements] = [
     await readGoal(queryable, userId, today),
@@ -61,6 +61,7 @@ async function readProfile(queryable: Queryable, userId: string, now: Date): Pro
     dayStreak: computeDayStreak(progress, today),
     email,
     entitlements,
+    hasPassword,
     timezone,
     xpToday: progress.find(({ localDate }) => localDate === today)?.xp ?? 0,
     xpTotal: progress.reduce((sum, { xp }) => sum + xp, 0),

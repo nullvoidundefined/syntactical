@@ -78,5 +78,11 @@ export const HTTP_STATUS_MULTIPLE_CHOICES = 300;
 export const HTTP_STATUS_BAD_REQUEST = 400;
 export const HTTP_STATUS_PAYLOAD_TOO_LARGE = 413;
 export const HTTP_STATUS_UNAUTHORIZED = 401;
+export const HTTP_STATUS_FORBIDDEN = 403;
+export const HTTP_STATUS_SERVICE_UNAVAILABLE = 503;
 export const HTTP_STATUS_UNPROCESSABLE = 422;
 export const HTTP_STATUS_TOO_MANY_REQUESTS = 429;
+
+// The server's password policy, in Unicode code points after NFKC.
+export const PASSWORD_MIN_LENGTH = 12;
+export const PASSWORD_MAX_LENGTH = 128;

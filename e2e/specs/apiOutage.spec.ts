@@ -8,6 +8,7 @@ test.describe('an API outage', () => {
   test('sign-in says the service is unavailable instead of failing silently', async ({ page }) => {
     await page.route(API_PATTERN, (route) => route.abort('connectionrefused'));
     await page.goto('sign-in');
+    await page.getByRole('button', { name: 'Use a code instead' }).click();
     await page.getByLabel('Email address').fill(createUniqueEmail());
     await page.getByRole('button', { name: 'Send code' }).click();
     await expect(page.getByRole('alert')).toContainText('Sign-in is unavailable right now');
