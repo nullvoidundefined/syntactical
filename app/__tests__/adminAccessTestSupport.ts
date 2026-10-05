@@ -69,3 +69,13 @@ export function mixedProducts(): ProductEntry[] {
     buildEntry(JAVASCRIPT_MEDIUM, 'purchase'),
   ];
 }
+
+// GET admin/access carrying whatever products value a test gives, well-formed or not.
+export function rawAccessReply(products: unknown): FakeReply {
+  return { status: 200, body: { data: { products } } };
+}
+
+// A 201 sign-in reply carrying a session value and user id, as POST auth/sessions/password sends it.
+export function sessionReply(identity: { sessionValue: string; userId: string }): FakeReply {
+  return { status: 201, body: { data: { token: identity.sessionValue, userId: identity.userId } } };
+}

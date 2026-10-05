@@ -11,7 +11,15 @@
 //   (or not found) state with no switch and send no PUT;
 // - after a toggle the signed-in user's entitlements (the source of the paid bank locks) change
 //   without a reload.
-// Identities and request ids are built at run time.
+// - a malformed GET admin/access reply shows the not-available state, while an extra field on an
+//   entry is ignored; a PUT reply naming another
+//   product changes nothing and shows the one alert; a product the manifest does not know is
+//   named from its raw id and can be toggled;
+// - after admin A signs out and non-admin B signs in on the same query client and AuthProvider,
+//   B sees no Admin link and the not-available state, and sends no PUT.
+// Identities, passwords, and request ids are built at run time.
+import { randomBytes } from 'node:crypto';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
@@ -28,11 +36,12 @@ import {
   type RouteReply,
   type SignInIdentity,
 } from '../../state/__tests__/authTestSupport';
-import { AuthProvider } from '../../state/AuthProvider';
+import { AuthProvider, useAuth } from '../../state/AuthProvider';
 import { ContentProvider } from '../../state/ContentProvider';
 import { OwnedStatsProvider } from '../../state/OwnedStatsProvider';
 import { useEntitlements } from '../../state/useEntitlements';
 import AdminScreen from '../admin';
+import SettingsScreen from '../settings';
 
 import {
   ACCESS_PATH,
@@ -53,6 +62,8 @@ import {
   entryReply,
   meReply,
   mixedProducts,
+  rawAccessReply,
+  sessionReply,
 } from './adminAccessTestSupport';
 
 jest.mock('expo-constants', () => ({
@@ -428,5 +439,155 @@ describe('admin route keeps the entitlements current', () => {
     await toggle(getSwitch(PYTHON_MEDIUM_NAME));
     await waitFor(() => expect(getSwitch(PYTHON_MEDIUM_NAME)).not.toBeChecked());
     await waitFor(() => expect(latestEntitlements.current).toBe(JAVASCRIPT_MEDIUM));
+  });
+});
+
+describe('admin route with malformed server data', () => {
+  async function expectNotAvailable(requests: { method: string; path: string; body: unknown }[]): Promise<void> {
+    await screen.findByText(NOT_AVAILABLE_TEXT);
+    await settle();
+    expect(screen.queryAllByRole('switch')).toHaveLength(0);
+    expect(listAccessUpdates(requests)).toHaveLength(0);
+  }
+
+  const malformedLists: { label: string; products: () => unknown }[] = [
+    {
+      label: 'a non-boolean isGranted',
+      products: () => [{ grantSource: 'admin', isGranted: 'true', productId: PYTHON_MEDIUM }],
+    },
+    {
+      label: 'an unknown grantSource',
+      products: () => [{ grantSource: 'gift', isGranted: true, productId: PYTHON_MEDIUM }],
+    },
+    {
+      label: 'products that are not an array',
+      products: () => ({ [PYTHON_MEDIUM]: buildEntry(PYTHON_MEDIUM, 'admin') }),
+    },
+  ];
+
+  it.each(malformedLists)(
+    'shows the not-available state with no switches and no PUT for $label',
+    async ({ products }) => {
+      const identity = buildIdentity();
+      const { requests } = installRoutedFetch({
+        [ACCESS_ROUTE]: rawAccessReply(products()),
+        [PROFILE_ROUTE]: meReply(identity.email, { isAdmin: true }),
+      });
+      await signIn(identity);
+      await renderAdmin();
+      await expectNotAvailable(requests);
+    },
+  );
+
+  it('renders an entry with an extra field from its three known fields and shows the extra value nowhere', async () => {
+    const marker = `marker-${randomBytes(6).toString('hex')}`;
+    const { requests } = await renderSignedInAdmin({
+      [ACCESS_ROUTE]: rawAccessReply([
+        { ...buildEntry(PYTHON_MEDIUM, null), displayName: marker, isPurchased: true },
+        buildEntry(POSTGRES_HARD, 'admin'),
+      ]),
+    });
+    await settle();
+    expect(screen.getAllByRole('switch')).toHaveLength(2);
+    const python = getSwitch(PYTHON_MEDIUM_NAME);
+    expect(python).not.toBeChecked();
+    expect(readIsDisabled(python)).toBe(false);
+    expect(screen.queryByText(PURCHASED_TEXT)).toBeNull();
+    expect(screen.queryByText(new RegExp(escapeForRegExp(marker)))).toBeNull();
+    expect(screen.queryByLabelText(new RegExp(escapeForRegExp(marker)))).toBeNull();
+    expect(listAccessUpdates(requests)).toHaveLength(0);
+  });
+
+  it('leaves the switch as it was and shows the one alert when the PUT reply names another product', async () => {
+    const { requests } = await renderSignedInAdmin({
+      [ACCESS_ROUTE]: accessReply(mixedProducts()),
+      [ACCESS_UPDATE_ROUTE]: entryReply(buildEntry(POSTGRES_HARD, null)),
+    });
+    await toggle(getSwitch(PYTHON_MEDIUM_NAME));
+    await screen.findByRole('alert');
+    await waitFor(() => expect(readIsDisabled(getSwitch(PYTHON_MEDIUM_NAME))).toBe(false));
+    await settle();
+    expect(getSwitch(PYTHON_MEDIUM_NAME)).not.toBeChecked();
+    expect(getSwitch(POSTGRES_HARD_NAME)).toBeChecked();
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
+    expect(listAccessUpdates(requests)).toHaveLength(1);
+    expect(listAccessUpdates(requests)[0].body).toEqual({ isGranted: true, productId: PYTHON_MEDIUM });
+  });
+
+  it('names a product the manifest does not know from its raw id and lets it be toggled', async () => {
+    const unknownId = `syntactical.lang${randomBytes(3).toString('hex')}.medium`;
+    const unknownName = new RegExp(`^${escapeForRegExp(unknownId)}$`);
+    const { requests } = await renderSignedInAdmin({
+      [ACCESS_ROUTE]: accessReply([buildEntry(PYTHON_MEDIUM, null), buildEntry(unknownId, null)]),
+      [ACCESS_UPDATE_ROUTE]: entryReply(buildEntry(unknownId, 'admin')),
+    });
+    const unknown = getSwitch(unknownName);
+    expect(unknown).not.toBeChecked();
+    expect(readIsDisabled(unknown)).toBe(false);
+    await toggle(unknown);
+    await waitFor(() => expect(getSwitch(unknownName)).toBeChecked());
+    await settle();
+    expect(listAccessUpdates(requests).map(({ body }) => body)).toEqual([{ isGranted: true, productId: unknownId }]);
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+});
+
+describe('admin route across an account switch on one query client', () => {
+  const authHandle: { current: ReturnType<typeof useAuth> | null } = { current: null };
+
+  function AuthHandle() {
+    authHandle.current = useAuth();
+    return null;
+  }
+
+  it('shows non-admin B no Admin link and the not-available state after admin A signs out', async () => {
+    const adminA = buildIdentity();
+    const memberB = buildIdentity();
+    const { requests, setRoute } = installRoutedFetch({
+      [ACCESS_ROUTE]: accessReply(mixedProducts()),
+      [PROFILE_ROUTE]: meReply(adminA.email, { isAdmin: true }),
+      'DELETE auth/sessions/current': { status: 204 },
+      'POST auth/sessions/password': sessionReply(memberB),
+    });
+    await signIn(adminA);
+    await render(
+      <QueryClientProvider client={queryClient}>
+        <ContentProvider contentBaseUrl={null}>
+          <AuthProvider>
+            <OwnedStatsProvider>
+              <AuthHandle />
+              <AdminScreen />
+              <SettingsScreen />
+            </OwnedStatsProvider>
+          </AuthProvider>
+        </ContentProvider>
+      </QueryClientProvider>,
+    );
+    await screen.findByRole('switch', { name: PYTHON_MEDIUM_NAME });
+    await screen.findByRole('link', { name: 'Admin' });
+
+    await act(async () => {
+      await authHandle.current?.signOut();
+    });
+    await waitFor(() => expect(screen.queryByRole('link', { name: 'Admin' })).toBeNull());
+
+    setRoute(PROFILE_ROUTE, meReply(memberB.email, { isAdmin: false }));
+    setRoute(ACCESS_ROUTE, buildErrorReply(403, 'ADMIN_REQUIRED', 'Admin required').reply);
+    const password = randomBytes(12).toString('hex');
+    await act(async () => {
+      const result = await authHandle.current?.signInWithPassword(memberB.email, password);
+      expect(result).toEqual({ isOk: true });
+    });
+
+    await screen.findByLabelText('New password');
+    await screen.findByText(NOT_AVAILABLE_TEXT);
+    await settle();
+    expect(requests.some(({ method, path }) => method === 'GET' && path === 'me')).toBe(true);
+    expect(screen.queryByRole('link', { name: 'Admin' })).toBeNull();
+    expect(screen.queryAllByRole('switch')).toHaveLength(0);
+    expect(listAccessUpdates(requests)).toHaveLength(0);
+    const accessReads = requests.filter(({ method, path }) => method === 'GET' && path === ACCESS_PATH);
+    expect(accessReads.length).toBeGreaterThanOrEqual(2);
+    expect(accessReads[accessReads.length - 1].headers.authorization).toContain(memberB.sessionValue);
   });
 });
