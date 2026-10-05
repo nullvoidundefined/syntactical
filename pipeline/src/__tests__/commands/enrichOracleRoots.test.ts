@@ -74,6 +74,8 @@ describe('enrich oracle roots and staged questions', () => {
     let pipelineDir: string;
     // The oracle each question was validated with (null when it had none).
     let seen: Map<string, Oracle | null>;
+    // Every question id validate was called for, in order, so a duplicate shows up.
+    let validated: string[];
 
     function run() {
         return enrich({
@@ -86,6 +88,7 @@ describe('enrich oracle roots and staged questions', () => {
             provider: scriptedProvider(),
             validate: async ({ id }, oracle) => {
                 seen.set(id, oracle);
+                validated.push(id);
                 return oracle === null ? { status: 'not-executable' } : { observed: 'OBSERVED', status: 'passed' };
             },
         } as Parameters<typeof enrich>[0]);
@@ -129,6 +132,7 @@ describe('enrich oracle roots and staged questions', () => {
 
     beforeEach(async () => {
         seen = new Map();
+        validated = [];
         root = await mkdtemp(join(tmpdir(), 'enrich-oracle-roots-'));
         contentDir = join(root, 'repo/content');
         contentRoot = join(root, 'syntactical-content');
@@ -195,12 +199,31 @@ describe('enrich oracle roots and staged questions', () => {
         await run();
         const enriched = await readJson(join(contentRoot, 'enrichment/python/easy.json'));
         expect(Object.keys(enriched).sort()).toEqual(['paid-gen-1', 'paid-q-1']);
+        // Paid text never lands under the pipeline dir. Reports carry ids and verdicts only, as every
+        // other command's reports already do, so ids are allowed there and nowhere else.
         for (const name of await listFiles(pipelineDir)) {
             const text = await readFile(join(pipelineDir, name), 'utf8');
-            expect(text).not.toContain('paid-gen-1');
-            expect(text).not.toContain('paid-q-1');
             expect(text).not.toContain(PAID_TEXT);
+            if (!name.startsWith('reports')) {
+                expect(text).not.toContain('paid-gen-1');
+                expect(text).not.toContain('paid-q-1');
+            }
         }
         expect(await listFiles(join(pipelineDir, 'enrichment'))).toEqual([]);
+    });
+
+    it('enriches a question once when it is both in the bank and still staged after publish', async () => {
+        const outRoot = await seed('free', ['q-1', 'gen-1'], ['gen-1']);
+        await writeJson(join(outRoot, 'oracles/python/easy.json'), { 'gen-1': oracleOf('G1'), 'q-1': oracleOf('Q1') });
+        await run();
+        expect(validated.filter((id) => id === 'gen-1')).toHaveLength(1);
+    });
+
+    it('keeps reports in the pipeline dir so every command shares one report chain', async () => {
+        await seed('paid', ['paid-q-1']);
+        await writeJson(join(contentRoot, 'oracles/python/easy.json'), { 'paid-q-1': oracleOf('Q1') });
+        await run();
+        expect(await listFiles(join(pipelineDir, 'reports'))).not.toEqual([]);
+        expect(await listFiles(join(contentRoot, 'reports'))).toEqual([]);
     });
 });
