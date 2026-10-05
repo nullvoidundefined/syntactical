@@ -178,6 +178,21 @@ describe('sign-in route with a password on the web', () => {
     expect(mockReplacedRoutes).toEqual(['/']);
   });
 
+  it('signs in when Enter is pressed in the email field, sending one request with the typed email and password', async () => {
+    const email = buildEmail();
+    const password = buildPassword();
+    mockCredentialSignIn.mockResolvedValue({ isOk: true });
+    render(<SignInScreen />);
+    typeInto(getEmailInput(), email);
+    typeInto(getPasswordInput(), password);
+    await act(async () => {
+      fireEvent.keyDown(getEmailInput(), { key: 'Enter' });
+    });
+    expect(mockCredentialSignIn).toHaveBeenCalledTimes(1);
+    expect(mockCredentialSignIn).toHaveBeenCalledWith(email, password);
+    expect(mockReplacedRoutes).toEqual(['/']);
+  });
+
   it.each([
     ['invalid-credentials', INVALID_CREDENTIALS_MESSAGE],
     ['busy', BUSY_MESSAGE],

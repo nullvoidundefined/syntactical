@@ -161,6 +161,18 @@ describe('sign-in route, password step', () => {
     expect(mockReplace).toHaveBeenCalledWith('/');
   });
 
+  it('signs in from the return key in the email field, sending one request with the typed email and password', async () => {
+    const email = buildEmail();
+    const password = buildPassword();
+    mockCredentialSignIn.mockResolvedValue({ isOk: true });
+    await render(<SignInScreen />);
+    await typeCredentials(email, password);
+    await fireEvent(screen.getByLabelText(EMAIL_LABEL), 'submitEditing');
+    expect(mockCredentialSignIn).toHaveBeenCalledTimes(1);
+    expect(mockCredentialSignIn).toHaveBeenCalledWith(email, password);
+    expect(mockReplace).toHaveBeenCalledWith('/');
+  });
+
   it('returns to the paid bank paywall in returnTo after a password sign-in', async () => {
     mockParams.current = { returnTo: '/python?paywall=medium' };
     mockCredentialSignIn.mockResolvedValue({ isOk: true });
