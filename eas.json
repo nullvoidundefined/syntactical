@@ -18,8 +18,7 @@
       "autoIncrement": true,
       "environment": "production",
       "env": {
-        "API_BASE_URL": "https://api.syntactical.dev/v1/",
-        "EXPO_BASE_URL": "/syntactical"
+        "API_BASE_URL": "https://api.syntactical.dev/v1/"
       }
     }
   },

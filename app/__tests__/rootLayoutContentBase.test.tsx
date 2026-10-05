@@ -3,7 +3,7 @@ import Constants from 'expo-constants';
 import { Text } from 'react-native';
 import RootLayout from '../_layout';
 
-const PINNED_BASE_URL = 'https://nullvoidundefined.github.io/syntactical/content/';
+const PINNED_BASE_URL = 'https://syntactical.dev/content/';
 const UNTRUSTED_WARNING = 'content base URL is missing';
 
 type MutableExtra = { contentBaseUrl?: unknown };

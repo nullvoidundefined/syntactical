@@ -36,15 +36,15 @@ describe('app.config e2e origins', () => {
     for (const name of NAMES) delete process.env[name];
     const extra = loadExtra();
     expect(extra.apiBaseUrl).toBe('https://api.syntactical.dev/v1/');
-    expect(extra.contentBaseUrl).toBe('https://nullvoidundefined.github.io/syntactical/content/');
+    expect(extra.contentBaseUrl).toBe('https://syntactical.dev/content/');
   });
 
   it('uses loopback URLs from the variables', () => {
     process.env.E2E_API_BASE_URL = 'http://127.0.0.1:4101/v1/';
-    process.env.E2E_CONTENT_BASE_URL = 'http://127.0.0.1:4100/syntactical/content/';
+    process.env.E2E_CONTENT_BASE_URL = 'http://127.0.0.1:4100/content/';
     const extra = loadExtra();
     expect(extra.apiBaseUrl).toBe('http://127.0.0.1:4101/v1/');
-    expect(extra.contentBaseUrl).toBe('http://127.0.0.1:4100/syntactical/content/');
+    expect(extra.contentBaseUrl).toBe('http://127.0.0.1:4100/content/');
   });
 
   it.each([

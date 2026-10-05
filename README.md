@@ -2,7 +2,7 @@
 
 Syntactical is a flashcard and lightning-round quiz app that drills developers on language syntax and behavior. Pick a language (Python, Postgres, or JavaScript), pick a difficulty (Easy, Medium, or Hard), and answer a shuffled round of multiple-choice and true/false questions. Wrong answers can be explained through the query drawer, and lifetime stats and streaks persist on the device.
 
-It is one Expo universal app (Expo Router, NativeWind, react-native-web) that runs on iOS, Android, and the web. The web build is published at https://nullvoidundefined.github.io/syntactical/. See `docs/stack.md` for every dependency and why it was chosen.
+It is one Expo universal app (Expo Router, NativeWind, react-native-web) that runs on iOS, Android, and the web. The web build is published at https://syntactical.dev/. See `docs/stack.md` for every dependency and why it was chosen.
 
 ## Local development
 
@@ -20,13 +20,13 @@ Formatting follows `.prettierrc.mjs`: 2-space indent and 120 columns, except `pi
 
 ## Keyboard controls (web)
 
-| Key | Action |
-|---|---|
-| `1`-`4` / `A`-`D` | Select a multiple-choice option |
-| `T` / `F` | Answer a True/False card |
-| `Enter` | Advance to the next card (once answered) or retry on the results screen |
-| `Q` | Open or close the query drawer for the current card |
-| `Esc` | Close the query drawer, or return to the menu |
+| Key               | Action                                                                  |
+| ----------------- | ----------------------------------------------------------------------- |
+| `1`-`4` / `A`-`D` | Select a multiple-choice option                                         |
+| `T` / `F`         | Answer a True/False card                                                |
+| `Enter`           | Advance to the next card (once answered) or retry on the results screen |
+| `Q`               | Open or close the query drawer for the current card                     |
+| `Esc`             | Close the query drawer, or return to the menu                           |
 
 Every action is also reachable by pointer or touch; the keyboard bindings are additive for speed.
 
@@ -72,7 +72,7 @@ A `grammar` that the build does not include renders code as plain text; the supp
 
 ## Deploying
 
-Pushing to `main` runs `.github/workflows/deploy.yml`, which installs dependencies, runs `npm run build`, and publishes `dist/` (the Expo web export plus the free banks and manifest in `content/`) to GitHub Pages. Watch the run under the Actions tab. The site is served at `/syntactical/`, and `404.html` serves deep links to the single-page app. Banks pushed to `main` reach installed apps on their next manifest refresh, with no new build.
+Pushing to `main` runs `.github/workflows/deploy.yml`, which installs dependencies, runs `npm run build`, and publishes `dist/` (the Expo web export plus the free banks and manifest in `content/`) to GitHub Pages. Watch the run under the Actions tab. The site is served at the root of `https://syntactical.dev` (the GitHub Pages custom domain), and `404.html` serves deep links to the single-page app. Banks pushed to `main` reach installed apps on their next manifest refresh, with no new build.
 
 ## Device builds
 
