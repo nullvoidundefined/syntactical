@@ -41,6 +41,8 @@ const TEST_TIMEOUT_MS = 30_000;
 const LONG_TEST_TIMEOUT_MS = 60_000;
 const RESPONSE_DEADLINE_MS = 1_500;
 const DEADLINE_PASSED = 'deadline passed';
+const SECOND_MS = 1_000;
+const MINUTE_MS = 60_000;
 const DAY_MS = 86_400_000;
 const EMAIL_BYTES = 6;
 const PASSWORD_BYTES = 12;
@@ -323,6 +325,43 @@ describe.skipIf(SKIP_DATABASE_TESTS)('PUT /v1/me/password guards', () => {
         }
         expect(await readUser(userId)).toEqual(before);
         expect((await getMe(testApp, current.sessionToken)).status).toBe(HTTP_OK);
+      },
+      TEST_TIMEOUT_MS,
+    );
+
+    it(
+      'answers an empty-string currentPassword with 400 AUTH_INVALID_CREDENTIALS from a 1-second-old password session, an 11-minute-old code session, and a fresh code session of a code-only user, changing nothing',
+      async () => {
+        const testApp = createApp();
+        const now = testApp.clock.now().getTime();
+        const callers = [
+          { authMethod: 'password' as const, ageMs: SECOND_MS, hasPassword: true },
+          { authMethod: 'code' as const, ageMs: 11 * MINUTE_MS, hasPassword: true },
+          { authMethod: 'code' as const, ageMs: 0, hasPassword: false },
+        ];
+
+        const outcomes = [];
+        for (const { ageMs, authMethod, hasPassword } of callers) {
+          // One user per caller, so the per-user limit never applies.
+          const userId = await insertUser(buildEmail(), hasPassword ? await hashPassword(buildPassword()) : null);
+          const current = await insertSession(database.pool, { authMethod, createdAt: new Date(now - ageMs), userId });
+          const other = await insertSession(database.pool, { createdAt: testApp.clock.now(), userId });
+          const before = await readUser(userId);
+          const response = await putWithBearer(
+            testApp,
+            current.sessionToken,
+            passwordBody({ current: '', next: buildPassword() }),
+          );
+          outcomes.push({ before, other, response, userId });
+        }
+
+        for (const { before, other, response, userId } of outcomes) {
+          expect(errorShape(response)).toEqual({ code: 'AUTH_INVALID_CREDENTIALS', status: HTTP_BAD_REQUEST });
+          expect(await readUser(userId)).toEqual(before);
+          expect((await getMe(testApp, other.sessionToken)).status).toBe(HTTP_OK);
+        }
+        expect(outcomes[2]?.before).toEqual({ password_hash: null, password_updated_at: null });
+        expect(await countRevoked()).toBe(0);
       },
       TEST_TIMEOUT_MS,
     );

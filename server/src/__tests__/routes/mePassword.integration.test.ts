@@ -25,10 +25,12 @@ const ME_ROUTE = '/v1/me';
 const CODES_ROUTE = '/v1/auth/codes';
 const SESSIONS_ROUTE = '/v1/auth/sessions';
 const PASSWORD_SIGN_IN_ROUTE = '/v1/auth/sessions/password';
+const SIGN_OUT_ROUTE = '/v1/auth/sessions/current';
 const COOKIE_NAME = 'syntactical_session';
 const HTTP_OK = 200;
 const HTTP_CREATED = 201;
 const HTTP_ACCEPTED = 202;
+const HTTP_NO_CONTENT = 204;
 const HTTP_BAD_REQUEST = 400;
 const HTTP_UNAUTHORIZED = 401;
 const HTTP_FORBIDDEN = 403;
@@ -664,6 +666,109 @@ describe.skipIf(SKIP_DATABASE_TESTS)('PUT /v1/me/password', () => {
       },
       TEST_TIMEOUT_MS,
     );
+  });
+
+  describe('the requesting session ending while the new hash is derived', () => {
+    type SessionEnding = (testApp: TestApp, current: { sessionId: string; sessionToken: string }) => Promise<void>;
+
+    // Signs the session out through the real DELETE /v1/auth/sessions/current.
+    const revokeBySignOut: SessionEnding = async (testApp, { sessionToken }) => {
+      const signedOut = await request(testApp.app)
+        .delete(SIGN_OUT_ROUTE)
+        .set('Authorization', `Bearer ${sessionToken}`);
+      expect(signedOut.status).toBe(HTTP_NO_CONTENT);
+    };
+
+    // Moves the session's expires_at one second before the injected clock's now.
+    const expireInDatabase: SessionEnding = async (testApp, { sessionId }) => {
+      const pastExpiry = new Date(testApp.clock.now().getTime() - SECOND_MS);
+      await database.pool.query('UPDATE sessions SET expires_at = $2 WHERE id = $1', [sessionId, pastExpiry]);
+    };
+
+    // A user with a password, a bearer session of `authMethod` created now, and one other session.
+    // The deriveKey hook ends the requesting session during derivation number `endOnCall` (the
+    // new-password derivation: 2 after verifying currentPassword, 1 on the fresh-code path).
+    async function runEndingDuringDerivation(options: {
+      authMethod: 'code' | 'password';
+      end: SessionEnding;
+      endOnCall: number;
+      sendCurrent: boolean;
+    }) {
+      const { authMethod, end, endOnCall, sendCurrent } = options;
+      const oldValue = buildPassword();
+      const storedHash = await hashPassword(oldValue);
+      const updatedAt = new Date(Date.now() - DAY_MS);
+      const userId = await insertUser(buildEmail(), { passwordHash: storedHash, passwordUpdatedAt: updatedAt });
+      let onEndingCall: () => Promise<void> = async () => {};
+      let calls = 0;
+      const deriveKey: DeriveKey = async (input, salt, keyBytes, deriveOptions) => {
+        calls += 1;
+        const derived = await realDeriveKey(input, salt, keyBytes, deriveOptions);
+        if (calls === endOnCall) {
+          await onEndingCall();
+        }
+        return derived;
+      };
+      const testApp = createApp({ deriveKey });
+      const current = await insertSession(database.pool, { authMethod, createdAt: testApp.clock.now(), userId });
+      const other = await insertSession(database.pool, { createdAt: testApp.clock.now(), userId });
+      onEndingCall = () => end(testApp, current);
+
+      const response = await putPassword(
+        testApp,
+        bearer(current.sessionToken),
+        passwordBody({ ...(sendCurrent ? { current: oldValue } : {}), next: buildPassword() }),
+      );
+
+      return { calls, current, other, response, storedHash, testApp, updatedAt, userId };
+    }
+
+    const cases = [
+      {
+        authMethod: 'password' as const,
+        end: revokeBySignOut,
+        endOnCall: 2,
+        name: 'revoked by sign-out, from a password session sending the right current password',
+        sendCurrent: true,
+      },
+      {
+        authMethod: 'code' as const,
+        end: revokeBySignOut,
+        endOnCall: 1,
+        name: 'revoked by sign-out, from a fresh code session with no current password',
+        sendCurrent: false,
+      },
+      {
+        authMethod: 'password' as const,
+        end: expireInDatabase,
+        endOnCall: 2,
+        name: 'expired (expires_at before the clock), from a password session sending the right current password',
+        sendCurrent: true,
+      },
+      {
+        authMethod: 'code' as const,
+        end: expireInDatabase,
+        endOnCall: 1,
+        name: 'expired (expires_at before the clock), from a fresh code session with no current password',
+        sendCurrent: false,
+      },
+    ];
+
+    for (const { name, ...options } of cases) {
+      it(
+        `answers 401 AUTH_SESSION_REQUIRED when the session is ${name}; the hash, password_updated_at, and the other session are unchanged`,
+        async () => {
+          const { calls, other, response, storedHash, updatedAt, userId } = await runEndingDuringDerivation(options);
+
+          expect(calls).toBe(options.endOnCall);
+          expect(errorShape(response)).toEqual({ code: 'AUTH_SESSION_REQUIRED', status: HTTP_UNAUTHORIZED });
+          expect(response.text).not.toContain('hasPassword');
+          expect(await readUser(userId)).toEqual({ password_hash: storedHash, password_updated_at: updatedAt });
+          expect((await readRevocations(userId)).get(other.sessionId)).toBeNull();
+        },
+        TEST_TIMEOUT_MS,
+      );
+    }
   });
 
   describe('concurrent changes for one user', () => {
