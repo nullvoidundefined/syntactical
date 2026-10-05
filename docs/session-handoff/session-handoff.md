@@ -63,7 +63,7 @@
 4. **Password sign-in, Tasks 7.4 to 7.10:**
    - Open PR: #93, Task 7.4 (sign-up with email and password, verified by a one-time code), head `08efbb9`, `**Risk:** high`. It touches auth, so the owner reads and merges it. When this was written, all checks passed except `oracle-runners`, which was pending.
    - Not started: 7.5 (password sign-in), 7.6 (set and change a password, `hasPassword` on `/me`), 7.7 to 7.9 (app screens and settings form), 7.10 (privacy page, store answers, lexicon).
-   - The owner confirmed spec decisions 31 to 37 on 2026-10-05, keeping scrypt N = 2^17. Before Stage 7 deploys, the owner confirms the Railway plan has at least 512 MB (decision 35).
+   - The owner confirmed spec decisions 31 to 37 on 2026-10-05, keeping scrypt N = 2^17. The Railway API service allows 24 GB in staging and production (Pro plan, no override), above decision 35's 512 MB minimum.
 5. **Carried over:**
    - IAN-596: Lighthouse, VoiceOver, and reduced motion on the live site.
    - IAN-595: EAS device builds. The prep shipped in #57; no builds have run.
