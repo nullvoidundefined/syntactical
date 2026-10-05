@@ -23,12 +23,15 @@ import { useCoarseNow } from './useCoarseNow';
 export type AccountFacts = { email: string; hasPassword: boolean };
 export type ProfileSnapshot = {
   account?: AccountFacts;
+  isAdmin?: boolean;
   profile: Profile;
   seenEventIds: ReadonlySet<string>;
   userId: string;
 };
 
 type ProfileState = {
+  // True only when GET /v1/me says isAdmin is exactly true; false for a guest and while loading.
+  isAdmin: boolean;
   markPasswordSet: (hasPassword: boolean) => void;
   snapshot: ProfileSnapshot | null;
   updateDailyGoal: (goal: number) => Promise<boolean>;
@@ -42,11 +45,15 @@ function readAccountFacts(body: unknown): AccountFacts | undefined {
   return typeof email === 'string' && typeof hasPassword === 'boolean' ? { email, hasPassword } : undefined;
 }
 
+function readIsAdmin(body: unknown): boolean {
+  return (body as { data?: { isAdmin?: unknown } } | null)?.data?.isAdmin === true;
+}
+
 async function fetchProfile(userId: string, seenEventIds: ReadonlySet<string>): Promise<ProfileSnapshot> {
   const { body, status } = await apiFetch('me');
   const profile = status === HTTP_STATUS_OK ? parseProfile(body) : null;
   if (profile === null) throw new Error(`profile request answered ${status}`);
-  return { account: readAccountFacts(body), profile, seenEventIds, userId };
+  return { account: readAccountFacts(body), isAdmin: readIsAdmin(body), profile, seenEventIds, userId };
 }
 
 export function useProfile(): ProfileState {
@@ -90,9 +97,10 @@ export function useProfile(): ProfileState {
         // A sync or a new day while the request was out moves the query to
         // another key; the accepted profile goes to the key current now.
         const currentKey = readCurrentKey();
-        const { account } = queryClient.getQueryData<ProfileSnapshot>(currentKey) ?? previous ?? {};
+        const { account, isAdmin } = queryClient.getQueryData<ProfileSnapshot>(currentKey) ?? previous ?? {};
         queryClient.setQueryData<ProfileSnapshot>(currentKey, {
           account,
+          isAdmin,
           profile,
           seenEventIds: new Set(syncedIdsRef.current),
           userId,
@@ -119,5 +127,6 @@ export function useProfile(): ProfileState {
   );
 
   // A placeholder kept from another user's query is never shown.
-  return { markPasswordSet, snapshot: data !== undefined && data.userId === userId ? data : null, updateDailyGoal };
+  const snapshot = data !== undefined && data.userId === userId ? data : null;
+  return { isAdmin: snapshot?.isAdmin === true, markPasswordSet, snapshot, updateDailyGoal };
 }

@@ -59,9 +59,19 @@ function RestorePurchases() {
   );
 }
 
+function AdminLink() {
+  return (
+    <View className="mt-4">
+      <Pressable role="link" aria-label="Admin" onPress={() => router.push('/admin')}>
+        <Text className="font-mono text-xs uppercase tracking-widest text-ink">Admin</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 function AccountSection() {
   const { isSignedIn } = useAuth();
-  const { markPasswordSet, snapshot } = useProfile();
+  const { isAdmin, markPasswordSet, snapshot } = useProfile();
   const { form } = useLocalSearchParams<{ form?: string | string[] }>();
   const account = snapshot?.account;
   return (
@@ -93,6 +103,7 @@ function AccountSection() {
         />
       ) : null}
       {isSignedIn && Platform.OS !== 'web' ? <RestorePurchases /> : null}
+      {isSignedIn && isAdmin ? <AdminLink /> : null}
     </View>
   );
 }
