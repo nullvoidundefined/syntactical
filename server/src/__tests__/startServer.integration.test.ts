@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 import { pino } from 'pino';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, inject, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, inject, it, vi } from 'vitest';
 
 import { AUTH } from '../constants/auth.js';
 import { startServer } from '../startServer.js';
@@ -19,6 +19,7 @@ const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.en
 const SETUP_TIMEOUT_MS = 120_000;
 const SECRET_BYTES = 24;
 const HTTP_OK = 200;
+const BREACH_RANGE_URL = 'https://api.pwnedpasswords.com/range/';
 
 const PROVENANCE = {
   isHumanReviewed: false,
@@ -181,6 +182,44 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
       method: 'POST',
     });
     expect(foreignWithHeader.status).toBe(403);
+  });
+
+  // Task 7.4 (PR #90 review): with no passwordBreachClient option, sign-up uses the HTTP breach
+  // client, which asks the HIBP range API through the global fetch (stubbed here to answer an
+  // empty range) for one 5-character prefix.
+  it('gives sign-up the HTTP breach client when no passwordBreachClient is passed', async () => {
+    await writeContent(contentDir, paidDir);
+    const realFetch = globalThis.fetch;
+    const rangeRequests: string[] = [];
+    vi.stubGlobal('fetch', (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (url.startsWith(BREACH_RANGE_URL)) {
+        rangeRequests.push(url);
+        return Promise.resolve(new Response('', { status: HTTP_OK }));
+      }
+      return realFetch(input, init);
+    });
+    try {
+      running = await startServer(buildSource(), {
+        emailClient: { sendSignInCode: () => Promise.resolve() },
+        logger,
+      });
+
+      const response = await realFetch(`http://127.0.0.1:${running.port}/v1/auth/signups`, {
+        body: JSON.stringify({
+          email: `learner-${randomBytes(6).toString('hex')}@example.com`,
+          password: randomBytes(12).toString('hex'),
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      });
+
+      expect(response.status).toBe(202);
+      expect(rangeRequests).toHaveLength(1);
+      expect(rangeRequests[0]).toMatch(/^https:\/\/api\.pwnedpasswords\.com\/range\/[0-9A-F]{5}$/);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('stops accepting connections after close', async () => {

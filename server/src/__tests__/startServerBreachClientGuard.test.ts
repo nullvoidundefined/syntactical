@@ -9,6 +9,15 @@ import { startServer } from '../startServer.js';
 const GUARD_MESSAGE = /fake password breach client/i;
 
 describe('startServer passwordBreachClient option', () => {
+  it.each([['development'], [undefined]])('refuses the fake breach client when NODE_ENV is %s', async (nodeEnv) => {
+    const source: NodeJS.ProcessEnv = { DATABASE_URL: 'postgres://postgres@127.0.0.1:1/none' };
+    if (nodeEnv !== undefined) source.NODE_ENV = nodeEnv;
+
+    await expect(startServer(source, { passwordBreachClient: createFakePasswordBreachClient({}) })).rejects.toThrow(
+      GUARD_MESSAGE,
+    );
+  });
+
   it('refuses the fake breach client when NODE_ENV is production', async () => {
     const source: NodeJS.ProcessEnv = {
       DATABASE_URL: 'postgres://postgres@127.0.0.1:1/none',

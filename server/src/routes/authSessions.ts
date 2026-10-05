@@ -7,7 +7,6 @@ import { Router } from 'express';
 import type { NextFunction, Request, Response } from 'express';
 
 import { withTransaction } from '../clients/withTransaction.js';
-import { sessionCookieOptions } from '../config/sessionCookieOptions.js';
 import { AUTH } from '../constants/auth.js';
 import { HTTP } from '../constants/http.js';
 import { createErrorResponse, ERROR_CODES } from '../errors.js';
@@ -17,17 +16,15 @@ import { createSession } from '../services/createSession.js';
 import { verifyOneTimeCode } from '../services/verifyOneTimeCode.js';
 
 import type { ResolvedAuthDeps } from './authDeps.js';
+import { sendSessionResponse } from './sendSessionResponse.js';
 
 const {
   RATE_LIMIT: { VERIFY_PER_EMAIL, VERIFY_PER_IP, WINDOW_MS },
   RATE_LIMIT_SCOPE: { VERIFY_EMAIL, VERIFY_IP },
-  SESSION: { ABSOLUTE_TTL_MS, COOKIE_NAME },
 } = AUTH;
 const {
-  STATUS: { BAD_REQUEST, CREATED },
+  STATUS: { BAD_REQUEST },
 } = HTTP;
-const NATIVE_CLIENT = 'native';
-const TOKEN_FIELD = 'token';
 
 interface SignInRequest {
   code: string;
@@ -39,7 +36,9 @@ function validateCreateSession(req: Request, res: Response, next: NextFunction):
   const { data, success } = authSchemas.createSession.safeParse(req.body);
   if (!success) {
     const { requestId } = res.locals as { requestId: string };
-    res.status(BAD_REQUEST).json(createErrorResponse(ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body', requestId));
+    res
+      .status(BAD_REQUEST)
+      .json(createErrorResponse(ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body', requestId));
     return;
   }
   const { code, email, timezone } = data;
@@ -79,13 +78,7 @@ function createAuthSessionsRouter(deps: ResolvedAuthDeps): Router {
         .json(createErrorResponse(ERROR_CODES.AUTH.INVALID_CODE, 'Invalid or expired code', requestId));
       return;
     }
-    const { sessionToken, userId } = session;
-    if (req.get('X-Client') === NATIVE_CLIENT) {
-      res.status(CREATED).json({ data: { [TOKEN_FIELD]: sessionToken, userId } });
-      return;
-    }
-    res.cookie(COOKIE_NAME, sessionToken, { ...sessionCookieOptions(isCookieSecure), maxAge: ABSOLUTE_TTL_MS });
-    res.status(CREATED).json({ data: { userId } });
+    sendSessionResponse(req, res, { ...session, isCookieSecure });
   });
 
   return router;
