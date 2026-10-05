@@ -46,8 +46,8 @@ describe('jsdom runner build context', () => {
     it('documents that window timers pending when the oracle settles are dropped', () => {
         const header = readRunnerFile('harness.mjs').split('\nimport ')[0];
 
-        expect(header).toMatch(/window\.setTimeout/);
-        expect(header).toMatch(/requestAnimationFrame/);
+        expect(header).toMatch(/window\.setTimeout[\s\S]*output is lost/);
+        expect(header).toMatch(/requestAnimationFrame is not defined/);
     });
 });
 
@@ -56,8 +56,8 @@ describe('security generation prompt', () => {
         const prompt = readFileSync(new URL('../../../prompts/generateSecurityQuestion.md', import.meta.url), 'utf8');
 
         expect(prompt).toMatch(/jsdom/);
-        expect(prompt).toMatch(/window\.setTimeout/);
-        expect(prompt).toMatch(/requestAnimationFrame/);
+        expect(prompt).toMatch(/window\.setTimeout[\s\S]*is dropped/);
+        expect(prompt).toMatch(/requestAnimationFrame is not defined/);
     });
 });
 
