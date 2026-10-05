@@ -65,7 +65,7 @@ export async function review(options: ReviewOptions): Promise<ReviewResult> {
         throw new Error('no pipeline report found: run `pipeline validate` first');
     }
     const result: ReviewResult = { approved: 0, items: 0, pending: 0, problems: 0, rejected: 0 };
-    for (const { banks, id: languageId } of languages) {
+    for (const { banks, id: languageId, kind } of languages) {
         for (const [difficulty, { access, path }] of Object.entries(banks)) {
             const bankKey = `${languageId}/${difficulty}`;
             const bank = (await readJson(resolveBankFile(contentDir, contentRoot, { access, path }))) as {
@@ -75,6 +75,7 @@ export async function review(options: ReviewOptions): Promise<ReviewResult> {
             const oracleSource = createOracleSource(join(outRoot, 'oracles'));
             const counts = await reviewBank({
                 bank: bank.questions,
+                scope: kind === 'topic' ? 'disputed' : 'all',
                 difficulty,
                 languageId,
                 log,

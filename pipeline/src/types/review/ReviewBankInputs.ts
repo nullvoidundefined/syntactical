@@ -1,9 +1,11 @@
 // What the earlier stages staged for one bank, read from `<outRoot>/...` by readBankInputs.
 import type { Question } from '@syntactical/content-schema';
 
+import type { DisputedCard } from '../judge/DisputedCard.js';
 import type { EnrichedRationale } from '../EnrichedRationale.js';
 
 export interface ReviewBankInputs {
+    disputed?: DisputedCard[];
     classifications: Record<string, { topic: string }>;
     enrichment: Record<string, EnrichedRationale[]>;
     generated: Question[];

@@ -10,6 +10,6 @@ const FINGERPRINT_LENGTH = 16;
 
 export function fingerprintItem(item: ReviewItem): string {
     const { observed, proposedTopic, question, rationales } = item;
-    const judged = { observed, proposedTopic, question, rationales };
+    const judged = { disputed: item.disputed, observed, proposedTopic, question, rationales };
     return createHash('sha256').update(JSON.stringify(judged)).digest('hex').slice(0, FINGERPRINT_LENGTH);
 }

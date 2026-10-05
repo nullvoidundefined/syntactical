@@ -1,8 +1,13 @@
 // Generates one topic-track question. Each turn the model answers with an `execute` request, an
 // executed `question` draft whose oracle names its runner, or a `notExecutable` draft. A runner
 // outside `args.runners` drops the draft; the card's grammar comes from the chosen runner.
-// Generated code runs ONLY through `runSandboxed`. A not-executable draft is dropped here; the
-// judged route (Task 3.6) handles it once a judge is configured.
+// Generated code runs ONLY through `runSandboxed`. Non-executable drafts use the judge when
+// configured; source failures drop while model disagreements go to owner review.
+import { SUPPORTED_SCHEMA_VERSION, validateQuestionBank } from '@syntactical/content-schema';
+import { judgeQuestion } from '../judge/judgeQuestion.js';
+import { findMissingRationale } from './findMissingRationale.js';
+import { normalizePrompt } from './normalizePrompt.js';
+import type { judgedDraftSchema } from './generateTopicStepSchema.js';
 import type { z } from 'zod';
 
 import { runOracle } from '../../clients/dockerRunner.js';
@@ -85,13 +90,37 @@ async function evaluateExecutedDraft(
     return evaluateDraft(draft, { ...args, language }, model, question);
 }
 
+async function evaluateJudgedDraft(
+    draft: z.infer<typeof judgedDraftSchema>,
+    args: GenerateTopicQuestionArgs,
+    model: string,
+): Promise<TopicAttempt> {
+    const { existingPrompts, judge, topic } = args;
+    if (!judge) return { reason: 'not-executable', status: 'dropped' };
+    if (existingPrompts.has(normalizePrompt(draft.prompt))) return { reason: 'duplicate', status: 'dropped' };
+    const { grammar, sources, ...fields } = draft;
+    const question = buildTopicQuestion(fields, args, model, { method: 'judged', status: 'pending' }, grammar);
+    const checked = validateQuestionBank(
+        { questions: [question], schemaVersion: SUPPORTED_SCHEMA_VERSION },
+        { misconceptionIds: [], topicIds: [topic] },
+    );
+    if (!checked.isValid)
+        return { feedback: 'the draft breaks the question schema (shape, lengths, or answer index)', status: 'revise' };
+    const missing = findMissingRationale(question);
+    if (missing) return { feedback: missing, status: 'revise' };
+    const judged = await judgeQuestion(question, sources, judge);
+    if (judged.status === 'judged') return { question: judged.question, status: 'kept' };
+    if (judged.status === 'disputed') return { card: judged.card, status: 'disputed' };
+    return { reason: 'source-unverified', status: 'dropped' };
+}
+
 async function attemptDraft(args: GenerateTopicQuestionArgs, notes: string[]): Promise<TopicAttempt> {
     for (let executes = 0; executes <= MAX_EXECUTES_PER_DRAFT; executes += 1) {
         const step = await requestStep(args, notes);
         if (!step) return { feedback: 'your last answer was not valid JSON for the schema', status: 'revise' };
         const { model, value } = step;
         if (value.question) return evaluateExecutedDraft(value.question, args, model);
-        if (value.notExecutable) return { reason: 'not-executable', status: 'dropped' };
+        if (value.notExecutable) return evaluateJudgedDraft(value.notExecutable.question, args, model);
         if (!value.execute || executes === MAX_EXECUTES_PER_DRAFT) break;
         const feedback = await runExecute(args, value.execute, notes);
         if (feedback) return { feedback, status: 'revise' };
