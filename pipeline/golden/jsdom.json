@@ -1,0 +1,753 @@
+[
+    {
+        "id": "jsdom-golden-01",
+        "note": "innerHTML creates the injected img",
+        "question": {
+            "id": "jsdom-golden-01",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "const el = document.createElement('div'); el.innerHTML = '<img src=x onerror=alert(1)>'; console.log(el.querySelector('img') !== null)",
+            "query": {
+                "title": "innerHTML creates the injected img",
+                "explanation": "innerHTML creates the injected img"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "true"
+                },
+                {
+                    "text": "false"
+                }
+            ],
+            "answerIndex": 0
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "const el = document.createElement('div'); el.innerHTML = '<img src=x onerror=alert(1)>'; console.log(el.querySelector('img') !== null)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "true",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "jsdom-golden-02",
+        "note": "wrong: claims false",
+        "question": {
+            "id": "jsdom-golden-02",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "const el = document.createElement('div'); el.innerHTML = '<img src=x onerror=alert(1)>'; console.log(el.querySelector('img') !== null)",
+            "query": {
+                "title": "wrong: claims false",
+                "explanation": "wrong: claims false"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "true"
+                },
+                {
+                    "text": "false"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "const el = document.createElement('div'); el.innerHTML = '<img src=x onerror=alert(1)>'; console.log(el.querySelector('img') !== null)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "true",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "jsdom-golden-03",
+        "note": "textContent creates no element",
+        "question": {
+            "id": "jsdom-golden-03",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "const el = document.createElement('div'); el.textContent = '<img src=x onerror=alert(1)>'; console.log(el.children.length)",
+            "query": {
+                "title": "textContent creates no element",
+                "explanation": "textContent creates no element"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "0"
+                },
+                {
+                    "text": "1"
+                }
+            ],
+            "answerIndex": 0
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "const el = document.createElement('div'); el.textContent = '<img src=x onerror=alert(1)>'; console.log(el.children.length)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "0",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "jsdom-golden-04",
+        "note": "wrong: claims 1",
+        "question": {
+            "id": "jsdom-golden-04",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "const el = document.createElement('div'); el.textContent = '<img src=x onerror=alert(1)>'; console.log(el.children.length)",
+            "query": {
+                "title": "wrong: claims 1",
+                "explanation": "wrong: claims 1"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "0"
+                },
+                {
+                    "text": "1"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "const el = document.createElement('div'); el.textContent = '<img src=x onerror=alert(1)>'; console.log(el.children.length)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "0",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "jsdom-golden-05",
+        "note": "insertAdjacentHTML creates the injected svg",
+        "question": {
+            "id": "jsdom-golden-05",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "document.body.insertAdjacentHTML('beforeend', '<svg onload=alert(1)>'); console.log(document.querySelectorAll('svg').length)",
+            "query": {
+                "title": "insertAdjacentHTML creates the injected svg",
+                "explanation": "insertAdjacentHTML creates the injected svg"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "1"
+                },
+                {
+                    "text": "0"
+                }
+            ],
+            "answerIndex": 0
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "document.body.insertAdjacentHTML('beforeend', '<svg onload=alert(1)>'); console.log(document.querySelectorAll('svg').length)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "1",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "jsdom-golden-06",
+        "note": "wrong: claims 0",
+        "question": {
+            "id": "jsdom-golden-06",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "document.body.insertAdjacentHTML('beforeend', '<svg onload=alert(1)>'); console.log(document.querySelectorAll('svg').length)",
+            "query": {
+                "title": "wrong: claims 0",
+                "explanation": "wrong: claims 0"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "1"
+                },
+                {
+                    "text": "0"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "document.body.insertAdjacentHTML('beforeend', '<svg onload=alert(1)>'); console.log(document.querySelectorAll('svg').length)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "1",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "jsdom-golden-07",
+        "note": "a javascript: href keeps its scheme",
+        "question": {
+            "id": "jsdom-golden-07",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "const a = document.createElement('a'); a.href = 'javascript:alert(1)'; console.log(a.protocol)",
+            "query": {
+                "title": "a javascript: href keeps its scheme",
+                "explanation": "a javascript: href keeps its scheme"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "javascript:"
+                },
+                {
+                    "text": "about:"
+                }
+            ],
+            "answerIndex": 0
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "const a = document.createElement('a'); a.href = 'javascript:alert(1)'; console.log(a.protocol)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "javascript:",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "jsdom-golden-08",
+        "note": "wrong: claims about:",
+        "question": {
+            "id": "jsdom-golden-08",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "const a = document.createElement('a'); a.href = 'javascript:alert(1)'; console.log(a.protocol)",
+            "query": {
+                "title": "wrong: claims about:",
+                "explanation": "wrong: claims about:"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "javascript:"
+                },
+                {
+                    "text": "about:"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "const a = document.createElement('a'); a.href = 'javascript:alert(1)'; console.log(a.protocol)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "javascript:",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "jsdom-golden-09",
+        "note": "DOMPurify strips the event handler",
+        "question": {
+            "id": "jsdom-golden-09",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "console.log(DOMPurify.sanitize('<img src=x onerror=alert(1)>'))",
+            "query": {
+                "title": "DOMPurify strips the event handler",
+                "explanation": "DOMPurify strips the event handler"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "<img src=\"x\">"
+                },
+                {
+                    "text": "<img src=x onerror=alert(1)>"
+                }
+            ],
+            "answerIndex": 0
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "console.log(DOMPurify.sanitize('<img src=x onerror=alert(1)>'))"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "<img src=\"x\">",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "jsdom-golden-10",
+        "note": "wrong: claims <img src=x onerror=alert(1)>",
+        "question": {
+            "id": "jsdom-golden-10",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "console.log(DOMPurify.sanitize('<img src=x onerror=alert(1)>'))",
+            "query": {
+                "title": "wrong: claims <img src=x onerror=alert(1)>",
+                "explanation": "wrong: claims <img src=x onerror=alert(1)>"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "<img src=\"x\">"
+                },
+                {
+                    "text": "<img src=x onerror=alert(1)>"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "console.log(DOMPurify.sanitize('<img src=x onerror=alert(1)>'))"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "<img src=\"x\">",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "jsdom-golden-11",
+        "note": "userinfo before @ is not the host",
+        "question": {
+            "id": "jsdom-golden-11",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "console.log(new URL('https://app.test@evil.test/').hostname)",
+            "query": {
+                "title": "userinfo before @ is not the host",
+                "explanation": "userinfo before @ is not the host"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "evil.test"
+                },
+                {
+                    "text": "app.test"
+                }
+            ],
+            "answerIndex": 0
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "console.log(new URL('https://app.test@evil.test/').hostname)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "evil.test",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "jsdom-golden-12",
+        "note": "wrong: claims app.test",
+        "question": {
+            "id": "jsdom-golden-12",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "console.log(new URL('https://app.test@evil.test/').hostname)",
+            "query": {
+                "title": "wrong: claims app.test",
+                "explanation": "wrong: claims app.test"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "evil.test"
+                },
+                {
+                    "text": "app.test"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "console.log(new URL('https://app.test@evil.test/').hostname)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "evil.test",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "jsdom-golden-13",
+        "note": "a recursive merge pollutes Object.prototype",
+        "question": {
+            "id": "jsdom-golden-13",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "const merge = (target, source) => { for (const key in source) { if (typeof source[key] === 'object' && source[key] !== null) { target[key] = target[key] || {}; merge(target[key], source[key]); } else { target[key] = source[key]; } } return target; }; merge({}, JSON.parse('{\"__proto__\": {\"polluted\": \"yes\"}}')); console.log(({}).polluted)",
+            "query": {
+                "title": "a recursive merge pollutes Object.prototype",
+                "explanation": "a recursive merge pollutes Object.prototype"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "yes"
+                },
+                {
+                    "text": "undefined"
+                }
+            ],
+            "answerIndex": 0
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "const merge = (target, source) => { for (const key in source) { if (typeof source[key] === 'object' && source[key] !== null) { target[key] = target[key] || {}; merge(target[key], source[key]); } else { target[key] = source[key]; } } return target; }; merge({}, JSON.parse('{\"__proto__\": {\"polluted\": \"yes\"}}')); console.log(({}).polluted)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "yes",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "jsdom-golden-14",
+        "note": "wrong: claims undefined",
+        "question": {
+            "id": "jsdom-golden-14",
+            "type": "mc",
+            "prompt": "What is logged?",
+            "code": "const merge = (target, source) => { for (const key in source) { if (typeof source[key] === 'object' && source[key] !== null) { target[key] = target[key] || {}; merge(target[key], source[key]); } else { target[key] = source[key]; } } return target; }; merge({}, JSON.parse('{\"__proto__\": {\"polluted\": \"yes\"}}')); console.log(({}).polluted)",
+            "query": {
+                "title": "wrong: claims undefined",
+                "explanation": "wrong: claims undefined"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "choices": [
+                {
+                    "text": "yes"
+                },
+                {
+                    "text": "undefined"
+                }
+            ],
+            "answerIndex": 1
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "const merge = (target, source) => { for (const key in source) { if (typeof source[key] === 'object' && source[key] !== null) { target[key] = target[key] || {}; merge(target[key], source[key]); } else { target[key] = source[key]; } } return target; }; merge({}, JSON.parse('{\"__proto__\": {\"polluted\": \"yes\"}}')); console.log(({}).polluted)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "yes",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "jsdom-golden-15",
+        "note": "innerHTML keeps the onerror attribute",
+        "question": {
+            "id": "jsdom-golden-15",
+            "prompt": "This logs true.",
+            "code": "const el = document.createElement('div'); el.innerHTML = '<img src=x onerror=alert(1)>'; console.log(el.querySelector('img[onerror]') !== null)",
+            "query": {
+                "title": "innerHTML keeps the onerror attribute",
+                "explanation": "innerHTML keeps the onerror attribute"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "type": "bool",
+            "answer": true
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "const el = document.createElement('div'); el.innerHTML = '<img src=x onerror=alert(1)>'; console.log(el.querySelector('img[onerror]') !== null)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "true",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "jsdom-golden-16",
+        "note": "wrong: claims false",
+        "question": {
+            "id": "jsdom-golden-16",
+            "prompt": "This logs true.",
+            "code": "const el = document.createElement('div'); el.innerHTML = '<img src=x onerror=alert(1)>'; console.log(el.querySelector('img[onerror]') !== null)",
+            "query": {
+                "title": "wrong: claims false",
+                "explanation": "wrong: claims false"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "type": "bool",
+            "answer": false
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "const el = document.createElement('div'); el.innerHTML = '<img src=x onerror=alert(1)>'; console.log(el.querySelector('img[onerror]') !== null)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "true",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    },
+    {
+        "id": "jsdom-golden-17",
+        "note": "DOMPurify removes the onerror attribute",
+        "question": {
+            "id": "jsdom-golden-17",
+            "prompt": "This logs true.",
+            "code": "const clean = DOMPurify.sanitize('<img src=x onerror=alert(1)>'); const el = document.createElement('div'); el.innerHTML = clean; console.log(el.querySelector('img[onerror]') !== null)",
+            "query": {
+                "title": "DOMPurify removes the onerror attribute",
+                "explanation": "DOMPurify removes the onerror attribute"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "type": "bool",
+            "answer": false
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "const clean = DOMPurify.sanitize('<img src=x onerror=alert(1)>'); const el = document.createElement('div'); el.innerHTML = clean; console.log(el.querySelector('img[onerror]') !== null)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "false",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "passed"
+        }
+    },
+    {
+        "id": "jsdom-golden-18",
+        "note": "wrong: claims true",
+        "question": {
+            "id": "jsdom-golden-18",
+            "prompt": "This logs true.",
+            "code": "const clean = DOMPurify.sanitize('<img src=x onerror=alert(1)>'); const el = document.createElement('div'); el.innerHTML = clean; console.log(el.querySelector('img[onerror]') !== null)",
+            "query": {
+                "title": "wrong: claims true",
+                "explanation": "wrong: claims true"
+            },
+            "provenance": {
+                "source": "original",
+                "validation": {
+                    "method": "executed",
+                    "status": "pending"
+                },
+                "isHumanReviewed": false
+            },
+            "type": "bool",
+            "answer": true
+        },
+        "oracle": {
+            "language": "jsdom",
+            "code": "const clean = DOMPurify.sanitize('<img src=x onerror=alert(1)>'); const el = document.createElement('div'); el.innerHTML = clean; console.log(el.querySelector('img[onerror]') !== null)"
+        },
+        "fakeRun": {
+            "outcome": "value",
+            "value": "false",
+            "runtimeVersion": "Node v24.0.0, jsdom 26.1.0"
+        },
+        "expected": {
+            "status": "failed",
+            "reason": "answer-mismatch"
+        }
+    }
+]
