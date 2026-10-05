@@ -8,7 +8,7 @@
 
 - Web: https://syntactical.dev/ (GitHub Pages custom domain since #76). The deploy.yml runs succeeded for `6c65354`, `0a6a4c4`, and `9af5085`.
 - API on Railway (`server/DEPLOY.md`):
-  - Staging is https://api-staging-accd.up.railway.app. It deploys on every push to `main`; the server-deploy.yml run for `3189f57` succeeded.
+  - Staging is https://api-staging-accd.up.railway.app. It deploys on pushes to `main` that touch `server/`, `packages/`, `content/`, or `package-lock.json`; the server-deploy.yml run for `3189f57` succeeded.
   - Production is https://api-production-9973.up.railway.app. It deploys only by manual run, and no production run has been confirmed since #76.
 - When `server/DEPLOY.md` and `docs/launch-placeholders.md` were written, the `api.syntactical.dev` and `staging-api.syntactical.dev` DNS records did not exist.
 - `content/manifest.json` still lists only Python, Postgres, and JavaScript (9 banks). Paid banks live in the private syntactical-content repo, pinned by `content/paid-content.ref` (#54, #62).
@@ -57,7 +57,7 @@
 3. **Owner review:**
    - 9 readability A/B cards await human approval (#61). An agent must not set `isHumanReviewed`.
    - The privacy and deletion pages are drafts with `[OWNER NAME]`, `[CONTACT EMAIL]`, and `[EFFECTIVE DATE]` placeholders (#59).
-4. **Open PR:** #85, the spec and plan for email and password sign-in (Tasks 7.1 to 7.10). Its review is pending, the owner must confirm spec decisions 31 to 37, and its ci.yml run on `dedf140` failed (cause not examined).
+4. **Open PR:** #85, the spec and plan for email and password sign-in (Tasks 7.1 to 7.10). Its review is pending, the owner must confirm spec decisions 31 to 37, and CI on its head `eb194b5` was passing or pending when this was written (an earlier run on `dedf140` failed).
 5. **Carried over:**
    - IAN-596: Lighthouse, VoiceOver, and reduced motion on the live site.
    - IAN-595: EAS device builds. The prep shipped in #57; no builds have run.
