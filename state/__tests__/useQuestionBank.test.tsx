@@ -173,6 +173,10 @@ describe('useQuestionBank inside ContentProvider', () => {
 
         it('serves the cached manifest before any fetch resolves', async () => {
             await AsyncStorage.setItem(MANIFEST_KEY, JSON.stringify(buildManifestWithGo()));
+            // Hold the manifest fetch open: a resolved fetch replaces the
+            // cached manifest (B-13), so the check could otherwise miss it.
+            const heldManifestBody = createDeferredBody();
+            stubFetchRoutes({ [MANIFEST_URL]: () => heldManifestBody.bodyPromise }, { shouldRejectUnrouted: true });
 
             const { result } = await renderHook(() => useLanguageManifest(), { wrapper: ContentWrapper });
             // A loaded CI runner can settle background work before the first
