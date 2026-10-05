@@ -1,5 +1,6 @@
-// Shared retry loop: ask the model, parse the text as JSON, check it against the
-// schema. A parse or schema failure is one failed attempt; after MAX_ATTEMPTS
+// Shared retry loop: ask the model, unwrap a single surrounding Markdown code
+// fence if present, parse the text as JSON, and check it against the schema.
+// A parse or schema failure is one failed attempt; after MAX_ATTEMPTS
 // the last issue is raised as ModelOutputInvalid. A transport error from `ask`
 // is not a failed attempt and propagates untouched.
 import { ModelOutputInvalid } from '../types/ModelOutputInvalid.js';
@@ -28,7 +29,9 @@ export async function generateWithRetries<T>(
         const { model, text } = await ask();
         let json: unknown;
         try {
-            json = JSON.parse(text);
+            const fence = /^```[^\s`]*\r?\n([\s\S]*)\r?\n```$/.exec(text.trim());
+            const body = fence?.[1];
+            json = JSON.parse(body !== undefined && !/^[ \t]*```/m.test(body) ? body : text);
         } catch (error) {
             lastIssue = `malformed JSON: ${describeFailure(error)}`;
             continue;

@@ -147,6 +147,11 @@ async function verifyPassword(normalized: string, stored: string, deps: VerifyDe
   }
 }
 
+// Whether the stored string is one verifyPassword can derive against; if not, it derives nothing.
+function isUsableHash(stored: string): boolean {
+  return parseStored(stored) !== undefined;
+}
+
 function needsRehash(stored: string, params: PasswordHashParams = CURRENT_PARAMS): boolean {
   const parsed = parseStored(stored);
   if (!parsed) {
@@ -168,5 +173,5 @@ async function createDummyPasswordHash(deps: HashDeps = {}): Promise<string> {
   return hashPassword(randomBytes(CURRENT_PARAMS.keyBytes).toString('base64'), deps);
 }
 
-export { createDummyPasswordHash, hashPassword, needsRehash, verifyPassword };
+export { createDummyPasswordHash, hashPassword, isUsableHash, needsRehash, verifyPassword };
 export type { DeriveKey };
