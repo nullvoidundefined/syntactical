@@ -9,6 +9,7 @@ import { join } from 'node:path';
 
 import type { ExecFn } from '../types/ExecFn.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
+import { ProviderTransientError } from '../types/ProviderTransientError.js';
 
 import { createSpawnExec } from './createSpawnExec.js';
 import { generateWithRetries } from './generateWithRetries.js';
@@ -60,6 +61,11 @@ export function createCodexCliProvider(exec: ExecFn = defaultExec): ModelProvide
                     );
                     return { model: CODEX_MODEL_LABEL, text: readFileSync(lastMessage, 'utf8') };
                 } catch (error) {
+                    // A timeout or non-zero exit on one card stays transient: gap-fill drops that card
+                    // and stops on its own after a streak. Only a CLI that cannot start ends the run.
+                    if (error instanceof ProviderTransientError) {
+                        throw error;
+                    }
                     throw new Error(
                         `codex CLI failed (${(error as Error).message}); install it and run \`codex login\``,
                         {
