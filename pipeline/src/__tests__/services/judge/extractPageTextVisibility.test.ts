@@ -126,6 +126,22 @@ describe('extractPageText follows the HTML parsing rules for hidden content', ()
         expect(Date.now() - startedAt).toBeLessThan(1000);
     });
 
+    // Found while fixing the two shapes above: a source-text count is also fooled by end tags the
+    // parser ignores, and depth times unmatched end tags is quadratic even under the limit.
+    it('refuses depth hidden behind end tags the parser ignores, quickly', () => {
+        const body = `${'<div></span>'.repeat(60_000)}${Q}`;
+        const startedAt = Date.now();
+        expect(visible(body)).toBe('');
+        expect(Date.now() - startedAt).toBeLessThan(1000);
+    });
+
+    it('parses a page at the depth limit followed by 1 MB of unmatched end tags quickly', () => {
+        const body = `${'<span>'.repeat(MAX_NESTING_DEPTH)}${Q}${'</x>'.repeat(250_000)}`;
+        const startedAt = Date.now();
+        expect(visible(body)).toContain(normalizeQuoteText(Q));
+        expect(Date.now() - startedAt).toBeLessThan(1000);
+    });
+
     it('keeps a quote after many self-closing void elements', () => {
         const body = `${'<br/>'.repeat(60_000)}${Q}`;
         expect(visible(body)).toContain(normalizeQuoteText(Q));
