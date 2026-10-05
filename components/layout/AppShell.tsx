@@ -33,7 +33,9 @@ export function AppShell({ accountControl = null, children }: { accountControl?:
     <SafeAreaView className="flex-1 bg-obsidian">
       <View role="banner" className="border-b border-line px-4 py-3">
         <View className="mx-auto w-full max-w-xl flex-row flex-wrap items-center justify-between gap-2">
-          <Text className="font-mono text-xs tracking-widest text-ink">SYNTACTICAL</Text>
+          <Pressable role="link" aria-label="Syntactical home" onPress={() => router.push('/')}>
+            <Text className="font-mono text-xs tracking-widest text-ink">SYNTACTICAL</Text>
+          </Pressable>
           <ReviewDueLink />
           <ProgressReadout />
           <Pressable role="link" aria-label="Settings" onPress={() => router.push('/settings')}>

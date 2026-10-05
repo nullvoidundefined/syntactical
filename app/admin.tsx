@@ -43,8 +43,18 @@ export default function AdminScreen() {
                           aria-disabled={isDisabled}
                           disabled={isDisabled}
                           onPress={() => void setAccess(productId, !isGranted)}
+                          className={`flex-row items-center gap-2 rounded-full focus:ring-2 focus:ring-ink ${isDisabled ? 'opacity-50' : ''}`}
                         >
-                          <Text className="font-mono text-xs uppercase tracking-widest text-ink">
+                          <View
+                            testID={isGranted ? 'switch-track-on' : 'switch-track-off'}
+                            className={`h-7 w-12 justify-center rounded-full border-2 px-0.5 ${isGranted ? 'border-signal bg-signal' : 'border-ink bg-surface-raised'}`}
+                          >
+                            <View
+                              testID={isGranted ? 'switch-thumb-on' : 'switch-thumb-off'}
+                              className={`h-5 w-5 rounded-full ${isGranted ? 'self-end bg-obsidian' : 'self-start bg-ink'}`}
+                            />
+                          </View>
+                          <Text className="w-8 font-mono text-xs uppercase tracking-widest text-ink">
                             {isGranted ? 'On' : 'Off'}
                           </Text>
                         </Pressable>

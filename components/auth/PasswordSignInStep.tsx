@@ -2,10 +2,11 @@
 // forgot-password flow, and sign-up one control away. Both values are held by
 // the screen; no length rule applies here and nothing is trimmed, since only
 // the server judges a sign-in.
-import { Platform, TextInput } from 'react-native';
+import { Platform } from 'react-native';
 
 import { buildAuthHref } from '../../services/auth/readReturnTo';
 import { AuthButton } from './AuthButton';
+import { EmailField } from './EmailField';
 import { AuthForm } from './AuthForm';
 import { AuthLink } from './AuthLink';
 import { PasswordField } from './PasswordField';
@@ -46,19 +47,7 @@ export function PasswordSignInStep({
   const onSubmitEditing = IS_WEB ? undefined : submit;
   return (
     <AuthForm onSubmit={submit}>
-      <TextInput
-        aria-label="Email address"
-        autoComplete="email"
-        autoCapitalize="none"
-        autoCorrect={false}
-        inputMode="email"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={onChangeEmail}
-        returnKeyType="go"
-        onSubmitEditing={onSubmitEditing}
-        className="mt-4 border border-ink px-3 py-2 font-mono text-base text-ink"
-      />
+      <EmailField value={email} onChangeText={onChangeEmail} returnKeyType="go" onSubmitEditing={onSubmitEditing} />
       <PasswordField
         label="Password"
         autoComplete="current-password"

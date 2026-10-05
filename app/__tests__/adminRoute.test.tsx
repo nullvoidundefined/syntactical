@@ -22,7 +22,7 @@ import { randomBytes } from 'node:crypto';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 
 import { escapeForRegExp } from '../../components/auth/__tests__/passwordSettingsTestSupport';
 import { createQueryClient } from '../../config/queryClient';
@@ -252,6 +252,26 @@ describe('admin route for an admin', () => {
     expect(purchased).toBeChecked();
     expect(readIsDisabled(purchased)).toBe(true);
     expect(screen.getAllByText(PURCHASED_TEXT)).toHaveLength(1);
+  });
+
+  it('draws each switch as a track and thumb whose state follows aria-checked, still role switch', async () => {
+    await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
+    const off = getSwitch(PYTHON_MEDIUM_NAME);
+    const on = getSwitch(POSTGRES_HARD_NAME);
+    expect(within(off).getByTestId('switch-track-off')).toBeTruthy();
+    expect(within(off).getByTestId('switch-thumb-off')).toBeTruthy();
+    expect(within(off).queryByTestId('switch-track-on')).toBeNull();
+    expect(within(on).getByTestId('switch-track-on')).toBeTruthy();
+    expect(within(on).getByTestId('switch-thumb-on')).toBeTruthy();
+    expect(within(on).queryByTestId('switch-track-off')).toBeNull();
+  });
+
+  it('draws a purchased switch as an on track that is disabled, beside the Purchased text', async () => {
+    await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
+    const purchased = getSwitch(JAVASCRIPT_MEDIUM_NAME);
+    expect(within(purchased).getByTestId('switch-track-on')).toBeTruthy();
+    expect(readIsDisabled(purchased)).toBe(true);
+    expect(screen.getByText('Purchased')).toBeTruthy();
   });
 });
 
