@@ -102,6 +102,82 @@
           "topicCounts": {}
         }
       }
+    },
+    {
+      "id": "backend-security",
+      "kind": "topic",
+      "label": "Backend Security",
+      "glyph": "BSEC",
+      "tagline": "Injection, broken auth, and the server-side bugs that leak data.",
+      "grammar": "plain",
+      "topics": [
+        {
+          "id": "sql-injection",
+          "label": "SQL injection"
+        },
+        {
+          "id": "command-injection",
+          "label": "Command injection"
+        },
+        {
+          "id": "path-traversal",
+          "label": "Path traversal"
+        },
+        {
+          "id": "ssrf",
+          "label": "Server-side request forgery"
+        },
+        {
+          "id": "authentication",
+          "label": "Authentication"
+        },
+        {
+          "id": "sessions",
+          "label": "Sessions and cookies"
+        },
+        {
+          "id": "access-control",
+          "label": "Access control"
+        },
+        {
+          "id": "deserialization",
+          "label": "Unsafe deserialization"
+        },
+        {
+          "id": "cryptography",
+          "label": "Cryptography and secrets"
+        },
+        {
+          "id": "input-validation",
+          "label": "Input validation"
+        }
+      ],
+      "misconceptions": [],
+      "banks": {
+        "easy": {
+          "path": "backend-security/easy.json",
+          "hash": "9ab361ada589f01ef78623925e17c943f3ef406a6752ca0fea5fcff77bcb4156",
+          "access": "free",
+          "contentVersion": 1,
+          "topicCounts": {}
+        },
+        "medium": {
+          "path": "backend-security/medium.json",
+          "hash": "9ab361ada589f01ef78623925e17c943f3ef406a6752ca0fea5fcff77bcb4156",
+          "access": "paid",
+          "productId": "syntactical.backend-security.medium",
+          "contentVersion": 1,
+          "topicCounts": {}
+        },
+        "hard": {
+          "path": "backend-security/hard.json",
+          "hash": "9ab361ada589f01ef78623925e17c943f3ef406a6752ca0fea5fcff77bcb4156",
+          "access": "paid",
+          "productId": "syntactical.backend-security.hard",
+          "contentVersion": 1,
+          "topicCounts": {}
+        }
+      }
     }
   ]
 }
