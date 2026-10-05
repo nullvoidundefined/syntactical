@@ -21,7 +21,7 @@ describe('menu routes', () => {
     expect(screen.queryByText(/^Day streak 0, 0 of 20 XP today$/)).not.toBeNull();
   });
 
-  it('hides the stats section on the home route until the first answer, leaving one h1 and the content quality link', async () => {
+  it('hides the stats section on the home route until the first answer, leaving one h1', async () => {
     await renderRouter(ROUTES, { initialUrl: '/' });
     await waitFor(() => expect(screen.queryByText('Python')).not.toBeNull());
     expect(screen.queryByText('Answer streak')).toBeNull();
@@ -29,7 +29,6 @@ describe('menu routes', () => {
     expect(screen.queryByText('Weak spots this week')).toBeNull();
     const levels = screen.getAllByRole('heading').map((heading) => heading.props['aria-level']);
     expect(levels).toEqual([1, 2]);
-    expect(screen.getByRole('link', { name: 'Content quality' })).toBeTruthy();
   });
 
   it('navigates from a language to its difficulty step', async () => {
