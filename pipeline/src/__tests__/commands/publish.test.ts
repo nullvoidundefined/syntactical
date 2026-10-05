@@ -129,7 +129,6 @@ async function build(contentRoot: string): Promise<void> {
     await buildContentManifest(
         contentDir,
         { banksPath: join(generated, 'banks.ts'), manifestPath: join(generated, 'manifest.ts') },
-        undefined,
         join(pipelineDir, 'taxonomy'),
         contentRoot,
     );

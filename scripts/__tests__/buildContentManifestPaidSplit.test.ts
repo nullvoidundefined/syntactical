@@ -82,7 +82,7 @@ describe('buildContentManifest with paid banks outside the public tree', () => {
     await expect(buildContentManifest(contentDir, outputs)).rejects.toThrow(
       'paid bank in public content: python/medium',
     );
-    await expect(buildContentManifest(contentDir, outputs, undefined, undefined, contentRoot)).rejects.toThrow(
+    await expect(buildContentManifest(contentDir, outputs, undefined, contentRoot)).rejects.toThrow(
       'paid bank in public content: python/medium',
     );
   });
@@ -92,7 +92,7 @@ describe('buildContentManifest with paid banks outside the public tree', () => {
     await writeStandInPaidBanks(contentDir, contentRoot);
     await cp(join(contentDir, 'python', 'easy.json'), join(contentRoot, 'python', 'easy.json'));
 
-    await expect(buildContentManifest(contentDir, outputs, undefined, undefined, contentRoot)).rejects.toThrow(
+    await expect(buildContentManifest(contentDir, outputs, undefined, contentRoot)).rejects.toThrow(
       'free bank in private content: python/easy',
     );
   });

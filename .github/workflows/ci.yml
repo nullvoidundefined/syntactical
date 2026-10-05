@@ -20,7 +20,7 @@ jobs:
       - run: npm run lint
       - run: npx tsc --noEmit
       - run: npm test
-      - run: npm run content:build && git diff --exit-code content/manifest.json services/content/bundledManifest.generated.ts services/content/bundledBanks.generated.ts services/quality/qualityReport.generated.ts
+      - run: npm run content:build && git diff --exit-code content/manifest.json services/content/bundledManifest.generated.ts services/content/bundledBanks.generated.ts
       - run: npm run build
 
   workspaces:
