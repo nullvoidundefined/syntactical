@@ -67,7 +67,8 @@ export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
     if (hasPaidBanks) {
         await assertContentRootUsable(contentRoot, pipelineDir, contentDir);
     }
-    const reportsDir = join(hasPaidBanks ? contentRoot : pipelineDir, 'reports');
+    // Reports hold ids and verdicts only; every command shares one report chain in the pipeline dir.
+    const reportsDir = join(pipelineDir, 'reports');
     const previous = await readLatestReport(reportsDir);
     const totals: EnrichBankResult = { accepted: 0, agreed: 0, compared: 0, contradicted: 0, dropped: 0 };
     for (const { banks, id: languageId } of languages) {
@@ -98,7 +99,13 @@ export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
                 // Free output stays in the public tree; paid output goes to the private content root.
                 outRoot,
                 provider,
-                questions: [...bank.questions, ...(staged?.questions ?? [])],
+                // Publish keeps the staged file, so a published question can sit in both lists.
+                questions: [
+                    ...bank.questions,
+                    ...(staged?.questions ?? []).filter(
+                        ({ id }) => !bank.questions.some((question) => question.id === id),
+                    ),
+                ],
                 taxonomy,
             });
             const { accepted, agreed, compared, contradicted, dropped } = result;

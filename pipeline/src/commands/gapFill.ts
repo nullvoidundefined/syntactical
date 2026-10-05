@@ -84,7 +84,8 @@ export async function gapFill(options: GapFillOptions): Promise<PipelineReport> 
         await assertContentRootUsable(contentRoot, pipelineDir, contentDir);
     }
     const fallbackTopics = await readFallbackTopics(join(pipelineDir, 'topics.json'));
-    const reportsDir = join(hasPaidBanks ? contentRoot : pipelineDir, 'reports');
+    // Reports hold ids and verdicts only; every command shares one report chain in the pipeline dir.
+    const reportsDir = join(pipelineDir, 'reports');
     const previous = await readLatestReport(reportsDir);
     const totals: FillBankResult = { duplicate: 0, failed: 0, generated: 0 };
     let isCompleted = false;
