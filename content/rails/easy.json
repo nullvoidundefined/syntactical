@@ -22,7 +22,7 @@
           "rationale": "Boolean true values are stored and compared correctly, so matching rows are found."
         }
       ],
-      "code": "User.create!(name: \"Ann\", age: 30, active: true)\nUser.create!(name: \"Bob\", age: 24, active: false)\nUser.create!(name: \"Cid\", age: 41, active: true)\n\nputs User.where(active: true).count",
+      "code": "ActiveRecord::Schema.define do\n  create_table :users, force: true do |t|\n    t.string :name\n    t.integer :age\n    t.boolean :active\n  end\nend\n\nclass User < ActiveRecord::Base; end\n\nUser.create!(name: \"Ann\", age: 30, active: true)\nUser.create!(name: \"Bob\", age: 24, active: false)\nUser.create!(name: \"Cid\", age: 41, active: true)\n\nputs User.where(active: true).count",
       "query": {
         "explanation": "`where(active: true)` builds `WHERE active = 1`, and `count` sends a `SELECT COUNT(*)` with that condition, so only the two active rows are counted.",
         "syntax": "Model.where(column: value).count",
@@ -68,7 +68,7 @@
           "rationale": "The table has three rows, so `first` returns a record rather than nil."
         }
       ],
-      "code": "User.create!(name: \"Ann\", age: 30)\nUser.create!(name: \"Bob\", age: 24)\nUser.create!(name: \"Cid\", age: 41)\n\nputs User.order(:age).first.name",
+      "code": "ActiveRecord::Schema.define do\n  create_table :users, force: true do |t|\n    t.string :name\n    t.integer :age\n  end\nend\n\nclass User < ActiveRecord::Base; end\n\nUser.create!(name: \"Ann\", age: 30)\nUser.create!(name: \"Bob\", age: 24)\nUser.create!(name: \"Cid\", age: 41)\n\nputs User.order(:age).first.name",
       "query": {
         "explanation": "`order(:age)` sorts ascending by age, and `first` on an ordered relation takes the first row of that order (age 24, Bob). Without an explicit `order`, `first` would fall back to ordering by primary key.",
         "syntax": "Model.order(:column).first",
@@ -114,7 +114,7 @@
           "rationale": "That would be the result of `count`; `pluck` returns the values themselves."
         }
       ],
-      "code": "User.create!(name: \"Ann\")\nUser.create!(name: \"Bob\")\nUser.create!(name: \"Cid\")\n\nputs User.order(:id).pluck(:name).inspect",
+      "code": "ActiveRecord::Schema.define do\n  create_table :users, force: true do |t|\n    t.string :name\n  end\nend\n\nclass User < ActiveRecord::Base; end\n\nUser.create!(name: \"Ann\")\nUser.create!(name: \"Bob\")\nUser.create!(name: \"Cid\")\n\nputs User.order(:id).pluck(:name).inspect",
       "query": {
         "explanation": "`pluck(:name)` issues `SELECT name` and returns a plain Array of the column values in the relation's order, skipping model instantiation entirely.",
         "syntax": "Model.pluck(:column) # => [value, value, ...]",
@@ -160,7 +160,7 @@
           "rationale": "3 is every row; Ann is excluded because her active value equals true."
         }
       ],
-      "code": "User.create!(name: \"Ann\", active: true)\nUser.create!(name: \"Bob\", active: false)\nUser.create!(name: \"Cid\", active: false)\n\nputs User.where.not(active: true).count",
+      "code": "ActiveRecord::Schema.define do\n  create_table :users, force: true do |t|\n    t.string :name\n    t.boolean :active\n  end\nend\n\nclass User < ActiveRecord::Base; end\n\nUser.create!(name: \"Ann\", active: true)\nUser.create!(name: \"Bob\", active: false)\nUser.create!(name: \"Cid\", active: false)\n\nputs User.where.not(active: true).count",
       "query": {
         "explanation": "`where.not(active: true)` generates `WHERE active != 1`, matching the two rows stored with false. Rows with NULL would not match, which is why `where.not` and NULL columns often surprise people.",
         "syntax": "Model.where.not(column: value)",
@@ -206,7 +206,7 @@
           "rationale": "The condition filters rows; Bob (24) and Ann (30) are both excluded."
         }
       ],
-      "code": "User.create!(name: \"Ann\", age: 30)\nUser.create!(name: \"Bob\", age: 24)\nUser.create!(name: \"Cid\", age: 41)\n\nputs User.where(\"age > ?\", 30).count",
+      "code": "ActiveRecord::Schema.define do\n  create_table :users, force: true do |t|\n    t.string :name\n    t.integer :age\n  end\nend\n\nclass User < ActiveRecord::Base; end\n\nUser.create!(name: \"Ann\", age: 30)\nUser.create!(name: \"Bob\", age: 24)\nUser.create!(name: \"Cid\", age: 41)\n\nputs User.where(\"age > ?\", 30).count",
       "query": {
         "explanation": "The `?` placeholder is replaced with the sanitized value 30, producing `WHERE age > 30`. The comparison is strictly greater than, so age 30 is excluded and only age 41 matches.",
         "syntax": "Model.where(\"column > ?\", value)",
@@ -252,7 +252,7 @@
           "rationale": "`sum` returns 0 only when no rows (or only NULL ages) match the relation."
         }
       ],
-      "code": "User.create!(name: \"Ann\", age: 30)\nUser.create!(name: \"Bob\", age: 24)\nUser.create!(name: \"Cid\", age: 41)\n\nputs User.sum(:age)",
+      "code": "ActiveRecord::Schema.define do\n  create_table :users, force: true do |t|\n    t.string :name\n    t.integer :age\n  end\nend\n\nclass User < ActiveRecord::Base; end\n\nUser.create!(name: \"Ann\", age: 30)\nUser.create!(name: \"Bob\", age: 24)\nUser.create!(name: \"Cid\", age: 41)\n\nputs User.sum(:age)",
       "query": {
         "explanation": "`sum(:age)` runs `SELECT SUM(age)` in the database and returns the total (30 + 24 + 41 = 95) without loading any records into Ruby.",
         "syntax": "Model.sum(:column)",
@@ -298,7 +298,7 @@
           "rationale": "`limit(2)` caps the result at two rows, so Bob is dropped."
         }
       ],
-      "code": "User.create!(name: \"Ann\", age: 30)\nUser.create!(name: \"Bob\", age: 24)\nUser.create!(name: \"Cid\", age: 41)\n\nputs User.order(age: :desc).limit(2).pluck(:name).inspect",
+      "code": "ActiveRecord::Schema.define do\n  create_table :users, force: true do |t|\n    t.string :name\n    t.integer :age\n  end\nend\n\nclass User < ActiveRecord::Base; end\n\nUser.create!(name: \"Ann\", age: 30)\nUser.create!(name: \"Bob\", age: 24)\nUser.create!(name: \"Cid\", age: 41)\n\nputs User.order(age: :desc).limit(2).pluck(:name).inspect",
       "query": {
         "explanation": "Chained query methods combine into one SQL statement: `ORDER BY age DESC LIMIT 2` selects the two oldest users, and `pluck(:name)` returns their names in that order.",
         "syntax": "Model.order(column: :desc).limit(n).pluck(:column)",
@@ -345,7 +345,7 @@
           "rationale": "The table is populated by `create!`, and two rows match the condition."
         }
       ],
-      "code": "User.create!([{name: \"A\", age: 25}, {name: \"B\", age: 31}, {name: \"C\", age: 40}])\nputs User.where(\"age > 30\").count",
+      "code": "ActiveRecord::Schema.define do\n  create_table :users do |t|\n    t.string :name\n    t.integer :age\n  end\nend\n\nclass User < ActiveRecord::Base; end\n\nUser.create!([{name: \"A\", age: 25}, {name: \"B\", age: 31}, {name: \"C\", age: 40}])\nputs User.where(\"age > 30\").count",
       "query": {
         "explanation": "`where` builds a relation that filters rows by the given condition; `count` then issues a SELECT COUNT(*) against that filtered set. Only B (31) and C (40) have an age greater than 30, so the count is 2. The condition is strict `>`, so a row with age exactly 30 would not be included.",
         "syntax": "Model.where(condition).count",
@@ -391,7 +391,7 @@
           "rationale": "`pluck` with a single column returns a flat array of values, not an array of one-element arrays."
         }
       ],
-      "code": "User.create!([{name: \"ada\", age: 30}, {name: \"bob\", age: 20}, {name: \"cid\", age: 40}])\np User.order(:age).pluck(:name)",
+      "code": "ActiveRecord::Schema.define do\n  create_table :users do |t|\n    t.string :name\n    t.integer :age\n  end\nend\n\nclass User < ActiveRecord::Base; end\n\nUser.create!([{name: \"ada\", age: 30}, {name: \"bob\", age: 20}, {name: \"cid\", age: 40}])\np User.order(:age).pluck(:name)",
       "query": {
         "explanation": "`order(:age)` sorts rows ascending by age, giving bob (20), ada (30), cid (40). `pluck(:name)` then selects only that one column and returns a flat array of its values, so the result is [\"bob\", \"ada\", \"cid\"]. Plucking a single column never wraps values in sub-arrays.",
         "syntax": "Model.order(:col).pluck(:other_col)",
@@ -874,7 +874,7 @@
           "rationale": "The record saves normally; the callback only changes the value, it does not clear it."
         }
       ],
-      "code": "class User < ActiveRecord::Base\n  before_save { self.name = name.upcase }\nend\n\nUser.create!(name: \"ada\")\nUser.first.name",
+      "code": "ActiveRecord::Schema.define do\n  create_table :users do |t|\n    t.string :name\n  end\nend\n\nclass User < ActiveRecord::Base\n  before_save { self.name = name.upcase }\nend\n\nUser.create!(name: \"ada\")\nUser.first.name",
       "query": {
         "explanation": "A `before_save` callback runs after validation but before the SQL write, and assignments it makes to `self` are part of the saved row. Here name becomes \"ADA\" before the INSERT.",
         "syntax": "before_save { self.attr = ... }",
@@ -919,7 +919,7 @@
           "rationale": "`count` always returns an Integer, never nil."
         }
       ],
-      "code": "class User < ActiveRecord::Base\n  before_create { throw :abort }\nend\n\nUser.create(name: \"ada\")\nUser.count",
+      "code": "ActiveRecord::Schema.define do\n  create_table :users do |t|\n    t.string :name\n  end\nend\n\nclass User < ActiveRecord::Base\n  before_create { throw :abort }\nend\n\nUser.create(name: \"ada\")\nUser.count",
       "query": {
         "explanation": "`throw :abort` inside a before_* callback halts the chain, rolls back the surrounding transaction and makes `create` return an unsaved record, so the table stays empty.",
         "syntax": "before_create { throw :abort }",
@@ -965,7 +965,7 @@
           "rationale": "The numericality rule fails on \"abc\", so the error list is not empty."
         }
       ],
-      "code": "class User < ActiveRecord::Base\n  validates :name, presence: true\n  validates :age, numericality: true\nend\n\nu = User.new(name: \"Ada\", age: \"abc\")\nu.valid?\nu.errors.attribute_names.first",
+      "code": "ActiveRecord::Schema.define do\n  create_table :users do |t|\n    t.string :name\n    t.string :age\n    t.string :email\n  end\nend\n\nclass User < ActiveRecord::Base\n  validates :name, presence: true\n  validates :age, numericality: true\nend\n\nu = User.new(name: \"Ada\", age: \"abc\")\nu.valid?\nputs u.errors.attribute_names.first",
       "query": {
         "explanation": "`valid?` runs every validation and files each failure under its attribute. Only the numericality check on \"abc\" fails, so `errors.attribute_names` contains just :age.",
         "syntax": "record.errors.attribute_names",
@@ -1011,7 +1011,7 @@
           "rationale": "Only two create calls are made in total."
         }
       ],
-      "code": "class User < ActiveRecord::Base\n  validates :email, uniqueness: true\nend\n\nUser.create(email: \"a@b.com\")\nUser.create(email: \"a@b.com\")\nUser.count",
+      "code": "ActiveRecord::Schema.define do\n  create_table :users do |t|\n    t.string :email\n  end\nend\n\nclass User < ActiveRecord::Base\n  validates :email, uniqueness: true\nend\n\nUser.create(email: \"a@b.com\")\nUser.create(email: \"a@b.com\")\nUser.count",
       "query": {
         "explanation": "`validates :email, uniqueness: true` queries the table before saving; the second create finds the existing row, fails validation and returns an unsaved record, leaving one row.",
         "syntax": "validates :attribute, uniqueness: true",
@@ -2922,7 +2922,7 @@
     },
     {
       "id": "gen-rails-easy-560e2e05",
-      "prompt": "are the pluck and map results equal here",
+      "prompt": "Are the pluck and map results equal here?",
       "topic": "performance",
       "answer": true,
       "code": "ActiveRecord::Schema.define do\n  create_table :users do |t|\n    t.string :name\n  end\nend\n\nclass User < ActiveRecord::Base; end\n\nUser.create!(name: \"Ann\")\nUser.create!(name: \"Bo\")\n\na = User.order(:id).pluck(:name)\nb = User.order(:id).map(&:name)\n\nputs(a == b ? \"True\" : \"False\")",
@@ -3273,7 +3273,7 @@
     },
     {
       "id": "gen-rails-easy-57bc8c6b",
-      "prompt": "is any? true for this table",
+      "prompt": "Is any? true for this table?",
       "topic": "performance",
       "answer": false,
       "code": "ActiveRecord::Schema.define do\n  create_table :users do |t|\n    t.string :name\n  end\nend\n\nclass User < ActiveRecord::Base; end\n\nputs(User.any? ? \"True\" : \"False\")",

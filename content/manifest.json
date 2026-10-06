@@ -963,9 +963,9 @@
       "banks": {
         "easy": {
           "path": "rails/easy.json",
-          "hash": "e24e987d9db940facb6fb006ec49b3e3adf97baf4e84a1aa1aee58c3cd746bc8",
+          "hash": "3d7e61614d39072a1c601453ed0fe2b1a4c83d267c3c73dc069764bc20323951",
           "access": "free",
-          "contentVersion": 3,
+          "contentVersion": 4,
           "topicCounts": {
             "activerecord-queries": 10,
             "associations": 10,
