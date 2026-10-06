@@ -694,26 +694,59 @@
       "banks": {
         "easy": {
           "path": "backend-security/easy.json",
-          "hash": "9ab361ada589f01ef78623925e17c943f3ef406a6752ca0fea5fcff77bcb4156",
+          "hash": "34ac35657a7165add39645bf27be20933e3375ca5cd2224165a983f00cbae5b1",
           "access": "free",
-          "contentVersion": 1,
-          "topicCounts": {}
+          "contentVersion": 2,
+          "topicCounts": {
+            "sql-injection": 10,
+            "command-injection": 10,
+            "path-traversal": 10,
+            "ssrf": 10,
+            "authentication": 10,
+            "sessions": 10,
+            "access-control": 10,
+            "deserialization": 10,
+            "cryptography": 10,
+            "input-validation": 10
+          }
         },
         "medium": {
           "path": "backend-security/medium.json",
-          "hash": "9ab361ada589f01ef78623925e17c943f3ef406a6752ca0fea5fcff77bcb4156",
+          "hash": "088ff483e1550426941e8ad3698a23cda5887af00992c8911628ec242e102ca5",
           "access": "paid",
           "productId": "syntactical.backend-security.medium",
-          "contentVersion": 1,
-          "topicCounts": {}
+          "contentVersion": 2,
+          "topicCounts": {
+            "sql-injection": 10,
+            "command-injection": 10,
+            "path-traversal": 10,
+            "ssrf": 10,
+            "authentication": 10,
+            "sessions": 10,
+            "access-control": 10,
+            "deserialization": 10,
+            "cryptography": 10,
+            "input-validation": 10
+          }
         },
         "hard": {
           "path": "backend-security/hard.json",
-          "hash": "9ab361ada589f01ef78623925e17c943f3ef406a6752ca0fea5fcff77bcb4156",
+          "hash": "f27d8222b935cdfce79e2d00674f21f8fc14e95688443163aeeb95866dad083c",
           "access": "paid",
           "productId": "syntactical.backend-security.hard",
-          "contentVersion": 1,
-          "topicCounts": {}
+          "contentVersion": 2,
+          "topicCounts": {
+            "sql-injection": 10,
+            "command-injection": 10,
+            "path-traversal": 10,
+            "ssrf": 10,
+            "authentication": 10,
+            "sessions": 10,
+            "access-control": 10,
+            "deserialization": 10,
+            "cryptography": 10,
+            "input-validation": 10
+          }
         }
       }
     }
