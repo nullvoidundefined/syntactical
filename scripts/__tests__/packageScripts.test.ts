@@ -8,7 +8,7 @@ describe('cutover to the Expo web build', () => {
     const { build, dev, lint, test } = scripts;
     expect(dev).toBe('expo start');
     expect(build).toBe(
-      'npm run content:build && npm run build -w @syntactical/progress && expo export --platform web --output-dir dist && cp -R content dist/content && node scripts/copySpaFallback.mjs dist && node scripts/assertNoPaidBanks.mjs dist',
+      'npm run content:build && npm run build -w @syntactical/progress && expo export --platform web --output-dir dist && cp -R content dist/content && node scripts/copySpaFallback.mjs dist && node scripts/writeRouteEntries.mjs dist && node scripts/assertNoPaidBanks.mjs dist',
     );
     expect(test).toBe('jest');
     expect(lint).toBe('oxlint');
