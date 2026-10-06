@@ -804,7 +804,7 @@
           "id": "rails.where-returns-array"
         },
         {
-          "description": "Believing `find`, `find_by`, and `where(...).first` behave identically \u2014 not realising `find` raises RecordNotFound on a missing id while `find_by` returns nil.",
+          "description": "Believing `find`, `find_by`, and `where(...).first` behave identically — not realising `find` raises RecordNotFound on a missing id while `find_by` returns nil.",
           "id": "rails.find-and-find-by-interchangeable"
         },
         {
@@ -812,7 +812,7 @@
           "id": "rails.save-returns-exception"
         },
         {
-          "description": "Believing `record.errors` is populated without running validations \u2014 not realising `valid?` (or a save attempt) must run first to refresh the errors object.",
+          "description": "Believing `record.errors` is populated without running validations — not realising `valid?` (or a save attempt) must run first to refresh the errors object.",
           "id": "rails.valid-does-not-touch-errors"
         },
         {
@@ -828,7 +828,7 @@
           "id": "rails.validation-guarantees-uniqueness"
         },
         {
-          "description": "Believing `validates :x, presence: true` only rejects nil, when it rejects any blank value including empty strings, whitespace, and empty arrays \u2014 and that `false` passes presence.",
+          "description": "Believing `validates :x, presence: true` only rejects nil, when it rejects any blank value including empty strings, whitespace, and empty arrays — and that `false` passes presence.",
           "id": "rails.presence-validation-checks-nil-only"
         },
         {
@@ -840,7 +840,7 @@
           "id": "rails.strong-params-permit-validates"
         },
         {
-          "description": "Confusing `params.require(:user)` with `params.permit(:user)` \u2014 thinking `require` whitelists attributes or that `permit` raises when a key is missing.",
+          "description": "Confusing `params.require(:user)` with `params.permit(:user)` — thinking `require` whitelists attributes or that `permit` raises when a key is missing.",
           "id": "rails.require-and-permit-confused"
         },
         {
@@ -852,7 +852,7 @@
           "id": "rails.render-performs-redirect"
         },
         {
-          "description": "Believing `includes` and `joins` are interchangeable \u2014 not realising `joins` builds an INNER JOIN for filtering while `includes` preloads associations to avoid N+1.",
+          "description": "Believing `includes` and `joins` are interchangeable — not realising `joins` builds an INNER JOIN for filtering while `includes` preloads associations to avoid N+1.",
           "id": "rails.includes-and-joins-same"
         },
         {
@@ -876,7 +876,7 @@
           "id": "rails.scope-with-non-lambda-body"
         },
         {
-          "description": "Believing the foreign key lives on the `has_many` side \u2014 not realising the table declaring `belongs_to` is the one that holds the `*_id` column.",
+          "description": "Believing the foreign key lives on the `has_many` side — not realising the table declaring `belongs_to` is the one that holds the `*_id` column.",
           "id": "rails.belongs-to-holds-foreign-key-elsewhere"
         },
         {
@@ -900,7 +900,7 @@
           "id": "rails.new-persists-record"
         },
         {
-          "description": "Believing `parent.children.build` saves at once, or that `parent.children.create` on an unsaved parent persists \u2014 ignoring how autosave defers child writes.",
+          "description": "Believing `parent.children.build` saves at once, or that `parent.children.create` on an unsaved parent persists — ignoring how autosave defers child writes.",
           "id": "rails.collection-build-saves-immediately"
         },
         {
@@ -932,7 +932,7 @@
           "id": "rails.resources-generates-only-crud-paths"
         },
         {
-          "description": "Believing `post_path` and `post_url` are interchangeable, or that a named helper works without the matching route \u2014 ignoring that `_url` includes the host and is needed in emails.",
+          "description": "Believing `post_path` and `post_url` are interchangeable, or that a named helper works without the matching route — ignoring that `_url` includes the host and is needed in emails.",
           "id": "rails.route-helper-and-path-interchangeable"
         },
         {
