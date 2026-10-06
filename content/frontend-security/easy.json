@@ -572,7 +572,7 @@
     },
     {
       "id": "gen-frontend-security-easy-955d8ecf",
-      "prompt": "Does assigning innerHTML to a <template> leave its children collection empty?",
+      "prompt": "Does this snippet print 0 after parsing a <p> into a <template> through innerHTML?",
       "topic": "html-sanitization",
       "answer": true,
       "code": "const t = document.createElement('template');\nt.innerHTML = '<p>hi</p>';\nconsole.log(t.children.length);",
@@ -1717,7 +1717,7 @@
     },
     {
       "id": "gen-frontend-security-easy-6c27972c",
-      "prompt": "What does this program print?",
+      "prompt": "What does this program print when it runs as a sloppy-mode (non-strict) classic script?",
       "topic": "prototype-pollution",
       "answerIndex": 0,
       "choices": [
@@ -1976,7 +1976,7 @@
         },
         {
           "text": "TypeError",
-          "rationale": "Object.prototype is an ordinary extensible object, so assigning a new property to it throws nothing in non-strict or strict module-free script code."
+          "rationale": "Object.prototype is an ordinary extensible object, so assigning a new property to it is allowed and throws no TypeError in either strict or non-strict code."
         }
       ],
       "code": "function merge(target, source) {\n  for (const key in source) {\n    if (typeof source[key] === 'object' && source[key] !== null) {\n      target[key] = target[key] || {};\n      merge(target[key], source[key]);\n    } else {\n      target[key] = source[key];\n    }\n  }\n  return target;\n}\n\nconst payload = JSON.parse('{\"__proto__\":{\"isAdmin\":true}}');\nmerge({}, payload);\nconsole.log(String(({}).isAdmin));",
@@ -2066,7 +2066,7 @@
         ],
         "title": "Prefix matching on origins"
       },
-      "rationale": "The URL is accepted, not rejected: it literally begins with https://example.com, because the attacker's host just appends .evil.net to that prefix.",
+      "rationale": "The check does not reject the URL: it begins with https://example.com because the attacker host only appends .evil.net to that prefix, so startsWith is true and the negation is false.",
       "type": "bool",
       "grammar": "javascript",
       "provenance": {
@@ -2344,7 +2344,7 @@
         ],
         "title": "Suffix checks on whole URLs"
       },
-      "rationale": "The check is not rejected: the raw string ends with .example.com inside its path, even though the parsed hostname is evil.com.",
+      "rationale": "The check accepts the URL: the raw string ends with .example.com inside its path, even though the parsed hostname is evil.com.",
       "type": "bool",
       "grammar": "javascript",
       "provenance": {
