@@ -81,12 +81,12 @@ describe('web keyboard navigation in a round', () => {
   });
 
   it.each([
-    ['1', 'a, incorrect'],
-    ['3', 'c, correct'],
-    ['4', 'd, incorrect'],
-    ['A', 'a, incorrect'],
-    ['c', 'c, correct'],
-    ['D', 'd, incorrect'],
+    ['1', 'A, a, incorrect'],
+    ['3', 'C, c, correct'],
+    ['4', 'D, d, incorrect'],
+    ['A', 'A, a, incorrect'],
+    ['c', 'C, c, correct'],
+    ['D', 'D, d, incorrect'],
   ])('key %p selects a choice', (key, label) => {
     render(<RoundHarness question={mcQuestion} />);
     pressKey(key);
@@ -107,7 +107,7 @@ describe('web keyboard navigation in a round', () => {
     pressKey('t');
     expect(screen.queryByText('Continue')).toBeNull();
     pressKey('2');
-    expect(screen.queryByLabelText('b, incorrect')).not.toBeNull();
+    expect(screen.queryByLabelText('B, b, incorrect')).not.toBeNull();
   });
 
   it('ignores a choice key on a boolean question but answers with T', () => {
@@ -150,9 +150,9 @@ describe('web keyboard navigation in a round', () => {
     pressKey('q');
     pressKey('3');
     pressKey('Escape');
-    expect(screen.queryByLabelText('c, correct')).toBeNull();
+    expect(screen.queryByLabelText('C, c, correct')).toBeNull();
     pressKey('3');
-    expect(screen.queryByLabelText('c, correct')).not.toBeNull();
+    expect(screen.queryByLabelText('C, c, correct')).not.toBeNull();
   });
 
   it('Enter retries and Escape returns to the menu from the results screen', () => {
@@ -257,7 +257,7 @@ describe('web keyboard navigation ignores keys meant for something else', () => 
     if (!field.isConnected) document.body.appendChild(field);
     field.focus();
     for (const key of ['3', 'c', 't', 'q', 'Enter', 'Escape']) pressKeyOn(field, key);
-    expect(screen.queryByLabelText('c, correct')).toBeNull();
+    expect(screen.queryByLabelText(/^[A-D], c, correct$/)).toBeNull();
     expect(screen.queryByTestId('query-modal')).toBeNull();
     expect(screen.queryByText('round 0')).not.toBeNull();
     expect(screen.queryByText('menu screen')).toBeNull();
@@ -280,15 +280,15 @@ describe('web keyboard navigation ignores keys meant for something else', () => 
     document.body.appendChild(control);
     control.focus();
     pressKeyOn(control, '3');
-    expect(screen.queryByLabelText('c, correct')).not.toBeNull();
+    expect(screen.queryByLabelText(/^[A-D], c, correct$/)).not.toBeNull();
     control.remove();
   });
 
   it.each(['4', 'D'])('ignores choice key %p on a question with three choices', (key) => {
     render(<RoundHarness question={threeChoiceQuestion} />);
     pressKey(key);
-    expect(screen.queryByLabelText('c, correct')).toBeNull();
+    expect(screen.queryByLabelText(/^[A-D], c, correct$/)).toBeNull();
     pressKey('3');
-    expect(screen.queryByLabelText('c, correct')).not.toBeNull();
+    expect(screen.queryByLabelText(/^[A-D], c, correct$/)).not.toBeNull();
   });
 });
