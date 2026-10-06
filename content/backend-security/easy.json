@@ -313,10 +313,10 @@
     },
     {
       "id": "gen-backend-security-easy-6cd0d9b3",
-      "prompt": "Does the query below return exactly 1 row?",
+      "prompt": "The users table holds ('bob', active = false) and ('amy', active = true). The injected comment cuts off the active filter. Does the query below print a count of 1?",
       "topic": "sql-injection",
       "answer": true,
-      "code": "SELECT count(*) FROM users\nWHERE name = 'bob' --' AND active = false",
+      "code": "-- users: ('bob', active = false), ('amy', active = true)\nSELECT count(*) FROM users\nWHERE name = 'bob' --' AND active = false",
       "query": {
         "explanation": "The input `bob' --` closed the name literal and started a SQL line comment, so `AND active = false` is never evaluated. The query becomes just `WHERE name = 'bob'`, which matches the single bob row even though that row has active = false.",
         "syntax": "-- comment to end of line",
@@ -327,7 +327,7 @@
         ],
         "title": "Comment payloads discard the rest of a query line"
       },
-      "rationale": "`--` comments out the remainder of the line, so the active = false filter is dropped and the one bob row still matches `name = 'bob'`.",
+      "rationale": "The claim is true: `--` comments out the remainder of the line, so the active = false filter is dropped and the bob row still matches `name = 'bob'`, giving a count of 1 instead of 0.",
       "type": "bool",
       "grammar": "sql",
       "provenance": {
@@ -1854,7 +1854,7 @@
           "rationale": "The table holds two users and the username filter keeps at most one of them."
         }
       ],
-      "code": "SELECT count(*) FROM users\nWHERE username = 'alice'\n  AND password_hash = md5('Hunter2');",
+      "code": "-- users: ('alice', md5('hunter2')), ('bob', md5('letmein'))\nSELECT count(*) FROM users\nWHERE username = 'alice'\n  AND password_hash = md5('Hunter2');",
       "query": {
         "explanation": "Alice's row stores md5('hunter2'). Hashing 'Hunter2' changes one input byte and therefore changes the whole digest, so the equality test fails and count(*) is 0. A one-character difference in the submitted password can never partially match a hash. (md5 is used here only to show the lookup; real systems need a slow algorithm such as bcrypt or argon2.)",
         "syntax": "WHERE username = $1 AND password_hash = crypt($2, password_hash)",
@@ -3732,7 +3732,7 @@
           "rationale": "All four rows cannot pass; bo's username is too short and charlie's email has no @."
         }
       ],
-      "code": "SELECT count(*) FROM signups\nWHERE email LIKE '%@%.%'\n  AND length(username) BETWEEN 3 AND 16;",
+      "code": "-- signups (username, email):\n--   ('alice', 'alice@example.com')\n--   ('bo', 'bo@example.com')\n--   ('charlie', 'charlie.example.com')\n--   ('dave', 'dave@example.org')\nSELECT count(*) FROM signups\nWHERE email LIKE '%@%.%'\n  AND length(username) BETWEEN 3 AND 16;",
       "query": {
         "explanation": "Only alice and dave satisfy both rules: bo has a 2-character username, and charlie's address has no @ sign. Validating stored data with explicit conditions (or CHECK constraints) catches rows that bypassed application-level checks.",
         "syntax": "WHERE col LIKE pattern AND length(col) BETWEEN a AND b",
