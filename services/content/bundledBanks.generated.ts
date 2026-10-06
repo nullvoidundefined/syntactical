@@ -6,5 +6,6 @@ export const BUNDLED_BANKS: Record<string, unknown> = {
   'javascript/easy': require('../../content/javascript/easy.json'),
   'postgres/easy': require('../../content/postgres/easy.json'),
   'python/easy': require('../../content/python/easy.json'),
+  'rails/easy': require('../../content/rails/easy.json'),
   'ruby/easy': require('../../content/ruby/easy.json'),
 };
