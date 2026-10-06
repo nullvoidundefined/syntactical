@@ -55,6 +55,7 @@ const cardSchema = z
 
 type BatchArgs = Pick<FillBankArgs, 'difficulty' | 'languageId' | 'provider' | 'run'> & {
     count: number;
+    existingKeys?: ReadonlySet<string>;
     existingPrompts: ReadonlySet<string>;
     topic: string;
 } & (
@@ -72,11 +73,7 @@ export async function generateBatch(
         COUNT: String(count),
         TOPIC: topic,
         CONTEXT: escapeForPrompt(JSON.stringify({ difficulty, languageId, runners: args.runners ?? [args.language] })),
-        EXISTING_PROMPTS: escapeForPrompt(
-            JSON.stringify(
-                [...new Set([...existingPrompts].map((key) => key.split('\n')[0]))].slice(0, MAX_EXISTING_PROMPTS),
-            ),
-        ),
+        EXISTING_PROMPTS: escapeForPrompt(JSON.stringify([...existingPrompts].slice(0, MAX_EXISTING_PROMPTS))),
     });
     const { model, value } = await provider.generate({
         lenientJson: true,
@@ -90,7 +87,7 @@ export async function generateBatch(
     if (!batch.success) throw new ModelOutputInvalid(PROMPT_VERSION, 'expected a cards array');
     const cards: { question: Question; oracle: Oracle }[] = [];
     const drops: Record<string, number> = {};
-    const seen = new Set(existingPrompts);
+    const seen = new Set(args.existingKeys ?? existingPrompts);
     const drop = (reason: string): void => {
         drops[reason] = (drops[reason] ?? 0) + 1;
     };
