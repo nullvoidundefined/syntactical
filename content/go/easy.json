@@ -3569,7 +3569,7 @@
         ],
         "title": "math.Round and halfway values"
       },
-      "rationale": "math.Round rounds halves away from zero, so -2.5 becomes -3; it does not round toward zero (-2) or toward negative infinity only for non-halves.",
+      "rationale": "math.Round rounds halves away from zero, so -2.5 becomes -3, not the -2 that rounding toward zero or half-to-even would give.",
       "type": "bool",
       "topic": "numbers-and-math",
       "provenance": {

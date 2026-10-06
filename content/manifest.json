@@ -316,9 +316,9 @@
       "banks": {
         "easy": {
           "path": "go/easy.json",
-          "hash": "c28b05f7eb155750e93bbe84c4d6849a2fad4f0e2edc770f9bbacc3542846fd2",
+          "hash": "56e8e3f846e0470f0109a0feb5b77def2135419421e125f634efe47d2d5c7f48",
           "access": "free",
-          "contentVersion": 5,
+          "contentVersion": 6,
           "topicCounts": {
             "operators-and-types": 10,
             "numbers-and-math": 10,
@@ -963,9 +963,9 @@
       "banks": {
         "easy": {
           "path": "rails/easy.json",
-          "hash": "036fc9ba4a3041e187180977b8464759e05ef3ff40465f231647eef763093dc8",
+          "hash": "963cbbd69b0f819f097ea315e549308511027d1b8306e8aa1a3c392800402176",
           "access": "free",
-          "contentVersion": 5,
+          "contentVersion": 6,
           "topicCounts": {
             "activerecord-queries": 10,
             "associations": 10,
@@ -976,7 +976,7 @@
             "security": 10,
             "performance": 10,
             "controllers-and-params": 10,
-            "background-jobs": 10
+            "background-jobs": 9
           }
         },
         "medium": {
