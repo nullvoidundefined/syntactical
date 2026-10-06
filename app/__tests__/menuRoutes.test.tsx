@@ -28,7 +28,10 @@ describe('menu routes', () => {
     expect(screen.queryByText('Lifetime accuracy')).toBeNull();
     expect(screen.queryByText('Weak spots this week')).toBeNull();
     const levels = screen.getAllByRole('heading').map((heading) => heading.props['aria-level']);
-    expect(levels).toEqual([1, 2]);
+    // One h1, then one h2 per menu group (Languages, and Topics once a topic track ships).
+    expect(levels[0]).toBe(1);
+    expect(levels.slice(1).length).toBeGreaterThan(0);
+    expect(levels.slice(1).every((level) => level === 2)).toBe(true);
   });
 
   it('navigates from a language to its difficulty step', async () => {

@@ -642,6 +642,115 @@
       }
     },
     {
+      "id": "backend-security",
+      "kind": "topic",
+      "label": "Backend Security",
+      "glyph": "BSEC",
+      "tagline": "Injection, broken auth, and the server-side bugs that leak data.",
+      "grammar": "plain",
+      "topics": [
+        {
+          "id": "sql-injection",
+          "label": "SQL injection"
+        },
+        {
+          "id": "command-injection",
+          "label": "Command injection"
+        },
+        {
+          "id": "path-traversal",
+          "label": "Path traversal"
+        },
+        {
+          "id": "ssrf",
+          "label": "Server-side request forgery"
+        },
+        {
+          "id": "authentication",
+          "label": "Authentication"
+        },
+        {
+          "id": "sessions",
+          "label": "Sessions and cookies"
+        },
+        {
+          "id": "access-control",
+          "label": "Access control"
+        },
+        {
+          "id": "deserialization",
+          "label": "Unsafe deserialization"
+        },
+        {
+          "id": "cryptography",
+          "label": "Cryptography and secrets"
+        },
+        {
+          "id": "input-validation",
+          "label": "Input validation"
+        }
+      ],
+      "misconceptions": [],
+      "banks": {
+        "easy": {
+          "path": "backend-security/easy.json",
+          "hash": "50bd3c390bc4aff46397db66d4c672937a4e4d44d4f44e415f78349c0258aa3f",
+          "access": "free",
+          "contentVersion": 3,
+          "topicCounts": {
+            "sql-injection": 10,
+            "command-injection": 10,
+            "path-traversal": 10,
+            "ssrf": 10,
+            "authentication": 10,
+            "sessions": 10,
+            "access-control": 10,
+            "deserialization": 10,
+            "cryptography": 10,
+            "input-validation": 10
+          }
+        },
+        "medium": {
+          "path": "backend-security/medium.json",
+          "hash": "088ff483e1550426941e8ad3698a23cda5887af00992c8911628ec242e102ca5",
+          "access": "paid",
+          "productId": "syntactical.backend-security.medium",
+          "contentVersion": 2,
+          "topicCounts": {
+            "sql-injection": 10,
+            "command-injection": 10,
+            "path-traversal": 10,
+            "ssrf": 10,
+            "authentication": 10,
+            "sessions": 10,
+            "access-control": 10,
+            "deserialization": 10,
+            "cryptography": 10,
+            "input-validation": 10
+          }
+        },
+        "hard": {
+          "path": "backend-security/hard.json",
+          "hash": "f27d8222b935cdfce79e2d00674f21f8fc14e95688443163aeeb95866dad083c",
+          "access": "paid",
+          "productId": "syntactical.backend-security.hard",
+          "contentVersion": 2,
+          "topicCounts": {
+            "sql-injection": 10,
+            "command-injection": 10,
+            "path-traversal": 10,
+            "ssrf": 10,
+            "authentication": 10,
+            "sessions": 10,
+            "access-control": 10,
+            "deserialization": 10,
+            "cryptography": 10,
+            "input-validation": 10
+          }
+        }
+      }
+    },
+    {
       "id": "rails",
       "label": "Rails",
       "glyph": "RR",
