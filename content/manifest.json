@@ -316,28 +316,28 @@
       "banks": {
         "easy": {
           "path": "go/easy.json",
-          "hash": "1a2538995317ff4af0b92d9eb99f2a5e5b0f1f703d75f9d61a833f4c5767fc7f",
+          "hash": "b86aeb7dd457c05785637d17f43e119134190163b97e18dc34b228aed078cdd4",
           "access": "free",
-          "contentVersion": 2,
+          "contentVersion": 3,
           "topicCounts": {
-            "operators-and-types": 10,
-            "numbers-and-math": 10,
-            "wtf": 10,
-            "iterables": 10,
+            "operators-and-types": 8,
+            "numbers-and-math": 4,
+            "wtf": 7,
+            "iterables": 9,
             "strings": 10,
-            "data-structures": 10,
-            "functions-and-scope": 10,
-            "async-and-concurrency": 10,
-            "errors-and-control-flow": 10,
+            "data-structures": 9,
+            "functions-and-scope": 7,
+            "async-and-concurrency": 9,
+            "errors-and-control-flow": 7,
             "optimization": 10
           }
         },
         "medium": {
           "path": "go/medium.json",
-          "hash": "842c1dfdc7c448ef3176b91a10fd3857a55367329f8aea3f223129e84bbd7f6d",
+          "hash": "b6a226fce5611caf333ace71c9a7e26f097b050f5cb14d36c542abcc30311f32",
           "access": "paid",
           "productId": "syntactical.go.medium",
-          "contentVersion": 2,
+          "contentVersion": 3,
           "topicCounts": {
             "operators-and-types": 10,
             "strings": 10,
@@ -353,10 +353,10 @@
         },
         "hard": {
           "path": "go/hard.json",
-          "hash": "9dcce1df0bd00f800f2944d7b1fe2977a52e6e03176efb6b5de321c2afb9d179",
+          "hash": "0b2265c7a572d06f6d129e571e1d3120d75194cf9129a59199ca40950afa3cdc",
           "access": "paid",
           "productId": "syntactical.go.hard",
-          "contentVersion": 2,
+          "contentVersion": 3,
           "topicCounts": {
             "operators-and-types": 10,
             "numbers-and-math": 10,

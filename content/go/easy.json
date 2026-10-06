@@ -1,59 +1,8 @@
 {
   "questions": [
     {
-      "id": "gen-go-easy-27db8383",
-      "prompt": "What does this Go program print?",
-      "topic": "operators-and-types",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-question-v1",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      },
-      "query": {
-        "explanation": "In Go, `/` on two integer operands does truncated integer division, so the untyped constant expression 7/2 is the integer 3. The `%` operator takes the sign of the dividend, so -7%2 is -1 (not 1). Writing one operand with a decimal point, as in 7.0/2, makes the constant expression floating-point, so it evaluates to 3.5 and Println's default formatting shows it as 3.5. There is no implicit int-to-float conversion in Go: if both operands are ints you get an int result, and you must convert explicitly (e.g. float64(a)/float64(b)) to get a fractional result.",
-        "syntax": "a / b   // integer division when both operands are integers\na % b   // remainder, sign follows the dividend\n7.0 / 2 // floating-point constant division -> 3.5",
-        "tags": [
-          "operators",
-          "types",
-          "integer-division",
-          "modulo",
-          "constants"
-        ],
-        "title": "Integer vs floating-point division and %"
-      },
-      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(7/2, -7%2, 7.0/2)\n}",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "3 -1 3.5"
-        },
-        {
-          "text": "3 1 3.5",
-          "misconceptionId": "go.int-division-yields-float",
-          "rationale": "You likely expected % to return a non-negative remainder, as in Python. Go's % pairs with truncated division, so the remainder takes the sign of the dividend: -7%2 is -1, which is what the output shows."
-        },
-        {
-          "text": "3.5 -1 3.5",
-          "misconceptionId": "go.int-division-yields-float",
-          "rationale": "You read 7/2 as real-number division giving 3.5. Both operands are untyped integer constants, so the division is integer division truncating toward zero, and the output shows 3; only 7.0/2 is float and prints 3.5."
-        },
-        {
-          "text": "3 -1 3",
-          "misconceptionId": "go.numeric-types-auto-convert",
-          "rationale": "You assumed every division here truncates, treating 7.0 as just 7. The 7.0 literal makes the constant expression floating point, so 7.0/2 keeps its fractional part and the output ends with 3.5, not 3."
-        }
-      ],
-      "type": "mc"
-    },
-    {
       "id": "gen-go-easy-13bcc105",
-      "prompt": "In Go, what value does this snippet print?",
+      "prompt": "What value does this snippet print?",
       "topic": "operators-and-types",
       "provenance": {
         "isHumanReviewed": false,
@@ -104,7 +53,7 @@
     },
     {
       "id": "gen-go-easy-56ec2dcf",
-      "prompt": "Pick the line that this Go program's single Println call writes to standard output.",
+      "prompt": "What line does this program's Println call write?",
       "topic": "operators-and-types",
       "provenance": {
         "isHumanReviewed": false,
@@ -153,58 +102,8 @@
       "type": "mc"
     },
     {
-      "id": "gen-go-easy-b6973fb0",
-      "prompt": "After this Go program runs, what three values appear on the single output line, in order?",
-      "topic": "operators-and-types",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-question-v1",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      },
-      "query": {
-        "explanation": "`a` and `b` are both `int`, so `a/b` is integer division that truncates toward zero: 7/2 is 3, not 3.5. `a%b` is the remainder, 1. Converting first with `float64(a)/float64(b)` performs floating-point division and yields 3.5. `%` is only defined for integer types, so you cannot use it on float64 values. `fmt.Println` prints the float64 as 3.5 and separates values with single spaces.",
-        "syntax": "quotient := a / b   // int division truncates\nrem := a % b        // integers only\nexact := float64(a) / float64(b)",
-        "tags": [
-          "operators",
-          "types",
-          "integer-division",
-          "conversion"
-        ],
-        "title": "Go: / and % depend on operand type"
-      },
-      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := 7\n\tb := 2\n\tfmt.Println(a/b, a%b, float64(a)/float64(b))\n}",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "3 1 3.5"
-        },
-        {
-          "text": "3.5 1 3.5",
-          "misconceptionId": "go.int-division-yields-float",
-          "rationale": "This assumes 7/2 yields 3.5 because the mathematical result is fractional. With two int operands Go does integer division and truncates, so the first value printed is 3; only the explicitly converted float64 division gives 3.5."
-        },
-        {
-          "text": "3 1 3",
-          "misconceptionId": "go.numeric-types-auto-convert",
-          "rationale": "This treats float64(a)/float64(b) as if the numbers were still ints, assuming the type labels do not change the arithmetic. The conversions really produce float64 operands, so that division keeps the fraction and prints 3.5, not 3."
-        },
-        {
-          "text": "4 1 3.5",
-          "misconceptionId": "go.int-division-yields-float",
-          "rationale": "This expects int division to round 3.5 up to 4. Go truncates toward zero instead of rounding, so 7/2 is 3; the output line starts with 3, and the float64 division is the only place 3.5 appears."
-        }
-      ],
-      "type": "mc"
-    },
-    {
       "id": "gen-go-easy-c929c57e",
-      "prompt": "This Go program adds two uint8 values. Which result does it print?",
+      "prompt": "Which result does this program print?",
       "topic": "operators-and-types",
       "provenance": {
         "isHumanReviewed": false,
@@ -255,7 +154,7 @@
     },
     {
       "id": "gen-go-easy-79ef61bc",
-      "prompt": "The two divisions below differ only by a decimal point. What single line does this Go program write?",
+      "prompt": "What single line does this program write?",
       "topic": "operators-and-types",
       "provenance": {
         "isHumanReviewed": false,
@@ -305,7 +204,7 @@
     },
     {
       "id": "gen-go-easy-4e13fc6a",
-      "prompt": "Go's integer `/` truncates toward zero, and `%` takes its sign from the dividend. Which line does this program print?",
+      "prompt": "Which line does this program print?",
       "topic": "operators-and-types",
       "provenance": {
         "isHumanReviewed": false,
@@ -355,7 +254,7 @@
     },
     {
       "id": "gen-go-easy-a1445784",
-      "prompt": "int8 holds values from -128 to 127, so negating its smallest value cannot be represented. Which value does this program print?",
+      "prompt": "Which value does this program print?",
       "topic": "operators-and-types",
       "provenance": {
         "isHumanReviewed": false,
@@ -404,158 +303,8 @@
       "type": "mc"
     },
     {
-      "id": "gen-go-easy-88bdae04",
-      "prompt": "Go's math.Floor, math.Trunc and math.Round treat the negative value -2.5 differently. Which line does this program print?",
-      "topic": "numbers-and-math",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-question-v1",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      },
-      "query": {
-        "explanation": "math.Floor rounds toward negative infinity, so math.Floor(-2.5) is -3. math.Trunc discards the fractional part, rounding toward zero, so math.Trunc(-2.5) is -2. math.Round rounds to the nearest integer, with halfway cases rounded away from zero, so math.Round(-2.5) is -3 (not -2). fmt.Println prints a float64 whose value is a whole number without a decimal point, so the line reads \"-3 -2 -3\".",
-        "syntax": "math.Floor(x float64) float64 // toward -Inf\nmath.Trunc(x float64) float64 // toward zero\nmath.Round(x float64) float64 // nearest, halves away from zero",
-        "tags": [
-          "go",
-          "math",
-          "rounding",
-          "float64"
-        ],
-        "title": "math.Floor vs math.Trunc vs math.Round in Go"
-      },
-      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"math\"\n)\n\nfunc main() {\n\tfmt.Println(math.Floor(-2.5), math.Trunc(-2.5), math.Round(-2.5))\n}",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "-3 -2 -3"
-        },
-        {
-          "text": "-2 -2 -2",
-          "misconceptionId": "go.int-division-yields-float",
-          "rationale": "This assumes all three functions chop off the fractional part toward zero, giving -2 each time. Only math.Trunc does that; math.Floor goes to the next lower integer (-3) and math.Round rounds half away from zero (-3), so the output is -3 -2 -3."
-        },
-        {
-          "text": "-3 -3 -3",
-          "misconceptionId": "go.int-division-yields-float",
-          "rationale": "This treats all three as rounding -2.5 down to -3. Floor and Round do print -3 here, but math.Trunc discards the fraction and moves toward zero, giving -2, so the line is -3 -2 -3."
-        },
-        {
-          "text": "-2 -3 -2",
-          "misconceptionId": "go.int-division-yields-float",
-          "rationale": "This swaps Floor and Trunc, assuming Floor truncates toward zero and Trunc goes downward. It is the reverse: Floor always moves to the lower integer (-3) and Trunc moves toward zero (-2). Round also gives -3, so the output is -3 -2 -3."
-        }
-      ],
-      "type": "mc"
-    },
-    {
-      "id": "gen-go-easy-7c4c412c",
-      "prompt": "Go's `<<` and `>>` shift an integer's bits left or right, and shifts bind tighter than most operators. What single line does this program print?",
-      "topic": "numbers-and-math",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-question-v1",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      },
-      "query": {
-        "explanation": "For a non-negative int, x<<n multiplies by 2^n and x>>n divides by 2^n discarding the remainder. With x = 5: 5<<3 = 5*8 = 40; 5>>1 = 2 (the 0.5 is dropped); x<<1>>2 is evaluated left to right as (5<<1)>>2 = 10>>2 = 2. Because the low bit was shifted away by >>1, shifting left then right does not restore the original value.",
-        "syntax": "x << n  // left shift (multiply by 2^n)\nx >> n  // right shift (floor divide by 2^n for non-negative x)",
-        "tags": [
-          "go",
-          "numbers-and-math",
-          "bitwise",
-          "operators"
-        ],
-        "title": "Integer shifts in Go"
-      },
-      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tx := 5\n\tfmt.Println(x<<3, x>>1, x<<1>>2)\n}",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "40 2 2"
-        },
-        {
-          "text": "40 2 5",
-          "misconceptionId": "go.int-division-yields-float",
-          "rationale": "The first two values are right, but the third assumes the shifts group right-to-left (x << (1>>2) = x<<0) or that >>2 undoes <<1, leaving 5. Go's shifts are left-associative: (5<<1)>>2 is 10>>2, and the halving truncates away the fraction, so the line ends in 2."
-        },
-        {
-          "text": "15 2 2",
-          "misconceptionId": "go.int-division-yields-float",
-          "rationale": "15 suggests reading x<<3 as multiplying by the shift count (5*3). A left shift by 3 multiplies by 2^3, so 5<<3 is 40; the printed line starts with 40, not 15."
-        },
-        {
-          "text": "8 2 2",
-          "misconceptionId": "go.int-division-yields-float",
-          "rationale": "8 comes from treating << as addition of the shift count (5+3). Shifting moves bits, so x<<3 scales by 2^3 and gives 40, which is what the program prints first."
-        }
-      ],
-      "type": "mc"
-    },
-    {
-      "id": "gen-go-easy-14579624",
-      "prompt": "In Go, `math.Mod` works on `float64` values and keeps the sign of the dividend, just like the integer `%` operator. What single line does this program print?",
-      "topic": "numbers-and-math",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-question-v1",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      },
-      "query": {
-        "explanation": "`math.Mod(x, y)` returns the floating-point remainder of x/y, so `math.Mod(7.5, 2)` is 1.5. The result takes the sign of the dividend x, so `math.Mod(-7, 3)` is -1 (not 2 as a floor-based modulo would give). The integer operator `%` behaves the same way: `7%3` is 1. `fmt.Println` formats float64 with %v (equivalent to %g), so the float64 value -1 prints as `-1` and 1.5 prints as `1.5`.",
-        "syntax": "func Mod(x, y float64) float64  // remainder, sign of x",
-        "tags": [
-          "math",
-          "modulo",
-          "float64",
-          "operators"
-        ],
-        "title": "math.Mod and the % operator in Go"
-      },
-      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"math\"\n)\n\nfunc main() {\n\tfmt.Println(math.Mod(7.5, 2), math.Mod(-7, 3), 7%3)\n}",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "1.5 -1 1"
-        },
-        {
-          "text": "1.5 2 1",
-          "misconceptionId": "go.int-division-yields-float",
-          "rationale": "This assumes Go's modulo follows the divisor's sign, Python-style, so -7 mod 3 wraps up to 2. Go truncates division toward zero instead, so math.Mod(-7, 3) keeps the dividend's sign and the output shows -1, not 2."
-        },
-        {
-          "text": "1.5 -1 -1",
-          "misconceptionId": "go.int-division-yields-float",
-          "rationale": "The first two values are right, but this carries the minus sign over to 7%3. Both operands there are positive, and % keeps the dividend's sign, so the remainder is +1; the printed line ends in 1, not -1."
-        },
-        {
-          "text": "1 2 1",
-          "misconceptionId": "go.numeric-types-auto-convert",
-          "rationale": "This treats math.Mod(7.5, 2) as if the float were silently converted to an int, truncating 1.5 to 1, and also assumes a Python-style positive 2 for -7 mod 3. math.Mod works in float64 and keeps the dividend's sign, printing 1.5 and -1."
-        }
-      ],
-      "type": "mc"
-    },
-    {
       "id": "gen-go-easy-12c137f4",
-      "prompt": "float64 in Go stores values in binary, so some decimal literals cannot be held exactly. Which single line does this program write to standard output?",
+      "prompt": "Which single line does this program write to standard output?",
       "topic": "numbers-and-math",
       "provenance": {
         "isHumanReviewed": false,
@@ -604,109 +353,8 @@
       "type": "mc"
     },
     {
-      "id": "gen-go-easy-a200ada1",
-      "prompt": "In Go, `len` on a string reports its size in bytes, not the number of runes. What single line does this program write to standard output?",
-      "topic": "wtf",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-question-v1",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      },
-      "query": {
-        "explanation": "A Go string is a read-only slice of bytes holding UTF-8 text. `len(s)` returns the byte count, so \"héllo\" is 6 because `é` (U+00E9) encodes as the two bytes 0xC3 0xA9. To count characters, use `utf8.RuneCountInString(s)` or `len([]rune(s))`, both of which give 5. Slicing a string also works in byte units: `s[1:3]` grabs exactly those two bytes and yields the string \"é\", while `s[1]` alone would be a single byte (195) and print as a number.",
-        "syntax": "len(s) // bytes; utf8.RuneCountInString(s) // runes",
-        "tags": [
-          "strings",
-          "unicode",
-          "len",
-          "utf8"
-        ],
-        "title": "String length in Go: bytes vs runes"
-      },
-      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"unicode/utf8\"\n)\n\nfunc main() {\n\ts := \"héllo\"\n\tfmt.Println(len(s), utf8.RuneCountInString(s), len([]rune(s)), s[1:3])\n}",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "6 5 5 é"
-        },
-        {
-          "text": "5 5 5 é",
-          "misconceptionId": "go.string-indexing-gives-character",
-          "rationale": "This assumes len(s) counts characters, making all three counts 5. But len measures bytes, and 'e' with an accent needs two bytes in UTF-8, so the observed first number is 6 while the rune counts are 5."
-        },
-        {
-          "text": "6 6 6 é",
-          "misconceptionId": "go.string-indexing-gives-character",
-          "rationale": "This treats all three calls as the same measurement, 6. Only len(s) counts bytes; utf8.RuneCountInString and len([]rune(s)) decode UTF-8 and count the 5 characters, so the output is 6 5 5, not 6 6 6."
-        },
-        {
-          "text": "6 5 5 h",
-          "misconceptionId": "go.string-indexing-gives-character",
-          "rationale": "Picking \"h\" treats string indices as 1-based character positions, so s[1:3] looks like it starts at the first letter. Indices are 0-based byte offsets, and bytes 1 and 2 are the two bytes of the accented e, which prints as the observed é."
-        }
-      ],
-      "type": "mc"
-    },
-    {
-      "id": "gen-go-easy-e682e69f",
-      "prompt": "NaN is not equal to itself, yet it can be used as a map key. What single line does this Go program write to standard output?",
-      "topic": "wtf",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-question-v1",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      },
-      "query": {
-        "explanation": "IEEE-754 says NaN compares unequal to every value, including itself, so nan == nan is false. Go's map lookup uses that same equality: a NaN key never matches an existing NaN key, so each assignment m[nan] = ... inserts a brand new entry (len(m) becomes 2) and the entries are unreachable afterwards. The lookup v, ok := m[nan] therefore finds nothing, giving the zero value \"\" (so v == \"\" is true) and ok == false. Such entries can only be seen by ranging over the map; they can never be read or deleted by key.",
-        "syntax": "math.NaN(); v, ok := m[key]",
-        "tags": [
-          "go",
-          "maps",
-          "float64",
-          "nan",
-          "comparison"
-        ],
-        "title": "NaN as a Go map key"
-      },
-      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"math\"\n)\n\nfunc main() {\n\tnan := math.NaN()\n\tm := map[float64]string{}\n\tm[nan] = \"first\"\n\tm[nan] = \"second\"\n\tv, ok := m[nan]\n\tfmt.Println(nan == nan, len(m), v == \"\", ok)\n}",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "false 2 true false"
-        },
-        {
-          "text": "false 1 false true",
-          "misconceptionId": "go.map-missing-key-panics",
-          "rationale": "This assumes the second assignment overwrote the first (len 1) and that m[nan] then returns \"second\" with ok true. But each NaN store creates a new entry because NaN != NaN, so len is 2 and the lookup misses: output is false 2 true false."
-        },
-        {
-          "text": "true 1 false true",
-          "misconceptionId": "go.map-missing-key-panics",
-          "rationale": "Picking true for nan == nan treats NaN like any ordinary float value, which would make the two stores collide (len 1) and the lookup succeed. The output starts with false: IEEE NaN is unequal to itself, so there are 2 entries and the read finds nothing."
-        },
-        {
-          "text": "false 2 false true",
-          "misconceptionId": "go.map-missing-key-panics",
-          "rationale": "This gets the inequality and len 2 right but still expects m[nan] to retrieve one of the stored strings, so v == \"\" false and ok true. Hash lookup also requires key equality, and no stored NaN equals the probe, so v is the zero string and ok is false."
-        }
-      ],
-      "type": "mc"
-    },
-    {
       "id": "gen-go-easy-d5420db6",
-      "prompt": "A Go map has no defined iteration order, yet the fmt package prints map values in a fixed order. Which single line does this program write to standard output?",
+      "prompt": "Which single line does this program write to standard output?",
       "topic": "wtf",
       "provenance": {
         "isHumanReviewed": false,
@@ -750,7 +398,7 @@
     },
     {
       "id": "gen-go-easy-332e9efe",
-      "prompt": "Since Go 1.22 you can range directly over an integer. What single line does this program write to standard output?",
+      "prompt": "What single line does this program write to standard output?",
       "topic": "iterables",
       "answerIndex": 0,
       "choices": [
@@ -795,54 +443,8 @@
       }
     },
     {
-      "id": "gen-go-easy-81c100aa",
-      "prompt": "A range over a string yields the byte offset of each rune, not a running count of runes. What single line does this program write to standard output?",
-      "topic": "iterables",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "0,1,3"
-        },
-        {
-          "text": "0,1,2",
-          "rationale": "These would be rune counts; range reports byte offsets, and the two-byte 'ñ' pushes 'b' to offset 3."
-        },
-        {
-          "text": "0,2,3",
-          "rationale": "'ñ' starts at offset 1, right after the single-byte 'a'; only the index after it is shifted."
-        },
-        {
-          "text": "0,1,2,3",
-          "rationale": "The loop runs once per rune, and the string has 3 runes, so only 3 indexes are produced."
-        }
-      ],
-      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\nfunc main() {\n\tvar idx []string\n\tfor i := range \"añb\" {\n\t\tidx = append(idx, fmt.Sprint(i))\n\t}\n\tfmt.Println(strings.Join(idx, \",\"))\n}",
-      "query": {
-        "explanation": "Ranging a string decodes UTF-8 one rune at a time and reports each rune's starting byte index. 'ñ' takes two bytes, so the next index jumps from 1 to 3.",
-        "syntax": "for i, r := range s { ... }",
-        "tags": [
-          "iterables",
-          "strings",
-          "utf8"
-        ],
-        "title": "Range over a string yields byte offsets"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v1",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      }
-    },
-    {
       "id": "gen-go-easy-0bcbac3e",
-      "prompt": "Two interface values are equal only when their dynamic types match as well as their values. What single line does this Go program write to standard output?",
+      "prompt": "What single line does this program write to standard output?",
       "topic": "wtf",
       "answerIndex": 0,
       "choices": [
@@ -889,7 +491,7 @@
     },
     {
       "id": "gen-go-easy-a4855b17",
-      "prompt": "`math.Sqrt` and `math.Pow` both return float64 values. What single line does this program write to standard output?",
+      "prompt": "What single line does this program write to standard output?",
       "topic": "numbers-and-math",
       "answerIndex": 0,
       "choices": [
@@ -964,98 +566,6 @@
       }
     },
     {
-      "id": "gen-go-easy-5dc59037",
-      "prompt": "The math package exports untyped constants for the limits of Go's sized integer types. What single line does this program write to standard output?",
-      "topic": "numbers-and-math",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "127 255 32767"
-        },
-        {
-          "text": "128 256 32768",
-          "rationale": "These are the counts of representable values above zero, not the largest representable values, which are one less."
-        },
-        {
-          "text": "255 255 65535",
-          "rationale": "MaxInt8 is signed, so its maximum is 127; 255 is the unsigned 8-bit maximum."
-        },
-        {
-          "text": "127 255 65535",
-          "rationale": "65535 is MaxUint16; the signed 16-bit maximum is 32767."
-        }
-      ],
-      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"math\"\n)\n\nfunc main() {\n\tfmt.Println(math.MaxInt8, math.MaxUint8, math.MaxInt16)\n}",
-      "query": {
-        "explanation": "A signed 8-bit integer tops out at 127, an unsigned 8-bit integer at 255, and a signed 16-bit integer at 32767. These are untyped constants, so passing them to Println gives them their default type int.",
-        "syntax": "math.MaxInt8 / math.MaxUint8 / math.MaxInt16",
-        "tags": [
-          "math",
-          "constants",
-          "integers"
-        ],
-        "title": "Integer limit constants in math"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v1",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      }
-    },
-    {
-      "id": "gen-go-easy-c2646ed8",
-      "prompt": "This program sums the integers 1 through 10 and then divides that sum two different ways. What single line does it write to standard output?",
-      "topic": "numbers-and-math",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "55 5 5.5"
-        },
-        {
-          "text": "55 5.5 5.5",
-          "rationale": "sum is an int, so sum/10 is integer division and truncates to 5."
-        },
-        {
-          "text": "55 6 5.5",
-          "rationale": "Integer division truncates toward zero rather than rounding, so it gives 5."
-        },
-        {
-          "text": "45 4 4.5",
-          "rationale": "The loop condition is i <= 10, so 10 is included and the sum is 55, not 45."
-        }
-      ],
-      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tsum := 0\n\tfor i := 1; i <= 10; i++ {\n\t\tsum += i\n\t}\n\tfmt.Println(sum, sum/10, float64(sum)/10)\n}",
-      "query": {
-        "explanation": "The loop accumulates 1+2+...+10 = 55. Because `sum` is an int, `sum/10` is integer division that truncates 5.5 toward zero to 5. Converting to float64 first makes the division floating-point, giving 5.5.",
-        "syntax": "sum / 10 // int division; float64(sum) / 10 // float division",
-        "tags": [
-          "integer-division",
-          "conversion",
-          "loops"
-        ],
-        "title": "Integer sum and two kinds of average"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v1",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      }
-    },
-    {
       "id": "gen-go-easy-41955f52",
       "prompt": "True or false: in Go, strings.HasPrefix(\"gopher\", \"go\") and strings.HasSuffix(\"gopher\", \"her\") both report true.",
       "topic": "strings",
@@ -1086,7 +596,7 @@
     },
     {
       "id": "gen-go-easy-83455090",
-      "prompt": "In Go, strings.Fields splits a string around runs of whitespace and discards empty pieces. How many elements does this program report?",
+      "prompt": "How many elements does this program report?",
       "topic": "strings",
       "answerIndex": 0,
       "choices": [
@@ -1132,7 +642,7 @@
     },
     {
       "id": "gen-go-easy-acc3e4cc",
-      "prompt": "In Go, strings.TrimSpace removes whitespace from both ends of a string and returns a new string. What single line does this program write to standard output?",
+      "prompt": "What single line does this program write to standard output?",
       "topic": "strings",
       "answerIndex": 0,
       "choices": [
@@ -1177,54 +687,8 @@
       }
     },
     {
-      "id": "gen-go-easy-c1e5d5be",
-      "prompt": "A Go slice can act as a stack when you push with append and pop by re-slicing off the last element. What single line does this program write to standard output?",
-      "topic": "data-structures",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "c b 1"
-        },
-        {
-          "text": "a b 1",
-          "rationale": "Popping takes the last element, not the first, so the first value removed is \"c\" rather than \"a\"."
-        },
-        {
-          "text": "c b 3",
-          "rationale": "Each re-slice shortens the stack, so after two pops the length is 1, not the original 3."
-        },
-        {
-          "text": "b c 1",
-          "rationale": "A stack is last-in-first-out: \"c\" was pushed last so it comes off before \"b\"."
-        }
-      ],
-      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar stack []string\n\tstack = append(stack, \"a\", \"b\", \"c\")\n\n\ttop := stack[len(stack)-1]\n\tstack = stack[:len(stack)-1]\n\n\tnext := stack[len(stack)-1]\n\tstack = stack[:len(stack)-1]\n\n\tfmt.Println(top, next, len(stack))\n}",
-      "query": {
-        "explanation": "append pushes onto the end and s = s[:len(s)-1] pops from the end, so the last value pushed is the first one read back. Two pops of the three-element stack return \"c\" then \"b\" and leave one element behind.",
-        "syntax": "stack = append(stack, v); top := stack[len(stack)-1]; stack = stack[:len(stack)-1]",
-        "tags": [
-          "slices",
-          "stack",
-          "lifo"
-        ],
-        "title": "Slice as a LIFO stack"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v1",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      }
-    },
-    {
       "id": "gen-go-easy-4c3533eb",
-      "prompt": "This Go program builds a binary search tree out of structs and then walks it left-node-right. What single line does it write to standard output?",
+      "prompt": "What single line does this program write to standard output?",
       "topic": "data-structures",
       "answerIndex": 0,
       "choices": [
@@ -1301,7 +765,7 @@
     },
     {
       "id": "gen-go-easy-c33a0b86",
-      "prompt": "A Go function can return more than one value, and `:=` can receive them all at once. What single line does this program write to standard output?",
+      "prompt": "What single line does this program write to standard output?",
       "topic": "functions-and-scope",
       "answerIndex": 0,
       "choices": [
@@ -1347,7 +811,7 @@
     },
     {
       "id": "gen-go-easy-15340365",
-      "prompt": "In Go a function is a value: it can be stored in a variable and passed to another function. What single line does this program write to standard output?",
+      "prompt": "What single line does this program write to standard output?",
       "topic": "functions-and-scope",
       "answerIndex": 0,
       "choices": [
@@ -1453,7 +917,7 @@
     },
     {
       "id": "gen-go-easy-f3e775dc",
-      "prompt": "Which value does the bit-clear expression in this Go program send to standard output?",
+      "prompt": "Which value does this program send to standard output?",
       "topic": "operators-and-types",
       "answerIndex": 0,
       "choices": [
@@ -1528,53 +992,6 @@
       }
     },
     {
-      "id": "gen-go-easy-fad34116",
-      "prompt": "What single line does this Go program write to standard output?",
-      "topic": "numbers-and-math",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "4 9 2"
-        },
-        {
-          "text": "-4 9 2",
-          "rationale": "math.Abs returns the magnitude of its argument, so it reports 4 rather than keeping the negative sign."
-        },
-        {
-          "text": "4 2 9",
-          "rationale": "This swaps the last two values: math.Max comes first in the call and yields 9, while math.Min yields 2."
-        },
-        {
-          "text": "4 9 9",
-          "rationale": "math.Min returns the smaller of 2 and 9, which is 2, not 9."
-        }
-      ],
-      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"math\"\n)\n\nfunc main() {\n\tfmt.Println(math.Abs(-4), math.Max(2, 9), math.Min(2, 9))\n}",
-      "query": {
-        "explanation": "math.Abs(-4) drops the sign and gives 4. math.Max returns the larger of its two float64 arguments (9), and math.Min returns the smaller (2). All three results are float64 values with no fractional part, so fmt.Println prints them as 4, 9 and 2 separated by single spaces.",
-        "syntax": "math.Abs(x float64) float64; math.Max(x, y float64) float64; math.Min(x, y float64) float64",
-        "tags": [
-          "go",
-          "math",
-          "numbers",
-          "stdlib"
-        ],
-        "title": "math.Abs, math.Max and math.Min"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      }
-    },
-    {
       "id": "gen-go-easy-636ff1f9",
       "prompt": "Does this Go program print 14?",
       "topic": "numbers-and-math",
@@ -1607,7 +1024,7 @@
     },
     {
       "id": "gen-go-easy-c6999740",
-      "prompt": "Which line does this Go program print?",
+      "prompt": "Which line does this program print?",
       "topic": "strings",
       "answerIndex": 0,
       "choices": [
@@ -1652,7 +1069,7 @@
     },
     {
       "id": "gen-go-easy-99f1779f",
-      "prompt": "How many elements does this Go program report?",
+      "prompt": "How many elements does this program report?",
       "topic": "strings",
       "answerIndex": 0,
       "choices": [
@@ -1697,7 +1114,7 @@
     },
     {
       "id": "gen-go-easy-d0935f07",
-      "prompt": "What string does strings.Replace produce here?",
+      "prompt": "What string does this program print?",
       "topic": "strings",
       "answerIndex": 0,
       "choices": [
@@ -1743,7 +1160,7 @@
     },
     {
       "id": "gen-go-easy-27c9b9f8",
-      "prompt": "What index does strings.Index report for this call?",
+      "prompt": "What index does this program print?",
       "topic": "strings",
       "answerIndex": 0,
       "choices": [
@@ -1835,7 +1252,7 @@
     },
     {
       "id": "gen-go-easy-2fc4aa8c",
-      "prompt": "What line do these strings.Repeat and strings.Join calls produce?",
+      "prompt": "What line does this program produce?",
       "topic": "strings",
       "answerIndex": 0,
       "choices": [
@@ -1881,7 +1298,7 @@
     },
     {
       "id": "gen-go-easy-5cd91ac1",
-      "prompt": "What count and total does this map loop report?",
+      "prompt": "What count and total does this loop report?",
       "topic": "iterables",
       "answerIndex": 0,
       "choices": [
@@ -1926,7 +1343,7 @@
     },
     {
       "id": "gen-go-easy-ffde40bc",
-      "prompt": "What sum does this program report from the channel?",
+      "prompt": "What sum does this program report?",
       "topic": "iterables",
       "answerIndex": 0,
       "choices": [
@@ -2108,7 +1525,7 @@
     },
     {
       "id": "gen-go-easy-3ff3ac8d",
-      "prompt": "What number does this range-over-func iterator print?",
+      "prompt": "What number does this program print?",
       "topic": "iterables",
       "answerIndex": 0,
       "choices": [
@@ -2154,7 +1571,7 @@
     },
     {
       "id": "gen-go-easy-e22f8e18",
-      "prompt": "What line do these maps.Keys and slices.Sorted calls produce?",
+      "prompt": "What line does this program produce?",
       "topic": "iterables",
       "answerIndex": 0,
       "choices": [
@@ -2320,7 +1737,7 @@
     },
     {
       "id": "gen-go-easy-e1565f11",
-      "prompt": "What total does this linked list walk print?",
+      "prompt": "What total does this snippet print?",
       "topic": "data-structures",
       "answerIndex": 0,
       "choices": [
@@ -2366,7 +1783,7 @@
     },
     {
       "id": "gen-go-easy-6db7bcee",
-      "prompt": "Which value and remaining length does this dequeue produce?",
+      "prompt": "Which value and remaining length does this snippet produce?",
       "topic": "data-structures",
       "answerIndex": 0,
       "choices": [
@@ -2442,7 +1859,7 @@
     },
     {
       "id": "gen-go-easy-04eb5cc9",
-      "prompt": "In what order does sort.Ints leave these values?",
+      "prompt": "In what order does this snippet leave these values?",
       "topic": "data-structures",
       "answerIndex": 0,
       "choices": [
@@ -2579,98 +1996,6 @@
       }
     },
     {
-      "id": "gen-go-easy-e1f18fa2",
-      "prompt": "What line do these two counters print?",
-      "topic": "functions-and-scope",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "1 2 1"
-        },
-        {
-          "text": "1 2 3",
-          "rationale": "c2 comes from a separate call to counter, so it captures a brand new n and restarts at 1 instead of continuing c1's count."
-        },
-        {
-          "text": "1 1 1",
-          "rationale": "c1 is called twice and its captured n persists between calls, so the second c1 call yields 2."
-        },
-        {
-          "text": "2 1 1",
-          "rationale": "Arguments are evaluated in left-to-right order, so the first c1 call returns 1 and the second returns 2."
-        }
-      ],
-      "code": "package main\n\nimport \"fmt\"\n\nfunc counter() func() int {\n\tn := 0\n\treturn func() int {\n\t\tn++\n\t\treturn n\n\t}\n}\n\nfunc main() {\n\tc1 := counter()\n\tc2 := counter()\n\tfmt.Println(c1(), c1(), c2())\n}",
-      "query": {
-        "explanation": "Every call to counter creates a fresh local n, and the returned closure captures that specific variable. c1 increments its own n twice, giving 1 then 2, while c2 has an independent n that starts over at 1. Call arguments are evaluated left to right.",
-        "syntax": "func counter() func() int { n := 0; return func() int { n++; return n } }",
-        "tags": [
-          "closures",
-          "scope",
-          "functions"
-        ],
-        "title": "Each closure captures its own variable"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      }
-    },
-    {
-      "id": "gen-go-easy-bba8ed92",
-      "prompt": "What three sums does this program print?",
-      "topic": "functions-and-scope",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "0 3 6"
-        },
-        {
-          "text": "0 2 6",
-          "rationale": "sum(1, 2) adds both arguments, giving 3 rather than 2."
-        },
-        {
-          "text": "0 3 3",
-          "rationale": "The ... spread passes all three elements 1, 2 and 3, so that call totals 6."
-        },
-        {
-          "text": "0 3 1",
-          "rationale": "Spreading a slice passes every element, not just the first, so the last call is 6."
-        }
-      ],
-      "code": "package main\n\nimport \"fmt\"\n\nfunc sum(nums ...int) int {\n\tt := 0\n\tfor _, n := range nums {\n\t\tt += n\n\t}\n\treturn t\n}\n\nfunc main() {\n\tfmt.Println(sum(), sum(1, 2), sum([]int{1, 2, 3}...))\n}",
-      "query": {
-        "explanation": "Inside sum the parameter nums is an []int built from the arguments. With no arguments it is an empty (nil) slice so the total is 0; with 1 and 2 it totals 3; and the ... spread passes every element of the slice, totalling 6.",
-        "syntax": "func sum(nums ...int) int   // call as sum(1, 2) or sum(slice...)",
-        "tags": [
-          "functions",
-          "variadic",
-          "slices"
-        ],
-        "title": "Variadic parameters"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      }
-    },
-    {
       "id": "gen-go-easy-50adc6fe",
       "prompt": "What value does this program print after the two calls?",
       "topic": "functions-and-scope",
@@ -2717,54 +2042,8 @@
       }
     },
     {
-      "id": "gen-go-easy-ee2f3b71",
-      "prompt": "What do these three stored closures return? (Go 1.22+)",
-      "topic": "functions-and-scope",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "1 2 3"
-        },
-        {
-          "text": "4 4 4",
-          "rationale": "That was the old pre-1.22 behaviour with one shared i left at its final value; from Go 1.22 each iteration has its own i."
-        },
-        {
-          "text": "3 3 3",
-          "rationale": "The closures do not share a single variable, and a shared i would also end at 4, not 3."
-        },
-        {
-          "text": "1 1 1",
-          "rationale": "Each closure captures its own iteration's i, so they return the three different loop values."
-        }
-      ],
-      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfuncs := []func() int{}\n\tfor i := 1; i <= 3; i++ {\n\t\tfuncs = append(funcs, func() int { return i })\n\t}\n\tfmt.Println(funcs[0](), funcs[1](), funcs[2]())\n}",
-      "query": {
-        "explanation": "Since Go 1.22 the variable declared by a for statement is scoped to each iteration, so every closure captures a distinct i holding that iteration's value. The three closures therefore return 1, 2 and 3.",
-        "syntax": "for i := 1; i <= 3; i++ { ... }  // i is a new variable each iteration",
-        "tags": [
-          "closures",
-          "scope",
-          "loops"
-        ],
-        "title": "Loop variable scope in Go 1.22+"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      }
-    },
-    {
       "id": "gen-go-easy-370ecc10",
-      "prompt": "What value does this go program write to standard output?",
+      "prompt": "What value does this program write to standard output?",
       "topic": "functions-and-scope",
       "answerIndex": 0,
       "choices": [
@@ -2826,52 +2105,6 @@
       },
       "rationale": "It cannot print 6: `n` is a local copy of the argument, so incrementing it leaves the caller's `v` at 5.",
       "type": "bool",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      }
-    },
-    {
-      "id": "gen-go-easy-950d19d5",
-      "prompt": "In what order does this program print its three letters?",
-      "topic": "errors-and-control-flow",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "C B A"
-        },
-        {
-          "text": "A B C",
-          "rationale": "This is the source order, but deferred calls do not run where they are written."
-        },
-        {
-          "text": "C A B",
-          "rationale": "Deferred calls run in reverse order of registration, so B comes before A."
-        },
-        {
-          "text": "B A C",
-          "rationale": "The non-deferred Println(\"C\") runs before the function returns, so C cannot be last."
-        }
-      ],
-      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tdefer fmt.Println(\"A\")\n\tdefer fmt.Println(\"B\")\n\tfmt.Println(\"C\")\n}",
-      "query": {
-        "explanation": "Statements in the function body run first, so C is printed immediately. Deferred calls are pushed onto a stack and run when the function returns, in last-in-first-out order, so B runs before A.",
-        "syntax": "defer f()",
-        "tags": [
-          "defer",
-          "control-flow",
-          "go"
-        ],
-        "title": "Deferred calls run last, in reverse order"
-      },
-      "type": "mc",
       "provenance": {
         "isHumanReviewed": false,
         "model": "claude-opus-5[1m]",
@@ -2977,52 +2210,6 @@
       }
     },
     {
-      "id": "gen-go-easy-79e6481a",
-      "prompt": "What message does this program print for err?",
-      "topic": "errors-and-control-flow",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "open config: permission denied"
-        },
-        {
-          "text": "permission denied",
-          "rationale": "The surrounding context text from the format string is part of the final message."
-        },
-        {
-          "text": "open config: %w",
-          "rationale": "%w is a real formatting verb; it is replaced by the wrapped error's message, not printed literally."
-        },
-        {
-          "text": "open config",
-          "rationale": "The wrapped error's text is appended after the colon, so it appears in the output."
-        }
-      ],
-      "code": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n)\n\nvar ErrDenied = errors.New(\"permission denied\")\n\nfunc main() {\n\terr := fmt.Errorf(\"open config: %w\", ErrDenied)\n\tfmt.Println(err)\n}",
-      "query": {
-        "explanation": "The %w verb behaves like %v for formatting: it substitutes the wrapped error's message into the new message, while also recording the wrapped error for later unwrapping.",
-        "syntax": "fmt.Errorf(\"context: %w\", err)",
-        "tags": [
-          "errors",
-          "fmt.Errorf",
-          "go"
-        ],
-        "title": "%w formats the wrapped error's text"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      }
-    },
-    {
       "id": "gen-go-easy-375345b3",
       "prompt": "Which labels does this nested loop collect?",
       "topic": "errors-and-control-flow",
@@ -3055,53 +2242,6 @@
           "go"
         ],
         "title": "break with a label exits the labeled loop"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      }
-    },
-    {
-      "id": "gen-go-easy-00243f4f",
-      "prompt": "Which numbers does this loop collect?",
-      "topic": "errors-and-control-flow",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "1 3 5"
-        },
-        {
-          "text": "2 4 6",
-          "rationale": "The even values are the ones skipped by continue, not the ones kept."
-        },
-        {
-          "text": "1 2 3 4 5 6",
-          "rationale": "continue prevents the append for even values, so half the numbers are missing."
-        },
-        {
-          "text": "1",
-          "rationale": "continue only ends the current iteration; it does not stop the loop the way break would."
-        }
-      ],
-      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\nfunc main() {\n\tvar out []string\n\tfor i := 1; i <= 6; i++ {\n\t\tif i%2 == 0 {\n\t\t\tcontinue\n\t\t}\n\t\tout = append(out, fmt.Sprint(i))\n\t}\n\tfmt.Println(strings.Join(out, \" \"))\n}",
-      "query": {
-        "explanation": "continue jumps straight to the loop's post statement and next condition check, skipping the remaining body. Here every even i is skipped before it can be appended.",
-        "syntax": "for ... { if cond { continue } }",
-        "tags": [
-          "continue",
-          "loops",
-          "control-flow",
-          "go"
-        ],
-        "title": "continue skips the rest of one iteration"
       },
       "type": "mc",
       "provenance": {
@@ -3241,7 +2381,7 @@
     },
     {
       "id": "gen-go-easy-d515f6f0",
-      "prompt": "What length and capacity does this buffered channel report?",
+      "prompt": "What length and capacity does this program report?",
       "topic": "async-and-concurrency",
       "answerIndex": 0,
       "choices": [
@@ -3404,51 +2544,6 @@
       }
     },
     {
-      "id": "gen-go-easy-20077495",
-      "prompt": "What single line does this program print from the two comma-ok receives?",
-      "topic": "async-and-concurrency",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "\"hi\" true \"\" false"
-        },
-        {
-          "text": "\"hi\" true \"\" true",
-          "rationale": "ok is false once the channel is closed and drained, so the second receive reports false."
-        },
-        {
-          "text": "\"\" false \"\" false",
-          "rationale": "Closing does not discard buffered values, so the first receive still delivers \"hi\" with ok true."
-        },
-        {
-          "text": "\"hi\" false \"\" false",
-          "rationale": "The first value really came from the channel, so its ok is true."
-        }
-      ],
-      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tch := make(chan string, 1)\n\tch <- \"hi\"\n\tclose(ch)\n\n\ta, ok1 := <-ch\n\tb, ok2 := <-ch\n\tfmt.Printf(\"%q %v %q %v\\n\", a, ok1, b, ok2)\n}",
-      "query": {
-        "explanation": "v, ok := <-ch sets ok to true when v came from the channel and false once the channel is closed and empty. Buffered values survive close, so the first receive still reports true.",
-        "syntax": "v, ok := <-ch",
-        "tags": [
-          "channels",
-          "comma-ok"
-        ],
-        "title": "The comma-ok form of a channel receive"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      }
-    },
-    {
       "id": "gen-go-easy-f2d70c0b",
       "prompt": "Which branch of this select runs?",
       "topic": "async-and-concurrency",
@@ -3495,7 +2590,7 @@
     },
     {
       "id": "gen-go-easy-11b6d3d3",
-      "prompt": "What does this program print for ctx.Err() after cancel?",
+      "prompt": "What does this program print for ctx.Err()?",
       "topic": "async-and-concurrency",
       "answerIndex": 0,
       "choices": [
@@ -3540,7 +2635,7 @@
     },
     {
       "id": "gen-go-easy-6534d25b",
-      "prompt": "What line does this Go program print?",
+      "prompt": "What line does this program print?",
       "topic": "async-and-concurrency",
       "answerIndex": 0,
       "choices": [
@@ -3587,7 +2682,7 @@
     },
     {
       "id": "gen-go-easy-1279a31d",
-      "prompt": "What does this memoized Fibonacci program print?",
+      "prompt": "What does this program print?",
       "topic": "optimization",
       "answerIndex": 0,
       "choices": [
@@ -3633,7 +2728,7 @@
     },
     {
       "id": "gen-go-easy-ba5a3aa2",
-      "prompt": "What len and cap does this program report?",
+      "prompt": "What len and cap does this snippet report?",
       "topic": "optimization",
       "answerIndex": 0,
       "choices": [
@@ -3679,7 +2774,7 @@
     },
     {
       "id": "gen-go-easy-9cf7563b",
-      "prompt": "What index does sort.SearchInts report here?",
+      "prompt": "What index does this snippet report?",
       "topic": "optimization",
       "answerIndex": 0,
       "choices": [
@@ -3725,7 +2820,7 @@
     },
     {
       "id": "gen-go-easy-31463cad",
-      "prompt": "What minimum coin count does this program print?",
+      "prompt": "What number does this snippet print?",
       "topic": "optimization",
       "answerIndex": 0,
       "choices": [
@@ -3771,7 +2866,7 @@
     },
     {
       "id": "gen-go-easy-0e7ac135",
-      "prompt": "What maximum subarray sum does this program print?",
+      "prompt": "What value does this snippet print?",
       "topic": "optimization",
       "answerIndex": 0,
       "choices": [
@@ -3817,7 +2912,7 @@
     },
     {
       "id": "gen-go-easy-3ee6a5eb",
-      "prompt": "How many primes does this sieve count?",
+      "prompt": "What count does this snippet print?",
       "topic": "optimization",
       "answerIndex": 0,
       "choices": [
@@ -3863,7 +2958,7 @@
     },
     {
       "id": "gen-go-easy-d24dc862",
-      "prompt": "What maximum value does this knapsack program print?",
+      "prompt": "What value does this snippet print?",
       "topic": "optimization",
       "answerIndex": 0,
       "choices": [
@@ -3909,7 +3004,7 @@
     },
     {
       "id": "gen-go-easy-e27782d0",
-      "prompt": "What value does this fast-exponentiation program print?",
+      "prompt": "What value does this snippet print?",
       "topic": "optimization",
       "answerIndex": 0,
       "choices": [
@@ -4014,54 +3109,8 @@
       }
     },
     {
-      "id": "gen-go-easy-587f3311",
-      "prompt": "What three values does this append-and-aliasing program print?",
-      "topic": "wtf",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "99 3 4"
-        },
-        {
-          "text": "1 3 4",
-          "rationale": "append had spare capacity, so no new array was allocated and b shares storage with a, meaning b[0] = 99 is visible through a."
-        },
-        {
-          "text": "99 4 4",
-          "rationale": "append never changes the length of the original slice value; a still has length 3 even though its backing array holds a fourth element."
-        },
-        {
-          "text": "1 4 5",
-          "rationale": "a keeps length 3, b gets length 4 (not capacity 5), and the shared backing array makes a[0] 99."
-        }
-      ],
-      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := make([]int, 3, 5)\n\ta[0], a[1], a[2] = 1, 2, 3\n\tb := append(a, 4)\n\tb[0] = 99\n\tfmt.Println(a[0], len(a), len(b))\n}",
-      "query": {
-        "explanation": "make([]int, 3, 5) leaves spare capacity, so append writes the new element into the existing backing array and returns a slice over that same array. b therefore shares memory with a: b[0] = 99 also changes a[0]. Lengths are independent though, so a stays at 3 while b is 4.",
-        "syntax": "b := append(a, x) // may or may not copy",
-        "tags": [
-          "slices",
-          "append",
-          "aliasing"
-        ],
-        "title": "append can alias the original slice"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Go 1.25.14"
-      }
-    },
-    {
       "id": "gen-go-easy-65d09a22",
-      "prompt": "What does this rune conversion joined with strconv.Itoa print?",
+      "prompt": "What does this program print?",
       "topic": "wtf",
       "answerIndex": 0,
       "choices": [
@@ -4107,7 +3156,7 @@
     },
     {
       "id": "gen-go-easy-8e7f3663",
-      "prompt": "After copying this struct and editing the copy, what pair does the original report?",
+      "prompt": "After editing the copy, what pair does the original report?",
       "topic": "wtf",
       "answerIndex": 0,
       "choices": [
@@ -4153,7 +3202,7 @@
     },
     {
       "id": "gen-go-easy-213ceade",
-      "prompt": "What single line do these two deferred calls print?",
+      "prompt": "What single line does this program print?",
       "topic": "wtf",
       "answerIndex": 0,
       "choices": [
@@ -4264,7 +3313,7 @@
         }
       ],
       "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\nfunc main() {\n\tfmt.Println(strings.Count(\"cheese\", \"e\"))\n}",
-      "prompt": "What number does this strings.Count call print?",
+      "prompt": "What number does this program print?",
       "query": {
         "explanation": "strings.Count returns how many non-overlapping instances of the substring appear in the string. \"cheese\" contains the letter 'e' at indexes 2, 4 and 5, so the count is 3. (As a special case, counting the empty substring returns len(s)+1.)",
         "syntax": "strings.Count(s, substr string) int",
@@ -4310,7 +3359,7 @@
         }
       ],
       "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"iter\"\n\t\"slices\"\n)\n\nfunc squares(n int) iter.Seq[int] {\n\treturn func(yield func(int) bool) {\n\t\tfor i := 1; i <= n; i++ {\n\t\t\tif !yield(i * i) {\n\t\t\t\treturn\n\t\t\t}\n\t\t}\n\t}\n}\n\nfunc main() {\n\tfmt.Println(slices.Collect(squares(4)))\n}",
-      "prompt": "What slice does slices.Collect gather from this iterator?",
+      "prompt": "What slice does this program print?",
       "query": {
         "explanation": "An iter.Seq[int] is a function that takes a yield callback and calls it once per element. Here squares(4) yields 1*1, 2*2, 3*3 and 4*4. slices.Collect drains such an iterator into a new slice, so it gathers [1 4 9 16]. The `if !yield(...) { return }` guard lets the consumer stop early; Collect never stops early, so every value arrives. Printing a []int with fmt.Println shows the elements space-separated inside square brackets.",
         "syntax": "slices.Collect(seq iter.Seq[E]) []E",
@@ -4357,7 +3406,7 @@
         }
       ],
       "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"time\"\n)\n\nfunc main() {\n\td := 90 * time.Second\n\tfmt.Println(d)\n}",
-      "prompt": "Which line does this time.Duration print produce?",
+      "prompt": "Which line does this program produce?",
       "query": {
         "explanation": "time.Duration is just an int64 count of nanoseconds, but it implements Stringer. fmt.Println therefore calls String(), which formats the value with the largest sensible units and a remainder, so 90 * time.Second prints as 1m30s rather than as 90000000000.",
         "syntax": "d := 90 * time.Second; fmt.Println(d) // 1m30s",
