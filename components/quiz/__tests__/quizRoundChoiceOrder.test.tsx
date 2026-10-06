@@ -39,11 +39,11 @@ async function renderRound() {
 }
 
 // The choice buttons render in display order; read that order from their accessible names
-// (the choice text, then ", correct" or ", incorrect" once answered).
+// (the key letter, the choice text, then ", correct" or ", incorrect" once answered).
 function readShownOrder(): string[] {
   return screen
-    .getAllByLabelText(/^(right|wrong-\d)(,|$)/)
-    .map((element) => String(element.props['aria-label'] ?? element.props.accessibilityLabel ?? '').split(',')[0]);
+    .getAllByLabelText(/^[A-D], (right|wrong-\d)(,|$)/)
+    .map((element) => String(element.props['aria-label'] ?? element.props.accessibilityLabel ?? '').split(', ')[1]);
 }
 
 afterEach(() => jest.restoreAllMocks());
@@ -58,17 +58,17 @@ describe('QuizRound choice order', () => {
   it('scores the displayed correct choice as correct, with no Explain offered', async () => {
     jest.spyOn(Math, 'random').mockReturnValue(0);
     await renderRound();
-    await fireEvent.press(screen.getByLabelText('right'));
+    await fireEvent.press(screen.getByLabelText(/^[A-D], right$/));
     expect(screen.queryByRole('button', { name: 'Explain' })).toBeNull();
-    expect(screen.getByLabelText('right, correct')).toBeTruthy();
+    expect(screen.getByLabelText(/^[A-D], right, correct$/)).toBeTruthy();
   });
 
   it('scores a displayed wrong choice as incorrect and explains it with its own rationale', async () => {
     jest.spyOn(Math, 'random').mockReturnValue(0);
     await renderRound();
-    await fireEvent.press(screen.getByLabelText('wrong-1'));
-    expect(screen.getByLabelText('wrong-1, incorrect')).toBeTruthy();
-    expect(screen.getByLabelText('right, correct')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText(/^[A-D], wrong-1$/));
+    expect(screen.getByLabelText(/^[A-D], wrong-1, incorrect$/)).toBeTruthy();
+    expect(screen.getByLabelText(/^[A-D], right, correct$/)).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: 'Explain' }));
     expect(screen.queryByText('because one is wrong')).not.toBeNull();
   });
@@ -79,7 +79,7 @@ describe('QuizRound choice order', () => {
     const before = readShownOrder();
     expect(before).not.toEqual(['right', 'wrong-1', 'wrong-2', 'wrong-3']);
     jest.spyOn(Math, 'random').mockReturnValue(0.99);
-    await fireEvent.press(screen.getByLabelText('wrong-2'));
+    await fireEvent.press(screen.getByLabelText(/^[A-D], wrong-2$/));
     expect(readShownOrder()).toEqual(before);
   });
 });

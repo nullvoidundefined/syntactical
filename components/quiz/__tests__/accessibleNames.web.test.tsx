@@ -4,13 +4,19 @@ import { Text } from 'react-native';
 import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/contentFixtures';
 import { QueryDrawer } from '../../query/QueryDrawer';
 import { CodeBlock } from '../CodeBlock';
+import { MultipleChoiceCard } from '../MultipleChoiceCard';
 import { ProgressBar } from '../ProgressBar';
 import { QuestionCardFrame } from '../QuestionCardFrame';
 import { ResultsScreen } from '../ResultsScreen';
 
 jest.mock('react-native-reanimated', () => ({ useReducedMotion: () => true }));
 
-const query = { explanation: 'Counts from start.', syntax: 'enumerate(iterable, start=0)', tags: ['builtins'], title: 'enumerate(iterable, start=0)' };
+const query = {
+  explanation: 'Counts from start.',
+  syntax: 'enumerate(iterable, start=0)',
+  tags: ['builtins'],
+  title: 'enumerate(iterable, start=0)',
+};
 
 // The sign-up prompt reads auth and stats; SignUpPrompt.test.tsx covers it.
 jest.mock('../../auth/SignUpPrompt', () => ({ SignUpPrompt: () => null }));
@@ -26,6 +32,30 @@ describe('quiz screens on the web expose accessible names and headings', () => {
     expect(screen.getByRole('progressbar', { name: 'Question 100 of 100' })).toBeTruthy();
   });
 
+  it('starts each answer choice name with its visible letter (WCAG 2.5.3)', () => {
+    const question = {
+      answerIndex: 0,
+      choices: [{ text: 'users[1].name' }, { text: 'plain' }],
+      id: 'q',
+      prompt: 'p',
+      query,
+      provenance: TEST_PROVENANCE,
+      type: 'mc',
+    } as never;
+    render(
+      <MultipleChoiceCard
+        question={question}
+        grammar="javascript"
+        submittedAnswer={null}
+        isAnswered={false}
+        onSelect={jest.fn()}
+      />,
+    );
+    const button = screen.getByRole('button', { name: 'A, users[1].name' });
+    expect(button.textContent).toMatch(/^Ausers\[1\]\.name$/);
+    expect(screen.getByRole('button', { name: 'B, plain' })).toBeTruthy();
+  });
+
   it('names the query dialog after the query title', () => {
     render(<QueryDrawer isOpen query={query} grammar="python" onClose={jest.fn()} />);
     expect(screen.getByRole('dialog', { name: 'enumerate(iterable, start=0)' })).toBeTruthy();
@@ -39,7 +69,13 @@ describe('quiz screens on the web expose accessible names and headings', () => {
 
   it('gives a question card a level-one heading naming the language, difficulty, and type', () => {
     render(
-      <QuestionCardFrame languageLabel="Python" difficultyLabel="Easy" type="mc" onOpenQuery={jest.fn()} provenance={TEST_PROVENANCE}>
+      <QuestionCardFrame
+        languageLabel="Python"
+        difficultyLabel="Easy"
+        type="mc"
+        onOpenQuery={jest.fn()}
+        provenance={TEST_PROVENANCE}
+      >
         <Text>body</Text>
       </QuestionCardFrame>,
     );
@@ -47,9 +83,19 @@ describe('quiz screens on the web expose accessible names and headings', () => {
   });
 
   it('keeps one level-one heading when the verified badge is shown', () => {
-    const verified = { ...TEST_PROVENANCE, runtimeVersion: 'Python 3.13.2', validation: { method: 'executed', status: 'passed' } } as const;
+    const verified = {
+      ...TEST_PROVENANCE,
+      runtimeVersion: 'Python 3.13.2',
+      validation: { method: 'executed', status: 'passed' },
+    } as const;
     render(
-      <QuestionCardFrame languageLabel="Python" difficultyLabel="Easy" type="mc" onOpenQuery={jest.fn()} provenance={verified}>
+      <QuestionCardFrame
+        languageLabel="Python"
+        difficultyLabel="Easy"
+        type="mc"
+        onOpenQuery={jest.fn()}
+        provenance={verified}
+      >
         <Text>body</Text>
       </QuestionCardFrame>,
     );
@@ -59,7 +105,15 @@ describe('quiz screens on the web expose accessible names and headings', () => {
 
   it('gives the results screen a level-one heading', () => {
     render(
-      <ResultsScreen accuracy={50} correctCount={1} totalQuestions={2} languageLabel="Python" difficultyLabel="Easy" onMenu={jest.fn()} onRetry={jest.fn()} />,
+      <ResultsScreen
+        accuracy={50}
+        correctCount={1}
+        totalQuestions={2}
+        languageLabel="Python"
+        difficultyLabel="Easy"
+        onMenu={jest.fn()}
+        onRetry={jest.fn()}
+      />,
     );
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Python / Easy / Complete');
   });
