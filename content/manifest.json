@@ -316,9 +316,9 @@
       "banks": {
         "easy": {
           "path": "go/easy.json",
-          "hash": "aff453cf2c39b4abaaaa0c36f20cc418e72ad0495095e580c92cc661913a50f0",
+          "hash": "c28b05f7eb155750e93bbe84c4d6849a2fad4f0e2edc770f9bbacc3542846fd2",
           "access": "free",
-          "contentVersion": 4,
+          "contentVersion": 5,
           "topicCounts": {
             "operators-and-types": 10,
             "numbers-and-math": 10,

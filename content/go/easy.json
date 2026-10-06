@@ -3803,7 +3803,7 @@
           "rationale": "Two of the three pushed values were popped, so the backing slice has length 1, not 2."
         }
       ],
-      "code": "package main\n\nimport \"fmt\"\n\ntype Stack struct{ items []int }\n\nfunc (s *Stack) Push(v int) { s.items = append(s.items, v) }\n\nfunc (s *Stack) Pop() int {\n\tv := s.items[len(s.items)-1]\n\ts.items = s.items[:len(s.items)-1]\n\treturn v\n}\n\nfunc main() {\n\ts := &Stack{}\n\ts.Push(10)\n\ts.Push(20)\n\ts.Push(30)\n\ts.Pop()\n\tfmt.Println(s.Pop(), len(s.items))\n}",
+      "code": "package main\n\nimport \"fmt\"\n\ntype Stack struct{ items []int }\n\nfunc (s *Stack) Push(v int) { s.items = append(s.items, v) }\n\nfunc (s *Stack) Pop() int {\n\tv := s.items[len(s.items)-1]\n\ts.items = s.items[:len(s.items)-1]\n\treturn v\n}\n\nfunc main() {\n\ts := &Stack{}\n\ts.Push(10)\n\ts.Push(20)\n\ts.Push(30)\n\ts.Pop()\n\tv := s.Pop()\n\tfmt.Println(v, len(s.items))\n}",
       "prompt": "What does this program print?",
       "query": {
         "explanation": "Push appends to the end of the slice and Pop reads the last element then reslices to drop it, so the stack is last-in-first-out. After pushing 10, 20 and 30, the first Pop returns 30 (discarded) and the second returns 20, leaving only 10 behind, so len(s.items) is 1 and the program prints \"20 1\".",
