@@ -2,9 +2,5 @@
 // Run `npm run content:build` to regenerate it.
 
 export const BUNDLED_BANKS: Record<string, unknown> = {
-  'go/easy': require('../../content/go/easy.json'),
-  'javascript/easy': require('../../content/javascript/easy.json'),
-  'postgres/easy': require('../../content/postgres/easy.json'),
-  'python/easy': require('../../content/python/easy.json'),
-  'ruby/easy': require('../../content/ruby/easy.json'),
+  'frontend-security/easy': require('../../content/frontend-security/easy.json'),
 };
