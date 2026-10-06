@@ -148,9 +148,9 @@
     },
     {
       "id": "gen-ruby-easy-b9530d0c",
-      "prompt": "In Ruby, Math.sqrt(16) returns the Float 4.0 rather than the Integer 4.",
+      "prompt": "In Ruby, Math.sqrt(16) returns the Integer 4 rather than the Float 4.0.",
       "topic": "numbers-and-math",
-      "answer": true,
+      "answer": false,
       "query": {
         "explanation": "Methods in the Math module work in floating point, so Math.sqrt(16) is 4.0, a Float. Integer.sqrt(16) is the method that returns the Integer 4.",
         "syntax": "Math.sqrt(numeric) -> float",
@@ -161,7 +161,7 @@
         ],
         "title": "Math.sqrt always returns a Float"
       },
-      "rationale": "Saying it returns an Integer is wrong: Math.sqrt converts its argument to a Float and always answers a Float, here 4.0.",
+      "rationale": "The claim is false: Math.sqrt converts its argument to a Float and always answers a Float, so it returns 4.0, not the Integer 4.",
       "type": "bool",
       "provenance": {
         "isHumanReviewed": false,
@@ -363,9 +363,9 @@
     },
     {
       "id": "gen-ruby-easy-63531b48",
-      "prompt": "In Ruby, `[1, 2, 3, 4].select { |n| n.even? }` returns `[2, 4]`.",
+      "prompt": "In Ruby, `[1, 2, 3, 4].select { |n| n.even? }` returns `[1, 3]`.",
       "topic": "iterables",
-      "answer": true,
+      "answer": false,
       "code": "p [1, 2, 3, 4].select { |n| n.even? }",
       "query": {
         "explanation": "select (alias filter) returns a new array containing only the elements for which the block is truthy, so the even numbers 2 and 4 survive. Its counterpart reject does the opposite and would return [1, 3].",
@@ -378,7 +378,7 @@
         ],
         "title": "select keeps the matching elements"
       },
-      "rationale": "select keeps elements whose block result is truthy, so the evens remain; it is reject that would discard them and return [1, 3].",
+      "rationale": "The claim is false: select keeps the elements whose block result is truthy, so the evens [2, 4] remain; it is reject that would return [1, 3].",
       "type": "bool",
       "provenance": {
         "isHumanReviewed": false,
@@ -532,9 +532,9 @@
     },
     {
       "id": "gen-ruby-easy-0cb7bda4",
-      "prompt": "In Ruby, calling each_with_index without a block returns an Enumerator whose first element is the pair `[10, 0]` for the array `[10, 20, 30]`.",
+      "prompt": "In Ruby, calling each_with_index without a block returns an Enumerator whose first element is the pair `[0, 10]` for the array `[10, 20, 30]`.",
       "topic": "iterables",
-      "answer": true,
+      "answer": false,
       "code": "p [10, 20, 30].each_with_index.first",
       "query": {
         "explanation": "each_with_index yields two values per iteration: the element first and its zero-based index second. Without a block it returns an Enumerator, so first gives the pair [10, 0] for the array's opening element.",
@@ -547,7 +547,7 @@
         ],
         "title": "each_with_index yields element then index"
       },
-      "rationale": "The element comes first and the index second, and indexing starts at 0, so the opening pair is [10, 0] rather than [0, 10] or [10, 1].",
+      "rationale": "The claim is false: each_with_index yields the element first and the index second, so the opening pair is [10, 0], not [0, 10].",
       "type": "bool",
       "provenance": {
         "isHumanReviewed": false,
@@ -609,9 +609,9 @@
     },
     {
       "id": "gen-ruby-easy-08f49ddd",
-      "prompt": "In Ruby, `minmax` finds the smallest and largest element in a single pass. Does this snippet print `[1, 7]`?",
+      "prompt": "In Ruby, `minmax` finds the smallest and largest element in a single pass. Does this snippet print `[7, 1]`?",
       "topic": "optimization",
-      "answer": true,
+      "answer": false,
       "code": "p [4, 1, 7, 3].minmax",
       "query": {
         "explanation": "`minmax` returns a two-element array holding the minimum first and the maximum second, so `[4, 1, 7, 3].minmax` is `[1, 7]`.",
@@ -623,7 +623,7 @@
         ],
         "title": "minmax returns both extremes"
       },
-      "rationale": "The order is always [minimum, maximum], so the printed array is [1, 7] rather than [7, 1] or anything else.",
+      "rationale": "The claim is false: minmax always returns [minimum, maximum], so the printed array is [1, 7], not [7, 1].",
       "type": "bool",
       "provenance": {
         "isHumanReviewed": false,
@@ -1227,9 +1227,9 @@
     },
     {
       "id": "gen-ruby-easy-768c49e3",
-      "prompt": "In Ruby, `{ \"b\" => 1, \"a\" => 2 }.keys` returns `[\"b\", \"a\"]`. True or false?",
+      "prompt": "In Ruby, `{ \"b\" => 1, \"a\" => 2 }.keys` returns `[\"a\", \"b\"]`. True or false?",
       "topic": "data-structures",
-      "answer": true,
+      "answer": false,
       "query": {
         "explanation": "Ruby hashes remember the order in which keys were first inserted, and `keys` returns them in that order. Since \"b\" was written first, the result is [\"b\", \"a\"]; hashes are not sorted automatically.",
         "syntax": "hash.keys -> array of keys in insertion order",
@@ -1240,7 +1240,7 @@
         ],
         "title": "Hash keys come back in insertion order"
       },
-      "rationale": "False would require the keys to come back sorted as [\"a\", \"b\"], but Ruby preserves insertion order and never sorts hash keys for you.",
+      "rationale": "The claim is false: Ruby hashes preserve insertion order and never sort keys for you, so keys returns [\"b\", \"a\"].",
       "type": "bool",
       "provenance": {
         "isHumanReviewed": false,
@@ -1502,9 +1502,9 @@
     },
     {
       "id": "gen-ruby-easy-0d8e7ef4",
-      "prompt": "A Thread::Queue hands values back in first-in, first-out order, so after pushing 1, 2, 3 the first pop returns 1. True or false?",
+      "prompt": "A Thread::Queue hands values back in first-in, first-out order, so after pushing 1, 2, 3 the first pop returns 3. True or false?",
       "topic": "async-and-concurrency",
-      "answer": true,
+      "answer": false,
       "code": "q = Thread::Queue.new\nq.push(1)\nq.push(2)\nq.push(3)\nputs q.pop",
       "query": {
         "explanation": "Thread::Queue is a thread-safe first-in, first-out buffer, so pops come back in the same order the values were pushed.",
@@ -1516,7 +1516,7 @@
         ],
         "title": "Thread::Queue is FIFO"
       },
-      "rationale": "False would mean the queue behaves like a stack, but Thread::Queue is FIFO: pop removes the oldest pushed element, which is 1.",
+      "rationale": "The claim is false: Thread::Queue is FIFO, so pop removes the oldest pushed element, which is 1, not the newest one, 3.",
       "type": "bool",
       "provenance": {
         "isHumanReviewed": false,
@@ -1960,9 +1960,9 @@
     },
     {
       "id": "gen-ruby-easy-6c762704",
-      "prompt": "In Ruby, `\"5\" + \"5\"` evaluates to the string `\"55\"` rather than the number 10.",
+      "prompt": "In Ruby, `\"5\" + \"5\"` evaluates to the number 10 rather than the string `\"55\"`.",
       "topic": "strings",
-      "answer": true,
+      "answer": false,
       "query": {
         "explanation": "The + operator on a String joins the two strings end to end, so digit characters are glued together instead of being added numerically.",
         "syntax": "str + other_str",
@@ -1973,7 +1973,7 @@
         ],
         "title": "String#+ concatenates"
       },
-      "rationale": "String#+ performs concatenation, not arithmetic, so the result is \"55\"; Ruby never converts the digit strings to numbers for you.",
+      "rationale": "The claim is false: String#+ performs concatenation, not arithmetic, so the result is the string \"55\"; Ruby never converts the digit strings to numbers for you.",
       "type": "bool",
       "provenance": {
         "isHumanReviewed": false,
@@ -2389,9 +2389,9 @@
     },
     {
       "id": "gen-ruby-easy-64f3d6f8",
-      "prompt": "Does this Ruby program print 512?",
+      "prompt": "Does this Ruby program print 64?",
       "topic": "operators-and-types",
-      "answer": true,
+      "answer": false,
       "code": "puts 2 ** 3 ** 2",
       "query": {
         "explanation": "The ** operator groups from the right, so 2 ** 3 ** 2 is evaluated as 2 ** (3 ** 2) == 2 ** 9 == 512. If it grouped from the left like most arithmetic operators, it would be (2 ** 3) ** 2 == 64.",
@@ -2403,7 +2403,7 @@
         ],
         "title": "Exponentiation is right-associative"
       },
-      "rationale": "** is right-associative, so the expression is 2 ** (3 ** 2) == 512, not the left-grouped (2 ** 3) ** 2 == 64.",
+      "rationale": "The claim is false: ** is right-associative, so the expression is 2 ** (3 ** 2) == 512, not the left-grouped (2 ** 3) ** 2 == 64.",
       "type": "bool",
       "provenance": {
         "isHumanReviewed": false,
@@ -2513,9 +2513,9 @@
     },
     {
       "id": "gen-ruby-easy-c52cc2b9",
-      "prompt": "Does this Ruby snippet print 2?",
+      "prompt": "Does this Ruby snippet print true?",
       "topic": "operators-and-types",
-      "answer": true,
+      "answer": false,
       "code": "p(1 && 2)",
       "query": {
         "explanation": "Ruby's `&&` returns one of its operands rather than `true`/`false`. If the left side is truthy it evaluates and returns the right side, so `1 && 2` is `2`. Only `nil` and `false` are falsy in Ruby, so the Integer 1 counts as truthy.",
@@ -2528,7 +2528,7 @@
         ],
         "title": "&& returns an operand, not a boolean"
       },
-      "rationale": "&& does not coerce its result to a boolean: because 1 is truthy it returns the right operand, so the snippet prints 2 instead of true.",
+      "rationale": "The claim is false: && does not coerce its result to a boolean. Because 1 is truthy it returns the right operand, so the snippet prints 2, not true.",
       "type": "bool",
       "provenance": {
         "isHumanReviewed": false,
@@ -2896,9 +2896,9 @@
     },
     {
       "id": "gen-ruby-easy-32a076d3",
-      "prompt": "Does this snippet write [3, 4, 1, 2] to stdout?",
+      "prompt": "Does this snippet write [4, 1, 2, 3] to stdout?",
       "topic": "data-structures",
-      "answer": true,
+      "answer": false,
       "code": "p [1, 2, 3, 4].rotate(2)",
       "query": {
         "explanation": "rotate(2) moves the first two elements to the end, producing [3, 4, 1, 2]. The original array is unchanged because rotate returns a new array.",
@@ -2909,7 +2909,7 @@
         ],
         "title": "Array#rotate"
       },
-      "rationale": "rotate(2) shifts elements left by two, not right, so the output is [3, 4, 1, 2] rather than [3, 4] staying in place or [3, 4, 1, 2] being wrong.",
+      "rationale": "The claim is false: rotate(2) shifts elements left by two positions, so the output is [3, 4, 1, 2]; [4, 1, 2, 3] is what rotate(1) would give.",
       "type": "bool",
       "provenance": {
         "isHumanReviewed": false,

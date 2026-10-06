@@ -585,9 +585,9 @@
       "banks": {
         "easy": {
           "path": "ruby/easy.json",
-          "hash": "5d75f0d610d3882f1b880394f8bc5f8967509be63a9358341f70b1dbc791c583",
+          "hash": "c486e93f12691b5a4047102b2adb0936ead200911e83e681d5d55df3c70fa135",
           "access": "free",
-          "contentVersion": 3,
+          "contentVersion": 4,
           "topicCounts": {
             "operators-and-types": 7,
             "wtf": 9,

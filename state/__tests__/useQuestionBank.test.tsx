@@ -39,7 +39,7 @@ const BUNDLED_PYTHON_EASY_HASH = (BUNDLED_MANIFEST as Manifest).languages[0].ban
 const BUNDLED_PYTHON_EASY_IDS = (BUNDLED_BANKS['python/easy'] as { questions: { id: string }[] }).questions.map(
   (question) => question.id,
 );
-const ADDED_EASY_TEXT = buildBankText(['go-q-1', 'go-q-2']);
+const ADDED_EASY_TEXT = buildBankText(['fixture-q-1', 'fixture-q-2']);
 const ADDED_EASY_HASH = hashUtf8Hex(ADDED_EASY_TEXT);
 
 let queryClient: QueryClient;
@@ -252,7 +252,7 @@ describe('useQuestionBank inside ContentProvider', () => {
       );
       expect(
         (await readCachedBank('fixture-lang', 'easy', EMPTY_BANK_CONTEXT))?.questions.map((question) => question.id),
-      ).toEqual(['go-q-1', 'go-q-2']);
+      ).toEqual(['fixture-q-1', 'fixture-q-2']);
       await settleBackgroundWork();
       expect(new Set(listFetchedUrls())).toEqual(new Set([MANIFEST_URL, ADDED_EASY_URL]));
     });
@@ -384,7 +384,7 @@ describe('useQuestionBank inside ContentProvider', () => {
 
       await waitFor(() => expect(result.current.status).toBe('ready'));
       expect(countFetchesFor(ADDED_EASY_URL)).toBeGreaterThan(requestsBeforeRetry);
-      expect(readBankIds(result.current)).toEqual(['go-q-1', 'go-q-2']);
+      expect(readBankIds(result.current)).toEqual(['fixture-q-1', 'fixture-q-2']);
     });
 
     it('reports unknown for a language the manifest does not list', async () => {
