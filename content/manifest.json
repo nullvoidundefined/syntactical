@@ -1070,9 +1070,9 @@
       "banks": {
         "easy": {
           "path": "frontend-security/easy.json",
-          "hash": "95e4fb9f90eeab8cce80b8ef5ab7f0cd6b2f158f5d4903dc2b2e92ff3ca210fc",
+          "hash": "8466ed14e1758b388fc7f6507be6ea11046e93099224d6df4a7ca83e36a2c463",
           "access": "free",
-          "contentVersion": 3,
+          "contentVersion": 4,
           "topicCounts": {
             "dom-xss": 10,
             "html-sanitization": 10,
