@@ -1340,8 +1340,8 @@
           "rationale": "The wildcard sends the message to whatever document occupies the target window, regardless of its origin."
         },
         {
-          "text": "https://app.example.com/",
-          "rationale": "An origin string has no path component, so the trailing slash makes the value not match the receiver's origin."
+          "text": "http://app.example.com",
+          "rationale": "The scheme is part of the origin, so an http target never matches a page served over https."
         },
         {
           "text": "app.example.com",
