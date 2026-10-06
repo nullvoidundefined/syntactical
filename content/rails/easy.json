@@ -3839,6 +3839,448 @@
         },
         "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
       }
+    },
+    {
+      "id": "gen-rails-easy-6e5aa81f",
+      "prompt": "What number does this snippet print?",
+      "topic": "background-jobs",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "At least EmailJob has run_at 0, which satisfies run_at <= 2."
+        },
+        {
+          "text": "1",
+          "rationale": "CleanupJob at run_at 2 also counts because the comparison uses <=, not <."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "ReportJob has run_at 5, which is greater than now = 2, so it is not ready."
+        }
+      ],
+      "code": "queue = []\nqueue << { name: \"EmailJob\", run_at: 0 }\nqueue << { name: \"ReportJob\", run_at: 5 }\nqueue << { name: \"CleanupJob\", run_at: 2 }\n\nnow = 2\nputs queue.count { |job| job[:run_at] <= now }",
+      "query": {
+        "explanation": "A worker only picks up jobs whose scheduled time has already arrived. With now = 2, EmailJob (0) and CleanupJob (2) qualify because both run_at values are <= 2, while ReportJob (5) is still in the future. count with a block returns 2.",
+        "syntax": "enumerable.count { |item| condition }",
+        "tags": [
+          "background-jobs",
+          "queue",
+          "enumerable"
+        ],
+        "title": "Ready jobs in a queue"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-easy-67f98830",
+      "prompt": "Does this retry loop end up reporting success?",
+      "topic": "background-jobs",
+      "answer": false,
+      "code": "MAX = 3\nattempts = 0\nsuccess = false\n\nwhile attempts < MAX && !success\n  attempts += 1\n  success = attempts >= 4\nend\n\nputs success",
+      "query": {
+        "explanation": "The loop stops once attempts reaches MAX = 3, but the work only succeeds from attempt 4 onward. The job therefore exhausts its retries and the final value of success is false, which is what a job that keeps failing would report to the queue.",
+        "syntax": "while attempts < MAX && !success",
+        "tags": [
+          "background-jobs",
+          "retries",
+          "loops"
+        ],
+        "title": "Retry attempts exhausted"
+      },
+      "rationale": "Saying true would require a fourth attempt, but the loop guard stops at MAX = 3, so success is never set and false is printed.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-easy-1f4a3a87",
+      "prompt": "What does this snippet print?",
+      "topic": "background-jobs",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "BillingJob"
+        },
+        {
+          "text": "EmailJob",
+          "rationale": "EmailJob has priority 10, the largest value, so min_by skips it."
+        },
+        {
+          "text": "ReportJob",
+          "rationale": "ReportJob's priority 5 is not the smallest value in the list."
+        },
+        {
+          "text": "nil",
+          "rationale": "The array is not empty, so min_by returns a real hash and the name is printed."
+        }
+      ],
+      "code": "jobs = [\n  { name: \"EmailJob\", priority: 10 },\n  { name: \"BillingJob\", priority: 1 },\n  { name: \"ReportJob\", priority: 5 }\n]\n\nputs jobs.min_by { |job| job[:priority] }[:name]",
+      "query": {
+        "explanation": "In most job backends a smaller priority number means higher urgency. min_by returns the hash with the smallest :priority value, which is BillingJob with priority 1, so its :name is printed.",
+        "syntax": "array.min_by { |item| item[:key] }",
+        "tags": [
+          "background-jobs",
+          "priority",
+          "min_by"
+        ],
+        "title": "Lowest priority number wins"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-easy-d33a5543",
+      "prompt": "Does this dedupe guard keep the enqueued count at 1?",
+      "topic": "background-jobs",
+      "answer": true,
+      "code": "enqueued = []\n\n[\"SyncJob\", \"SyncJob\"].each do |name|\n  enqueued << name unless enqueued.include?(name)\nend\n\nputs enqueued.size == 1",
+      "query": {
+        "explanation": "Unique-job guards check whether an equivalent job is already queued before pushing a new one. The second \"SyncJob\" is skipped because enqueued.include?(\"SyncJob\") is already true, so the list holds one entry and the comparison prints true.",
+        "syntax": "list << value unless list.include?(value)",
+        "tags": [
+          "background-jobs",
+          "idempotency",
+          "arrays"
+        ],
+        "title": "Preventing duplicate enqueues"
+      },
+      "rationale": "Answering false would mean both copies were pushed, but the unless guard rejects the second \"SyncJob\" since it is already present.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-easy-a605c9bd",
+      "prompt": "What value does this snippet print?",
+      "topic": "background-jobs",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "4",
+          "rationale": "4 is delays[1], the second attempt's wait, not the third."
+        },
+        {
+          "text": "6",
+          "rationale": "The delays double rather than growing by a fixed step of 2."
+        },
+        {
+          "text": "8"
+        },
+        {
+          "text": "16",
+          "rationale": "16 would be 2**4, a fourth attempt that this loop never reaches."
+        }
+      ],
+      "code": "delays = []\n1.upto(3) { |attempt| delays << 2 ** attempt }\n\nputs delays[2]",
+      "query": {
+        "explanation": "The block stores 2**1, 2**2 and 2**3, giving [2, 4, 8]. Index 2 is the third element, so 8 seconds is printed. This doubling pattern is the classic exponential backoff used between failed job retries.",
+        "syntax": "2 ** attempt",
+        "tags": [
+          "background-jobs",
+          "retries",
+          "backoff"
+        ],
+        "title": "Exponential backoff delays"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-easy-feac51a1",
+      "prompt": "What number does this snippet print?",
+      "topic": "background-jobs",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "Both EmailJob and CleanupJob carry status \"pending\", so more than one row matches."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "3 is the total row count; the where clause removes the \"finished\" row."
+        },
+        {
+          "text": "0",
+          "rationale": "Rows with status \"pending\" do exist, so the count is not zero."
+        }
+      ],
+      "code": "ActiveRecord::Schema.verbose = false\nActiveRecord::Schema.define do\n  create_table :jobs do |t|\n    t.string :name\n    t.string :status\n  end\nend\n\nclass Job < ActiveRecord::Base; end\n\nJob.create!(name: \"EmailJob\", status: \"pending\")\nJob.create!(name: \"ReportJob\", status: \"finished\")\nJob.create!(name: \"CleanupJob\", status: \"pending\")\n\nputs Job.where(status: \"pending\").count",
+      "query": {
+        "explanation": "Database-backed queues store each job as a row with a status column. Three rows are inserted and two of them have status \"pending\", so the filtered count query reports 2. The \"finished\" row is excluded by the where clause.",
+        "syntax": "Model.where(column: value).count",
+        "tags": [
+          "background-jobs",
+          "activerecord",
+          "count"
+        ],
+        "title": "Counting queued jobs in a table"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-easy-f031930a",
+      "prompt": "Are two jobs due at this point in time according to the snippet?",
+      "topic": "background-jobs",
+      "answer": false,
+      "code": "now = 90\njobs = [\n  { name: \"DigestJob\", scheduled_at: 60 },\n  { name: \"PurgeJob\", scheduled_at: 120 }\n]\n\ndue = jobs.select { |job| job[:scheduled_at] <= now }\nputs due.size == 2",
+      "query": {
+        "explanation": "select keeps only jobs whose scheduled_at has already passed. DigestJob at 60 is due, but PurgeJob at 120 is still in the future relative to now = 90, so due has one element and the size == 2 comparison prints false.",
+        "syntax": "array.select { |job| job[:scheduled_at] <= now }",
+        "tags": [
+          "background-jobs",
+          "scheduling",
+          "select"
+        ],
+        "title": "Scheduled jobs that are not due yet"
+      },
+      "rationale": "True would require PurgeJob to be due, but its scheduled_at of 120 is greater than now = 90, leaving only one due job.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-easy-36b01a1f",
+      "prompt": "What does this snippet print?",
+      "topic": "background-jobs",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "dead_letter"
+        },
+        {
+          "text": "default",
+          "rationale": "No code assigns \"default\" to destination anywhere in the snippet."
+        },
+        {
+          "text": "retry",
+          "rationale": "retry is a keyword that restarts the begin block; it is never stored as a string value."
+        },
+        {
+          "text": "boom",
+          "rationale": "\"boom\" is the raised error message, not the value assigned to destination."
+        }
+      ],
+      "code": "MAX_ATTEMPTS = 3\nattempts = 0\ndestination = nil\n\nbegin\n  attempts += 1\n  raise \"boom\"\nrescue\n  retry if attempts < MAX_ATTEMPTS\n  destination = \"dead_letter\"\nend\n\nputs destination",
+      "query": {
+        "explanation": "The begin/rescue block retries while attempts is below MAX_ATTEMPTS. On the third failure the retry condition is false, so execution falls through and destination is set to \"dead_letter\" before printing, mirroring how queues park permanently failing jobs.",
+        "syntax": "retry if attempts < MAX_ATTEMPTS",
+        "tags": [
+          "background-jobs",
+          "failures",
+          "rescue"
+        ],
+        "title": "Dead letter after exhausted retries"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-easy-daa8b824",
+      "prompt": "With this inline adapter, has the job already run when the check prints?",
+      "topic": "background-jobs",
+      "answer": true,
+      "code": "performed = []\n\n# inline adapter: enqueueing performs the job right away\nenqueue = ->(name) { performed << name }\nenqueue.call(\"WelcomeJob\")\n\nputs performed.include?(\"WelcomeJob\")",
+      "query": {
+        "explanation": "The inline adapter performs work synchronously instead of handing it to a worker, so the lambda appends \"WelcomeJob\" to performed before the next line runs. include? therefore returns true. A real async adapter would leave performed empty at this point.",
+        "syntax": "lambda.call(argument)",
+        "tags": [
+          "background-jobs",
+          "adapters",
+          "inline"
+        ],
+        "title": "Inline execution versus deferred execution"
+      },
+      "rationale": "False would describe an async adapter, but calling the lambda runs the body immediately, so \"WelcomeJob\" is already in performed.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-easy-ae0236e7",
+      "prompt": "What number does this snippet print?",
+      "topic": "background-jobs",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "Only three of the four jobs are shifted off, so the queue is not empty."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "3",
+          "rationale": "3 is how many jobs were removed, not how many are left."
+        },
+        {
+          "text": "4",
+          "rationale": "shift mutates the array in place, so its size does shrink from 4."
+        }
+      ],
+      "code": "queue = [\"A\", \"B\", \"C\", \"D\"]\nworker_capacity = 3\n\nworker_capacity.times { queue.shift }\n\nputs queue.size",
+      "query": {
+        "explanation": "shift removes the element at the front of the array, so three calls pull A, B and C off the queue in FIFO order. One job, D, is left waiting, so 1 is printed.",
+        "syntax": "n.times { queue.shift }",
+        "tags": [
+          "background-jobs",
+          "queue",
+          "fifo"
+        ],
+        "title": "Draining a queue up to worker capacity"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-easy-4019f5a7",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "String"
+        },
+        {
+          "text": "Integer",
+          "rationale": "The default 10 is an Integer, but the key :page is present, so the stored value \"2\" is returned instead of the default."
+        },
+        {
+          "text": "Symbol",
+          "rationale": "Only the key is written as a symbol here; the stored value is the string \"2\", and fetch returns the value, not the key."
+        },
+        {
+          "text": "NilClass",
+          "rationale": "fetch returns nil only when the key is missing and no default is given; here the key exists and a default was supplied anyway."
+        }
+      ],
+      "code": "params = ActiveSupport::HashWithIndifferentAccess.new(\"page\" => \"2\")\n\nputs params.fetch(:page, 10).class",
+      "prompt": "What does this snippet print?",
+      "query": {
+        "explanation": "Request parameters arrive as strings, and HashWithIndifferentAccess (the structure behind ActionController::Parameters) lets you read the \"page\" key with the symbol :page. Because that key exists, fetch returns the stored value \"2\" rather than the Integer default 10, so the printed class is String. This is why controllers usually call to_i on values like page numbers or ids before doing arithmetic.",
+        "syntax": "params.fetch(:key, default)",
+        "tags": [
+          "controllers",
+          "params",
+          "strong-parameters"
+        ],
+        "title": "Params values are strings"
+      },
+      "type": "mc",
+      "topic": "controllers-and-params",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
     }
   ],
   "schemaVersion": 2
