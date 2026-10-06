@@ -15,8 +15,9 @@ import { fillTemplate } from '../enrich/fillTemplate.js';
 import { validateQuestion } from '../validateQuestion.js';
 
 import { findMissingRationale } from './findMissingRationale.js';
+import { countPrintedValues } from './countPrintedValues.js';
 import { MAX_PROMPT_LENGTH } from './MAX_PROMPT_LENGTH.js';
-import { normalizePrompt } from './normalizePrompt.js';
+import { buildCardKey } from './buildCardKey.js';
 import { runSandboxed } from './runSandboxed.js';
 
 const PROMPT_VERSION = 'generate-batch-v2';
@@ -71,7 +72,11 @@ export async function generateBatch(
         COUNT: String(count),
         TOPIC: topic,
         CONTEXT: escapeForPrompt(JSON.stringify({ difficulty, languageId, runners: args.runners ?? [args.language] })),
-        EXISTING_PROMPTS: escapeForPrompt(JSON.stringify([...existingPrompts].slice(0, MAX_EXISTING_PROMPTS))),
+        EXISTING_PROMPTS: escapeForPrompt(
+            JSON.stringify(
+                [...new Set([...existingPrompts].map((key) => key.split('\n')[0]))].slice(0, MAX_EXISTING_PROMPTS),
+            ),
+        ),
     });
     const { model, value } = await provider.generate({
         lenientJson: true,
@@ -96,6 +101,14 @@ export async function generateBatch(
             continue;
         }
         const { oracle: rawOracle, ...draft } = parsed.data;
+        if (
+            difficulty === 'easy' &&
+            draft.type === 'mc' &&
+            countPrintedValues(draft.choices?.[draft.answerIndex ?? 0]?.text ?? '') > 2
+        ) {
+            drop('too-dense');
+            continue;
+        }
         if (draft.prompt.length > MAX_PROMPT_LENGTH) {
             drop('prompt-too-long');
             continue;
@@ -105,7 +118,7 @@ export async function generateBatch(
             drop('disallowed-runner');
             continue;
         }
-        const normalized = normalizePrompt(draft.prompt);
+        const normalized = buildCardKey(draft);
         if (seen.has(normalized)) {
             drop('duplicate');
             continue;

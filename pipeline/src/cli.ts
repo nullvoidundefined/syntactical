@@ -9,6 +9,7 @@ import { enrich } from './commands/enrich.js';
 import { gapFill } from './commands/gapFill.js';
 import { publish } from './commands/publish.js';
 import { review } from './commands/review.js';
+import { rewritePrompts } from './commands/rewritePrompts.js';
 import { runCli } from './commands/runCli.js';
 import { validateContent } from './commands/validate.js';
 
@@ -37,6 +38,7 @@ process.exitCode = await runCli(argv, {
     pipelineDir: fileURLToPath(new URL('../', import.meta.url)),
     publish,
     review,
+    rewritePrompts,
     stderr: (text) => stderr.write(text),
     stdout: (text) => stdout.write(text),
     validate: validateContent,
