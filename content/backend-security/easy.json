@@ -126,7 +126,7 @@
     },
     {
       "id": "gen-backend-security-easy-6f950a89",
-      "prompt": "How many rows does the query below return?",
+      "prompt": "What count does the query below print?",
       "topic": "sql-injection",
       "answerIndex": 0,
       "choices": [
@@ -1834,7 +1834,7 @@
     },
     {
       "id": "gen-backend-security-easy-c687e4e3",
-      "prompt": "How many rows does the query below return for that password?",
+      "prompt": "What count does the query below print for that password?",
       "topic": "authentication",
       "answerIndex": 0,
       "choices": [
@@ -2489,7 +2489,7 @@
     },
     {
       "id": "gen-backend-security-easy-233e50b0",
-      "prompt": "How many rows does the query below return?",
+      "prompt": "What count does the query below print?",
       "topic": "access-control",
       "answerIndex": 1,
       "choices": [
@@ -3711,7 +3711,7 @@
     },
     {
       "id": "gen-backend-security-easy-58c94bc9",
-      "prompt": "How many rows satisfy both conditions in the query below?",
+      "prompt": "What count does the query below print?",
       "topic": "input-validation",
       "answerIndex": 1,
       "choices": [
