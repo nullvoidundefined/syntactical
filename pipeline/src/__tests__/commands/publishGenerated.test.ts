@@ -1,14 +1,13 @@
 // publish merges the enrichment rationales into staged generated questions, so a bank whose
 // generated questions are all enriched publishes with `rationale` on every wrong choice (mc) or
-// on the question (bool). The chain test runs gap-fill, enrich, and publish end to end with fakes
-// for a free and a paid bank: no oracle is lost between the stages.
+// on the question (bool). The chain test runs gap-fill and publish (no enrich) end to end with fakes
+// for a free and a paid bank: batch-generated cards arrive already explained.
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { enrich } from '../../commands/enrich.js';
 import { gapFill } from '../../commands/gapFill.js';
 import { publish } from '../../commands/publish.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
@@ -160,67 +159,43 @@ describe('publish with generated questions', () => {
     });
 
     it.each<'free' | 'paid'>(['free', 'paid'])(
-        'chain: gap-fill, enrich, then publish writes a %s bank with every generated question explained',
+        'chain: gap-fill then publish (no enrich) writes a %s bank with every generated question explained',
         async (access) => {
             const outRoot = await seed(access);
-            let drafts = 0;
+            let requested = 0;
             const drafter = {
-                async generate(request: { schema: { parse: (value: unknown) => unknown } }) {
-                    drafts += 1;
-                    const draft = {
-                        question: {
-                            answer: true,
-                            oracle: { code: 'print(True)' },
-                            prompt: `Chain question number ${drafts}?`,
-                            query: { explanation: 'e', title: 't' },
-                            type: 'bool',
-                        },
-                    };
-                    return { model: 'fake-model', value: request.schema.parse(draft) };
+                async generate(request: { prompt: string }) {
+                    const count = Number(/COUNT: (\d+)/.exec(request.prompt)?.[1] ?? 0);
+                    requested += count;
+                    const cards = Array.from({ length: count }, (_unused, index) => ({
+                        answer: true,
+                        oracle: { code: 'print(True)' },
+                        prompt: `Chain question number ${requested}-${index}?`,
+                        query: { explanation: 'e', title: 't' },
+                        rationale: 'The statement holds because the program prints True.',
+                        type: 'bool',
+                    }));
+                    return { model: 'fake-model', value: { cards } };
                 },
             } as unknown as ModelProvider;
-            const enricher = {
-                async generate(request: {
-                    prompt: string;
-                    promptVersion: string;
-                    schema: { parse: (v: unknown) => unknown };
-                }) {
-                    const value =
-                        request.promptVersion === 'judge-rationale-v1'
-                            ? { isConsistent: true, reason: 'because' }
-                            : { rationales: [{ choiceIndex: 0, misconceptionId: TAG, rationale: 'why not' }] };
-                    return { model: 'fake', value: request.schema.parse(value) };
-                },
-            } as unknown as ModelProvider;
-            const common = {
+            await gapFill({
                 contentDir,
                 contentRoot,
                 log: () => undefined,
                 newRunId: () => 'run-chain',
                 now: () => '2026-10-05T00:00:00.000Z',
                 pipelineDir,
-            };
-            await gapFill({
-                ...common,
                 provider: drafter,
                 run: async () => ({ outcome: 'value', runtimeVersion: 'Python 3.13.1', value: 'True' }),
             });
-            // The real oracle files stay in place; only the sandbox run is faked.
-            await enrich({
-                ...common,
-                provider: enricher,
-                validate: async (_question: unknown, oracle: unknown) =>
-                    oracle === null ? { status: 'not-executable' } : { observed: 'True', status: 'passed' },
-            } as Parameters<typeof enrich>[0]);
             const { banks } = await publishNow();
             expect(banks['python/easy']).toMatchObject({ isWritten: true, problems: [] });
             const { questions } = await readBank(
                 join(access === 'free' ? contentDir : contentRoot, 'python/easy.json'),
             );
-            expect(questions).toHaveLength(drafts);
-            expect(questions.length).toBeGreaterThan(0);
+            expect(questions).toHaveLength(10);
             for (const question of questions) {
-                expect(question).toMatchObject({ rationale: 'why not' });
+                expect(question).toMatchObject({ rationale: 'The statement holds because the program prints True.' });
             }
             expect(outRoot).toBe(access === 'free' ? pipelineDir : contentRoot);
         },

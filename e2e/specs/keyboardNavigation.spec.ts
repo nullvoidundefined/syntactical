@@ -47,9 +47,11 @@ test('a round can be played with the keyboard alone', async ({ page }) => {
   await tabTo(page, /^\s*Easy/);
   await page.keyboard.press('Enter');
   await expect(page.getByText('Step 3 / Select topic')).toBeVisible();
-  await tabTo(page, /^\s*Whole bank/);
+  // The "All questions" card is on this step; Tab to it.
+  await tabTo(page, /^\s*All/);
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('progressbar', { name: /^Question 1 of/ })).toBeVisible();
+  const round = page.getByRole('progressbar', { name: /^Question 1 of/ });
+  await expect(round).toBeVisible();
 
   // Question 1: Tab to a choice, answer with Enter, then Continue with Enter.
   await tabToAnswerOption(page);

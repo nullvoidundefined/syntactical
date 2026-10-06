@@ -43,6 +43,7 @@ type QuizRoundProps = QuestionSource & {
   onRetry: () => void;
   questions: readonly Question[];
   roundKind?: RoundKind;
+  sampleSize?: number;
   topic?: string;
 };
 
@@ -146,9 +147,10 @@ export function QuizRound(props: QuizRoundProps) {
     onRetry,
     questions,
     roundKind = 'bank',
+    sampleSize,
     topic,
   } = props;
-  const engine = useQuizEngine(questions, { roundKind, topic });
+  const engine = useQuizEngine(questions, { roundKind, sampleSize, topic });
   const { advanceQuestion, currentQuestion, isAnswered, isComplete, submitAnswer, submittedAnswer, wasCorrect } =
     engine;
   const { recordAnswer } = useQuizStats();
@@ -180,8 +182,10 @@ export function QuizRound(props: QuizRoundProps) {
     if (isCorrect === null || !currentQuestion) return;
     const { id: questionId } = currentQuestion;
     const { difficulty: questionDifficulty, language: questionLanguage } = source;
+    const displayedChoiceIndex = toChoiceIndex(value);
     const answer = {
-      choiceIndex: toChoiceIndex(value),
+      choiceIndex:
+        currentQuestion.type === 'mc' ? currentQuestion.bankChoiceIndexes[displayedChoiceIndex] : displayedChoiceIndex,
       difficulty: questionDifficulty,
       language: questionLanguage,
       questionId,

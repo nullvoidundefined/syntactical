@@ -40,6 +40,7 @@ async function readSignInCode(email: string, knownCount = 0): Promise<string> {
 
 async function signIn(page: Page, email: string): Promise<void> {
   await page.goto('sign-in');
+  await page.getByRole('button', { name: 'Use a code instead' }).click();
   await page.getByLabel('Email address').fill(email);
   const knownCount = (await listSentCodes(email)).length;
   await page.getByRole('button', { name: 'Send code' }).click();
@@ -49,15 +50,22 @@ async function signIn(page: Page, email: string): Promise<void> {
   await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
 }
 
-// Opens a bank's round from the menu with keys only: language 1, difficulty by position, whole bank.
+// Opens a bank's round from the menu: language 1 and difficulty by key, then all questions.
 async function openRoundByKeys(page: Page, difficultyKey: string): Promise<void> {
   await page.goto('./');
   await expect(page.getByRole('heading', { level: 1, name: /syntactical/ })).toBeVisible();
   await page.keyboard.press('1');
   await expect(page.getByText('Step 2 / Select difficulty')).toBeVisible();
   await page.keyboard.press(difficultyKey);
+  await pickAllQuestions(page);
+}
+
+// On the topic step, plays every question of the whole bank: the "All questions" card (named "All
+// 100 questions" when the manifest gives a count) is the only length card for a small bank and the
+// last of the length cards otherwise. Returns once the round's first question shows.
+async function pickAllQuestions(page: Page): Promise<void> {
   await expect(page.getByText('Step 3 / Select topic')).toBeVisible();
-  await page.keyboard.press('1');
+  await page.getByRole('button', { name: /^All (\d+ )?questions/ }).click();
   await expect(page.getByRole('progressbar', { name: /^Question 1 of/ })).toBeVisible();
 }
 
@@ -88,4 +96,13 @@ async function readUserId(email: string): Promise<string | undefined> {
   return row?.id;
 }
 
-export { answerQuestions, createUniqueEmail, openRoundByKeys, queryDatabase, readSignInCode, readUserId, signIn };
+export {
+  answerQuestions,
+  createUniqueEmail,
+  openRoundByKeys,
+  pickAllQuestions,
+  queryDatabase,
+  readSignInCode,
+  readUserId,
+  signIn,
+};

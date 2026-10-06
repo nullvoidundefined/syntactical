@@ -5,10 +5,11 @@
 // refused or failed change is announced and leaves the goal unchanged.
 import { useState } from 'react';
 
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { DeleteAccountDialog } from '../components/auth/DeleteAccountDialog';
+import { PasswordSettingsForm } from '../components/auth/PasswordSettingsForm';
 import { SignOutDialog } from '../components/auth/SignOutDialog';
 import { DailyGoalPicker } from '../components/progress/DailyGoalPicker';
 import { useAuth } from '../state/AuthProvider';
@@ -58,8 +59,21 @@ function RestorePurchases() {
   );
 }
 
+function AdminLink() {
+  return (
+    <View className="mt-4">
+      <Pressable role="link" aria-label="Admin" onPress={() => router.push('/admin')}>
+        <Text className="font-mono text-xs uppercase tracking-widest text-ink">Admin</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 function AccountSection() {
   const { isSignedIn } = useAuth();
+  const { isAdmin, markPasswordSet, snapshot } = useProfile();
+  const { form } = useLocalSearchParams<{ form?: string | string[] }>();
+  const account = snapshot?.account;
   return (
     <View className="mt-10 border-t border-line pt-6">
       <Text role="heading" aria-level={2} className="font-mono text-sm uppercase tracking-widest text-ink">
@@ -80,7 +94,16 @@ function AccountSection() {
           </Pressable>
         )}
       </View>
+      {isSignedIn && account !== undefined ? (
+        <PasswordSettingsForm
+          email={account.email}
+          hasPassword={account.hasPassword}
+          onPasswordSaved={markPasswordSet}
+          shouldFocusFirstField={form === 'password'}
+        />
+      ) : null}
       {isSignedIn && Platform.OS !== 'web' ? <RestorePurchases /> : null}
+      {isSignedIn && isAdmin ? <AdminLink /> : null}
     </View>
   );
 }

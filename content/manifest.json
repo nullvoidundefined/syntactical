@@ -104,6 +104,544 @@
       }
     },
     {
+      "id": "go",
+      "label": "Go",
+      "glyph": "GO",
+      "tagline": "Slices, interfaces, goroutines, and the zero values in between.",
+      "grammar": "go",
+      "topics": [
+        {
+          "id": "operators-and-types",
+          "label": "Operators and types"
+        },
+        {
+          "id": "numbers-and-math",
+          "label": "Numbers and math"
+        },
+        {
+          "id": "strings",
+          "label": "Strings"
+        },
+        {
+          "id": "iterables",
+          "label": "Iterables"
+        },
+        {
+          "id": "data-structures",
+          "label": "Data structures"
+        },
+        {
+          "id": "functions-and-scope",
+          "label": "Functions and scope"
+        },
+        {
+          "id": "errors-and-control-flow",
+          "label": "Errors and control flow"
+        },
+        {
+          "id": "async-and-concurrency",
+          "label": "Async and concurrency"
+        },
+        {
+          "id": "optimization",
+          "label": "Optimization"
+        },
+        {
+          "id": "wtf",
+          "label": "WTF"
+        }
+      ],
+      "misconceptions": [
+        {
+          "description": "Believing append always copies, so the returned slice never shares backing storage with the original and writes through one cannot be seen through the other.",
+          "id": "go.slice-append-never-aliases"
+        },
+        {
+          "description": "Believing a slice is passed by reference, so append inside a function changes the caller's length, rather than the header being copied by value.",
+          "id": "go.slice-passed-by-reference"
+        },
+        {
+          "description": "Believing s[1:3] copies elements into a new array instead of creating a view over the same backing array.",
+          "id": "go.slice-expression-copies"
+        },
+        {
+          "description": "Believing len and cap are the same thing, so make([]int, 5) and make([]int, 0, 5) are interchangeable.",
+          "id": "go.len-equals-cap"
+        },
+        {
+          "description": "Believing a nil slice must be initialised before use, rather than being a valid empty slice that supports len, range and append.",
+          "id": "go.nil-slice-unusable"
+        },
+        {
+          "description": "Believing you can assign into a nil map the way you can append to a nil slice, instead of it panicking without make.",
+          "id": "go.nil-map-writable"
+        },
+        {
+          "description": "Believing reading an absent map key panics or returns nil, rather than yielding the value type's zero value.",
+          "id": "go.map-missing-key-panics"
+        },
+        {
+          "description": "Believing map iteration follows insertion order or sorted key order, rather than being deliberately randomised.",
+          "id": "go.map-iteration-ordered"
+        },
+        {
+          "description": "Believing you can assign to a field of a struct value stored in a map (m[k].f = v) without the map holding a pointer.",
+          "id": "go.map-struct-field-assignable"
+        },
+        {
+          "description": "Believing arrays and slices are the same, so [3]int and []int are interchangeable and arrays are passed by reference.",
+          "id": "go.array-is-slice"
+        },
+        {
+          "description": "Believing the range value variable aliases the element, so mutating it or taking its address modifies the collection.",
+          "id": "go.range-variable-is-element-alias"
+        },
+        {
+          "description": "Believing the ranged expression and its length are re-evaluated each iteration, so appending inside the loop extends it.",
+          "id": "go.range-expression-reevaluated"
+        },
+        {
+          "description": "Assuming (or in modern Go, still fearing) that goroutines and closures capture one shared loop variable, misjudging per-iteration scoping rules.",
+          "id": "go.loop-var-shared-in-closures"
+        },
+        {
+          "description": "Believing defer runs at the end of the enclosing block or loop iteration rather than when the surrounding function returns.",
+          "id": "go.defer-runs-at-block-end"
+        },
+        {
+          "description": "Believing deferred call arguments and the receiver are evaluated when the deferred call runs, not at the point of the defer statement.",
+          "id": "go.defer-args-evaluated-late"
+        },
+        {
+          "description": "Believing a deferred function cannot alter the returned value, overlooking that it can modify named result parameters after return.",
+          "id": "go.defer-cannot-change-result"
+        },
+        {
+          "description": "Believing go f() waits for f to finish, or that main waits for running goroutines before exiting.",
+          "id": "go.goroutine-blocks-caller"
+        },
+        {
+          "description": "Believing a send on an unbuffered channel returns immediately and buffers one value, rather than blocking until a receiver is ready.",
+          "id": "go.unbuffered-channel-send-async"
+        },
+        {
+          "description": "Believing receives on a closed channel block or panic, rather than returning the zero value immediately with ok == false.",
+          "id": "go.closed-channel-receive-blocks"
+        },
+        {
+          "description": "Believing every channel must be closed to avoid leaks, or that the receiver may close a channel, rather than close signalling no more sends.",
+          "id": "go.close-needed-for-gc"
+        },
+        {
+          "description": "Believing operations on a nil channel panic or succeed, instead of blocking forever and thus disabling a select case.",
+          "id": "go.nil-channel-is-ready"
+        },
+        {
+          "description": "Believing select evaluates cases top to bottom and picks the first listed ready case, rather than choosing uniformly at random among ready cases.",
+          "id": "go.select-picks-first-case"
+        },
+        {
+          "description": "Believing wg.Add may be called inside the spawned goroutine, or that passing a WaitGroup by value still coordinates correctly.",
+          "id": "go.waitgroup-add-inside-goroutine"
+        },
+        {
+          "description": "Believing a struct containing a sync.Mutex can be copied or passed by value and still provide mutual exclusion.",
+          "id": "go.mutex-copy-is-safe"
+        },
+        {
+          "description": "Believing that using channels or goroutines anywhere makes all shared-variable access safe, so no mutex or atomic is ever needed.",
+          "id": "go.channels-make-code-race-free"
+        },
+        {
+          "description": "Believing an interface holding a typed nil pointer compares equal to nil, so err != nil is false when a nil *MyError is returned.",
+          "id": "go.nil-interface-equals-nil-pointer"
+        },
+        {
+          "description": "Believing a type must explicitly declare that it implements an interface, rather than satisfaction being structural and implicit.",
+          "id": "go.interface-needs-implements-keyword"
+        },
+        {
+          "description": "Believing a value of type T satisfies an interface whose methods have pointer receivers, ignoring addressability and method-set rules.",
+          "id": "go.pointer-receiver-set-includes-value"
+        },
+        {
+          "description": "Believing a method with a value receiver can mutate the original struct, instead of operating on a copy.",
+          "id": "go.value-receiver-mutates"
+        },
+        {
+          "description": "Believing struct embedding is subclassing with virtual dispatch, so the outer type's method overrides calls made from the embedded type's methods.",
+          "id": "go.embedding-is-inheritance"
+        },
+        {
+          "description": "Believing s[i] yields a one-character string or a rune, rather than a byte, and that len(s) counts characters rather than bytes.",
+          "id": "go.string-indexing-gives-character"
+        },
+        {
+          "description": "Believing a string can be modified in place via s[i] = 'x', rather than being immutable and requiring a []byte or []rune conversion.",
+          "id": "go.strings-are-mutable"
+        },
+        {
+          "description": "Believing repeated s += x in a loop mutates in place at no cost, rather than allocating a new string each time where a Builder is preferable.",
+          "id": "go.string-concat-in-loop-cheap"
+        },
+        {
+          "description": "Believing Go implicitly converts between numeric types, so int and int64 or int and float64 can be mixed in an expression without a conversion.",
+          "id": "go.numeric-types-auto-convert"
+        },
+        {
+          "description": "Believing 3/2 produces 1.5, rather than integer division truncating toward zero when both operands are integers.",
+          "id": "go.int-division-yields-float"
+        },
+        {
+          "description": "Confusing T(x) conversion with x.(T) type assertion, expecting one to do the other's runtime interface check.",
+          "id": "go.conversion-is-assertion"
+        },
+        {
+          "description": "Believing panic/recover is Go's normal error mechanism and that a panic in one goroutine can be recovered by another or by the caller's recover.",
+          "id": "go.errors-are-exceptions"
+        },
+        {
+          "description": "Believing wrapped errors can be matched with == or by comparing message strings, rather than with errors.Is and errors.As.",
+          "id": "go.error-comparison-by-equality"
+        },
+        {
+          "description": "Believing visibility is controlled by keywords or file layout rather than identifier capitalisation, and that unexported fields marshal to JSON.",
+          "id": "go.capitalisation-irrelevant"
+        },
+        {
+          "description": "Believing := always assigns to the existing outer variable, missing that in a new scope it declares and shadows a fresh variable.",
+          "id": "go.shadowing-with-short-declaration"
+        }
+      ],
+      "banks": {
+        "easy": {
+          "path": "go/easy.json",
+          "hash": "b86aeb7dd457c05785637d17f43e119134190163b97e18dc34b228aed078cdd4",
+          "access": "free",
+          "contentVersion": 3,
+          "topicCounts": {
+            "operators-and-types": 8,
+            "numbers-and-math": 4,
+            "wtf": 7,
+            "iterables": 9,
+            "strings": 10,
+            "data-structures": 9,
+            "functions-and-scope": 7,
+            "async-and-concurrency": 9,
+            "errors-and-control-flow": 7,
+            "optimization": 10
+          }
+        },
+        "medium": {
+          "path": "go/medium.json",
+          "hash": "b6a226fce5611caf333ace71c9a7e26f097b050f5cb14d36c542abcc30311f32",
+          "access": "paid",
+          "productId": "syntactical.go.medium",
+          "contentVersion": 3,
+          "topicCounts": {
+            "operators-and-types": 10,
+            "strings": 10,
+            "iterables": 10,
+            "functions-and-scope": 10,
+            "optimization": 10,
+            "numbers-and-math": 10,
+            "data-structures": 10,
+            "errors-and-control-flow": 10,
+            "async-and-concurrency": 10,
+            "wtf": 10
+          }
+        },
+        "hard": {
+          "path": "go/hard.json",
+          "hash": "0b2265c7a572d06f6d129e571e1d3120d75194cf9129a59199ca40950afa3cdc",
+          "access": "paid",
+          "productId": "syntactical.go.hard",
+          "contentVersion": 3,
+          "topicCounts": {
+            "operators-and-types": 10,
+            "numbers-and-math": 10,
+            "strings": 10,
+            "data-structures": 10,
+            "iterables": 10,
+            "functions-and-scope": 10,
+            "errors-and-control-flow": 10,
+            "async-and-concurrency": 10,
+            "optimization": 10,
+            "wtf": 10
+          }
+        }
+      }
+    },
+    {
+      "id": "ruby",
+      "label": "Ruby",
+      "glyph": "RB",
+      "tagline": "Blocks, objects, and the dynamic behavior underneath.",
+      "grammar": "ruby",
+      "topics": [
+        {
+          "id": "operators-and-types",
+          "label": "Operators and types"
+        },
+        {
+          "id": "numbers-and-math",
+          "label": "Numbers and math"
+        },
+        {
+          "id": "strings",
+          "label": "Strings"
+        },
+        {
+          "id": "iterables",
+          "label": "Iterables"
+        },
+        {
+          "id": "data-structures",
+          "label": "Data structures"
+        },
+        {
+          "id": "functions-and-scope",
+          "label": "Functions and scope"
+        },
+        {
+          "id": "errors-and-control-flow",
+          "label": "Errors and control flow"
+        },
+        {
+          "id": "async-and-concurrency",
+          "label": "Async and concurrency"
+        },
+        {
+          "id": "optimization",
+          "label": "Optimization"
+        },
+        {
+          "id": "wtf",
+          "label": "WTF"
+        }
+      ],
+      "misconceptions": [
+        {
+          "description": "Believing 0, \"\", [] and {} are falsy in Ruby, as in C or JavaScript; only false and nil are falsy.",
+          "id": "ruby.falsy-zero-and-empty-string"
+        },
+        {
+          "description": "Believing nil == false is true, or that nil and false are interchangeable values rather than distinct objects.",
+          "id": "ruby.nil-equals-false"
+        },
+        {
+          "description": "Believing the ! suffix is enforced by Ruby to mean in-place mutation, rather than being a naming convention for a more surprising or dangerous variant.",
+          "id": "ruby.bang-methods-always-mutate"
+        },
+        {
+          "description": "Believing mutating methods like String#strip!, Array#uniq! or #sort! always return the receiver, when they return nil if no change was made.",
+          "id": "ruby.bang-methods-return-receiver"
+        },
+        {
+          "description": "Believing `b = a` copies the object, so mutating b through a shared reference (e.g. b << x) will not affect a.",
+          "id": "ruby.assignment-copies-object"
+        },
+        {
+          "description": "Believing dup or clone performs a deep copy, so nested objects inside the copy are independent of the original.",
+          "id": "ruby.dup-is-deep-copy"
+        },
+        {
+          "description": "Believing freeze makes an object deeply immutable, rather than only preventing changes to the object's own state.",
+          "id": "ruby.frozen-means-deeply-immutable"
+        },
+        {
+          "description": "Believing default argument expressions are evaluated once at definition time, rather than on each call where the argument is omitted.",
+          "id": "ruby.default-args-evaluated-once"
+        },
+        {
+          "description": "Believing Hash.new([]) gives each missing key its own fresh array, when all misses share one object that is never stored in the hash.",
+          "id": "ruby.hash-default-value-per-key"
+        },
+        {
+          "description": "Believing hash[:missing] raises an error like fetch does, instead of returning nil or the hash's default.",
+          "id": "ruby.hash-fetch-vs-brackets"
+        },
+        {
+          "description": "Believing a method needs an explicit `return` to produce a value, rather than returning the value of its last evaluated expression.",
+          "id": "ruby.explicit-return-required"
+        },
+        {
+          "description": "Believing `return` inside a block returns only from the block, when it returns from the enclosing method; `next` is what exits a block.",
+          "id": "ruby.return-inside-block"
+        },
+        {
+          "description": "Believing each returns an array of the block's results like map, rather than returning the original collection.",
+          "id": "ruby.each-returns-mapped-array"
+        },
+        {
+          "description": "Believing map, select, reject or sort modify the receiver in place instead of returning a new collection.",
+          "id": "ruby.map-mutates-receiver"
+        },
+        {
+          "description": "Believing procs and lambdas behave identically, missing that lambdas check arity strictly and return only from themselves.",
+          "id": "ruby.block-vs-proc-vs-lambda-return"
+        },
+        {
+          "description": "Believing a method must declare an explicit &block parameter before it can yield to a given block.",
+          "id": "ruby.yield-requires-block-parameter"
+        },
+        {
+          "description": "Believing single-quoted strings interpolate #{} and process escapes like \\n the same way double-quoted strings do.",
+          "id": "ruby.single-vs-double-quotes-interpolation"
+        },
+        {
+          "description": "Believing \"a\" + 1 or \"5\" + 5 coerces automatically, rather than raising TypeError and needing to_s or to_i.",
+          "id": "ruby.string-plus-integer-coercion"
+        },
+        {
+          "description": "Believing String#to_i raises on non-numeric input, when \"abc\".to_i returns 0 and \"12abc\".to_i returns 12; Integer() is the strict form.",
+          "id": "ruby.to-i-validates-input"
+        },
+        {
+          "description": "Believing 7 / 2 yields 3.5, rather than integer division truncating toward negative infinity to give 3.",
+          "id": "ruby.integer-division-returns-float"
+        },
+        {
+          "description": "Believing floating point arithmetic is exact, so 0.1 + 0.2 == 0.3 evaluates to true.",
+          "id": "ruby.float-equality-exact"
+        },
+        {
+          "description": "Believing :name and \"name\" are the same object or interchangeable as hash keys, when they are distinct and not equal.",
+          "id": "ruby.symbol-equals-string"
+        },
+        {
+          "description": "Believing ==, eql? and equal? all test the same thing, rather than value equality, type-strict equality, and object identity.",
+          "id": "ruby.equal-vs-eql-vs-equal-question"
+        },
+        {
+          "description": "Believing === is a stricter equality operator as in JavaScript, rather than case-subsumption (class membership, regexp match, range inclusion).",
+          "id": "ruby.triple-equals-is-strict-equality"
+        },
+        {
+          "description": "Believing case/when falls through to the next branch without a break, as in C-style switch statements.",
+          "id": "ruby.case-uses-fallthrough"
+        },
+        {
+          "description": "Believing `and`/`or` are exact synonyms for &&/||, missing that their much lower precedence changes how assignments parse.",
+          "id": "ruby.and-or-same-as-ampersand-pipe"
+        },
+        {
+          "description": "Believing x ||= value leaves an existing false or nil value alone, when ||= overwrites any falsy value.",
+          "id": "ruby.or-equals-sets-on-false"
+        },
+        {
+          "description": "Believing &. guards against every error or against NoMethodError generally, when it only skips the call when the receiver is nil.",
+          "id": "ruby.safe-navigation-catches-all-errors"
+        },
+        {
+          "description": "Believing local variables assigned inside a method, block, or class body are visible in enclosing or sibling scopes.",
+          "id": "ruby.local-variable-scope-leaks"
+        },
+        {
+          "description": "Believing reading an undefined instance variable raises an error, rather than quietly returning nil.",
+          "id": "ruby.instance-variable-defaults-error"
+        },
+        {
+          "description": "Believing a bare `name = x` inside an instance method calls the attr_writer, when it creates a local variable; self.name = x is required.",
+          "id": "ruby.attr-accessor-usable-without-self"
+        },
+        {
+          "description": "Believing private methods are invisible to subclasses or that private restricts by class rather than by receiver syntax.",
+          "id": "ruby.private-methods-blocked-by-subclass"
+        },
+        {
+          "description": "Believing @@variables are per-subclass, when they are shared across the whole class hierarchy.",
+          "id": "ruby.class-variables-not-shared"
+        },
+        {
+          "description": "Believing self inside a class body refers to a future instance, rather than to the class object itself.",
+          "id": "ruby.self-in-class-body-is-instance"
+        },
+        {
+          "description": "Believing include gives true multiple inheritance with unordered lookup, rather than inserting modules into a defined ancestor chain.",
+          "id": "ruby.modules-give-multiple-inheritance"
+        },
+        {
+          "description": "Believing to_s and inspect produce identical output, so puts and p display objects the same way.",
+          "id": "ruby.to-s-and-inspect-same"
+        },
+        {
+          "description": "Believing puts returns the printed string (and that p and puts return the same thing), when puts returns nil and p returns its argument.",
+          "id": "ruby.puts-returns-string"
+        },
+        {
+          "description": "Believing a bare `rescue` catches every exception, when it only catches StandardError and its descendants.",
+          "id": "ruby.rescue-catches-all-exceptions"
+        },
+        {
+          "description": "Believing code in ensure never runs after a return, or conversely that raising in ensure is harmless to the original exception.",
+          "id": "ruby.ensure-overrides-return"
+        },
+        {
+          "description": "Believing (1..5) excludes 5 like a half-open range in other languages, or that (1...5) includes it.",
+          "id": "ruby.range-end-exclusive"
+        }
+      ],
+      "banks": {
+        "easy": {
+          "path": "ruby/easy.json",
+          "hash": "5d75f0d610d3882f1b880394f8bc5f8967509be63a9358341f70b1dbc791c583",
+          "access": "free",
+          "contentVersion": 3,
+          "topicCounts": {
+            "operators-and-types": 7,
+            "wtf": 9,
+            "numbers-and-math": 7,
+            "iterables": 10,
+            "optimization": 10,
+            "data-structures": 10,
+            "functions-and-scope": 8,
+            "errors-and-control-flow": 10,
+            "async-and-concurrency": 10,
+            "strings": 10
+          }
+        },
+        "medium": {
+          "path": "ruby/medium.json",
+          "hash": "2e91118a881d7642c969c8d424f5e207392d043e6d2b58abaa497bda6253f1c1",
+          "access": "paid",
+          "productId": "syntactical.ruby.medium",
+          "contentVersion": 3,
+          "topicCounts": {
+            "operators-and-types": 10,
+            "functions-and-scope": 10,
+            "wtf": 10,
+            "numbers-and-math": 10,
+            "strings": 10,
+            "iterables": 10,
+            "data-structures": 10,
+            "errors-and-control-flow": 10,
+            "async-and-concurrency": 10,
+            "optimization": 10
+          }
+        },
+        "hard": {
+          "path": "ruby/hard.json",
+          "hash": "a35bbb18e884dba27a8325d27bfa1ea8302142d0df5ac795032a6c56e3159699",
+          "access": "paid",
+          "productId": "syntactical.ruby.hard",
+          "contentVersion": 3,
+          "topicCounts": {
+            "operators-and-types": 10,
+            "numbers-and-math": 10,
+            "strings": 10,
+            "iterables": 10,
+            "data-structures": 10,
+            "functions-and-scope": 10,
+            "errors-and-control-flow": 10,
+            "async-and-concurrency": 10,
+            "optimization": 10,
+            "wtf": 10
+          }
+        }
+      }
+    },
+    {
       "id": "frontend-security",
       "kind": "topic",
       "label": "Frontend Security",

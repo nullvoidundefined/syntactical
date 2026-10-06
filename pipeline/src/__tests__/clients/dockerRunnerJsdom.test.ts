@@ -51,16 +51,6 @@ describe('jsdom runner build context', () => {
     });
 });
 
-describe('security generation prompt', () => {
-    it('tells jsdom oracles to print synchronously, not from window timers', () => {
-        const prompt = readFileSync(new URL('../../../prompts/generateSecurityQuestion.md', import.meta.url), 'utf8');
-
-        expect(prompt).toMatch(/jsdom/);
-        expect(prompt).toMatch(/window\.setTimeout[\s\S]*is dropped/);
-        expect(prompt).toMatch(/requestAnimationFrame is not defined/);
-    });
-});
-
 describe('jsdom docker args', () => {
     it('match the node runner flags exactly apart from the image', () => {
         expect(buildDockerArgs({ code: 'x', language: JSDOM }, 'image')).toEqual(

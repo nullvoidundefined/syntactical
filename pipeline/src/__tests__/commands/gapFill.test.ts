@@ -66,26 +66,46 @@ async function listFiles(dir: string): Promise<string[]> {
     return files.sort();
 }
 
-// Each call drafts a new question for the topic named in the prompt; the answer matches the fake run.
-function counting(): ModelProvider & { requestedTopics: string[] } {
-    const requestedTopics: string[] = [];
+type RawCard = Record<string, unknown>;
+
+interface BatchCall {
+    count: number;
+    n: number;
+    topic: string;
+}
+
+function buildCard(tag: string, answer = true): RawCard {
     return {
-        async generate(request) {
-            const topic = /TOPIC: (\S+)/.exec(request.prompt)?.[1] ?? 'none';
-            requestedTopics.push(topic);
-            const draft = {
-                question: {
-                    answer: true,
-                    oracle: { code: 'print(True)' },
-                    prompt: `Generated ${requestedTopics.length} about ${PAID_MARKER}-${topic}?`,
-                    query: { explanation: 'e', title: 't' },
-                    type: 'bool',
-                },
+        answer,
+        oracle: { code: 'print(True)' },
+        prompt: `Generated ${tag} about ${PAID_MARKER}?`,
+        query: { explanation: 'e', title: 't' },
+        rationale: 'The OR clause makes the WHERE condition always true.',
+        type: 'bool',
+    };
+}
+
+// Batch fake: the topic and count come from the prompt's `TOPIC:` and `COUNT:` lines; the script
+// returns the raw cards of the batch. The fake run always answers True.
+function scripted(script: (call: BatchCall) => RawCard[]): ModelProvider & { calls: BatchCall[] } {
+    const calls: BatchCall[] = [];
+    return {
+        async generate(request: { prompt: string }) {
+            const call = {
+                count: Number(/COUNT: (\d+)/.exec(request.prompt)?.[1] ?? 0),
+                n: calls.length + 1,
+                topic: /TOPIC: (\S+)/.exec(request.prompt)?.[1] ?? 'none',
             };
-            return { model: 'fake-model', value: request.schema.parse(draft) };
+            calls.push(call);
+            return { model: 'fake-model', value: { cards: script(call) } };
         },
-        requestedTopics,
-    } as ModelProvider & { requestedTopics: string[] };
+        calls,
+    } as unknown as ModelProvider & { calls: BatchCall[] };
+}
+
+// Each batch returns `count` fresh cards, tagged by call number so no two prompts collide.
+function counting(): ModelProvider & { calls: BatchCall[] } {
+    return scripted(({ count, n }) => Array.from({ length: count }, (_u, index) => buildCard(`${n}-${index}`)));
 }
 
 describe('gapFill', () => {
@@ -148,7 +168,7 @@ describe('gapFill', () => {
         await seed({ 'easy:free': [...Array(7).fill('strings'), ...Array(10).fill('lists')] });
         const provider = counting();
         await run(provider);
-        expect(provider.requestedTopics).toEqual(['strings', 'strings', 'strings']);
+        expect(provider.calls.map(({ count, topic }) => [topic, count])).toEqual([['strings', 3]]);
         const staged = await readJson(join(pipelineDir, 'generated/python/easy.json'));
         expect(staged.questions).toHaveLength(3);
         expect(staged.schemaVersion).toBe(2);
@@ -159,7 +179,7 @@ describe('gapFill', () => {
         await run(counting());
         const second = counting();
         await run(second);
-        expect(second.requestedTopics).toEqual([]);
+        expect(second.calls).toEqual([]);
         const staged = await readJson(join(pipelineDir, 'generated/python/easy.json'));
         expect(staged.questions).toHaveLength(3);
     });
@@ -194,7 +214,7 @@ describe('gapFill', () => {
         await rm(join(pipelineDir, 'classifications'), { recursive: true });
         const provider = counting();
         await run(provider);
-        expect(provider.requestedTopics).toEqual([]);
+        expect(provider.calls).toEqual([]);
         expect(logs.join('\n')).toContain('run classify first');
     });
 
@@ -217,20 +237,9 @@ describe('gapFill', () => {
 
     it('reports a draft equal to an existing bank prompt as a duplicate, not a failure, and stages nothing', async () => {
         await seed({ 'easy:free': [...Array(9).fill('strings'), ...Array(10).fill('lists')] });
-        const duplicating: ModelProvider = {
-            async generate(request) {
-                const draft = {
-                    question: {
-                        answer: true,
-                        oracle: { code: 'print(True)' },
-                        prompt: '  existing EASY-0!! ',
-                        query: { explanation: 'e', title: 't' },
-                        type: 'bool',
-                    },
-                };
-                return { model: 'fake-model', value: request.schema.parse(draft) };
-            },
-        };
+        const duplicating = scripted(({ n }) =>
+            n === 1 ? [{ ...buildCard('dup'), prompt: '  existing EASY-0!! ' }] : [],
+        );
         const report = await run(duplicating);
         expect(report.counts['gap-fill-duplicate']).toBe(1);
         expect(report.counts['gap-fill-failed']).toBe(0);
@@ -239,26 +248,14 @@ describe('gapFill', () => {
         expect(await listFiles(join(pipelineDir, 'generated'))).toEqual([]);
     });
 
+    // The first batch keeps one card; the next model call throws.
     function goodThenThrowing(): ModelProvider {
-        let calls = 0;
-        return {
-            async generate(request) {
-                calls += 1;
-                if (calls > 1) {
-                    throw new Error('transport down');
-                }
-                const draft = {
-                    question: {
-                        answer: true,
-                        oracle: { code: 'print(True)' },
-                        prompt: 'One good generated question?',
-                        query: { explanation: 'e', title: 't' },
-                        type: 'bool',
-                    },
-                };
-                return { model: 'fake-model', value: request.schema.parse(draft) };
-            },
-        };
+        return scripted(({ n }) => {
+            if (n > 1) {
+                throw new Error('transport down');
+            }
+            return [buildCard('good')];
+        });
     }
 
     it('keeps the original error when staging the partial results also fails', async () => {
@@ -285,22 +282,12 @@ describe('gapFill', () => {
 
     it('reports dropped questions in counts without staging them', async () => {
         await seed({ 'easy:free': [...Array(9).fill('strings'), ...Array(10).fill('lists')] });
-        const failing: ModelProvider = {
-            async generate(request) {
-                const draft = {
-                    question: {
-                        answer: false,
-                        oracle: { code: 'print(True)' },
-                        prompt: 'A question that is wrong?',
-                        query: { explanation: 'e', title: 't' },
-                        type: 'bool',
-                    },
-                };
-                return { model: 'fake-model', value: request.schema.parse(draft) };
-            },
-        };
+        // A bool card claiming the wrong answer never proves out; each of the 2 batches drops one.
+        const failing = scripted(({ count, n }) =>
+            Array.from({ length: count }, (_u, index) => buildCard(`bad${n}-${index}`, false)),
+        );
         const report = await run(failing);
-        expect(report.counts).toMatchObject({ 'gap-fill-failed': 1, 'gap-fill-generated': 0 });
+        expect(report.counts).toMatchObject({ 'gap-fill-failed': 2, 'gap-fill-generated': 0 });
         expect(await listFiles(join(pipelineDir, 'generated'))).toEqual([]);
     });
 });

@@ -59,6 +59,8 @@ function toHref(href: unknown): string {
 
 async function signIn(): Promise<string> {
     await render(<SignInScreen />);
+    // The screen opens on the password step (Task 7.7); the code steps are one press away.
+    await fireEvent.press(screen.getByRole('button', { name: 'Use a code instead' }));
     await fireEvent.changeText(screen.getByLabelText('Email address'), buildEmail());
     await fireEvent.press(screen.getByRole('button', { name: 'Send code' }));
     await fireEvent.changeText(screen.getByLabelText('Sign-in code'), buildCode());

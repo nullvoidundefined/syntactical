@@ -1,5 +1,6 @@
 // Shared retry loop: ask the model, unwrap a single surrounding Markdown code
 // fence if present, parse the text as JSON, and check it against the schema.
+// Opt-in leniency recovers one JSON fence or a line-starting object from prose.
 // A parse or schema failure is one failed attempt; after MAX_ATTEMPTS
 // the last issue is raised as ModelOutputInvalid. A transport error from `ask`
 // is not a failed attempt and propagates untouched.
@@ -19,19 +20,39 @@ function describeFailure(error: unknown): string {
     return error instanceof Error ? error.message : 'unreadable model output';
 }
 
+function extractJson(text: string): string {
+    const fences = [...text.matchAll(/^[ \t]*```json[ \t]*\r?$/gim)];
+    if (fences.length > 1) throw new SyntaxError('multiple JSON fences');
+    const fence = fences[0];
+    if (fence) {
+        const bodyStart = fence.index + fence[0].length;
+        const remainder = text.slice(bodyStart);
+        const closing = /^[ \t]*```[ \t]*\r?$/m.exec(remainder);
+        if (closing) return remainder.slice(0, closing.index);
+    }
+    const start = /^[ \t]*\{/m.exec(text);
+    const end = text.lastIndexOf('}');
+    return start && end >= start.index ? text.slice(start.index, end + 1) : text;
+}
+
 export async function generateWithRetries<T>(
     request: ModelRequest<T>,
     ask: AskModel,
 ): Promise<{ model: string; value: T }> {
-    const { promptVersion, schema } = request;
+    const { maxAttempts = MAX_ATTEMPTS, promptVersion, schema } = request;
     let lastIssue = 'no attempt made';
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
         const { model, text } = await ask();
         let json: unknown;
         try {
             const fence = /^```[^\s`]*\r?\n([\s\S]*)\r?\n```$/.exec(text.trim());
             const body = fence?.[1];
-            json = JSON.parse(body !== undefined && !/^[ \t]*```/m.test(body) ? body : text);
+            try {
+                json = JSON.parse(body !== undefined && !/^[ \t]*```/m.test(body) ? body : text);
+            } catch (error) {
+                if (!request.lenientJson) throw error;
+                json = JSON.parse(extractJson(text));
+            }
         } catch (error) {
             lastIssue = `malformed JSON: ${describeFailure(error)}`;
             continue;

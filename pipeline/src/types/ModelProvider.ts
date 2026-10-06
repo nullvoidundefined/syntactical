@@ -3,6 +3,8 @@
 import type { z } from 'zod';
 
 export interface ModelRequest<T> {
+    lenientJson?: boolean;
+    maxAttempts?: number;
     prompt: string;
     promptVersion: string;
     schema: z.ZodType<T>;

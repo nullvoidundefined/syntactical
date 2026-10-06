@@ -5,6 +5,8 @@ import { ScrollView, View } from 'react-native';
 
 import NotFoundScreen from '../../+not-found';
 import { TopicStep } from '../../../components/menu/TopicStep';
+import { buildPlayHref } from '../../../services/quiz/buildPlayHref';
+import { isLengthChoiceOffered, readPoolSize } from '../../../services/quiz/roundLength';
 import { useLanguageManifest } from '../../../state/useLanguageManifest';
 
 export default function TopicScreen() {
@@ -19,13 +21,13 @@ export default function TopicScreen() {
           difficulty={difficulty}
           language={language}
           onBack={() => router.replace(`/${language}`)}
-          onSelectTopic={(topic) =>
-            router.push(
-              topic === undefined
-                ? `/${language}/${difficulty}/play`
-                : `/${language}/${difficulty}/play?topic=${encodeURIComponent(topic)}`,
-            )
-          }
+          onSelectLength={(count) => router.push(buildPlayHref({ count, difficulty, language }))}
+          onSelectTopic={(topic) => {
+            const bank = (languageEntry.banks as Record<string, { topicCounts?: Record<string, number> }>)[difficulty];
+            const poolSize = readPoolSize(bank.topicCounts ?? {}, topic);
+            const screen = isLengthChoiceOffered(poolSize) ? 'length' : 'play';
+            router.push(buildPlayHref({ difficulty, language, screen, topic }));
+          }}
         />
       </View>
     </ScrollView>

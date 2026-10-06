@@ -18,20 +18,42 @@ import { useAuth } from './AuthProvider';
 import { useQuizStats } from './StatsProvider';
 import { useCoarseNow } from './useCoarseNow';
 
-export type ProfileSnapshot = { profile: Profile; seenEventIds: ReadonlySet<string>; userId: string };
+// The account email and whether it has a password come with GET /v1/me; absent when the
+// response lacks them.
+export type AccountFacts = { email: string; hasPassword: boolean };
+export type ProfileSnapshot = {
+  account?: AccountFacts;
+  isAdmin?: boolean;
+  profile: Profile;
+  seenEventIds: ReadonlySet<string>;
+  userId: string;
+};
 
 type ProfileState = {
+  // True only when GET /v1/me says isAdmin is exactly true; false for a guest and while loading.
+  isAdmin: boolean;
+  markPasswordSet: (hasPassword: boolean) => void;
   snapshot: ProfileSnapshot | null;
   updateDailyGoal: (goal: number) => Promise<boolean>;
 };
 
 const PROFILE_QUERY_ROOT = 'me';
 
+function readAccountFacts(body: unknown): AccountFacts | undefined {
+  const data = (body as { data?: Record<string, unknown> } | null)?.data;
+  const { email, hasPassword } = data ?? {};
+  return typeof email === 'string' && typeof hasPassword === 'boolean' ? { email, hasPassword } : undefined;
+}
+
+function readIsAdmin(body: unknown): boolean {
+  return (body as { data?: { isAdmin?: unknown } } | null)?.data?.isAdmin === true;
+}
+
 async function fetchProfile(userId: string, seenEventIds: ReadonlySet<string>): Promise<ProfileSnapshot> {
   const { body, status } = await apiFetch('me');
   const profile = status === HTTP_STATUS_OK ? parseProfile(body) : null;
   if (profile === null) throw new Error(`profile request answered ${status}`);
-  return { profile, seenEventIds, userId };
+  return { account: readAccountFacts(body), isAdmin: readIsAdmin(body), profile, seenEventIds, userId };
 }
 
 export function useProfile(): ProfileState {
@@ -63,7 +85,10 @@ export function useProfile(): ProfileState {
       const key = readCurrentKey();
       const previous = queryClient.getQueryData<ProfileSnapshot>(key);
       if (previous !== undefined) {
-        queryClient.setQueryData<ProfileSnapshot>(key, { ...previous, profile: { ...previous.profile, dailyGoal: goal } });
+        queryClient.setQueryData<ProfileSnapshot>(key, {
+          ...previous,
+          profile: { ...previous.profile, dailyGoal: goal },
+        });
       }
       try {
         const { body, status } = await apiFetch('me', { body: { dailyGoal: goal }, method: 'PATCH' });
@@ -71,7 +96,15 @@ export function useProfile(): ProfileState {
         if (profile === null) throw new Error(`profile update answered ${status}`);
         // A sync or a new day while the request was out moves the query to
         // another key; the accepted profile goes to the key current now.
-        queryClient.setQueryData<ProfileSnapshot>(readCurrentKey(), { profile, seenEventIds: new Set(syncedIdsRef.current), userId });
+        const currentKey = readCurrentKey();
+        const { account, isAdmin } = queryClient.getQueryData<ProfileSnapshot>(currentKey) ?? previous ?? {};
+        queryClient.setQueryData<ProfileSnapshot>(currentKey, {
+          account,
+          isAdmin,
+          profile,
+          seenEventIds: new Set(syncedIdsRef.current),
+          userId,
+        });
         return true;
       } catch {
         if (previous !== undefined) queryClient.setQueryData(key, previous);
@@ -81,6 +114,19 @@ export function useProfile(): ProfileState {
     [queryClient, userId],
   );
 
+  // A saved password changes the account fact at once, on the key current now, without a refetch.
+  const markPasswordSet = useCallback(
+    (hasPassword: boolean) => {
+      if (userId === null) return;
+      const key = [PROFILE_QUERY_ROOT, userId, todayRef.current, syncedIdsRef.current.length];
+      const previous = queryClient.getQueryData<ProfileSnapshot>(key);
+      if (previous?.account === undefined) return;
+      queryClient.setQueryData<ProfileSnapshot>(key, { ...previous, account: { ...previous.account, hasPassword } });
+    },
+    [queryClient, userId],
+  );
+
   // A placeholder kept from another user's query is never shown.
-  return { snapshot: data !== undefined && data.userId === userId ? data : null, updateDailyGoal };
+  const snapshot = data !== undefined && data.userId === userId ? data : null;
+  return { isAdmin: snapshot?.isAdmin === true, markPasswordSet, snapshot, updateDailyGoal };
 }
