@@ -1,0 +1,3766 @@
+{
+  "questions": [
+    {
+      "id": "gen-ruby-easy-221f01d7",
+      "prompt": "What output does this snippet produce?",
+      "topic": "operators-and-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-question-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      },
+      "query": {
+        "explanation": "When both operands of `/` are Integers, Ruby performs integer (floor) division, so `9 / 4` is `2`, not `2.25`. The `%` operator gives the remainder, `9 % 4 == 1`. If either operand is a Float, the Integer is coerced to Float and the result is a Float: `9.0 / 4 == 2.25`. Use `fdiv` (`9.fdiv(4)`) to force float division without writing a literal Float.",
+        "syntax": "9 / 4      # => 2   (Integer)\n9 % 4      # => 1\n9.0 / 4    # => 2.25 (Float)\n9.fdiv(4)  # => 2.25",
+        "tags": [
+          "operators",
+          "types",
+          "integer",
+          "float",
+          "division"
+        ],
+        "title": "Integer vs Float division in Ruby"
+      },
+      "code": "p [9 / 4, 9 % 4, 9.0 / 4]",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[2, 1, 2.25]"
+        },
+        {
+          "text": "[2.25, 1, 2.25]",
+          "misconceptionId": "ruby.integer-division-returns-float",
+          "rationale": "This assumes / always produces a mathematically exact result, so 9 / 4 would be 2.25. But both operands are Integers, so Ruby uses integer division and truncates: the observed output starts with 2, and only 9.0 / 4 gives 2.25."
+        },
+        {
+          "text": "[2, 1, 2]",
+          "misconceptionId": "ruby.integer-division-returns-float",
+          "rationale": "This treats / as always truncating, even for 9.0 / 4. One Float operand is enough to make Ruby coerce the other to Float, so the result keeps its fractional part: the observed output ends with 2.25, not 2."
+        },
+        {
+          "text": "[3, 1, 2.25]",
+          "misconceptionId": "ruby.integer-division-returns-float",
+          "rationale": "This assumes integer division rounds to the nearest whole number, turning 2.25 into 3. Ruby discards the fractional part instead of rounding, so 9 / 4 is 2 as the observed output's first element shows."
+        }
+      ],
+      "type": "mc"
+    },
+    {
+      "id": "gen-ruby-easy-2c2124eb",
+      "prompt": "What does this snippet print?",
+      "topic": "wtf",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-question-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      },
+      "query": {
+        "explanation": "`a = true and false` parses as `(a = true) and false`: `a` gets `true` and the `and` result is thrown away. Likewise `b = false or true` parses as `(b = false) or true`, so `b` is `false`. Only `&&` and `||` bind tighter than assignment, so `c = true && false` stores `false`. That is why `and`/`or` are recommended for control flow (`do_it or raise`) and `&&`/`||` for value expressions.",
+        "syntax": "x = expr and expr   # parsed as (x = expr) and expr\nx = expr && expr    # parsed as x = (expr && expr)",
+        "tags": [
+          "precedence",
+          "operators",
+          "gotcha"
+        ],
+        "title": "`and`/`or` bind looser than `=`"
+      },
+      "code": "a = true and false\nb = false or true\nc = true && false\np [a, b, c]",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[true, false, false]"
+        },
+        {
+          "text": "[false, true, false]",
+          "misconceptionId": "ruby.and-or-same-as-ampersand-pipe",
+          "rationale": "This treats `and`/`or` as plain synonyms for &&/||, so `true and false` seems to give a=false and `false or true` gives b=true. Ruby parses the assignment first: a=true then `and false` is discarded, and b=false then `or true` is discarded, printing [true, false, false]."
+        },
+        {
+          "text": "[true, true, false]",
+          "misconceptionId": "ruby.and-or-same-as-ampersand-pipe",
+          "rationale": "You applied the low-precedence rule to line 1 but not line 2, evaluating `false or true` as a whole for b. The same parse applies: b=false binds first, so the trailing `or true` only affects the statement's value, not b. Output is [true, false, false]."
+        },
+        {
+          "text": "[false, false, false]",
+          "misconceptionId": "ruby.and-or-same-as-ampersand-pipe",
+          "rationale": "This assumes each line stores the full boolean result, so a gets `true and false` = false. But `=` binds tighter than `and`, so a is assigned true and the `and false` part is thrown away; b is assigned false. Hence [true, false, false]."
+        }
+      ],
+      "type": "mc"
+    },
+    {
+      "id": "gen-ruby-easy-ebc2653a",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "6"
+        },
+        {
+          "text": "2",
+          "rationale": "2 is a common divisor of 12 and 18, but not the greatest one."
+        },
+        {
+          "text": "36",
+          "rationale": "36 is the least common multiple of 12 and 18, which is what lcm would return."
+        },
+        {
+          "text": "3",
+          "rationale": "3 divides both numbers, but 6 is larger and still divides both."
+        }
+      ],
+      "code": "puts 12.gcd(18)",
+      "query": {
+        "explanation": "Integer#gcd returns the greatest common divisor of the receiver and the argument. The divisors shared by 12 and 18 are 1, 2, 3 and 6, so the largest is 6.",
+        "syntax": "integer.gcd(other_integer) -> integer",
+        "tags": [
+          "numbers",
+          "integer",
+          "gcd"
+        ],
+        "title": "Integer#gcd"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-b9530d0c",
+      "prompt": "In Ruby, Math.sqrt(16) returns the Float 4.0 rather than the Integer 4.",
+      "topic": "numbers-and-math",
+      "answer": true,
+      "query": {
+        "explanation": "Methods in the Math module work in floating point, so Math.sqrt(16) is 4.0, a Float. Integer.sqrt(16) is the method that returns the Integer 4.",
+        "syntax": "Math.sqrt(numeric) -> float",
+        "tags": [
+          "numbers",
+          "math",
+          "float"
+        ],
+        "title": "Math.sqrt always returns a Float"
+      },
+      "rationale": "Saying it returns an Integer is wrong: Math.sqrt converts its argument to a Float and always answers a Float, here 4.0.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-bfc431b1",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "5050"
+        },
+        {
+          "text": "4950",
+          "rationale": "4950 is the sum of 1..99; the two-dot range (1..100) includes its end value 100."
+        },
+        {
+          "text": "5000",
+          "rationale": "A rounded guess; the exact total of 1 through 100 is 100 * 101 / 2."
+        },
+        {
+          "text": "10100",
+          "rationale": "That is 100 * 101, double the real sum, because the division by 2 was skipped."
+        }
+      ],
+      "code": "puts (1..100).sum",
+      "query": {
+        "explanation": "Range#sum uses the arithmetic-series formula n * (first + last) / 2 for integer ranges, so (1..100).sum is 100 * 101 / 2 = 5050. The range includes both 1 and 100.",
+        "syntax": "(first..last).sum -> numeric",
+        "tags": [
+          "numbers",
+          "range",
+          "sum"
+        ],
+        "title": "Summing a Range"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-7b9e8cb2",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "7"
+        },
+        {
+          "text": "7.0710678118654755",
+          "rationale": "That is Math.sqrt(50); Integer.sqrt returns an Integer, never a Float."
+        },
+        {
+          "text": "8",
+          "rationale": "Integer.sqrt floors the result rather than rounding up, and 8 * 8 = 64 exceeds 50."
+        },
+        {
+          "text": "2500",
+          "rationale": "2500 is 50 squared; Integer.sqrt takes a square root, not a square."
+        }
+      ],
+      "code": "puts Integer.sqrt(50)",
+      "query": {
+        "explanation": "Integer.sqrt(n) returns the largest integer whose square is not greater than n. Since 7 * 7 = 49 <= 50 and 8 * 8 = 64 > 50, the answer is 7, printed as an exact Integer.",
+        "syntax": "Integer.sqrt(non_negative_integer) -> integer",
+        "tags": [
+          "numbers",
+          "integer",
+          "sqrt"
+        ],
+        "title": "Integer.sqrt"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-1efab3cc",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[1, 4, 9]"
+        },
+        {
+          "text": "[2, 4, 6]",
+          "rationale": "That is n * 2 for each element; the block here multiplies each number by itself, not by two."
+        },
+        {
+          "text": "[1, 2, 3]",
+          "rationale": "map does not return the receiver unchanged; it returns the block's results, which differ from the inputs here."
+        },
+        {
+          "text": "[1, 4, 9, 16]",
+          "rationale": "map returns exactly one result per element, so a 3-element array maps to a 3-element array."
+        }
+      ],
+      "code": "puts [1, 2, 3].map { |n| n * n }.inspect",
+      "query": {
+        "explanation": "map (alias collect) visits each element of the iterable, calls the block, and collects the block's results into a brand new array of the same length. Here each number is squared, so [1, 2, 3] becomes [1, 4, 9]. The receiver itself is never modified.",
+        "syntax": "enumerable.map { |element| new_value }",
+        "tags": [
+          "iterables",
+          "enumerable",
+          "map",
+          "blocks"
+        ],
+        "title": "map transforms every element"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-d77f1064",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[[\"a\", 3], [\"b\", 2], [\"c\", 1]]"
+        },
+        {
+          "text": "[[\"a\", 1], [\"b\", 2], [\"c\", 3]]",
+          "rationale": "These counts are wrong: 'a' occurs three times and 'c' only once, not the other way round."
+        },
+        {
+          "text": "[[\"c\", 1], [\"b\", 2], [\"a\", 3]]",
+          "rationale": "tally does not sort by count; keys stay in the order the elements were first seen, so 'a' comes first."
+        },
+        {
+          "text": "[[\"a\", \"b\", \"c\"], [3, 2, 1]]",
+          "rationale": "tally returns a hash of element => count, so to_a gives one pair per element, not separate key and count lists."
+        }
+      ],
+      "code": "puts %w[a b a c b a].tally.to_a.inspect",
+      "query": {
+        "explanation": "tally walks the iterable once and returns a hash mapping each distinct element to its count. Keys appear in the order the elements were first encountered: 'a' first, then 'b', then 'c'. Converting that hash with to_a yields one [key, count] pair per distinct element.",
+        "syntax": "enumerable.tally #=> {element => count, ...}",
+        "tags": [
+          "iterables",
+          "enumerable",
+          "tally",
+          "counting"
+        ],
+        "title": "tally counts occurrences in first-seen order"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-63531b48",
+      "prompt": "In Ruby, `[1, 2, 3, 4].select { |n| n.even? }` returns `[2, 4]`.",
+      "topic": "iterables",
+      "answer": true,
+      "code": "p [1, 2, 3, 4].select { |n| n.even? }",
+      "query": {
+        "explanation": "select (alias filter) returns a new array containing only the elements for which the block is truthy, so the even numbers 2 and 4 survive. Its counterpart reject does the opposite and would return [1, 3].",
+        "syntax": "enumerable.select { |element| condition }",
+        "tags": [
+          "iterables",
+          "enumerable",
+          "select",
+          "filter"
+        ],
+        "title": "select keeps the matching elements"
+      },
+      "rationale": "select keeps elements whose block result is truthy, so the evens remain; it is reject that would discard them and return [1, 3].",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-7a65261d",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[1, 2]"
+        },
+        {
+          "text": "[1, 2, 1, 2]",
+          "rationale": "That is what select would give; take_while halts at the 3 and ignores everything after it."
+        },
+        {
+          "text": "[3]",
+          "rationale": "take_while collects the elements that satisfy the block, not the element that broke the run."
+        },
+        {
+          "text": "[1, 2, 3, 1, 2]",
+          "rationale": "The whole array is returned only if every element satisfies the block, but 3 < 3 is false."
+        }
+      ],
+      "code": "puts [1, 2, 3, 1, 2].take_while { |n| n < 3 }.inspect",
+      "query": {
+        "explanation": "take_while yields elements from the front of the iterable while the block is truthy and stops permanently as soon as the block is falsy. The 3 ends the run, so the later 1 and 2 are never taken even though they satisfy the condition.",
+        "syntax": "enumerable.take_while { |element| condition }",
+        "tags": [
+          "iterables",
+          "enumerable",
+          "take_while"
+        ],
+        "title": "take_while stops at the first failure"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-e95d1564",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[\"fig\", \"pear\", \"banana\"]"
+        },
+        {
+          "text": "[\"banana\", \"pear\", \"fig\"]",
+          "rationale": "sort_by sorts ascending by the key, so the shortest word comes first unless you reverse the result."
+        },
+        {
+          "text": "[\"banana\", \"fig\", \"pear\"]",
+          "rationale": "That is alphabetical order; the block makes length, not the string itself, the sort key."
+        },
+        {
+          "text": "[3, 4, 6]",
+          "rationale": "sort_by returns the original elements reordered, not the computed sort keys."
+        }
+      ],
+      "code": "puts %w[pear fig banana].sort_by { |w| w.length }.inspect",
+      "query": {
+        "explanation": "sort_by calls the block once per element to obtain a sort key, then returns a new array ordered by those keys in ascending order. The lengths are 4, 3 and 6, so the words come out shortest first: fig, pear, banana.",
+        "syntax": "enumerable.sort_by { |element| sort_key }",
+        "tags": [
+          "iterables",
+          "enumerable",
+          "sort_by"
+        ],
+        "title": "sort_by orders by a computed key"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-f219b506",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[1, 4, 7, 10]"
+        },
+        {
+          "text": "[1, 4, 7]",
+          "rationale": "10 is included because the range is inclusive and 1 + 3 + 3 + 3 equals exactly 10."
+        },
+        {
+          "text": "[3, 6, 9]",
+          "rationale": "step starts counting at the range's first element, 1, rather than at the step size itself."
+        },
+        {
+          "text": "[1, 3, 5, 7, 9]",
+          "rationale": "The step is 3, not 2, so the gap between consecutive yielded values is three."
+        }
+      ],
+      "code": "puts (1..10).step(3).to_a.inspect",
+      "query": {
+        "explanation": "(1..10).step(3) starts at the range's beginning and repeatedly adds 3, yielding only values that stay inside the range. That gives 1, 4, 7 and 10; the next value, 13, is past the end, so it is dropped.",
+        "syntax": "(first..last).step(n).to_a",
+        "tags": [
+          "iterables",
+          "range",
+          "step"
+        ],
+        "title": "Range#step walks the range in increments"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-0cb7bda4",
+      "prompt": "In Ruby, calling each_with_index without a block returns an Enumerator whose first element is the pair `[10, 0]` for the array `[10, 20, 30]`.",
+      "topic": "iterables",
+      "answer": true,
+      "code": "p [10, 20, 30].each_with_index.first",
+      "query": {
+        "explanation": "each_with_index yields two values per iteration: the element first and its zero-based index second. Without a block it returns an Enumerator, so first gives the pair [10, 0] for the array's opening element.",
+        "syntax": "enumerable.each_with_index { |element, index| ... }",
+        "tags": [
+          "iterables",
+          "enumerable",
+          "each_with_index",
+          "enumerator"
+        ],
+        "title": "each_with_index yields element then index"
+      },
+      "rationale": "The element comes first and the index second, and indexing starts at 0, so the opening pair is [10, 0] rather than [0, 10] or [10, 1].",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-5573046c",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "notebook"
+        },
+        {
+          "text": "8",
+          "rationale": "`max_by` returns the winning element, not the block's numeric score."
+        },
+        {
+          "text": "pencil",
+          "rationale": "\"pencil\" has 6 characters, fewer than \"notebook\"'s 8."
+        },
+        {
+          "text": "pen",
+          "rationale": "\"pen\" is among the shortest words, so it would be the answer for `min_by`, not `max_by`."
+        }
+      ],
+      "code": "words = [\"pen\", \"pencil\", \"ink\", \"notebook\"]\nputs words.max_by { |w| w.length }",
+      "query": {
+        "explanation": "`max_by` evaluates the block for every element and returns the element itself whose block value is greatest. The lengths are 3, 6, 3 and 8, so the longest word \"notebook\" wins and `puts` prints it.",
+        "syntax": "enum.max_by { |item| score }",
+        "tags": [
+          "optimization",
+          "enumerable",
+          "max_by"
+        ],
+        "title": "Maximizing with max_by"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-08f49ddd",
+      "prompt": "In Ruby, `minmax` finds the smallest and largest element in a single pass. Does this snippet print `[1, 7]`?",
+      "topic": "optimization",
+      "answer": true,
+      "code": "p [4, 1, 7, 3].minmax",
+      "query": {
+        "explanation": "`minmax` returns a two-element array holding the minimum first and the maximum second, so `[4, 1, 7, 3].minmax` is `[1, 7]`.",
+        "syntax": "enum.minmax #=> [min, max]",
+        "tags": [
+          "optimization",
+          "enumerable",
+          "minmax"
+        ],
+        "title": "minmax returns both extremes"
+      },
+      "rationale": "The order is always [minimum, maximum], so the printed array is [1, 7] rather than [7, 1] or anything else.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-9711001e",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "12"
+        },
+        {
+          "text": "8",
+          "rationale": "8 ties with 12 at distance 2, but `min_by` keeps the earlier element on a tie."
+        },
+        {
+          "text": "2",
+          "rationale": "That is the smallest block value; `min_by` returns the element, not the score."
+        },
+        {
+          "text": "5",
+          "rationale": "5 is 5 away from 10, a worse score than 12 and 8."
+        }
+      ],
+      "code": "nums = [12, 5, 23, 8]\np nums.min_by { |n| (n - 10).abs }",
+      "query": {
+        "explanation": "The block measures the distance from 10: 2, 5, 13 and 2. Two elements tie at distance 2, and `min_by` keeps the first one it saw, which is 12.",
+        "syntax": "enum.min_by { |item| cost }",
+        "tags": [
+          "optimization",
+          "enumerable",
+          "min_by"
+        ],
+        "title": "min_by for the closest value"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-022c892d",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[9, 7]"
+        },
+        {
+          "text": "[7, 9]",
+          "rationale": "`max(n)` sorts its result in descending order, so the largest value comes first."
+        },
+        {
+          "text": "[9]",
+          "rationale": "The argument 2 asks for two elements, not for the maximum of the first 2."
+        },
+        {
+          "text": "[1, 3]",
+          "rationale": "Those are the two smallest elements, which is what `min(2)` would return."
+        }
+      ],
+      "code": "p [5, 1, 9, 3, 7].max(2)",
+      "query": {
+        "explanation": "`max(n)` returns the n largest elements in an array sorted from largest to smallest, so `max(2)` gives `[9, 7]`.",
+        "syntax": "enum.max(n) #=> array of n largest, descending",
+        "tags": [
+          "optimization",
+          "enumerable",
+          "top-n"
+        ],
+        "title": "Taking the top N with max(n)"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-94857a56",
+      "prompt": "Sorting is a slower way to find an extreme than scanning once. Does this snippet print `true`?",
+      "topic": "optimization",
+      "answer": true,
+      "code": "scores = [88, 72, 95, 64]\nputs scores.sort.first == scores.min",
+      "query": {
+        "explanation": "`sort` arranges the numbers ascending, so its first element is the smallest, which is exactly what `min` returns. Both are 64, so the comparison is true, though `min` does the job in one pass instead of sorting everything.",
+        "syntax": "enum.min # cheaper than enum.sort.first",
+        "tags": [
+          "optimization",
+          "sorting",
+          "min"
+        ],
+        "title": "sort.first versus min"
+      },
+      "rationale": "`sort` puts the smallest value at index 0, so `sort.first` and `min` agree here and the comparison cannot be false.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-208b769f",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2"
+        },
+        {
+          "text": "4",
+          "rationale": "That would be the count without caching; `||=` skips the call for keys already stored."
+        },
+        {
+          "text": "1",
+          "rationale": "The distinct keys 4 and 5 each need one computation, so one call is too few."
+        },
+        {
+          "text": "3",
+          "rationale": "Only two distinct values appear in the list, so at most two computations happen."
+        }
+      ],
+      "code": "$calls = 0\n\ndef slow(n)\n  $calls += 1\n  n * n\nend\n\ncache = {}\n[4, 4, 5, 4].each { |n| cache[n] ||= slow(n) }\nputs $calls",
+      "query": {
+        "explanation": "`cache[n] ||= slow(n)` only calls `slow` when the key is missing or holds a falsy value. The first 4 and the 5 trigger a call; the two later 4s are served from the cache, so the counter ends at 2.",
+        "syntax": "cache[key] ||= expensive(key)",
+        "tags": [
+          "optimization",
+          "memoization",
+          "hash"
+        ],
+        "title": "Memoizing with ||="
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-45863c85",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "nil"
+        },
+        {
+          "text": "1",
+          "rationale": "`1` would only be returned if the hash had the Symbol key `:a`; its only key is the String `\"a\"`."
+        },
+        {
+          "text": "\"a\"",
+          "rationale": "`Hash#[]` returns the stored value, never the key, and the lookup did not match anyway."
+        },
+        {
+          "text": "0",
+          "rationale": "A missing key returns the hash's default, which is `nil` here; `0` would require `Hash.new(0)`."
+        }
+      ],
+      "code": "h = { \"a\" => 1 }\np h[:a]",
+      "query": {
+        "explanation": "Hash lookup uses `hash` and `eql?`, and `\"a\".eql?(:a)` is false because a String and a Symbol are different objects of different classes. The hash was built with the String key `\"a\"`, so looking it up with the Symbol `:a` finds nothing and `Hash#[]` returns the default value, which is `nil`. `p nil` writes `nil`.",
+        "syntax": "hash[key]",
+        "tags": [
+          "hash",
+          "symbol",
+          "string",
+          "gotcha"
+        ],
+        "title": "String keys vs Symbol keys"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-6f8a9c85",
+      "prompt": "Ruby Strings are mutable objects, and plain assignment copies the reference rather than the contents. Does this snippet print `true`?",
+      "topic": "wtf",
+      "answer": true,
+      "code": "a = \"hi\"\nb = a\nb << \"!\"\nputs a == \"hi!\"",
+      "query": {
+        "explanation": "`b = a` makes `b` point at the very same String object as `a`; it does not copy the text. `String#<<` appends in place, mutating that shared object, so `a` now reads `\"hi!\"` as well and the comparison is true. Use `a.dup` or the non-mutating `a + \"!\"` to leave `a` untouched.",
+        "syntax": "str << other",
+        "tags": [
+          "string",
+          "mutation",
+          "aliasing",
+          "gotcha"
+        ],
+        "title": "Strings are shared by reference"
+      },
+      "rationale": "`false` would require `b = a` to copy the string, but it only copies the reference, so `<<` mutates the one object both names share.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-280608c5",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "false"
+        },
+        {
+          "text": "true",
+          "rationale": "That is the numeric answer; string comparison stops at the first differing character, where `\"1\"` is less than `\"9\"`."
+        },
+        {
+          "text": "1",
+          "rationale": "`<=>` returns an Integer, but `>` returns a boolean."
+        },
+        {
+          "text": "nil",
+          "rationale": "`nil` comes from `<=>` on incomparable types; two Strings compare fine and `>` yields a boolean."
+        }
+      ],
+      "code": "p \"10\" > \"9\"",
+      "query": {
+        "explanation": "`String#>` uses `String#<=>`, which compares bytes left to right. The first characters are `\"1\"` and `\"9\"`; `\"1\"` has the smaller byte value, so `\"10\"` sorts before `\"9\"` and the comparison is false. Convert with `to_i` first if you want numeric ordering.",
+        "syntax": "str1 > str2",
+        "tags": [
+          "string",
+          "comparison",
+          "gotcha"
+        ],
+        "title": "Strings compare character by character"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-278f8638",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "operators-and-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "a-7"
+        },
+        {
+          "text": "%s-%d",
+          "rationale": "The directives are substituted, not printed literally, because the right operand supplies values for them."
+        },
+        {
+          "text": "[\"a\", 7]",
+          "rationale": "The array is consumed as the argument list for the format string; it is not printed as an array."
+        },
+        {
+          "text": "a-7.0",
+          "rationale": "`%d` formats an integer, so 7 prints as `7` with no decimal part."
+        }
+      ],
+      "code": "puts(\"%s-%d\" % [\"a\", 7])",
+      "query": {
+        "explanation": "On numbers `%` is modulo, but on a String it is `format`: the directives in the left operand are replaced by the values from the right operand, so `\"%s-%d\" % [\"a\", 7]` yields `a-7`.",
+        "syntax": "format_string % argument_or_array",
+        "tags": [
+          "operators",
+          "types",
+          "string",
+          "format"
+        ],
+        "title": "String#% as a format operator"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-befed88b",
+      "prompt": "In Ruby, `1 == 1.0` evaluates to true even though `1` and `1.0` are instances of different classes.",
+      "topic": "operators-and-types",
+      "answer": true,
+      "code": "p 1 == 1.0\np 1.class\np 1.0.class",
+      "query": {
+        "explanation": "`==` on numbers compares mathematical value across numeric classes, so `1 == 1.0` is true while `1.class` is Integer and `1.0.class` is Float.",
+        "syntax": "integer == float",
+        "tags": [
+          "operators",
+          "types",
+          "numeric",
+          "equality"
+        ],
+        "title": "Numeric == compares mathematical value"
+      },
+      "rationale": "Saying false would require `==` to compare classes, but Ruby's numeric `==` compares value, so an Integer can equal a Float.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-e1f0eed9",
+      "prompt": "What does this Ruby program print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "30 [10, 20]"
+        },
+        {
+          "text": "10 [20, 30]",
+          "rationale": "`pop` removes from the end, not the front; removing the first element is `shift`."
+        },
+        {
+          "text": "30 [10, 20, 30]",
+          "rationale": "`pop` mutates the receiver, so the popped element is no longer in the array."
+        },
+        {
+          "text": "20 [10, 30]",
+          "rationale": "`pop` always takes the last element, never the middle one."
+        }
+      ],
+      "code": "stack = []\nstack.push(10)\nstack.push(20)\nstack.push(30)\ntop = stack.pop\nputs \"#{top} #{stack.inspect}\"",
+      "query": {
+        "explanation": "`push` appends to the end of the array and `pop` removes and returns the last element, so the array behaves last-in-first-out. After pushing 10, 20, 30 the last element is 30; popping it returns 30 and leaves [10, 20].",
+        "syntax": "array.push(value) -> array ; array.pop -> last element (removed)",
+        "tags": [
+          "array",
+          "stack",
+          "lifo",
+          "push",
+          "pop"
+        ],
+        "title": "Array as a stack: push and pop"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-717730f1",
+      "prompt": "What does this Ruby program print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "a [\"b\", \"c\"]"
+        },
+        {
+          "text": "c [\"a\", \"b\"]",
+          "rationale": "That is what `pop` would do; `shift` removes from the front of the array."
+        },
+        {
+          "text": "a [\"a\", \"b\", \"c\"]",
+          "rationale": "`shift` removes the element it returns, so the array shrinks to two elements."
+        },
+        {
+          "text": "nil [\"a\", \"b\", \"c\"]",
+          "rationale": "`shift` returns nil only when the array is empty, and this array has three elements."
+        }
+      ],
+      "code": "queue = []\nqueue << \"a\"\nqueue << \"b\"\nqueue << \"c\"\nfirst = queue.shift\nputs \"#{first} #{queue.inspect}\"",
+      "query": {
+        "explanation": "`<<` appends to the end while `shift` removes and returns the element at index 0, giving first-in-first-out behaviour. The first element added was \"a\", so `shift` returns \"a\" and leaves [\"b\", \"c\"].",
+        "syntax": "array << value -> array ; array.shift -> first element (removed)",
+        "tags": [
+          "array",
+          "queue",
+          "fifo",
+          "shift"
+        ],
+        "title": "Array as a queue: shift takes the front element"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-35ac6a79",
+      "prompt": "What does this Ruby program print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "0 3"
+        },
+        {
+          "text": "3 0",
+          "rationale": "The missing key \"pears\" yields the default 0; the present key \"apples\" yields 3, in that order."
+        },
+        {
+          "text": "0 0",
+          "rationale": "The default is only used for missing keys, and \"apples\" is stored with the value 3."
+        },
+        {
+          "text": "A KeyError is raised for \"pears\"",
+          "rationale": "`fetch` only raises KeyError when no default (and no block) is given."
+        }
+      ],
+      "code": "counts = { \"apples\" => 3 }\nputs \"#{counts.fetch(\"pears\", 0)} #{counts.fetch(\"apples\", 0)}\"",
+      "query": {
+        "explanation": "`fetch(key, default)` returns the stored value when the key exists and the supplied default when it does not. \"pears\" is absent so the default 0 is returned, while \"apples\" is present so its value 3 is returned.",
+        "syntax": "hash.fetch(key, default) -> value or default",
+        "tags": [
+          "hash",
+          "fetch",
+          "default",
+          "lookup"
+        ],
+        "title": "Hash#fetch with a default value"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-0baafd80",
+      "prompt": "What does this Ruby program print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "c"
+        },
+        {
+          "text": "ruby",
+          "rationale": "Array indexes start at 0, so index 1 is the second element, not the first."
+        },
+        {
+          "text": "nil",
+          "rationale": "Every step of the path exists, so `dig` finds a real value instead of returning nil."
+        },
+        {
+          "text": "Ada",
+          "rationale": "The path given is :user then :langs, which never visits the :name key."
+        }
+      ],
+      "code": "data = { user: { name: \"Ada\", langs: [\"ruby\", \"c\"] } }\nputs data.dig(:user, :langs, 1)",
+      "query": {
+        "explanation": "`dig` follows each argument in turn: `:user` selects the inner hash, `:langs` selects the array, and the integer 1 indexes that array. Array indexing is zero-based, so index 1 is the second element, \"c\".",
+        "syntax": "hash.dig(key, *rest) -> value or nil",
+        "tags": [
+          "hash",
+          "dig",
+          "nested",
+          "array-index"
+        ],
+        "title": "Hash#dig through nested hashes and arrays"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-3d0226e9",
+      "prompt": "In Ruby, a `Set` stores each value only once, so `Set.new([1, 2, 2, 3, 3, 3]).size` is 3. True or false?",
+      "topic": "data-structures",
+      "answer": true,
+      "query": {
+        "explanation": "A Set is an unordered collection of unique members. Building a Set from [1, 2, 2, 3, 3, 3] keeps only the distinct values 1, 2 and 3, so its size is 3 rather than the 6 elements of the original array.",
+        "syntax": "require 'set' ; Set.new(enumerable).size -> Integer",
+        "tags": [
+          "set",
+          "uniqueness",
+          "size"
+        ],
+        "title": "Set discards duplicate values"
+      },
+      "rationale": "False would mean the Set kept duplicates and reported 6, but a Set only ever stores one copy of each value.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-768c49e3",
+      "prompt": "In Ruby, `{ \"b\" => 1, \"a\" => 2 }.keys` returns `[\"b\", \"a\"]`. True or false?",
+      "topic": "data-structures",
+      "answer": true,
+      "query": {
+        "explanation": "Ruby hashes remember the order in which keys were first inserted, and `keys` returns them in that order. Since \"b\" was written first, the result is [\"b\", \"a\"]; hashes are not sorted automatically.",
+        "syntax": "hash.keys -> array of keys in insertion order",
+        "tags": [
+          "hash",
+          "keys",
+          "insertion-order"
+        ],
+        "title": "Hash keys come back in insertion order"
+      },
+      "rationale": "False would require the keys to come back sorted as [\"a\", \"b\"], but Ruby preserves insertion order and never sorts hash keys for you.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-da28407f",
+      "prompt": "What single line does this snippet write to stdout?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Hello, Ada!"
+        },
+        {
+          "text": "Ada, Hello!",
+          "rationale": "The format string puts the greeting first and the name second, not the other way round."
+        },
+        {
+          "text": "greeting, Ada!",
+          "rationale": "Interpolation inserts the value of the variable, not the parameter's name."
+        },
+        {
+          "text": "ArgumentError: wrong number of arguments",
+          "rationale": "A parameter with a default value is optional, so calling with one argument is legal."
+        }
+      ],
+      "code": "def greet(name, greeting = \"Hello\")\n  \"#{greeting}, #{name}!\"\nend\n\nputs greet(\"Ada\")",
+      "query": {
+        "explanation": "Only one argument is passed, so `name` becomes \"Ada\" and `greeting` falls back to its default \"Hello\". The interpolated string is therefore \"Hello, Ada!\".",
+        "syntax": "def name(required, optional = default)",
+        "tags": [
+          "functions",
+          "default-arguments",
+          "ruby"
+        ],
+        "title": "Default parameter values"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-bb46627a",
+      "prompt": "What single line does this snippet write to stdout?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "not visible",
+          "rationale": ""
+        },
+        {
+          "text": "visible",
+          "rationale": "A method body cannot see local variables of the code that surrounds the `def`; only blocks can."
+        },
+        {
+          "text": "10",
+          "rationale": "The method prints a descriptive word, and in any case `x` is out of reach inside the method."
+        },
+        {
+          "text": "NameError: undefined local variable or method 'x'",
+          "rationale": "`defined?` is designed to test safely; it returns nil instead of raising when the name is unknown."
+        }
+      ],
+      "code": "x = 10\n\ndef show\n  defined?(x) ? \"visible\" : \"not visible\"\nend\n\nputs show",
+      "query": {
+        "explanation": "The local variable `x` belongs to the top-level scope. The body of `show` runs in a fresh scope that cannot reach it, so `defined?(x)` is nil and the method answers \"not visible\".",
+        "syntax": "defined?(expression) # nil when undefined",
+        "tags": [
+          "scope",
+          "local-variables",
+          "ruby"
+        ],
+        "title": "Methods do not see surrounding locals"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-11600809",
+      "prompt": "In Ruby `retry` inside a rescue clause restarts the whole begin body from the top. Does this snippet print 3?",
+      "topic": "errors-and-control-flow",
+      "answer": true,
+      "code": "attempts = 0\nbegin\n  attempts += 1\n  raise \"boom\" if attempts < 3\nrescue RuntimeError\n  retry\nend\nputs attempts",
+      "query": {
+        "explanation": "The body runs with attempts becoming 1, raises, and `retry` re-runs the body. On attempts == 2 it raises again and retries. On the third run attempts is 3, the `if` guard is false, no exception is raised, and the begin block finishes, so 3 is printed.",
+        "syntax": "begin ... rescue ... retry ... end",
+        "tags": [
+          "errors",
+          "control-flow",
+          "retry"
+        ],
+        "title": "retry restarts the begin body"
+      },
+      "rationale": "`retry` re-executes the begin body rather than falling through, so the loop continues until the guard `attempts < 3` is false, leaving attempts at 3.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-d4253c82",
+      "prompt": "What single line does this snippet write to stdout?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "8 12"
+        },
+        {
+          "text": "7 12",
+          "rationale": "i is incremented to 8 before the break guard is reached, because `next` skips the rest of the body when i is 7."
+        },
+        {
+          "text": "8 20",
+          "rationale": "8 is never added: the `break` guard runs before `total += i`, so only 2, 4 and 6 are summed to 12."
+        },
+        {
+          "text": "10 12",
+          "rationale": "`break` ends the loop when i is 8, so i never reaches 10."
+        }
+      ],
+      "code": "total = 0\ni = 0\nwhile i < 10\n  i += 1\n  next if i.odd?\n  break if i > 6\n  total += i\nend\nputs \"#{i} #{total}\"",
+      "query": {
+        "explanation": "Odd values of i are skipped by `next` before anything is added. The even values 2, 4 and 6 pass the break guard and add up to 12. When i becomes 8 the guard `i > 6` is true and `break` ends the loop with i left at 8.",
+        "syntax": "while cond ... next ... break ... end",
+        "tags": [
+          "control-flow",
+          "while",
+          "next",
+          "break"
+        ],
+        "title": "next and break inside a while loop"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-f56ef9c8",
+      "prompt": "In Ruby a `rescue` clause naming a class also catches instances of that class's subclasses. Does this snippet print `MyError: oops`?",
+      "topic": "errors-and-control-flow",
+      "answer": true,
+      "code": "class MyError < StandardError; end\n\nbegin\n  raise MyError, \"oops\"\nrescue StandardError => e\n  puts \"#{e.class}: #{e.message}\"\nend",
+      "query": {
+        "explanation": "MyError inherits from StandardError, so `rescue StandardError` matches it. The rescued object is still a MyError instance, so `e.class` is MyError, and the string given to `raise` becomes the message.",
+        "syntax": "rescue SomeErrorClass => variable",
+        "tags": [
+          "errors",
+          "control-flow",
+          "exception-hierarchy"
+        ],
+        "title": "rescue matches subclasses of the named class"
+      },
+      "rationale": "Matching is done with `Module#===`, which is true for subclass instances, and the rescued object keeps its own class MyError rather than being converted to StandardError.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-42e4054b",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "5"
+        },
+        {
+          "text": "nil",
+          "rationale": "nil would be the result only if the block produced nothing; `2 + 3` evaluates to 5 and that becomes the thread's value."
+        },
+        {
+          "text": "true",
+          "rationale": "true is what Thread#alive? style predicates return; #value returns the block's own result, not a flag."
+        },
+        {
+          "text": "#<Thread:0x0000 run>",
+          "rationale": "Thread#join returns the thread object itself; Thread#value returns the block's result instead."
+        }
+      ],
+      "code": "t = Thread.new { 2 + 3 }\nputs t.value",
+      "query": {
+        "explanation": "Thread#value joins the thread and then returns whatever the thread's block evaluated to, so `Thread.new { 2 + 3 }.value` is 5.",
+        "syntax": "thread.value",
+        "tags": [
+          "threads",
+          "async",
+          "return-values"
+        ],
+        "title": "Thread#value returns the block's result"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-0d8e7ef4",
+      "prompt": "A Thread::Queue hands values back in first-in, first-out order, so after pushing 1, 2, 3 the first pop returns 1. True or false?",
+      "topic": "async-and-concurrency",
+      "answer": true,
+      "code": "q = Thread::Queue.new\nq.push(1)\nq.push(2)\nq.push(3)\nputs q.pop",
+      "query": {
+        "explanation": "Thread::Queue is a thread-safe first-in, first-out buffer, so pops come back in the same order the values were pushed.",
+        "syntax": "q = Thread::Queue.new; q.push(x); q.pop",
+        "tags": [
+          "queue",
+          "concurrency",
+          "fifo"
+        ],
+        "title": "Thread::Queue is FIFO"
+      },
+      "rationale": "False would mean the queue behaves like a stack, but Thread::Queue is FIFO: pop removes the oldest pushed element, which is 1.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-b8901fcd",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[1, 2, 3]"
+        },
+        {
+          "text": "[1, 1, 1]",
+          "rationale": "A fiber does not restart from the top on each resume; it continues after the Fiber.yield that paused it."
+        },
+        {
+          "text": "[1, 2, nil]",
+          "rationale": "The final resume returns the value of the fiber's last expression, which is 3, not nil."
+        },
+        {
+          "text": "[nil, 1, 2]",
+          "rationale": "The first resume already runs the body up to the first Fiber.yield, so it returns 1 rather than nil."
+        }
+      ],
+      "code": "f = Fiber.new do\n  Fiber.yield 1\n  Fiber.yield 2\n  3\nend\np [f.resume, f.resume, f.resume]",
+      "query": {
+        "explanation": "Each resume returns the value passed to the next Fiber.yield, and the last resume returns the value of the block's final expression.",
+        "syntax": "f = Fiber.new { Fiber.yield v }; f.resume",
+        "tags": [
+          "fiber",
+          "coroutines",
+          "async"
+        ],
+        "title": "Fiber.yield and resume"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-7a7c201a",
+      "prompt": "Inside the block of a thread created with Thread.new, Thread.current is the same object as Thread.main. True or false?",
+      "topic": "async-and-concurrency",
+      "answer": false,
+      "code": "t = Thread.new { Thread.current == Thread.main }\nputs t.value",
+      "query": {
+        "explanation": "Thread.current is whichever thread is running the code right now, so inside a spawned thread it differs from Thread.main, the process's initial thread.",
+        "syntax": "Thread.current / Thread.main",
+        "tags": [
+          "threads",
+          "concurrency",
+          "identity"
+        ],
+        "title": "Thread.current vs Thread.main"
+      },
+      "rationale": "True is wrong because Thread.current refers to the thread actually executing the block, which is the new thread, while Thread.main stays the program's original thread.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-73369b41",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[10, 1, false]"
+        },
+        {
+          "text": "[20, 1, false]",
+          "rationale": "pop takes the oldest element from the FIFO queue, which is 10, not the most recently pushed 20."
+        },
+        {
+          "text": "[10, 2, false]",
+          "rationale": "pop removes the element it returns, so only one of the two pushed values is still queued."
+        },
+        {
+          "text": "[10, 1, true]",
+          "rationale": "One element (20) is still waiting in the queue, so empty? is false."
+        }
+      ],
+      "code": "q = Thread::Queue.new\nq << 10\nq << 20\nx = q.pop\np [x, q.size, q.empty?]",
+      "query": {
+        "explanation": "`<<` enqueues, pop dequeues the oldest element and removes it, so size drops to 1 and empty? is still false.",
+        "syntax": "q << x; q.pop; q.size; q.empty?",
+        "tags": [
+          "queue",
+          "concurrency",
+          "collections"
+        ],
+        "title": "Queue#pop, #size and #empty?"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-0db062c8",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "hELLO wORLD"
+        },
+        {
+          "text": "HELLO WORLD",
+          "rationale": "That is upcase; swapcase does not make everything uppercase."
+        },
+        {
+          "text": "hello world",
+          "rationale": "That is downcase; swapcase does not make everything lowercase."
+        },
+        {
+          "text": "Hello World",
+          "rationale": "swapcase returns a changed copy, not the original casing."
+        }
+      ],
+      "code": "puts \"Hello World\".swapcase",
+      "query": {
+        "explanation": "swapcase inverts the case of each letter individually, leaving non-letters such as the space untouched. 'H' becomes 'h', 'e' becomes 'E', and so on for both words.",
+        "syntax": "str.swapcase",
+        "tags": [
+          "strings",
+          "case",
+          "ruby"
+        ],
+        "title": "String#swapcase"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-f0705e2a",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[\"a\", \"b\", \"\", \"c\"]"
+        },
+        {
+          "text": "[\"a\", \"b\", \"c\"]",
+          "rationale": "split does not silently discard an empty field that sits between two separators."
+        },
+        {
+          "text": "[\"a\", \"b\", nil, \"c\"]",
+          "rationale": "A missing field is an empty string, never nil."
+        },
+        {
+          "text": "[\"a,b,,c\"]",
+          "rationale": "The separator is present, so the string really is cut apart."
+        }
+      ],
+      "code": "p \"a,b,,c\".split(\",\")",
+      "query": {
+        "explanation": "Splitting on a given string separator cuts at every occurrence, so the two commas in the middle produce an empty string between them. Only trailing empty fields are dropped by default.",
+        "syntax": "str.split(separator)",
+        "tags": [
+          "strings",
+          "split",
+          "ruby"
+        ],
+        "title": "String#split keeps interior empty fields"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-fef4a196",
+      "prompt": "In Ruby, `\"Ruby\".start_with?(\"ru\")` evaluates to true.",
+      "topic": "strings",
+      "answer": false,
+      "code": "p \"Ruby\".start_with?(\"ru\")",
+      "query": {
+        "explanation": "start_with? compares characters exactly, and 'R' is not the same character as 'r', so the prefix test fails and the result is false.",
+        "syntax": "str.start_with?(prefix)",
+        "tags": [
+          "strings",
+          "predicates",
+          "ruby"
+        ],
+        "title": "start_with? is case-sensitive"
+      },
+      "rationale": "start_with? does an exact, case-sensitive character comparison, so the lowercase \"ru\" does not match the capital 'R' and the answer is false.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-e5cb8c6a",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"hi there\""
+        },
+        {
+          "text": "\"hithere\"",
+          "rationale": "strip never touches whitespace in the middle of the string."
+        },
+        {
+          "text": "\"hi there  \"",
+          "rationale": "That is lstrip; strip trims both ends."
+        },
+        {
+          "text": "\"  hi there  \"",
+          "rationale": "strip returns a trimmed copy, so the padding is gone."
+        }
+      ],
+      "code": "p \"  hi there  \".strip",
+      "query": {
+        "explanation": "strip trims whitespace only at the two ends of the string; whitespace inside the string is left exactly as it was, so the space between the words survives.",
+        "syntax": "str.strip",
+        "tags": [
+          "strings",
+          "whitespace",
+          "ruby"
+        ],
+        "title": "String#strip"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-bb09e5f0",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "bonono"
+        },
+        {
+          "text": "bonana",
+          "rationale": "That is what sub would give; gsub replaces every match, not just the first."
+        },
+        {
+          "text": "banano",
+          "rationale": "gsub works left to right over all matches, not only the last one."
+        },
+        {
+          "text": "banana",
+          "rationale": "The pattern \"a\" does occur, so replacements really happen."
+        }
+      ],
+      "code": "puts \"banana\".gsub(\"a\", \"o\")",
+      "query": {
+        "explanation": "The 'g' in gsub stands for global: all three 'a' characters in \"banana\" are replaced with 'o', giving \"bonono\".",
+        "syntax": "str.gsub(pattern, replacement)",
+        "tags": [
+          "strings",
+          "gsub",
+          "ruby"
+        ],
+        "title": "String#gsub replaces all matches"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-171467f6",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "heLlo"
+        },
+        {
+          "text": "heLLo",
+          "rationale": "Replacing both 'l' characters is gsub's behaviour, not sub's."
+        },
+        {
+          "text": "hellLo",
+          "rationale": "sub substitutes for the match, it does not insert an extra character."
+        },
+        {
+          "text": "helLo",
+          "rationale": "The first 'l' is the one replaced, not the second."
+        }
+      ],
+      "code": "puts \"hello\".sub(\"l\", \"L\")",
+      "query": {
+        "explanation": "sub stops after the first match, so only the first of the two 'l' characters becomes 'L' and the second one stays lowercase.",
+        "syntax": "str.sub(pattern, replacement)",
+        "tags": [
+          "strings",
+          "sub",
+          "ruby"
+        ],
+        "title": "String#sub replaces one match"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-991eb7af",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"ell\""
+        },
+        {
+          "text": "\"el\"",
+          "rationale": "The 3 is a length, so three characters are returned, not two."
+        },
+        {
+          "text": "\"ello\"",
+          "rationale": "That would be four characters; the requested length is 3."
+        },
+        {
+          "text": "\"hel\"",
+          "rationale": "Counting starts at index 1, which is 'e', not at index 0."
+        }
+      ],
+      "code": "p \"hello\"[1, 3]",
+      "query": {
+        "explanation": "Index 1 is the character 'e', and taking 3 characters from there gives 'e', 'l', 'l'. The second number is a count, not an end index.",
+        "syntax": "str[start, length]",
+        "tags": [
+          "strings",
+          "indexing",
+          "ruby"
+        ],
+        "title": "Substring by start and length"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-6c762704",
+      "prompt": "In Ruby, `\"5\" + \"5\"` evaluates to the string `\"55\"` rather than the number 10.",
+      "topic": "strings",
+      "answer": true,
+      "query": {
+        "explanation": "The + operator on a String joins the two strings end to end, so digit characters are glued together instead of being added numerically.",
+        "syntax": "str + other_str",
+        "tags": [
+          "strings",
+          "concatenation",
+          "ruby"
+        ],
+        "title": "String#+ concatenates"
+      },
+      "rationale": "String#+ performs concatenation, not arithmetic, so the result is \"55\"; Ruby never converts the digit strings to numbers for you.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-4c27ee3b",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "2",
+          "rationale": "That counts only the two 'l' characters in \"hello\" and misses the one in \"world\"."
+        },
+        {
+          "text": "1",
+          "rationale": "count tallies every matching character, not just the first occurrence."
+        },
+        {
+          "text": "0",
+          "rationale": "The string clearly contains the letter 'l', so the count is not zero."
+        }
+      ],
+      "code": "puts \"hello world\".count(\"l\")",
+      "query": {
+        "explanation": "count scans every character and tallies the ones listed in its argument. The letter 'l' appears twice in \"hello\" and once in \"world\", for a total of 3.",
+        "syntax": "str.count(char_set)",
+        "tags": [
+          "strings",
+          "count",
+          "ruby"
+        ],
+        "title": "String#count"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-d6124d30",
+      "prompt": "What does this Ruby snippet print?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "div.box#main"
+        },
+        {
+          "text": "div.box#x",
+          "rationale": "`id: \"main\"` was passed explicitly, so the default \"x\" is overridden."
+        },
+        {
+          "text": "div.main#x",
+          "rationale": "Keyword arguments bind by name, so \"main\" goes to `id`, never to `cls`."
+        },
+        {
+          "text": "ArgumentError: wrong number of arguments",
+          "rationale": "Both keywords have defaults, so calling with just the positional argument plus `id:` is valid."
+        }
+      ],
+      "code": "def tag(name, cls: \"box\", id: \"x\")\n  \"#{name}.#{cls}##{id}\"\nend\n\nputs tag(\"div\", id: \"main\")",
+      "query": {
+        "explanation": "Keyword arguments are matched by name, not by position. Here only `id:` is supplied, so `id` becomes \"main\" while `cls` keeps its default \"box\", producing \"div.box#main\".",
+        "syntax": "def m(a, key: default)",
+        "tags": [
+          "functions-and-scope",
+          "keyword-arguments",
+          "defaults"
+        ],
+        "title": "Keyword arguments with defaults"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-538d2c23",
+      "prompt": "Does this snippet print \"no block\" and then \"HI\"?",
+      "topic": "functions-and-scope",
+      "answer": true,
+      "code": "def greet\n  if block_given?\n    yield \"hi\"\n  else\n    \"no block\"\n  end\nend\n\nputs greet\nputs greet { |s| s.upcase }",
+      "query": {
+        "explanation": "`block_given?` reports whether the caller attached a block. The first call has no block, so the method returns \"no block\"; the second call yields \"hi\" to the block, which upcases it to \"HI\". Both values are the methods' return values, so `puts` prints them.",
+        "syntax": "block_given?; yield value",
+        "tags": [
+          "functions-and-scope",
+          "blocks",
+          "yield"
+        ],
+        "title": "block_given? and yield"
+      },
+      "rationale": "The first call attaches no block so `block_given?` is false and \"no block\" is returned; the second yields \"hi\" into the block, whose `upcase` result \"HI\" becomes the method's value.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-4d1c6ce9",
+      "prompt": "What value for counter does this snippet print?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "0",
+          "rationale": "The lambda mutates the captured outer `counter`, so the original variable does change."
+        },
+        {
+          "text": "1",
+          "rationale": "`3.times` calls the lambda three separate times, and each call increments the same variable."
+        },
+        {
+          "text": "nil",
+          "rationale": "`counter` was initialised to 0 and only ever incremented, so it is always an Integer."
+        }
+      ],
+      "code": "counter = 0\ninc = -> { counter += 1 }\n\n3.times { inc.call }\n\nputs counter",
+      "query": {
+        "explanation": "A lambda captures the surrounding local scope rather than copying it, so `counter += 1` updates the very same `counter` defined outside. After three calls the outer variable holds 3.",
+        "syntax": "-> { ... }.call",
+        "tags": [
+          "functions-and-scope",
+          "closures",
+          "lambda"
+        ],
+        "title": "Lambdas close over local variables"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-8f647ae9",
+      "prompt": "What single line does this snippet write to stdout?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[\"start\", \"rescued\", \"ensure\"]"
+        },
+        {
+          "text": "[\"start\", \"rescued\"]",
+          "rationale": "The ensure clause runs no matter how the body exits, so \"ensure\" is appended as well."
+        },
+        {
+          "text": "[\"start\", \"ensure\"]",
+          "rationale": "The bare rescue catches the RuntimeError from raise \"boom\", so \"rescued\" is appended before ensure."
+        },
+        {
+          "text": "[\"start\", \"ensure\", \"rescued\"]",
+          "rationale": "The rescue body handles the error first; ensure is the final step, not an earlier one."
+        }
+      ],
+      "code": "log = []\n\ndef risky(log)\n  log << \"start\"\n  raise \"boom\"\nrescue => e\n  log << \"rescued\"\nensure\n  log << \"ensure\"\nend\n\nrisky(log)\np log",
+      "query": {
+        "explanation": "A method body can carry its own rescue and ensure clauses without an explicit begin. \"start\" is pushed, then raise \"boom\" aborts the rest of the body and jumps to the matching rescue clause, which pushes \"rescued\". The ensure clause always runs last, after the rescue body completes, so \"ensure\" is appended at the end.",
+        "syntax": "def name ... rescue => e ... ensure ... end",
+        "tags": [
+          "exceptions",
+          "ensure",
+          "rescue",
+          "control-flow"
+        ],
+        "title": "rescue and ensure order in a method body"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-5ea65d39",
+      "prompt": "Does this snippet print else and then ensure?",
+      "topic": "errors-and-control-flow",
+      "answer": true,
+      "code": "begin\n  x = 10 / 2\nrescue ZeroDivisionError\n  puts \"rescued\"\nelse\n  puts \"else\"\nensure\n  puts \"ensure\"\nend",
+      "query": {
+        "explanation": "10 / 2 raises nothing, so the rescue clause is skipped and the else clause runs instead. The ensure clause then runs last, giving the two lines \"else\" and \"ensure\".",
+        "syntax": "begin ... rescue ... else ... ensure ... end",
+        "tags": [
+          "exceptions",
+          "else",
+          "ensure",
+          "control-flow"
+        ],
+        "title": "begin/rescue/else/ensure"
+      },
+      "rationale": "The else clause runs exactly when the begin body finishes without raising, and ensure always runs afterwards, so both lines appear in that order.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-367cb08e",
+      "prompt": "Does the body of this Ruby if statement run when the condition is the integer 0?",
+      "topic": "wtf",
+      "answer": true,
+      "code": "if 0\n  puts \"ran\"\nend",
+      "query": {
+        "explanation": "Unlike C, Python, or JavaScript, Ruby treats every object except nil and false as truthy. The integer 0 is a real object, so the branch runs and \"ran\" is printed.",
+        "syntax": "if condition ... end",
+        "tags": [
+          "truthiness",
+          "conditionals",
+          "gotchas"
+        ],
+        "title": "Only nil and false are falsy in Ruby"
+      },
+      "rationale": "The answer is not False: Ruby's only falsy values are nil and false, so 0 passes the test and the body executes.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-a007cebe",
+      "prompt": "What single value does this snippet print?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "false"
+        },
+        {
+          "text": "true",
+          "rationale": "The two sides differ by a tiny rounding error, so == is not satisfied even though the decimal arithmetic looks exact."
+        },
+        {
+          "text": "0.30000000000000004",
+          "rationale": "That is the value of 0.1 + 0.2, but == is applied before p, so a boolean is printed instead."
+        },
+        {
+          "text": "TypeError",
+          "rationale": "Comparing two Floats with == is perfectly legal in Ruby and raises nothing."
+        }
+      ],
+      "code": "p 0.1 + 0.2 == 0.3",
+      "query": {
+        "explanation": "Float uses binary IEEE-754 doubles, so 0.1, 0.2 and 0.3 are all stored as tiny approximations. The sum 0.1 + 0.2 lands on a value slightly above the stored 0.3, so == reports false. Compare with a tolerance, or use Rational/BigDecimal, for exact decimal math.",
+        "syntax": "(a - b).abs < tolerance",
+        "tags": [
+          "float",
+          "equality",
+          "gotchas"
+        ],
+        "title": "Floats cannot represent 0.1 exactly"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-b6f22762",
+      "prompt": "What two lines does this snippet write to stdout, in order?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "ensure, body"
+        },
+        {
+          "text": "body, ensure",
+          "rationale": "The ensure block runs before the method actually hands control back, so its output appears first."
+        },
+        {
+          "text": "body",
+          "rationale": "An explicit return does not skip ensure; the ensure block always runs."
+        },
+        {
+          "text": "ensure",
+          "rationale": "The return value is still \"body\", and the outer puts prints it."
+        }
+      ],
+      "code": "def f\n  return \"body\"\nensure\n  puts \"ensure\"\nend\n\nputs f",
+      "query": {
+        "explanation": "An ensure clause runs when the method body finishes for any reason, including an explicit return. Here \"ensure\" is printed while f is still unwinding, and only afterwards does the caller print the returned string \"body\". Because ensure has no return value of its own (unless it returns explicitly), the method still yields \"body\".",
+        "syntax": "def name; ...; ensure; ...; end",
+        "tags": [
+          "errors-and-control-flow",
+          "ensure",
+          "return",
+          "methods"
+        ],
+        "title": "ensure runs even on an explicit return"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-59c0c37f",
+      "prompt": "Does this snippet print ArgumentError?",
+      "topic": "errors-and-control-flow",
+      "answer": true,
+      "code": "begin\n  begin\n    raise ArgumentError, \"bad\"\n  rescue => e\n    raise\n  end\nrescue => outer\n  puts outer.class\nend",
+      "query": {
+        "explanation": "Inside a rescue clause, Ruby keeps the exception being handled in the global $!. Writing raise with no arguments there re-raises that same exception object, preserving its class and message, so the outer rescue sees ArgumentError. Outside of a rescue clause a bare raise instead raises RuntimeError with no message.",
+        "syntax": "rescue => e\n  raise",
+        "tags": [
+          "errors-and-control-flow",
+          "raise",
+          "rescue",
+          "exceptions"
+        ],
+        "title": "A bare raise re-raises the current exception"
+      },
+      "rationale": "A bare raise inside a rescue clause re-raises the exception currently being handled, so the original ArgumentError reaches the outer rescue; it does not create a new RuntimeError.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-64f3d6f8",
+      "prompt": "Does this Ruby program print 512?",
+      "topic": "operators-and-types",
+      "answer": true,
+      "code": "puts 2 ** 3 ** 2",
+      "query": {
+        "explanation": "The ** operator groups from the right, so 2 ** 3 ** 2 is evaluated as 2 ** (3 ** 2) == 2 ** 9 == 512. If it grouped from the left like most arithmetic operators, it would be (2 ** 3) ** 2 == 64.",
+        "syntax": "a ** b",
+        "tags": [
+          "operators",
+          "precedence",
+          "exponentiation"
+        ],
+        "title": "Exponentiation is right-associative"
+      },
+      "rationale": "** is right-associative, so the expression is 2 ** (3 ** 2) == 512, not the left-grouped (2 ** 3) ** 2 == 64.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-ce436931",
+      "prompt": "What single line does this snippet output?",
+      "topic": "operators-and-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[3, 3.5]"
+        },
+        {
+          "text": "[3.5, 3.5]",
+          "rationale": "Integer / Integer never produces a Float in Ruby; 7 / 2 truncates to 3."
+        },
+        {
+          "text": "[3, 3]",
+          "rationale": "7.0 is a Float, so the second division keeps its fractional part and gives 3.5."
+        },
+        {
+          "text": "[4, 3.5]",
+          "rationale": "Integer division truncates toward zero rather than rounding, so 7 / 2 is 3, not 4."
+        }
+      ],
+      "code": "p [7 / 2, 7.0 / 2]",
+      "query": {
+        "explanation": "When both operands are Integers, `/` does integer division and truncates toward zero, so `7 / 2` is `3`. If either operand is a Float, the result is a Float, so `7.0 / 2` is `3.5`. `p` prints the array with `inspect`, which shows `3` for the Integer and `3.5` for the Float.",
+        "syntax": "Integer#/ , Float#/",
+        "tags": [
+          "operators",
+          "types",
+          "division",
+          "numeric"
+        ],
+        "title": "Integer vs float division"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-2cf6f1dc",
+      "prompt": "What value does this snippet print?",
+      "topic": "operators-and-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "-1"
+        },
+        {
+          "text": "1",
+          "rationale": "1 would mean the left operand is greater, but 2 is smaller than 3."
+        },
+        {
+          "text": "0",
+          "rationale": "0 means the operands compare as equal, which 2 and 3 do not."
+        },
+        {
+          "text": "true",
+          "rationale": "<=> returns an Integer (or nil), not a boolean; `2 < 3` is what returns true."
+        }
+      ],
+      "code": "puts(2 <=> 3)",
+      "query": {
+        "explanation": "`<=>` compares two values and returns an Integer: -1 when the left side is smaller, 0 when they are equal, and 1 when the left side is larger (or `nil` when the values are not comparable). Since 2 is less than 3, `2 <=> 3` returns -1.",
+        "syntax": "a <=> b",
+        "tags": [
+          "operators",
+          "comparison",
+          "spaceship",
+          "types"
+        ],
+        "title": "The spaceship operator"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-c52cc2b9",
+      "prompt": "Does this Ruby snippet print 2?",
+      "topic": "operators-and-types",
+      "answer": true,
+      "code": "p(1 && 2)",
+      "query": {
+        "explanation": "Ruby's `&&` returns one of its operands rather than `true`/`false`. If the left side is truthy it evaluates and returns the right side, so `1 && 2` is `2`. Only `nil` and `false` are falsy in Ruby, so the Integer 1 counts as truthy.",
+        "syntax": "a && b",
+        "tags": [
+          "operators",
+          "truthiness",
+          "boolean",
+          "types"
+        ],
+        "title": "&& returns an operand, not a boolean"
+      },
+      "rationale": "&& does not coerce its result to a boolean: because 1 is truthy it returns the right operand, so the snippet prints 2 instead of true.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-3a2bc4d2",
+      "prompt": "What does this snippet print?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[3, 2]"
+        },
+        {
+          "text": "[3.4, 2]",
+          "rationale": "divmod returns the integer quotient, not the floating-point result of 17 / 5.0."
+        },
+        {
+          "text": "[2, 3]",
+          "rationale": "The quotient comes first and the remainder second, not the other way around."
+        },
+        {
+          "text": "[3, 0.4]",
+          "rationale": "The second element is the integer remainder 2, not the fractional part of the quotient."
+        }
+      ],
+      "code": "p 17.divmod(5)",
+      "query": {
+        "explanation": "17.divmod(5) returns a two-element array holding the quotient and remainder of integer division: 17 / 5 is 3 and 17 % 5 is 2, so the result is [3, 2].",
+        "syntax": "int.divmod(other) # => [quotient, modulus]",
+        "tags": [
+          "numbers",
+          "integer",
+          "divmod"
+        ],
+        "title": "Integer#divmod"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-020714a8",
+      "prompt": "What number does this snippet print?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "10"
+        },
+        {
+          "text": "15",
+          "rationale": "clamp does not pass values through untouched; 15 is above the maximum and gets pulled down to it."
+        },
+        {
+          "text": "1",
+          "rationale": "The lower bound is only used when the value is below the range, and 15 is above it."
+        },
+        {
+          "text": "nil",
+          "rationale": "clamp always returns a number inside the range; it never signals failure with nil."
+        }
+      ],
+      "code": "p 15.clamp(1, 10)",
+      "query": {
+        "explanation": "clamp(min, max) returns min if the value is smaller than min, max if it is larger than max, and the value itself otherwise. Since 15 > 10, the result is the upper bound 10.",
+        "syntax": "value.clamp(min, max)",
+        "tags": [
+          "numbers",
+          "comparable",
+          "clamp"
+        ],
+        "title": "Comparable#clamp"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-5c7ef42e",
+      "prompt": "What single value does this snippet print?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2"
+        },
+        {
+          "text": "-1",
+          "rationale": "-1 is what languages like C or JavaScript give, where the remainder takes the sign of the dividend; Ruby's % takes the sign of the divisor instead."
+        },
+        {
+          "text": "1",
+          "rationale": "1 would be the result of 7 % 3, ignoring the minus sign on the left operand."
+        },
+        {
+          "text": "-2",
+          "rationale": "Ruby's % never returns a negative value when the divisor is positive, so -2 cannot be the answer."
+        }
+      ],
+      "code": "puts(-7 % 3)",
+      "query": {
+        "explanation": "In Ruby, the result of a % b always has the same sign as b. Since -7 = -3 * 3 + 2, the expression -7 % 3 evaluates to 2, not -1. This differs from C-style languages, where the remainder keeps the sign of the dividend. Use -7.remainder(3) if you want the C-style result of -1.",
+        "syntax": "a % b",
+        "tags": [
+          "numbers-and-math",
+          "operators",
+          "modulo"
+        ],
+        "title": "Modulo with a negative dividend"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-af1d8729",
+      "prompt": "Which line does this snippet write to stdout?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Hello world"
+        },
+        {
+          "text": "HELLO WORLD",
+          "rationale": "That is what upcase returns; capitalize uppercases only the first character."
+        },
+        {
+          "text": "hELLO world",
+          "rationale": "capitalize also downcases the remaining characters, so the trailing uppercase letters change."
+        },
+        {
+          "text": "Hello World",
+          "rationale": "capitalize affects only the first character of the whole string, not the first letter of each word."
+        }
+      ],
+      "code": "puts \"hELLO world\".capitalize",
+      "query": {
+        "explanation": "String#capitalize returns a copy of the string with the first character converted to uppercase and every remaining character converted to lowercase. So \"hELLO world\" becomes \"Hello world\". It acts on the whole string, not on each word, and it does not modify the receiver (capitalize! does that).",
+        "syntax": "str.capitalize",
+        "tags": [
+          "strings",
+          "case",
+          "ruby"
+        ],
+        "title": "String#capitalize"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-8b509d12",
+      "prompt": "What does this snippet print?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[[1, 2], [3, 4], [5]]"
+        },
+        {
+          "text": "[[1, 2], [3, 4]]",
+          "rationale": "each_slice does not discard the leftover element; the trailing short chunk [5] is still yielded."
+        },
+        {
+          "text": "[[1, 2], [2, 3], [3, 4], [4, 5]]",
+          "rationale": "Overlapping pairs come from each_cons(2); each_slice produces disjoint chunks."
+        },
+        {
+          "text": "[[1, 2, 3, 4, 5]]",
+          "rationale": "The argument 2 is the chunk size, not the number of chunks, so the array is cut every 2 elements."
+        }
+      ],
+      "code": "p [1, 2, 3, 4, 5].each_slice(2).to_a",
+      "query": {
+        "explanation": "each_slice(n) walks the iterable and groups consecutive elements into chunks of n without overlapping. The final chunk keeps whatever elements are left over, so it can be shorter than n. With 5 elements and a slice size of 2 you get [[1, 2], [3, 4], [5]].",
+        "syntax": "enum.each_slice(n) -> enumerator",
+        "tags": [
+          "enumerable",
+          "iterables",
+          "each_slice"
+        ],
+        "title": "Enumerable#each_slice"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-3819098e",
+      "prompt": "Does this zip snippet print [[1, 4], [2, 5], [3, nil]]?",
+      "topic": "iterables",
+      "answer": true,
+      "code": "p [1, 2, 3].zip([4, 5])",
+      "query": {
+        "explanation": "zip builds one tuple per element of the receiver, so the result always has the receiver's length. When an argument iterable runs out of elements, the missing slots are filled with nil rather than truncating the result, giving [[1, 4], [2, 5], [3, nil]].",
+        "syntax": "ary.zip(other) -> new_ary",
+        "tags": [
+          "array",
+          "iterables",
+          "zip"
+        ],
+        "title": "Array#zip with a shorter argument"
+      },
+      "rationale": "zip does not shorten its output to the shortest iterable; it pads the missing positions with nil, so the third tuple is [3, nil].",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-406fdfe2",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[3, 6, 9, 12]"
+        },
+        {
+          "text": "[1, 2, 3, 4]",
+          "rationale": "The map block triples each element before first(4) collects them, so the values are multiples of 3."
+        },
+        {
+          "text": "[3, 6, 9, 12, 15]",
+          "rationale": "first(4) returns exactly four elements, not five."
+        },
+        {
+          "text": "3",
+          "rationale": "first with a count argument returns an array of that many elements; only a bare first returns a single element."
+        }
+      ],
+      "code": "p (1..Float::INFINITY).lazy.map { |n| n * 3 }.first(4)",
+      "query": {
+        "explanation": "Calling lazy on an endless range turns it into a lazy enumerator, so map does not try to build a whole new collection. Elements are pulled through the chain one at a time and first(4) stops after four results, yielding [3, 6, 9, 12] instead of hanging forever.",
+        "syntax": "enum.lazy.map { |x| ... }.first(n) -> array",
+        "tags": [
+          "enumerator",
+          "iterables",
+          "lazy"
+        ],
+        "title": "Enumerator::Lazy"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-867dc775",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[1, 2, [3, 4], 5]"
+        },
+        {
+          "text": "[1, 2, 3, 4, 5]",
+          "rationale": "That is plain flatten with no depth argument, which flattens every level."
+        },
+        {
+          "text": "[1, [2, [3, 4]], 5]",
+          "rationale": "flatten(1) does remove one level, so the result differs from the original array."
+        },
+        {
+          "text": "[1, 2, [3], [4], 5]",
+          "rationale": "flatten never splits an inner array into one-element arrays."
+        }
+      ],
+      "code": "nested = [1, [2, [3, 4]], 5]\np nested.flatten(1)",
+      "query": {
+        "explanation": "flatten(1) removes only one level of nesting, so the inner [3, 4] survives: the result is [1, 2, [3, 4], 5]. Calling flatten with no argument would keep going until no nested arrays remain.",
+        "syntax": "array.flatten(depth)",
+        "tags": [
+          "array",
+          "nesting",
+          "flatten"
+        ],
+        "title": "Array#flatten with a depth limit"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-32a076d3",
+      "prompt": "Does this snippet write [3, 4, 1, 2] to stdout?",
+      "topic": "data-structures",
+      "answer": true,
+      "code": "p [1, 2, 3, 4].rotate(2)",
+      "query": {
+        "explanation": "rotate(2) moves the first two elements to the end, producing [3, 4, 1, 2]. The original array is unchanged because rotate returns a new array.",
+        "syntax": "array.rotate(count)",
+        "tags": [
+          "array",
+          "rotate"
+        ],
+        "title": "Array#rotate"
+      },
+      "rationale": "rotate(2) shifts elements left by two, not right, so the output is [3, 4, 1, 2] rather than [3, 4] staying in place or [3, 4, 1, 2] being wrong.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-5898ca5c",
+      "prompt": "What does this Ruby snippet write to stdout?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[1, 2, 3, 4, 5]"
+        },
+        {
+          "text": "[1, 2, 5, 3, 4]",
+          "rationale": "That is what push/append would do; insert honours the index argument instead of adding at the end."
+        },
+        {
+          "text": "[1, 3, 4, 2, 5]",
+          "rationale": "This inserts before index 1, but the call uses index 2, which is where the value 5 sits."
+        },
+        {
+          "text": "[1, 2, 3, 4]",
+          "rationale": "insert never removes existing elements, so 5 is still present after the inserted values."
+        }
+      ],
+      "code": "a = [1, 2, 5]\na.insert(2, 3, 4)\nputs a.inspect",
+      "query": {
+        "explanation": "Array#insert(index, *values) places the given values immediately before the element currently at that zero-based index, shifting the rest to the right. Here index 2 holds 5, so 3 and 4 land between 2 and 5, producing [1, 2, 3, 4, 5]. The array is modified in place and insert returns the same array.",
+        "syntax": "array.insert(index, obj, ...)",
+        "tags": [
+          "arrays",
+          "mutation",
+          "ruby"
+        ],
+        "title": "Array#insert with multiple values"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-da61369e",
+      "prompt": "What single line does this Ruby snippet write to stdout?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "<b>hi</b> [hi]"
+        },
+        {
+          "text": "<b>hi</b> <b>hi</b>",
+          "rationale": "The second call explicitly passes open: \"[\" and close: \"]\", so its defaults are overridden."
+        },
+        {
+          "text": "[hi] [hi]",
+          "rationale": "The first call passes no keywords at all, so it falls back to the \"<b>\" and \"</b>\" defaults."
+        },
+        {
+          "text": "ArgumentError: wrong number of arguments",
+          "rationale": "Both calls supply the one required positional argument; keyword parameters with defaults are optional."
+        }
+      ],
+      "code": "def tag(text, open: \"<b>\", close: \"</b>\")\n  open + text + close\nend\n\nputs [tag(\"hi\"), tag(\"hi\", open: \"[\", close: \"]\")].join(\" \")",
+      "query": {
+        "explanation": "Keyword parameters declared as `open:` and `close:` have defaults, so the first call uses \"<b>\" and \"</b>\" and produces \"<b>hi</b>\". The second call passes both keywords by name, overriding the defaults, so it produces \"[hi]\". Joining the two results with a space gives \"<b>hi</b> [hi]\". Keyword arguments are matched by name, not position, so they may be supplied in any order and any subset of the defaulted ones may be omitted.",
+        "syntax": "def m(pos, key: default)",
+        "tags": [
+          "functions-and-scope",
+          "keyword-arguments",
+          "defaults"
+        ],
+        "title": "Keyword arguments with default values"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-1c8b003a",
+      "prompt": "Does this snippet print 10?",
+      "topic": "functions-and-scope",
+      "answer": true,
+      "code": "x = 10\n[1, 2, 3].each { |n; x| x = n * 100 }\nputs x",
+      "query": {
+        "explanation": "Names listed after the semicolon in a block's parameter list are block-local: each iteration gets a fresh variable that shadows any outer variable of the same name. So `x = n * 100` assigns to the block's own x and the outer x keeps its original value of 10. Without the `; x` declaration the block would close over the outer x and the final value would be 300.",
+        "syntax": "{ |param; block_local| ... }",
+        "tags": [
+          "functions-and-scope",
+          "blocks",
+          "shadowing"
+        ],
+        "title": "Block-local variables declared after a semicolon"
+      },
+      "rationale": "Printing 300 would require the block to assign to the outer x, but `; x` makes x block-local, so the outer binding is never touched.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-e6778a3f",
+      "prompt": "What single line does this Ruby snippet write to stdout?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3x6 3x4"
+        },
+        {
+          "text": "3x3 3x4",
+          "rationale": "The default is width * 2, not width, so height becomes 6 rather than 3."
+        },
+        {
+          "text": "3x6 3x6",
+          "rationale": "Passing 4 explicitly replaces the default, so the second call never evaluates width * 2."
+        },
+        {
+          "text": "NameError: undefined local variable or method 'width'",
+          "rationale": "Default expressions are evaluated in the method scope after earlier parameters are bound, so width is already in scope."
+        }
+      ],
+      "code": "def box(width, height = width * 2)\n  \"#{width}x#{height}\"\nend\n\nputs [box(3), box(3, 4)].join(\" \")",
+      "query": {
+        "explanation": "A default value in Ruby is an ordinary expression evaluated at call time, in the method's own scope, after the parameters to its left are bound. So `height = width * 2` sees width = 3 and yields 6, making box(3) return \"3x6\". When height is given explicitly, the default expression is never evaluated, so box(3, 4) returns \"3x4\". Joined with a space the output is \"3x6 3x4\".",
+        "syntax": "def m(a, b = a * 2)",
+        "tags": [
+          "functions-and-scope",
+          "default-arguments",
+          "evaluation-order"
+        ],
+        "title": "Default argument values can reference earlier parameters"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-63b97e8b",
+      "prompt": "What single line does this Ruby snippet write to stdout?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "C"
+        },
+        {
+          "text": "B",
+          "rationale": "80...90 excludes everything below 80, and 73 is below 80, so that clause does not match."
+        },
+        {
+          "text": "F",
+          "rationale": "The `else` branch only runs when no `when` clause matches, but 70...80 matches 73."
+        },
+        {
+          "text": "A",
+          "rationale": "90..100 covers 90 through 100 only; 73 is far below that range."
+        }
+      ],
+      "code": "score = 73\ngrade = case score\n        when 90..100 then \"A\"\n        when 80...90 then \"B\"\n        when 70...80 then \"C\"\n        else \"F\"\n        end\nputs grade",
+      "query": {
+        "explanation": "A `case` expression tests each `when` clause in order using `===`. For a Range, `===` means \"includes this value\". 73 is not in 90..100 or 80...90, but it is in 70...80 (70 up to but excluding 80), so that branch wins and the whole `case` evaluates to \"C\". Once a branch matches, no later clause (including `else`) is considered.",
+        "syntax": "case value when range then result ... else result end",
+        "tags": [
+          "case",
+          "ranges",
+          "control-flow"
+        ],
+        "title": "case/when with ranges"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-7b1e46f4",
+      "prompt": "Does this snippet print body and then ensure?",
+      "topic": "errors-and-control-flow",
+      "answer": true,
+      "code": "begin\n  puts \"body\"\nrescue\n  puts \"rescue\"\nensure\n  puts \"ensure\"\nend",
+      "query": {
+        "explanation": "The `begin` body succeeds, so the `rescue` clause is skipped entirely. An `ensure` clause is not conditional on failure: it runs after the block finishes no matter what, so the output is \"body\" followed by \"ensure\".",
+        "syntax": "begin ... rescue ... ensure ... end",
+        "tags": [
+          "ensure",
+          "rescue",
+          "exceptions"
+        ],
+        "title": "ensure runs with or without an exception"
+      },
+      "rationale": "Saying False would assume `ensure` only fires when an exception occurs, but `ensure` always runs, so \"ensure\" is printed after the successful body.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-4c9e3d12",
+      "prompt": "What does this snippet print?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "NoMethodError"
+        },
+        {
+          "text": "TypeError",
+          "rationale": "TypeError comes from a method that receives an incompatible argument, but here no `+` method exists on nil at all."
+        },
+        {
+          "text": "NameError",
+          "rationale": "NameError is the parent class, and `e.class` reports the specific class that was raised, not an ancestor."
+        },
+        {
+          "text": "ArgumentError",
+          "rationale": "ArgumentError signals a wrong number or value of arguments to an existing method; nil simply has no `+` method."
+        }
+      ],
+      "code": "begin\n  nil + 1\nrescue StandardError => e\n  puts e.class\nend",
+      "query": {
+        "explanation": "`nil` has no `+` method, so Ruby raises NoMethodError (a subclass of NameError, which is a StandardError). The `rescue StandardError => e` clause catches it and binds the exception object to `e`, and `e.class` reports the most specific class: NoMethodError.",
+        "syntax": "rescue StandardError => e",
+        "tags": [
+          "exceptions",
+          "nomethoderror",
+          "rescue"
+        ],
+        "title": "The class of a rescued exception"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-052bc4ec",
+      "prompt": "What array does this snippet write to stdout?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[10, 20, 30]"
+        },
+        {
+          "text": "[1, 2, 3]",
+          "rationale": "Thread#value returns the value of the thread's block, not the captured input n."
+        },
+        {
+          "text": "[10]",
+          "rationale": "map over three elements creates three threads, so three values come back."
+        },
+        {
+          "text": "nil",
+          "rationale": "map always returns an array here, and Thread#value blocks until each thread has a result."
+        }
+      ],
+      "code": "threads = [1, 2, 3].map { |n| Thread.new { n * 10 } }\nputs threads.map(&:value).inspect",
+      "query": {
+        "explanation": "Each Thread.new starts a thread running n * 10. Thread#value waits for that thread to finish and returns the block's last expression, so mapping &:value over the three threads yields [10, 20, 30] in the original order.",
+        "syntax": "Thread#value",
+        "tags": [
+          "threads",
+          "concurrency"
+        ],
+        "title": "Collecting results from several threads"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-f35a97b6",
+      "prompt": "What number does this snippet write to stdout?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "4000"
+        },
+        {
+          "text": "1000",
+          "rationale": "All four threads increment the same shared counter, so their increments add up rather than overwrite."
+        },
+        {
+          "text": "4",
+          "rationale": "Each thread performs 1000 increments, not one."
+        },
+        {
+          "text": "A different number on each run",
+          "rationale": "The mutex serialises every increment, so no updates are lost and the total is deterministic."
+        }
+      ],
+      "code": "require 'thread'\nm = Mutex.new\ncount = 0\nthreads = 4.times.map { Thread.new { 1000.times { m.synchronize { count += 1 } } } }\nthreads.each(&:join)\nputs count",
+      "query": {
+        "explanation": "Four threads each add 1 one thousand times. Mutex#synchronize lets only one thread run the increment at a time, so no update is lost and the final count is exactly 4 * 1000 = 4000.",
+        "syntax": "Mutex#synchronize",
+        "tags": [
+          "threads",
+          "mutex",
+          "shared-state"
+        ],
+        "title": "Guarding a shared counter with a Mutex"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-a1987ee3",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[1, 2, false]"
+        },
+        {
+          "text": "[1, 2, true]",
+          "rationale": "After the block runs off its end the fiber is finished, so alive? is false."
+        },
+        {
+          "text": "[1, nil, false]",
+          "rationale": "The second resume returns the block's final expression, 2, not nil."
+        },
+        {
+          "text": "[1, 1, false]",
+          "rationale": "The second resume continues after Fiber.yield rather than replaying it."
+        }
+      ],
+      "code": "f = Fiber.new do\n  Fiber.yield 1\n  2\nend\na = f.resume\nb = f.resume\nputs [a, b, f.alive?].inspect",
+      "query": {
+        "explanation": "The first resume runs until Fiber.yield 1 and returns 1. The second resume continues after the yield, reaches the end of the block, and returns its value 2. A finished fiber reports alive? == false.",
+        "syntax": "Fiber.new / Fiber.yield / Fiber#alive?",
+        "tags": [
+          "fibers",
+          "coroutines"
+        ],
+        "title": "Fiber resume values and alive?"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-c3eeb403",
+      "prompt": "After close is called, does pop on an empty queue return nil instead of blocking?",
+      "topic": "async-and-concurrency",
+      "answer": true,
+      "code": "q = Queue.new\nq.close\np q.pop",
+      "query": {
+        "explanation": "Once a queue is closed, pop no longer blocks waiting for a producer; it drains any remaining items and then returns nil forever, which lets consumer loops exit cleanly.",
+        "syntax": "q.close ; q.pop # => nil when empty and closed",
+        "tags": [
+          "queue",
+          "concurrency",
+          "producer-consumer"
+        ],
+        "title": "Closing a Thread::Queue"
+      },
+      "rationale": "pop only blocks on an empty queue that is still open; after close it returns nil immediately rather than waiting for an item that can never arrive.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-f8429a4b",
+      "prompt": "What does this snippet write to stdout?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[1, 3, 2]"
+        },
+        {
+          "text": "[3, 2, 1]",
+          "rationale": "values follows insertion order of the keys (b, a, n), not descending count order."
+        },
+        {
+          "text": "[1, 1, 1]",
+          "rationale": "The counter is incremented on every occurrence, so a reaches 3 and n reaches 2."
+        },
+        {
+          "text": "NoMethodError",
+          "rationale": "The default value 0 means a missing key reads as 0 rather than nil, so += never calls a method on nil."
+        }
+      ],
+      "code": "counts = Hash.new(0)\n\"banana\".each_char { |c| counts[c] += 1 }\nputs counts.values.inspect",
+      "query": {
+        "explanation": "Hash.new(0) makes missing keys read back as 0, so `counts[c] += 1` works on the first sighting of a character without any nil check or branch. Keys stay in first-seen order: b, a, n, giving counts 1, 3 and 2.",
+        "syntax": "counts = Hash.new(0)\ncounts[key] += 1",
+        "tags": [
+          "hash",
+          "default-value",
+          "optimization"
+        ],
+        "title": "Hash.new(0) for counters"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-a25a1a42",
+      "prompt": "Which value does this snippet print?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "37"
+        },
+        {
+          "text": "1",
+          "rationale": "bsearch returns the first element satisfying the block, not the first element of the range; 1 >= 37 is false."
+        },
+        {
+          "text": "38",
+          "rationale": "The condition n >= 37 is already true at 37, so 37 is the smallest satisfying element."
+        },
+        {
+          "text": "50",
+          "rationale": "50 is only the midpoint probed first; bsearch keeps narrowing until it finds the boundary at 37."
+        }
+      ],
+      "code": "p (1..100).bsearch { |n| n >= 37 }",
+      "query": {
+        "explanation": "On a sorted range, bsearch halves the search space each step instead of scanning. In find-minimum mode the block returns true/false, and bsearch returns the smallest element for which the block is true. Here the smallest n with n >= 37 is 37, found in about 7 comparisons rather than 37.",
+        "syntax": "range.bsearch { |x| boolean }",
+        "tags": [
+          "ruby",
+          "optimization",
+          "bsearch"
+        ],
+        "title": "Range#bsearch in find-minimum mode"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-d8b39028",
+      "prompt": "What number does this snippet print?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "5",
+          "rationale": "All five elements would be visited only by something like select or map; find stops early."
+        },
+        {
+          "text": "1",
+          "rationale": "The block must run for 1 and 2 as well, since neither satisfies n > 2."
+        },
+        {
+          "text": "0",
+          "rationale": "find does call the block; it is only skipped entirely for an empty collection."
+        }
+      ],
+      "code": "count = 0\n[1, 2, 3, 4, 5].find { |n| count += 1; n > 2 }\nputs count",
+      "query": {
+        "explanation": "Enumerable#find (alias detect) walks the collection and returns as soon as the block is truthy, so it never touches the remaining elements. The block runs for 1, 2 and 3; it returns true at 3, so 4 and 5 are skipped and count is 3. select would have run the block all 5 times.",
+        "syntax": "enum.find { |x| boolean }",
+        "tags": [
+          "ruby",
+          "optimization",
+          "short-circuit"
+        ],
+        "title": "find stops at the first match"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-63930012",
+      "prompt": "Do the Set and the Array give the same include? result for this element?",
+      "topic": "optimization",
+      "answer": true,
+      "code": "require 'set'\ns = Set.new([1, 2, 3])\na = [1, 2, 3]\nputs s.include?(2) == a.include?(2)",
+      "query": {
+        "explanation": "Set#include? is backed by a hash lookup (roughly constant time) while Array#include? scans elements one by one (linear time). The speed differs, but the answer does not: both report true for a member that is present, so the comparison is true.",
+        "syntax": "set.include?(x) / array.include?(x)",
+        "tags": [
+          "ruby",
+          "optimization",
+          "set"
+        ],
+        "title": "Set vs Array membership tests"
+      },
+      "rationale": "Both calls return true because 2 is present; the Set is only faster, never a different answer, so False is wrong.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-c358b0ed",
+      "prompt": "Which array does this snippet print?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[1, 2, 3, nil, nil, nil, 9]"
+        },
+        {
+          "text": "[1, 2, 3, 9]",
+          "rationale": "Ruby does not compact the gap; the element really lands at index 6, so positions 3..5 must exist."
+        },
+        {
+          "text": "[1, 2, 3, 0, 0, 0, 9]",
+          "rationale": "Unwritten slots are filled with nil, not with 0."
+        },
+        {
+          "text": "IndexError",
+          "rationale": "Writing past the end of an Array is legal in Ruby; only some other languages raise here."
+        }
+      ],
+      "code": "a = [1, 2, 3]\na[6] = 9\np a",
+      "query": {
+        "explanation": "Array#[]= accepts an index beyond the current length. Ruby grows the array to fit and pads every skipped slot with nil, so a[6] = 9 turns a 3-element array into a 7-element one: [1, 2, 3, nil, nil, nil, 9].",
+        "syntax": "array[index] = value",
+        "tags": [
+          "ruby",
+          "array",
+          "nil"
+        ],
+        "title": "Assigning past the end of an Array"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-e439fce2",
+      "prompt": "Does this snippet print 0 and then false?",
+      "topic": "wtf",
+      "answer": true,
+      "code": "h = Hash.new(0)\np h[:missing]\np h.key?(:missing)",
+      "query": {
+        "explanation": "Hash.new(0) sets a default value returned for absent keys, so h[:missing] gives 0. The lookup is read-only: nothing is inserted, so h.key?(:missing) remains false and h stays empty. Hash.new { |hash, k| hash[k] = [] } is the form that does store the default.",
+        "syntax": "Hash.new(default_value)",
+        "tags": [
+          "ruby",
+          "hash",
+          "default"
+        ],
+        "title": "Hash defaults do not create keys"
+      },
+      "rationale": "A Hash default only supplies a value for the lookup; reading h[:missing] does not store the key, so key?(:missing) is still false.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-46c89617",
+      "prompt": "Which value does this snippet print?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "nil"
+        },
+        {
+          "text": "-1",
+          "rationale": "Integer#<=> only returns -1, 0 or 1 for operands it can compare; a String is not comparable to an Integer."
+        },
+        {
+          "text": "0",
+          "rationale": "0 would mean the two values are equal, which Ruby never concludes for an Integer and a String."
+        },
+        {
+          "text": "ArgumentError",
+          "rationale": "The bare <=> operator returns nil instead of raising; the ArgumentError appears only when something like 1 < \"a\" uses the nil result."
+        }
+      ],
+      "code": "p(1 <=> \"a\")",
+      "query": {
+        "explanation": "The spaceship operator returns -1, 0 or 1 when the operands can be ordered, and nil when they cannot. Since 1 and \"a\" are of unrelated types, 1 <=> \"a\" is nil. Comparison operators such as < call <=> and raise ArgumentError when they get nil back.",
+        "syntax": "a <=> b  # => -1, 0, 1, or nil",
+        "tags": [
+          "ruby",
+          "comparable",
+          "operators"
+        ],
+        "title": "<=> returns nil for incomparable operands"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-6a445659",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[3, 1, 2]"
+        },
+        {
+          "text": "[1, 2, 3]",
+          "rationale": "uniq does not sort; it keeps the original ordering of the first occurrences."
+        },
+        {
+          "text": "[3, 1, 3, 2, 1]",
+          "rationale": "uniq removes duplicates, so the returned array is shorter than the receiver here."
+        },
+        {
+          "text": "[1, 1, 2, 3, 3]",
+          "rationale": "This is the sorted receiver with duplicates intact, which is neither what uniq nor sort alone produces."
+        }
+      ],
+      "code": "p [3, 1, 3, 2, 1].uniq",
+      "prompt": "Which array does this snippet print?",
+      "query": {
+        "explanation": "Array#uniq returns a new array with duplicate elements removed, keeping each value at the position of its first appearance. Since 3 appears first, then 1, then 2, the result is [3, 1, 2]. It never sorts the elements, and it leaves the receiver unchanged (uniq! mutates instead).",
+        "syntax": "array.uniq",
+        "tags": [
+          "array",
+          "uniq",
+          "duplicates"
+        ],
+        "title": "Array#uniq keeps first occurrences"
+      },
+      "type": "mc",
+      "topic": "data-structures",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-easy-04cf7ba6",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "false false"
+        },
+        {
+          "text": "true nil",
+          "rationale": "join waits for completion, so the thread is not alive; nil status is reserved for a thread killed by an unhandled exception."
+        },
+        {
+          "text": "false \"sleep\"",
+          "rationale": "\"sleep\" is the status only while the thread is blocked; after join it has already finished sleeping and terminated."
+        },
+        {
+          "text": "false \"run\"",
+          "rationale": "\"run\" is the status of a currently executing thread, not of one that has already terminated."
+        }
+      ],
+      "code": "t = Thread.new { sleep 0.01 }\nt.join\nputs \"#{t.alive?} #{t.status.inspect}\"",
+      "prompt": "Which single line does this snippet write to stdout?",
+      "query": {
+        "explanation": "Thread#join blocks until the thread finishes, so by the time the puts runs the thread is no longer alive. Thread#alive? returns false, and Thread#status returns false for a thread that terminated normally (it would be nil if the thread had died from an unhandled exception). So the line printed is \"false false\".",
+        "syntax": "thread.join; thread.alive?; thread.status",
+        "tags": [
+          "async-and-concurrency",
+          "threads",
+          "ruby"
+        ],
+        "title": "Thread state after join"
+      },
+      "type": "mc",
+      "topic": "async-and-concurrency",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    }
+  ],
+  "schemaVersion": 2
+}
