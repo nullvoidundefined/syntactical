@@ -4161,36 +4161,6 @@
       }
     },
     {
-      "id": "gen-rails-easy-daa8b824",
-      "prompt": "With this inline adapter, has the job already run when the check prints?",
-      "topic": "background-jobs",
-      "answer": true,
-      "code": "performed = []\n\n# inline adapter: enqueueing performs the job right away\nenqueue = ->(name) { performed << name }\nenqueue.call(\"WelcomeJob\")\n\nputs performed.include?(\"WelcomeJob\")",
-      "query": {
-        "explanation": "The inline adapter performs work synchronously instead of handing it to a worker, so the lambda appends \"WelcomeJob\" to performed before the next line runs. include? therefore returns true. A real async adapter would leave performed empty at this point.",
-        "syntax": "lambda.call(argument)",
-        "tags": [
-          "background-jobs",
-          "adapters",
-          "inline"
-        ],
-        "title": "Inline execution versus deferred execution"
-      },
-      "rationale": "False would describe an async adapter, but calling the lambda runs the body immediately, so \"WelcomeJob\" is already in performed.",
-      "type": "bool",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
-      }
-    },
-    {
       "id": "gen-rails-easy-ae0236e7",
       "prompt": "What number does this snippet print?",
       "topic": "background-jobs",
