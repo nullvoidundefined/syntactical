@@ -15,6 +15,7 @@ import { fillTemplate } from '../enrich/fillTemplate.js';
 import { validateQuestion } from '../validateQuestion.js';
 
 import { findMissingRationale } from './findMissingRationale.js';
+import { countPrintedValues } from './countPrintedValues.js';
 import { MAX_PROMPT_LENGTH } from './MAX_PROMPT_LENGTH.js';
 import { normalizePrompt } from './normalizePrompt.js';
 import { runSandboxed } from './runSandboxed.js';
@@ -96,6 +97,14 @@ export async function generateBatch(
             continue;
         }
         const { oracle: rawOracle, ...draft } = parsed.data;
+        if (
+            difficulty === 'easy' &&
+            draft.type === 'mc' &&
+            countPrintedValues(draft.choices?.[draft.answerIndex ?? 0]?.text ?? '') > 2
+        ) {
+            drop('too-dense');
+            continue;
+        }
         if (draft.prompt.length > MAX_PROMPT_LENGTH) {
             drop('prompt-too-long');
             continue;

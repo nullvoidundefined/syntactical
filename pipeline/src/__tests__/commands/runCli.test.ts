@@ -63,6 +63,7 @@ function buildDeps(
             return { approved: 0, items: 0, pending: 0, problems: deps.reviewProblems, rejected: 0 };
         },
         reviewProblems: 0,
+        rewritePrompts: async () => undefined,
         roots: [] as string[],
         stderr: (text: string) => {
             deps.err.push(text);
