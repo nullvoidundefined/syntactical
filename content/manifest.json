@@ -749,6 +749,273 @@
           }
         }
       }
+    },
+    {
+      "id": "rails",
+      "label": "Rails",
+      "glyph": "RR",
+      "tagline": "ActiveRecord, conventions, and what the framework does for you.",
+      "grammar": "ruby",
+      "topics": [
+        {
+          "id": "activerecord-queries",
+          "label": "Activerecord queries"
+        },
+        {
+          "id": "associations",
+          "label": "Associations"
+        },
+        {
+          "id": "callbacks-and-validations",
+          "label": "Callbacks and validations"
+        },
+        {
+          "id": "migrations-and-schema",
+          "label": "Migrations and schema"
+        },
+        {
+          "id": "routing",
+          "label": "Routing"
+        },
+        {
+          "id": "controllers-and-params",
+          "label": "Controllers and params"
+        },
+        {
+          "id": "activesupport",
+          "label": "Activesupport"
+        },
+        {
+          "id": "background-jobs",
+          "label": "Background jobs"
+        },
+        {
+          "id": "security",
+          "label": "Security"
+        },
+        {
+          "id": "performance",
+          "label": "Performance"
+        }
+      ],
+      "misconceptions": [
+        {
+          "description": "Believing `where` returns an Array of records immediately, rather than a lazy ActiveRecord::Relation that only queries the database when enumerated, counted, or inspected.",
+          "id": "rails.where-returns-array"
+        },
+        {
+          "description": "Believing `find`, `find_by`, and `where(...).first` behave identically — not realising `find` raises RecordNotFound on a missing id while `find_by` returns nil.",
+          "id": "rails.find-and-find-by-interchangeable"
+        },
+        {
+          "description": "Believing `save` and `update` raise an exception when validations fail, instead of returning false; only the bang versions (`save!`, `update!`) raise.",
+          "id": "rails.save-returns-exception"
+        },
+        {
+          "description": "Believing `record.errors` is populated without running validations — not realising `valid?` (or a save attempt) must run first to refresh the errors object.",
+          "id": "rails.valid-does-not-touch-errors"
+        },
+        {
+          "description": "Believing `update_attribute` runs validations like `update` does, when it skips validations (though it does run callbacks and touches updated_at).",
+          "id": "rails.update-attribute-validates"
+        },
+        {
+          "description": "Believing `update_column`/`update_columns` run validations and callbacks and bump updated_at, when they write straight to the database, skipping all of them.",
+          "id": "rails.update-column-runs-callbacks"
+        },
+        {
+          "description": "Believing `validates_uniqueness_of` guarantees uniqueness, when it is a read-then-write check subject to races and requires a database unique index for real safety.",
+          "id": "rails.validation-guarantees-uniqueness"
+        },
+        {
+          "description": "Believing `validates :x, presence: true` only rejects nil, when it rejects any blank value including empty strings, whitespace, and empty arrays — and that `false` passes presence.",
+          "id": "rails.presence-validation-checks-nil-only"
+        },
+        {
+          "description": "Believing request params arrive as integers, booleans, or dates; in fact query and form params are strings (or hashes/arrays of strings) until explicitly cast.",
+          "id": "rails.params-are-typed"
+        },
+        {
+          "description": "Believing `permit` validates or sanitises values, when it only whitelists which keys may be mass-assigned; it performs no type checking or escaping.",
+          "id": "rails.strong-params-permit-validates"
+        },
+        {
+          "description": "Confusing `params.require(:user)` with `params.permit(:user)` — thinking `require` whitelists attributes or that `permit` raises when a key is missing.",
+          "id": "rails.require-and-permit-confused"
+        },
+        {
+          "description": "Believing `redirect_to` or `render` immediately returns from the controller action, when execution continues and a second render/redirect raises DoubleRenderError.",
+          "id": "rails.redirect-stops-action"
+        },
+        {
+          "description": "Believing `render :edit` changes the browser URL like a redirect, when it only renders a template in the current request without a new HTTP round trip.",
+          "id": "rails.render-performs-redirect"
+        },
+        {
+          "description": "Believing `includes` and `joins` are interchangeable — not realising `joins` builds an INNER JOIN for filtering while `includes` preloads associations to avoid N+1.",
+          "id": "rails.includes-and-joins-same"
+        },
+        {
+          "description": "Believing that looping over records and calling an association inside the loop issues one query, rather than one query per record (the N+1 problem).",
+          "id": "rails.each-does-not-cause-n-plus-one"
+        },
+        {
+          "description": "Believing `count`, `size`, and `length` on a relation or association are identical, ignoring that `count` always queries, `length` loads all records, and `size` depends on load state.",
+          "id": "rails.count-same-as-size-and-length"
+        },
+        {
+          "description": "Believing `pluck` returns model objects like `select` does, when it returns raw column values as an array and bypasses model instantiation and methods.",
+          "id": "rails.pluck-returns-records"
+        },
+        {
+          "description": "Believing `default_scope` only affects explicit queries, when it also leaks into associations, `new` defaults, and `unscoped` workarounds, making it hard to opt out of.",
+          "id": "rails.default-scope-is-harmless"
+        },
+        {
+          "description": "Believing a scope body may be a plain expression, when a non-lambda body (e.g. `where('created_at > ?', Time.now)`) is evaluated once at class load and freezes the value.",
+          "id": "rails.scope-with-non-lambda-body"
+        },
+        {
+          "description": "Believing the foreign key lives on the `has_many` side — not realising the table declaring `belongs_to` is the one that holds the `*_id` column.",
+          "id": "rails.belongs-to-holds-foreign-key-elsewhere"
+        },
+        {
+          "description": "Believing `belongs_to` is optional by default; in modern Rails it adds a presence validation unless `optional: true` is given.",
+          "id": "rails.belongs-to-optional-by-default"
+        },
+        {
+          "description": "Believing associated records are deleted automatically when a parent is destroyed, when nothing happens without `dependent: :destroy`/`:delete_all` or a database-level cascade.",
+          "id": "rails.dependent-destroy-is-default"
+        },
+        {
+          "description": "Believing `delete`/`delete_all` run destroy callbacks and `dependent` options like `destroy`/`destroy_all`, when they issue raw DELETE statements and skip model logic.",
+          "id": "rails.delete-all-runs-callbacks"
+        },
+        {
+          "description": "Believing `has_many :through` works without the intermediate association or model, or confusing it with `has_and_belongs_to_many`, which has no join model at all.",
+          "id": "rails.has-many-through-needs-no-join-model"
+        },
+        {
+          "description": "Believing `Model.new` or building through an association writes to the database, when only `create`/`save` persist and `new` leaves the record unpersisted.",
+          "id": "rails.new-persists-record"
+        },
+        {
+          "description": "Believing `parent.children.build` saves at once, or that `parent.children.create` on an unsaved parent persists — ignoring how autosave defers child writes.",
+          "id": "rails.collection-build-saves-immediately"
+        },
+        {
+          "description": "Believing `after_save`/`after_create` run outside the transaction so external jobs and emails see committed data; that requires `after_commit`.",
+          "id": "rails.after-save-sees-committed-data"
+        },
+        {
+          "description": "Believing returning `false` from a before_* callback cancels the operation, when modern Rails requires `throw :abort` to halt the callback chain.",
+          "id": "rails.returning-false-halts-callbacks"
+        },
+        {
+          "description": "Believing a transaction rolls back when a block returns false or a save fails, when rollback requires a raised exception (or `raise ActiveRecord::Rollback`).",
+          "id": "rails.transaction-rolls-back-on-return-false"
+        },
+        {
+          "description": "Believing editing an already-run migration changes the schema on the next `db:migrate`, when Rails tracks applied versions and skips them; a new migration or rollback is needed.",
+          "id": "rails.migration-edit-reruns"
+        },
+        {
+          "description": "Believing models read columns from migration files, when the authoritative source is the database (and `schema.rb`), so a forgotten `db:migrate` leaves methods missing.",
+          "id": "rails.migrations-define-schema-for-tests"
+        },
+        {
+          "description": "Believing each database column needs an `attr_accessor` or explicit attribute declaration, when ActiveRecord defines accessors from the table schema automatically.",
+          "id": "rails.attr-accessor-needed-for-columns"
+        },
+        {
+          "description": "Misreading `resources :posts`: believing it creates no show/edit routes, or that route order is irrelevant, when the first matching route wins and member/collection blocks matter.",
+          "id": "rails.resources-generates-only-crud-paths"
+        },
+        {
+          "description": "Believing `post_path` and `post_url` are interchangeable, or that a named helper works without the matching route — ignoring that `_url` includes the host and is needed in emails.",
+          "id": "rails.route-helper-and-path-interchangeable"
+        },
+        {
+          "description": "Believing controller instance variables or memoised class-level state persist across requests, when each request gets a fresh controller instance and class state is shared unsafely.",
+          "id": "rails.instance-variables-shared-between-requests"
+        },
+        {
+          "description": "Believing local variables from a controller action or from one partial are visible in views and other partials, when only instance variables and explicit `locals:` are passed.",
+          "id": "rails.helpers-and-views-share-controller-locals"
+        },
+        {
+          "description": "Believing `html_safe` sanitises user input, when it merely marks a string as trusted and disables escaping, opening an XSS hole; `sanitize` is the sanitiser.",
+          "id": "rails.html-safe-sanitizes"
+        },
+        {
+          "description": "Believing CSRF tokens are unnecessary for JavaScript or API-style requests from the app's own pages, so disabling `protect_from_forgery` is a harmless fix for 422 errors.",
+          "id": "rails.csrf-protection-optional-for-ajax"
+        },
+        {
+          "description": "Believing behaviour seen in development carries over to production, ignoring differences in eager loading, class reloading, caching, asset compilation, and error reporting.",
+          "id": "rails.development-config-matches-production"
+        },
+        {
+          "description": "Believing `Time.now`/`Date.today` respect the application time zone, when zone-aware code needs `Time.current`/`Time.zone.now`/`Date.current`.",
+          "id": "rails.time-now-is-timezone-aware"
+        }
+      ],
+      "banks": {
+        "easy": {
+          "path": "rails/easy.json",
+          "hash": "e24e987d9db940facb6fb006ec49b3e3adf97baf4e84a1aa1aee58c3cd746bc8",
+          "access": "free",
+          "contentVersion": 3,
+          "topicCounts": {
+            "activerecord-queries": 10,
+            "associations": 10,
+            "callbacks-and-validations": 10,
+            "migrations-and-schema": 10,
+            "routing": 10,
+            "activesupport": 10,
+            "security": 10,
+            "performance": 10,
+            "controllers-and-params": 9
+          }
+        },
+        "medium": {
+          "path": "rails/medium.json",
+          "hash": "0e31288eddb90b4a0188413de3fd4067bad6258937a157d1ec4768b9585dd03d",
+          "access": "paid",
+          "productId": "syntactical.rails.medium",
+          "contentVersion": 2,
+          "topicCounts": {
+            "activerecord-queries": 10,
+            "associations": 10,
+            "callbacks-and-validations": 10,
+            "migrations-and-schema": 10,
+            "controllers-and-params": 6,
+            "activesupport": 10,
+            "background-jobs": 10,
+            "security": 10,
+            "performance": 10,
+            "routing": 10
+          }
+        },
+        "hard": {
+          "path": "rails/hard.json",
+          "hash": "917627d45d42951203c3eed3f0184bde48bc659fbfd87ffb95b7efcda3999bb9",
+          "access": "paid",
+          "productId": "syntactical.rails.hard",
+          "contentVersion": 2,
+          "topicCounts": {
+            "activerecord-queries": 10,
+            "associations": 10,
+            "callbacks-and-validations": 10,
+            "migrations-and-schema": 10,
+            "activesupport": 10,
+            "background-jobs": 10,
+            "security": 10,
+            "performance": 10,
+            "routing": 10
+          }
+        }
+      }
     }
   ]
 }
