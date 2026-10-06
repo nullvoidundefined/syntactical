@@ -12,7 +12,7 @@ import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
 import { ProviderTransientError } from '../../types/ProviderTransientError.js';
 import { countQuestionsNeeded } from './countQuestionsNeeded.js';
 import { generateBatch } from './generateBatch.js';
-import { normalizePrompt } from './normalizePrompt.js';
+import { buildCardKey } from './buildCardKey.js';
 import { readJsonIfPresent } from './readJsonIfPresent.js';
 
 const classificationsSchema = z.record(z.string(), z.looseObject({ topic: z.string() }));
@@ -47,7 +47,7 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
     const oracleFile = join(outRoot, 'oracles', languageId, `${difficulty}.json`);
     const oracles = await readExistingOracles(oracleFile);
     const counts = countByTopic([...questions, ...staged], classified);
-    const existingPrompts = new Set([...questions, ...staged].map(({ prompt }) => normalizePrompt(prompt)));
+    const existingPrompts = new Set([...questions, ...staged].map(buildCardKey));
     const added: Question[] = [];
     let isCompleted = false;
     try {
@@ -68,7 +68,7 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
                 }
                 const { cards, drops } = outcome;
                 for (const { oracle, question } of cards) {
-                    existingPrompts.add(normalizePrompt(question.prompt));
+                    existingPrompts.add(buildCardKey(question));
                     added.push(question);
                     oracles.set(question.id, oracle);
                 }
