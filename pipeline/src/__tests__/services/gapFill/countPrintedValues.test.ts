@@ -12,6 +12,7 @@ describe('countPrintedValues', () => {
         ["'it''s' 2", 2],
         ["'a' 'b' 'c'", 3],
         ['3 -1 3.5', 3],
+        ["'C:\\' 'x'", 2],
     ])('counts %s as %i value(s)', (text, expected) => {
         expect(countPrintedValues(text)).toBe(expected);
     });

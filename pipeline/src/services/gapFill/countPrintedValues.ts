@@ -17,7 +17,7 @@ export function countPrintedValues(text: string): number {
         }
         if (quote) {
             if (isEscaped) isEscaped = false;
-            else if (char === '\\') isEscaped = true;
+            else if (quote === '"' && char === '\\') isEscaped = true;
             else if (char === quote) {
                 if (quote === "'" && text[index + 1] === "'") index += 1;
                 else quote = undefined;
