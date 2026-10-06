@@ -1,13 +1,13 @@
 // The pipeline CLI's command dispatch, with every side effect injected so the real
 // entry path can be tested: `validate [--content-root <path>]`, `draft-oracles [--api]`, or
-// `classify`, `gap-fill`, or `enrich [--api] [--content-root <path>]`, `review [--content-root <path>]`, or `publish [--content-root <path>]`.
+// `classify`, `gap-fill`, or `enrich [--api] [--content-root <path>]`, `rewrite-prompts [--content-root <path>]`,
+// `review [--content-root <path>]`, or `publish [--content-root <path>]`.
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 
 import { readContentRootFlag } from '../services/classify/readContentRootFlag.js';
 import { exitCodeFor } from '../services/exitCodeFor.js';
 import { pickProviderKind } from '../services/pickProviderKind.js';
-import type { GapFillJudge } from '../types/judge/GapFillJudge.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 
 import type { classify } from './classify.js';
@@ -17,10 +17,10 @@ import type { enrich } from './enrich.js';
 import type { gapFill } from './gapFill.js';
 import type { publish } from './publish.js';
 import type { review } from './review.js';
+import type { rewritePrompts } from './rewritePrompts.js';
 import type { validateContent } from './validate.js';
 
 export interface CliDeps {
-    createJudge?: (kind: 'api' | 'cli') => GapFillJudge;
     buildManifest: (contentRoot: string) => Promise<void>;
     classify: typeof classify;
     contentDir: string;
@@ -34,6 +34,7 @@ export interface CliDeps {
     pipelineDir: string;
     publish: typeof publish;
     review: typeof review;
+    rewritePrompts: typeof rewritePrompts;
     stderr: (text: string) => void;
     stdout: (text: string) => void;
     validate: typeof validateContent;
@@ -69,8 +70,7 @@ async function runContentRootCommand(command: 'classify' | 'gap-fill', argv: str
         pipelineDir,
         provider: createProvider(kind),
     };
-    if (command === 'gap-fill')
-        await runGapFill({ ...shared, ...(deps.createJudge ? { judge: deps.createJudge(kind) } : {}) });
+    if (command === 'gap-fill') await runGapFill(shared);
     else await runClassify(shared);
     return 0;
 }
@@ -179,12 +179,24 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
     if (command === 'review') {
         return runReview(argv, deps);
     }
+    if (command === 'rewrite-prompts') {
+        const contentRoot = resolveContentRoot(argv, deps);
+        if (contentRoot === undefined) return 1;
+        await deps.rewritePrompts({
+            contentDir,
+            contentRoot,
+            log: (line) => stdout(`${line}\n`),
+            pipelineDir,
+            provider: createProvider('cli'),
+        });
+        return 0;
+    }
     if (command === 'publish') {
         return runPublish(argv, deps);
     }
     if (command !== 'validate') {
         stderr(
-            'Usage: pipeline validate [--content-root <path>] | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | gap-fill [--api] [--content-root <path>] | enrich [--api] [--content-root <path>] | review [--content-root <path>] | publish [--content-root <path>]\n',
+            'Usage: pipeline validate [--content-root <path>] | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | gap-fill [--api] [--content-root <path>] | enrich [--api] [--content-root <path>] | rewrite-prompts [--content-root <path>] | review [--content-root <path>] | publish [--content-root <path>]\n',
         );
         return 1;
     }

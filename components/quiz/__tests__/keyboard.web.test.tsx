@@ -11,12 +11,32 @@ import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/co
 // jsdom never fires.
 jest.mock('react-native-reanimated', () => ({ useReducedMotion: () => true }));
 jest.mock('../../../state/StatsProvider', () => ({
-  useQuizStats: () => ({ eventLog: [], isHydrated: true, recordAnswer: () => undefined, recordCompletion: () => undefined }),
+  useQuizStats: () => ({
+    eventLog: [],
+    isHydrated: true,
+    recordAnswer: () => undefined,
+    recordCompletion: () => undefined,
+  }),
 }));
 
 const query = { explanation: 'Because', title: 'Why' };
-const mcQuestion: Question = { answerIndex: 2, choices: [{ text: 'a' }, { text: 'b' }, { text: 'c' }, { text: 'd' }], id: 'q-1', prompt: 'Pick', query, provenance: TEST_PROVENANCE, type: 'mc' };
-const boolQuestion: Question = { answer: true, id: 'q-2', prompt: 'Yes?', query, provenance: TEST_PROVENANCE, type: 'bool' };
+const mcQuestion: Question = {
+  answerIndex: 2,
+  choices: [{ text: 'a' }, { text: 'b' }, { text: 'c' }, { text: 'd' }],
+  id: 'q-1',
+  prompt: 'Pick',
+  query,
+  provenance: TEST_PROVENANCE,
+  type: 'mc',
+};
+const boolQuestion: Question = {
+  answer: true,
+  id: 'q-2',
+  prompt: 'Yes?',
+  query,
+  provenance: TEST_PROVENANCE,
+  type: 'bool',
+};
 
 function RoundHarness({ question }: { question: Question }) {
   const [isOnMenu, setIsOnMenu] = useState(false);
@@ -50,6 +70,16 @@ function pressKey(key: string) {
 jest.mock('../../auth/SignUpPrompt', () => ({ SignUpPrompt: () => null }));
 
 describe('web keyboard navigation in a round', () => {
+  // Choices are shuffled per round; Math.random at 0.999 makes every Fisher-Yates swap a no-op, so
+  // the displayed order is the bank order these key-to-choice assertions are written against.
+  beforeEach(() => {
+    jest.spyOn(Math, 'random').mockReturnValue(0.999);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it.each([
     ['1', 'a, incorrect'],
     ['3', 'c, correct'],
@@ -141,7 +171,10 @@ describe('web keyboard navigation in a round', () => {
 
 const abQuestion: Question = {
   answerIndex: 1,
-  choices: [{ code: 'x = 1', text: 'first' }, { code: 'y = 2', text: 'second' }],
+  choices: [
+    { code: 'x = 1', text: 'first' },
+    { code: 'y = 2', text: 'second' },
+  ],
   criterion: { evidence: 'B is faster', statement: 'Lower runtime wins', type: 'performance' },
   id: 'q-ab',
   prompt: 'Pick the faster',
@@ -178,7 +211,15 @@ describe('web keyboard navigation on an A/B card', () => {
 });
 
 describe('web keyboard navigation ignores keys meant for something else', () => {
-  const threeChoiceQuestion: Question = { answerIndex: 2, choices: [{ text: 'a' }, { text: 'b' }, { text: 'c' }], id: 'q-3', prompt: 'Pick', query, provenance: TEST_PROVENANCE, type: 'mc' };
+  const threeChoiceQuestion: Question = {
+    answerIndex: 2,
+    choices: [{ text: 'a' }, { text: 'b' }, { text: 'c' }],
+    id: 'q-3',
+    prompt: 'Pick',
+    query,
+    provenance: TEST_PROVENANCE,
+    type: 'mc',
+  };
 
   function pressKeyOn(target: HTMLElement, key: string) {
     act(() => {

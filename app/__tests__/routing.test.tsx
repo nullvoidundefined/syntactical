@@ -7,7 +7,13 @@ import RoundScreen from '../[language]/[difficulty]/play';
 
 jest.mock('../../state/StatsProvider', () => ({
   ...jest.requireActual('../../state/StatsProvider'),
-  useQuizStats: () => ({ isHydrated: true, recordAnswer: jest.fn(), recordCompletion: jest.fn(), eventLog: [], stats: { answerStreak: { best: 0, current: 0 }, goalHistory: [] } }),
+  useQuizStats: () => ({
+    isHydrated: true,
+    recordAnswer: jest.fn(),
+    recordCompletion: jest.fn(),
+    eventLog: [],
+    stats: { answerStreak: { best: 0, current: 0 }, goalHistory: [] },
+  }),
 }));
 jest.mock('../../state/useLanguageManifest', () => ({
   useLanguageManifest: () => ({
@@ -29,7 +35,11 @@ jest.mock('../../state/useLanguageManifest', () => ({
   }),
 }));
 jest.mock('../../state/useQuestionBank', () => {
-  const provenance = { isHumanReviewed: false, source: 'original', validation: { method: 'judged', status: 'pending' } };
+  const provenance = {
+    isHumanReviewed: false,
+    source: 'original',
+    validation: { method: 'judged', status: 'pending' },
+  };
   const buildBoolQuestion = (id: string, topic: string) => ({
     answer: true,
     id,
@@ -41,7 +51,11 @@ jest.mock('../../state/useQuestionBank', () => {
   });
   const bank = {
     hash: 'a'.repeat(64),
-    questions: [buildBoolQuestion('s-1', 'strings'), buildBoolQuestion('s-2', 'strings'), buildBoolQuestion('n-1', 'numbers')],
+    questions: [
+      buildBoolQuestion('s-1', 'strings'),
+      buildBoolQuestion('s-2', 'strings'),
+      buildBoolQuestion('n-1', 'numbers'),
+    ],
   };
   return { useQuestionBank: () => ({ bank, status: 'ready' }) };
 });
@@ -67,22 +81,31 @@ describe('routing', () => {
 
   it('shows the topic list at /python/easy', async () => {
     await renderRouter({ '[language]/[difficulty]/index': TopicScreen }, { initialUrl: '/python/easy' });
-    expect(await screen.findByRole('button', { name: /Whole bank/ })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: /^All 3 questions/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Strings, 2 questions/ })).toBeTruthy();
   });
 
   it('shows not-found for a difficulty the language has no bank for', async () => {
-    await renderRouter({ '[language]/[difficulty]/index': TopicScreen, '+not-found': NotFoundScreen }, { initialUrl: '/python/hard' });
+    await renderRouter(
+      { '[language]/[difficulty]/index': TopicScreen, '+not-found': NotFoundScreen },
+      { initialUrl: '/python/hard' },
+    );
     await waitFor(() => expect(screen.queryByText('Not found')).not.toBeNull());
   });
 
   it('starts a round of only the topic in /python/easy/play?topic=strings', async () => {
-    await renderRouter({ '[language]/[difficulty]/play': RoundScreen }, { initialUrl: '/python/easy/play?topic=strings' });
+    await renderRouter(
+      { '[language]/[difficulty]/play': RoundScreen },
+      { initialUrl: '/python/easy/play?topic=strings' },
+    );
     expect(await screen.findByText('Q1 / 2')).toBeTruthy();
   });
 
   it('falls back to the whole bank for a topic the bank has no questions for', async () => {
-    await renderRouter({ '[language]/[difficulty]/play': RoundScreen }, { initialUrl: '/python/easy/play?topic=nonsense' });
+    await renderRouter(
+      { '[language]/[difficulty]/play': RoundScreen },
+      { initialUrl: '/python/easy/play?topic=nonsense' },
+    );
     expect(await screen.findByText('Q1 / 3')).toBeTruthy();
   });
 

@@ -1,0 +1,162 @@
+[
+  {
+    "description": "Believing 0, \"\", [] and {} are falsy in Ruby, as in C or JavaScript; only false and nil are falsy.",
+    "id": "ruby.falsy-zero-and-empty-string"
+  },
+  {
+    "description": "Believing nil == false is true, or that nil and false are interchangeable values rather than distinct objects.",
+    "id": "ruby.nil-equals-false"
+  },
+  {
+    "description": "Believing the ! suffix is enforced by Ruby to mean in-place mutation, rather than being a naming convention for a more surprising or dangerous variant.",
+    "id": "ruby.bang-methods-always-mutate"
+  },
+  {
+    "description": "Believing mutating methods like String#strip!, Array#uniq! or #sort! always return the receiver, when they return nil if no change was made.",
+    "id": "ruby.bang-methods-return-receiver"
+  },
+  {
+    "description": "Believing `b = a` copies the object, so mutating b through a shared reference (e.g. b << x) will not affect a.",
+    "id": "ruby.assignment-copies-object"
+  },
+  {
+    "description": "Believing dup or clone performs a deep copy, so nested objects inside the copy are independent of the original.",
+    "id": "ruby.dup-is-deep-copy"
+  },
+  {
+    "description": "Believing freeze makes an object deeply immutable, rather than only preventing changes to the object's own state.",
+    "id": "ruby.frozen-means-deeply-immutable"
+  },
+  {
+    "description": "Believing default argument expressions are evaluated once at definition time, rather than on each call where the argument is omitted.",
+    "id": "ruby.default-args-evaluated-once"
+  },
+  {
+    "description": "Believing Hash.new([]) gives each missing key its own fresh array, when all misses share one object that is never stored in the hash.",
+    "id": "ruby.hash-default-value-per-key"
+  },
+  {
+    "description": "Believing hash[:missing] raises an error like fetch does, instead of returning nil or the hash's default.",
+    "id": "ruby.hash-fetch-vs-brackets"
+  },
+  {
+    "description": "Believing a method needs an explicit `return` to produce a value, rather than returning the value of its last evaluated expression.",
+    "id": "ruby.explicit-return-required"
+  },
+  {
+    "description": "Believing `return` inside a block returns only from the block, when it returns from the enclosing method; `next` is what exits a block.",
+    "id": "ruby.return-inside-block"
+  },
+  {
+    "description": "Believing each returns an array of the block's results like map, rather than returning the original collection.",
+    "id": "ruby.each-returns-mapped-array"
+  },
+  {
+    "description": "Believing map, select, reject or sort modify the receiver in place instead of returning a new collection.",
+    "id": "ruby.map-mutates-receiver"
+  },
+  {
+    "description": "Believing procs and lambdas behave identically, missing that lambdas check arity strictly and return only from themselves.",
+    "id": "ruby.block-vs-proc-vs-lambda-return"
+  },
+  {
+    "description": "Believing a method must declare an explicit &block parameter before it can yield to a given block.",
+    "id": "ruby.yield-requires-block-parameter"
+  },
+  {
+    "description": "Believing single-quoted strings interpolate #{} and process escapes like \\n the same way double-quoted strings do.",
+    "id": "ruby.single-vs-double-quotes-interpolation"
+  },
+  {
+    "description": "Believing \"a\" + 1 or \"5\" + 5 coerces automatically, rather than raising TypeError and needing to_s or to_i.",
+    "id": "ruby.string-plus-integer-coercion"
+  },
+  {
+    "description": "Believing String#to_i raises on non-numeric input, when \"abc\".to_i returns 0 and \"12abc\".to_i returns 12; Integer() is the strict form.",
+    "id": "ruby.to-i-validates-input"
+  },
+  {
+    "description": "Believing 7 / 2 yields 3.5, rather than integer division truncating toward negative infinity to give 3.",
+    "id": "ruby.integer-division-returns-float"
+  },
+  {
+    "description": "Believing floating point arithmetic is exact, so 0.1 + 0.2 == 0.3 evaluates to true.",
+    "id": "ruby.float-equality-exact"
+  },
+  {
+    "description": "Believing :name and \"name\" are the same object or interchangeable as hash keys, when they are distinct and not equal.",
+    "id": "ruby.symbol-equals-string"
+  },
+  {
+    "description": "Believing ==, eql? and equal? all test the same thing, rather than value equality, type-strict equality, and object identity.",
+    "id": "ruby.equal-vs-eql-vs-equal-question"
+  },
+  {
+    "description": "Believing === is a stricter equality operator as in JavaScript, rather than case-subsumption (class membership, regexp match, range inclusion).",
+    "id": "ruby.triple-equals-is-strict-equality"
+  },
+  {
+    "description": "Believing case/when falls through to the next branch without a break, as in C-style switch statements.",
+    "id": "ruby.case-uses-fallthrough"
+  },
+  {
+    "description": "Believing `and`/`or` are exact synonyms for &&/||, missing that their much lower precedence changes how assignments parse.",
+    "id": "ruby.and-or-same-as-ampersand-pipe"
+  },
+  {
+    "description": "Believing x ||= value leaves an existing false or nil value alone, when ||= overwrites any falsy value.",
+    "id": "ruby.or-equals-sets-on-false"
+  },
+  {
+    "description": "Believing &. guards against every error or against NoMethodError generally, when it only skips the call when the receiver is nil.",
+    "id": "ruby.safe-navigation-catches-all-errors"
+  },
+  {
+    "description": "Believing local variables assigned inside a method, block, or class body are visible in enclosing or sibling scopes.",
+    "id": "ruby.local-variable-scope-leaks"
+  },
+  {
+    "description": "Believing reading an undefined instance variable raises an error, rather than quietly returning nil.",
+    "id": "ruby.instance-variable-defaults-error"
+  },
+  {
+    "description": "Believing a bare `name = x` inside an instance method calls the attr_writer, when it creates a local variable; self.name = x is required.",
+    "id": "ruby.attr-accessor-usable-without-self"
+  },
+  {
+    "description": "Believing private methods are invisible to subclasses or that private restricts by class rather than by receiver syntax.",
+    "id": "ruby.private-methods-blocked-by-subclass"
+  },
+  {
+    "description": "Believing @@variables are per-subclass, when they are shared across the whole class hierarchy.",
+    "id": "ruby.class-variables-not-shared"
+  },
+  {
+    "description": "Believing self inside a class body refers to a future instance, rather than to the class object itself.",
+    "id": "ruby.self-in-class-body-is-instance"
+  },
+  {
+    "description": "Believing include gives true multiple inheritance with unordered lookup, rather than inserting modules into a defined ancestor chain.",
+    "id": "ruby.modules-give-multiple-inheritance"
+  },
+  {
+    "description": "Believing to_s and inspect produce identical output, so puts and p display objects the same way.",
+    "id": "ruby.to-s-and-inspect-same"
+  },
+  {
+    "description": "Believing puts returns the printed string (and that p and puts return the same thing), when puts returns nil and p returns its argument.",
+    "id": "ruby.puts-returns-string"
+  },
+  {
+    "description": "Believing a bare `rescue` catches every exception, when it only catches StandardError and its descendants.",
+    "id": "ruby.rescue-catches-all-exceptions"
+  },
+  {
+    "description": "Believing code in ensure never runs after a return, or conversely that raising in ensure is harmless to the original exception.",
+    "id": "ruby.ensure-overrides-return"
+  },
+  {
+    "description": "Believing (1..5) excludes 5 like a half-open range in other languages, or that (1...5) includes it.",
+    "id": "ruby.range-end-exclusive"
+  }
+]

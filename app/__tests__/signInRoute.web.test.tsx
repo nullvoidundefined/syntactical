@@ -91,6 +91,8 @@ function typeInto(input: HTMLElement, value: string) {
 
 async function reachCodeStep(email: string): Promise<HTMLElement> {
   mockRequestCode.mockResolvedValue({ isOk: true });
+  // The screen opens on the password step (Task 7.7); "Use a code instead" opens the code steps.
+  fireEvent.click(screen.getByRole('button', { name: 'Use a code instead' }));
   const emailInput = screen.getByRole('textbox', { name: EMAIL_LABEL });
   typeInto(emailInput, email);
   fireEvent.keyDown(emailInput, { key: 'Enter' });

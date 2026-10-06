@@ -1,6 +1,13 @@
 import { expect, test } from '../support/test';
 
-import { answerQuestions, createUniqueEmail, queryDatabase, readUserId, signIn } from '../support/app';
+import {
+  answerQuestions,
+  createUniqueEmail,
+  pickAllQuestions,
+  queryDatabase,
+  readUserId,
+  signIn,
+} from '../support/app';
 
 const PRODUCT_ID = 'syntactical.python.medium';
 const PAID_BANK_SIZE = 5;
@@ -32,7 +39,7 @@ test.describe('a paid bank', () => {
     await expect(page.getByRole('button', { name: 'Medium, locked' })).toBeHidden();
     await page.getByRole('button', { name: /^Medium/ }).click();
     await expect(page.getByText('Step 3 / Select topic')).toBeVisible();
-    await page.keyboard.press('1');
+    await pickAllQuestions(page);
     await expect(page.getByRole('progressbar', { name: /^Question 1 of 5$/ })).toBeVisible();
     await answerQuestions(page, PAID_BANK_SIZE);
     await expect(page.getByRole('heading', { level: 1, name: 'Python / Medium / Complete' })).toBeVisible();

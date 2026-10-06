@@ -36,7 +36,7 @@ jest.mock('../../clients/onUnauthorized', () => ({ onUnauthorized: () => () => u
 jest.mock('../../components/layout/ReviewDueLink', () => ({ ReviewDueLink: () => null }));
 jest.mock('../../components/layout/DownloadIndicator', () => ({ DownloadIndicator: () => null }));
 jest.mock('react-native-reanimated', () => ({ useReducedMotion: () => true }));
-jest.mock('expo-router',() => ({ router: { push: jest.fn() } }));
+jest.mock('expo-router', () => ({ router: { push: jest.fn() }, useLocalSearchParams: () => ({}) }));
 jest.mock('@react-native-community/netinfo', () => {
   const api = {
     addEventListener: (listener: (value: { isConnected: boolean }) => void) => {

@@ -1,8 +1,6 @@
 // The pipeline CLI: `npm run pipeline -- <command>`. Dispatch lives in runCli.
 import { fileURLToPath } from 'node:url';
 
-import { assertCodexReady, createCodexCliProvider } from './clients/codexCliProvider.js';
-import { createSourceFetcher } from './clients/sourceFetcher.js';
 import { createModelProvider } from './clients/modelProvider.js';
 import { classify } from './commands/classify.js';
 import { draftOracles } from './commands/draftOracles.js';
@@ -11,6 +9,7 @@ import { enrich } from './commands/enrich.js';
 import { gapFill } from './commands/gapFill.js';
 import { publish } from './commands/publish.js';
 import { review } from './commands/review.js';
+import { rewritePrompts } from './commands/rewritePrompts.js';
 import { runCli } from './commands/runCli.js';
 import { validateContent } from './commands/validate.js';
 
@@ -30,12 +29,6 @@ process.exitCode = await runCli(argv, {
     classify,
     contentDir: fileURLToPath(new URL('../../content', import.meta.url)),
     createProvider: createModelProvider,
-    createJudge: (kind) => ({
-        assertReady: assertCodexReady,
-        claude: createModelProvider(kind),
-        codex: createCodexCliProvider(),
-        fetchSource: createSourceFetcher(),
-    }),
     defaultContentRoot: fileURLToPath(new URL('../../../syntactical-content', import.meta.url)),
     draft: draftOracles,
     draftTaxonomy,
@@ -45,6 +38,7 @@ process.exitCode = await runCli(argv, {
     pipelineDir: fileURLToPath(new URL('../', import.meta.url)),
     publish,
     review,
+    rewritePrompts,
     stderr: (text) => stderr.write(text),
     stdout: (text) => stdout.write(text),
     validate: validateContent,

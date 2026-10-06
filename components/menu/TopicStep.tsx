@@ -1,11 +1,13 @@
-// Step 3 of the launch flow: the whole bank, or one of the bank's topics, each with its question
-// count from the manifest. A topic with no questions in this bank is not listed. Keys: 1 picks
-// the whole bank, 2 and up pick the topics in order, Escape goes back.
+// Step 3 of the launch flow: how many questions to play from the whole bank (each fixed length
+// smaller than the bank, then every question), or one of the bank's topics with its question
+// count from the manifest. A topic with no questions in this bank is not listed. Keys: 1 and up
+// pick the length cards, then the topics in order; Escape goes back.
 import { Pressable, Text, View } from 'react-native';
 
 import { DIFFICULTIES } from '@syntactical/content-schema';
 
 import { KEY_BINDINGS } from '../../constants/appConfig';
+import { listRoundLengths, readPoolSize } from '../../services/quiz/roundLength';
 import { useKeyboardNav } from '../../state/useKeyboardNav';
 import { useLanguageManifest } from '../../state/useLanguageManifest';
 
@@ -15,12 +17,13 @@ type TopicStepProps = {
   difficulty: string;
   language: string;
   onBack: () => void;
-  onSelectTopic: (topic: string | undefined) => void;
+  // A fixed length, or undefined for every question in the bank.
+  onSelectLength: (count: number | undefined) => void;
+  onSelectTopic: (topic: string) => void;
 };
 
-// The whole bank holds key 1, so topic keys start at 2. Choice keys come in two rows
+// Choice keys come in two rows
 // (digits, letters) that bind the same choices, so only this many positions exist.
-const FIRST_TOPIC_KEY_HINT = 2;
 const CHOICE_KEY_ROWS = 2;
 const BOUND_KEY_COUNT = KEY_BINDINGS.choice.length / CHOICE_KEY_ROWS;
 
@@ -33,21 +36,31 @@ function describeCount(count: number): string {
   return `${count} ${count === 1 ? 'question' : 'questions'}`;
 }
 
-export function TopicStep({ difficulty, language, onBack, onSelectTopic }: TopicStepProps) {
+export function TopicStep({ difficulty, language, onBack, onSelectLength, onSelectTopic }: TopicStepProps) {
   const { languages } = useLanguageManifest();
-  const { banks, label, topics: listedTopics } = languages.find(({ id }) => id === language) ?? {
+  const {
+    banks,
+    label,
+    topics: listedTopics,
+  } = languages.find(({ id }) => id === language) ?? {
     banks: {},
     label: language,
     topics: [],
   };
-  const topicCounts = (banks as Record<string, { topicCounts: Record<string, number> } | undefined>)[difficulty]?.topicCounts ?? {};
+  const topicCounts =
+    (banks as Record<string, { topicCounts: Record<string, number> } | undefined>)[difficulty]?.topicCounts ?? {};
   const topics = listedTopics.filter(({ id }) => (topicCounts[id] ?? 0) > 0);
   const difficultyLabel = DIFFICULTIES.find(({ id }) => id === difficulty)?.label ?? difficulty;
+  const poolSize = readPoolSize(topicCounts, undefined);
+  const lengths = listRoundLengths(poolSize);
+  // Whole-bank cards come first: each fixed length, then every question.
+  const lengthCardCount = lengths.length + 1;
   useKeyboardNav({
     onEscape: onBack,
     onSelectChoice: (index) => {
-      if (index === 0) onSelectTopic(undefined);
-      else if (index <= topics.length) onSelectTopic(topics[index - 1].id);
+      if (index < lengths.length) onSelectLength(lengths[index]);
+      else if (index === lengths.length) onSelectLength(undefined);
+      else if (index - lengthCardCount < topics.length) onSelectTopic(topics[index - lengthCardCount].id);
     },
   });
   return (
@@ -64,18 +77,27 @@ export function TopicStep({ difficulty, language, onBack, onSelectTopic }: Topic
         </Pressable>
       </View>
       <View className="gap-3">
+        {lengths.map((length, index) => (
+          <SelectionCard
+            key={length}
+            keyHint={pickKeyHint(index + 1)}
+            title={`${length} questions`}
+            subtitle={`A random ${length} from this bank`}
+            onSelect={() => onSelectLength(length)}
+          />
+        ))}
         <SelectionCard
-          keyHint={1}
-          title="Whole bank"
+          keyHint={pickKeyHint(lengthCardCount)}
+          title={poolSize === undefined ? 'All questions' : `All ${poolSize} questions`}
           subtitle="Every question in this bank"
-          onSelect={() => onSelectTopic(undefined)}
+          onSelect={() => onSelectLength(undefined)}
         />
         {topics.map(({ id, label: topicLabel }, index) => {
           const subtitle = describeCount(topicCounts[id] ?? 0);
           return (
             <SelectionCard
               key={id}
-              keyHint={pickKeyHint(index + FIRST_TOPIC_KEY_HINT)}
+              keyHint={pickKeyHint(index + lengthCardCount + 1)}
               title={topicLabel}
               subtitle={subtitle}
               ariaLabel={`${topicLabel}, ${subtitle}`}

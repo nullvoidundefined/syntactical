@@ -41,15 +41,17 @@ async function readEntitlements(queryable: Queryable, userId: string): Promise<s
 
 // Undefined when the user no longer exists.
 async function readProfile(queryable: Queryable, userId: string, now: Date): Promise<Profile | undefined> {
-  const { rows } = await queryable.query<{ email: string; has_password: boolean; timezone: string | null }>(
-    'SELECT email, password_hash IS NOT NULL AS has_password, timezone FROM users WHERE id = $1',
-    [userId],
-  );
+  const { rows } = await queryable.query<{
+    email: string;
+    has_password: boolean;
+    is_admin: boolean;
+    timezone: string | null;
+  }>('SELECT email, password_hash IS NOT NULL AS has_password, is_admin, timezone FROM users WHERE id = $1', [userId]);
   const [user] = rows;
   if (!user) {
     return undefined;
   }
-  const { email, has_password: hasPassword, timezone } = user;
+  const { email, has_password: hasPassword, is_admin: isAdmin, timezone } = user;
   const today = toLocalDate(now.toISOString(), timezone ?? PROGRESS_DEFAULTS.TIMEZONE);
   const [dailyGoal, progress, entitlements] = [
     await readGoal(queryable, userId, today),
@@ -62,6 +64,7 @@ async function readProfile(queryable: Queryable, userId: string, now: Date): Pro
     email,
     entitlements,
     hasPassword,
+    isAdmin,
     timezone,
     xpToday: progress.find(({ localDate }) => localDate === today)?.xp ?? 0,
     xpTotal: progress.reduce((sum, { xp }) => sum + xp, 0),

@@ -1,11 +1,15 @@
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { buildContentManifest } from '../buildContentManifest.mjs';
 
 const REPOSITORY_CONTENT_DIR = join(__dirname, '..', '..', 'content');
-const LANGUAGE_IDS = ['python', 'postgres', 'javascript'];
+// Every language in the shipped manifest, so adding a language does not break these tests.
+const LANGUAGE_IDS = (
+  JSON.parse(readFileSync(join(REPOSITORY_CONTENT_DIR, 'manifest.json'), 'utf8')) as { languages: { id: string }[] }
+).languages.map(({ id }) => id);
 // Only free banks are in the public content tree (B-60); paid banks live in syntactical-content.
 const FREE_DIFFICULTY_IDS = ['easy'];
 const STALE_HASH = 'a'.repeat(64);

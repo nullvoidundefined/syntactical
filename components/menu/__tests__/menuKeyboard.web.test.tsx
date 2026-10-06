@@ -13,7 +13,10 @@ jest.mock('../../../state/useLanguageManifest', () => ({
   useLanguageManifest: () => ({
     languages: [
       {
-        banks: { easy: { hash: 'a'.repeat(64), path: 'python/easy.json', topicCounts: { numbers: 4, strings: 6 } }, hard: { hash: 'b'.repeat(64), path: 'python/hard.json' } },
+        banks: {
+          easy: { hash: 'a'.repeat(64), path: 'python/easy.json', topicCounts: { numbers: 4, strings: 6 } },
+          hard: { hash: 'b'.repeat(64), path: 'python/hard.json' },
+        },
         glyph: 'PY',
         grammar: 'python',
         id: 'python',
@@ -34,8 +37,26 @@ jest.mock('../../../state/useQuestionBank', () => ({
 jest.mock('../../../state/useIsOnline', () => ({ useIsOnline: () => false }));
 
 const languages: LanguageEntry[] = [
-  { banks: {}, glyph: 'PY', grammar: 'python', id: 'python', label: 'Python', misconceptions: [], tagline: 'Snakes.', topics: [] },
-  { banks: {}, glyph: 'PG', grammar: 'sql', id: 'postgres', label: 'Postgres', misconceptions: [], tagline: 'Tables.', topics: [] },
+  {
+    banks: {},
+    glyph: 'PY',
+    grammar: 'python',
+    id: 'python',
+    label: 'Python',
+    misconceptions: [],
+    tagline: 'Snakes.',
+    topics: [],
+  },
+  {
+    banks: {},
+    glyph: 'PG',
+    grammar: 'sql',
+    id: 'postgres',
+    label: 'Postgres',
+    misconceptions: [],
+    tagline: 'Tables.',
+    topics: [],
+  },
 ];
 
 function MenuHarness() {
@@ -70,7 +91,8 @@ function TopicHarness() {
       <TopicStep
         language="python"
         difficulty="easy"
-        onSelectTopic={(topic) => setSelection(`topic ${topic ?? 'whole bank'}`)}
+        onSelectLength={(count) => setSelection(`length ${count ?? 'all'}`)}
+        onSelectTopic={(topic) => setSelection(`topic ${topic}`)}
         onBack={() => setSelection('back to difficulties')}
       />
     </>
@@ -123,10 +145,10 @@ describe('web keyboard navigation in the menus', () => {
     expect(screen.queryByText('back to languages')).not.toBeNull();
   });
 
-  it('on the topic step, 1 picks the whole bank and 2 the first topic', () => {
+  it('on the topic step, 1 picks all questions (the bank holds 10) and 2 and 3 the topics', () => {
     render(<TopicHarness />);
     pressKey('1');
-    expect(screen.queryByText('topic whole bank')).not.toBeNull();
+    expect(screen.queryByText('length all')).not.toBeNull();
     pressKey('2');
     expect(screen.queryByText('topic strings')).not.toBeNull();
     pressKey('3');

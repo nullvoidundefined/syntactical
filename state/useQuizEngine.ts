@@ -4,26 +4,36 @@
 // questions, filtered before the shuffle. An answer that does not fit the
 // current question (a choice index it does not have, or the wrong kind of
 // answer) is ignored rather than recorded as wrong. A bank round shuffles its
-// questions; a review round keeps the queue's order, most overdue first.
+// questions, or plays a random sample of `sampleSize` of them when that is
+// smaller than the pool (each round draws its own); a review round keeps the queue's order, most overdue first.
 import { useState } from 'react';
 
 import type { Question } from '@syntactical/content-schema';
 
 import { calculateAccuracy } from '../services/quiz/calculateAccuracy';
 import { isAnswerCorrect } from '../services/quiz/isAnswerCorrect';
+import { sampleQuestions } from '../services/quiz/sampleQuestions';
+import { shuffleChoices } from '../services/quiz/shuffleChoices';
 import { shuffleQuestions } from '../services/quiz/shuffleQuestions';
 
 type SubmittedAnswer = number | boolean | null;
 
 export type RoundKind = 'bank' | 'review';
 
-type EngineOptions = { roundKind?: RoundKind; topic?: string };
+type EngineOptions = { roundKind?: RoundKind; sampleSize?: number; topic?: string };
 
 export function useQuizEngine(bankQuestions: readonly Question[], options: EngineOptions = {}) {
-  const { roundKind = 'bank', topic } = options;
+  const { roundKind = 'bank', sampleSize, topic } = options;
   const [questions] = useState(() => {
     const inTopic = bankQuestions.filter((question) => topic === undefined || question.topic === topic);
-    return roundKind === 'review' ? inTopic : shuffleQuestions(inTopic);
+    let selectedQuestions = inTopic;
+    if (roundKind !== 'review') {
+      selectedQuestions =
+        sampleSize !== undefined && sampleSize < inTopic.length
+          ? sampleQuestions(inTopic, sampleSize)
+          : shuffleQuestions(inTopic);
+    }
+    return selectedQuestions.map((question) => shuffleChoices(question));
   });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [submittedAnswer, setSubmittedAnswer] = useState<SubmittedAnswer>(null);

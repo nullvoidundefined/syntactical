@@ -38,10 +38,18 @@ const CODE_LABEL = 'Sign-in code';
 const SEND_BUTTON = 'Send code';
 const VERIFY_BUTTON = 'Verify code';
 const RESEND_BUTTON = 'Resend code';
+const USE_CODE_BUTTON = 'Use a code instead';
 const INVALID_CODE_MESSAGE = 'That code did not work. Check the newest email and try again.';
 const RATE_LIMITED_MESSAGE = 'Too many attempts. Wait a few minutes, then try again.';
 const UNAVAILABLE_MESSAGE = 'Sign-in is unavailable right now. Try again later.';
 const RESEND_COOLDOWN_SECONDS = 60;
+
+// The screen opens on the password step (Task 7.7); these tests cover the
+// code steps, which "Use a code instead" opens.
+async function renderCodeSteps(): Promise<void> {
+  await render(<SignInScreen />);
+  await fireEvent.press(screen.getByRole('button', { name: USE_CODE_BUTTON }));
+}
 
 // Built at run time: neither value is a literal in the source.
 function buildEmail(): string {
@@ -70,7 +78,7 @@ async function submitEmail(email: string): Promise<void> {
 
 async function reachCodeStep(email: string): Promise<void> {
   mockRequestCode.mockResolvedValue({ isOk: true });
-  await render(<SignInScreen />);
+  await renderCodeSteps();
   await submitEmail(email);
   expect(screen.getByLabelText(CODE_LABEL)).toBeTruthy();
 }
@@ -98,7 +106,7 @@ function expectAlertOmits(alert: ReturnType<typeof screen.getByRole>, values: st
 
 describe('sign-in route', () => {
   it('renders exactly one h1 "Sign in" and a labeled email input with a submit button', async () => {
-    await render(<SignInScreen />);
+    await renderCodeSteps();
     expect(listLevelOneHeadings()).toEqual(['Sign in']);
     expect(screen.getByLabelText(EMAIL_LABEL)).toBeTruthy();
     expect(screen.getByRole('button', { name: SEND_BUTTON })).toBeTruthy();
@@ -117,7 +125,7 @@ describe('sign-in route', () => {
   it('submits the email step from the keyboard return key', async () => {
     mockRequestCode.mockResolvedValue({ isOk: true });
     const email = buildEmail();
-    await render(<SignInScreen />);
+    await renderCodeSteps();
     const emailInput = screen.getByLabelText(EMAIL_LABEL);
     await fireEvent.changeText(emailInput, email);
     await fireEvent(emailInput, 'submitEditing');
@@ -168,7 +176,7 @@ describe('sign-in route', () => {
   it('announces a rate limit in an alert distinct from the invalid-code message, without echoing the email', async () => {
     const email = buildEmail();
     mockRequestCode.mockResolvedValue({ isOk: false, reason: 'rate-limited' });
-    await render(<SignInScreen />);
+    await renderCodeSteps();
     await submitEmail(email);
     const alert = screen.getByRole('alert');
     expect(within(alert).getByText(RATE_LIMITED_MESSAGE)).toBeTruthy();
@@ -180,7 +188,7 @@ describe('sign-in route', () => {
   it('announces an unavailable service in an alert distinct from the other two messages, without echoing the email', async () => {
     const email = buildEmail();
     mockRequestCode.mockResolvedValue({ isOk: false, reason: 'unavailable' });
-    await render(<SignInScreen />);
+    await renderCodeSteps();
     await submitEmail(email);
     const alert = screen.getByRole('alert');
     expect(within(alert).getByText(UNAVAILABLE_MESSAGE)).toBeTruthy();

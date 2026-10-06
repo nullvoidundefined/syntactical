@@ -1,0 +1,1 @@
+export const MAX_REWRITTEN_PROMPT_LENGTH = 120;

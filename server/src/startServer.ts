@@ -98,6 +98,7 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
   const dummyPasswordHash = await createDummyPasswordHash();
   const pool = createDatabasePool(DATABASE_URL, NODE_ENV, logger);
   const app = createApp({
+    admin: { database: pool, paidProductIds, rateLimitKeySecret: env.RATE_LIMIT_KEY_SECRET },
     allowedOrigins: ALLOWED_ORIGINS.split(',')
       .map((origin) => origin.trim())
       .filter(Boolean),

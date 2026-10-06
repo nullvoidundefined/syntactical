@@ -49,6 +49,12 @@ describe('AppShell on the web', () => {
     expect(ring.getAttribute('aria-valuetext')).toBe('12 of 20 XP');
   });
 
+  it('makes the SYNTACTICAL mark a link named "Syntactical home"', () => {
+    renderShell();
+    const home = screen.getByRole('link', { name: 'Syntactical home' });
+    expect(home.textContent).toBe('SYNTACTICAL');
+  });
+
   it('links to the settings route and no longer shows the answer streak', () => {
     renderShell();
     expect(screen.getByRole('link', { name: 'Settings' })).toBeTruthy();
@@ -69,7 +75,7 @@ describe('AppShell on the web', () => {
   it('keeps the app bar contents in one container inside the banner', () => {
     renderShell();
     const banner = screen.getByRole('banner');
-    const inner = screen.getByText('SYNTACTICAL').parentElement as HTMLElement;
+    const inner = screen.getByRole('link', { name: 'Syntactical home' }).parentElement as HTMLElement;
     expect(inner).not.toBe(banner);
     expect(inner.parentElement).toBe(banner);
     expect(inner.contains(screen.getByRole('link', { name: 'Settings' }))).toBe(true);

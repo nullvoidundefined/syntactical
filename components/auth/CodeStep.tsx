@@ -5,10 +5,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 
 import { AuthButton } from './AuthButton';
+import { FieldLabel } from './FieldLabel';
 
 const RESEND_COOLDOWN_SECONDS = 60;
 const MS_PER_SECOND = 1000;
 const CODE_LENGTH = 6;
+const INPUT_ID = 'sign-in-code-input';
 const INSTRUCTION_ID = 'sign-in-code-instruction';
 const INSTRUCTION_TEXT = 'Enter the 6-digit code we emailed you.';
 
@@ -50,8 +52,10 @@ export function CodeStep({ cooldownRestartKey, isBusy, onResend, onSubmit }: Cod
       <Text nativeID={INSTRUCTION_ID} className="mt-2 text-sm text-muted">
         {INSTRUCTION_TEXT}
       </Text>
+      <FieldLabel className="mt-4" inputId={INPUT_ID} text="Sign-in code" />
       <TextInput
         ref={inputRef}
+        nativeID={INPUT_ID}
         aria-describedby={INSTRUCTION_ID}
         accessibilityHint={INSTRUCTION_TEXT}
         aria-label="Sign-in code"
@@ -65,7 +69,7 @@ export function CodeStep({ cooldownRestartKey, isBusy, onResend, onSubmit }: Cod
         onChangeText={setCode}
         onSubmitEditing={submit}
         returnKeyType="done"
-        className="mt-4 border border-ink px-3 py-2 font-mono text-base text-ink"
+        className="mt-1 w-full border border-ink px-3 py-2 font-mono text-base text-ink"
       />
       <AuthButton label="Verify code" isDisabled={isBusy} onPress={submit} />
       <AuthButton label="Resend code" isPrimary={false} isDisabled={isCoolingDown || isBusy} onPress={resend} />

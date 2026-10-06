@@ -31,6 +31,11 @@ describe('tokenizeCode', () => {
         ['python', 'def f(): pass', 'def'],
         ['sql', 'SELECT 1', 'SELECT'],
         ['javascript', 'const x = 1', 'const'],
+        ['typescript', 'interface Foo {}', 'interface'],
+        ['go', 'func main() {}', 'func'],
+        ['rust', 'fn main() {}', 'fn'],
+        ['ruby', 'def f; end', 'def'],
+        ['bash', 'if true; then echo; fi', 'then'],
     ] as const)('tags the %s keyword with the keyword type', (grammar, code, keyword) => {
         const pieces = tokenizeCode(code, grammar);
         expect(joinPieces(pieces)).toBe(code);
