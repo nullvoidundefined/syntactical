@@ -1688,7 +1688,7 @@
     },
     {
       "id": "gen-rails-easy-c93488ff",
-      "prompt": "Does this line create seven routes by default?",
+      "prompt": "Does this line map seven controller actions by default?",
       "topic": "routing",
       "answer": true,
       "code": "# config/routes.rb\nresources :books",
