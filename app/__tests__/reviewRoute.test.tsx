@@ -16,6 +16,10 @@ const PYTHON_EASY = (BUNDLED_BANKS['python/easy'] as { questions: Question[] }).
 const DUE_IDS = ['py-easy-01', 'py-easy-02', 'py-easy-03'];
 const TEN_DAYS_MS = 10 * 86_400_000;
 
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function seedMiss(questionId: string, answeredAt: string, bankKey = 'python/easy'): LoggedAnswerEvent {
   return {
     answeredAt,
@@ -67,7 +71,9 @@ describe('review route', () => {
     for (const id of DUE_IDS) {
       const { answerIndex, choices, prompt } = findQuestion(id);
       await waitFor(() => expect(screen.queryByText(prompt)).not.toBeNull());
-      await fireEvent.press(screen.getAllByRole('button', { name: choices[answerIndex].text })[0]);
+      await fireEvent.press(
+        screen.getAllByRole('button', { name: new RegExp(`^[A-D], ${escapeRegExp(choices[answerIndex].text)}$`) })[0],
+      );
       await fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
     }
     expect(screen.queryByText('Review / Due / Complete')).not.toBeNull();
@@ -76,10 +82,14 @@ describe('review route', () => {
     await waitFor(async () => expect(await readStoredLog()).toHaveLength(6));
     const log = await readStoredLog();
     const reviews = log.slice(3);
-    expect(reviews.map(({ questionId, roundKind }) => [questionId, roundKind])).toEqual(DUE_IDS.map((id) => [id, 'review']));
+    expect(reviews.map(({ questionId, roundKind }) => [questionId, roundKind])).toEqual(
+      DUE_IDS.map((id) => [id, 'review']),
+    );
     const dueIds = findDueReviewEventIds(log);
     expect(reviews.every(({ eventId }) => dueIds.has(eventId))).toBe(true);
-    const progress = computeDailyProgress(log, 'UTC', [{ from: '2000-01-01', goal: 10 }], ({ eventId }) => dueIds.has(eventId));
+    const progress = computeDailyProgress(log, 'UTC', [{ from: '2000-01-01', goal: 10 }], ({ eventId }) =>
+      dueIds.has(eventId),
+    );
     expect(progress.reduce((total, { xp }) => total + xp, 0)).toBe(6);
   });
 
