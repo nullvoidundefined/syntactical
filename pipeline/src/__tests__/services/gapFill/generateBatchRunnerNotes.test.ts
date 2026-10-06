@@ -34,3 +34,11 @@ describe('generateBatch runner notes', () => {
         expect(prompt).toContain('ActiveRecord::Schema.define');
     });
 });
+
+describe('generateBatch rails Action Pack note', () => {
+    it('tells a Rails batch that Action Pack is available after require', async () => {
+        const prompt = await captureBatchPrompt();
+        expect(prompt).toMatch(/rails[^\n]*require ['"]action_controller['"]/i);
+        expect(prompt).toContain('ActionController::Parameters');
+    });
+});
