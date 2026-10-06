@@ -2909,7 +2909,7 @@
         ],
         "title": "Array#rotate"
       },
-      "rationale": "The claim is false: rotate(2) shifts elements left by two positions, so the output is [3, 4, 1, 2]; [4, 1, 2, 3] is what rotate(1) would give.",
+      "rationale": "The claim is false: rotate(2) shifts elements left by two positions, so the output is [3, 4, 1, 2]; [4, 1, 2, 3] is what rotate(-1) would give.",
       "type": "bool",
       "provenance": {
         "isHumanReviewed": false,
