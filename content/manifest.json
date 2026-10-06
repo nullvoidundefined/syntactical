@@ -1016,6 +1016,115 @@
           }
         }
       }
+    },
+    {
+      "id": "frontend-security",
+      "kind": "topic",
+      "label": "Frontend Security",
+      "glyph": "FSEC",
+      "tagline": "XSS sinks, sanitizers, and what the browser does and does not block.",
+      "grammar": "plain",
+      "topics": [
+        {
+          "id": "dom-xss",
+          "label": "DOM XSS"
+        },
+        {
+          "id": "html-sanitization",
+          "label": "HTML sanitization"
+        },
+        {
+          "id": "url-handling",
+          "label": "URL parsing and handling"
+        },
+        {
+          "id": "postmessage",
+          "label": "postMessage"
+        },
+        {
+          "id": "prototype-pollution",
+          "label": "Prototype pollution"
+        },
+        {
+          "id": "open-redirect",
+          "label": "Open redirects"
+        },
+        {
+          "id": "csp",
+          "label": "Content Security Policy"
+        },
+        {
+          "id": "cookies",
+          "label": "Cookies"
+        },
+        {
+          "id": "cors",
+          "label": "CORS"
+        },
+        {
+          "id": "framing",
+          "label": "Framing and clickjacking"
+        }
+      ],
+      "misconceptions": [],
+      "banks": {
+        "easy": {
+          "path": "frontend-security/easy.json",
+          "hash": "95e4fb9f90eeab8cce80b8ef5ab7f0cd6b2f158f5d4903dc2b2e92ff3ca210fc",
+          "access": "free",
+          "contentVersion": 3,
+          "topicCounts": {
+            "dom-xss": 10,
+            "html-sanitization": 10,
+            "url-handling": 10,
+            "postmessage": 10,
+            "prototype-pollution": 10,
+            "open-redirect": 10,
+            "csp": 10,
+            "cookies": 10,
+            "cors": 10,
+            "framing": 10
+          }
+        },
+        "medium": {
+          "path": "frontend-security/medium.json",
+          "hash": "52611f37102489310fac198471c304ae8dc5ed5e26edc0431b89cb5ab33dd87b",
+          "access": "paid",
+          "productId": "syntactical.frontend-security.medium",
+          "contentVersion": 2,
+          "topicCounts": {
+            "dom-xss": 10,
+            "html-sanitization": 10,
+            "url-handling": 10,
+            "postmessage": 10,
+            "prototype-pollution": 10,
+            "open-redirect": 10,
+            "csp": 10,
+            "cookies": 10,
+            "cors": 10,
+            "framing": 10
+          }
+        },
+        "hard": {
+          "path": "frontend-security/hard.json",
+          "hash": "8830eeba190e57ab6f2a559ec524ea470923dcc8ba73f580c1d736ecd99d1bec",
+          "access": "paid",
+          "productId": "syntactical.frontend-security.hard",
+          "contentVersion": 2,
+          "topicCounts": {
+            "dom-xss": 10,
+            "html-sanitization": 10,
+            "url-handling": 10,
+            "postmessage": 10,
+            "prototype-pollution": 10,
+            "open-redirect": 10,
+            "csp": 10,
+            "cookies": 10,
+            "cors": 10,
+            "framing": 10
+          }
+        }
+      }
     }
   ]
 }
