@@ -316,47 +316,47 @@
       "banks": {
         "easy": {
           "path": "ruby/easy.json",
-          "hash": "aa70dd049c419fa86662d1c44d11b164c40dae242e4795e05f185b92fe2866a8",
+          "hash": "5d75f0d610d3882f1b880394f8bc5f8967509be63a9358341f70b1dbc791c583",
           "access": "free",
-          "contentVersion": 2,
+          "contentVersion": 3,
           "topicCounts": {
-            "operators-and-types": 10,
-            "numbers-and-math": 10,
-            "strings": 10,
+            "operators-and-types": 7,
+            "wtf": 9,
+            "numbers-and-math": 7,
             "iterables": 10,
+            "optimization": 10,
             "data-structures": 10,
-            "functions-and-scope": 10,
+            "functions-and-scope": 8,
             "errors-and-control-flow": 10,
             "async-and-concurrency": 10,
-            "optimization": 10,
-            "wtf": 10
+            "strings": 10
           }
         },
         "medium": {
           "path": "ruby/medium.json",
-          "hash": "53ba111b585a8d237ca28b2c95936f244c16ef642ceb6cf61a19fefd6edc60e5",
+          "hash": "2e91118a881d7642c969c8d424f5e207392d043e6d2b58abaa497bda6253f1c1",
           "access": "paid",
           "productId": "syntactical.ruby.medium",
-          "contentVersion": 2,
+          "contentVersion": 3,
           "topicCounts": {
             "operators-and-types": 10,
+            "functions-and-scope": 10,
+            "wtf": 10,
             "numbers-and-math": 10,
             "strings": 10,
             "iterables": 10,
             "data-structures": 10,
-            "functions-and-scope": 10,
             "errors-and-control-flow": 10,
             "async-and-concurrency": 10,
-            "optimization": 10,
-            "wtf": 10
+            "optimization": 10
           }
         },
         "hard": {
           "path": "ruby/hard.json",
-          "hash": "ee0afcce7e544b2892616f03f99644b3198ff8b291bb15cae462a00dd1c912de",
+          "hash": "a35bbb18e884dba27a8325d27bfa1ea8302142d0df5ac795032a6c56e3159699",
           "access": "paid",
           "productId": "syntactical.ruby.hard",
-          "contentVersion": 2,
+          "contentVersion": 3,
           "topicCounts": {
             "operators-and-types": 10,
             "numbers-and-math": 10,
