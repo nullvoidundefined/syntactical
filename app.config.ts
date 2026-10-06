@@ -69,6 +69,8 @@ const config: ExpoConfig = {
   extra: {
     apiBaseUrl: readLoopbackUrl('E2E_API_BASE_URL', readApiBaseUrl()),
     contentBaseUrl: CONTENT_BASE_URL,
+    // Links EAS builds to the Expo project @nullvoidundefined/syntactical (created 2026-10-06).
+    eas: { projectId: 'a6a0d002-f2b6-49ac-91d6-d83150e7fa2d' },
     posthogHost: readPostHogHost(),
     posthogKey: readPublicKey('POSTHOG_KEY', 'phc', 'PostHog'),
     revenueCatAppleKey: readPublicKey('REVENUECAT_APPLE_KEY', 'appl'),
