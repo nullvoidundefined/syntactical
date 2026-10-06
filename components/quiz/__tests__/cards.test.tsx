@@ -55,8 +55,8 @@ describe('question cards', () => {
       />,
     );
     expect(screen.getByText('first')).toBeTruthy();
-    expect(screen.getByLabelText('first, incorrect')).toBeTruthy();
-    expect(screen.getByLabelText('second, correct')).toBeTruthy();
+    expect(screen.getByLabelText('A, first, incorrect')).toBeTruthy();
+    expect(screen.getByLabelText('B, second, correct')).toBeTruthy();
   });
 
   it('names each choice button starting with its visible letter, then the choice text', async () => {
@@ -97,8 +97,8 @@ describe('question cards', () => {
         onSelect={jest.fn()}
       />,
     );
-    expect(screen.getByLabelText(`${HOSTILE}, incorrect`)).toBeTruthy();
-    expect(screen.getByLabelText('plain, correct')).toBeTruthy();
+    expect(screen.getByLabelText(`A, ${HOSTILE}, incorrect`)).toBeTruthy();
+    expect(screen.getByLabelText('B, plain, correct')).toBeTruthy();
   });
 
   it('reports a boolean selection and disables both options after answering', async () => {

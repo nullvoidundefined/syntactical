@@ -61,7 +61,7 @@ describe('QuizRound recorded answer under shuffled choices', () => {
   ])('records %s by its bank index %i', async (text, bankIndex, wasCorrect) => {
     jest.spyOn(Math, 'random').mockReturnValue(0);
     await renderRound();
-    await fireEvent.press(screen.getByLabelText(text));
+    await fireEvent.press(screen.getByLabelText(new RegExp(`^[A-D], ${text}$`)));
     expect(mockRecordAnswer).toHaveBeenCalledTimes(1);
     expect(mockRecordAnswer.mock.calls[0]?.[0]).toMatchObject({
       choiceIndex: bankIndex,
