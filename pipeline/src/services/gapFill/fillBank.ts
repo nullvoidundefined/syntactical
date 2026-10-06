@@ -13,6 +13,7 @@ import { ProviderTransientError } from '../../types/ProviderTransientError.js';
 import { countQuestionsNeeded } from './countQuestionsNeeded.js';
 import { generateBatch } from './generateBatch.js';
 import { buildCardKey } from './buildCardKey.js';
+import { normalizePrompt } from './normalizePrompt.js';
 import { readJsonIfPresent } from './readJsonIfPresent.js';
 
 const classificationsSchema = z.record(z.string(), z.looseObject({ topic: z.string() }));
@@ -47,7 +48,8 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
     const oracleFile = join(outRoot, 'oracles', languageId, `${difficulty}.json`);
     const oracles = await readExistingOracles(oracleFile);
     const counts = countByTopic([...questions, ...staged], classified);
-    const existingPrompts = new Set([...questions, ...staged].map(buildCardKey));
+    const existingKeys = new Set([...questions, ...staged].map(buildCardKey));
+    const existingPrompts = new Set([...questions, ...staged].map(({ prompt }) => normalizePrompt(prompt)));
     const added: Question[] = [];
     let isCompleted = false;
     try {
@@ -57,7 +59,7 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
                 const requested = Math.min(10, needed);
                 let outcome;
                 try {
-                    outcome = await generateBatch({ ...args, count: requested, existingPrompts, topic });
+                    outcome = await generateBatch({ ...args, count: requested, existingKeys, existingPrompts, topic });
                 } catch (error) {
                     if (!(error instanceof ModelOutputInvalid) && !(error instanceof ProviderTransientError))
                         throw error;
@@ -68,7 +70,8 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
                 }
                 const { cards, drops } = outcome;
                 for (const { oracle, question } of cards) {
-                    existingPrompts.add(buildCardKey(question));
+                    existingKeys.add(buildCardKey(question));
+                    existingPrompts.add(normalizePrompt(question.prompt));
                     added.push(question);
                     oracles.set(question.id, oracle);
                 }
