@@ -5,6 +5,7 @@ TOPIC: {{TOPIC}}
 You cannot run any code or commands. Do not write shell commands or test steps.
 Reply with only the JSON object, starting with `{`: {"cards": [...]}.
 Each card has type "mc" or "bool", prompt, optional code shown to the learner, query {title, explanation, syntax?, tags?}, and oracle {code, language, setupSql?}.
+Each question's prompt must be one short question of at most 120 characters. Put code in the separate code field. Do not explain the concept or hint at the answer in the prompt; explanations go in query.explanation.
 Use one of the runners in the context for oracle.language.
 An mc card has exactly four choices {text, rationale?} and a zero-based answerIndex. Every wrong choice needs a clear one-line rationale of at most 280 characters.
 A bool card has a boolean answer and a one-line question rationale of at most 280 characters explaining why the opposite answer is wrong.
