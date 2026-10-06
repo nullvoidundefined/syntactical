@@ -694,9 +694,9 @@
       "banks": {
         "easy": {
           "path": "backend-security/easy.json",
-          "hash": "50bd3c390bc4aff46397db66d4c672937a4e4d44d4f44e415f78349c0258aa3f",
+          "hash": "a5530d8303893d2c6f6ca3da7ca2f80e17a95745f21bb456ac9926511b336f12",
           "access": "free",
-          "contentVersion": 3,
+          "contentVersion": 4,
           "topicCounts": {
             "sql-injection": 10,
             "command-injection": 10,
