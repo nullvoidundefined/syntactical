@@ -963,9 +963,9 @@
       "banks": {
         "easy": {
           "path": "rails/easy.json",
-          "hash": "963cbbd69b0f819f097ea315e549308511027d1b8306e8aa1a3c392800402176",
+          "hash": "5f0cb06036f10e2afb1723de2cc84278b4c4362a5f7de482807837ba8ea31e5e",
           "access": "free",
-          "contentVersion": 6,
+          "contentVersion": 7,
           "topicCounts": {
             "activerecord-queries": 10,
             "associations": 10,
@@ -976,21 +976,21 @@
             "security": 10,
             "performance": 10,
             "controllers-and-params": 10,
-            "background-jobs": 9
+            "background-jobs": 10
           }
         },
         "medium": {
           "path": "rails/medium.json",
-          "hash": "0e31288eddb90b4a0188413de3fd4067bad6258937a157d1ec4768b9585dd03d",
+          "hash": "1355417bc28cad3694330369865611c16e690fe87dfdee71b6f74bd4a88f24f5",
           "access": "paid",
           "productId": "syntactical.rails.medium",
-          "contentVersion": 2,
+          "contentVersion": 3,
           "topicCounts": {
             "activerecord-queries": 10,
             "associations": 10,
             "callbacks-and-validations": 10,
             "migrations-and-schema": 10,
-            "controllers-and-params": 6,
+            "controllers-and-params": 10,
             "activesupport": 10,
             "background-jobs": 10,
             "security": 10,
@@ -1000,10 +1000,10 @@
         },
         "hard": {
           "path": "rails/hard.json",
-          "hash": "917627d45d42951203c3eed3f0184bde48bc659fbfd87ffb95b7efcda3999bb9",
+          "hash": "e8fc05a69283f3a72eb61927fa8c2b2145a412678046d0818e2e0ca0dbc93945",
           "access": "paid",
           "productId": "syntactical.rails.hard",
-          "contentVersion": 2,
+          "contentVersion": 3,
           "topicCounts": {
             "activerecord-queries": 10,
             "associations": 10,
@@ -1013,7 +1013,8 @@
             "background-jobs": 10,
             "security": 10,
             "performance": 10,
-            "routing": 10
+            "routing": 10,
+            "controllers-and-params": 10
           }
         }
       }

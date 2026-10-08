@@ -4251,6 +4251,53 @@
         },
         "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
       }
+    },
+    {
+      "id": "gen-rails-easy-1b14a07e",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "report"
+        },
+        {
+          "text": "email",
+          "rationale": "\"email\" was inserted first, but the query orders by priority descending, and its priority of 2 is the lowest of the three."
+        },
+        {
+          "text": "cleanup",
+          "rationale": "\"cleanup\" has priority 3, which is higher than 2 but lower than the 5 belonging to \"report\"."
+        },
+        {
+          "text": "nil",
+          "rationale": "Three rows were created, so `first` returns a record rather than nil."
+        }
+      ],
+      "code": "ActiveRecord::Schema.define do\n  create_table :jobs do |t|\n    t.string :name\n    t.integer :priority\n  end\nend\n\nclass Job < ActiveRecord::Base; end\n\nJob.create!(name: \"email\",   priority: 2)\nJob.create!(name: \"report\",  priority: 5)\nJob.create!(name: \"cleanup\", priority: 3)\n\nputs Job.order(priority: :desc).first.name",
+      "prompt": "What does this program print?",
+      "query": {
+        "explanation": "Many background-job systems drain a queue by priority rather than insertion order. Here `order(priority: :desc)` sorts the rows from the highest priority value to the lowest, so the row with priority 5 comes first and `first.name` returns \"report\". Insertion order only matters as a tiebreaker when priorities are equal, which is not the case here.",
+        "syntax": "Model.order(column: :desc).first",
+        "tags": [
+          "background-jobs",
+          "activerecord",
+          "ordering",
+          "queue"
+        ],
+        "title": "Priority ordering in a job queue"
+      },
+      "type": "mc",
+      "topic": "background-jobs",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
     }
   ],
   "schemaVersion": 2
