@@ -7,6 +7,8 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/contentFixtures';
 import { QuizRound } from '../QuizRound';
 
+import { choiceName } from './choiceName';
+
 const mockRecordAnswer = jest.fn();
 
 jest.mock('../../../state/StatsProvider', () => ({
@@ -61,7 +63,7 @@ describe('QuizRound recorded answer under shuffled choices', () => {
   ])('records %s by its bank index %i', async (text, bankIndex, wasCorrect) => {
     jest.spyOn(Math, 'random').mockReturnValue(0);
     await renderRound();
-    await fireEvent.press(screen.getByLabelText(new RegExp(`^[A-D], ${text}$`)));
+    await fireEvent.press(screen.getByRole('button', { name: choiceName('[A-D]', text) }));
     expect(mockRecordAnswer).toHaveBeenCalledTimes(1);
     expect(mockRecordAnswer.mock.calls[0]?.[0]).toMatchObject({
       choiceIndex: bankIndex,
