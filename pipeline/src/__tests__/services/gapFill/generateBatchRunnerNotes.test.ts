@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { generateBatch } from '../../../services/gapFill/generateBatch.js';
 import type { ModelProvider } from '../../../types/ModelProvider.js';
 
-async function captureBatchPrompt(): Promise<string> {
+async function captureBatchPrompt(languageId = 'rails'): Promise<string> {
     let captured = '';
     const provider = {
         async generate(request: { prompt: string }) {
@@ -18,8 +18,8 @@ async function captureBatchPrompt(): Promise<string> {
         count: 4,
         difficulty: 'easy',
         existingPrompts: new Set<string>(),
-        language: 'rails',
-        languageId: 'rails',
+        language: languageId === 'sql' ? 'postgres' : 'rails',
+        languageId,
         provider,
         run: async () => ({ outcome: 'value', runtimeVersion: 'Rails 8.0.2', value: '' }),
         topic: 'associations',
@@ -40,5 +40,12 @@ describe('generateBatch rails Action Pack note', () => {
         const prompt = await captureBatchPrompt();
         expect(prompt).toMatch(/rails[^\n]*require ['"]action_controller['"]/i);
         expect(prompt).toContain('ActionController::Parameters');
+    });
+});
+
+describe('generateBatch sql shown setup', () => {
+    it('tells a sql batch that the shown code includes CREATE TABLE and INSERT before the query', async () => {
+        const prompt = await captureBatchPrompt('sql');
+        expect(prompt).toMatch(/code[^\n]*(CREATE TABLE|create table)[^\n]*INSERT/);
     });
 });
