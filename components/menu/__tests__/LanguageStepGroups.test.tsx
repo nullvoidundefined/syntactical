@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { LanguageStep } from '../LanguageStep';
 
-function buildEntry(id: string, label: string, kind?: 'language' | 'topic'): LanguageEntry {
+function buildEntry(id: string, label: string, category?: 'frontend' | 'backend' | 'database'): LanguageEntry {
   return {
     banks: {},
     glyph: 'X',
@@ -13,56 +13,70 @@ function buildEntry(id: string, label: string, kind?: 'language' | 'topic'): Lan
     misconceptions: [],
     tagline: `${label} tagline`,
     topics: [],
-    ...(kind ? { kind } : {}),
+    ...(category ? { category } : {}),
   };
 }
 
+function readHeadings() {
+  return screen.getAllByRole('heading').map((heading) => heading.props.children);
+}
+
 describe('LanguageStep groups', () => {
-  it('lists entries without kind under Languages and topic entries under Topics, in that order', async () => {
+  it('shows Frontend, Backend and Database in that order whatever the manifest order', async () => {
     await render(
       <LanguageStep
-        languages={[buildEntry('backend-security', 'Backend Security', 'topic'), buildEntry('python', 'Python')]}
+        languages={[
+          buildEntry('postgres', 'Postgres', 'database'),
+          buildEntry('python', 'Python', 'backend'),
+          buildEntry('javascript', 'JavaScript', 'frontend'),
+        ]}
         onSelectLanguage={jest.fn()}
       />,
     );
-    expect(screen.getAllByRole('heading').map((heading) => heading.props.children)).toEqual(['Languages', 'Topics']);
+    expect(readHeadings()).toEqual(['Frontend', 'Backend', 'Database']);
   });
 
-  it("puts an explicit kind 'language' under Languages", async () => {
-    await render(<LanguageStep languages={[buildEntry('go', 'Go', 'language')]} onSelectLanguage={jest.fn()} />);
-    expect(screen.getAllByRole('heading').map((heading) => heading.props.children)).toEqual(['Languages']);
-  });
-
-  it('shows no Topics heading when no entry is a topic', async () => {
+  it('puts entries under their category in manifest order', async () => {
     await render(
       <LanguageStep
-        languages={[buildEntry('python', 'Python'), buildEntry('postgres', 'Postgres')]}
+        languages={[
+          buildEntry('python', 'Python', 'backend'),
+          buildEntry('javascript', 'JavaScript', 'frontend'),
+          buildEntry('go', 'Go', 'backend'),
+        ]}
         onSelectLanguage={jest.fn()}
       />,
     );
-    expect(screen.queryByRole('heading', { name: 'Topics' })).toBeNull();
+    const titles = screen.getAllByText(/^(Python|JavaScript|Go)$/).map((node) => node.props.children);
+    expect(titles).toEqual(['JavaScript', 'Python', 'Go']);
   });
 
-  it('shows no Languages heading when every entry is a topic', async () => {
+  it('lists an uncategorized entry in a last group headed More', async () => {
     await render(
       <LanguageStep
-        languages={[buildEntry('backend-security', 'Backend Security', 'topic')]}
+        languages={[buildEntry('mystery', 'Mystery'), buildEntry('postgres', 'Postgres', 'database')]}
         onSelectLanguage={jest.fn()}
       />,
     );
-    expect(screen.queryByRole('heading', { name: 'Languages' })).toBeNull();
-    expect(screen.getAllByRole('heading').map((heading) => heading.props.children)).toEqual(['Topics']);
+    expect(readHeadings()).toEqual(['Database', 'More']);
   });
 
-  it('reports the id of a topic entry when pressed', async () => {
+  it('hides empty groups and the old Languages and Topics headings', async () => {
+    await render(<LanguageStep languages={[buildEntry('go', 'Go', 'backend')]} onSelectLanguage={jest.fn()} />);
+    expect(readHeadings()).toEqual(['Backend']);
+    expect(screen.queryByText('Languages')).toBeNull();
+    expect(screen.queryByText('Topics')).toBeNull();
+  });
+
+  it('reports the id of a pressed entry', async () => {
     const onSelectLanguage = jest.fn();
     await render(
       <LanguageStep
-        languages={[buildEntry('python', 'Python'), buildEntry('backend-security', 'Backend Security', 'topic')]}
+        languages={[buildEntry('python', 'Python', 'backend'), buildEntry('postgres', 'Postgres', 'database')]}
         onSelectLanguage={onSelectLanguage}
       />,
     );
-    await fireEvent.press(screen.getByText('Backend Security'));
-    expect(onSelectLanguage).toHaveBeenCalledWith('backend-security');
+    await fireEvent.press(screen.getByText('Postgres'));
+    expect(onSelectLanguage).toHaveBeenCalledWith('postgres');
   });
 });
