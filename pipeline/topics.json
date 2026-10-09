@@ -71,5 +71,17 @@
         "async-and-concurrency",
         "optimization",
         "wtf"
+    ],
+    "sql": [
+        "filtering-and-nulls",
+        "joins",
+        "aggregation-and-grouping",
+        "subqueries",
+        "set-operations",
+        "ordering",
+        "window-functions",
+        "ctes",
+        "data-modification",
+        "constraints-and-keys"
     ]
 }
