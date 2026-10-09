@@ -33,7 +33,8 @@
           "contentVersion": 2,
           "topicCounts": {}
         }
-      }
+      },
+      "category": "backend"
     },
     {
       "id": "postgres",
@@ -67,7 +68,8 @@
           "contentVersion": 2,
           "topicCounts": {}
         }
-      }
+      },
+      "category": "database"
     },
     {
       "id": "javascript",
@@ -101,7 +103,8 @@
           "contentVersion": 2,
           "topicCounts": {}
         }
-      }
+      },
+      "category": "frontend"
     },
     {
       "id": "go",
@@ -370,7 +373,8 @@
             "wtf": 10
           }
         }
-      }
+      },
+      "category": "backend"
     },
     {
       "id": "ruby",
@@ -639,7 +643,8 @@
             "wtf": 10
           }
         }
-      }
+      },
+      "category": "backend"
     },
     {
       "id": "backend-security",
@@ -748,7 +753,8 @@
             "input-validation": 10
           }
         }
-      }
+      },
+      "category": "backend"
     },
     {
       "id": "rails",
@@ -1017,7 +1023,8 @@
             "controllers-and-params": 10
           }
         }
-      }
+      },
+      "category": "backend"
     },
     {
       "id": "frontend-security",
@@ -1126,7 +1133,8 @@
             "framing": 10
           }
         }
-      }
+      },
+      "category": "frontend"
     }
   ]
 }

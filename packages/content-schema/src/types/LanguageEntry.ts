@@ -2,12 +2,14 @@
 import type { DifficultyId } from '../difficulties.js';
 import type { EntryKind } from '../entryKinds.js';
 import type { Grammar } from '../grammars.js';
+import type { TrackCategory } from '../trackCategories.js';
 
 import type { BankEntry } from './BankEntry.js';
 
 export type LanguageEntry = {
   id: string;
   kind?: EntryKind;
+  category?: TrackCategory;
   label: string;
   glyph: string;
   tagline: string;
