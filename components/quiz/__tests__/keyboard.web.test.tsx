@@ -6,6 +6,8 @@ import { Text } from 'react-native';
 import { QuizRound } from '../QuizRound';
 import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/contentFixtures';
 
+import { choiceName } from './choiceName';
+
 // Reduced motion makes the query Modal close without a CSS animation;
 // react-native-web unmounts an animated Modal only on animationend, which
 // jsdom never fires.
@@ -81,16 +83,16 @@ describe('web keyboard navigation in a round', () => {
   });
 
   it.each([
-    ['1', 'A, a, incorrect'],
-    ['3', 'C, c, correct'],
-    ['4', 'D, d, incorrect'],
-    ['A', 'A, a, incorrect'],
-    ['c', 'C, c, correct'],
-    ['D', 'D, d, incorrect'],
+    ['1', choiceName('A', 'a', 'incorrect')],
+    ['3', choiceName('C', 'c', 'correct')],
+    ['4', choiceName('D', 'd', 'incorrect')],
+    ['A', choiceName('A', 'a', 'incorrect')],
+    ['c', choiceName('C', 'c', 'correct')],
+    ['D', choiceName('D', 'd', 'incorrect')],
   ])('key %p selects a choice', (key, label) => {
     render(<RoundHarness question={mcQuestion} />);
     pressKey(key);
-    expect(screen.queryByLabelText(label)).not.toBeNull();
+    expect(screen.queryByRole('button', { name: label })).not.toBeNull();
   });
 
   it.each([
@@ -107,7 +109,7 @@ describe('web keyboard navigation in a round', () => {
     pressKey('t');
     expect(screen.queryByText('Continue')).toBeNull();
     pressKey('2');
-    expect(screen.queryByLabelText('B, b, incorrect')).not.toBeNull();
+    expect(screen.queryByRole('button', { name: choiceName('B', 'b', 'incorrect') })).not.toBeNull();
   });
 
   it('ignores a choice key on a boolean question but answers with T', () => {
@@ -150,9 +152,9 @@ describe('web keyboard navigation in a round', () => {
     pressKey('q');
     pressKey('3');
     pressKey('Escape');
-    expect(screen.queryByLabelText('C, c, correct')).toBeNull();
+    expect(screen.queryByRole('button', { name: choiceName('C', 'c', 'correct') })).toBeNull();
     pressKey('3');
-    expect(screen.queryByLabelText('C, c, correct')).not.toBeNull();
+    expect(screen.queryByRole('button', { name: choiceName('C', 'c', 'correct') })).not.toBeNull();
   });
 
   it('Enter retries and Escape returns to the menu from the results screen', () => {
@@ -257,7 +259,7 @@ describe('web keyboard navigation ignores keys meant for something else', () => 
     if (!field.isConnected) document.body.appendChild(field);
     field.focus();
     for (const key of ['3', 'c', 't', 'q', 'Enter', 'Escape']) pressKeyOn(field, key);
-    expect(screen.queryByLabelText(/^[A-D], c, correct$/)).toBeNull();
+    expect(screen.queryByRole('button', { name: choiceName('[A-D]', 'c', 'correct') })).toBeNull();
     expect(screen.queryByTestId('query-modal')).toBeNull();
     expect(screen.queryByText('round 0')).not.toBeNull();
     expect(screen.queryByText('menu screen')).toBeNull();
@@ -280,15 +282,15 @@ describe('web keyboard navigation ignores keys meant for something else', () => 
     document.body.appendChild(control);
     control.focus();
     pressKeyOn(control, '3');
-    expect(screen.queryByLabelText(/^[A-D], c, correct$/)).not.toBeNull();
+    expect(screen.queryByRole('button', { name: choiceName('[A-D]', 'c', 'correct') })).not.toBeNull();
     control.remove();
   });
 
   it.each(['4', 'D'])('ignores choice key %p on a question with three choices', (key) => {
     render(<RoundHarness question={threeChoiceQuestion} />);
     pressKey(key);
-    expect(screen.queryByLabelText(/^[A-D], c, correct$/)).toBeNull();
+    expect(screen.queryByRole('button', { name: choiceName('[A-D]', 'c', 'correct') })).toBeNull();
     pressKey('3');
-    expect(screen.queryByLabelText(/^[A-D], c, correct$/)).not.toBeNull();
+    expect(screen.queryByRole('button', { name: choiceName('[A-D]', 'c', 'correct') })).not.toBeNull();
   });
 });

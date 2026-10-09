@@ -4,6 +4,7 @@ import { computeDailyProgress, findDueReviewEventIds } from '@syntactical/progre
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
+import { choiceName } from '../../components/quiz/__tests__/choiceName';
 import { createQueryClient } from '../../config/queryClient';
 import { EVENT_LOG_STORAGE_KEY } from '../../constants/appConfig';
 import { BUNDLED_BANKS } from '../../services/content/bundledBanks.generated';
@@ -15,10 +16,6 @@ import ReviewScreen from '../review';
 const PYTHON_EASY = (BUNDLED_BANKS['python/easy'] as { questions: Question[] }).questions;
 const DUE_IDS = ['py-easy-01', 'py-easy-02', 'py-easy-03'];
 const TEN_DAYS_MS = 10 * 86_400_000;
-
-function escapeRegExp(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 function seedMiss(questionId: string, answeredAt: string, bankKey = 'python/easy'): LoggedAnswerEvent {
   return {
@@ -71,9 +68,7 @@ describe('review route', () => {
     for (const id of DUE_IDS) {
       const { answerIndex, choices, prompt } = findQuestion(id);
       await waitFor(() => expect(screen.queryByText(prompt)).not.toBeNull());
-      await fireEvent.press(
-        screen.getAllByRole('button', { name: new RegExp(`^[A-D], ${escapeRegExp(choices[answerIndex].text)}$`) })[0],
-      );
+      await fireEvent.press(screen.getAllByRole('button', { name: choiceName('[A-D]', choices[answerIndex].text) })[0]);
       await fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
     }
     expect(screen.queryByText('Review / Due / Complete')).not.toBeNull();
