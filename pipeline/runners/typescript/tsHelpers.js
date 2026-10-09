@@ -7,6 +7,7 @@ function compileSnippet(source) {
         strict: true,
         noEmit: true,
         target: ts.ScriptTarget.ES2022,
+        lib: ['lib.es2022.d.ts'],
         module: ts.ModuleKind.CommonJS,
         types: [],
     };
