@@ -9,4 +9,5 @@ export const ORACLE_LANGUAGES: Record<string, OracleLanguage> = {
     python: 'python',
     rails: 'rails',
     ruby: 'ruby',
+    typescript: 'typescript',
 };

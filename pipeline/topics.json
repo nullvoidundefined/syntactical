@@ -71,5 +71,17 @@
         "async-and-concurrency",
         "optimization",
         "wtf"
+    ],
+    "typescript": [
+        "types-and-inference",
+        "unions-and-narrowing",
+        "interfaces-vs-types",
+        "generics",
+        "utility-types",
+        "literal-types",
+        "any-unknown-never",
+        "classes",
+        "enums-and-const",
+        "compile-vs-runtime"
     ]
 }

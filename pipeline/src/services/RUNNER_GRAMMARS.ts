@@ -11,4 +11,5 @@ export const RUNNER_GRAMMARS: Record<OracleLanguage, Grammar> = {
     python: 'python',
     rails: 'ruby',
     ruby: 'ruby',
+    typescript: 'typescript',
 };
