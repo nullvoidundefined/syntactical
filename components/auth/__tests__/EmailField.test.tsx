@@ -1,5 +1,6 @@
 // The email input on native: every place the app asks for an email shows a visible
-// "Email address" label tied to the input, and the input is as wide as the password input.
+// "Email address" label, hidden from assistive technology so the input's own aria-label is the one
+// announced name, and the input class names keep it as wide as the password input.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -48,13 +49,23 @@ describe.each([
 ])('the email input on the %s', (_name, renderStep) => {
   it('has the visible text "Email address" and is found by that label', async () => {
     await renderStep();
-    expect(screen.getByText('Email address')).toBeTruthy();
+    expect(screen.getByText('Email address', { includeHiddenElements: true })).toBeTruthy();
     expect(screen.getByLabelText('Email address')).toBeTruthy();
+  });
+
+  it('exposes the name "Email address" once: the visible label text is hidden from assistive technology', async () => {
+    await renderStep();
+    expect(screen.queryAllByText('Email address')).toHaveLength(0);
+    const label = screen.getByText('Email address', { includeHiddenElements: true });
+    expect(label.props['aria-hidden']).toBe(true);
+    expect(screen.getAllByLabelText('Email address')).toHaveLength(1);
   });
 });
 
-describe('the email input width', () => {
-  it('stretches to the column like the password input: wrapper and input are both w-full', () => {
+// This is a class-presence guard on the source text, not a layout check: it cannot tell whether
+// the input really renders full width, only that the w-full classes are still there.
+describe('the email input width classes (source-text class-presence guard, not a layout check)', () => {
+  it('keeps w-full on the wrapper and the input, and no fixed width on the password input', () => {
     const field = readFileSync(join(__dirname, '..', 'EmailField.tsx'), 'utf8');
     expect(field).toMatch(/<View className="[^"]*\bw-full\b/);
     expect(field).toMatch(/<TextInput[^>]*className="[^"]*\bw-full\b/s);

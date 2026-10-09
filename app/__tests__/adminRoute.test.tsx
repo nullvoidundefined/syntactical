@@ -262,18 +262,35 @@ describe('admin route for an admin', () => {
     await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
     const off = getSwitch(PYTHON_MEDIUM_NAME);
     const on = getSwitch(POSTGRES_HARD_NAME);
-    expect(within(off).getByTestId('switch-track-off')).toBeTruthy();
-    expect(within(off).getByTestId('switch-thumb-off')).toBeTruthy();
+    expect(within(off).getByTestId('switch-track-off', { includeHiddenElements: true })).toBeTruthy();
+    expect(within(off).getByTestId('switch-thumb-off', { includeHiddenElements: true })).toBeTruthy();
     expect(within(off).queryByTestId('switch-track-on')).toBeNull();
-    expect(within(on).getByTestId('switch-track-on')).toBeTruthy();
-    expect(within(on).getByTestId('switch-thumb-on')).toBeTruthy();
+    expect(within(on).getByTestId('switch-track-on', { includeHiddenElements: true })).toBeTruthy();
+    expect(within(on).getByTestId('switch-thumb-on', { includeHiddenElements: true })).toBeTruthy();
     expect(within(on).queryByTestId('switch-track-off')).toBeNull();
+  });
+
+  it('hides the decorative track and thumb from assistive technology', async () => {
+    await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
+    const off = getSwitch(PYTHON_MEDIUM_NAME);
+    for (const testID of ['switch-track-off', 'switch-thumb-off']) {
+      const part = within(off).getByTestId(testID, { includeHiddenElements: true });
+      expect(part.props['aria-hidden']).toBe(true);
+    }
+    const track = within(off).getByTestId('switch-track-off', { includeHiddenElements: true });
+    expect(track.props.importantForAccessibility).toBe('no-hide-descendants');
+    expect(within(off).queryByTestId('switch-track-off')).toBeNull();
+  });
+
+  it('draws the switch with no focus:ring class, leaving the focus outline to the platform like other controls', async () => {
+    await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
+    expect(String(getSwitch(PYTHON_MEDIUM_NAME).props.className ?? '')).not.toMatch(/\bfocus:ring/);
   });
 
   it('draws a purchased switch as an on track that is disabled, beside the Purchased text', async () => {
     await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
     const purchased = getSwitch(JAVASCRIPT_MEDIUM_NAME);
-    expect(within(purchased).getByTestId('switch-track-on')).toBeTruthy();
+    expect(within(purchased).getByTestId('switch-track-on', { includeHiddenElements: true })).toBeTruthy();
     expect(readIsDisabled(purchased)).toBe(true);
     expect(screen.getByText('Purchased')).toBeTruthy();
   });

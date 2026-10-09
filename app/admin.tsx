@@ -69,14 +69,17 @@ export default function AdminScreen() {
                       aria-disabled={isDisabled}
                       disabled={isDisabled}
                       onPress={() => void setAccess(productId, !isGranted)}
-                      className={`flex-row items-center gap-2 rounded-full focus:ring-2 focus:ring-ink ${isDisabled ? 'opacity-50' : ''}`}
+                      className={`flex-row items-center gap-2 rounded-full ${isDisabled ? 'opacity-50' : ''}`}
                     >
                       <View
                         testID={isGranted ? 'switch-track-on' : 'switch-track-off'}
+                        aria-hidden
+                        importantForAccessibility="no-hide-descendants"
                         className={`h-7 w-12 justify-center rounded-full border-2 px-0.5 ${isGranted ? 'border-signal bg-signal' : 'border-ink bg-surface-raised'}`}
                       >
                         <View
                           testID={isGranted ? 'switch-thumb-on' : 'switch-thumb-off'}
+                          aria-hidden
                           className={`h-5 w-5 rounded-full ${isGranted ? 'self-end bg-obsidian' : 'self-start bg-ink'}`}
                         />
                       </View>
