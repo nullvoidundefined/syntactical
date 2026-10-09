@@ -149,6 +149,46 @@ describe.skipIf(SKIP_DOCKER)('runOracle typescript (docker)', () => {
             },
             RUN_TIMEOUT_MS,
         );
+
+        it(
+            'countTypeErrors cannot read host files: an import of /etc/passwd is an unresolved module and only a count is printed',
+            async () => {
+                const run = await runTypescript(
+                    'const { countTypeErrors } = require("/harness/tsHelpers.js");\nconsole.log(countTypeErrors(\'import x from "/etc/passwd";\\n/// <reference path="/etc/hostname" />\\nexport const y = x;\'));',
+                );
+
+                expect(run.outcome).toBe('value');
+                expect(run.value).toMatch(/^[1-9]\d*$/);
+            },
+            RUN_TIMEOUT_MS,
+        );
+
+        it(
+            'type-checks against ES2022 only, without the DOM library',
+            async () => {
+                const run = await runTypescript(
+                    'const { countTypeErrors } = require("/harness/tsHelpers.js");\nconsole.log(countTypeErrors("const t: string = document.title;"));',
+                );
+
+                expect(run).toMatchObject({ outcome: 'value', value: '1' });
+            },
+            RUN_TIMEOUT_MS,
+        );
+
+        it(
+            'runs both helpers in one oracle within the sandbox limits',
+            async () => {
+                const run = await runTypescript(
+                    [
+                        'const { countTypeErrors, typeOf } = require("/harness/tsHelpers.js");',
+                        'console.log(countTypeErrors("const n: number = 1;") + " " + typeOf("const xs = [1, 2];", "xs"));',
+                    ].join('\n'),
+                );
+
+                expect(run).toMatchObject({ outcome: 'value', value: '0 number[]' });
+            },
+            RUN_TIMEOUT_MS,
+        );
     });
 
     describe('sandbox', () => {
