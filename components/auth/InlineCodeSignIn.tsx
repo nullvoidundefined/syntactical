@@ -1,7 +1,8 @@
 // The code steps for the signed-in email, shown inside Settings when a password change needs a
 // fresh sign-in: the code is sent as the steps open, there is no email field, and the code is
-// verified through the AuthProvider code sign-in. A refusal is announced in one role="alert"
-// region by reason only; the email and the code are never echoed.
+// verified through the AuthProvider code sign-in. "Back to password" hands control back to the
+// caller. A refusal is announced in one role="alert" region by reason only; the email and the
+// code are never echoed.
 import { useEffect, useRef, useState } from 'react';
 
 import { Text, View } from 'react-native';
@@ -9,6 +10,7 @@ import { Text, View } from 'react-native';
 import { RATE_LIMITED_MESSAGE } from '../../services/auth/passwordFailureMessages';
 import { useAuth, type AuthResult } from '../../state/AuthProvider';
 
+import { AuthButton } from './AuthButton';
 import { CodeStep } from './CodeStep';
 
 type FailureReason = Extract<AuthResult, { isOk: false }>['reason'];
@@ -27,10 +29,11 @@ const ERROR_MESSAGES: Record<FailureReason, string> = {
 
 type InlineCodeSignInProps = {
   email: string;
+  onBack: () => void;
   onSignedIn: () => void;
 };
 
-export function InlineCodeSignIn({ email, onSignedIn }: InlineCodeSignInProps) {
+export function InlineCodeSignIn({ email, onBack, onSignedIn }: InlineCodeSignInProps) {
   const { requestCode, verifyCode } = useAuth();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
@@ -83,6 +86,7 @@ export function InlineCodeSignIn({ email, onSignedIn }: InlineCodeSignInProps) {
         onResend={() => void sendCode(true)}
         onSubmit={(code) => void verify(code)}
       />
+      <AuthButton label="Back to password" isPrimary={false} isDisabled={isBusy} onPress={onBack} />
     </View>
   );
 }
