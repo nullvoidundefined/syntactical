@@ -1,0 +1,4037 @@
+{
+  "questions": [
+    {
+      "id": "gen-sql-easy-a6be2e89",
+      "answer": false,
+      "code": "CREATE TABLE pairs (a INTEGER, b INTEGER);\nINSERT INTO pairs VALUES (5,5),(NULL,NULL),(1,2);\n\nSELECT count(*) FROM pairs WHERE a = b;",
+      "prompt": "Does this query count the row where both a and b are NULL?",
+      "query": {
+        "explanation": "Comparing NULL to NULL with = yields unknown, not true, so that row is filtered out. Only the (5,5) row matches, giving a count of 1. To treat two NULLs as matching you need IS NOT DISTINCT FROM or an explicit IS NULL test.",
+        "syntax": "WHERE a = b",
+        "tags": [
+          "null",
+          "comparison",
+          "where"
+        ],
+        "title": "NULL = NULL is unknown"
+      },
+      "rationale": "True is wrong because NULL = NULL evaluates to unknown rather than true, so that row is excluded and only the (5,5) row is counted.",
+      "type": "bool",
+      "topic": "filtering-and-nulls",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-110eb09d",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "IS NULL does match NULL values, and two rows have NULL scores."
+        },
+        {
+          "text": "1",
+          "rationale": "Two separate rows were inserted with a NULL score, not one."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "4",
+          "rationale": "That is the total row count; the two rows with scores 10 and 7 are filtered out."
+        }
+      ],
+      "code": "CREATE TABLE tests (id INTEGER, score INTEGER);\nINSERT INTO tests VALUES (1,10),(2,NULL),(3,NULL),(4,7);\n\nSELECT count(*) FROM tests WHERE score IS NULL;",
+      "prompt": "What number does this query print?",
+      "query": {
+        "explanation": "Two of the four rows have a NULL score, and IS NULL is the only operator that tests for NULL, so the count is 2. The rows with scores 10 and 7 are excluded.",
+        "syntax": "WHERE column IS NULL",
+        "tags": [
+          "null",
+          "is-null",
+          "count"
+        ],
+        "title": "Counting NULLs with IS NULL"
+      },
+      "type": "mc",
+      "topic": "filtering-and-nulls",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-49274677",
+      "answer": false,
+      "code": "CREATE TABLE employees (name VARCHAR(10), manager_id INTEGER);\nINSERT INTO employees VALUES ('Ann',1),('Bo',NULL),('Cy',3);\n\nSELECT count(*) FROM employees WHERE manager_id IS NOT NULL;",
+      "prompt": "Does this query count the row whose manager_id is NULL?",
+      "query": {
+        "explanation": "IS NOT NULL keeps only rows with an actual value, so the row for Bo (manager_id NULL) is excluded and the count is 2 (Ann and Cy).",
+        "syntax": "WHERE column IS NOT NULL",
+        "tags": [
+          "null",
+          "is-not-null",
+          "where"
+        ],
+        "title": "IS NOT NULL excludes NULL rows"
+      },
+      "rationale": "True is wrong because IS NOT NULL is true only for rows holding a real value, so the NULL manager_id row is filtered out and the count is 2.",
+      "type": "bool",
+      "topic": "filtering-and-nulls",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-cbb59507",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "Three different rows satisfy the condition, not just one."
+        },
+        {
+          "text": "2",
+          "rationale": "That would be the answer for qty = 0 alone; COALESCE also turns the NULL row into 0."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "The row with qty 5 is not converted to 0 and does not match."
+        }
+      ],
+      "code": "CREATE TABLE stock (id INTEGER, qty INTEGER);\nINSERT INTO stock VALUES (1,0),(2,NULL),(3,5),(4,0);\n\nSELECT count(*) FROM stock WHERE COALESCE(qty, 0) = 0;",
+      "prompt": "What value does this query print?",
+      "query": {
+        "explanation": "COALESCE(qty, 0) replaces NULL with 0 before the comparison, so the two rows with qty 0 and the row with qty NULL all match, giving 3. Only the row with qty 5 fails.",
+        "syntax": "COALESCE(expr, fallback)",
+        "tags": [
+          "null",
+          "coalesce",
+          "where"
+        ],
+        "title": "COALESCE makes NULLs comparable"
+      },
+      "type": "mc",
+      "topic": "filtering-and-nulls",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-6c4db868",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "Three rows have a non-NULL email, not one."
+        },
+        {
+          "text": "2",
+          "rationale": "Only one row has a NULL email, so three non-NULL values remain."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "That is count(*); the NULL email row is skipped by count(email)."
+        }
+      ],
+      "code": "CREATE TABLE users (id INTEGER, email VARCHAR(20));\nINSERT INTO users VALUES (1,'a@x.com'),(2,NULL),(3,'b@x.com'),(4,'c@x.com');\n\nSELECT count(email) FROM users;",
+      "prompt": "What does this query output?",
+      "query": {
+        "explanation": "count(email) counts only rows where email is not NULL. Three of the four rows have an address, so the result is 3; count(*) would return 4.",
+        "syntax": "count(column)",
+        "tags": [
+          "null",
+          "count",
+          "aggregate"
+        ],
+        "title": "count(column) skips NULLs"
+      },
+      "type": "mc",
+      "topic": "filtering-and-nulls",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-37844367",
+      "answer": true,
+      "code": "CREATE TABLE visits (city VARCHAR(10));\nINSERT INTO visits VALUES ('Rome'),('Oslo');\n\nSELECT count(*) FROM visits WHERE city NOT IN ('Rome', NULL);",
+      "prompt": "Is the count printed by this query 0?",
+      "query": {
+        "explanation": "NOT IN expands to city <> 'Rome' AND city <> NULL. The second comparison is always unknown, so the whole condition can never be true and no rows survive, making the count 0 even for 'Oslo'.",
+        "syntax": "WHERE column NOT IN (list)",
+        "tags": [
+          "null",
+          "not-in",
+          "where"
+        ],
+        "title": "NOT IN with a NULL in the list"
+      },
+      "rationale": "False is wrong because the NULL in the list makes the comparison unknown for every row, so even 'Oslo' is filtered out and nothing is counted.",
+      "type": "bool",
+      "topic": "filtering-and-nulls",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-64398972",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "0"
+        },
+        {
+          "text": "1",
+          "rationale": "No row can satisfy a comparison against NULL, since the result is unknown rather than true."
+        },
+        {
+          "text": "2",
+          "rationale": "The two non-NULL prices still fail: 10 > NULL and 50 > NULL are both unknown."
+        },
+        {
+          "text": "3",
+          "rationale": "That is the total row count, but the filter rejects every row."
+        }
+      ],
+      "code": "CREATE TABLE products (id INTEGER, price INTEGER);\nINSERT INTO products VALUES (1,10),(2,NULL),(3,50);\n\nSELECT count(*) FROM products WHERE price > NULL;",
+      "prompt": "What value is printed by this statement?",
+      "query": {
+        "explanation": "Any comparison operator used with NULL yields unknown, so price > NULL is never true and no row passes the filter; the count is 0.",
+        "syntax": "WHERE column > NULL",
+        "tags": [
+          "null",
+          "comparison",
+          "where"
+        ],
+        "title": "Comparing to NULL never matches"
+      },
+      "type": "mc",
+      "topic": "filtering-and-nulls",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-79002346",
+      "answer": true,
+      "code": "CREATE TABLE tickets (id INTEGER, status VARCHAR(10));\nINSERT INTO tickets VALUES (1,'open'),(2,'closed'),(3,NULL);\n\nSELECT count(*) FROM tickets WHERE status <> 'open' OR status IS NULL;",
+      "prompt": "Does this query count both the 'closed' row and the NULL row?",
+      "query": {
+        "explanation": "status <> 'open' alone matches only 'closed', because the NULL row evaluates to unknown. The extra OR status IS NULL branch brings the NULL row back in, so both rows are counted and the result is 2.",
+        "syntax": "WHERE col <> value OR col IS NULL",
+        "tags": [
+          "null",
+          "or",
+          "where"
+        ],
+        "title": "Adding IS NULL to an inequality"
+      },
+      "rationale": "False is wrong because the OR status IS NULL branch is true for the NULL row, so it joins the 'closed' row and the count is 2.",
+      "type": "bool",
+      "topic": "filtering-and-nulls",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-a8c7df12",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "Customer 2 has no matching order, so one unmatched row remains."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "Customers 1 and 3 both match orders, so they are removed by the IS NULL filter."
+        },
+        {
+          "text": "3",
+          "rationale": "That is every customer; the filter keeps only those without a matching order."
+        }
+      ],
+      "code": "CREATE TABLE customers (id INTEGER);\nINSERT INTO customers VALUES (1),(2),(3);\nCREATE TABLE orders (id INTEGER, customer_id INTEGER);\nINSERT INTO orders VALUES (10,1),(11,3),(12,1);\n\nSELECT count(*)\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id\nWHERE o.customer_id IS NULL;",
+      "prompt": "What number does this query print?",
+      "query": {
+        "explanation": "The LEFT JOIN fills unmatched customers with NULL columns from orders, and the IS NULL filter keeps exactly those rows. Customers 1 and 3 have orders, so only customer 2 is left and the count is 1.",
+        "syntax": "LEFT JOIN ... WHERE right.col IS NULL",
+        "tags": [
+          "null",
+          "left-join",
+          "anti-join"
+        ],
+        "title": "IS NULL after a LEFT JOIN"
+      },
+      "type": "mc",
+      "topic": "filtering-and-nulls",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-487f6825",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "0"
+        },
+        {
+          "text": "1",
+          "rationale": "This assumes only tag 'b' passes, but comparing 'b' to the NULL in skip yields UNKNOWN, so that row is filtered out too."
+        },
+        {
+          "text": "2",
+          "rationale": "This assumes the NULL in skip is ignored and both 'b' and NULL tags pass; a NULL tag can never satisfy a WHERE predicate."
+        },
+        {
+          "text": "3",
+          "rationale": "All three rows would only count if the predicate were TRUE everywhere, but the row with tag 'a' clearly matches skip and is excluded."
+        }
+      ],
+      "code": "CREATE TABLE items (id INTEGER, tag VARCHAR(10));\nINSERT INTO items (id, tag) VALUES (1, 'a'), (2, NULL), (3, 'b');\nCREATE TABLE skip (tag VARCHAR(10));\nINSERT INTO skip (tag) VALUES ('a'), (NULL);\n\nSELECT count(*)\nFROM items\nWHERE tag NOT IN (SELECT tag FROM skip);\n\n-- items(id, tag): (1,'a'), (2,NULL), (3,'b')\n-- skip(tag): ('a'), (NULL)",
+      "prompt": "What single value does this SELECT print?",
+      "query": {
+        "explanation": "NOT IN expands to a chain of <> comparisons joined by AND. Because skip contains a NULL, every comparison chain ends in UNKNOWN rather than TRUE: 'b' <> 'a' is TRUE but 'b' <> NULL is UNKNOWN, so the whole predicate is UNKNOWN. The row with tag = 'a' is plainly FALSE, and the row with tag = NULL is UNKNOWN as well. WHERE keeps only TRUE rows, so no rows survive and count(*) prints 0.",
+        "syntax": "NOT IN (subquery)",
+        "tags": [
+          "null",
+          "not-in",
+          "three-valued-logic",
+          "filtering"
+        ],
+        "title": "NOT IN with a NULL in the subquery"
+      },
+      "type": "mc",
+      "topic": "filtering-and-nulls",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-5ec1c0c0",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "Employee 1 with dept_id 10 does match dept 10, so the result is not empty."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "dept_id 20 has no matching dept row, so employee 2 contributes nothing."
+        },
+        {
+          "text": "3",
+          "rationale": "An inner join drops non-matching rows; only one of the three employees matches."
+        }
+      ],
+      "code": "CREATE TABLE emp (id INT, dept_id INT);\nCREATE TABLE dept (id INT, dname VARCHAR(10));\nINSERT INTO emp VALUES (1, 10), (2, 20), (3, NULL);\nINSERT INTO dept VALUES (10, 'Sales'), (30, 'IT');\n\nSELECT count(*) FROM emp JOIN dept ON emp.dept_id = dept.id;",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "An inner join emits a row only when the ON condition is true. Employee 1 pairs with dept 10. Employee 2 has dept_id 20, which is not in dept, and employee 3 has a NULL dept_id, which never equals anything. So exactly one row is counted.",
+        "syntax": "SELECT ... FROM a JOIN b ON a.col = b.col",
+        "tags": [
+          "joins",
+          "inner-join",
+          "count"
+        ],
+        "title": "Inner join keeps only matching pairs"
+      },
+      "type": "mc",
+      "topic": "joins",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-1a5ba47b",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "2",
+          "rationale": "A left join keeps unmatched left rows, so student 2 still produces a row."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "Each student matches at most one club here, so no row is duplicated."
+        },
+        {
+          "text": "5",
+          "rationale": "The join is not a cross product; only matching club rows are attached."
+        }
+      ],
+      "code": "CREATE TABLE students (id INT, club_id INT);\nCREATE TABLE clubs (id INT, cname VARCHAR(10));\nINSERT INTO students VALUES (1, 100), (2, 200), (3, 100);\nINSERT INTO clubs VALUES (100, 'Chess'), (300, 'Art');\n\nSELECT count(*) FROM students s LEFT JOIN clubs c ON s.club_id = c.id;",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "A left join returns all rows from the left table. Students 1 and 3 match club 100, and student 2 has no matching club but is still kept with NULLs for the club columns. That gives 3 rows.",
+        "syntax": "SELECT ... FROM a LEFT JOIN b ON a.col = b.col",
+        "tags": [
+          "joins",
+          "left-join",
+          "count"
+        ],
+        "title": "LEFT JOIN preserves every left row"
+      },
+      "type": "mc",
+      "topic": "joins",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-e93a3f3c",
+      "answerIndex": 3,
+      "choices": [
+        {
+          "text": "2",
+          "rationale": "That is just the size count; each size pairs with all three colors."
+        },
+        {
+          "text": "3",
+          "rationale": "That is just the color count; a cross join multiplies rather than keeps one side."
+        },
+        {
+          "text": "5",
+          "rationale": "Row counts are multiplied, not added, by a cross join."
+        },
+        {
+          "text": "6"
+        }
+      ],
+      "code": "CREATE TABLE colors (cname VARCHAR(10));\nCREATE TABLE sizes (label VARCHAR(10));\nINSERT INTO colors VALUES ('red'), ('blue'), ('green');\nINSERT INTO sizes VALUES ('S'), ('M');\n\nSELECT count(*) FROM colors CROSS JOIN sizes;",
+      "prompt": "What number does this script print?",
+      "query": {
+        "explanation": "A cross join pairs every left row with every right row and has no ON clause. With 3 colors and 2 sizes the result has 3 * 2 = 6 rows.",
+        "syntax": "SELECT ... FROM a CROSS JOIN b",
+        "tags": [
+          "joins",
+          "cross-join",
+          "count"
+        ],
+        "title": "CROSS JOIN multiplies row counts"
+      },
+      "type": "mc",
+      "topic": "joins",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-f8f16daf",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "Only an inner join would keep just the matching id 3."
+        },
+        {
+          "text": "3",
+          "rationale": "That is the left-join answer; it ignores the unmatched t2 row with id 4."
+        },
+        {
+          "text": "4"
+        },
+        {
+          "text": "5",
+          "rationale": "The matched id 3 appears once as a single paired row, not twice."
+        }
+      ],
+      "code": "CREATE TABLE t1 (id INT);\nCREATE TABLE t2 (id INT);\nINSERT INTO t1 VALUES (1), (2), (3);\nINSERT INTO t2 VALUES (3), (4);\n\nSELECT count(*) FROM t1 FULL OUTER JOIN t2 ON t1.id = t2.id;",
+      "prompt": "What value does the script below print?",
+      "query": {
+        "explanation": "Id 3 matches and gives 1 paired row. Ids 1 and 2 from t1 are unmatched and kept with NULLs on the right. Id 4 from t2 is unmatched and kept with NULLs on the left. Total 1 + 2 + 1 = 4 rows.",
+        "syntax": "SELECT ... FROM a FULL OUTER JOIN b ON a.col = b.col",
+        "tags": [
+          "joins",
+          "full-outer-join",
+          "count"
+        ],
+        "title": "FULL OUTER JOIN keeps unmatched rows from both sides"
+      },
+      "type": "mc",
+      "topic": "joins",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-27179000",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "2",
+          "rationale": "Three employees (2, 3 and 4) have an existing manager row, not two."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "Staff 1 has a NULL mgr_id, which matches no manager row in an inner join."
+        },
+        {
+          "text": "5",
+          "rationale": "Each employee matches at most one manager, so no row is duplicated."
+        }
+      ],
+      "code": "CREATE TABLE staff (id INT, mgr_id INT);\nINSERT INTO staff VALUES (1, NULL), (2, 1), (3, 1), (4, 2);\n\nSELECT count(*) FROM staff e JOIN staff m ON e.mgr_id = m.id;",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "The table is joined to itself, pairing each employee with its manager row. Staff 2, 3 and 4 have managers that exist, so they produce 3 rows. Staff 1 has a NULL mgr_id and is dropped by the inner join.",
+        "syntax": "SELECT ... FROM t a JOIN t b ON a.parent_id = b.id",
+        "tags": [
+          "joins",
+          "self-join",
+          "count"
+        ],
+        "title": "Self join on a manager column"
+      },
+      "type": "mc",
+      "topic": "joins",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-f12b7443",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "Order 1 matches customer 5, so one non-NULL c.id value exists."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "Only one order matches a customer; orders 2 and 3 get NULL for c.id."
+        },
+        {
+          "text": "3",
+          "rationale": "That is the row count; count(c.id) skips the two NULL c.id values."
+        }
+      ],
+      "code": "CREATE TABLE orders (id INT, cust_id INT);\nCREATE TABLE customers (id INT);\nINSERT INTO orders VALUES (1, 5), (2, 6), (3, NULL);\nINSERT INTO customers VALUES (5);\n\nSELECT count(c.id) FROM orders o LEFT JOIN customers c ON o.cust_id = c.id;",
+      "prompt": "What figure does this final SELECT print?",
+      "query": {
+        "explanation": "The left join produces 3 rows, but only order 1 gets a customer row, so c.id is NULL for orders 2 and 3. count(c.id) ignores NULLs and returns 1.",
+        "syntax": "count(column) -- skips NULL values",
+        "tags": [
+          "joins",
+          "left-join",
+          "aggregates"
+        ],
+        "title": "count on the right-hand column of a LEFT JOIN"
+      },
+      "type": "mc",
+      "topic": "joins",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-64909c80",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "35"
+        },
+        {
+          "text": "30",
+          "rationale": "That drops the amount 5, but customer 2 does match an order row and is included."
+        },
+        {
+          "text": "15",
+          "rationale": "That counts only one order per customer; sum() adds every joined row, including both of customer 1's orders."
+        },
+        {
+          "text": "45",
+          "rationale": "No extra amount is added for customer 3; its unmatched row contributes NULL, which sum() ignores."
+        }
+      ],
+      "code": "CREATE TABLE customers (id INT);\nINSERT INTO customers VALUES (1),(2),(3);\nCREATE TABLE orders (customer_id INT, amount INT);\nINSERT INTO orders VALUES (1,10),(1,20),(2,5);\n\nSELECT sum(o.amount)\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id;\n\n-- customers(id): 1, 2, 3\n-- orders(customer_id, amount): (1,10), (1,20), (2,5)",
+      "prompt": "What value does this query print?",
+      "query": {
+        "explanation": "The LEFT JOIN produces one row per match plus one row for each unmatched left row. Customer 1 matches twice (10 and 20), customer 2 matches once (5), and customer 3 produces a single row where o.amount is NULL. sum() skips NULL values, so the total is 10 + 20 + 5 = 35.",
+        "syntax": "SELECT sum(col) FROM t1 LEFT JOIN t2 ON ...",
+        "tags": [
+          "joins",
+          "left-join",
+          "aggregates"
+        ],
+        "title": "Aggregating over a LEFT JOIN"
+      },
+      "type": "mc",
+      "topic": "joins",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-077c6660",
+      "answer": true,
+      "code": "CREATE TABLE customers (id INT);\nINSERT INTO customers VALUES (1),(2);\nCREATE TABLE orders (customer_id INT);\nINSERT INTO orders VALUES (1),(1),(99);\n\nSELECT count(*)\nFROM customers c\nRIGHT JOIN orders o ON o.customer_id = c.id;\n\n-- customers(id): 1, 2\n-- orders(customer_id): 1, 1, 99",
+      "prompt": "Is the count printed by this RIGHT JOIN equal to 3?",
+      "query": {
+        "explanation": "A RIGHT JOIN keeps every row of the right table. Both orders with customer_id 1 match customer 1, and the order with customer_id 99 has no matching customer but is still kept with NULL customer columns. count(*) counts all three result rows.",
+        "syntax": "SELECT count(*) FROM t1 RIGHT JOIN t2 ON ...",
+        "tags": [
+          "joins",
+          "right-join",
+          "count"
+        ],
+        "title": "RIGHT JOIN keeps unmatched right rows"
+      },
+      "rationale": "False would require dropping the order with customer_id 99, but a RIGHT JOIN preserves every right-table row, so the count is 2 matched + 1 unmatched = 3.",
+      "type": "bool",
+      "topic": "joins",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-61db808d",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "none"
+        },
+        {
+          "text": "paid",
+          "rationale": "That status belongs to the order for customer 1; customer 2 has no order row of its own."
+        },
+        {
+          "text": "no rows at all",
+          "rationale": "A LEFT JOIN keeps customer 2 even with no match, so exactly one row is returned."
+        },
+        {
+          "text": "2",
+          "rationale": "The SELECT list returns the status column (or its default), not the customer id."
+        }
+      ],
+      "code": "CREATE TABLE customers (id INT);\nINSERT INTO customers VALUES (1),(2);\nCREATE TABLE orders (customer_id INT, status VARCHAR(10));\nINSERT INTO orders VALUES (1,'paid');\n\nSELECT coalesce(o.status, 'none')\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id\nWHERE c.id = 2;\n\n-- customers(id): 1, 2\n-- orders(customer_id, status): (1, 'paid')",
+      "prompt": "What does this query print?",
+      "query": {
+        "explanation": "Customer 2 has no matching order, but a LEFT JOIN still returns the customer row with every right-table column set to NULL. coalesce(o.status, 'none') therefore replaces the NULL with the string none.",
+        "syntax": "SELECT coalesce(t2.col, 'default') FROM t1 LEFT JOIN t2 ON ...",
+        "tags": [
+          "joins",
+          "left-join",
+          "null"
+        ],
+        "title": "NULL columns from an unmatched LEFT JOIN row"
+      },
+      "type": "mc",
+      "topic": "joins",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-d6f2f6f3",
+      "answer": false,
+      "code": "CREATE TABLE a (x INT);\nINSERT INTO a VALUES (1),(2);\nCREATE TABLE b (y INT);\nINSERT INTO b VALUES (2),(3);\n\nSELECT count(*)\nFROM a\nJOIN b ON a.x < b.y;\n\n-- a(x): 1, 2\n-- b(y): 2, 3",
+      "prompt": "Is the count printed by this join 4?",
+      "query": {
+        "explanation": "A join condition can be any predicate. Of the four possible pairs, (1,2), (1,3) and (2,3) satisfy a.x < b.y, while (2,2) does not because 2 is not less than 2. So count(*) prints 3.",
+        "syntax": "SELECT count(*) FROM a JOIN b ON a.col < b.col",
+        "tags": [
+          "joins",
+          "non-equi-join",
+          "count"
+        ],
+        "title": "Joining on a non-equality condition"
+      },
+      "rationale": "True would mean all four pairs qualify, but (2,2) fails the strict a.x < b.y test, leaving only (1,2), (1,3) and (2,3), so the printed count is 3.",
+      "type": "bool",
+      "topic": "joins",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-cd660c40",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "35"
+        },
+        {
+          "text": "75",
+          "rationale": "75 is the sum of every row; GROUP BY keeps the west amount of 40 in a separate group."
+        },
+        {
+          "text": "25",
+          "rationale": "25 is only the largest east amount, not the sum of the group."
+        },
+        {
+          "text": "2",
+          "rationale": "2 is the number of east rows, which is what count(*) would print, not sum(amount)."
+        }
+      ],
+      "code": "CREATE TABLE sales (region VARCHAR(10), amount INT);\nINSERT INTO sales VALUES ('east', 10), ('east', 25), ('west', 40);\n\nSELECT sum(amount) FROM sales GROUP BY region HAVING region = 'east';",
+      "prompt": "What is printed by this script?",
+      "query": {
+        "explanation": "GROUP BY region splits the rows into an 'east' group (10 and 25) and a 'west' group (40). sum(amount) is computed per group, so the east row shows 10 + 25 = 35; the west amount never enters that group.",
+        "syntax": "SELECT sum(col) FROM t GROUP BY g",
+        "tags": [
+          "group-by",
+          "sum"
+        ],
+        "title": "SUM inside a group"
+      },
+      "type": "mc",
+      "topic": "aggregation-and-grouping",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-4ff058cf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "6",
+          "rationale": "6 is the row count; DISTINCT collapses repeated user_id values before counting."
+        },
+        {
+          "text": "1",
+          "rationale": "1 is just the number of result rows, not the value inside that row."
+        },
+        {
+          "text": "4",
+          "rationale": "There are only three different user_id values: 1, 2 and 3."
+        }
+      ],
+      "code": "CREATE TABLE visits (user_id INT);\nINSERT INTO visits VALUES (1), (1), (2), (3), (3), (3);\n\nSELECT count(DISTINCT user_id) FROM visits;",
+      "prompt": "What single number does this script print?",
+      "query": {
+        "explanation": "count(DISTINCT user_id) first removes duplicate values, leaving 1, 2 and 3, then counts them, so it prints 3 even though the table holds six rows.",
+        "syntax": "SELECT count(DISTINCT col) FROM t",
+        "tags": [
+          "count",
+          "distinct"
+        ],
+        "title": "count(DISTINCT col)"
+      },
+      "type": "mc",
+      "topic": "aggregation-and-grouping",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-7586c3be",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "ann"
+        },
+        {
+          "text": "bob",
+          "rationale": "bob's only order totals 30, which fails the HAVING condition sum(total) > 100."
+        },
+        {
+          "text": "ann and bob",
+          "rationale": "bob's group sums to 30 and is removed by HAVING, so only one name is printed."
+        },
+        {
+          "text": "no rows are printed",
+          "rationale": "ann's two orders sum to 110, which is greater than 100, so one row survives."
+        }
+      ],
+      "code": "CREATE TABLE orders (cust VARCHAR(10), total INT);\nINSERT INTO orders VALUES ('ann', 50), ('ann', 60), ('bob', 30);\n\nSELECT cust FROM orders GROUP BY cust HAVING sum(total) > 100;",
+      "prompt": "Which customer name does this script print?",
+      "query": {
+        "explanation": "Groups are ann (50 + 60 = 110) and bob (30). HAVING is applied after aggregation, so only the ann group passes sum(total) > 100 and bob is dropped.",
+        "syntax": "SELECT g FROM t GROUP BY g HAVING sum(col) > n",
+        "tags": [
+          "having",
+          "group-by"
+        ],
+        "title": "HAVING filters groups"
+      },
+      "type": "mc",
+      "topic": "aggregation-and-grouping",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-af04a2b2",
+      "answer": true,
+      "code": "CREATE TABLE t (g VARCHAR(5), v INT);\nINSERT INTO t VALUES ('a', 1), ('a', NULL), ('b', 5);\n\nSELECT sum(v) FROM t WHERE g = 'a';",
+      "prompt": "Does this query print 1?",
+      "query": {
+        "explanation": "WHERE keeps the two 'a' rows, and sum() skips NULL inputs instead of propagating them, so the total is just 1.",
+        "syntax": "SELECT sum(col) FROM t WHERE ...",
+        "tags": [
+          "sum",
+          "null"
+        ],
+        "title": "SUM ignores NULL"
+      },
+      "rationale": "Aggregates discard NULL arguments, so the NULL row does not make the result NULL; the sum of the remaining value is 1.",
+      "type": "bool",
+      "topic": "aggregation-and-grouping",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-9bedd27b",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "-2"
+        },
+        {
+          "text": "3",
+          "rationale": "3 is the larger oslo value; min() returns the smallest, and -2 is less than 3."
+        },
+        {
+          "text": "20",
+          "rationale": "20 is lima's temperature and sits in a different group."
+        },
+        {
+          "text": "1",
+          "rationale": "min() returns an existing value from the group, not a sum or average of 3 and -2."
+        }
+      ],
+      "code": "CREATE TABLE temps (city VARCHAR(10), deg INT);\nINSERT INTO temps VALUES ('oslo', 3), ('oslo', -2), ('lima', 20);\n\nSELECT min(deg) FROM temps GROUP BY city HAVING city = 'oslo';",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "min(deg) is computed separately for each city. The oslo group holds 3 and -2, and the smallest of those is -2; lima's 20 belongs to a different group.",
+        "syntax": "SELECT min(col) FROM t GROUP BY g",
+        "tags": [
+          "min",
+          "group-by"
+        ],
+        "title": "MIN per group"
+      },
+      "type": "mc",
+      "topic": "aggregation-and-grouping",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-ec601cad",
+      "answer": false,
+      "code": "CREATE TABLE t (v INT);\nINSERT INTO t VALUES (5), (7);\n\nSELECT sum(v) FROM t WHERE v > 100;",
+      "prompt": "Does this query print 0?",
+      "query": {
+        "explanation": "The WHERE clause removes both rows, and with no input rows sum() returns NULL rather than 0. Only count() returns 0 for an empty input.",
+        "syntax": "SELECT sum(col) FROM t WHERE ...",
+        "tags": [
+          "sum",
+          "null",
+          "empty-group"
+        ],
+        "title": "SUM over no rows"
+      },
+      "rationale": "sum() over an empty set of rows is NULL, not 0, so the printed value is NULL; wrap it in COALESCE to get 0.",
+      "type": "bool",
+      "topic": "aggregation-and-grouping",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-1463bc34",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "5",
+          "rationale": "5 is the total row count; GROUP BY counts only the rows in the info group."
+        },
+        {
+          "text": "1",
+          "rationale": "1 would be the number of distinct info values, not the number of info rows."
+        },
+        {
+          "text": "2",
+          "rationale": "The table contains three 'info' rows, not two."
+        }
+      ],
+      "code": "CREATE TABLE logs (lvl VARCHAR(10));\nINSERT INTO logs VALUES ('info'), ('warn'), ('info'), ('info'), ('error');\n\nSELECT count(*) FROM logs GROUP BY lvl HAVING lvl = 'info';",
+      "prompt": "What number does this script print?",
+      "query": {
+        "explanation": "GROUP BY lvl creates one group per level, and count(*) counts the rows inside each group. Three rows have lvl = 'info', so that row prints 3.",
+        "syntax": "SELECT count(*) FROM t GROUP BY g",
+        "tags": [
+          "count",
+          "group-by"
+        ],
+        "title": "count(*) per group"
+      },
+      "type": "mc",
+      "topic": "aggregation-and-grouping",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-68ce16a8",
+      "answer": true,
+      "code": "CREATE TABLE p (cat VARCHAR(5));\nINSERT INTO p VALUES (NULL), (NULL), ('x');\n\nSELECT count(*) FROM p GROUP BY cat HAVING cat IS NULL;",
+      "prompt": "Does this query print 2?",
+      "query": {
+        "explanation": "GROUP BY treats all NULL keys as one single group, so the two NULL rows land together and count(*) for that group prints 2.",
+        "syntax": "SELECT count(*) FROM t GROUP BY g HAVING g IS NULL",
+        "tags": [
+          "group-by",
+          "null",
+          "count"
+        ],
+        "title": "GROUP BY and NULL keys"
+      },
+      "rationale": "GROUP BY puts all NULL keys in a single group instead of one group per NULL row, so the single NULL group contains both rows and counts 2.",
+      "type": "bool",
+      "topic": "aggregation-and-grouping",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-28f2eaf3",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "15"
+        },
+        {
+          "text": "10",
+          "rationale": "10 would be the result if the NULL counted as a zero and the sum were divided by 3."
+        },
+        {
+          "text": "30",
+          "rationale": "30 is the sum of the non-NULL points, not their average."
+        },
+        {
+          "text": "20",
+          "rationale": "20 is the largest value in the group, which is what max(pts) would print."
+        }
+      ],
+      "code": "CREATE TABLE scores (team VARCHAR(5), pts INT);\nINSERT INTO scores VALUES ('red', 10), ('red', 20), ('red', NULL);\n\nSELECT CAST(avg(pts) AS INT) FROM scores GROUP BY team;",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "avg() ignores NULL values entirely, so it divides 10 + 20 by 2 (not by 3) and returns 15. The NULL row is not treated as a zero.",
+        "syntax": "SELECT avg(col) FROM t GROUP BY g",
+        "tags": [
+          "avg",
+          "null",
+          "group-by"
+        ],
+        "title": "AVG skips NULL rows"
+      },
+      "type": "mc",
+      "topic": "aggregation-and-grouping",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-dcc187b8",
+      "answer": false,
+      "code": "CREATE TABLE enroll (course VARCHAR(5), student VARCHAR(5));\nINSERT INTO enroll VALUES ('m1', 'a'), ('m1', 'b'), ('m2', 'c');\n\nSELECT count(*) FROM enroll GROUP BY course HAVING count(*) > 1;",
+      "prompt": "Does this query print 3?",
+      "query": {
+        "explanation": "The groups are m1 with 2 rows and m2 with 1 row. HAVING count(*) > 1 keeps only m1, so the single printed value is 2; the overall total of 3 is never produced.",
+        "syntax": "SELECT count(*) FROM t GROUP BY g HAVING count(*) > n",
+        "tags": [
+          "having",
+          "count",
+          "group-by"
+        ],
+        "title": "HAVING on an aggregate"
+      },
+      "rationale": "GROUP BY counts rows per course rather than overall, and HAVING keeps only the m1 group, so the printed count is 2 instead of the table total 3.",
+      "type": "bool",
+      "topic": "aggregation-and-grouping",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-6b387f12",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "pen",
+          "rationale": "Price 2 is the lowest price, so it does not equal max(price)."
+        },
+        {
+          "text": "book"
+        },
+        {
+          "text": "mug",
+          "rationale": "Price 7 is not the maximum; 12 is, so the mug row is filtered out."
+        },
+        {
+          "text": "12",
+          "rationale": "The subquery returns 12, but the outer SELECT prints the name column, not the price."
+        }
+      ],
+      "code": "CREATE TABLE products (id INT, name VARCHAR(20), price INT);\n\n-- setup\nINSERT INTO products (id, name, price) VALUES\n  (1, 'pen', 2), (2, 'book', 12), (3, 'mug', 7);\n\nSELECT name\nFROM products\nWHERE price = (SELECT max(price) FROM products);",
+      "prompt": "Which name does this query print?",
+      "query": {
+        "explanation": "A scalar subquery returns a single value. (SELECT max(price) FROM products) evaluates to 12, so the WHERE clause keeps only the row whose price is 12, and that row's name is 'book'.",
+        "syntax": "WHERE col = (SELECT agg(col) FROM table)",
+        "tags": [
+          "subqueries",
+          "scalar-subquery",
+          "aggregate"
+        ],
+        "title": "Scalar subquery in WHERE"
+      },
+      "type": "mc",
+      "topic": "subqueries",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-01138ad3",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "2",
+          "rationale": "Three order rows (1, 3 and 4) belong to the east customers 1 and 3, not two."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "Orders 2 and 5 belong to customer 2, who is in the west, so they are excluded."
+        },
+        {
+          "text": "5",
+          "rationale": "5 is the total number of order rows; the IN filter removes the two west orders."
+        }
+      ],
+      "code": "CREATE TABLE customers (id INT, region VARCHAR(10));\nCREATE TABLE orders (id INT, customer_id INT);\n\n-- setup\nINSERT INTO customers (id, region) VALUES\n  (1, 'east'), (2, 'west'), (3, 'east');\nINSERT INTO orders (id, customer_id) VALUES\n  (1, 1), (2, 2), (3, 3), (4, 1), (5, 2);\n\nSELECT count(*)\nFROM orders\nWHERE customer_id IN (SELECT id FROM customers WHERE region = 'east');",
+      "prompt": "What number does this query print?",
+      "query": {
+        "explanation": "The subquery returns the ids 1 and 3 (the east customers). Order rows 1, 4 (customer 1) and 3 (customer 3) match, so count(*) prints 3.",
+        "syntax": "WHERE col IN (SELECT col FROM table WHERE ...)",
+        "tags": [
+          "subqueries",
+          "in",
+          "count"
+        ],
+        "title": "IN with a subquery list"
+      },
+      "type": "mc",
+      "topic": "subqueries",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-50180a21",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "Departments 1 and 3 do have matching employees, so EXISTS is true for them."
+        },
+        {
+          "text": "1",
+          "rationale": "Both department 1 and department 3 have at least one employee, so two rows qualify."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "Department 2 (hr) has no employees, so EXISTS is false and it is not counted."
+        }
+      ],
+      "code": "CREATE TABLE departments (id INT, name VARCHAR(10));\nCREATE TABLE employees (id INT, dept_id INT);\n\n-- setup\nINSERT INTO departments (id, name) VALUES\n  (1, 'sales'), (2, 'hr'), (3, 'it');\nINSERT INTO employees (id, dept_id) VALUES\n  (1, 1), (2, 1), (3, 3);\n\nSELECT count(*)\nFROM departments d\nWHERE EXISTS (SELECT 1 FROM employees e WHERE e.dept_id = d.id);",
+      "prompt": "What number does this query print?",
+      "query": {
+        "explanation": "EXISTS is true when the correlated subquery finds at least one row. Departments 1 and 3 have employees; department 2 has none, so count(*) prints 2.",
+        "syntax": "WHERE EXISTS (SELECT 1 FROM other WHERE other.fk = outer.id)",
+        "tags": [
+          "subqueries",
+          "exists",
+          "correlated"
+        ],
+        "title": "Correlated EXISTS subquery"
+      },
+      "type": "mc",
+      "topic": "subqueries",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-18ac029c",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "60",
+          "rationale": "That is only customer 3's total; customer 1's total of 70 also passes the filter."
+        },
+        {
+          "text": "70",
+          "rationale": "That is only customer 1's total; customer 3's total of 60 also passes the filter."
+        },
+        {
+          "text": "130"
+        },
+        {
+          "text": "150",
+          "rationale": "150 sums every sale, but customer 2's total of 20 is removed by WHERE total > 50."
+        }
+      ],
+      "code": "CREATE TABLE sales (id INT, customer_id INT, amount INT);\n\n-- setup\nINSERT INTO sales (id, customer_id, amount) VALUES\n  (1, 1, 30), (2, 1, 40), (3, 2, 20), (4, 3, 60);\n\nSELECT sum(total)\nFROM (\n  SELECT customer_id, sum(amount) AS total\n  FROM sales\n  GROUP BY customer_id\n) t\nWHERE total > 50;",
+      "prompt": "What value does this query print?",
+      "query": {
+        "explanation": "The derived table produces one row per customer: 70, 20 and 60. WHERE keeps 70 and 60, and the outer sum adds them to 130.",
+        "syntax": "SELECT ... FROM (SELECT ... GROUP BY ...) alias WHERE ...",
+        "tags": [
+          "subqueries",
+          "derived-table",
+          "group-by"
+        ],
+        "title": "Subquery in FROM (derived table)"
+      },
+      "type": "mc",
+      "topic": "subqueries",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-a9bb1466",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "Row 2 has value 30, which is greater than both 20 and 25, so one row does qualify."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "Value 10 is not greater than 20 or 25, and 20 and 25 are not greater than themselves."
+        },
+        {
+          "text": "3",
+          "rationale": "Only one of the four rows beats every value returned by the subquery."
+        }
+      ],
+      "code": "CREATE TABLE scores (id INT, value INT, grade VARCHAR(2));\n\n-- setup\nINSERT INTO scores (id, value, grade) VALUES\n  (1, 10, 'a'), (2, 30, 'a'), (3, 20, 'b'), (4, 25, 'b');\n\nSELECT count(*)\nFROM scores\nWHERE value > ALL (SELECT value FROM scores WHERE grade = 'b');",
+      "prompt": "What number does this query print?",
+      "query": {
+        "explanation": "The subquery returns 20 and 25. A row passes only if its value exceeds both, so only the row with value 30 qualifies and count(*) prints 1.",
+        "syntax": "WHERE col > ALL (SELECT col FROM table WHERE ...)",
+        "tags": [
+          "subqueries",
+          "all",
+          "comparison"
+        ],
+        "title": "Comparison with ALL"
+      },
+      "type": "mc",
+      "topic": "subqueries",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-d593d002",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "ana",
+          "rationale": "Customer 1 has orders 1 and 2, so EXISTS is true and NOT EXISTS excludes this row."
+        },
+        {
+          "text": "bo"
+        },
+        {
+          "text": "cy",
+          "rationale": "Customer 3 has order 3, so the correlated subquery finds a row and cy is excluded."
+        },
+        {
+          "text": "no rows",
+          "rationale": "Customer 2 has no matching order row, so exactly one name is printed."
+        }
+      ],
+      "code": "CREATE TABLE customers (id INT, name VARCHAR(10));\nCREATE TABLE orders (id INT, customer_id INT);\n\n-- setup\nINSERT INTO customers (id, name) VALUES (1, 'ana'), (2, 'bo'), (3, 'cy');\nINSERT INTO orders (id, customer_id) VALUES (1, 1), (2, 1), (3, 3);\n\nSELECT c.name\nFROM customers c\nWHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id);",
+      "prompt": "Which value does this query print?",
+      "query": {
+        "explanation": "NOT EXISTS keeps only outer rows whose correlated subquery finds nothing. Customers 1 and 3 have orders; customer 2 does not, so 'bo' is printed.",
+        "syntax": "WHERE NOT EXISTS (SELECT 1 FROM other WHERE other.fk = outer.id)",
+        "tags": [
+          "subqueries",
+          "not-exists",
+          "correlated"
+        ],
+        "title": "NOT EXISTS for unmatched rows"
+      },
+      "type": "mc",
+      "topic": "subqueries",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-5d19aff6",
+      "answer": true,
+      "code": "CREATE TABLE a (id INT);\nINSERT INTO a VALUES (1),(2),(3);\nCREATE TABLE b (id INT);\nINSERT INTO b VALUES (2),(NULL);\n\nSELECT count(*) FROM a WHERE id NOT IN (SELECT id FROM b);",
+      "prompt": "Is the count printed by this NOT IN query 0?",
+      "query": {
+        "explanation": "Table b contains a NULL, so `id NOT IN (2, NULL)` evaluates to UNKNOWN for every row of a (never TRUE), and no row passes the WHERE clause. The printed count is 0, even though 1 and 3 are visibly absent from b.",
+        "syntax": "NOT IN (subquery)",
+        "tags": [
+          "subqueries",
+          "null",
+          "not-in"
+        ],
+        "title": "NOT IN with a NULL in the subquery"
+      },
+      "rationale": "The NULL makes the NOT IN test UNKNOWN for all three rows, so the answer is not 2 or any non-zero count.",
+      "type": "bool",
+      "topic": "subqueries",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-f9eca8ee",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "20"
+        },
+        {
+          "text": "30",
+          "rationale": "30 is the raw 'west' amount before the minimum is subtracted."
+        },
+        {
+          "text": "10",
+          "rationale": "10 is the overall minimum itself, not the difference 30 - 10."
+        },
+        {
+          "text": "0",
+          "rationale": "The minimum is taken over all rows, not only the 'west' row, so the result is not 0."
+        }
+      ],
+      "code": "CREATE TABLE sales (region VARCHAR(10), amt INT);\nINSERT INTO sales VALUES ('east',10),('west',30),('east',20);\n\nSELECT amt - (SELECT min(amt) FROM sales) AS d\nFROM sales\nWHERE region = 'west';",
+      "prompt": "What value does this query print?",
+      "query": {
+        "explanation": "The subquery `(SELECT min(amt) FROM sales)` is uncorrelated and returns the single value 10 over all rows. The outer query keeps only the 'west' row with amt = 30, so the printed difference is 30 - 10 = 20.",
+        "syntax": "SELECT expr - (SELECT agg FROM t) FROM t WHERE ...",
+        "tags": [
+          "subqueries",
+          "scalar-subquery"
+        ],
+        "title": "Scalar subquery in the SELECT list"
+      },
+      "type": "mc",
+      "topic": "subqueries",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-75fd949d",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2"
+        },
+        {
+          "text": "1",
+          "rationale": "1 would be the result of `> ALL`, which requires beating 20 too; only 25 does that."
+        },
+        {
+          "text": "3",
+          "rationale": "Price 5 is not greater than either 10 or 20, so it is excluded."
+        },
+        {
+          "text": "0",
+          "rationale": "The subquery returns rows and two prices exceed 10, so the count is not 0."
+        }
+      ],
+      "code": "CREATE TABLE p (id INT, price INT);\nINSERT INTO p VALUES (1,5),(2,15),(3,25);\nCREATE TABLE lim (v INT);\nINSERT INTO lim VALUES (10),(20);\n\nSELECT count(*) FROM p\nWHERE price > ANY (SELECT v FROM lim);",
+      "prompt": "What number does this query print?",
+      "query": {
+        "explanation": "`> ANY` is true when the value exceeds at least one subquery row, i.e. when it exceeds the smallest value 10. Prices 15 and 25 qualify, while 5 does not, so count(*) prints 2.",
+        "syntax": "expr > ANY (subquery)",
+        "tags": [
+          "subqueries",
+          "any"
+        ],
+        "title": "Comparison with ANY"
+      },
+      "type": "mc",
+      "topic": "subqueries",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-a02be292",
+      "answer": false,
+      "code": "CREATE TABLE emp (id INT, dept VARCHAR(5), sal INT);\nINSERT INTO emp VALUES (1,'a',100),(2,'a',200),(3,'b',150);\n\nSELECT count(*) FROM emp e\nWHERE sal = (SELECT max(sal) FROM emp m WHERE m.dept = e.dept);",
+      "prompt": "Does this correlated subquery query print 1?",
+      "query": {
+        "explanation": "The inner query is correlated on dept, so it returns the maximum salary of each row's own department: 200 for dept 'a' and 150 for dept 'b'. Rows 2 and 3 match, so the printed count is 2.",
+        "syntax": "WHERE col = (SELECT agg FROM t2 WHERE t2.k = t1.k)",
+        "tags": [
+          "subqueries",
+          "correlated"
+        ],
+        "title": "Correlated subquery per group"
+      },
+      "rationale": "The subquery is correlated by dept rather than global, so the top earner of each of the two departments qualifies and the count is 2, not 1.",
+      "type": "bool",
+      "topic": "subqueries",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-528473e0",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "3",
+          "rationale": "3 is the number of distinct values in t1 alone; UNION also contributes 4 from t2."
+        },
+        {
+          "text": "4"
+        },
+        {
+          "text": "6",
+          "rationale": "Duplicates do not survive UNION, so 2 and 3 are each counted only once."
+        },
+        {
+          "text": "7",
+          "rationale": "7 is the total input row count, which is what UNION ALL would give."
+        }
+      ],
+      "code": "CREATE TABLE t1 (x int);\nINSERT INTO t1 VALUES (1), (2), (2), (3);\nCREATE TABLE t2 (x int);\nINSERT INTO t2 VALUES (2), (3), (4);\n\nSELECT count(*) FROM (SELECT x FROM t1 UNION SELECT x FROM t2) u;",
+      "prompt": "What number does this script print?",
+      "query": {
+        "explanation": "UNION combines the two result sets and then removes duplicate rows. The distinct values across both tables are 1, 2, 3 and 4, so the derived table has 4 rows and count(*) prints 4.",
+        "syntax": "SELECT ... UNION SELECT ...",
+        "tags": [
+          "set-operations",
+          "union",
+          "distinct"
+        ],
+        "title": "UNION removes duplicates"
+      },
+      "type": "mc",
+      "topic": "set-operations",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-bbbeecab",
+      "answer": false,
+      "code": "CREATE TABLE t1 (x int);\nINSERT INTO t1 VALUES (1), (2), (2), (3);\nCREATE TABLE t2 (x int);\nINSERT INTO t2 VALUES (2), (3), (4);\n\nSELECT count(*) FROM (SELECT x FROM t1 UNION ALL SELECT x FROM t2) u;",
+      "prompt": "Does this UNION ALL query print 4?",
+      "query": {
+        "explanation": "UNION ALL does no duplicate removal, so the derived table holds all 4 rows of t1 plus all 3 rows of t2. The printed count is 7, not 4.",
+        "syntax": "SELECT ... UNION ALL SELECT ...",
+        "tags": [
+          "set-operations",
+          "union-all"
+        ],
+        "title": "UNION ALL keeps every row"
+      },
+      "rationale": "4 would be the count of distinct values; UNION ALL keeps all 4 + 3 = 7 input rows, so the query prints 7.",
+      "type": "bool",
+      "topic": "set-operations",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-be06f803",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "Only 2 and 3 appear in both tables; 5 and 7 appear in just one table each."
+        },
+        {
+          "text": "4",
+          "rationale": "INTERSECT does not pair up duplicate rows from each side; it returns distinct common values."
+        },
+        {
+          "text": "5",
+          "rationale": "5 is a value in i1, not the number of rows returned."
+        }
+      ],
+      "code": "CREATE TABLE i1 (x int);\nINSERT INTO i1 VALUES (2), (2), (3), (5);\nCREATE TABLE i2 (x int);\nINSERT INTO i2 VALUES (2), (3), (3), (7);\n\nSELECT count(*) FROM (SELECT x FROM i1 INTERSECT SELECT x FROM i2) u;",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "INTERSECT keeps only values present in both inputs and removes duplicates. The common values are 2 and 3, so the derived table has 2 rows.",
+        "syntax": "SELECT ... INTERSECT SELECT ...",
+        "tags": [
+          "set-operations",
+          "intersect"
+        ],
+        "title": "INTERSECT returns distinct common values"
+      },
+      "type": "mc",
+      "topic": "set-operations",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-b302e142",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "2 exists in e2, so EXCEPT removes it from the result."
+        },
+        {
+          "text": "3",
+          "rationale": "3 exists in e2, so both copies are removed from the result."
+        },
+        {
+          "text": "no rows",
+          "rationale": "The value 1 is absent from e2, so one row does survive the EXCEPT."
+        }
+      ],
+      "code": "CREATE TABLE e1 (x int);\nINSERT INTO e1 VALUES (1), (2), (3), (3);\nCREATE TABLE e2 (x int);\nINSERT INTO e2 VALUES (2), (3);\n\nSELECT x FROM e1 EXCEPT SELECT x FROM e2;",
+      "prompt": "What single value does this script print?",
+      "query": {
+        "explanation": "EXCEPT returns the distinct rows of the first query that do not appear in the second. Values 2 and 3 appear in e2, so only 1 remains.",
+        "syntax": "SELECT ... EXCEPT SELECT ...",
+        "tags": [
+          "set-operations",
+          "except"
+        ],
+        "title": "EXCEPT removes values found in the second query"
+      },
+      "type": "mc",
+      "topic": "set-operations",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-392ac963",
+      "answer": true,
+      "code": "CREATE TABLE f1 (x int);\nINSERT INTO f1 VALUES (1), (2), (3);\nCREATE TABLE f2 (x int);\nINSERT INTO f2 VALUES (3), (4);\n\nSELECT x FROM f2 EXCEPT SELECT x FROM f1;",
+      "prompt": "Does this query print 4?",
+      "query": {
+        "explanation": "Here f2 is the left side, so the result is the values of f2 missing from f1. Only 4 qualifies, since 3 is present in f1, so the query prints 4.",
+        "syntax": "SELECT ... EXCEPT SELECT ...",
+        "tags": [
+          "set-operations",
+          "except",
+          "order"
+        ],
+        "title": "EXCEPT is not symmetric"
+      },
+      "rationale": "The left side is f2, whose only value absent from f1 is 4; swapping the operands would instead print 1 and 2.",
+      "type": "bool",
+      "topic": "set-operations",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-4123285b",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "The NULL row is kept by UNION, and count(*) counts rows regardless of NULL values."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "UNION considers the two NULLs from n1 duplicates and keeps just one of them."
+        },
+        {
+          "text": "3",
+          "rationale": "3 is the total number of input rows, which only UNION ALL would preserve."
+        }
+      ],
+      "code": "CREATE TABLE n1 (x int);\nINSERT INTO n1 VALUES (NULL), (NULL);\nCREATE TABLE n2 (x int);\nINSERT INTO n2 VALUES (NULL);\n\nSELECT count(*) FROM (SELECT x FROM n1 UNION SELECT x FROM n2) u;",
+      "prompt": "What number does this script print?",
+      "query": {
+        "explanation": "For duplicate elimination in set operations, two NULLs are considered the same. All three input rows collapse to a single NULL row, and count(*) counts that row, printing 1.",
+        "syntax": "SELECT ... UNION SELECT ...",
+        "tags": [
+          "set-operations",
+          "union",
+          "null"
+        ],
+        "title": "UNION treats NULLs as duplicates"
+      },
+      "type": "mc",
+      "topic": "set-operations",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-e9c5d7b6",
+      "answer": false,
+      "code": "CREATE TABLE a7 (x int);\nINSERT INTO a7 VALUES (1), (1), (1);\nCREATE TABLE b7 (x int);\nINSERT INTO b7 VALUES (1), (1);\n\nSELECT count(*) FROM (SELECT x FROM a7 INTERSECT ALL SELECT x FROM b7) u;",
+      "prompt": "Does this INTERSECT ALL query print 3?",
+      "query": {
+        "explanation": "INTERSECT ALL returns each value as many times as the minimum of its counts in the two inputs. The value 1 appears 3 times in a7 and 2 times in b7, so 2 rows are returned.",
+        "syntax": "SELECT ... INTERSECT ALL SELECT ...",
+        "tags": [
+          "set-operations",
+          "intersect-all",
+          "multiset"
+        ],
+        "title": "INTERSECT ALL keeps the smaller multiplicity"
+      },
+      "rationale": "INTERSECT ALL uses the minimum multiplicity, min(3, 2) = 2, so the query prints 2 rather than a7's 3 rows.",
+      "type": "bool",
+      "topic": "set-operations",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-55308da7",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "1 is what plain EXCEPT would give, since it first removes duplicates and then drops every 1."
+        },
+        {
+          "text": "2",
+          "rationale": "EXCEPT ALL removes only one copy of 1, so two 1s survive along with the row 2."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "4 is a8's row count; one copy of 1 is removed by the single matching row in b8."
+        }
+      ],
+      "code": "CREATE TABLE a8 (x int);\nINSERT INTO a8 VALUES (1), (1), (1), (2);\nCREATE TABLE b8 (x int);\nINSERT INTO b8 VALUES (1);\n\nSELECT count(*) FROM (SELECT x FROM a8 EXCEPT ALL SELECT x FROM b8) u;",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "EXCEPT ALL removes one copy from the left side for each matching row on the right. One copy of 1 is removed, leaving two 1s plus the row 2, so 3 rows remain.",
+        "syntax": "SELECT ... EXCEPT ALL SELECT ...",
+        "tags": [
+          "set-operations",
+          "except-all",
+          "multiset"
+        ],
+        "title": "EXCEPT ALL subtracts row counts"
+      },
+      "type": "mc",
+      "topic": "set-operations",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-cac52db9",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "35"
+        },
+        {
+          "text": "50",
+          "rationale": "50 is the UNION ALL sum, which counts the duplicate 5 and duplicate 10 twice."
+        },
+        {
+          "text": "15",
+          "rationale": "15 is the sum of the distinct values of a9 only and ignores 20 from b9."
+        },
+        {
+          "text": "20",
+          "rationale": "20 is the largest single value in the result, not the sum of the rows."
+        }
+      ],
+      "code": "CREATE TABLE a9 (x int);\nINSERT INTO a9 VALUES (5), (5), (10);\nCREATE TABLE b9 (x int);\nINSERT INTO b9 VALUES (10), (20);\n\nSELECT sum(x) FROM (SELECT x FROM a9 UNION SELECT x FROM b9) u;",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "UNION first reduces the combined rows to the distinct values 5, 10 and 20. Summing those gives 5 + 10 + 20 = 35.",
+        "syntax": "SELECT sum(col) FROM (SELECT ... UNION SELECT ...) t",
+        "tags": [
+          "set-operations",
+          "union",
+          "aggregate"
+        ],
+        "title": "Summing a UNION result"
+      },
+      "type": "mc",
+      "topic": "set-operations",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-62c7963b",
+      "answer": true,
+      "code": "CREATE TABLE a10 (x int);\nINSERT INTO a10 VALUES (1);\nCREATE TABLE b10 (x int);\nINSERT INTO b10 VALUES (2), (3);\nCREATE TABLE c10 (x int);\nINSERT INTO c10 VALUES (3);\n\nSELECT count(*) FROM (SELECT x FROM a10 UNION SELECT x FROM b10 INTERSECT SELECT x FROM c10) u;",
+      "prompt": "Does this query print 2?",
+      "query": {
+        "explanation": "INTERSECT is evaluated before UNION, so b10 INTERSECT c10 yields {3}, and a10 UNION {3} yields {1, 3}. The count printed is 2.",
+        "syntax": "A UNION B INTERSECT C  =  A UNION (B INTERSECT C)",
+        "tags": [
+          "set-operations",
+          "precedence",
+          "intersect"
+        ],
+        "title": "INTERSECT binds tighter than UNION"
+      },
+      "rationale": "INTERSECT has higher precedence, giving {1, 3}; a strict left-to-right reading would instead intersect {1, 2, 3} with {3} and print 1.",
+      "type": "bool",
+      "topic": "set-operations",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-cc5dcd60",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "bo"
+        },
+        {
+          "text": "ana",
+          "rationale": "ana has score 30, the largest value, so it sorts last in ascending order."
+        },
+        {
+          "text": "cy",
+          "rationale": "cy has score 20, which sorts between 10 and 30, not first."
+        },
+        {
+          "text": "10",
+          "rationale": "10 is the score used for sorting, but the SELECT list returns name, not score."
+        }
+      ],
+      "code": "CREATE TABLE players (name VARCHAR(10), score INTEGER);\nINSERT INTO players (name, score) VALUES ('ana', 30), ('bo', 10), ('cy', 20);\n\nSELECT name\nFROM players\nORDER BY score\nFETCH FIRST 1 ROW ONLY;",
+      "prompt": "Which value does this query print?",
+      "query": {
+        "explanation": "Without ASC or DESC, ORDER BY sorts ascending, so the smallest score (10, 'bo') comes first and FETCH FIRST 1 ROW ONLY keeps just that row. The SELECT list only has name, so 'bo' is printed.",
+        "syntax": "ORDER BY column [ASC | DESC]",
+        "tags": [
+          "order-by",
+          "sorting",
+          "fetch-first"
+        ],
+        "title": "ORDER BY defaults to ascending"
+      },
+      "type": "mc",
+      "topic": "ordering",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-66741e3d",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "mug"
+        },
+        {
+          "text": "pen",
+          "rationale": "pen costs 3, the lowest price, so it sorts last under DESC."
+        },
+        {
+          "text": "cap",
+          "rationale": "cap costs 5, which is between 3 and 7, so it is not first."
+        },
+        {
+          "text": "7",
+          "rationale": "7 is mug's price; the query selects product, not price."
+        }
+      ],
+      "code": "CREATE TABLE products (product VARCHAR(10), price INTEGER);\nINSERT INTO products (product, price) VALUES ('pen', 3), ('mug', 7), ('cap', 5);\n\nSELECT product\nFROM products\nORDER BY price DESC\nFETCH FIRST 1 ROW ONLY;",
+      "prompt": "Which product does this query print?",
+      "query": {
+        "explanation": "DESC sorts from largest to smallest, so the row with price 7 ('mug') is first and is the only row kept by FETCH FIRST 1 ROW ONLY.",
+        "syntax": "ORDER BY column DESC",
+        "tags": [
+          "order-by",
+          "desc",
+          "sorting"
+        ],
+        "title": "ORDER BY DESC picks the largest first"
+      },
+      "type": "mc",
+      "topic": "ordering",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-b8f632c4",
+      "answer": false,
+      "code": "CREATE TABLE fruits (name VARCHAR(10));\nINSERT INTO fruits (name) VALUES ('banana'), ('apple'), ('cherry');\n\nSELECT name\nFROM fruits\nORDER BY name\nFETCH FIRST 1 ROW ONLY;",
+      "prompt": "Does this query print cherry?",
+      "query": {
+        "explanation": "ORDER BY name sorts the strings alphabetically ascending: apple, banana, cherry. The first row is 'apple', so the query prints apple, not cherry.",
+        "syntax": "ORDER BY text_column",
+        "tags": [
+          "order-by",
+          "strings",
+          "sorting"
+        ],
+        "title": "Sorting text values ascending"
+      },
+      "rationale": "Ascending text order puts 'apple' first; 'cherry' would only be printed with ORDER BY name DESC.",
+      "type": "bool",
+      "topic": "ordering",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-2ca68db7",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "y"
+        },
+        {
+          "text": "x",
+          "rationale": "x has qty 9, the largest value, so it sorts last ascending."
+        },
+        {
+          "text": "z",
+          "rationale": "z has qty 5, which sorts between 2 and 9."
+        },
+        {
+          "text": "an error, since ORDER BY 2 is not allowed",
+          "rationale": "A positive integer in ORDER BY legally refers to the Nth select-list column."
+        }
+      ],
+      "code": "CREATE TABLE items (code VARCHAR(5), qty INTEGER);\nINSERT INTO items (code, qty) VALUES ('x', 9), ('y', 2), ('z', 5);\n\nSELECT code, qty\nFROM items\nORDER BY 2\nFETCH FIRST 1 ROW ONLY;",
+      "prompt": "Which code value appears in the printed row?",
+      "query": {
+        "explanation": "ORDER BY 2 sorts by the second column of the select list, which is qty. Ascending qty puts 2 first, and that row has code 'y'.",
+        "syntax": "ORDER BY position_number",
+        "tags": [
+          "order-by",
+          "ordinal",
+          "sorting"
+        ],
+        "title": "ORDER BY with a column position"
+      },
+      "type": "mc",
+      "topic": "ordering",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-a8c30bc0",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "amy"
+        },
+        {
+          "text": "zoe",
+          "rationale": "zoe ties with amy on grade 1, but the second sort key name puts 'amy' before 'zoe'."
+        },
+        {
+          "text": "bob",
+          "rationale": "bob has grade 2, which sorts after both grade 1 rows."
+        },
+        {
+          "text": "1",
+          "rationale": "1 is the grade used for sorting; the select list returns name."
+        }
+      ],
+      "code": "CREATE TABLE students (name VARCHAR(10), grade INTEGER);\nINSERT INTO students (name, grade) VALUES ('zoe', 1), ('amy', 1), ('bob', 2);\n\nSELECT name\nFROM students\nORDER BY grade, name\nFETCH FIRST 1 ROW ONLY;",
+      "prompt": "Which name does this query print?",
+      "query": {
+        "explanation": "Rows sort by grade first; 'zoe' and 'amy' both have grade 1, so the second key, name, breaks the tie alphabetically and 'amy' comes first.",
+        "syntax": "ORDER BY col1, col2",
+        "tags": [
+          "order-by",
+          "tie-break",
+          "multiple-keys"
+        ],
+        "title": "Multiple ORDER BY keys break ties"
+      },
+      "type": "mc",
+      "topic": "ordering",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-656e8764",
+      "answer": true,
+      "code": "CREATE TABLE sales (label VARCHAR(5), qty INTEGER);\nINSERT INTO sales (label, qty) VALUES ('a', 4), ('b', 9), ('c', 6);\n\nSELECT label, qty * 2 AS total\nFROM sales\nORDER BY total DESC\nFETCH FIRST 1 ROW ONLY;",
+      "prompt": "Is the label printed by this query b?",
+      "query": {
+        "explanation": "The alias total holds qty * 2, giving 8, 18 and 12. Sorting DESC by total puts 18 first, which is the row with label 'b'.",
+        "syntax": "SELECT expr AS alias ... ORDER BY alias",
+        "tags": [
+          "order-by",
+          "alias",
+          "desc"
+        ],
+        "title": "ORDER BY can reference a select alias"
+      },
+      "rationale": "Row b has the largest doubled value (18), so DESC ordering places it first; any other label would need a larger qty.",
+      "type": "bool",
+      "topic": "ordering",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-2974c9bc",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "lima"
+        },
+        {
+          "text": "nome",
+          "rationale": "nome is first in ascending order, so OFFSET 1 ROWS skips it."
+        },
+        {
+          "text": "perth",
+          "rationale": "perth has the highest degrees (30) and would be the third row, not the second."
+        },
+        {
+          "text": "no rows at all",
+          "rationale": "Three rows exist, so skipping one still leaves rows to fetch."
+        }
+      ],
+      "code": "CREATE TABLE temps (city VARCHAR(10), degrees INTEGER);\nINSERT INTO temps (city, degrees) VALUES ('lima', 22), ('nome', 3), ('perth', 30);\n\nSELECT city\nFROM temps\nORDER BY degrees\nOFFSET 1 ROWS\nFETCH NEXT 1 ROWS ONLY;",
+      "prompt": "Which city does this query print?",
+      "query": {
+        "explanation": "Ascending order by degrees is nome (3), lima (22), perth (30). OFFSET 1 ROWS skips nome, and FETCH NEXT 1 ROWS ONLY returns lima.",
+        "syntax": "ORDER BY col OFFSET n ROWS FETCH NEXT m ROWS ONLY",
+        "tags": [
+          "order-by",
+          "offset",
+          "pagination"
+        ],
+        "title": "OFFSET skips rows after ordering"
+      },
+      "type": "mc",
+      "topic": "ordering",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-d87d4773",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "red"
+        },
+        {
+          "text": "blue",
+          "rationale": "blue appears twice, fewer times than red's three rows."
+        },
+        {
+          "text": "green",
+          "rationale": "green appears once, the smallest count, so it sorts last under DESC."
+        },
+        {
+          "text": "3",
+          "rationale": "3 is red's count; the select list returns team, not the count."
+        }
+      ],
+      "code": "CREATE TABLE visits (team VARCHAR(10));\nINSERT INTO visits (team) VALUES ('red'), ('blue'), ('red'), ('green'), ('red'), ('blue');\n\nSELECT team\nFROM visits\nGROUP BY team\nORDER BY count(*) DESC\nFETCH FIRST 1 ROW ONLY;",
+      "prompt": "Which team does this query print?",
+      "query": {
+        "explanation": "Group counts are red 3, blue 2 and green 1. ORDER BY count(*) DESC puts the largest count first, so 'red' is printed.",
+        "syntax": "GROUP BY col ORDER BY count(*) DESC",
+        "tags": [
+          "order-by",
+          "group-by",
+          "aggregate"
+        ],
+        "title": "Ordering grouped rows by an aggregate"
+      },
+      "type": "mc",
+      "topic": "ordering",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-0de711af",
+      "answer": false,
+      "code": "CREATE TABLE codes (name VARCHAR(10));\nINSERT INTO codes (name) VALUES ('alpha'), ('delta'), ('bravo');\n\nSELECT name\nFROM codes\nORDER BY name DESC\nFETCH FIRST 1 ROW ONLY;",
+      "prompt": "Does this query print alpha?",
+      "query": {
+        "explanation": "DESC reverses alphabetical order to delta, bravo, alpha. The first row is 'delta', so the query prints delta rather than alpha.",
+        "syntax": "ORDER BY text_column DESC",
+        "tags": [
+          "order-by",
+          "desc",
+          "strings"
+        ],
+        "title": "Descending text ordering"
+      },
+      "rationale": "'alpha' is the alphabetically smallest value, so DESC ordering puts it last; 'delta' is printed instead.",
+      "type": "bool",
+      "topic": "ordering",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-4d43c487",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "fig"
+        },
+        {
+          "text": "banana",
+          "rationale": "banana has 6 characters, the longest, so it sorts last ascending."
+        },
+        {
+          "text": "kiwi",
+          "rationale": "kiwi has 4 characters, one more than fig, so it is second."
+        },
+        {
+          "text": "3",
+          "rationale": "3 is fig's length used for sorting; the select list returns word."
+        }
+      ],
+      "code": "CREATE TABLE words (word VARCHAR(10));\nINSERT INTO words (word) VALUES ('kiwi'), ('fig'), ('banana');\n\nSELECT word\nFROM words\nORDER BY CHAR_LENGTH(word)\nFETCH FIRST 1 ROW ONLY;",
+      "prompt": "Which word does this query print?",
+      "query": {
+        "explanation": "ORDER BY can sort on a computed expression. Lengths are kiwi 4, fig 3 and banana 6, so ascending length puts 'fig' first.",
+        "syntax": "ORDER BY expression",
+        "tags": [
+          "order-by",
+          "expression",
+          "char-length"
+        ],
+        "title": "Ordering by an expression"
+      },
+      "type": "mc",
+      "topic": "ordering",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-d1bdecc8",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "cid"
+        },
+        {
+          "text": "bob",
+          "rationale": "bob has the highest pts (30), so bob gets row number 1, not 2."
+        },
+        {
+          "text": "ann",
+          "rationale": "ann has the lowest pts (10), so ann gets row number 3 under ORDER BY pts DESC."
+        },
+        {
+          "text": "no rows",
+          "rationale": "Three rows get numbers 1, 2 and 3, so exactly one row matches rn = 2."
+        }
+      ],
+      "code": "CREATE TABLE scores (name VARCHAR(10), pts INT);\nINSERT INTO scores VALUES ('ann', 10), ('bob', 30), ('cid', 20);\n\nSELECT name\nFROM (\n  SELECT name, ROW_NUMBER() OVER (ORDER BY pts DESC) AS rn\n  FROM scores\n) t\nWHERE rn = 2;",
+      "prompt": "Which name does this script print?",
+      "query": {
+        "explanation": "ROW_NUMBER() OVER (ORDER BY pts DESC) numbers rows 1, 2, 3 from the highest pts down: bob (30) is 1, cid (20) is 2, ann (10) is 3. Filtering rn = 2 in the outer query returns cid.",
+        "syntax": "ROW_NUMBER() OVER (ORDER BY col)",
+        "tags": [
+          "sql",
+          "window-functions",
+          "row_number"
+        ],
+        "title": "ROW_NUMBER picks a position"
+      },
+      "type": "mc",
+      "topic": "window-functions",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-71c14144",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "1",
+          "rationale": "Rank 1 goes to the tied rows x and y, which both have the top pts of 100."
+        },
+        {
+          "text": "2",
+          "rationale": "RANK skips 2 because two rows already share rank 1; DENSE_RANK would give 2 here."
+        },
+        {
+          "text": "4",
+          "rationale": "Only three rows exist, so the largest rank RANK can assign in this table is 3."
+        }
+      ],
+      "code": "CREATE TABLE games (name VARCHAR(10), pts INT);\nINSERT INTO games VALUES ('x', 100), ('y', 100), ('z', 90);\n\nSELECT r\nFROM (\n  SELECT name, RANK() OVER (ORDER BY pts DESC) AS r\n  FROM games\n) t\nWHERE name = 'z';",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "x and y both have 100 pts, so both get rank 1. RANK counts the rows that came before, so the next distinct value (z with 90) gets rank 3, skipping 2.",
+        "syntax": "RANK() OVER (ORDER BY col)",
+        "tags": [
+          "sql",
+          "window-functions",
+          "rank"
+        ],
+        "title": "RANK leaves gaps after ties"
+      },
+      "type": "mc",
+      "topic": "window-functions",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-b1df3bfe",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "30"
+        },
+        {
+          "text": "5",
+          "rationale": "The filter id = 1 happens in the outer query, after the window already summed all three rows."
+        },
+        {
+          "text": "15",
+          "rationale": "15 is only the amt of the last row; OVER () adds all three amounts together."
+        },
+        {
+          "text": "10",
+          "rationale": "10 is the middle amt, not the sum of 5 + 10 + 15."
+        }
+      ],
+      "code": "CREATE TABLE sales (id INT, amt INT);\nINSERT INTO sales VALUES (1, 5), (2, 10), (3, 15);\n\nSELECT total\nFROM (\n  SELECT id, SUM(amt) OVER () AS total\n  FROM sales\n) t\nWHERE id = 1;",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "SUM(amt) OVER () has no PARTITION BY and no ORDER BY, so the window is the whole result set: 5 + 10 + 15 = 30. Every row carries the same total, including the row with id = 1.",
+        "syntax": "SUM(col) OVER ()",
+        "tags": [
+          "sql",
+          "window-functions",
+          "sum"
+        ],
+        "title": "An empty OVER () clause spans every row"
+      },
+      "type": "mc",
+      "topic": "window-functions",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-d1d67838",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "35"
+        },
+        {
+          "text": "20",
+          "rationale": "20 is only the current row's amt; the running frame also includes the earlier rows 5 and 10."
+        },
+        {
+          "text": "15",
+          "rationale": "15 is the running total at id 2 (5 + 10), one row too early."
+        },
+        {
+          "text": "70",
+          "rationale": "70 would double the total; each amt is added only once."
+        }
+      ],
+      "code": "CREATE TABLE steps (id INT, amt INT);\nINSERT INTO steps VALUES (1, 5), (2, 10), (3, 20);\n\nSELECT run\nFROM (\n  SELECT id, SUM(amt) OVER (ORDER BY id) AS run\n  FROM steps\n) t\nWHERE id = 3;",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "With ORDER BY id and no explicit frame, the default frame runs from the start of the partition to the current row, so id 3 sums 5 + 10 + 20 = 35.",
+        "syntax": "SUM(col) OVER (ORDER BY col)",
+        "tags": [
+          "sql",
+          "window-functions",
+          "running-total"
+        ],
+        "title": "ORDER BY inside OVER makes a running total"
+      },
+      "type": "mc",
+      "topic": "window-functions",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-19c7a8eb",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "8"
+        },
+        {
+          "text": "13",
+          "rationale": "13 is the current row's own val; LAG returns the previous row's value instead."
+        },
+        {
+          "text": "5",
+          "rationale": "5 belongs to id 1, which is two rows back, not one."
+        },
+        {
+          "text": "NULL",
+          "rationale": "NULL appears only for the first row, which has no preceding row."
+        }
+      ],
+      "code": "CREATE TABLE readings (id INT, val INT);\nINSERT INTO readings VALUES (1, 5), (2, 8), (3, 13);\n\nSELECT prev\nFROM (\n  SELECT id, LAG(val) OVER (ORDER BY id) AS prev\n  FROM readings\n) t\nWHERE id = 3;",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "LAG(val) OVER (ORDER BY id) returns val from the row one position earlier in the ordering. The row before id 3 is id 2, whose val is 8.",
+        "syntax": "LAG(col) OVER (ORDER BY col)",
+        "tags": [
+          "sql",
+          "window-functions",
+          "lag"
+        ],
+        "title": "LAG looks one row back"
+      },
+      "type": "mc",
+      "topic": "window-functions",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-ecf1245a",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "3 would be the count without PARTITION BY; the partition for 'red' holds only rows a and b."
+        },
+        {
+          "text": "1",
+          "rationale": "1 is the count in the 'blue' partition, which contains only row c."
+        },
+        {
+          "text": "0",
+          "rationale": "COUNT(*) over a partition containing the current row is never 0."
+        }
+      ],
+      "code": "CREATE TABLE players (name VARCHAR(10), team VARCHAR(10));\nINSERT INTO players VALUES ('a', 'red'), ('b', 'red'), ('c', 'blue');\n\nSELECT c\nFROM (\n  SELECT name, COUNT(*) OVER (PARTITION BY team) AS c\n  FROM players\n) t\nWHERE name = 'a';",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "PARTITION BY team splits the rows into a 'red' group of two rows (a, b) and a 'blue' group of one row (c). Row a sits in the red partition, so COUNT(*) OVER that partition prints 2.",
+        "syntax": "COUNT(*) OVER (PARTITION BY col)",
+        "tags": [
+          "sql",
+          "window-functions",
+          "partition-by"
+        ],
+        "title": "PARTITION BY limits the window"
+      },
+      "type": "mc",
+      "topic": "window-functions",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-a023c848",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "Rank 1 goes to the tied top rows 'a' and 'b'; 'c' has the fewest points under DESC ordering."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "That is the RANK() result, which skips a value after a two-way tie; DENSE_RANK leaves no gaps."
+        },
+        {
+          "text": "4",
+          "rationale": "There are only three rows, and no ranking function would reach 4 here."
+        }
+      ],
+      "code": "CREATE TABLE scores (name varchar(10), pts int);\nINSERT INTO scores VALUES ('a', 10), ('b', 10), ('c', 5);\n\n-- scores(name, pts): ('a', 10), ('b', 10), ('c', 5)\nSELECT dr\nFROM (\n  SELECT name, dense_rank() OVER (ORDER BY pts DESC) AS dr\n  FROM scores\n) t\nWHERE name = 'c';",
+      "prompt": "What value does this query print?",
+      "query": {
+        "explanation": "Rows 'a' and 'b' tie at 10 points and both get dense rank 1. DENSE_RANK assigns the next distinct value without leaving gaps, so 'c' (5 points) gets 2. RANK would instead have given 3, because it skips ranks consumed by the tied rows.",
+        "syntax": "dense_rank() OVER (ORDER BY expr)",
+        "tags": [
+          "window-functions",
+          "dense_rank",
+          "ranking"
+        ],
+        "title": "DENSE_RANK with ties"
+      },
+      "type": "mc",
+      "topic": "window-functions",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-e9bbb495",
+      "answer": true,
+      "code": "CREATE TABLE nums (id int, v int);\nINSERT INTO nums VALUES (1, 5), (2, 7), (3, 9);\n\n-- nums(id, v): (1, 5), (2, 7), (3, 9)\nSELECT nxt\nFROM (\n  SELECT id, lead(v) OVER (ORDER BY id) AS nxt\n  FROM nums\n) t\nWHERE id = 3;",
+      "prompt": "Is the value printed by this query NULL?",
+      "query": {
+        "explanation": "LEAD(v) looks one row ahead in the window's ordering. For the final row there is no next row, so the default (NULL) is returned. A second argument sets the offset and a third sets the default value to use instead of NULL.",
+        "syntax": "lead(expr [, offset [, default]]) OVER (ORDER BY ...)",
+        "tags": [
+          "window-functions",
+          "lead",
+          "null"
+        ],
+        "title": "LEAD past the last row"
+      },
+      "rationale": "id = 3 is the last row in the ORDER BY id sequence, so LEAD has no following row and returns NULL; it would print 9 only if a fourth row existed.",
+      "type": "bool",
+      "topic": "window-functions",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-3d48c97a",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "30",
+          "rationale": "That is the current row's own amount; FIRST_VALUE reports the first row of the ordered partition instead."
+        },
+        {
+          "text": "10"
+        },
+        {
+          "text": "50",
+          "rationale": "50 belongs to the 'west' partition, which PARTITION BY region keeps separate from the 'east' rows."
+        },
+        {
+          "text": "40",
+          "rationale": "40 is the sum of the east amounts; FIRST_VALUE returns a single row's value, not a total."
+        }
+      ],
+      "code": "CREATE TABLE sales (region varchar(10), amt int);\nINSERT INTO sales VALUES ('east', 30), ('east', 10), ('west', 50);\n\n-- sales(region, amt): ('east', 30), ('east', 10), ('west', 50)\nSELECT fv\nFROM (\n  SELECT region, amt,\n         first_value(amt) OVER (PARTITION BY region ORDER BY amt) AS fv\n  FROM sales\n) t\nWHERE amt = 30;",
+      "prompt": "Which amount does this query print?",
+      "query": {
+        "explanation": "PARTITION BY region limits the window to the 'east' rows (30 and 10). Ordered ascending by amt, the first row of that partition has amt 10, so every 'east' row reports 10. The 'west' row is in a separate partition and cannot influence the result.",
+        "syntax": "first_value(expr) OVER (PARTITION BY ... ORDER BY ...)",
+        "tags": [
+          "window-functions",
+          "first_value",
+          "partition-by"
+        ],
+        "title": "FIRST_VALUE within a partition"
+      },
+      "type": "mc",
+      "topic": "window-functions",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-e9598e23",
+      "answer": false,
+      "code": "CREATE TABLE vals (id int, v int);\nINSERT INTO vals VALUES (1, 2), (2, 3), (3, 4);\n\n-- vals(id, v): (1, 2), (2, 3), (3, 4)\nSELECT s\nFROM (\n  SELECT id, sum(v) OVER (ORDER BY id) AS s\n  FROM vals\n) t\nWHERE id = 1;",
+      "prompt": "Does this query print 9?",
+      "query": {
+        "explanation": "When a window has an ORDER BY and no explicit frame, the frame is RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW, producing a running total. The first row's running total is just its own value, 2. Omitting ORDER BY entirely would make the frame the whole partition and print 9.",
+        "syntax": "sum(expr) OVER (ORDER BY col)",
+        "tags": [
+          "window-functions",
+          "frame",
+          "running-total"
+        ],
+        "title": "Default window frame with ORDER BY"
+      },
+      "rationale": "Adding ORDER BY gives the default frame of start-of-partition through the current row, so row 1 sums only its own 2; 9 (the grand total) would need SUM(v) OVER () or an unbounded following frame.",
+      "type": "bool",
+      "topic": "window-functions",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-16a9d691",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "60"
+        },
+        {
+          "text": "30",
+          "rationale": "30 is only the largest single amount; sum adds every row in the CTE."
+        },
+        {
+          "text": "3",
+          "rationale": "3 would be the row count; the query sums amount, not rows."
+        },
+        {
+          "text": "10",
+          "rationale": "10 is just the first amount; the CTE passes all three rows to sum."
+        }
+      ],
+      "code": "CREATE TABLE sales (id INTEGER, amount INTEGER);\nINSERT INTO sales VALUES (1, 10), (2, 20), (3, 30);\n\nWITH recent AS (\n  SELECT amount FROM sales\n)\nSELECT sum(amount) FROM recent;\n\n-- sales rows: (1, 10), (2, 20), (3, 30)",
+      "prompt": "What single value does this query print?",
+      "query": {
+        "explanation": "WITH recent AS (...) names a result set for the statement. The CTE selects all three amounts (10, 20, 30) unchanged, so the outer sum(amount) adds them to 60.",
+        "syntax": "WITH name AS (query) SELECT ...",
+        "tags": [
+          "cte",
+          "with",
+          "aggregate"
+        ],
+        "title": "A CTE as a named subquery"
+      },
+      "type": "mc",
+      "topic": "ctes",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-5f4ce2ce",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "10"
+        },
+        {
+          "text": "5",
+          "rationale": "5 is the stored value; the outer SELECT doubles it."
+        },
+        {
+          "text": "2",
+          "rationale": "2 is the multiplier in the expression, not the result."
+        },
+        {
+          "text": "25",
+          "rationale": "The expression multiplies by 2, not by itself."
+        }
+      ],
+      "code": "CREATE TABLE t1 (v INTEGER);\nINSERT INTO t1 VALUES (5);\n\nWITH c(x) AS (\n  SELECT v FROM t1\n)\nSELECT x * 2 FROM c;\n\n-- t1 rows: (5)",
+      "prompt": "What value does this query print?",
+      "query": {
+        "explanation": "c(x) renames the single output column of the CTE to x. The CTE returns one row with x = 5, so the outer query prints 5 * 2 = 10.",
+        "syntax": "WITH name(col, ...) AS (query)",
+        "tags": [
+          "cte",
+          "column-alias"
+        ],
+        "title": "Naming CTE columns"
+      },
+      "type": "mc",
+      "topic": "ctes",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-a58b9289",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "2",
+          "rationale": "2 is the row count and also the last value; b sums the values instead."
+        },
+        {
+          "text": "1",
+          "rationale": "1 is only the first value in nums; both rows are summed."
+        },
+        {
+          "text": "6",
+          "rationale": "6 would require values beyond 1 and 2; nums holds only those two rows."
+        }
+      ],
+      "code": "CREATE TABLE nums (n INTEGER);\nINSERT INTO nums VALUES (1), (2);\n\nWITH a AS (\n  SELECT n FROM nums\n), b AS (\n  SELECT sum(n) AS s FROM a\n)\nSELECT s FROM b;\n\n-- nums rows: (1), (2)",
+      "prompt": "What number does this query print?",
+      "query": {
+        "explanation": "A later CTE may reference an earlier one in the same WITH clause. CTE a returns 1 and 2, and b sums them to 3, which the outer query prints.",
+        "syntax": "WITH a AS (query), b AS (query using a) SELECT ...",
+        "tags": [
+          "cte",
+          "chained-cte"
+        ],
+        "title": "Chaining CTEs"
+      },
+      "type": "mc",
+      "topic": "ctes",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-62c72503",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "bob"
+        },
+        {
+          "text": "ann",
+          "rationale": "ann's only order totals 50, which the CTE's total > 100 filter removes."
+        },
+        {
+          "text": "ann then bob",
+          "rationale": "Only one order passes the filter, so only one name is printed."
+        },
+        {
+          "text": "nothing is printed",
+          "rationale": "Order 2 has total 150, so the CTE is not empty and the join matches cust_id 2."
+        }
+      ],
+      "code": "CREATE TABLE orders (id INTEGER, cust_id INTEGER, total INTEGER);\nCREATE TABLE customers (id INTEGER, name VARCHAR(20));\nINSERT INTO orders VALUES (1, 1, 50), (2, 2, 150);\nINSERT INTO customers VALUES (1, 'ann'), (2, 'bob');\n\nWITH big AS (\n  SELECT cust_id FROM orders WHERE total > 100\n)\nSELECT c.name\nFROM customers c\nJOIN big ON c.id = big.cust_id;\n\n-- orders rows: (1, 1, 50), (2, 2, 150)\n-- customers rows: (1, 'ann'), (2, 'bob')",
+      "prompt": "Which name does this query print?",
+      "query": {
+        "explanation": "The CTE keeps only orders with total > 100, which is order 2 for cust_id 2. Joining customers to that single row yields the name bob.",
+        "syntax": "WITH name AS (query) SELECT ... JOIN name ON ...",
+        "tags": [
+          "cte",
+          "join"
+        ],
+        "title": "Joining a table to a CTE"
+      },
+      "type": "mc",
+      "topic": "ctes",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-3b6b1423",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "10"
+        },
+        {
+          "text": "4",
+          "rationale": "4 is the number of rows generated, not the sum of their values."
+        },
+        {
+          "text": "6",
+          "rationale": "6 is 1+2+3; the row with x = 4 is still produced because the test runs on x = 3."
+        },
+        {
+          "text": "15",
+          "rationale": "15 would include a row for 5, but recursion stops once x reaches 4."
+        }
+      ],
+      "code": "WITH RECURSIVE n(x) AS (\n  SELECT 1\n  UNION ALL\n  SELECT x + 1 FROM n WHERE x < 4\n)\nSELECT sum(x) FROM n;",
+      "prompt": "What value does this query print?",
+      "query": {
+        "explanation": "The anchor produces 1; the recursive part adds 1 while x < 4, generating 2, 3 and 4 before stopping. Summing 1 + 2 + 3 + 4 prints 10.",
+        "syntax": "WITH RECURSIVE name(col) AS (anchor UNION ALL recursive) SELECT ...",
+        "tags": [
+          "cte",
+          "recursive"
+        ],
+        "title": "Recursive CTE generating a series"
+      },
+      "type": "mc",
+      "topic": "ctes",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-25006806",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "red"
+        },
+        {
+          "text": "blue",
+          "rationale": "blue totals 2 + 1 = 3, which fails the total > 5 test."
+        },
+        {
+          "text": "red and blue",
+          "rationale": "Only one group has a total above 5, so a single row is printed."
+        },
+        {
+          "text": "nothing is printed",
+          "rationale": "red totals 7, so one group satisfies the filter."
+        }
+      ],
+      "code": "CREATE TABLE scores (team VARCHAR(10), pts INTEGER);\nINSERT INTO scores VALUES ('red', 3), ('red', 4), ('blue', 2), ('blue', 1);\n\nWITH totals AS (\n  SELECT team, sum(pts) AS total\n  FROM scores\n  GROUP BY team\n)\nSELECT team FROM totals WHERE total > 5;\n\n-- scores rows: ('red', 3), ('red', 4), ('blue', 2), ('blue', 1)",
+      "prompt": "Which team name does this query print?",
+      "query": {
+        "explanation": "The CTE groups scores into red = 7 and blue = 3. The outer WHERE can filter the already-computed total, and only red exceeds 5.",
+        "syntax": "WITH t AS (SELECT key, agg(...) FROM ... GROUP BY key) SELECT ... WHERE agg_alias > n",
+        "tags": [
+          "cte",
+          "group-by"
+        ],
+        "title": "Filtering an aggregate through a CTE"
+      },
+      "type": "mc",
+      "topic": "ctes",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-8cee6523",
+      "answer": true,
+      "code": "CREATE TABLE payments (amount INTEGER);\nINSERT INTO payments VALUES (5), (10), (15), (20);\n\nWITH t AS (\n  SELECT amount FROM payments WHERE amount > 10\n)\nSELECT count(*) FROM t;\n\n-- payments rows: (5), (10), (15), (20)",
+      "prompt": "Is the count printed by this query 2?",
+      "query": {
+        "explanation": "The CTE's WHERE keeps amounts strictly greater than 10, which are 15 and 20. The outer count(*) over the CTE therefore prints 2.",
+        "tags": [
+          "cte",
+          "count"
+        ],
+        "title": "Counting rows kept by a CTE"
+      },
+      "rationale": "The filter is strict, so 5 and 10 are excluded and only 15 and 20 remain, making the printed count 2 rather than any other value.",
+      "type": "bool",
+      "topic": "ctes",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-7c2be9c6",
+      "answer": false,
+      "code": "CREATE TABLE vals (n INTEGER);\nINSERT INTO vals VALUES (2), (3);\n\nWITH t AS (\n  SELECT n FROM vals\n)\nSELECT (SELECT sum(n) FROM t) + (SELECT count(*) FROM t) AS result;\n\n-- vals rows: (2), (3)",
+      "prompt": "Does this query print 6?",
+      "query": {
+        "explanation": "A CTE can be referenced many times in the same statement. Here sum(n) is 5 and count(*) is 2, so the printed result is 7.",
+        "tags": [
+          "cte",
+          "reuse"
+        ],
+        "title": "Referencing one CTE more than once"
+      },
+      "rationale": "Both references are legal and evaluate over the same two rows: 5 + 2 is 7, not 6.",
+      "type": "bool",
+      "topic": "ctes",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-c8848abd",
+      "answer": true,
+      "code": "WITH RECURSIVE n(x) AS (\n  SELECT 1\n  UNION ALL\n  SELECT x + 1 FROM n WHERE x < 3\n)\nSELECT count(*) FROM n;",
+      "prompt": "Is the count printed by this recursive query 3?",
+      "query": {
+        "explanation": "The anchor row is 1, and the recursive step adds 1 while x < 3, producing 2 and 3. That gives three rows, so count(*) prints 3.",
+        "tags": [
+          "cte",
+          "recursive",
+          "count"
+        ],
+        "title": "Rows produced by a recursive CTE"
+      },
+      "rationale": "Recursion stops after x = 3 fails the x < 3 test, so exactly the rows 1, 2 and 3 exist and the count is 3.",
+      "type": "bool",
+      "topic": "ctes",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-527f5278",
+      "answer": false,
+      "code": "CREATE TABLE items (id INTEGER);\nINSERT INTO items VALUES (1), (2), (3);\n\nWITH t AS (\n  SELECT id FROM items WHERE id > 1\n)\nSELECT count(*) FROM items;\n\n-- items rows: (1), (2), (3)",
+      "prompt": "Does this query print 2?",
+      "query": {
+        "explanation": "Defining the CTE t does not change the items table. The outer query counts items directly, so all three rows are counted and 3 is printed.",
+        "tags": [
+          "cte",
+          "scope"
+        ],
+        "title": "A CTE only applies where it is used"
+      },
+      "rationale": "The outer FROM names items, not t, so the CTE's id > 1 filter never applies and the printed count is 3.",
+      "type": "bool",
+      "topic": "ctes",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-f9d8b0d2",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "32"
+        },
+        {
+          "text": "33",
+          "rationale": "That would require all three rows to be incremented, but qty 5 fails the qty > 5 test."
+        },
+        {
+          "text": "30",
+          "rationale": "30 is the original total; the UPDATE does add 1 to two of the rows."
+        },
+        {
+          "text": "31",
+          "rationale": "Only one increment is counted here, but two rows satisfy qty > 5."
+        }
+      ],
+      "code": "CREATE TABLE items (id INT, qty INT);\nINSERT INTO items VALUES (1, 5), (2, 10), (3, 15);\n\nUPDATE items SET qty = qty + 1 WHERE qty > 5;\n\nSELECT sum(qty) FROM items;",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "The WHERE clause matches only the rows with qty 10 and 15, so those become 11 and 16 while qty 5 is untouched. The sum is 5 + 11 + 16 = 32.",
+        "syntax": "UPDATE table SET col = expr WHERE condition",
+        "tags": [
+          "update",
+          "where",
+          "aggregate"
+        ],
+        "title": "UPDATE with a WHERE filter"
+      },
+      "type": "mc",
+      "topic": "data-modification",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-f1eced44",
+      "answer": true,
+      "code": "CREATE TABLE logs (id INT, note VARCHAR(10));\nINSERT INTO logs VALUES (1, 'a'), (2, NULL), (3, 'b');\n\nDELETE FROM logs WHERE note <> 'a';\n\nSELECT count(*) FROM logs;",
+      "prompt": "Is the count printed after this DELETE equal to 2?",
+      "query": {
+        "explanation": "NULL <> 'a' evaluates to unknown, not true, so row 2 is not deleted. Only row 3 ('b') is removed, leaving rows 1 and 2, so the count is 2.",
+        "syntax": "DELETE FROM table WHERE condition",
+        "tags": [
+          "delete",
+          "null",
+          "where"
+        ],
+        "title": "DELETE and NULL comparisons"
+      },
+      "rationale": "A count of 1 would mean the NULL row was deleted, but a WHERE condition that evaluates to unknown never deletes a row.",
+      "type": "bool",
+      "topic": "data-modification",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-191b84c1",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "count(b) ignores NULL values, and the second row stores NULL explicitly."
+        },
+        {
+          "text": "0",
+          "rationale": "The first row gets the column default 7, which is a non-NULL value."
+        },
+        {
+          "text": "7",
+          "rationale": "7 is the default value stored, not the number of non-NULL values counted."
+        }
+      ],
+      "code": "CREATE TABLE t (a INT, b INT DEFAULT 7);\n\nINSERT INTO t (a) VALUES (1);\nINSERT INTO t (a, b) VALUES (2, NULL);\n\nSELECT count(b) FROM t;",
+      "prompt": "What value does the final SELECT print?",
+      "query": {
+        "explanation": "The first INSERT omits b, so b takes its default 7. The second explicitly stores NULL, which count(b) skips. One non-NULL value remains, so the result is 1.",
+        "syntax": "INSERT INTO table (cols) VALUES (...)",
+        "tags": [
+          "insert",
+          "default",
+          "count"
+        ],
+        "title": "Omitted columns, defaults and count()"
+      },
+      "type": "mc",
+      "topic": "data-modification",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-203240c1",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "400"
+        },
+        {
+          "text": "600",
+          "rationale": "600 is the total before the UPDATE; after it, 200 is replaced by NULL."
+        },
+        {
+          "text": "300",
+          "rationale": "Only row 2 is changed, so row 1's 100 still contributes to the sum."
+        },
+        {
+          "text": "NULL",
+          "rationale": "sum() returns NULL only when every input value is NULL, and two rows still hold numbers."
+        }
+      ],
+      "code": "CREATE TABLE sales (id INT, amount INT);\nINSERT INTO sales VALUES (1, 100), (2, 200), (3, 300);\n\nUPDATE sales SET amount = NULL WHERE id = 2;\n\nSELECT sum(amount) FROM sales;",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "The UPDATE replaces row 2's amount with NULL. sum() skips NULL values, so the total is 100 + 300 = 400.",
+        "syntax": "UPDATE table SET col = NULL WHERE condition",
+        "tags": [
+          "update",
+          "null",
+          "sum"
+        ],
+        "title": "Setting a column to NULL"
+      },
+      "type": "mc",
+      "topic": "data-modification",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-1859f9dd",
+      "answer": false,
+      "code": "CREATE TABLE a (x INT);\nINSERT INTO a VALUES (1), (2);\n\nDELETE FROM a;\nINSERT INTO a VALUES (3);\n\nSELECT count(*) FROM a;",
+      "prompt": "Is the count printed by this script 2?",
+      "query": {
+        "explanation": "A DELETE without WHERE removes every row but keeps the table, so both original rows disappear. The following INSERT adds one row, so the count is 1.",
+        "syntax": "DELETE FROM table",
+        "tags": [
+          "delete",
+          "insert",
+          "count"
+        ],
+        "title": "DELETE with no WHERE clause"
+      },
+      "rationale": "A count of 2 would require the original rows to survive, but DELETE without WHERE empties the table before the single INSERT runs.",
+      "type": "bool",
+      "topic": "data-modification",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-b6028c5c",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "20"
+        },
+        {
+          "text": "0",
+          "rationale": "The UPDATE matches no row, so no price is set to 0."
+        },
+        {
+          "text": "10",
+          "rationale": "10 is the smaller price; max() returns the largest, which is still 20."
+        },
+        {
+          "text": "5",
+          "rationale": "5 is the id used in the filter, not a price value."
+        }
+      ],
+      "code": "CREATE TABLE p (id INT, price INT);\nINSERT INTO p VALUES (1, 10), (2, 20);\n\nUPDATE p SET price = 0 WHERE id = 5;\n\nSELECT max(price) FROM p;",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "No row has id = 5, so the UPDATE affects zero rows and raises no error. The data is unchanged and max(price) is 20.",
+        "syntax": "UPDATE table SET col = value WHERE condition",
+        "tags": [
+          "update",
+          "where",
+          "max"
+        ],
+        "title": "UPDATE that matches no rows"
+      },
+      "type": "mc",
+      "topic": "data-modification",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-7e1674c1",
+      "answer": false,
+      "code": "CREATE TABLE src (v INT);\nCREATE TABLE dst (v INT);\nINSERT INTO src VALUES (1), (2), (3);\n\nINSERT INTO dst SELECT v FROM src WHERE v >= 2;\n\nSELECT count(*) FROM dst;",
+      "prompt": "Does this INSERT ... SELECT leave dst with 3 rows?",
+      "query": {
+        "explanation": "INSERT ... SELECT copies only the rows returned by the SELECT. Only v = 2 and v = 3 satisfy v >= 2, so dst ends up with 2 rows.",
+        "syntax": "INSERT INTO target SELECT ... FROM source WHERE condition",
+        "tags": [
+          "insert",
+          "insert-select",
+          "count"
+        ],
+        "title": "INSERT ... SELECT with a filter"
+      },
+      "rationale": "All three rows would be copied only without the WHERE clause; the filter excludes v = 1, so dst holds 2 rows.",
+      "type": "bool",
+      "topic": "data-modification",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-c513c1dc",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "bob"
+        },
+        {
+          "text": "ann",
+          "rationale": "'ann' no longer exists in the table because the UPDATE replaced it with 'zoe'."
+        },
+        {
+          "text": "zoe",
+          "rationale": "'zoe' sorts after 'bob', so it is the maximum rather than the minimum."
+        },
+        {
+          "text": "NULL",
+          "rationale": "min() returns NULL only when there are no non-NULL values, but two names remain."
+        }
+      ],
+      "code": "CREATE TABLE users (id INT, name VARCHAR(10));\nINSERT INTO users VALUES (1, 'ann'), (2, 'bob');\n\nUPDATE users SET name = 'zoe' WHERE name = 'ann';\n\nSELECT min(name) FROM users;",
+      "prompt": "Which name does this script print?",
+      "query": {
+        "explanation": "Row 1's name becomes 'zoe', so the table holds 'zoe' and 'bob'. min() on text returns the alphabetically smallest value, 'bob'.",
+        "syntax": "UPDATE table SET text_col = 'value' WHERE condition",
+        "tags": [
+          "update",
+          "strings",
+          "min"
+        ],
+        "title": "UPDATE changing a text column"
+      },
+      "type": "mc",
+      "topic": "data-modification",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-9d71e6e4",
+      "answer": true,
+      "code": "CREATE TABLE orders (id INT, cust INT);\nCREATE TABLE banned (cust INT);\nINSERT INTO orders VALUES (1, 10), (2, 20), (3, 10);\nINSERT INTO banned VALUES (10);\n\nDELETE FROM orders WHERE cust IN (SELECT cust FROM banned);\n\nSELECT count(*) FROM orders;",
+      "prompt": "Does this DELETE leave exactly one row in orders?",
+      "query": {
+        "explanation": "The subquery returns cust 10, so both orders with cust 10 (ids 1 and 3) are deleted. Only the order with cust 20 remains, so the count is 1.",
+        "syntax": "DELETE FROM table WHERE col IN (SELECT ...)",
+        "tags": [
+          "delete",
+          "subquery",
+          "in"
+        ],
+        "title": "DELETE driven by a subquery"
+      },
+      "rationale": "A count of 2 would mean only one matching order was removed, but the IN condition is true for both rows with cust 10.",
+      "type": "bool",
+      "topic": "data-modification",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-6af879a8",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "10"
+        },
+        {
+          "text": "18",
+          "rationale": "18 is (2 + 4) * 3, which reverses the order of the two statements."
+        },
+        {
+          "text": "6",
+          "rationale": "6 is the value after the first UPDATE only; the second UPDATE also runs."
+        },
+        {
+          "text": "2",
+          "rationale": "2 is the inserted value, but both UPDATE statements change it."
+        }
+      ],
+      "code": "CREATE TABLE c (id INT, n INT);\nINSERT INTO c VALUES (1, 2);\n\nUPDATE c SET n = n * 3;\nUPDATE c SET n = n + 4;\n\nSELECT n FROM c;",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "Statements run in order: the first makes n = 2 * 3 = 6, and the second makes n = 6 + 4 = 10.",
+        "syntax": "UPDATE table SET col = expr",
+        "tags": [
+          "update",
+          "order-of-statements"
+        ],
+        "title": "Two UPDATE statements in sequence"
+      },
+      "type": "mc",
+      "topic": "data-modification",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-60075ba0",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "pending"
+        },
+        {
+          "text": "NULL",
+          "rationale": "The column is NOT NULL and has a DEFAULT, so the omitted value becomes 'pending', never NULL."
+        },
+        {
+          "text": "(empty string)",
+          "rationale": "A DEFAULT of 'pending' is stored as-is; SQL does not substitute an empty string for omitted columns."
+        },
+        {
+          "text": "No row is printed",
+          "rationale": "The INSERT succeeds because the default satisfies NOT NULL, so one row with id = 1 exists."
+        }
+      ],
+      "code": "CREATE TABLE tasks (\n  id INT PRIMARY KEY,\n  status VARCHAR(10) DEFAULT 'pending' NOT NULL\n);\n\nINSERT INTO tasks (id) VALUES (1);\n\nSELECT status FROM tasks WHERE id = 1;",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "The INSERT lists only the id column, so the omitted status column takes its DEFAULT value 'pending'. Because a default exists, the NOT NULL constraint is satisfied and the insert succeeds. A DEFAULT is only used when the column is left out of the INSERT column list (or given the DEFAULT keyword); supplying NULL explicitly would violate NOT NULL instead.",
+        "syntax": "column_name type DEFAULT value NOT NULL",
+        "tags": [
+          "constraints",
+          "default",
+          "not-null"
+        ],
+        "title": "DEFAULT fills an omitted NOT NULL column"
+      },
+      "type": "mc",
+      "topic": "constraints-and-keys",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-62edb307",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "2",
+          "rationale": "Nothing is rejected: repeating student_id 1 is allowed because uniqueness applies to the (student_id, course) pair."
+        },
+        {
+          "text": "1",
+          "rationale": "Only one row would remain if student_id alone were the key, but the key is the column pair."
+        },
+        {
+          "text": "0",
+          "rationale": "All three inserts succeed, so the table is not empty."
+        }
+      ],
+      "code": "CREATE TABLE enrol (\n  student_id INT,\n  course VARCHAR(5),\n  PRIMARY KEY (student_id, course)\n);\n\nINSERT INTO enrol VALUES (1, 'a'), (1, 'b'), (2, 'a');\n\nSELECT count(*) FROM enrol;",
+      "prompt": "What value does this script print?",
+      "query": {
+        "explanation": "A composite PRIMARY KEY requires the combination of student_id and course to be unique, not each column on its own. The pairs (1,'a'), (1,'b') and (2,'a') are all different, so all three rows are accepted and count(*) prints 3. A fourth insert of (1,'a') would be the first duplicate-key error.",
+        "syntax": "PRIMARY KEY (col_a, col_b)",
+        "tags": [
+          "constraints",
+          "primary-key",
+          "composite-key"
+        ],
+        "title": "Composite primary keys constrain the column pair"
+      },
+      "type": "mc",
+      "topic": "constraints-and-keys",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-9594ae12",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "count(dept_code) skips the NULL value, so only two of the three stored rows are counted."
+        },
+        {
+          "text": "1",
+          "rationale": "Both 'd1' and 'd2' match parent rows and are counted, giving more than one."
+        },
+        {
+          "text": "0",
+          "rationale": "The inserts all succeed, so there are non-NULL dept_code values to count."
+        }
+      ],
+      "code": "CREATE TABLE dept (\n  code VARCHAR(3) UNIQUE,\n  name VARCHAR(10)\n);\nCREATE TABLE emp (\n  id INT PRIMARY KEY,\n  dept_code VARCHAR(3) REFERENCES dept(code)\n);\n\nINSERT INTO dept VALUES ('d1', 'sales'), ('d2', 'ops');\nINSERT INTO emp VALUES (1, 'd1'), (2, NULL), (3, 'd2');\n\nSELECT count(dept_code) FROM emp;",
+      "prompt": "In standard SQL, what value does the final SELECT print?",
+      "query": {
+        "explanation": "A FOREIGN KEY only requires non-NULL values to match a row in the referenced table, so the row with dept_code = NULL is accepted without any parent. All three inserts succeed, but count(column) ignores NULLs, so only the two rows with 'd1' and 'd2' are counted and 2 is printed.",
+        "syntax": "col type REFERENCES parent(unique_col)",
+        "tags": [
+          "constraints",
+          "foreign-key",
+          "nulls"
+        ],
+        "title": "A foreign key column may hold NULL"
+      },
+      "type": "mc",
+      "topic": "constraints-and-keys",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-24987143",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1"
+        },
+        {
+          "text": "0",
+          "rationale": "Row 1 is stored with boss_id = NULL, which a foreign key permits, so one such row exists."
+        },
+        {
+          "text": "2",
+          "rationale": "Rows 2 and 3 both have boss_id = 1, which is not NULL, so they are excluded."
+        },
+        {
+          "text": "3",
+          "rationale": "Only the first row has a NULL boss_id; the other two reference id 1."
+        }
+      ],
+      "code": "CREATE TABLE staff (\n  id INT PRIMARY KEY,\n  boss_id INT REFERENCES staff(id)\n);\n\nINSERT INTO staff VALUES (1, NULL);\nINSERT INTO staff VALUES (2, 1), (3, 1);\n\nSELECT count(*) FROM staff WHERE boss_id IS NULL;",
+      "prompt": "What value does the final SELECT print?",
+      "query": {
+        "explanation": "The FOREIGN KEY points back at the same table's primary key, so each boss_id must either be NULL or match an existing id. Row 1 is inserted with NULL to start the chain, then rows 2 and 3 point at id 1. Exactly one row has boss_id IS NULL, so the query prints 1.",
+        "syntax": "col INT REFERENCES same_table(id)",
+        "tags": [
+          "constraints",
+          "foreign-key",
+          "self-reference"
+        ],
+        "title": "Self-referencing foreign keys need a NULL root"
+      },
+      "type": "mc",
+      "topic": "constraints-and-keys",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-647dc710",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "bb"
+        },
+        {
+          "text": "aa",
+          "rationale": "The cascade updates the child column to the parent's new value, so the old 'aa' no longer remains."
+        },
+        {
+          "text": "NULL",
+          "rationale": "NULL would be the result of ON UPDATE SET NULL; CASCADE copies the new key instead."
+        },
+        {
+          "text": "No row is printed",
+          "rationale": "CASCADE updates the child row rather than deleting it, so row id 1 still exists."
+        }
+      ],
+      "code": "CREATE TABLE cat (code VARCHAR(3) PRIMARY KEY);\nCREATE TABLE item (\n  id INT PRIMARY KEY,\n  code VARCHAR(3) REFERENCES cat(code) ON UPDATE CASCADE\n);\n\nINSERT INTO cat VALUES ('aa');\nINSERT INTO item VALUES (1, 'aa');\n\nUPDATE cat SET code = 'bb' WHERE code = 'aa';\n\nSELECT code FROM item WHERE id = 1;",
+      "prompt": "Which code value does this final SELECT print?",
+      "query": {
+        "explanation": "With ON UPDATE CASCADE, changing the parent key value propagates to every referencing row instead of blocking the update. When cat.code becomes 'bb', the child row's code is rewritten to 'bb' as well, so the row still exists and prints 'bb'.",
+        "syntax": "REFERENCES parent(col) ON UPDATE CASCADE",
+        "tags": [
+          "constraints",
+          "foreign-key",
+          "cascade"
+        ],
+        "title": "ON UPDATE CASCADE rewrites child keys"
+      },
+      "type": "mc",
+      "topic": "constraints-and-keys",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-8ff53559",
+      "answer": true,
+      "code": "CREATE TABLE parts (\n  id INT PRIMARY KEY,\n  qty INT CHECK (qty > 0)\n);\n\nINSERT INTO parts VALUES (1, 5);\nINSERT INTO parts VALUES (2, NULL);\n\nSELECT count(*) FROM parts WHERE id = 2;",
+      "prompt": "Does the row with NULL qty survive this CHECK constraint?",
+      "query": {
+        "explanation": "NULL > 0 evaluates to UNKNOWN, not FALSE, and a CHECK constraint only rejects a row when its condition is definitely FALSE. So the row with qty = NULL is stored and the count for id 2 is 1. Adding NOT NULL to the column would be needed to forbid it.",
+        "syntax": "col INT CHECK (col > 0)",
+        "tags": [
+          "constraints",
+          "check",
+          "nulls"
+        ],
+        "title": "CHECK constraints accept UNKNOWN results"
+      },
+      "rationale": "A CHECK only rejects rows whose condition is FALSE; NULL > 0 is UNKNOWN, so the row is accepted and the count prints 1.",
+      "type": "bool",
+      "topic": "constraints-and-keys",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-6b8a367e",
+      "answer": false,
+      "code": "CREATE TABLE tags (label VARCHAR(5) UNIQUE);\n\nINSERT INTO tags VALUES (NULL), (NULL), ('x');\n\nSELECT count(*) FROM tags;",
+      "prompt": "In standard SQL, does this script leave exactly 2 rows in tags?",
+      "query": {
+        "explanation": "Two NULLs are never considered equal under a UNIQUE constraint, so both NULL rows are allowed alongside 'x'. All three inserts succeed and count(*) prints 3. Only a second row with the value 'x' would raise a uniqueness error.",
+        "syntax": "col type UNIQUE",
+        "tags": [
+          "constraints",
+          "unique",
+          "nulls"
+        ],
+        "title": "UNIQUE permits repeated NULLs"
+      },
+      "rationale": "UNIQUE treats NULLs as not equal to each other, so both NULL rows plus 'x' are kept and the count printed is 3, not 2.",
+      "type": "bool",
+      "topic": "constraints-and-keys",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-18eb8efe",
+      "answer": false,
+      "code": "CREATE TABLE books (\n  id INT PRIMARY KEY,\n  title VARCHAR(10)\n);\n\nSELECT is_nullable\nFROM information_schema.columns\nWHERE table_name = 'books' AND column_name = 'id';",
+      "prompt": "Does this metadata query print YES?",
+      "query": {
+        "explanation": "Declaring a column as PRIMARY KEY makes it both unique and NOT NULL, even though NOT NULL was never written. The catalog therefore reports is_nullable = 'NO' for books.id. The title column, with no constraint, would report 'YES'.",
+        "syntax": "col type PRIMARY KEY",
+        "tags": [
+          "constraints",
+          "primary-key",
+          "not-null"
+        ],
+        "title": "PRIMARY KEY implies NOT NULL"
+      },
+      "rationale": "A PRIMARY KEY column is implicitly NOT NULL, so the catalog reports 'NO' for id rather than 'YES'.",
+      "type": "bool",
+      "topic": "constraints-and-keys",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-a42fc48e",
+      "answer": true,
+      "code": "CREATE TABLE ord (id INT PRIMARY KEY);\nCREATE TABLE line (\n  id INT PRIMARY KEY,\n  ord_id INT REFERENCES ord(id) ON DELETE CASCADE\n);\n\nINSERT INTO ord VALUES (1), (2);\nINSERT INTO line VALUES (10, 1), (11, 1), (12, 2);\n\nDELETE FROM ord WHERE id = 1;\n\nSELECT count(*) FROM line;",
+      "prompt": "After this cascading delete, is the remaining line count 1?",
+      "query": {
+        "explanation": "Deleting ord row 1 cascades to every line row whose ord_id is 1, removing lines 10 and 11. Line 12 references ord 2, which was not deleted, so it survives and count(*) prints 1.",
+        "syntax": "REFERENCES parent(id) ON DELETE CASCADE",
+        "tags": [
+          "constraints",
+          "foreign-key",
+          "cascade"
+        ],
+        "title": "ON DELETE CASCADE removes matching children"
+      },
+      "rationale": "Only the two lines referencing ord 1 are cascaded away; line 12 belongs to ord 2 and remains, so the printed count is 1.",
+      "type": "bool",
+      "topic": "constraints-and-keys",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-sql-easy-ba79fb48",
+      "answer": false,
+      "code": "CREATE TABLE room (id INT PRIMARY KEY);\nCREATE TABLE seat (\n  id INT PRIMARY KEY,\n  room_id INT REFERENCES room(id) ON DELETE SET NULL\n);\n\nINSERT INTO room VALUES (1);\nINSERT INTO seat VALUES (1, 1), (2, 1);\n\nDELETE FROM room WHERE id = 1;\n\nSELECT count(room_id) FROM seat;",
+      "prompt": "Is the value printed by this ON DELETE SET NULL script 2?",
+      "query": {
+        "explanation": "Deleting room 1 sets room_id to NULL in both seat rows instead of deleting them, so seat still holds 2 rows. However count(room_id) ignores NULLs, so it prints 0; count(*) would be the query that prints 2.",
+        "syntax": "REFERENCES parent(id) ON DELETE SET NULL",
+        "tags": [
+          "constraints",
+          "foreign-key",
+          "set-null"
+        ],
+        "title": "ON DELETE SET NULL keeps the child rows"
+      },
+      "rationale": "Both seat rows survive but their room_id becomes NULL, and count(room_id) skips NULLs, so the printed value is 0 rather than 2.",
+      "type": "bool",
+      "topic": "constraints-and-keys",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    }
+  ],
+  "schemaVersion": 2
+}
