@@ -1349,9 +1349,9 @@
       "banks": {
         "easy": {
           "path": "sql/easy.json",
-          "hash": "d14ee6cfa008ad942900dcbfa975c5e53b628d8cb449e2ff926520aab45d4dd5",
+          "hash": "ec102a856c5f1ac9ad6307cafde7764da7148c758dc2423adcc770235310b74a",
           "access": "free",
-          "contentVersion": 2,
+          "contentVersion": 3,
           "topicCounts": {
             "filtering-and-nulls": 10,
             "joins": 10,
@@ -1367,9 +1367,9 @@
         },
         "medium": {
           "path": "sql/medium.json",
-          "hash": "e4b956038d295b65d167b8a34a60649fe173b2c85570ab88ab11ed6c0d87edba",
+          "hash": "277a8b439f906f911a8faf18f9ac80c4f94d6d373412ca563acd241fa59953f5",
           "access": "paid",
-          "contentVersion": 2,
+          "contentVersion": 3,
           "topicCounts": {
             "filtering-and-nulls": 10,
             "joins": 10,
@@ -1386,9 +1386,9 @@
         },
         "hard": {
           "path": "sql/hard.json",
-          "hash": "cdbaa8555208c561793670472dd4109f9c5975edf3443d5b5f1937476c1bd95f",
+          "hash": "eaa0126ad9e781a9b6099e5811eb0b54b87db9be86f416c266b9eaaa5f7b04ac",
           "access": "paid",
-          "contentVersion": 2,
+          "contentVersion": 3,
           "topicCounts": {
             "filtering-and-nulls": 10,
             "joins": 10,

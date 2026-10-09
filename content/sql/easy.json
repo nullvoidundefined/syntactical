@@ -3,7 +3,7 @@
     {
       "id": "gen-sql-easy-a6be2e89",
       "answer": false,
-      "code": "SELECT count(*) FROM pairs WHERE a = b;",
+      "code": "CREATE TABLE pairs (a INTEGER, b INTEGER);\nINSERT INTO pairs VALUES (5,5),(NULL,NULL),(1,2);\n\nSELECT count(*) FROM pairs WHERE a = b;",
       "prompt": "Does this query count the row where both a and b are NULL?",
       "query": {
         "explanation": "Comparing NULL to NULL with = yields unknown, not true, so that row is filtered out. Only the (5,5) row matches, giving a count of 1. To treat two NULLs as matching you need IS NOT DISTINCT FROM or an explicit IS NULL test.",
@@ -50,7 +50,7 @@
           "rationale": "That is the total row count; the two rows with scores 10 and 7 are filtered out."
         }
       ],
-      "code": "SELECT count(*) FROM tests WHERE score IS NULL;",
+      "code": "CREATE TABLE tests (id INTEGER, score INTEGER);\nINSERT INTO tests VALUES (1,10),(2,NULL),(3,NULL),(4,7);\n\nSELECT count(*) FROM tests WHERE score IS NULL;",
       "prompt": "What number does this query print?",
       "query": {
         "explanation": "Two of the four rows have a NULL score, and IS NULL is the only operator that tests for NULL, so the count is 2. The rows with scores 10 and 7 are excluded.",
@@ -79,7 +79,7 @@
     {
       "id": "gen-sql-easy-49274677",
       "answer": false,
-      "code": "SELECT count(*) FROM employees WHERE manager_id IS NOT NULL;",
+      "code": "CREATE TABLE employees (name VARCHAR(10), manager_id INTEGER);\nINSERT INTO employees VALUES ('Ann',1),('Bo',NULL),('Cy',3);\n\nSELECT count(*) FROM employees WHERE manager_id IS NOT NULL;",
       "prompt": "Does this query count the row whose manager_id is NULL?",
       "query": {
         "explanation": "IS NOT NULL keeps only rows with an actual value, so the row for Bo (manager_id NULL) is excluded and the count is 2 (Ann and Cy).",
@@ -126,7 +126,7 @@
           "rationale": "The row with qty 5 is not converted to 0 and does not match."
         }
       ],
-      "code": "SELECT count(*) FROM stock WHERE COALESCE(qty, 0) = 0;",
+      "code": "CREATE TABLE stock (id INTEGER, qty INTEGER);\nINSERT INTO stock VALUES (1,0),(2,NULL),(3,5),(4,0);\n\nSELECT count(*) FROM stock WHERE COALESCE(qty, 0) = 0;",
       "prompt": "What value does this query print?",
       "query": {
         "explanation": "COALESCE(qty, 0) replaces NULL with 0 before the comparison, so the two rows with qty 0 and the row with qty NULL all match, giving 3. Only the row with qty 5 fails.",
@@ -172,7 +172,7 @@
           "rationale": "That is count(*); the NULL email row is skipped by count(email)."
         }
       ],
-      "code": "SELECT count(email) FROM users;",
+      "code": "CREATE TABLE users (id INTEGER, email VARCHAR(20));\nINSERT INTO users VALUES (1,'a@x.com'),(2,NULL),(3,'b@x.com'),(4,'c@x.com');\n\nSELECT count(email) FROM users;",
       "prompt": "What does this query output?",
       "query": {
         "explanation": "count(email) counts only rows where email is not NULL. Three of the four rows have an address, so the result is 3; count(*) would return 4.",
@@ -201,7 +201,7 @@
     {
       "id": "gen-sql-easy-37844367",
       "answer": true,
-      "code": "SELECT count(*) FROM visits WHERE city NOT IN ('Rome', NULL);",
+      "code": "CREATE TABLE visits (city VARCHAR(10));\nINSERT INTO visits VALUES ('Rome'),('Oslo');\n\nSELECT count(*) FROM visits WHERE city NOT IN ('Rome', NULL);",
       "prompt": "Is the count printed by this query 0?",
       "query": {
         "explanation": "NOT IN expands to city <> 'Rome' AND city <> NULL. The second comparison is always unknown, so the whole condition can never be true and no rows survive, making the count 0 even for 'Oslo'.",
@@ -248,7 +248,7 @@
           "rationale": "That is the total row count, but the filter rejects every row."
         }
       ],
-      "code": "SELECT count(*) FROM products WHERE price > NULL;",
+      "code": "CREATE TABLE products (id INTEGER, price INTEGER);\nINSERT INTO products VALUES (1,10),(2,NULL),(3,50);\n\nSELECT count(*) FROM products WHERE price > NULL;",
       "prompt": "What value is printed by this statement?",
       "query": {
         "explanation": "Any comparison operator used with NULL yields unknown, so price > NULL is never true and no row passes the filter; the count is 0.",
@@ -277,7 +277,7 @@
     {
       "id": "gen-sql-easy-79002346",
       "answer": true,
-      "code": "SELECT count(*) FROM tickets WHERE status <> 'open' OR status IS NULL;",
+      "code": "CREATE TABLE tickets (id INTEGER, status VARCHAR(10));\nINSERT INTO tickets VALUES (1,'open'),(2,'closed'),(3,NULL);\n\nSELECT count(*) FROM tickets WHERE status <> 'open' OR status IS NULL;",
       "prompt": "Does this query count both the 'closed' row and the NULL row?",
       "query": {
         "explanation": "status <> 'open' alone matches only 'closed', because the NULL row evaluates to unknown. The extra OR status IS NULL branch brings the NULL row back in, so both rows are counted and the result is 2.",
@@ -324,7 +324,7 @@
           "rationale": "That is every customer; the filter keeps only those without a matching order."
         }
       ],
-      "code": "SELECT count(*)\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id\nWHERE o.customer_id IS NULL;",
+      "code": "CREATE TABLE customers (id INTEGER);\nINSERT INTO customers VALUES (1),(2),(3);\nCREATE TABLE orders (id INTEGER, customer_id INTEGER);\nINSERT INTO orders VALUES (10,1),(11,3),(12,1);\n\nSELECT count(*)\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id\nWHERE o.customer_id IS NULL;",
       "prompt": "What number does this query print?",
       "query": {
         "explanation": "The LEFT JOIN fills unmatched customers with NULL columns from orders, and the IS NULL filter keeps exactly those rows. Customers 1 and 3 have orders, so only customer 2 is left and the count is 1.",
@@ -370,7 +370,7 @@
           "rationale": "All three rows would only count if the predicate were TRUE everywhere, but the row with tag 'a' clearly matches skip and is excluded."
         }
       ],
-      "code": "SELECT count(*)\nFROM items\nWHERE tag NOT IN (SELECT tag FROM skip);\n\n-- items(id, tag): (1,'a'), (2,NULL), (3,'b')\n-- skip(tag): ('a'), (NULL)",
+      "code": "CREATE TABLE items (id INTEGER, tag VARCHAR(10));\nINSERT INTO items (id, tag) VALUES (1, 'a'), (2, NULL), (3, 'b');\nCREATE TABLE skip (tag VARCHAR(10));\nINSERT INTO skip (tag) VALUES ('a'), (NULL);\n\nSELECT count(*)\nFROM items\nWHERE tag NOT IN (SELECT tag FROM skip);\n\n-- items(id, tag): (1,'a'), (2,NULL), (3,'b')\n-- skip(tag): ('a'), (NULL)",
       "prompt": "What single value does this SELECT print?",
       "query": {
         "explanation": "NOT IN expands to a chain of <> comparisons joined by AND. Because skip contains a NULL, every comparison chain ends in UNKNOWN rather than TRUE: 'b' <> 'a' is TRUE but 'b' <> NULL is UNKNOWN, so the whole predicate is UNKNOWN. The row with tag = 'a' is plainly FALSE, and the row with tag = NULL is UNKNOWN as well. WHERE keeps only TRUE rows, so no rows survive and count(*) prints 0.",
@@ -693,7 +693,7 @@
           "rationale": "No extra amount is added for customer 3; its unmatched row contributes NULL, which sum() ignores."
         }
       ],
-      "code": "SELECT sum(o.amount)\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id;\n\n-- customers(id): 1, 2, 3\n-- orders(customer_id, amount): (1,10), (1,20), (2,5)",
+      "code": "CREATE TABLE customers (id INT);\nINSERT INTO customers VALUES (1),(2),(3);\nCREATE TABLE orders (customer_id INT, amount INT);\nINSERT INTO orders VALUES (1,10),(1,20),(2,5);\n\nSELECT sum(o.amount)\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id;\n\n-- customers(id): 1, 2, 3\n-- orders(customer_id, amount): (1,10), (1,20), (2,5)",
       "prompt": "What value does this query print?",
       "query": {
         "explanation": "The LEFT JOIN produces one row per match plus one row for each unmatched left row. Customer 1 matches twice (10 and 20), customer 2 matches once (5), and customer 3 produces a single row where o.amount is NULL. sum() skips NULL values, so the total is 10 + 20 + 5 = 35.",
@@ -722,7 +722,7 @@
     {
       "id": "gen-sql-easy-077c6660",
       "answer": true,
-      "code": "SELECT count(*)\nFROM customers c\nRIGHT JOIN orders o ON o.customer_id = c.id;\n\n-- customers(id): 1, 2\n-- orders(customer_id): 1, 1, 99",
+      "code": "CREATE TABLE customers (id INT);\nINSERT INTO customers VALUES (1),(2);\nCREATE TABLE orders (customer_id INT);\nINSERT INTO orders VALUES (1),(1),(99);\n\nSELECT count(*)\nFROM customers c\nRIGHT JOIN orders o ON o.customer_id = c.id;\n\n-- customers(id): 1, 2\n-- orders(customer_id): 1, 1, 99",
       "prompt": "Is the count printed by this RIGHT JOIN equal to 3?",
       "query": {
         "explanation": "A RIGHT JOIN keeps every row of the right table. Both orders with customer_id 1 match customer 1, and the order with customer_id 99 has no matching customer but is still kept with NULL customer columns. count(*) counts all three result rows.",
@@ -769,7 +769,7 @@
           "rationale": "The SELECT list returns the status column (or its default), not the customer id."
         }
       ],
-      "code": "SELECT coalesce(o.status, 'none')\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id\nWHERE c.id = 2;\n\n-- customers(id): 1, 2\n-- orders(customer_id, status): (1, 'paid')",
+      "code": "CREATE TABLE customers (id INT);\nINSERT INTO customers VALUES (1),(2);\nCREATE TABLE orders (customer_id INT, status VARCHAR(10));\nINSERT INTO orders VALUES (1,'paid');\n\nSELECT coalesce(o.status, 'none')\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id\nWHERE c.id = 2;\n\n-- customers(id): 1, 2\n-- orders(customer_id, status): (1, 'paid')",
       "prompt": "What does this query print?",
       "query": {
         "explanation": "Customer 2 has no matching order, but a LEFT JOIN still returns the customer row with every right-table column set to NULL. coalesce(o.status, 'none') therefore replaces the NULL with the string none.",
@@ -798,7 +798,7 @@
     {
       "id": "gen-sql-easy-d6f2f6f3",
       "answer": false,
-      "code": "SELECT count(*)\nFROM a\nJOIN b ON a.x < b.y;\n\n-- a(x): 1, 2\n-- b(y): 2, 3",
+      "code": "CREATE TABLE a (x INT);\nINSERT INTO a VALUES (1),(2);\nCREATE TABLE b (y INT);\nINSERT INTO b VALUES (2),(3);\n\nSELECT count(*)\nFROM a\nJOIN b ON a.x < b.y;\n\n-- a(x): 1, 2\n-- b(y): 2, 3",
       "prompt": "Is the count printed by this join 4?",
       "query": {
         "explanation": "A join condition can be any predicate. Of the four possible pairs, (1,2), (1,3) and (2,3) satisfy a.x < b.y, while (2,2) does not because 2 is not less than 2. So count(*) prints 3.",
@@ -1235,7 +1235,7 @@
           "rationale": "The subquery returns 12, but the outer SELECT prints the name column, not the price."
         }
       ],
-      "code": "-- setup\nINSERT INTO products (id, name, price) VALUES\n  (1, 'pen', 2), (2, 'book', 12), (3, 'mug', 7);\n\nSELECT name\nFROM products\nWHERE price = (SELECT max(price) FROM products);",
+      "code": "CREATE TABLE products (id INT, name VARCHAR(20), price INT);\n\n-- setup\nINSERT INTO products (id, name, price) VALUES\n  (1, 'pen', 2), (2, 'book', 12), (3, 'mug', 7);\n\nSELECT name\nFROM products\nWHERE price = (SELECT max(price) FROM products);",
       "prompt": "Which name does this query print?",
       "query": {
         "explanation": "A scalar subquery returns a single value. (SELECT max(price) FROM products) evaluates to 12, so the WHERE clause keeps only the row whose price is 12, and that row's name is 'book'.",
@@ -1281,7 +1281,7 @@
           "rationale": "5 is the total number of order rows; the IN filter removes the two west orders."
         }
       ],
-      "code": "-- setup\nINSERT INTO customers (id, region) VALUES\n  (1, 'east'), (2, 'west'), (3, 'east');\nINSERT INTO orders (id, customer_id) VALUES\n  (1, 1), (2, 2), (3, 3), (4, 1), (5, 2);\n\nSELECT count(*)\nFROM orders\nWHERE customer_id IN (SELECT id FROM customers WHERE region = 'east');",
+      "code": "CREATE TABLE customers (id INT, region VARCHAR(10));\nCREATE TABLE orders (id INT, customer_id INT);\n\n-- setup\nINSERT INTO customers (id, region) VALUES\n  (1, 'east'), (2, 'west'), (3, 'east');\nINSERT INTO orders (id, customer_id) VALUES\n  (1, 1), (2, 2), (3, 3), (4, 1), (5, 2);\n\nSELECT count(*)\nFROM orders\nWHERE customer_id IN (SELECT id FROM customers WHERE region = 'east');",
       "prompt": "What number does this query print?",
       "query": {
         "explanation": "The subquery returns the ids 1 and 3 (the east customers). Order rows 1, 4 (customer 1) and 3 (customer 3) match, so count(*) prints 3.",
@@ -1327,7 +1327,7 @@
           "rationale": "Department 2 (hr) has no employees, so EXISTS is false and it is not counted."
         }
       ],
-      "code": "-- setup\nINSERT INTO departments (id, name) VALUES\n  (1, 'sales'), (2, 'hr'), (3, 'it');\nINSERT INTO employees (id, dept_id) VALUES\n  (1, 1), (2, 1), (3, 3);\n\nSELECT count(*)\nFROM departments d\nWHERE EXISTS (SELECT 1 FROM employees e WHERE e.dept_id = d.id);",
+      "code": "CREATE TABLE departments (id INT, name VARCHAR(10));\nCREATE TABLE employees (id INT, dept_id INT);\n\n-- setup\nINSERT INTO departments (id, name) VALUES\n  (1, 'sales'), (2, 'hr'), (3, 'it');\nINSERT INTO employees (id, dept_id) VALUES\n  (1, 1), (2, 1), (3, 3);\n\nSELECT count(*)\nFROM departments d\nWHERE EXISTS (SELECT 1 FROM employees e WHERE e.dept_id = d.id);",
       "prompt": "What number does this query print?",
       "query": {
         "explanation": "EXISTS is true when the correlated subquery finds at least one row. Departments 1 and 3 have employees; department 2 has none, so count(*) prints 2.",
@@ -1373,7 +1373,7 @@
           "rationale": "150 sums every sale, but customer 2's total of 20 is removed by WHERE total > 50."
         }
       ],
-      "code": "-- setup\nINSERT INTO sales (id, customer_id, amount) VALUES\n  (1, 1, 30), (2, 1, 40), (3, 2, 20), (4, 3, 60);\n\nSELECT sum(total)\nFROM (\n  SELECT customer_id, sum(amount) AS total\n  FROM sales\n  GROUP BY customer_id\n) t\nWHERE total > 50;",
+      "code": "CREATE TABLE sales (id INT, customer_id INT, amount INT);\n\n-- setup\nINSERT INTO sales (id, customer_id, amount) VALUES\n  (1, 1, 30), (2, 1, 40), (3, 2, 20), (4, 3, 60);\n\nSELECT sum(total)\nFROM (\n  SELECT customer_id, sum(amount) AS total\n  FROM sales\n  GROUP BY customer_id\n) t\nWHERE total > 50;",
       "prompt": "What value does this query print?",
       "query": {
         "explanation": "The derived table produces one row per customer: 70, 20 and 60. WHERE keeps 70 and 60, and the outer sum adds them to 130.",
@@ -1419,7 +1419,7 @@
           "rationale": "Only one of the four rows beats every value returned by the subquery."
         }
       ],
-      "code": "-- setup\nINSERT INTO scores (id, value, grade) VALUES\n  (1, 10, 'a'), (2, 30, 'a'), (3, 20, 'b'), (4, 25, 'b');\n\nSELECT count(*)\nFROM scores\nWHERE value > ALL (SELECT value FROM scores WHERE grade = 'b');",
+      "code": "CREATE TABLE scores (id INT, value INT, grade VARCHAR(2));\n\n-- setup\nINSERT INTO scores (id, value, grade) VALUES\n  (1, 10, 'a'), (2, 30, 'a'), (3, 20, 'b'), (4, 25, 'b');\n\nSELECT count(*)\nFROM scores\nWHERE value > ALL (SELECT value FROM scores WHERE grade = 'b');",
       "prompt": "What number does this query print?",
       "query": {
         "explanation": "The subquery returns 20 and 25. A row passes only if its value exceeds both, so only the row with value 30 qualifies and count(*) prints 1.",
@@ -1465,7 +1465,7 @@
           "rationale": "Customer 2 has no matching order row, so exactly one name is printed."
         }
       ],
-      "code": "-- setup\nINSERT INTO customers (id, name) VALUES (1, 'ana'), (2, 'bo'), (3, 'cy');\nINSERT INTO orders (id, customer_id) VALUES (1, 1), (2, 1), (3, 3);\n\nSELECT c.name\nFROM customers c\nWHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id);",
+      "code": "CREATE TABLE customers (id INT, name VARCHAR(10));\nCREATE TABLE orders (id INT, customer_id INT);\n\n-- setup\nINSERT INTO customers (id, name) VALUES (1, 'ana'), (2, 'bo'), (3, 'cy');\nINSERT INTO orders (id, customer_id) VALUES (1, 1), (2, 1), (3, 3);\n\nSELECT c.name\nFROM customers c\nWHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id);",
       "prompt": "Which value does this query print?",
       "query": {
         "explanation": "NOT EXISTS keeps only outer rows whose correlated subquery finds nothing. Customers 1 and 3 have orders; customer 2 does not, so 'bo' is printed.",
@@ -1494,7 +1494,7 @@
     {
       "id": "gen-sql-easy-5d19aff6",
       "answer": true,
-      "code": "SELECT count(*) FROM a WHERE id NOT IN (SELECT id FROM b);",
+      "code": "CREATE TABLE a (id INT);\nINSERT INTO a VALUES (1),(2),(3);\nCREATE TABLE b (id INT);\nINSERT INTO b VALUES (2),(NULL);\n\nSELECT count(*) FROM a WHERE id NOT IN (SELECT id FROM b);",
       "prompt": "Is the count printed by this NOT IN query 0?",
       "query": {
         "explanation": "Table b contains a NULL, so `id NOT IN (2, NULL)` evaluates to UNKNOWN for every row of a (never TRUE), and no row passes the WHERE clause. The printed count is 0, even though 1 and 3 are visibly absent from b.",
@@ -1541,7 +1541,7 @@
           "rationale": "The minimum is taken over all rows, not only the 'west' row, so the result is not 0."
         }
       ],
-      "code": "SELECT amt - (SELECT min(amt) FROM sales) AS d\nFROM sales\nWHERE region = 'west';",
+      "code": "CREATE TABLE sales (region VARCHAR(10), amt INT);\nINSERT INTO sales VALUES ('east',10),('west',30),('east',20);\n\nSELECT amt - (SELECT min(amt) FROM sales) AS d\nFROM sales\nWHERE region = 'west';",
       "prompt": "What value does this query print?",
       "query": {
         "explanation": "The subquery `(SELECT min(amt) FROM sales)` is uncorrelated and returns the single value 10 over all rows. The outer query keeps only the 'west' row with amt = 30, so the printed difference is 30 - 10 = 20.",
@@ -1586,7 +1586,7 @@
           "rationale": "The subquery returns rows and two prices exceed 10, so the count is not 0."
         }
       ],
-      "code": "SELECT count(*) FROM p\nWHERE price > ANY (SELECT v FROM lim);",
+      "code": "CREATE TABLE p (id INT, price INT);\nINSERT INTO p VALUES (1,5),(2,15),(3,25);\nCREATE TABLE lim (v INT);\nINSERT INTO lim VALUES (10),(20);\n\nSELECT count(*) FROM p\nWHERE price > ANY (SELECT v FROM lim);",
       "prompt": "What number does this query print?",
       "query": {
         "explanation": "`> ANY` is true when the value exceeds at least one subquery row, i.e. when it exceeds the smallest value 10. Prices 15 and 25 qualify, while 5 does not, so count(*) prints 2.",
@@ -1614,7 +1614,7 @@
     {
       "id": "gen-sql-easy-a02be292",
       "answer": false,
-      "code": "SELECT count(*) FROM emp e\nWHERE sal = (SELECT max(sal) FROM emp m WHERE m.dept = e.dept);",
+      "code": "CREATE TABLE emp (id INT, dept VARCHAR(5), sal INT);\nINSERT INTO emp VALUES (1,'a',100),(2,'a',200),(3,'b',150);\n\nSELECT count(*) FROM emp e\nWHERE sal = (SELECT max(sal) FROM emp m WHERE m.dept = e.dept);",
       "prompt": "Does this correlated subquery query print 1?",
       "query": {
         "explanation": "The inner query is correlated on dept, so it returns the maximum salary of each row's own department: 200 for dept 'a' and 150 for dept 'b'. Rows 2 and 3 match, so the printed count is 2.",
@@ -2053,7 +2053,7 @@
           "rationale": "10 is the score used for sorting, but the SELECT list returns name, not score."
         }
       ],
-      "code": "SELECT name\nFROM players\nORDER BY score\nFETCH FIRST 1 ROW ONLY;",
+      "code": "CREATE TABLE players (name VARCHAR(10), score INTEGER);\nINSERT INTO players (name, score) VALUES ('ana', 30), ('bo', 10), ('cy', 20);\n\nSELECT name\nFROM players\nORDER BY score\nFETCH FIRST 1 ROW ONLY;",
       "prompt": "Which value does this query print?",
       "query": {
         "explanation": "Without ASC or DESC, ORDER BY sorts ascending, so the smallest score (10, 'bo') comes first and FETCH FIRST 1 ROW ONLY keeps just that row. The SELECT list only has name, so 'bo' is printed.",
@@ -2099,7 +2099,7 @@
           "rationale": "7 is mug's price; the query selects product, not price."
         }
       ],
-      "code": "SELECT product\nFROM products\nORDER BY price DESC\nFETCH FIRST 1 ROW ONLY;",
+      "code": "CREATE TABLE products (product VARCHAR(10), price INTEGER);\nINSERT INTO products (product, price) VALUES ('pen', 3), ('mug', 7), ('cap', 5);\n\nSELECT product\nFROM products\nORDER BY price DESC\nFETCH FIRST 1 ROW ONLY;",
       "prompt": "Which product does this query print?",
       "query": {
         "explanation": "DESC sorts from largest to smallest, so the row with price 7 ('mug') is first and is the only row kept by FETCH FIRST 1 ROW ONLY.",
@@ -2128,7 +2128,7 @@
     {
       "id": "gen-sql-easy-b8f632c4",
       "answer": false,
-      "code": "SELECT name\nFROM fruits\nORDER BY name\nFETCH FIRST 1 ROW ONLY;",
+      "code": "CREATE TABLE fruits (name VARCHAR(10));\nINSERT INTO fruits (name) VALUES ('banana'), ('apple'), ('cherry');\n\nSELECT name\nFROM fruits\nORDER BY name\nFETCH FIRST 1 ROW ONLY;",
       "prompt": "Does this query print cherry?",
       "query": {
         "explanation": "ORDER BY name sorts the strings alphabetically ascending: apple, banana, cherry. The first row is 'apple', so the query prints apple, not cherry.",
@@ -2175,7 +2175,7 @@
           "rationale": "A positive integer in ORDER BY legally refers to the Nth select-list column."
         }
       ],
-      "code": "SELECT code, qty\nFROM items\nORDER BY 2\nFETCH FIRST 1 ROW ONLY;",
+      "code": "CREATE TABLE items (code VARCHAR(5), qty INTEGER);\nINSERT INTO items (code, qty) VALUES ('x', 9), ('y', 2), ('z', 5);\n\nSELECT code, qty\nFROM items\nORDER BY 2\nFETCH FIRST 1 ROW ONLY;",
       "prompt": "Which code value appears in the printed row?",
       "query": {
         "explanation": "ORDER BY 2 sorts by the second column of the select list, which is qty. Ascending qty puts 2 first, and that row has code 'y'.",
@@ -2221,7 +2221,7 @@
           "rationale": "1 is the grade used for sorting; the select list returns name."
         }
       ],
-      "code": "SELECT name\nFROM students\nORDER BY grade, name\nFETCH FIRST 1 ROW ONLY;",
+      "code": "CREATE TABLE students (name VARCHAR(10), grade INTEGER);\nINSERT INTO students (name, grade) VALUES ('zoe', 1), ('amy', 1), ('bob', 2);\n\nSELECT name\nFROM students\nORDER BY grade, name\nFETCH FIRST 1 ROW ONLY;",
       "prompt": "Which name does this query print?",
       "query": {
         "explanation": "Rows sort by grade first; 'zoe' and 'amy' both have grade 1, so the second key, name, breaks the tie alphabetically and 'amy' comes first.",
@@ -2250,7 +2250,7 @@
     {
       "id": "gen-sql-easy-656e8764",
       "answer": true,
-      "code": "SELECT label, qty * 2 AS total\nFROM sales\nORDER BY total DESC\nFETCH FIRST 1 ROW ONLY;",
+      "code": "CREATE TABLE sales (label VARCHAR(5), qty INTEGER);\nINSERT INTO sales (label, qty) VALUES ('a', 4), ('b', 9), ('c', 6);\n\nSELECT label, qty * 2 AS total\nFROM sales\nORDER BY total DESC\nFETCH FIRST 1 ROW ONLY;",
       "prompt": "Is the label printed by this query b?",
       "query": {
         "explanation": "The alias total holds qty * 2, giving 8, 18 and 12. Sorting DESC by total puts 18 first, which is the row with label 'b'.",
@@ -2297,7 +2297,7 @@
           "rationale": "Three rows exist, so skipping one still leaves rows to fetch."
         }
       ],
-      "code": "SELECT city\nFROM temps\nORDER BY degrees\nOFFSET 1 ROWS\nFETCH NEXT 1 ROWS ONLY;",
+      "code": "CREATE TABLE temps (city VARCHAR(10), degrees INTEGER);\nINSERT INTO temps (city, degrees) VALUES ('lima', 22), ('nome', 3), ('perth', 30);\n\nSELECT city\nFROM temps\nORDER BY degrees\nOFFSET 1 ROWS\nFETCH NEXT 1 ROWS ONLY;",
       "prompt": "Which city does this query print?",
       "query": {
         "explanation": "Ascending order by degrees is nome (3), lima (22), perth (30). OFFSET 1 ROWS skips nome, and FETCH NEXT 1 ROWS ONLY returns lima.",
@@ -2343,7 +2343,7 @@
           "rationale": "3 is red's count; the select list returns team, not the count."
         }
       ],
-      "code": "SELECT team\nFROM visits\nGROUP BY team\nORDER BY count(*) DESC\nFETCH FIRST 1 ROW ONLY;",
+      "code": "CREATE TABLE visits (team VARCHAR(10));\nINSERT INTO visits (team) VALUES ('red'), ('blue'), ('red'), ('green'), ('red'), ('blue');\n\nSELECT team\nFROM visits\nGROUP BY team\nORDER BY count(*) DESC\nFETCH FIRST 1 ROW ONLY;",
       "prompt": "Which team does this query print?",
       "query": {
         "explanation": "Group counts are red 3, blue 2 and green 1. ORDER BY count(*) DESC puts the largest count first, so 'red' is printed.",
@@ -2372,7 +2372,7 @@
     {
       "id": "gen-sql-easy-0de711af",
       "answer": false,
-      "code": "SELECT name\nFROM codes\nORDER BY name DESC\nFETCH FIRST 1 ROW ONLY;",
+      "code": "CREATE TABLE codes (name VARCHAR(10));\nINSERT INTO codes (name) VALUES ('alpha'), ('delta'), ('bravo');\n\nSELECT name\nFROM codes\nORDER BY name DESC\nFETCH FIRST 1 ROW ONLY;",
       "prompt": "Does this query print alpha?",
       "query": {
         "explanation": "DESC reverses alphabetical order to delta, bravo, alpha. The first row is 'delta', so the query prints delta rather than alpha.",
@@ -2419,7 +2419,7 @@
           "rationale": "3 is fig's length used for sorting; the select list returns word."
         }
       ],
-      "code": "SELECT word\nFROM words\nORDER BY CHAR_LENGTH(word)\nFETCH FIRST 1 ROW ONLY;",
+      "code": "CREATE TABLE words (word VARCHAR(10));\nINSERT INTO words (word) VALUES ('kiwi'), ('fig'), ('banana');\n\nSELECT word\nFROM words\nORDER BY CHAR_LENGTH(word)\nFETCH FIRST 1 ROW ONLY;",
       "prompt": "Which word does this query print?",
       "query": {
         "explanation": "ORDER BY can sort on a computed expression. Lengths are kiwi 4, fig 3 and banana 6, so ascending length puts 'fig' first.",
@@ -2741,7 +2741,7 @@
           "rationale": "There are only three rows, and no ranking function would reach 4 here."
         }
       ],
-      "code": "-- scores(name, pts): ('a', 10), ('b', 10), ('c', 5)\nSELECT dr\nFROM (\n  SELECT name, dense_rank() OVER (ORDER BY pts DESC) AS dr\n  FROM scores\n) t\nWHERE name = 'c';",
+      "code": "CREATE TABLE scores (name varchar(10), pts int);\nINSERT INTO scores VALUES ('a', 10), ('b', 10), ('c', 5);\n\n-- scores(name, pts): ('a', 10), ('b', 10), ('c', 5)\nSELECT dr\nFROM (\n  SELECT name, dense_rank() OVER (ORDER BY pts DESC) AS dr\n  FROM scores\n) t\nWHERE name = 'c';",
       "prompt": "What value does this query print?",
       "query": {
         "explanation": "Rows 'a' and 'b' tie at 10 points and both get dense rank 1. DENSE_RANK assigns the next distinct value without leaving gaps, so 'c' (5 points) gets 2. RANK would instead have given 3, because it skips ranks consumed by the tied rows.",
@@ -2770,7 +2770,7 @@
     {
       "id": "gen-sql-easy-e9bbb495",
       "answer": true,
-      "code": "-- nums(id, v): (1, 5), (2, 7), (3, 9)\nSELECT nxt\nFROM (\n  SELECT id, lead(v) OVER (ORDER BY id) AS nxt\n  FROM nums\n) t\nWHERE id = 3;",
+      "code": "CREATE TABLE nums (id int, v int);\nINSERT INTO nums VALUES (1, 5), (2, 7), (3, 9);\n\n-- nums(id, v): (1, 5), (2, 7), (3, 9)\nSELECT nxt\nFROM (\n  SELECT id, lead(v) OVER (ORDER BY id) AS nxt\n  FROM nums\n) t\nWHERE id = 3;",
       "prompt": "Is the value printed by this query NULL?",
       "query": {
         "explanation": "LEAD(v) looks one row ahead in the window's ordering. For the final row there is no next row, so the default (NULL) is returned. A second argument sets the offset and a third sets the default value to use instead of NULL.",
@@ -2817,7 +2817,7 @@
           "rationale": "40 is the sum of the east amounts; FIRST_VALUE returns a single row's value, not a total."
         }
       ],
-      "code": "-- sales(region, amt): ('east', 30), ('east', 10), ('west', 50)\nSELECT fv\nFROM (\n  SELECT region, amt,\n         first_value(amt) OVER (PARTITION BY region ORDER BY amt) AS fv\n  FROM sales\n) t\nWHERE amt = 30;",
+      "code": "CREATE TABLE sales (region varchar(10), amt int);\nINSERT INTO sales VALUES ('east', 30), ('east', 10), ('west', 50);\n\n-- sales(region, amt): ('east', 30), ('east', 10), ('west', 50)\nSELECT fv\nFROM (\n  SELECT region, amt,\n         first_value(amt) OVER (PARTITION BY region ORDER BY amt) AS fv\n  FROM sales\n) t\nWHERE amt = 30;",
       "prompt": "Which amount does this query print?",
       "query": {
         "explanation": "PARTITION BY region limits the window to the 'east' rows (30 and 10). Ordered ascending by amt, the first row of that partition has amt 10, so every 'east' row reports 10. The 'west' row is in a separate partition and cannot influence the result.",
@@ -2846,7 +2846,7 @@
     {
       "id": "gen-sql-easy-e9598e23",
       "answer": false,
-      "code": "-- vals(id, v): (1, 2), (2, 3), (3, 4)\nSELECT s\nFROM (\n  SELECT id, sum(v) OVER (ORDER BY id) AS s\n  FROM vals\n) t\nWHERE id = 1;",
+      "code": "CREATE TABLE vals (id int, v int);\nINSERT INTO vals VALUES (1, 2), (2, 3), (3, 4);\n\n-- vals(id, v): (1, 2), (2, 3), (3, 4)\nSELECT s\nFROM (\n  SELECT id, sum(v) OVER (ORDER BY id) AS s\n  FROM vals\n) t\nWHERE id = 1;",
       "prompt": "Does this query print 9?",
       "query": {
         "explanation": "When a window has an ORDER BY and no explicit frame, the frame is RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW, producing a running total. The first row's running total is just its own value, 2. Omitting ORDER BY entirely would make the frame the whole partition and print 9.",
@@ -2893,7 +2893,7 @@
           "rationale": "10 is just the first amount; the CTE passes all three rows to sum."
         }
       ],
-      "code": "WITH recent AS (\n  SELECT amount FROM sales\n)\nSELECT sum(amount) FROM recent;\n\n-- sales rows: (1, 10), (2, 20), (3, 30)",
+      "code": "CREATE TABLE sales (id INTEGER, amount INTEGER);\nINSERT INTO sales VALUES (1, 10), (2, 20), (3, 30);\n\nWITH recent AS (\n  SELECT amount FROM sales\n)\nSELECT sum(amount) FROM recent;\n\n-- sales rows: (1, 10), (2, 20), (3, 30)",
       "prompt": "What single value does this query print?",
       "query": {
         "explanation": "WITH recent AS (...) names a result set for the statement. The CTE selects all three amounts (10, 20, 30) unchanged, so the outer sum(amount) adds them to 60.",
@@ -2939,7 +2939,7 @@
           "rationale": "The expression multiplies by 2, not by itself."
         }
       ],
-      "code": "WITH c(x) AS (\n  SELECT v FROM t1\n)\nSELECT x * 2 FROM c;\n\n-- t1 rows: (5)",
+      "code": "CREATE TABLE t1 (v INTEGER);\nINSERT INTO t1 VALUES (5);\n\nWITH c(x) AS (\n  SELECT v FROM t1\n)\nSELECT x * 2 FROM c;\n\n-- t1 rows: (5)",
       "prompt": "What value does this query print?",
       "query": {
         "explanation": "c(x) renames the single output column of the CTE to x. The CTE returns one row with x = 5, so the outer query prints 5 * 2 = 10.",
@@ -2984,7 +2984,7 @@
           "rationale": "6 would require values beyond 1 and 2; nums holds only those two rows."
         }
       ],
-      "code": "WITH a AS (\n  SELECT n FROM nums\n), b AS (\n  SELECT sum(n) AS s FROM a\n)\nSELECT s FROM b;\n\n-- nums rows: (1), (2)",
+      "code": "CREATE TABLE nums (n INTEGER);\nINSERT INTO nums VALUES (1), (2);\n\nWITH a AS (\n  SELECT n FROM nums\n), b AS (\n  SELECT sum(n) AS s FROM a\n)\nSELECT s FROM b;\n\n-- nums rows: (1), (2)",
       "prompt": "What number does this query print?",
       "query": {
         "explanation": "A later CTE may reference an earlier one in the same WITH clause. CTE a returns 1 and 2, and b sums them to 3, which the outer query prints.",
@@ -3029,7 +3029,7 @@
           "rationale": "Order 2 has total 150, so the CTE is not empty and the join matches cust_id 2."
         }
       ],
-      "code": "WITH big AS (\n  SELECT cust_id FROM orders WHERE total > 100\n)\nSELECT c.name\nFROM customers c\nJOIN big ON c.id = big.cust_id;\n\n-- orders rows: (1, 1, 50), (2, 2, 150)\n-- customers rows: (1, 'ann'), (2, 'bob')",
+      "code": "CREATE TABLE orders (id INTEGER, cust_id INTEGER, total INTEGER);\nCREATE TABLE customers (id INTEGER, name VARCHAR(20));\nINSERT INTO orders VALUES (1, 1, 50), (2, 2, 150);\nINSERT INTO customers VALUES (1, 'ann'), (2, 'bob');\n\nWITH big AS (\n  SELECT cust_id FROM orders WHERE total > 100\n)\nSELECT c.name\nFROM customers c\nJOIN big ON c.id = big.cust_id;\n\n-- orders rows: (1, 1, 50), (2, 2, 150)\n-- customers rows: (1, 'ann'), (2, 'bob')",
       "prompt": "Which name does this query print?",
       "query": {
         "explanation": "The CTE keeps only orders with total > 100, which is order 2 for cust_id 2. Joining customers to that single row yields the name bob.",
@@ -3119,7 +3119,7 @@
           "rationale": "red totals 7, so one group satisfies the filter."
         }
       ],
-      "code": "WITH totals AS (\n  SELECT team, sum(pts) AS total\n  FROM scores\n  GROUP BY team\n)\nSELECT team FROM totals WHERE total > 5;\n\n-- scores rows: ('red', 3), ('red', 4), ('blue', 2), ('blue', 1)",
+      "code": "CREATE TABLE scores (team VARCHAR(10), pts INTEGER);\nINSERT INTO scores VALUES ('red', 3), ('red', 4), ('blue', 2), ('blue', 1);\n\nWITH totals AS (\n  SELECT team, sum(pts) AS total\n  FROM scores\n  GROUP BY team\n)\nSELECT team FROM totals WHERE total > 5;\n\n-- scores rows: ('red', 3), ('red', 4), ('blue', 2), ('blue', 1)",
       "prompt": "Which team name does this query print?",
       "query": {
         "explanation": "The CTE groups scores into red = 7 and blue = 3. The outer WHERE can filter the already-computed total, and only red exceeds 5.",
@@ -3147,7 +3147,7 @@
     {
       "id": "gen-sql-easy-8cee6523",
       "answer": true,
-      "code": "WITH t AS (\n  SELECT amount FROM payments WHERE amount > 10\n)\nSELECT count(*) FROM t;\n\n-- payments rows: (5), (10), (15), (20)",
+      "code": "CREATE TABLE payments (amount INTEGER);\nINSERT INTO payments VALUES (5), (10), (15), (20);\n\nWITH t AS (\n  SELECT amount FROM payments WHERE amount > 10\n)\nSELECT count(*) FROM t;\n\n-- payments rows: (5), (10), (15), (20)",
       "prompt": "Is the count printed by this query 2?",
       "query": {
         "explanation": "The CTE's WHERE keeps amounts strictly greater than 10, which are 15 and 20. The outer count(*) over the CTE therefore prints 2.",
@@ -3175,7 +3175,7 @@
     {
       "id": "gen-sql-easy-7c2be9c6",
       "answer": false,
-      "code": "WITH t AS (\n  SELECT n FROM vals\n)\nSELECT (SELECT sum(n) FROM t) + (SELECT count(*) FROM t) AS result;\n\n-- vals rows: (2), (3)",
+      "code": "CREATE TABLE vals (n INTEGER);\nINSERT INTO vals VALUES (2), (3);\n\nWITH t AS (\n  SELECT n FROM vals\n)\nSELECT (SELECT sum(n) FROM t) + (SELECT count(*) FROM t) AS result;\n\n-- vals rows: (2), (3)",
       "prompt": "Does this query print 6?",
       "query": {
         "explanation": "A CTE can be referenced many times in the same statement. Here sum(n) is 5 and count(*) is 2, so the printed result is 7.",
@@ -3232,7 +3232,7 @@
     {
       "id": "gen-sql-easy-527f5278",
       "answer": false,
-      "code": "WITH t AS (\n  SELECT id FROM items WHERE id > 1\n)\nSELECT count(*) FROM items;\n\n-- items rows: (1), (2), (3)",
+      "code": "CREATE TABLE items (id INTEGER);\nINSERT INTO items VALUES (1), (2), (3);\n\nWITH t AS (\n  SELECT id FROM items WHERE id > 1\n)\nSELECT count(*) FROM items;\n\n-- items rows: (1), (2), (3)",
       "prompt": "Does this query print 2?",
       "query": {
         "explanation": "Defining the CTE t does not change the items table. The outer query counts items directly, so all three rows are counted and 3 is printed.",
@@ -3765,7 +3765,7 @@
         }
       ],
       "code": "CREATE TABLE dept (\n  code VARCHAR(3) UNIQUE,\n  name VARCHAR(10)\n);\nCREATE TABLE emp (\n  id INT PRIMARY KEY,\n  dept_code VARCHAR(3) REFERENCES dept(code)\n);\n\nINSERT INTO dept VALUES ('d1', 'sales'), ('d2', 'ops');\nINSERT INTO emp VALUES (1, 'd1'), (2, NULL), (3, 'd2');\n\nSELECT count(dept_code) FROM emp;",
-      "prompt": "What value does the final SELECT print?",
+      "prompt": "In standard SQL, what value does the final SELECT print?",
       "query": {
         "explanation": "A FOREIGN KEY only requires non-NULL values to match a row in the referenced table, so the row with dept_code = NULL is accepted without any parent. All three inserts succeed, but count(column) ignores NULLs, so only the two rows with 'd1' and 'd2' are counted and 2 is printed.",
         "syntax": "col type REFERENCES parent(unique_col)",
@@ -3916,7 +3916,7 @@
       "id": "gen-sql-easy-6b8a367e",
       "answer": false,
       "code": "CREATE TABLE tags (label VARCHAR(5) UNIQUE);\n\nINSERT INTO tags VALUES (NULL), (NULL), ('x');\n\nSELECT count(*) FROM tags;",
-      "prompt": "Does this script leave exactly 2 rows in tags?",
+      "prompt": "In standard SQL, does this script leave exactly 2 rows in tags?",
       "query": {
         "explanation": "Two NULLs are never considered equal under a UNIQUE constraint, so both NULL rows are allowed alongside 'x'. All three inserts succeed and count(*) prints 3. Only a second row with the value 'x' would raise a uniqueness error.",
         "syntax": "col type UNIQUE",
