@@ -13,6 +13,7 @@ import { logWarning } from '../clients/logClient';
 import { AccountControl } from '../components/auth/AccountControl';
 import { AppShell } from '../components/layout/AppShell';
 import { createQueryClient } from '../config/queryClient';
+import { AdminCacheReset } from '../state/AdminCacheReset';
 import { AuthProvider } from '../state/AuthProvider';
 import { ContentProvider } from '../state/ContentProvider';
 import { OwnedStatsProvider } from '../state/OwnedStatsProvider';
@@ -36,6 +37,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ContentProvider contentBaseUrl={contentBaseUrl}>
           <AuthProvider>
+            <AdminCacheReset />
             <PaidBankPrefetch />
             <OwnedStatsProvider>
               <SyncProvider>

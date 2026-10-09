@@ -12,7 +12,7 @@
 //   one router.replace, sees no not-available text, and sends no GET admin/access and no PUT;
 // - after a toggle the signed-in user's entitlements (the source of the paid bank locks) change
 //   without a reload.
-// - a malformed GET admin/access reply shows the not-available state, while an extra field on an
+// - a malformed GET admin/access reply shows the load-failed state with Retry, while an extra field on an
 //   entry is ignored; a PUT reply naming another
 //   product changes nothing and shows the one alert; a product the manifest does not know is
 //   named from its raw id and can be toggled;
@@ -486,8 +486,9 @@ describe('admin route keeps the entitlements current', () => {
 });
 
 describe('admin route with malformed server data', () => {
-  async function expectNotAvailable(requests: { method: string; path: string; body: unknown }[]): Promise<void> {
-    await screen.findByText(NOT_AVAILABLE_TEXT);
+  async function expectLoadFailed(requests: { method: string; path: string; body: unknown }[]): Promise<void> {
+    await screen.findByText(/could not be loaded/i);
+    expect(screen.queryByText(NOT_AVAILABLE_TEXT)).toBeNull();
     await settle();
     expect(screen.queryAllByRole('switch')).toHaveLength(0);
     expect(listAccessUpdates(requests)).toHaveLength(0);
@@ -509,7 +510,7 @@ describe('admin route with malformed server data', () => {
   ];
 
   it.each(malformedLists)(
-    'shows the not-available state with no switches and no PUT for $label',
+    'shows the load-failed state with no switches and no PUT for $label',
     async ({ products }) => {
       const identity = buildIdentity();
       const { requests } = installRoutedFetch({
@@ -518,7 +519,7 @@ describe('admin route with malformed server data', () => {
       });
       await signIn(identity);
       await renderAdmin();
-      await expectNotAvailable(requests);
+      await expectLoadFailed(requests);
     },
   );
 
