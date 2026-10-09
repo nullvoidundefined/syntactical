@@ -26,6 +26,7 @@ describe('shipped content manifest categories', () => {
       rails: 'backend',
       'backend-security': 'backend',
       postgres: 'database',
+      sql: 'database',
     });
   });
 });

@@ -1,0 +1,162 @@
+[
+  {
+    "description": "Believing `col = NULL` matches rows where col is NULL, missing that comparing with NULL yields unknown so no row is returned and IS NULL is required.",
+    "id": "sql.equals-null-matches-null"
+  },
+  {
+    "description": "Believing `col <> 'x'` also returns rows where col is NULL, missing that the NULL rows evaluate to unknown and are filtered out.",
+    "id": "sql.not-equal-includes-nulls"
+  },
+  {
+    "description": "Believing NOT IN behaves like the negation of a membership test when the list contains NULL, missing that it then returns no rows at all.",
+    "id": "sql.not-in-with-null-list"
+  },
+  {
+    "description": "Believing a WHERE clause keeps rows whose condition is unknown, rather than only rows where the condition is true.",
+    "id": "sql.where-keeps-unknown-rows"
+  },
+  {
+    "description": "Believing AND binds looser than OR, so `a OR b AND c` is read as `(a OR b) AND c` instead of `a OR (b AND c)`.",
+    "id": "sql.and-or-precedence-reversed"
+  },
+  {
+    "description": "Believing LIKE with an unescaped `_` or `%` in the pattern matches those characters literally rather than as wildcards.",
+    "id": "sql.like-wildcards-are-literal"
+  },
+  {
+    "description": "Believing INNER JOIN keeps rows with no match on the other side, as LEFT JOIN does.",
+    "id": "sql.inner-join-keeps-unmatched"
+  },
+  {
+    "description": "Believing a join on a non-unique column returns one row per left row, missing that each match produces another row and the result multiplies.",
+    "id": "sql.join-never-multiplies-rows"
+  },
+  {
+    "description": "Believing a filter on the right table in WHERE leaves a LEFT JOIN unchanged, missing that it discards the NULL-extended rows and turns it into an inner join.",
+    "id": "sql.where-on-left-join-keeps-unmatched"
+  },
+  {
+    "description": "Believing a filter placed in the ON clause of a LEFT JOIN removes left rows, rather than only controlling which right rows match.",
+    "id": "sql.on-filter-removes-left-rows"
+  },
+  {
+    "description": "Believing a join without an ON condition or WHERE returns the matching rows, missing that it produces the Cartesian product of both tables.",
+    "id": "sql.missing-join-condition-is-harmless"
+  },
+  {
+    "description": "Believing a join compares NULL keys as equal, so rows with NULL in both join columns are paired.",
+    "id": "sql.null-keys-join-together"
+  },
+  {
+    "description": "Believing COUNT(col) counts every row, missing that it skips rows where col is NULL while COUNT(*) counts all rows.",
+    "id": "sql.count-column-counts-nulls"
+  },
+  {
+    "description": "Believing SUM and AVG treat NULL as zero, so AVG divides by the total row count instead of the count of non-NULL values.",
+    "id": "sql.aggregates-treat-null-as-zero"
+  },
+  {
+    "description": "Believing an aggregate over an empty set returns 0, missing that SUM, AVG, MIN and MAX return NULL while COUNT returns 0.",
+    "id": "sql.sum-of-no-rows-is-zero"
+  },
+  {
+    "description": "Believing an aggregate function can be used in WHERE to filter groups, rather than in HAVING.",
+    "id": "sql.aggregate-in-where"
+  },
+  {
+    "description": "Believing HAVING filters individual rows before grouping, rather than groups after aggregation.",
+    "id": "sql.having-filters-rows-before-grouping"
+  },
+  {
+    "description": "Believing a column not in GROUP BY and not aggregated can be selected, with the database picking the first or only value.",
+    "id": "sql.select-ungrouped-column"
+  },
+  {
+    "description": "Believing GROUP BY sorts its output, so an ORDER BY is unnecessary to get a guaranteed order.",
+    "id": "sql.group-by-implies-order"
+  },
+  {
+    "description": "Believing a scalar subquery that returns more than one row quietly uses the first row, rather than raising an error.",
+    "id": "sql.scalar-subquery-takes-first-row"
+  },
+  {
+    "description": "Believing a scalar subquery that returns no rows yields an error, missing that it evaluates to NULL.",
+    "id": "sql.empty-scalar-subquery-errors"
+  },
+  {
+    "description": "Believing an uncorrelated subquery is rerun for each outer row, or that a correlated subquery is evaluated only once.",
+    "id": "sql.correlated-subquery-runs-once"
+  },
+  {
+    "description": "Believing EXISTS depends on the values the subquery selects, so `EXISTS (SELECT NULL ...)` is false.",
+    "id": "sql.exists-checks-selected-value"
+  },
+  {
+    "description": "Believing UNION keeps duplicate rows, missing that it removes them and UNION ALL is needed to keep them.",
+    "id": "sql.union-keeps-duplicates"
+  },
+  {
+    "description": "Believing UNION matches columns by name, rather than by position and compatible type.",
+    "id": "sql.union-matches-columns-by-name"
+  },
+  {
+    "description": "Believing INTERSECT and EXCEPT are order-insensitive, so `A EXCEPT B` equals `B EXCEPT A`.",
+    "id": "sql.except-is-symmetric"
+  },
+  {
+    "description": "Believing set operators treat NULLs as distinct, so duplicate NULL rows are kept by UNION and INTERSECT.",
+    "id": "sql.set-ops-treat-nulls-distinct"
+  },
+  {
+    "description": "Believing a query without ORDER BY returns rows in insertion or primary key order.",
+    "id": "sql.no-order-by-implies-insert-order"
+  },
+  {
+    "description": "Believing a window function collapses rows like GROUP BY, rather than returning one value per input row.",
+    "id": "sql.window-function-collapses-rows"
+  },
+  {
+    "description": "Believing a window function can be filtered in the same query's WHERE clause, missing that it is computed after WHERE and needs a subquery or CTE.",
+    "id": "sql.window-function-in-where"
+  },
+  {
+    "description": "Believing RANK gives consecutive numbers after ties, missing that it leaves gaps while DENSE_RANK does not and ROW_NUMBER never ties.",
+    "id": "sql.rank-has-no-gaps"
+  },
+  {
+    "description": "Believing a window ORDER BY with the default frame gives the whole-partition total, missing that it makes SUM a running total up to the current row's peers.",
+    "id": "sql.running-sum-is-partition-total"
+  },
+  {
+    "description": "Believing a non-recursive CTE can reference itself, or that a CTE can be referenced by an earlier sibling in the WITH list.",
+    "id": "sql.cte-can-reference-itself"
+  },
+  {
+    "description": "Believing an UPDATE or DELETE without a WHERE clause affects no rows, rather than every row in the table.",
+    "id": "sql.update-without-where-affects-none"
+  },
+  {
+    "description": "Believing INSERT with a column list can omit a NOT NULL column that has no default.",
+    "id": "sql.insert-omits-required-column"
+  },
+  {
+    "description": "Believing a UNIQUE constraint rejects more than one NULL, rather than allowing multiple NULLs.",
+    "id": "sql.unique-forbids-multiple-nulls"
+  },
+  {
+    "description": "Believing a PRIMARY KEY can contain NULL, or that a table may have several primary keys.",
+    "id": "sql.primary-key-allows-null"
+  },
+  {
+    "description": "Believing a FOREIGN KEY forces the referencing column to be non-NULL, rather than allowing NULL to mean no reference.",
+    "id": "sql.foreign-key-forbids-null"
+  },
+  {
+    "description": "Believing a CHECK constraint rejects a row whose condition evaluates to unknown, missing that only false is rejected.",
+    "id": "sql.check-rejects-unknown"
+  },
+  {
+    "description": "Believing a foreign key lets you delete the referenced parent row, with child rows quietly kept, when the default action is to reject the delete.",
+    "id": "sql.foreign-key-delete-cascades-by-default"
+  }
+]
