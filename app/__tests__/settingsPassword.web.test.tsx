@@ -134,9 +134,15 @@ describe('Settings password form on the web', () => {
     await waitFor(() => expect(document.activeElement).toBe(getNewInput()));
   });
 
-  it('leaves focus alone without the form param', async () => {
+  it.each([
+    ['no form param', undefined],
+    ['an array holding the value', ['password', 'x']],
+    ['a near-miss value', 'passwords'],
+    ['a different case', 'Password'],
+  ])('leaves focus alone with %s', async (_label, value) => {
     const identity = buildIdentity();
     installRoutedFetch({ [PROFILE_ROUTE]: profileReply(identity.email, true) });
+    mockParams.current = value === undefined ? {} : { form: value };
     await renderSignedInSettings(identity);
     await act(async () => undefined);
     expect(document.activeElement).not.toBe(getCurrentInput());
