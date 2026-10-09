@@ -981,10 +981,10 @@
         },
         "medium": {
           "path": "rails/medium.json",
-          "hash": "1355417bc28cad3694330369865611c16e690fe87dfdee71b6f74bd4a88f24f5",
+          "hash": "dd298ba093b9e9b75d51a7626443687cd2b346abbe7b9f65f9c58d38c8ad1286",
           "access": "paid",
           "productId": "syntactical.rails.medium",
-          "contentVersion": 3,
+          "contentVersion": 4,
           "topicCounts": {
             "activerecord-queries": 10,
             "associations": 10,
@@ -1000,10 +1000,10 @@
         },
         "hard": {
           "path": "rails/hard.json",
-          "hash": "e8fc05a69283f3a72eb61927fa8c2b2145a412678046d0818e2e0ca0dbc93945",
+          "hash": "53c7a9559ea6f8c17720a51658af6de7d185d80e3f844c3dd76dced5ae07ee55",
           "access": "paid",
           "productId": "syntactical.rails.hard",
-          "contentVersion": 3,
+          "contentVersion": 4,
           "topicCounts": {
             "activerecord-queries": 10,
             "associations": 10,
