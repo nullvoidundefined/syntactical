@@ -10,4 +10,5 @@ export const ORACLE_LANGUAGES: Record<string, OracleLanguage> = {
     rails: 'rails',
     ruby: 'ruby',
     sql: 'postgres',
+    typescript: 'typescript',
 };
