@@ -18,7 +18,7 @@ async function captureBatchPrompt(languageId = 'rails'): Promise<string> {
         count: 4,
         difficulty: 'easy',
         existingPrompts: new Set<string>(),
-        language: languageId,
+        language: languageId === 'sql' ? 'postgres' : 'rails',
         languageId,
         provider,
         run: async () => ({ outcome: 'value', runtimeVersion: 'Rails 8.0.2', value: '' }),
