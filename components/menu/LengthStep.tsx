@@ -1,6 +1,7 @@
-// Step 4 of the launch flow: how many questions to play from the chosen pool (the whole bank or
-// one topic). Offers each fixed length smaller than the pool, then every question. Keys: 1 and up
-// pick the options in order, Escape goes back to the topic step.
+// Step 4 of the launch flow, reached only for a topic whose pool offers a fixed length: how many
+// questions to play from that topic. The whole bank picks its length on the topic step instead.
+// Offers each fixed length smaller than the pool, then every question. Keys: 1 and up pick the
+// options in order, Escape goes back to the topic step.
 import { Pressable, Text, View } from 'react-native';
 
 import { DIFFICULTIES } from '@syntactical/content-schema';

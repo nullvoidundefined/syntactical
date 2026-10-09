@@ -90,3 +90,22 @@ describe('TopicStep round lengths', () => {
     expect(titles).toEqual(['20 questions', '50 questions', 'All 100 questions', 'Strings', 'Numbers']);
   });
 });
+
+describe('TopicStep with the loaded bank', () => {
+  it('labels All with the real bank length, and offers lengths for it, when the manifest disagrees', async () => {
+    const twelve = Array.from({ length: 12 }, () => ({ topic: 'strings' }));
+    await render(
+      <TopicStep
+        bankQuestions={twelve}
+        difficulty="medium"
+        language="python"
+        onBack={jest.fn()}
+        onSelectLength={jest.fn()}
+        onSelectTopic={jest.fn()}
+      />,
+    );
+    expect(screen.getByRole('button', { name: /^All 12 questions/ })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^All 100 questions/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^(20|50) questions/ })).toBeNull();
+  });
+});

@@ -7,13 +7,15 @@ import { Pressable, Text, View } from 'react-native';
 import { DIFFICULTIES } from '@syntactical/content-schema';
 
 import { KEY_BINDINGS } from '../../constants/appConfig';
-import { listRoundLengths, readPoolSize } from '../../services/quiz/roundLength';
+import { listRoundLengths, readPoolSize, reconcilePoolSize } from '../../services/quiz/roundLength';
 import { useKeyboardNav } from '../../state/useKeyboardNav';
 import { useLanguageManifest } from '../../state/useLanguageManifest';
 
 import { SelectionCard } from './SelectionCard';
 
 type TopicStepProps = {
+  // The loaded bank's questions when known; their count corrects a stale manifest count.
+  bankQuestions?: readonly { topic?: string }[];
   difficulty: string;
   language: string;
   onBack: () => void;
@@ -36,7 +38,14 @@ function describeCount(count: number): string {
   return `${count} ${count === 1 ? 'question' : 'questions'}`;
 }
 
-export function TopicStep({ difficulty, language, onBack, onSelectLength, onSelectTopic }: TopicStepProps) {
+export function TopicStep({
+  bankQuestions,
+  difficulty,
+  language,
+  onBack,
+  onSelectLength,
+  onSelectTopic,
+}: TopicStepProps) {
   const { languages } = useLanguageManifest();
   const {
     banks,
@@ -51,7 +60,7 @@ export function TopicStep({ difficulty, language, onBack, onSelectLength, onSele
     (banks as Record<string, { topicCounts: Record<string, number> } | undefined>)[difficulty]?.topicCounts ?? {};
   const topics = listedTopics.filter(({ id }) => (topicCounts[id] ?? 0) > 0);
   const difficultyLabel = DIFFICULTIES.find(({ id }) => id === difficulty)?.label ?? difficulty;
-  const poolSize = readPoolSize(topicCounts, undefined);
+  const poolSize = reconcilePoolSize(readPoolSize(topicCounts, undefined), bankQuestions, undefined);
   const lengths = listRoundLengths(poolSize);
   // Whole-bank cards come first: each fixed length, then every question.
   const lengthCardCount = lengths.length + 1;
