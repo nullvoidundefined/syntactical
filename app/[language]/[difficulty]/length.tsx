@@ -7,8 +7,9 @@ import { ScrollView, View } from 'react-native';
 import NotFoundScreen from '../../+not-found';
 import { LengthStep } from '../../../components/menu/LengthStep';
 import { buildPlayHref } from '../../../services/quiz/buildPlayHref';
-import { isLengthChoiceOffered, readPoolSize } from '../../../services/quiz/roundLength';
+import { isLengthChoiceOffered, readPoolSize, reconcilePoolSize } from '../../../services/quiz/roundLength';
 import { useLanguageManifest } from '../../../state/useLanguageManifest';
+import { useQuestionBank } from '../../../state/useQuestionBank';
 
 export default function LengthScreen() {
   const {
@@ -17,11 +18,13 @@ export default function LengthScreen() {
     topic: rawTopic,
   } = useLocalSearchParams<{ difficulty: string; language: string; topic?: string }>();
   const { languages } = useLanguageManifest();
+  const bankState = useQuestionBank(language, difficulty);
   const languageEntry = languages.find(({ id }) => id === language);
   if (!languageEntry || !Object.hasOwn(languageEntry.banks, difficulty)) return <NotFoundScreen />;
   const topic = typeof rawTopic === 'string' ? rawTopic : undefined;
   const bank = (languageEntry.banks as Record<string, { topicCounts?: Record<string, number> }>)[difficulty];
-  const poolSize = readPoolSize(bank.topicCounts ?? {}, topic);
+  const questions = bankState.status === 'ready' ? bankState.bank.questions : undefined;
+  const poolSize = reconcilePoolSize(readPoolSize(bank.topicCounts ?? {}, topic), questions, topic);
   if (!isLengthChoiceOffered(poolSize)) return <Redirect href={buildPlayHref({ difficulty, language, topic })} />;
   return (
     <ScrollView contentContainerClassName="flex-grow items-center justify-center px-4 py-8">

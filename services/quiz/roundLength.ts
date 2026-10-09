@@ -29,3 +29,16 @@ export function readPoolSize(topicCounts: Record<string, number>, topic: string 
     topic === undefined ? Object.values(topicCounts).reduce((sum, count) => sum + count, 0) : (topicCounts[topic] ?? 0);
   return size > 0 ? size : undefined;
 }
+
+// The pool size the menu should show. The manifest count can drift from the bank the round plays,
+// so when the loaded bank's real count (whole bank, or one topic) is known and differs, the real
+// one wins. With no manifest count the menu keeps showing none.
+export function reconcilePoolSize(
+  manifestSize: number | undefined,
+  questions: readonly { topic?: string }[] | undefined,
+  topic: string | undefined,
+): number | undefined {
+  if (manifestSize === undefined || questions === undefined) return manifestSize;
+  const realSize = questions.filter((question) => topic === undefined || question.topic === topic).length;
+  return realSize > 0 ? realSize : manifestSize;
+}

@@ -1,7 +1,8 @@
 // Fires the round analytics events, each once per round: round_started on
 // mount, round_completed (a bank or topic round) or review_round_completed
 // when the round ends, and bank_exhausted when this round's answers make
-// every question of the bank answered at least once. A review round mixes
+// every question of the bank answered at least once. A bank or topic round also says whether it
+// plays a sample (a fixed 20 or 50) rather than every question of its pool. A review round mixes
 // banks, so it carries no bank properties and never exhausts one.
 import { useEffect, useRef } from 'react';
 
@@ -25,30 +26,24 @@ type RoundAnalytics = {
 };
 
 // A review round mixes banks, so it names none.
-function describeBank(
-  roundKind: RoundKind,
-  difficulty: string,
-  language: string,
-): Record<string, string> {
+function describeBank(roundKind: RoundKind, difficulty: string, language: string): Record<string, string> {
   return roundKind === 'review' ? {} : { difficulty, language };
 }
 
+// A bank or topic round plays a sample when it asks fewer questions than its pool holds.
+function describeSampling(roundKind: RoundKind, isSampled: boolean): Record<string, boolean> {
+  return roundKind === 'review' ? {} : { isSampled };
+}
+
 export function useRoundAnalytics(round: RoundAnalytics): void {
-  const {
-    bankQuestions,
-    correctCount,
-    difficulty,
-    isComplete,
-    language,
-    roundKind,
-    topic,
-    totalQuestions,
-  } = round;
+  const { bankQuestions, correctCount, difficulty, isComplete, language, roundKind, topic, totalQuestions } = round;
   const { eventLog, isHydrated } = useQuizStats();
   const hasStarted = useRef(false);
   const hasCompleted = useRef(false);
   const wasExhaustedAtStart = useRef<boolean | null>(null);
   const hasReportedExhaustion = useRef(false);
+  const poolSize = bankQuestions.filter((question) => topic === undefined || question.topic === topic).length;
+  const isSampled = totalQuestions < poolSize;
   const kind = roundKind === 'bank' && topic !== undefined ? 'topic' : roundKind;
 
   // A round reports its start once; later changes to these values do not restart it.
@@ -59,8 +54,9 @@ export function useRoundAnalytics(round: RoundAnalytics): void {
       roundKind: kind,
       totalQuestions,
       ...describeBank(roundKind, difficulty, language),
+      ...describeSampling(roundKind, isSampled),
     });
-  }, [difficulty, kind, language, roundKind, totalQuestions]);
+  }, [difficulty, isSampled, kind, language, roundKind, totalQuestions]);
 
   useEffect(() => {
     if (!isComplete || totalQuestions === 0 || hasCompleted.current) return;
@@ -71,8 +67,9 @@ export function useRoundAnalytics(round: RoundAnalytics): void {
       roundKind: kind,
       totalQuestions,
       ...describeBank(roundKind, difficulty, language),
+      ...describeSampling(roundKind, isSampled),
     });
-  }, [correctCount, difficulty, language, isComplete, kind, roundKind, totalQuestions]);
+  }, [correctCount, difficulty, isComplete, isSampled, kind, language, roundKind, totalQuestions]);
 
   useEffect(() => {
     if (roundKind === 'review' || !isHydrated || hasReportedExhaustion.current) return;
