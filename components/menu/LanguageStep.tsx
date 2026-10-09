@@ -1,7 +1,7 @@
 // Step 1 of the launch flow: choose a language or topic track from the manifest. Entries are
-// grouped under "Languages" and "Topics" by kind (a missing kind is a language); number keys
-// follow the displayed order across both groups.
-import type { EntryKind, LanguageEntry } from '@syntactical/content-schema';
+// grouped by category in display order, with uncategorized entries under "More" last;
+// number keys follow the displayed order across all groups.
+import { TRACK_CATEGORIES, type LanguageEntry, type TrackCategory } from '@syntactical/content-schema';
 import { Text, View } from 'react-native';
 
 import { useKeyboardNav } from '../../state/useKeyboardNav';
@@ -10,14 +10,19 @@ import { SelectionCard } from './SelectionCard';
 
 type LanguageStepProps = { languages: readonly LanguageEntry[]; onSelectLanguage: (languageId: string) => void };
 
-const GROUPS: readonly { heading: string; kind: EntryKind }[] = [
-  { heading: 'Languages', kind: 'language' },
-  { heading: 'Topics', kind: 'topic' },
+const CATEGORY_HEADINGS: Record<TrackCategory, string> = {
+  frontend: 'Frontend',
+  backend: 'Backend',
+  database: 'Database',
+};
+const GROUPS: readonly { heading: string; category?: TrackCategory }[] = [
+  ...TRACK_CATEGORIES.map((category) => ({ heading: CATEGORY_HEADINGS[category], category })),
+  { heading: 'More' },
 ];
 
 export function LanguageStep({ languages, onSelectLanguage }: LanguageStepProps) {
-  const groups = GROUPS.map(({ heading, kind }) => ({
-    entries: languages.filter((entry) => (entry.kind ?? 'language') === kind),
+  const groups = GROUPS.map(({ heading, category }) => ({
+    entries: languages.filter((entry) => entry.category === category),
     heading,
   })).filter(({ entries }) => entries.length > 0);
   const ordered = groups.flatMap(({ entries }) => entries);

@@ -28,6 +28,8 @@ export type { Query } from './types/Query.js';
 export type { Question } from './types/Question.js';
 export { ENTRY_KINDS } from './entryKinds.js';
 export type { EntryKind } from './entryKinds.js';
+export { TRACK_CATEGORIES } from './trackCategories.js';
+export type { TrackCategory } from './trackCategories.js';
 export { isValidProvenance } from './isValidProvenance.js';
 export { hasValidQuestionProvenance } from './hasValidQuestionProvenance.js';
 export type { Evidence } from './types/Evidence.js';

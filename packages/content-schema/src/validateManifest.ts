@@ -10,9 +10,11 @@ import { GRAMMARS } from './grammars.js';
 import { isRecord } from './isRecord.js';
 import { isTextWithin } from './isTextWithin.js';
 import { SUPPORTED_SCHEMA_VERSION } from './supportedSchemaVersion.js';
+import { TRACK_CATEGORIES } from './trackCategories.js';
 import type { Manifest } from './types/Manifest.js';
 
 const KIND_IDS: readonly unknown[] = ENTRY_KINDS;
+const CATEGORY_IDS: readonly unknown[] = TRACK_CATEGORIES;
 const LANGUAGE_ID = /^[a-z0-9-]{1,32}$/;
 const DIFFICULTY_IDS: readonly string[] = DIFFICULTIES.map((difficulty) => difficulty.id);
 const GRAMMAR_IDS: readonly string[] = GRAMMARS;
@@ -36,11 +38,12 @@ function findBankProblem(banks: unknown, languageId: string, topicIds: readonly 
 
 function findLanguageProblem(language: unknown): string | null {
   if (!isRecord(language)) return 'is not an object';
-  const { kind, id, label, glyph, tagline, grammar, banks, topics, misconceptions } = language;
+  const { kind, category, id, label, glyph, tagline, grammar, banks, topics, misconceptions } = language;
   if (typeof id !== 'string' || !LANGUAGE_ID.test(id)) return 'id is invalid';
   if (![label, glyph, tagline].every(isDisplayText)) return 'a display field is invalid';
   if (typeof grammar !== 'string' || !GRAMMAR_IDS.includes(grammar)) return 'grammar is not supported';
   if (kind !== undefined && !KIND_IDS.includes(kind)) return 'kind is invalid';
+  if (category !== undefined && !CATEGORY_IDS.includes(category)) return 'category is invalid';
   const topicsProblem = findTopicsProblem(topics);
   if (topicsProblem) return topicsProblem;
   const misconceptionsProblem = findMisconceptionsProblem(misconceptions, id);
