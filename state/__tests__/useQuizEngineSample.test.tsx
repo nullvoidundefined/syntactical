@@ -48,6 +48,9 @@ describe('useQuizEngine with a sample size', () => {
   it('plays the whole pool when the size is not smaller than it', async () => {
     expect((await playRound(undefined)).ids).toHaveLength(100);
     expect((await playRound(100)).ids).toHaveLength(100);
+  });
+
+  it('samples a smaller topic pool of 30 down to 20', async () => {
     expect((await playRound(20, 'a')).ids).toHaveLength(20);
   });
 });

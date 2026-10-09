@@ -1,8 +1,10 @@
 import type { Question } from '@syntactical/content-schema';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
 
 import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/contentFixtures';
 import { QuizRound } from '../QuizRound';
+
+import { choiceName } from './choiceName';
 
 jest.mock('../../../state/StatsProvider', () => ({
   useQuizStats: () => ({ eventLog: [], isHydrated: true, recordAnswer: jest.fn(), recordCompletion: jest.fn() }),
@@ -42,8 +44,8 @@ async function renderRound() {
 // (the key letter, the choice text, then ", correct" or ", incorrect" once answered).
 function readShownOrder(): string[] {
   return screen
-    .getAllByLabelText(/^[A-D], (right|wrong-\d)(,|$)/)
-    .map((element) => String(element.props['aria-label'] ?? element.props.accessibilityLabel ?? '').split(', ')[1]);
+    .getAllByRole('button', { name: /^[A-D]\s*(right|wrong-\d)/ })
+    .map((button) => String(within(button).getByText(/^(right|wrong-\d)$/).props.children));
 }
 
 afterEach(() => jest.restoreAllMocks());
@@ -58,17 +60,17 @@ describe('QuizRound choice order', () => {
   it('scores the displayed correct choice as correct, with no Explain offered', async () => {
     jest.spyOn(Math, 'random').mockReturnValue(0);
     await renderRound();
-    await fireEvent.press(screen.getByLabelText(/^[A-D], right$/));
+    await fireEvent.press(screen.getByRole('button', { name: choiceName('[A-D]', 'right') }));
     expect(screen.queryByRole('button', { name: 'Explain' })).toBeNull();
-    expect(screen.getByLabelText(/^[A-D], right, correct$/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: choiceName('[A-D]', 'right', 'correct') })).toBeTruthy();
   });
 
   it('scores a displayed wrong choice as incorrect and explains it with its own rationale', async () => {
     jest.spyOn(Math, 'random').mockReturnValue(0);
     await renderRound();
-    await fireEvent.press(screen.getByLabelText(/^[A-D], wrong-1$/));
-    expect(screen.getByLabelText(/^[A-D], wrong-1, incorrect$/)).toBeTruthy();
-    expect(screen.getByLabelText(/^[A-D], right, correct$/)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: choiceName('[A-D]', 'wrong-1') }));
+    expect(screen.getByRole('button', { name: choiceName('[A-D]', 'wrong-1', 'incorrect') })).toBeTruthy();
+    expect(screen.getByRole('button', { name: choiceName('[A-D]', 'right', 'correct') })).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: 'Explain' }));
     expect(screen.queryByText('because one is wrong')).not.toBeNull();
   });
@@ -79,7 +81,7 @@ describe('QuizRound choice order', () => {
     const before = readShownOrder();
     expect(before).not.toEqual(['right', 'wrong-1', 'wrong-2', 'wrong-3']);
     jest.spyOn(Math, 'random').mockReturnValue(0.99);
-    await fireEvent.press(screen.getByLabelText(/^[A-D], wrong-2$/));
+    await fireEvent.press(screen.getByRole('button', { name: choiceName('[A-D]', 'wrong-2') }));
     expect(readShownOrder()).toEqual(before);
   });
 });

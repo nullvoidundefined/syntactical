@@ -1,6 +1,8 @@
 import { access, mkdir, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { copyFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import { writeRouteEntries } from '../writeRouteEntries.mjs';
 
 const INDEX_HTML = '<div id="root"></div>';
@@ -40,7 +42,7 @@ async function makeFixture() {
   await writeFile(
     manifestPath,
     JSON.stringify({
-      languages: [{ id: 'python', banks: { easy: {}, medium: {} } }],
+      languages: [{ id: 'python', banks: { easy: {}, medium: {}, hard: { access: 'paid' } } }],
     }),
   );
   return { outputDir, appDir, manifestPath };
@@ -67,7 +69,30 @@ describe('writeRouteEntries', () => {
     const { outputDir, appDir, manifestPath } = await makeFixture();
     await writeRouteEntries(outputDir, { appDir, manifestPath });
     expect((await readdir(outputDir)).sort()).toEqual(['index.html', 'python', 'settings', 'sign-in']);
-    expect(await exists(join(outputDir, 'python', 'hard'))).toBe(false);
+    expect(await exists(join(outputDir, 'python', 'insane'))).toBe(false);
     expect(await exists(join(outputDir, 'ruby'))).toBe(false);
+  });
+
+  it('copies only index.html, the app shell, for a paid bank route', async () => {
+    const { outputDir, appDir, manifestPath } = await makeFixture();
+    await writeRouteEntries(outputDir, { appDir, manifestPath });
+    const files = (await readdir(join(outputDir, 'python', 'hard'), { recursive: true, withFileTypes: true }))
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name);
+    expect(files.length).toBeGreaterThan(0);
+    expect(new Set(files)).toEqual(new Set(['index.html']));
+    expect(await readFile(join(outputDir, 'python', 'hard', 'index.html'), 'utf8')).toBe(INDEX_HTML);
+  });
+
+  it('writes the entries when run as a script from a path with a space', async () => {
+    const { outputDir, appDir, manifestPath } = await makeFixture();
+    const scriptDir = await mkdtemp(join(tmpdir(), 'script dir-'));
+    const script = join(scriptDir, 'writeRouteEntries.mjs');
+    await copyFile(join(__dirname, '..', 'writeRouteEntries.mjs'), script);
+    const root = dirname(appDir);
+    await mkdir(join(root, 'content'));
+    await copyFile(manifestPath, join(root, 'content', 'manifest.json'));
+    execFileSync('node', [script, outputDir], { cwd: root });
+    expect(await readFile(join(outputDir, 'settings', 'index.html'), 'utf8')).toBe(INDEX_HTML);
   });
 });

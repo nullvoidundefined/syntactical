@@ -6,13 +6,34 @@ import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/co
 
 jest.mock('react-native-reanimated', () => ({ useReducedMotion: () => true }));
 jest.mock('../../../state/StatsProvider', () => ({
-  useQuizStats: () => ({ eventLog: [], isHydrated: true, recordAnswer: () => undefined, recordCompletion: () => undefined }),
+  useQuizStats: () => ({
+    eventLog: [],
+    isHydrated: true,
+    recordAnswer: () => undefined,
+    recordCompletion: () => undefined,
+  }),
 }));
 
 const query = { explanation: 'Because', title: 'Why' };
 const questions: Question[] = [
-  { answerIndex: 2, choices: [{ text: 'a' }, { text: 'b' }, { text: 'c' }, { text: 'd' }], id: 'q-1', prompt: 'First', query, provenance: TEST_PROVENANCE, type: 'mc' },
-  { answerIndex: 0, choices: [{ text: 'w' }, { text: 'x' }, { text: 'y' }, { text: 'z' }], id: 'q-2', prompt: 'Second', query, provenance: TEST_PROVENANCE, type: 'mc' },
+  {
+    answerIndex: 2,
+    choices: [{ text: 'a' }, { text: 'b' }, { text: 'c' }, { text: 'd' }],
+    id: 'q-1',
+    prompt: 'First',
+    query,
+    provenance: TEST_PROVENANCE,
+    type: 'mc',
+  },
+  {
+    answerIndex: 0,
+    choices: [{ text: 'w' }, { text: 'x' }, { text: 'y' }, { text: 'z' }],
+    id: 'q-2',
+    prompt: 'Second',
+    query,
+    provenance: TEST_PROVENANCE,
+    type: 'mc',
+  },
 ];
 
 function renderRound() {
@@ -37,7 +58,7 @@ function pressKey(key: string, modifiers: KeyboardEventInit = {}) {
 }
 
 function findAnsweredChoice(): Element | null {
-  return document.querySelector('[aria-label$=", correct"], [aria-label$=", incorrect"]');
+  return screen.queryAllByRole('button', { name: /,\s*(in)?correct$/ })[0] ?? null;
 }
 
 describe('web keyboard bindings and browser shortcuts', () => {
@@ -61,6 +82,6 @@ describe('web keyboard bindings and browser shortcuts', () => {
     pressKey('1');
     pressKey('Enter', { repeat: true });
     expect(screen.queryByText(promptAfterAdvance)).not.toBeNull();
-    expect(screen.queryByText(/correct$/)).toBeNull();
+    expect(findAnsweredChoice()).not.toBeNull();
   });
 });

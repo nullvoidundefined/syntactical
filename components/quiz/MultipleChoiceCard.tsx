@@ -1,5 +1,6 @@
 // A multiple-choice question: prompt, optional code, and up to four
-// lettered choices that show correct and incorrect once answered.
+// lettered choices that show correct and incorrect once answered. A choice's name comes from its
+// visible letter and text (WCAG 2.5.3), plus the state as visually hidden text once answered.
 import type { Grammar, Question } from '@syntactical/content-schema';
 import { Pressable, Text, View } from 'react-native';
 
@@ -27,11 +28,6 @@ function describeChoice(
   return { state: undefined, toneClass: 'border-line' };
 }
 
-// The name starts with the visible letter so it contains the visible label (WCAG 2.5.3).
-function describeName(letter: string, text: string, state: string | undefined) {
-  return state ? `${letter}, ${text}, ${state}` : `${letter}, ${text}`;
-}
-
 export function MultipleChoiceCard({
   grammar,
   isAnswered,
@@ -52,7 +48,6 @@ export function MultipleChoiceCard({
               key={`${index}-${choice.text}`}
               role="button"
               disabled={isAnswered}
-              aria-label={describeName(CHOICE_LABELS[index], choice.text, state)}
               onPress={() => onSelect(index)}
               className={`flex-row items-center gap-3 rounded-md border px-4 py-3 ${toneClass}`}
             >
@@ -60,6 +55,7 @@ export function MultipleChoiceCard({
                 {CHOICE_LABELS[index]}
               </Text>
               <Text className="flex-1 text-sm text-ink">{choice.text}</Text>
+              {state ? <Text className="sr-only">{`, ${state}`}</Text> : null}
             </Pressable>
           );
         })}

@@ -1,7 +1,7 @@
 // The Settings password form: "Add a password" (one new-password field) for an account without
 // one, "Change password" (current and new) for one with a password. Saving sends PUT me/password
 // with currentPassword only when that field is filled. A 403 AUTH_REAUTH_REQUIRED, or "Use a
-// code instead", swaps the form for the code steps of the signed-in email; after the code sign-in
+// code instead", swaps the form for the code steps of the signed-in email ("Back to password" returns to the fields); after the code sign-in
 // the form returns with the new password still entered. Both passwords live in this component's
 // memory only: they are sent in the request, cleared on a save, and gone when Settings is left.
 // Refusals are announced in one role="alert" region by reason only, tied to the field they
@@ -62,10 +62,6 @@ function readErrorCode(body: unknown): string | null {
   return typeof code === 'string' ? code : null;
 }
 
-function readHasPassword(body: unknown): boolean {
-  return (body as { data?: { hasPassword?: unknown } } | null)?.data?.hasPassword === true;
-}
-
 // The field a body the server called invalid belongs to: the current password when it is
 // malformed or over the length limit, otherwise the new one.
 function readInvalidBodyField(currentPassword: string): 'current' | 'new' {
@@ -83,7 +79,7 @@ function readRefusal(status: number, body: unknown, currentPassword: string): Re
   }
   if (status === HTTP_STATUS_BAD_REQUEST && code !== null) {
     if (code === 'AUTH_INVALID_CREDENTIALS') return { field: 'current', message: WRONG_CURRENT_MESSAGE };
-    if (code in POLICY_REFUSALS) return { field: 'new', message: POLICY_REFUSALS[code] };
+    if (Object.hasOwn(POLICY_REFUSALS, code)) return { field: 'new', message: POLICY_REFUSALS[code] };
     if (code === 'INPUT_INVALID_BODY') {
       return { field: readInvalidBodyField(currentPassword), message: INVALID_PASSWORD_MESSAGE };
     }
@@ -147,7 +143,7 @@ export function PasswordSettingsForm({
         setCurrentPassword('');
         setNewPassword('');
         setIsSaved(true);
-        onPasswordSaved?.(readHasPassword(replyBody));
+        onPasswordSaved?.(true);
       } else if (status === HTTP_STATUS_FORBIDDEN && readErrorCode(replyBody) === 'AUTH_REAUTH_REQUIRED') {
         setIsCodeStep(true);
       } else {
@@ -159,6 +155,13 @@ export function PasswordSettingsForm({
       isInFlightRef.current = false;
       setIsBusy(false);
     }
+  }
+
+  // A refusal belongs to the password fields, so it goes when the code steps open.
+  function openCodeStep() {
+    setRefusal(null);
+    setIsSaved(false);
+    setIsCodeStep(true);
   }
 
   function submit() {
@@ -185,7 +188,7 @@ export function PasswordSettingsForm({
         </View>
       ) : null}
       {isCodeStep ? (
-        <InlineCodeSignIn email={email} onSignedIn={() => setIsCodeStep(false)} />
+        <InlineCodeSignIn email={email} onBack={() => setIsCodeStep(false)} onSignedIn={() => setIsCodeStep(false)} />
       ) : (
         <AuthForm onSubmit={submit}>
           {hasPassword ? (
@@ -207,7 +210,7 @@ export function PasswordSettingsForm({
             onSubmitEditing={onSubmitEditing}
           />
           <AuthButton label="Save password" isDisabled={isBusy} isSubmit onPress={submit} />
-          <AuthButton label="Use a code instead" isPrimary={false} onPress={() => setIsCodeStep(true)} />
+          <AuthButton label="Use a code instead" isPrimary={false} onPress={openCodeStep} />
         </AuthForm>
       )}
     </View>

@@ -4,6 +4,8 @@
 // through to 404.html and the app's not-found screen.
 import { copyFile, mkdir, readdir, readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { realpathSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 const SKIPPED_NAMES = new Set(['_layout', '+not-found', '__tests__']);
 const SCREEN_EXTENSION = /\.(tsx|ts|jsx|js)$/;
@@ -12,7 +14,8 @@ function isDynamicSegment(name) {
   return name.startsWith('[');
 }
 
-// Static routes from the app/ tree, as slash-separated paths ('' is the home page).
+// Static routes from the app/ tree, as slash-separated paths ('' is the home page). Route groups
+// ((name) folders), nested index files, and stray test files are not handled: app/ has none.
 async function listStaticRoutes(dir, prefix = '') {
   const routes = [];
   for (const entry of await readdir(dir, { withFileTypes: true })) {
@@ -54,7 +57,9 @@ export async function writeRouteEntries(outputDir, { appDir = 'app', manifestPat
   return routes;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Compare as file URLs: a plain string compare breaks on a path with a space, and a symlink needs
+// its real path.
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   writeRouteEntries(process.argv[2] ?? 'dist').catch((err) => {
     console.error(err);
     process.exitCode = 1;

@@ -8,6 +8,7 @@ import { MultipleChoiceCard } from '../MultipleChoiceCard';
 import { ProgressBar } from '../ProgressBar';
 import { QuestionCardFrame } from '../QuestionCardFrame';
 import { ResultsScreen } from '../ResultsScreen';
+import { choiceName } from './choiceName';
 
 jest.mock('react-native-reanimated', () => ({ useReducedMotion: () => true }));
 
@@ -51,9 +52,12 @@ describe('quiz screens on the web expose accessible names and headings', () => {
         onSelect={jest.fn()}
       />,
     );
-    const button = screen.getByRole('button', { name: 'A, users[1].name' });
+    const button = screen.getByRole('button', { name: choiceName('A', 'users[1].name') });
     expect(button.textContent).toMatch(/^Ausers\[1\]\.name$/);
-    expect(screen.getByRole('button', { name: 'B, plain' })).toBeTruthy();
+    // The name comes from the visible content, so no aria-label can disagree with it (Lighthouse
+    // label-content-name-mismatch).
+    expect(button.getAttribute('aria-label')).toBeNull();
+    expect(screen.getByRole('button', { name: choiceName('B', 'plain') })).toBeTruthy();
   });
 
   it('names the query dialog after the query title', () => {

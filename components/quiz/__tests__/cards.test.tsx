@@ -5,6 +5,7 @@ import { BooleanCard } from '../BooleanCard';
 import { MultipleChoiceCard } from '../MultipleChoiceCard';
 import { ProgressBar } from '../ProgressBar';
 import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/contentFixtures';
+import { choiceName } from './choiceName';
 
 const query = { explanation: 'e', title: 't' };
 const HOSTILE = '<script>alert(1)</script><b>bold</b>';
@@ -55,8 +56,8 @@ describe('question cards', () => {
       />,
     );
     expect(screen.getByText('first')).toBeTruthy();
-    expect(screen.getByLabelText('A, first, incorrect')).toBeTruthy();
-    expect(screen.getByLabelText('B, second, correct')).toBeTruthy();
+    expect(screen.getByRole('button', { name: choiceName('A', 'first', 'incorrect') })).toBeTruthy();
+    expect(screen.getByRole('button', { name: choiceName('B', 'second', 'correct') })).toBeTruthy();
   });
 
   it('names each choice button starting with its visible letter, then the choice text', async () => {
@@ -69,8 +70,8 @@ describe('question cards', () => {
         onSelect={jest.fn()}
       />,
     );
-    expect(screen.getByRole('button', { name: `A, ${HOSTILE}` })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'B, plain' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: choiceName('A', HOSTILE) })).toBeTruthy();
+    expect(screen.getByRole('button', { name: choiceName('B', 'plain') })).toBeTruthy();
   });
 
   it('keeps the visible letter first when the name also announces the answer state', async () => {
@@ -83,8 +84,8 @@ describe('question cards', () => {
         onSelect={jest.fn()}
       />,
     );
-    expect(screen.getByRole('button', { name: `A, ${HOSTILE}, incorrect` })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'B, plain, correct' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: choiceName('A', HOSTILE, 'incorrect') })).toBeTruthy();
+    expect(screen.getByRole('button', { name: choiceName('B', 'plain', 'correct') })).toBeTruthy();
   });
 
   it('marks the chosen wrong answer and the correct answer once answered', async () => {
@@ -97,8 +98,8 @@ describe('question cards', () => {
         onSelect={jest.fn()}
       />,
     );
-    expect(screen.getByLabelText(`A, ${HOSTILE}, incorrect`)).toBeTruthy();
-    expect(screen.getByLabelText('B, plain, correct')).toBeTruthy();
+    expect(screen.getByRole('button', { name: choiceName('A', HOSTILE, 'incorrect') })).toBeTruthy();
+    expect(screen.getByRole('button', { name: choiceName('B', 'plain', 'correct') })).toBeTruthy();
   });
 
   it('reports a boolean selection and disables both options after answering', async () => {

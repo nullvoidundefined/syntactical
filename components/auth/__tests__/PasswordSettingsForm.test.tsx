@@ -15,7 +15,8 @@
 // Every value is built at run time.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
+import { NavigationContext } from 'expo-router/build/react-navigation/core';
 
 import { createQueryClient } from '../../../config/queryClient';
 import {
@@ -162,12 +163,23 @@ async function signIn(identity: SignInIdentity): Promise<void> {
   secureStore.mockValues.set(SESSION_TOKEN_KEY, identity.sessionValue);
 }
 
-async function renderForm(identity: SignInIdentity, hasPassword: boolean) {
+async function renderForm(
+  identity: SignInIdentity,
+  hasPassword: boolean,
+  options: { navigation?: unknown; onPasswordSaved?: (hasPassword: boolean) => void } = {},
+) {
   await signIn(identity);
+  const form = (
+    <PasswordSettingsForm email={identity.email} hasPassword={hasPassword} onPasswordSaved={options.onPasswordSaved} />
+  );
   const rendered = await render(
     <QueryClientProvider client={createQueryClient()}>
       <AuthProvider>
-        <PasswordSettingsForm email={identity.email} hasPassword={hasPassword} />
+        {options.navigation === undefined ? (
+          form
+        ) : (
+          <NavigationContext.Provider value={options.navigation as never}>{form}</NavigationContext.Provider>
+        )}
       </AuthProvider>
     </QueryClientProvider>,
   );
@@ -504,5 +516,83 @@ describe('PasswordSettingsForm, the inline code steps', () => {
     for (const alert of screen.getAllByRole('alert')) expectAlertOmits(alert, [next, identity.email]);
     expect(screen.getByLabelText(CODE_LABEL)).toBeTruthy();
     expect(listPasswordRequests(requests)).toHaveLength(1);
+  });
+});
+
+const BACK_BUTTON = 'Back to password';
+
+describe('PasswordSettingsForm, follow-ups', () => {
+  it('"Back to password" leaves the code steps for the password fields with the typed values kept', async () => {
+    const identity = buildIdentity();
+    const current = buildPassword();
+    const next = buildPassword();
+    const { requests } = installRoutedFetch({ [CODES_ROUTE]: codeSentReply() });
+    await renderForm(identity, true);
+    await typeCurrent(current);
+    await typeNew(next);
+    await fireEvent.press(screen.getByRole('button', { name: USE_CODE_BUTTON }));
+    await reachCodeField();
+    await fireEvent.press(screen.getByRole('button', { name: BACK_BUTTON }));
+    await waitFor(() => expect(screen.getByLabelText(NEW_LABEL).props.value).toBe(next));
+    expect(screen.getByLabelText(CURRENT_LABEL).props.value).toBe(current);
+    expect(screen.queryByLabelText(CODE_LABEL)).toBeNull();
+    expect(listPasswordRequests(requests)).toEqual([]);
+  });
+
+  it('clears a refusal left on the password fields when "Use a code instead" is pressed', async () => {
+    const identity = buildIdentity();
+    installRoutedFetch({
+      [CODES_ROUTE]: codeSentReply(),
+      [PASSWORD_ROUTE]: errorReply(400, 'AUTH_INVALID_CREDENTIALS'),
+    });
+    await renderForm(identity, true);
+    await typeCurrent(buildPassword());
+    await typeNew(buildPassword());
+    await pressSave();
+    await screen.findByText(WRONG_CURRENT_MESSAGE);
+    await fireEvent.press(screen.getByRole('button', { name: USE_CODE_BUTTON }));
+    await reachCodeField();
+    expect(screen.queryByText(WRONG_CURRENT_MESSAGE)).toBeNull();
+    expect(screen.queryAllByRole('alert')).toHaveLength(0);
+  });
+
+  it('treats an inherited property name as an unknown error code, not a policy refusal', async () => {
+    installRoutedFetch({ [PASSWORD_ROUTE]: errorReply(400, 'constructor') });
+    await renderForm(buildIdentity(), false);
+    await typeNew(buildPassword());
+    await pressSave();
+    const alerts = await screen.findAllByRole('alert');
+    expect(alerts).toHaveLength(1);
+    expect(within(alerts[0]).getByText(UNAVAILABLE_MESSAGE)).toBeTruthy();
+    expect(readDescribedByIds(screen.getByLabelText(NEW_LABEL))).not.toContain(readAlertId(alerts[0]));
+  });
+
+  it('reports the password as set on a 200 whose body does not say so', async () => {
+    const onPasswordSaved = jest.fn();
+    installRoutedFetch({ [PASSWORD_ROUTE]: { status: 200, body: { data: {} } } });
+    await renderForm(buildIdentity(), false, { onPasswordSaved });
+    await typeNew(buildPassword());
+    await pressSave();
+    await screen.findByText(SAVED_MESSAGE);
+    expect(onPasswordSaved).toHaveBeenCalledWith(true);
+  });
+
+  it('clears both password fields when the screen loses focus (blur)', async () => {
+    const listeners = new Map<string, () => void>();
+    const navigation = {
+      addListener: (event: string, listener: () => void) => {
+        listeners.set(event, listener);
+        return () => listeners.delete(event);
+      },
+    };
+    await renderForm(buildIdentity(), true, { navigation });
+    await typeCurrent(buildPassword());
+    await typeNew(buildPassword());
+    expect(screen.getByLabelText(NEW_LABEL).props.value).not.toBe('');
+    const blur = listeners.get('blur');
+    expect(blur).toBeDefined();
+    await act(async () => blur?.());
+    expect(screen.getByLabelText(CURRENT_LABEL).props.value).toBe('');
+    expect(screen.getByLabelText(NEW_LABEL).props.value).toBe('');
   });
 });

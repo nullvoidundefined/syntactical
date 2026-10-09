@@ -10,7 +10,7 @@ import { LanguageStep } from '../LanguageStep';
 
 expect.extend(toHaveNoViolations);
 
-function buildEntry(id: string, label: string, kind?: 'language' | 'topic'): LanguageEntry {
+function buildEntry(id: string, label: string, category?: 'frontend' | 'backend' | 'database'): LanguageEntry {
   return {
     banks: {},
     glyph: 'X',
@@ -20,14 +20,15 @@ function buildEntry(id: string, label: string, kind?: 'language' | 'topic'): Lan
     misconceptions: [],
     tagline: `${label} tagline`,
     topics: [],
-    ...(kind ? { kind } : {}),
+    ...(category ? { category } : {}),
   };
 }
 
 const ENTRIES = [
-  buildEntry('backend-security', 'Backend Security', 'topic'),
-  buildEntry('python', 'Python'),
-  buildEntry('postgres', 'Postgres'),
+  buildEntry('postgres', 'Postgres', 'database'),
+  buildEntry('python', 'Python', 'backend'),
+  buildEntry('javascript', 'JavaScript', 'frontend'),
+  buildEntry('mystery', 'Mystery'),
 ];
 
 function pressKey(key: string) {
@@ -47,17 +48,21 @@ describe('LanguageStep groups on the web', () => {
       </>,
     );
     const levels = [...container.querySelectorAll('[role="heading"]')].map((node) => node.getAttribute('aria-level'));
-    expect(levels).toEqual(['1', '2', '2']);
+    expect(levels).toEqual(['1', '2', '2', '2', '2']);
     expect(await axe(container, { rules: { 'color-contrast': { enabled: false } } })).toHaveNoViolations();
   });
 
-  it('maps number keys to the displayed order: languages first, then topics', () => {
+  it('maps number keys to the displayed order: Frontend, Backend, Database, then More', () => {
     const onSelectLanguage = jest.fn();
     render(<LanguageStep languages={ENTRIES} onSelectLanguage={onSelectLanguage} />);
-    pressKey('3');
-    expect(onSelectLanguage).toHaveBeenCalledWith('backend-security');
     pressKey('1');
+    expect(onSelectLanguage).toHaveBeenLastCalledWith('javascript');
+    pressKey('2');
     expect(onSelectLanguage).toHaveBeenLastCalledWith('python');
-    expect(screen.getByText('Languages')).toBeTruthy();
+    pressKey('3');
+    expect(onSelectLanguage).toHaveBeenLastCalledWith('postgres');
+    pressKey('4');
+    expect(onSelectLanguage).toHaveBeenLastCalledWith('mystery');
+    expect(screen.getByText('More')).toBeTruthy();
   });
 });

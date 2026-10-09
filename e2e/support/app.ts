@@ -50,11 +50,14 @@ async function signIn(page: Page, email: string): Promise<void> {
   await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
 }
 
-// Opens a bank's round from the menu: language 1 and difficulty by key, then all questions.
+// Opens a bank's round from the menu: Python and difficulty by key, then all questions. The
+// Python card's key comes from its own hint, since tracks are grouped and Python is not first.
 async function openRoundByKeys(page: Page, difficultyKey: string): Promise<void> {
   await page.goto('./');
   await expect(page.getByRole('heading', { level: 1, name: /syntactical/ })).toBeVisible();
-  await page.keyboard.press('1');
+  const pythonCard = page.getByRole('button').filter({ hasText: /^Python/ });
+  const pythonKey = (await pythonCard.locator('[aria-hidden="true"]').innerText()).trim();
+  await page.keyboard.press(pythonKey);
   await expect(page.getByText('Step 2 / Select difficulty')).toBeVisible();
   await page.keyboard.press(difficultyKey);
   await pickAllQuestions(page);

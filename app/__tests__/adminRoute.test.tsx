@@ -12,7 +12,7 @@
 //   one router.replace, sees no not-available text, and sends no GET admin/access and no PUT;
 // - after a toggle the signed-in user's entitlements (the source of the paid bank locks) change
 //   without a reload.
-// - a malformed GET admin/access reply shows the not-available state, while an extra field on an
+// - a malformed GET admin/access reply shows the load-failed state with Retry, while an extra field on an
 //   entry is ignored; a PUT reply naming another
 //   product changes nothing and shows the one alert; a product the manifest does not know is
 //   named from its raw id and can be toggled;
@@ -262,18 +262,35 @@ describe('admin route for an admin', () => {
     await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
     const off = getSwitch(PYTHON_MEDIUM_NAME);
     const on = getSwitch(POSTGRES_HARD_NAME);
-    expect(within(off).getByTestId('switch-track-off')).toBeTruthy();
-    expect(within(off).getByTestId('switch-thumb-off')).toBeTruthy();
+    expect(within(off).getByTestId('switch-track-off', { includeHiddenElements: true })).toBeTruthy();
+    expect(within(off).getByTestId('switch-thumb-off', { includeHiddenElements: true })).toBeTruthy();
     expect(within(off).queryByTestId('switch-track-on')).toBeNull();
-    expect(within(on).getByTestId('switch-track-on')).toBeTruthy();
-    expect(within(on).getByTestId('switch-thumb-on')).toBeTruthy();
+    expect(within(on).getByTestId('switch-track-on', { includeHiddenElements: true })).toBeTruthy();
+    expect(within(on).getByTestId('switch-thumb-on', { includeHiddenElements: true })).toBeTruthy();
     expect(within(on).queryByTestId('switch-track-off')).toBeNull();
+  });
+
+  it('hides the decorative track and thumb from assistive technology', async () => {
+    await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
+    const off = getSwitch(PYTHON_MEDIUM_NAME);
+    for (const testID of ['switch-track-off', 'switch-thumb-off']) {
+      const part = within(off).getByTestId(testID, { includeHiddenElements: true });
+      expect(part.props['aria-hidden']).toBe(true);
+    }
+    const track = within(off).getByTestId('switch-track-off', { includeHiddenElements: true });
+    expect(track.props.importantForAccessibility).toBe('no-hide-descendants');
+    expect(within(off).queryByTestId('switch-track-off')).toBeNull();
+  });
+
+  it('draws the switch with no focus:ring class, leaving the focus outline to the platform like other controls', async () => {
+    await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
+    expect(String(getSwitch(PYTHON_MEDIUM_NAME).props.className ?? '')).not.toMatch(/\bfocus:ring/);
   });
 
   it('draws a purchased switch as an on track that is disabled, beside the Purchased text', async () => {
     await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
     const purchased = getSwitch(JAVASCRIPT_MEDIUM_NAME);
-    expect(within(purchased).getByTestId('switch-track-on')).toBeTruthy();
+    expect(within(purchased).getByTestId('switch-track-on', { includeHiddenElements: true })).toBeTruthy();
     expect(readIsDisabled(purchased)).toBe(true);
     expect(screen.getByText('Purchased')).toBeTruthy();
   });
@@ -486,8 +503,9 @@ describe('admin route keeps the entitlements current', () => {
 });
 
 describe('admin route with malformed server data', () => {
-  async function expectNotAvailable(requests: { method: string; path: string; body: unknown }[]): Promise<void> {
-    await screen.findByText(NOT_AVAILABLE_TEXT);
+  async function expectLoadFailed(requests: { method: string; path: string; body: unknown }[]): Promise<void> {
+    await screen.findByText(/could not be loaded/i);
+    expect(screen.queryByText(NOT_AVAILABLE_TEXT)).toBeNull();
     await settle();
     expect(screen.queryAllByRole('switch')).toHaveLength(0);
     expect(listAccessUpdates(requests)).toHaveLength(0);
@@ -509,7 +527,7 @@ describe('admin route with malformed server data', () => {
   ];
 
   it.each(malformedLists)(
-    'shows the not-available state with no switches and no PUT for $label',
+    'shows the load-failed state with no switches and no PUT for $label',
     async ({ products }) => {
       const identity = buildIdentity();
       const { requests } = installRoutedFetch({
@@ -518,7 +536,7 @@ describe('admin route with malformed server data', () => {
       });
       await signIn(identity);
       await renderAdmin();
-      await expectNotAvailable(requests);
+      await expectLoadFailed(requests);
     },
   );
 

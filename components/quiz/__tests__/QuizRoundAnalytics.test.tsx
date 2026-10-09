@@ -39,7 +39,7 @@ function AfterHydration({ children }: { children: ReactNode }) {
   return isHydrated ? children : null;
 }
 
-async function renderRound(questions: Question[], roundKind: RoundKind = 'bank') {
+async function renderRound(questions: Question[], roundKind: RoundKind = 'bank', sampleSize?: number) {
   await render(
     <StatsProvider>
       <AfterHydration>
@@ -51,6 +51,7 @@ async function renderRound(questions: Question[], roundKind: RoundKind = 'bank')
           grammar="python"
           questions={questions}
           roundKind={roundKind}
+          sampleSize={sampleSize}
           onExit={() => undefined}
           onRetry={() => undefined}
         />
@@ -79,7 +80,7 @@ describe('round analytics', () => {
     expect(callsNamed('round_started')).toEqual([
       [
         'round_started',
-        { difficulty: 'easy', language: 'python', roundKind: 'bank', totalQuestions: 2 },
+        { difficulty: 'easy', isSampled: false, language: 'python', roundKind: 'bank', totalQuestions: 2 },
       ],
     ]);
     await answerAll(1);
@@ -99,6 +100,7 @@ describe('round analytics', () => {
         {
           correctCount: 2,
           difficulty: 'easy',
+          isSampled: false,
           language: 'python',
           roundKind: 'bank',
           totalQuestions: 2,
@@ -106,6 +108,20 @@ describe('round analytics', () => {
       ],
     ]);
     expect(callsNamed('review_round_completed')).toHaveLength(0);
+  });
+
+  it('marks a sampled round isSampled on both events, and a whole-pool round not', async () => {
+    const pool = Array.from({ length: 4 }, (_, index) => boolQuestion(`q-${index}`));
+    await renderRound(pool, 'bank', 2);
+    await answerAll(2);
+    await waitFor(() => expect(callsNamed('round_completed')).toHaveLength(1));
+    expect(callsNamed('round_started')[0][1]).toMatchObject({ isSampled: true, totalQuestions: 2 });
+    expect(callsNamed('round_completed')[0][1]).toMatchObject({ isSampled: true, totalQuestions: 2 });
+  });
+
+  it('carries no isSampled on a review round', async () => {
+    await renderRound([boolQuestion('q-1')], 'review');
+    expect(callsNamed('round_started')[0][1]).not.toHaveProperty('isSampled');
   });
 
   it('fires review_round_completed, not round_completed, for a review round, with no bank properties', async () => {

@@ -1,5 +1,11 @@
 import { buildPlayHref } from '../buildPlayHref';
-import { isLengthChoiceOffered, listRoundLengths, readPoolSize, readRoundCount } from '../roundLength';
+import {
+  isLengthChoiceOffered,
+  listRoundLengths,
+  readPoolSize,
+  readRoundCount,
+  reconcilePoolSize,
+} from '../roundLength';
 
 describe('listRoundLengths', () => {
   it('offers only the fixed lengths smaller than the pool', () => {
@@ -58,5 +64,23 @@ describe('buildPlayHref', () => {
     expect(buildPlayHref({ difficulty: 'easy', language: 'python', screen: 'length', topic: 'x' })).toBe(
       '/python/easy/length?topic=x',
     );
+  });
+});
+
+describe('reconcilePoolSize', () => {
+  const questions = [{ topic: 'a' }, { topic: 'a' }, { topic: 'b' }];
+
+  it('prefers the loaded bank count when it differs from the manifest count', () => {
+    expect(reconcilePoolSize(100, questions, undefined)).toBe(3);
+    expect(reconcilePoolSize(100, questions, 'a')).toBe(2);
+  });
+
+  it('keeps the manifest count when no bank is loaded or the manifest gives none', () => {
+    expect(reconcilePoolSize(100, undefined, undefined)).toBe(100);
+    expect(reconcilePoolSize(undefined, questions, undefined)).toBeUndefined();
+  });
+
+  it('keeps the manifest count when the loaded bank has no question for the topic', () => {
+    expect(reconcilePoolSize(10, questions, 'missing')).toBe(10);
   });
 });
