@@ -8,13 +8,40 @@ import { StatsProvider, useQuizStats } from '../../../state/StatsProvider';
 import { QuizRound } from '../QuizRound';
 import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/contentFixtures';
 
-const questions: Question[] = [{ answer: true, id: 'q-1', prompt: 'Is it?', query: { explanation: 'Because', title: 'Why' }, provenance: TEST_PROVENANCE, type: 'bool' }];
+const questions: Question[] = [
+  {
+    answer: true,
+    id: 'q-1',
+    prompt: 'Is it?',
+    query: { explanation: 'Because', title: 'Why' },
+    provenance: TEST_PROVENANCE,
+    type: 'bool',
+  },
+];
 
 // Mounts the round only once stats have hydrated, as the round route does, so
 // an immediate completion is not swallowed by the pre-hydration guard.
 function AfterHydration({ children }: { children: ReactNode }) {
   const { isHydrated } = useQuizStats();
   return isHydrated ? children : null;
+}
+
+const threeQuestions: Question[] = ['q-a', 'q-b', 'q-c'].map((id, index) => ({
+  answer: true,
+  id,
+  prompt: `Is ${id}?`,
+  query: { explanation: 'Because', title: 'Why' },
+  provenance: TEST_PROVENANCE,
+  topic: index === 0 ? 'strings' : 'numbers',
+  type: 'bool',
+}));
+
+// Answers every question of the open round with True and moves on.
+async function answerAll(count: number) {
+  for (let answered = 0; answered < count; answered += 1) {
+    await fireEvent.press(screen.getByText('True'));
+    await fireEvent.press(screen.getByRole('button', { name: /^(Continue|See results)/ }));
+  }
 }
 
 function CompletionsProbe() {
@@ -59,12 +86,96 @@ describe('QuizRound with the real stats provider', () => {
       <StatsProvider>
         <CompletionsProbe />
         <AfterHydration>
-          <QuizRound language="python" languageLabel="Python" difficulty="easy" difficultyLabel="Easy" grammar="python" questions={noQuestions} onExit={() => undefined} onRetry={() => undefined} />
+          <QuizRound
+            language="python"
+            languageLabel="Python"
+            difficulty="easy"
+            difficultyLabel="Easy"
+            grammar="python"
+            questions={noQuestions}
+            onExit={() => undefined}
+            onRetry={() => undefined}
+          />
         </AfterHydration>
       </StatsProvider>,
     );
     await waitFor(() => expect(screen.getByTestId('completions').props.children).toBe('0'));
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(screen.getByTestId('completions').props.children).toBe('0');
+  });
+
+  it('records no completion for a sampled round that plays only part of the bank', async () => {
+    await render(
+      <StatsProvider>
+        <CompletionsProbe />
+        <AfterHydration>
+          <QuizRound
+            language="python"
+            languageLabel="Python"
+            difficulty="easy"
+            difficultyLabel="Easy"
+            grammar="python"
+            questions={threeQuestions}
+            sampleSize={2}
+            onExit={() => undefined}
+            onRetry={() => undefined}
+          />
+        </AfterHydration>
+      </StatsProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId('completions').props.children).toBe('0'));
+    await answerAll(2);
+    await screen.findByText(/2 of 2|of 2 correct/);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.getByTestId('completions').props.children).toBe('0');
+  });
+
+  it('records no completion for a topic round that plays only one topic of the bank', async () => {
+    await render(
+      <StatsProvider>
+        <CompletionsProbe />
+        <AfterHydration>
+          <QuizRound
+            language="python"
+            languageLabel="Python"
+            difficulty="easy"
+            difficultyLabel="Easy"
+            grammar="python"
+            questions={threeQuestions}
+            topic="strings"
+            onExit={() => undefined}
+            onRetry={() => undefined}
+          />
+        </AfterHydration>
+      </StatsProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId('completions').props.children).toBe('0'));
+    await answerAll(1);
+    await screen.findByText(/1 of 1|of 1 correct/);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.getByTestId('completions').props.children).toBe('0');
+  });
+
+  it('records a completion when a round plays every question in the bank', async () => {
+    await render(
+      <StatsProvider>
+        <CompletionsProbe />
+        <AfterHydration>
+          <QuizRound
+            language="python"
+            languageLabel="Python"
+            difficulty="easy"
+            difficultyLabel="Easy"
+            grammar="python"
+            questions={threeQuestions}
+            sampleSize={3}
+            onExit={() => undefined}
+            onRetry={() => undefined}
+          />
+        </AfterHydration>
+      </StatsProvider>,
+    );
+    await answerAll(3);
+    await waitFor(() => expect(screen.getByTestId('completions').props.children).toBe('1'));
   });
 });

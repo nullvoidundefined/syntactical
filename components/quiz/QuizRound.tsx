@@ -2,8 +2,9 @@
 // and switches to the results screen when the round completes. Answers
 // are refused while the drawer is open, and advancing closes it. A bank
 // round plays one bank, or one topic of it; a review round mixes banks, so
-// each question's bank, labels, and grammar come from describeQuestion, and
-// a review round records no bank completion.
+// each question's bank, labels, and grammar come from describeQuestion. Only a
+// round that plays every question in the bank records a bank completion: a
+// sampled 20 or 50 question round, a topic round, and a review round do not.
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import type { Grammar, Question } from '@syntactical/content-schema';
@@ -161,8 +162,8 @@ export function QuizRound(props: QuizRoundProps) {
     if (currentQuestion) explain(readChosenRationale(currentQuestion, submittedAnswer));
   }
 
-  // A round with no questions is not a completion; a review round is not a bank completion.
-  useRoundCompletion(isComplete && engine.totalQuestions > 0 && roundKind === 'bank', { difficulty, language });
+  const isWholeBank = roundKind === 'bank' && topic === undefined && engine.totalQuestions === questions.length;
+  useRoundCompletion(isComplete && engine.totalQuestions > 0 && isWholeBank, { difficulty, language });
   useRoundAnalytics({
     bankQuestions: questions,
     correctCount: engine.correctCount,
