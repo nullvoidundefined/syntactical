@@ -13,6 +13,7 @@ export { isRecord } from './isRecord.js';
 export { isSafeBankPath } from './isSafeBankPath.js';
 export { findMisconceptionsProblem } from './findMisconceptionsProblem.js';
 export { buildBankContext } from './buildBankContext.js';
+export { collectMisconceptionIds } from './collectMisconceptionIds.js';
 export { validateManifest } from './validateManifest.js';
 export { validateBankForPublish } from './validateBankForPublish.js';
 export { validateQuestionBank } from './validateQuestionBank.js';

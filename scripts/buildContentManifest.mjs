@@ -11,6 +11,7 @@
 import {
   CONTENT_LIMITS,
   buildBankContext,
+  collectMisconceptionIds,
   findMisconceptionsProblem,
   isSafeBankPath,
   validateManifest,
@@ -203,17 +204,26 @@ async function readApprovedTaxonomy(taxonomyPath) {
   }
 }
 
-// Copies each language's owner-approved `<language>.json` into its manifest entry. The
+// Keeps linked entries from each language's owner-approved `<language>.json`, retaining
+// previously published ids when private banks are unavailable. The
 // `<language>.draft.json` the pipeline writes is never read. Language ids are already
 // validated (they are joined into the path), and a malformed approved file fails the build.
-async function applyApprovedTaxonomies(taxonomyDir, manifest) {
+async function applyApprovedTaxonomies(taxonomyDir, manifest, contentDir, contentRoot) {
   for (const language of manifest.languages) {
     const approvedName = `${language.id}.json`;
     const misconceptions = await readApprovedTaxonomy(join(taxonomyDir, approvedName));
     if (misconceptions === undefined) continue;
     const problem = findMisconceptionsProblem(misconceptions, language.id);
     if (problem !== null) throw new Error(`taxonomy ${approvedName} is invalid: ${problem}`);
-    language.misconceptions = misconceptions;
+    const linkedIds = new Set(contentRoot ? [] : language.misconceptions.map(({ id }) => id));
+    for (const bank of Object.values(language.banks)) {
+      if (bank.access === 'paid' && !contentRoot) continue;
+      const bytes = await readBankBytes(pickBankDir(contentDir, contentRoot, bank), bank.path);
+      for (const question of JSON.parse(bytes.toString('utf8')).questions) {
+        for (const id of collectMisconceptionIds(question)) linkedIds.add(id);
+      }
+    }
+    language.misconceptions = misconceptions.filter(({ id }) => linkedIds.has(id));
   }
 }
 
@@ -224,7 +234,7 @@ export async function buildContentManifest(contentDir, outputs, taxonomyDir, con
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   assertSafeBankPaths(manifest);
   assertValidManifest(withPlaceholderHashes(manifest));
-  if (taxonomyDir) await applyApprovedTaxonomies(taxonomyDir, manifest);
+  if (taxonomyDir) await applyApprovedTaxonomies(taxonomyDir, manifest, contentDir, contentRoot);
   await assertBanksInTheirTrees(contentDir, manifest, contentRoot);
   await hashAllBanks(contentDir, manifest, contentRoot);
   assertValidManifest(manifest);
