@@ -35,7 +35,12 @@ describe('buildContentManifest taxonomy', () => {
         return buildContentManifest(contentDir, generatedPath, taxonomyDir);
     }
 
-    it('copies the approved file into the manifest and ignores the draft', async () => {
+    it('takes entries from the approved file, never the draft', async () => {
+        // The approved entry is already published, so it is kept without a content root.
+        const manifestPath = join(contentDir, 'manifest.json');
+        const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+        manifest.languages.find(({ id }: { id: string }) => id === 'python').misconceptions = APPROVED;
+        await writeFile(manifestPath, JSON.stringify(manifest));
         await writeFile(join(taxonomyDir, 'python.json'), JSON.stringify(APPROVED));
         await writeFile(join(taxonomyDir, 'python.draft.json'), JSON.stringify(DRAFT));
 
