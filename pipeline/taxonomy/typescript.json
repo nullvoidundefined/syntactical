@@ -1,0 +1,162 @@
+[
+  {
+    "id": "typescript.infer-let-literal-type",
+    "description": "Believing `let x = 'a'` is inferred as the literal type 'a', rather than widened to string."
+  },
+  {
+    "id": "typescript.infer-const-widens",
+    "description": "Believing `const x = 'a'` is inferred as string, rather than the literal type 'a'."
+  },
+  {
+    "id": "typescript.infer-object-literal-props-literal",
+    "description": "Believing the properties of `const o = { k: 'a' }` keep the literal type 'a', rather than widening to string."
+  },
+  {
+    "id": "typescript.infer-empty-array-never",
+    "description": "Believing `const xs = []` under strict mode is inferred as a fixed element type, rather than evolving as elements are pushed."
+  },
+  {
+    "id": "typescript.annotation-changes-runtime",
+    "description": "Believing a type annotation changes the value at runtime, such as converting or validating it."
+  },
+  {
+    "id": "typescript.assertion-converts-value",
+    "description": "Believing `x as number` converts the value to a number at runtime, rather than only telling the compiler to trust the type."
+  },
+  {
+    "id": "typescript.non-null-bang-checks",
+    "description": "Believing the non-null assertion `x!` checks or removes null at runtime."
+  },
+  {
+    "id": "typescript.union-access-any-member",
+    "description": "Believing any property of any union member can be read without narrowing."
+  },
+  {
+    "id": "typescript.union-exposes-all-members",
+    "description": "Believing a value of type A | B exposes the members of both A and B, rather than only the members they share."
+  },
+  {
+    "id": "typescript.typeof-null-object-narrow",
+    "description": "Believing `typeof x === 'object'` narrows out null."
+  },
+  {
+    "id": "typescript.in-operator-narrows-by-value",
+    "description": "Believing the `in` operator narrows by property value rather than by property presence."
+  },
+  {
+    "id": "typescript.narrowing-persists-in-callback",
+    "description": "Believing narrowing of a mutable variable persists inside a callback created after the check."
+  },
+  {
+    "id": "typescript.discriminant-needs-literal",
+    "description": "Believing a union narrows on any shared property, rather than one with literal types."
+  },
+  {
+    "id": "typescript.instanceof-works-on-interface",
+    "description": "Believing `instanceof` can test against an interface, which has no runtime value."
+  },
+  {
+    "id": "typescript.type-guard-is-verified",
+    "description": "Believing a user-defined type predicate is verified by the compiler, rather than trusted."
+  },
+  {
+    "id": "typescript.interface-exists-at-runtime",
+    "description": "Believing an interface or type alias exists at runtime and can be inspected or passed as a value."
+  },
+  {
+    "id": "typescript.type-alias-merges",
+    "description": "Believing two `type` aliases with the same name merge like interfaces, rather than being a duplicate identifier error."
+  },
+  {
+    "id": "typescript.types-are-nominal",
+    "description": "Believing two structurally identical types are incompatible because they have different names."
+  },
+  {
+    "id": "typescript.extra-props-always-error",
+    "description": "Believing extra properties are always an error, rather than only for fresh object literals."
+  },
+  {
+    "id": "typescript.implements-adds-members",
+    "description": "Believing `implements` copies members into the class, rather than only checking the class against the interface."
+  },
+  {
+    "id": "typescript.generics-exist-at-runtime",
+    "description": "Believing generic type arguments exist at runtime and can be inspected or constructed with `new T()`."
+  },
+  {
+    "id": "typescript.generic-inferred-widest",
+    "description": "Believing a generic parameter is inferred as the widest type rather than from the argument."
+  },
+  {
+    "id": "typescript.extends-constraint-means-subclass",
+    "description": "Believing `T extends U` in a constraint means T must be a class inheriting from U, rather than assignable to U."
+  },
+  {
+    "id": "typescript.partial-is-deep",
+    "description": "Believing `Partial<T>` makes nested properties optional as well as the top level."
+  },
+  {
+    "id": "typescript.readonly-freezes-at-runtime",
+    "description": "Believing `Readonly<T>` or `readonly` freezes the object at runtime."
+  },
+  {
+    "id": "typescript.readonly-is-deep",
+    "description": "Believing `Readonly<T>` makes nested object properties readonly."
+  },
+  {
+    "id": "typescript.omit-checks-keys",
+    "description": "Believing `Omit<T, K>` errors when K is not a key of T, rather than accepting any string key."
+  },
+  {
+    "id": "typescript.record-index-includes-undefined",
+    "description": "Believing indexing a `Record<string, T>` yields `T | undefined`, rather than T."
+  },
+  {
+    "id": "typescript.literal-stays-narrow-when-mutable",
+    "description": "Believing a literal type stays narrow when assigned to a mutable property or `let`."
+  },
+  {
+    "id": "typescript.as-const-freezes-at-runtime",
+    "description": "Believing `as const` freezes the value at runtime."
+  },
+  {
+    "id": "typescript.template-literal-type-validates-runtime",
+    "description": "Believing template literal types validate string values at runtime."
+  },
+  {
+    "id": "typescript.any-same-as-unknown",
+    "description": "Believing `any` and `unknown` behave the same, including allowing property access without a check."
+  },
+  {
+    "id": "typescript.unknown-assignable-anywhere",
+    "description": "Believing a value of type `unknown` can be assigned to any other type without narrowing."
+  },
+  {
+    "id": "typescript.never-holds-values",
+    "description": "Believing a variable of type `never` can hold a value at runtime."
+  },
+  {
+    "id": "typescript.private-enforced-at-runtime",
+    "description": "Believing TypeScript `private` members are inaccessible at runtime, rather than only at compile time."
+  },
+  {
+    "id": "typescript.parameter-property-needs-field",
+    "description": "Believing a constructor parameter marked `public` or `private` also needs a separate field declaration."
+  },
+  {
+    "id": "typescript.string-enum-reverse-mapping",
+    "description": "Believing a string enum has a reverse mapping from value to name like a numeric enum."
+  },
+  {
+    "id": "typescript.const-enum-emitted",
+    "description": "Believing a `const enum` is always emitted as an object at runtime."
+  },
+  {
+    "id": "typescript.types-checked-at-runtime",
+    "description": "Believing type annotations are checked at runtime, so a wrong-typed value throws a TypeError."
+  },
+  {
+    "id": "typescript.type-error-blocks-emit",
+    "description": "Believing code with type errors never produces JavaScript output by default."
+  }
+]
