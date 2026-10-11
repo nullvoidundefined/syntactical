@@ -3944,20 +3944,19 @@
     },
     {
       "id": "gen-sql-easy-18eb8efe",
-      "answer": false,
-      "code": "CREATE TABLE books (\n  id INT PRIMARY KEY,\n  title VARCHAR(10)\n);\n\nSELECT is_nullable\nFROM information_schema.columns\nWHERE table_name = 'books' AND column_name = 'id';",
-      "prompt": "Does this metadata query print YES?",
+      "answer": true,
+      "code": "CREATE TABLE books (\n  id INT PRIMARY KEY,\n  copies INT NOT NULL\n);\n\nINSERT INTO books (id, copies) VALUES (1, 0);\nINSERT INTO books (id, copies) VALUES (2, 5);\n\nSELECT COUNT(*) FROM books;",
+      "prompt": "Does this script print 2?",
       "query": {
-        "explanation": "Declaring a column as PRIMARY KEY makes it both unique and NOT NULL, even though NOT NULL was never written. The catalog therefore reports is_nullable = 'NO' for books.id. The title column, with no constraint, would report 'YES'.",
-        "syntax": "col type PRIMARY KEY",
+        "explanation": "NOT NULL rejects only the NULL marker. The value 0 is a real value, so the first INSERT into copies succeeds, as does the second, and COUNT(*) returns 2. An INSERT that gave copies as NULL, or left it out with no default, would be rejected.",
+        "syntax": "col type NOT NULL",
         "tags": [
           "constraints",
-          "primary-key",
           "not-null"
         ],
-        "title": "PRIMARY KEY implies NOT NULL"
+        "title": "NOT NULL rejects NULL, not 0"
       },
-      "rationale": "A PRIMARY KEY column is implicitly NOT NULL, so the catalog reports 'NO' for id rather than 'YES'.",
+      "rationale": "NOT NULL blocks only NULL, so 0 is accepted and both rows are stored, not just one.",
       "type": "bool",
       "topic": "constraints-and-keys",
       "provenance": {

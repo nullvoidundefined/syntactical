@@ -755,9 +755,9 @@
       "banks": {
         "easy": {
           "path": "sql/easy.json",
-          "hash": "ec102a856c5f1ac9ad6307cafde7764da7148c758dc2423adcc770235310b74a",
+          "hash": "5fee11bf5f7cede68b9b6a9a6010ac0edbad7bfda893d0dd86b8036dc02a6a47",
           "access": "free",
-          "contentVersion": 3,
+          "contentVersion": 4,
           "topicCounts": {
             "filtering-and-nulls": 10,
             "joins": 10,
