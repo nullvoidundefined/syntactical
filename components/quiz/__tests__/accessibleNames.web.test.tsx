@@ -3,6 +3,7 @@ import { Text } from 'react-native';
 
 import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/contentFixtures';
 import { QueryDrawer } from '../../query/QueryDrawer';
+import { BooleanCard } from '../BooleanCard';
 import { CodeBlock } from '../CodeBlock';
 import { MultipleChoiceCard } from '../MultipleChoiceCard';
 import { ProgressBar } from '../ProgressBar';
@@ -58,6 +59,29 @@ describe('quiz screens on the web expose accessible names and headings', () => {
     // label-content-name-mismatch).
     expect(button.getAttribute('aria-label')).toBeNull();
     expect(screen.getByRole('button', { name: choiceName('B', 'plain') })).toBeTruthy();
+  });
+
+  it('names each True/False button from its visible key hint and word, plus the hidden state', () => {
+    const question = { answer: true, id: 'q', prompt: 'p', query, provenance: TEST_PROVENANCE, type: 'bool' } as never;
+    const { rerender } = render(
+      <BooleanCard
+        question={question}
+        grammar="python"
+        submittedAnswer={null}
+        isAnswered={false}
+        onSelect={jest.fn()}
+      />,
+    );
+    const trueButton = screen.getByRole('button', { name: choiceName('T', 'True') });
+    // The name comes from the visible content, so no aria-label can disagree with it (Lighthouse
+    // label-content-name-mismatch flagged aria-label "True" against visible "T True").
+    expect(trueButton.getAttribute('aria-label')).toBeNull();
+    expect(screen.getByRole('button', { name: choiceName('F', 'False') }).getAttribute('aria-label')).toBeNull();
+    rerender(
+      <BooleanCard question={question} grammar="python" submittedAnswer={false} isAnswered onSelect={jest.fn()} />,
+    );
+    expect(screen.getByRole('button', { name: choiceName('T', 'True', 'correct') })).toBeTruthy();
+    expect(screen.getByRole('button', { name: choiceName('F', 'False', 'incorrect') })).toBeTruthy();
   });
 
   it('names the query dialog after the query title', () => {

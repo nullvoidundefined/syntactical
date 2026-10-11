@@ -96,12 +96,12 @@ describe('web keyboard navigation in a round', () => {
   });
 
   it.each([
-    ['t', 'True, correct'],
-    ['F', 'False, incorrect'],
+    ['t', choiceName('T', 'True', 'correct')],
+    ['F', choiceName('F', 'False', 'incorrect')],
   ])('key %p answers a boolean question', (key, label) => {
     render(<RoundHarness question={boolQuestion} />);
     pressKey(key);
-    expect(screen.queryByLabelText(label)).not.toBeNull();
+    expect(screen.queryByRole('button', { name: label })).not.toBeNull();
   });
 
   it('ignores T on a multiple-choice question but answers with a choice key', () => {
@@ -117,7 +117,7 @@ describe('web keyboard navigation in a round', () => {
     pressKey('2');
     expect(screen.queryByText('Continue')).toBeNull();
     pressKey('t');
-    expect(screen.queryByLabelText('True, correct')).not.toBeNull();
+    expect(screen.queryByRole('button', { name: choiceName('T', 'True', 'correct') })).not.toBeNull();
   });
 
   it('Enter does nothing before an answer and advances after one', () => {
