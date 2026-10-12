@@ -53,8 +53,8 @@ function buildLanguageContext(bankPath, language) {
   return buildBankContext(language);
 }
 
-function assertValidBank(bankPath, bytes, language) {
-  const result = validateQuestionBank(JSON.parse(bytes.toString('utf8')), buildLanguageContext(bankPath, language));
+function assertValidBank(bankPath, data, language) {
+  const result = validateQuestionBank(data, buildLanguageContext(bankPath, language));
   if (!result.isValid) throw new Error(`${bankPath} is invalid: ${result.rule}`);
   if (result.droppedQuestionIds.length > 0) {
     throw new Error(`${bankPath} has invalid questions: ${result.droppedQuestionIds.join(', ')}`);
@@ -62,9 +62,9 @@ function assertValidBank(bankPath, bytes, language) {
 }
 
 // Counts a bank's questions per topic; a question with no topic is not counted.
-function countTopics(bytes) {
+function countTopics(data) {
   const counts = {};
-  for (const question of JSON.parse(bytes.toString('utf8')).questions) {
+  for (const question of data.questions) {
     if (typeof question?.topic === 'string') counts[question.topic] = (counts[question.topic] ?? 0) + 1;
   }
   return counts;
@@ -74,6 +74,19 @@ function countTopics(bytes) {
 // public content directory.
 function pickBankDir(contentDir, contentRoot, bank) {
   return bank.access === 'paid' ? contentRoot : contentDir;
+}
+
+function readBank(contentDir, contentRoot, bank, bankCache) {
+  if (!bankCache.has(bank.path)) {
+    bankCache.set(
+      bank.path,
+      readBankBytes(pickBankDir(contentDir, contentRoot, bank), bank.path).then((bytes) => ({
+        bytes,
+        data: JSON.parse(bytes.toString('utf8')),
+      })),
+    );
+  }
+  return bankCache.get(bank.path);
 }
 
 async function isFilePresent(path) {
@@ -97,16 +110,16 @@ async function assertBanksInTheirTrees(contentDir, manifest, contentRoot) {
 // Recomputes the bank's hash and topic counts, and bumps its content version only when the
 // hash changed, so a rebuild with no content change is a no-op. Without a content root a paid
 // bank is not read and its manifest entry is kept as it is.
-async function hashAllBanks(contentDir, manifest, contentRoot) {
+async function hashAllBanks(contentDir, manifest, contentRoot, bankCache) {
   await Promise.all(
     listBankEntries(manifest).map(async ({ bank, language }) => {
       if (bank.access === 'paid' && !contentRoot) return;
-      const bytes = await readBankBytes(pickBankDir(contentDir, contentRoot, bank), bank.path);
-      assertValidBank(bank.path, bytes, language);
+      const { bytes, data } = await readBank(contentDir, contentRoot, bank, bankCache);
+      assertValidBank(bank.path, data, language);
       const hash = createHash('sha256').update(bytes).digest('hex');
       if (hash !== bank.hash) bank.contentVersion += 1;
       bank.hash = hash;
-      bank.topicCounts = countTopics(bytes);
+      bank.topicCounts = countTopics(data);
     }),
   );
 }
@@ -208,18 +221,22 @@ async function readApprovedTaxonomy(taxonomyPath) {
 // previously published ids when private banks are unavailable. The
 // `<language>.draft.json` the pipeline writes is never read. Language ids are already
 // validated (they are joined into the path), and a malformed approved file fails the build.
-async function applyApprovedTaxonomies(taxonomyDir, manifest, contentDir, contentRoot) {
+async function applyApprovedTaxonomies(taxonomyDir, manifest, contentDir, contentRoot, bankCache) {
   for (const language of manifest.languages) {
     const approvedName = `${language.id}.json`;
     const misconceptions = await readApprovedTaxonomy(join(taxonomyDir, approvedName));
     if (misconceptions === undefined) continue;
     const problem = findMisconceptionsProblem(misconceptions, language.id);
     if (problem !== null) throw new Error(`taxonomy ${approvedName} is invalid: ${problem}`);
+    // Without a content root, new paid-only entries stay out by design: publish adds
+    // them with the root, and CI's root-less drift check must reproduce the committed manifest.
     const linkedIds = new Set(contentRoot ? [] : language.misconceptions.map(({ id }) => id));
     for (const bank of Object.values(language.banks)) {
       if (bank.access === 'paid' && !contentRoot) continue;
-      const bytes = await readBankBytes(pickBankDir(contentDir, contentRoot, bank), bank.path);
-      for (const question of JSON.parse(bytes.toString('utf8')).questions) {
+      const { data } = await readBank(contentDir, contentRoot, bank, bankCache);
+      // Check the root shape before iterating; full validation uses the filtered taxonomy below.
+      if (!Array.isArray(data?.questions)) assertValidBank(bank.path, data, language);
+      for (const question of data.questions) {
         for (const id of collectMisconceptionIds(question)) linkedIds.add(id);
       }
     }
@@ -234,9 +251,10 @@ export async function buildContentManifest(contentDir, outputs, taxonomyDir, con
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   assertSafeBankPaths(manifest);
   assertValidManifest(withPlaceholderHashes(manifest));
-  if (taxonomyDir) await applyApprovedTaxonomies(taxonomyDir, manifest, contentDir, contentRoot);
+  const bankCache = new Map();
+  if (taxonomyDir) await applyApprovedTaxonomies(taxonomyDir, manifest, contentDir, contentRoot, bankCache);
   await assertBanksInTheirTrees(contentDir, manifest, contentRoot);
-  await hashAllBanks(contentDir, manifest, contentRoot);
+  await hashAllBanks(contentDir, manifest, contentRoot, bankCache);
   assertValidManifest(manifest);
   const manifestText = `${JSON.stringify(manifest, null, 2)}\n`;
   if (Buffer.byteLength(manifestText, 'utf8') > CONTENT_LIMITS.manifestBytes) {
