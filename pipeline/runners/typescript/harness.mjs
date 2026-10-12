@@ -27,7 +27,12 @@ const EXCEPTION_MARKER = '\u0000oracle-exception:';
 
 function buildChildSource(code) {
     return `
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const module = { exports: {} };
+const exports = module.exports;
 const ts = require('typescript');
+const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 const fail = (marker) => { process.stderr.write('\\n' + marker + '\\n', () => process.exit(${FAILURE_EXIT_CODE})); };
 const reportException = (error) => {
     const name = error && typeof error === 'object' && error.name ? String(error.name) : 'Error';
@@ -44,16 +49,17 @@ if (result.diagnostics.some((diagnostic) => diagnostic.category === ts.Diagnosti
 } else {
     let compiled;
     try {
-        compiled = new Function('require', 'module', 'exports', result.outputText);
+        compiled = new AsyncFunction('require', 'module', 'exports', result.outputText);
     } catch (error) {
         if (error instanceof SyntaxError) { fail(${JSON.stringify(SYNTAX_MARKER)}); }
         else { reportException(error); }
     }
     if (compiled) {
         try {
-            compiled(require, module, exports);
+            await compiled(require, module, exports);
         } catch (error) {
             reportException(error);
+            await new Promise(() => {});
         }
     }
 }
@@ -96,7 +102,7 @@ if (fdProbe.status === 0 || fdProbe.status === null || !/Permission denied/.test
 }
 
 const payload = JSON.parse(readFileSync(0, 'utf8'));
-const child = spawn(process.execPath, ['--max-old-space-size=160', '--input-type=commonjs', '-'], {
+const child = spawn(process.execPath, ['--max-old-space-size=160', '--input-type=module', '-'], {
     stdio: ['pipe', 'pipe', 'pipe'],
     detached: true,
 });
