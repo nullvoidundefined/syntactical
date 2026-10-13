@@ -1,6 +1,7 @@
 // The Query panel, in a modal that closes by its control, the backdrop, or the platform back
 // action. Before the learner answers it is a reference: the title, syntax, and documentation
-// links, which must not give the answer away. After they answer it is the full explanation: a
+// links, which must not give the answer away (a query marked `isSyntaxAfterAnswer` holds its
+// syntax back until after an answer). After they answer it is the full explanation: a
 // wrong choice's rationale first, then the reference, the explanation, the tags, and, for judged
 // cards, the first evidence source. Slides in unless reduced motion is requested. The panel pads by
 // the device's safe-area insets, since an Android modal draws under the status bar and gesture bar.
@@ -30,7 +31,8 @@ export function QueryDrawer(props: QueryDrawerProps) {
   const { chosenRationale, evidenceSource, grammar, isAnswered, isOpen, onClose, query } = props;
   const isReducedMotion = useIsReducedMotion();
   const insets = useContext(SafeAreaInsetsContext);
-  const { docs, explanation, syntax, tags, title } = query;
+  const { docs, explanation, isSyntaxAfterAnswer, syntax, tags, title } = query;
+  const isSyntaxShown = Boolean(syntax) && (isAnswered || isSyntaxAfterAnswer !== true);
   return (
     <Modal
       testID="query-modal"
@@ -76,7 +78,7 @@ export function QueryDrawer(props: QueryDrawerProps) {
             <Text role="heading" aria-level={2} className="mb-4 font-mono text-lg text-ink">
               {title}
             </Text>
-            {syntax ? <CodeBlock className="mb-4" code={syntax} grammar={grammar} /> : null}
+            {isSyntaxShown ? <CodeBlock className="mb-4" code={syntax ?? ''} grammar={grammar} /> : null}
             {isAnswered ? (
               <>
                 <Text className="text-sm leading-relaxed text-ink">{explanation}</Text>
