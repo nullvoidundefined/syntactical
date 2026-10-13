@@ -129,6 +129,16 @@ describe('validateContent', () => {
         };
     }
 
+    it('rejects a manifest missing schemaVersion without writing reports', async () => {
+        await writeFile(join(contentDir, 'manifest.json'), JSON.stringify({ languages: MANIFEST.languages }));
+        await mkdir(reportsDir, { recursive: true });
+
+        await expect(run(() => null)).rejects.toThrow(/^Manifest rejected:/);
+
+        await expect(readFile(join(reportsDir, 'latest.json'), 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
+        expect(await readdir(reportsDir)).toEqual([]);
+    });
+
     it('reports each status with its reason and counts them', async () => {
         const seenOracles = new Map<string, Oracle | null>();
         const report = await run((id) => (id === 'p-3' ? null : ORACLE), recordingValidator(seenOracles));
