@@ -11,9 +11,9 @@ import type { z } from 'zod';
 
 import { AUTH } from '../constants/auth.js';
 import { HTTP } from '../constants/http.js';
-import { createErrorResponse, ERROR_CODES } from '../errors.js';
-import type { ErrorCode } from '../errors.js';
+import { ERROR_CODES, sendError } from '../errors.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
+import { keyOfEmail, keyOfIp } from '../middleware/rateLimitKeys.js';
 import { authSchemas } from '../schemas/authSchemas.js';
 import { normalizePassword } from '../services/checkPasswordPolicy.js';
 import { createPasswordSession } from '../services/createPasswordSession.js';
@@ -33,11 +33,6 @@ const {
 } = HTTP;
 
 type SignInBody = z.infer<typeof authSchemas.passwordSignIn>;
-
-function sendError(res: Response, status: number, code: ErrorCode, message: string): void {
-  const { requestId } = res.locals as { requestId: string };
-  res.status(status).json(createErrorResponse(code, message, requestId));
-}
 
 function sendInvalidCredentials(res: Response): void {
   sendError(res, BAD_REQUEST, ERROR_CODES.AUTH.INVALID_CREDENTIALS, 'Invalid email or password');
@@ -60,13 +55,13 @@ function createAuthPasswordSessionsRouter(deps: PasswordSessionsAuthDeps): Route
   const limits = { database, keySecret: rateLimitKeySecret, now, windowMs: WINDOW_MS };
   const perIp = createRateLimit({
     ...limits,
-    keyOf: (req) => req.ip ?? 'unknown',
+    keyOf: keyOfIp,
     limit: PASSWORD_SIGN_IN_PER_IP,
     scope: PASSWORD_SIGN_IN_IP,
   });
   const perEmail = createRateLimit({
     ...limits,
-    keyOf: (_req, res) => String(res.locals.email),
+    keyOf: keyOfEmail,
     limit: PASSWORD_SIGN_IN_PER_EMAIL,
     scope: PASSWORD_SIGN_IN_EMAIL,
   });

@@ -6,7 +6,7 @@
 import { Router } from 'express';
 
 import { HTTP } from '../constants/http.js';
-import { createErrorResponse, ERROR_CODES } from '../errors.js';
+import { ERROR_CODES, sendError } from '../errors.js';
 import { createRequireSession } from '../middleware/requireSession.js';
 import { hasEntitlement } from '../services/hasEntitlement.js';
 
@@ -29,18 +29,16 @@ function createBanksRouter(deps: ResolvedBanksDeps): Router {
     },
     requireSession,
     async (req, res) => {
-      const { requestId, session } = res.locals as { requestId: string; session: { userId: string } };
+      const { session } = res.locals as { session: { userId: string } };
       const { difficulty, language } = req.params;
       const bank = paidBanks.get(`${language}/${difficulty}`);
       if (!bank) {
-        res.status(NOT_FOUND).json(createErrorResponse(ERROR_CODES.ROUTING.NOT_FOUND, 'Not found', requestId));
+        sendError(res, NOT_FOUND, ERROR_CODES.ROUTING.NOT_FOUND, 'Not found');
         return;
       }
       const { body, productId } = bank;
       if (!(await hasEntitlement(database, session.userId, productId))) {
-        res
-          .status(FORBIDDEN)
-          .json(createErrorResponse(ERROR_CODES.ENTITLEMENT.REQUIRED, 'This bank requires a purchase', requestId));
+        sendError(res, FORBIDDEN, ERROR_CODES.ENTITLEMENT.REQUIRED, 'This bank requires a purchase');
         return;
       }
       res.status(OK).type('application/json').send(body);
