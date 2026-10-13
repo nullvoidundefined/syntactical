@@ -46,15 +46,14 @@ function areValidTags(tags: unknown): boolean {
 
 function isValidQuery(query: unknown): boolean {
   if (!isRecord(query)) return false;
-  const { docs, explanation, isSyntaxAfterAnswer, syntax, tags, title } = query;
+  const { docs, explanation, syntax, tags, title } = query;
   const { longTextLength, queryTitleLength } = CONTENT_LIMITS;
   return (
     isText(title, queryTitleLength) &&
     isText(explanation, longTextLength) &&
     isOptionalText(syntax, longTextLength) &&
     areValidTags(tags) &&
-    areValidDocLinks(docs) &&
-    (isSyntaxAfterAnswer === undefined || typeof isSyntaxAfterAnswer === 'boolean')
+    areValidDocLinks(docs)
   );
 }
 

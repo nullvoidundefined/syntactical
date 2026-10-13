@@ -116,6 +116,8 @@ describe('per-question grammar', () => {
       query: { ...query, syntax: 'SELECT 1' },
       type: 'bool',
     });
+    // The drawer shows the syntax only after an answer.
+    await fireEvent.press(screen.getByText('True'));
     await fireEvent.press(screen.getByRole('button', { name: 'Query' }));
     await waitFor(() => expect(screen.queryByText('SELECT', EXACT_RUN)).not.toBeNull());
   });
