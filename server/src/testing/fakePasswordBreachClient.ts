@@ -1,7 +1,7 @@
 // A breach client for tests: serves canned ranges and records each prefix it is asked for.
 // startServer refuses an injected client outside NODE_ENV test.
 import { AUTH } from '../constants/auth.js';
-import type { PasswordBreachClient } from './passwordBreachClient.js';
+import type { PasswordBreachClient } from '../clients/passwordBreachClient.js';
 
 interface FakeOptions {
   failure?: 'hang' | 'oversize' | 'reject' | 'status-500';

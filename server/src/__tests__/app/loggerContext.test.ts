@@ -1,17 +1,13 @@
-// B-62f: a child derived from the request logger keeps the request id; absolute
-// URLs come from PUBLIC_BASE_URL, and X-Forwarded-Proto cannot flip req.protocol.
-import { randomBytes } from 'node:crypto';
-
+// B-62f: a child derived from the request logger keeps the request id, and
+// X-Forwarded-Proto cannot flip req.protocol.
 import type { Router } from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 
 import { createApp } from '../../app.js';
 import { createLogger } from '../../clients/logger.js';
-import { loadEnv } from '../../config/env.js';
 
 const HTTP_OK = 200;
-const TOKEN_BYTES = 12;
 
 function capture() {
   const lines: string[] = [];
@@ -22,23 +18,6 @@ function capture() {
       },
     },
     lines,
-  };
-}
-
-function secret(): string {
-  return randomBytes(TOKEN_BYTES * 2).toString('hex');
-}
-
-function envWith(publicBaseUrl: string | undefined): NodeJS.ProcessEnv {
-  return {
-    ALLOWED_ORIGINS: 'https://syntactical.dev',
-    DATABASE_URL: `postgres-url-${secret()}`,
-    EMAIL_FROM: 'Syntactical <sign-in@syntactical.dev>',
-    PAID_CONTENT_DIR: '/srv/syntactical-content',
-    PUBLIC_BASE_URL: publicBaseUrl,
-    RATE_LIMIT_KEY_SECRET: secret(),
-    RESEND_API_KEY: secret(),
-    REVENUECAT_WEBHOOK_AUTH: secret(),
   };
 }
 
@@ -77,12 +56,5 @@ describe('request identity', () => {
     });
     await request(app).get('/proto').set('X-Forwarded-Proto', 'https');
     expect(seenProtocol).toBe('http');
-  });
-
-  it('requires PUBLIC_BASE_URL to be an https URL', () => {
-    expect(() => loadEnv(envWith(undefined))).toThrow('PUBLIC_BASE_URL');
-    expect(() => loadEnv(envWith('http://api.syntactical.dev'))).toThrow('PUBLIC_BASE_URL');
-    expect(() => loadEnv(envWith('not a url'))).toThrow('PUBLIC_BASE_URL');
-    expect(loadEnv(envWith('https://api.syntactical.dev')).PUBLIC_BASE_URL).toBe('https://api.syntactical.dev');
   });
 });

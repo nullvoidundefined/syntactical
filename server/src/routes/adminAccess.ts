@@ -6,8 +6,9 @@ import { Router } from 'express';
 
 import { ADMIN } from '../constants/admin.js';
 import { HTTP } from '../constants/http.js';
-import { createErrorResponse, ERROR_CODES } from '../errors.js';
+import { ERROR_CODES, sendError } from '../errors.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
+import { keyOfUser } from '../middleware/rateLimitKeys.js';
 import { createRequireAdmin } from '../middleware/requireAdmin.js';
 import { createRequireSession } from '../middleware/requireSession.js';
 import { createAdminSchemas } from '../schemas/adminSchemas.js';
@@ -28,7 +29,7 @@ function createAdminAccessRouter(deps: ResolvedAdminDeps): Router {
   const requireAdmin = createRequireAdmin(database);
   const perUser = createRateLimit({
     database,
-    keyOf: (_req, res) => String((res.locals.session as { userId: string }).userId),
+    keyOf: keyOfUser,
     keySecret: rateLimitKeySecret,
     limit: ADMIN.RATE_LIMIT.ACCESS_UPDATE_PER_USER,
     now,
@@ -48,19 +49,15 @@ function createAdminAccessRouter(deps: ResolvedAdminDeps): Router {
   });
 
   router.put('/admin/access', requireSession, requireAdmin, perUser, async (req, res) => {
-    const { requestId, session } = res.locals as { requestId: string; session: { userId: string } };
+    const { session } = res.locals as { session: { userId: string } };
     const { data, success } = schemas.updateAccess.safeParse(req.body);
     if (!success) {
-      res
-        .status(BAD_REQUEST)
-        .json(createErrorResponse(ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body', requestId));
+      sendError(res, BAD_REQUEST, ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body');
       return;
     }
     const entry = await setAdminAccess(database, session.userId, data.productId, data.isGranted);
     if (!entry) {
-      res
-        .status(UNAUTHORIZED)
-        .json(createErrorResponse(ERROR_CODES.AUTH.SESSION_REQUIRED, 'Sign-in required', requestId));
+      sendError(res, UNAUTHORIZED, ERROR_CODES.AUTH.SESSION_REQUIRED, 'Sign-in required');
       return;
     }
     res.status(OK).json({ data: entry });

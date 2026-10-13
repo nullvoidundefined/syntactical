@@ -5,10 +5,7 @@ import type { Database } from '../clients/database.js';
 import type { EmailClient } from '../clients/emailTypes.js';
 import type { PasswordBreachClient } from '../clients/passwordBreachClient.js';
 import type { DeriveKey } from '../services/passwordHash.js';
-
-interface PasswordHashSlots {
-  run<T>(task: () => Promise<T>): Promise<T>;
-}
+import type { PasswordHashSlots } from '../services/passwordHashSlots.js';
 
 interface AuthDeps {
   database: Database;
@@ -37,4 +34,4 @@ type PasswordSessionsAuthDeps = ResolvedAuthDeps & Required<Pick<AuthDeps, 'dumm
 
 type SignUpAuthDeps = ResolvedAuthDeps & Required<Pick<AuthDeps, 'passwordBreachClient' | 'passwordHashSlots'>>;
 
-export type { AuthDeps, PasswordHashSlots, PasswordSessionsAuthDeps, ResolvedAuthDeps, SignUpAuthDeps };
+export type { AuthDeps, PasswordSessionsAuthDeps, ResolvedAuthDeps, SignUpAuthDeps };
