@@ -63,12 +63,9 @@ jest.mock('../../state/useIsOnline', () => ({ useIsOnline: () => true }));
 jest.mock('../../state/useIsReducedMotion', () => ({
     useIsReducedMotion: () => mockMotion.isReduced,
 }));
-// analyticsClient lands from a parallel PR; virtual until then.
 jest.mock(
     '../../clients/analyticsClient',
-    () => ({ trackEvent: (...args: unknown[]) => mockTrackEvent(...args) }),
-    { virtual: true },
-);
+    () => ({ trackEvent: (...args: unknown[]) => mockTrackEvent(...args) }));
 
 // jsdom computes no layout or colors, so axe cannot judge contrast here.
 const AXE_OPTIONS = { rules: { 'color-contrast': { enabled: false } } };
