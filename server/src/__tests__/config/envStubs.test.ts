@@ -10,7 +10,6 @@ const SECRET_BYTES = 24;
 const STUBBABLE_NAMES = [
   'ALLOWED_ORIGINS',
   'EMAIL_FROM',
-  'PUBLIC_BASE_URL',
   'RATE_LIMIT_KEY_SECRET',
   'RESEND_API_KEY',
   'REVENUECAT_WEBHOOK_AUTH',
@@ -33,7 +32,6 @@ function fullSource(): NodeJS.ProcessEnv {
     ...onlyRequired(),
     ALLOWED_ORIGINS: 'https://syntactical.dev',
     EMAIL_FROM: 'Syntactical <sign-in@syntactical.dev>',
-    PUBLIC_BASE_URL: 'https://api.syntactical.dev',
     RATE_LIMIT_KEY_SECRET: randomSecret(),
     RESEND_API_KEY: randomSecret(),
     REVENUECAT_WEBHOOK_AUTH: randomSecret(),

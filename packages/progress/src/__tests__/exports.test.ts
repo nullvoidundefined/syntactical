@@ -9,15 +9,13 @@ it('exports the progress functions and constants', () => {
         'computeDayStreak',
         'toLocalDate',
         'isLocalDate',
-        'newReviewItem',
-        'scheduleReview',
         'buildReviewState',
-        'isDueReview',
         'findDueReviewEventIds',
-        'orderAnswerEvents',
+        'findGoal',
         'XP_BY_DIFFICULTY',
         'REVIEW_BONUS_XP',
         'DAILY_GOALS',
+        'DEFAULT_DAILY_GOAL',
     ]) {
         expect(progress).toHaveProperty(name);
     }

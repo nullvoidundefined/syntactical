@@ -48,6 +48,8 @@ const ERROR_CODES = {
   },
 } as const;
 
+import type { Response } from 'express';
+
 type NestedValues<T> = T extends Record<string, infer V> ? (V extends string ? V : NestedValues<V>) : never;
 
 type ErrorCode = NestedValues<typeof ERROR_CODES>;
@@ -66,5 +68,12 @@ function createErrorResponse(
   return { error: { ...details, code, message, requestId } };
 }
 
-export { createErrorResponse, ERROR_CODES };
+// The one way a route or middleware answers with an error: the status plus the body above, with
+// the request id the request-id middleware left in res.locals.
+function sendError(res: Response, status: number, code: ErrorCode, message: string): void {
+  const { requestId } = res.locals as { requestId: string };
+  res.status(status).json(createErrorResponse(code, message, requestId));
+}
+
+export { createErrorResponse, ERROR_CODES, sendError };
 export type { ErrorCode, ErrorResponse };

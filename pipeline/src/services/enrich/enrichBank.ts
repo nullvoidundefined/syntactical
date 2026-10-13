@@ -10,7 +10,7 @@ import type { EnrichBankArgs } from '../../types/EnrichBankArgs.js';
 import type { EnrichBankResult } from '../../types/EnrichBankResult.js';
 import type { EnrichQuestionOutcome } from '../../types/EnrichQuestionOutcome.js';
 import { ProviderTransientError } from '../../types/ProviderTransientError.js';
-import { writeJsonAtomic } from '../classify/writeJsonAtomic.js';
+import { writeJsonAtomic } from '../json/writeJsonAtomic.js';
 
 import { enrichQuestion } from './enrichQuestion.js';
 import { readEnrichment } from './readEnrichment.js';

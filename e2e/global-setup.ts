@@ -102,7 +102,6 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
         NODE_ENV: 'test',
         PAID_CONTENT_DIR: paidDir,
         PORT: String(apiPort),
-        PUBLIC_BASE_URL: webOrigin.replace('http:', 'https:'),
         RATE_LIMIT_KEY_SECRET: randomBytes(SECRET_BYTES).toString('hex'),
       },
       stdio: ['ignore', 'pipe', 'pipe'],

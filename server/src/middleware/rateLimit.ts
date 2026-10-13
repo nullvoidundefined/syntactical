@@ -8,7 +8,7 @@ import type { NextFunction, Request, Response } from 'express';
 
 import type { Database } from '../clients/database.js';
 import { HTTP } from '../constants/http.js';
-import { createErrorResponse, ERROR_CODES } from '../errors.js';
+import { ERROR_CODES, sendError } from '../errors.js';
 import { rateLimitKey } from '../services/rateLimitKey.js';
 
 // SKIP LOCKED: concurrent requests never wait on, or deadlock over, the same stale rows.
@@ -40,10 +40,7 @@ function createRateLimit(options: RateLimitOptions) {
     const { rows } = await database.query<{ count: number }>(INCREMENT_SQL, [key, windowStart]);
     const [{ count } = { count: Number.POSITIVE_INFINITY }] = rows;
     if (count > limit) {
-      const { requestId } = res.locals as { requestId: string };
-      res
-        .status(HTTP.STATUS.TOO_MANY_REQUESTS)
-        .json(createErrorResponse(ERROR_CODES.RATE_LIMIT.EXCEEDED, 'Too many requests', requestId));
+      sendError(res, HTTP.STATUS.TOO_MANY_REQUESTS, ERROR_CODES.RATE_LIMIT.EXCEEDED, 'Too many requests');
       return;
     }
     next();

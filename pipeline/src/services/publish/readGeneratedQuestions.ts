@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { Question } from '@syntactical/content-schema';
 import { z } from 'zod';
 
-import { readJsonIfPresent } from '../gapFill/readJsonIfPresent.js';
+import { readJsonIfPresent } from '../json/readJsonIfPresent.js';
 
 const SCHEMA = z.looseObject({ questions: z.array(z.looseObject({ id: z.string() })) });
 

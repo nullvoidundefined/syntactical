@@ -4,8 +4,8 @@ import Anthropic from '@anthropic-ai/sdk';
 
 import type { ModelProvider } from '../types/ModelProvider.js';
 import { generateWithRetries } from './generateWithRetries.js';
+import { resolveModelId } from './resolveModelId.js';
 
-const DEFAULT_MODEL = 'claude-opus-5-5';
 const MAX_OUTPUT_TOKENS = 8192;
 
 export interface MessagesClient {
@@ -26,13 +26,15 @@ export function createAnthropicApiProvider(messages?: MessagesClient): ModelProv
                 const response = await client.create({
                     max_tokens: MAX_OUTPUT_TOKENS,
                     messages: [{ content: prompt, role: 'user' }],
-                    model: process.env.PIPELINE_MODEL || DEFAULT_MODEL,
+                    model: resolveModelId(),
                     system,
                 });
                 if (response.stop_reason === 'max_tokens') {
                     throw new Error(`model output truncated at max_tokens (${MAX_OUTPUT_TOKENS})`);
                 }
-                const text = response.content.map((block) => (block.type === 'text' ? (block.text ?? '') : '')).join('');
+                const text = response.content
+                    .map((block) => (block.type === 'text' ? (block.text ?? '') : ''))
+                    .join('');
                 return { model: response.model, text };
             });
         },

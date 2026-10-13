@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import type { StoredDecision } from '../../types/review/StoredDecision.js';
 
-import { readOptionalJson } from './readOptionalJson.js';
+import { readJsonIfPresent } from '../json/readJsonIfPresent.js';
 
 const storedSchema = z.object({
     decisions: z.record(
@@ -20,6 +20,6 @@ const storedSchema = z.object({
 });
 
 export async function readStoredDecisions(file: string): Promise<Record<string, StoredDecision>> {
-    const raw = await readOptionalJson(file);
+    const raw = await readJsonIfPresent(file);
     return raw === undefined ? {} : (storedSchema.parse(raw).decisions as Record<string, StoredDecision>);
 }

@@ -1,5 +1,9 @@
 import { ERROR_CODES } from '../errors.js';
 
+interface PasswordHashSlots {
+  run<T>(task: () => Promise<T>): Promise<T>;
+}
+
 interface PasswordHashSlotsOptions {
   concurrency: number;
   queueTimeoutMs: number;
@@ -21,7 +25,7 @@ class HashSlotsBusy extends Error {
 
 // A semaphore: at most `concurrency` tasks run at once. A task waits up to `queueTimeoutMs` for a
 // slot, then rejects with HashSlotsBusy and never runs. The timeout bounds the wait, not the task.
-function createPasswordHashSlots({ concurrency, queueTimeoutMs }: PasswordHashSlotsOptions) {
+function createPasswordHashSlots({ concurrency, queueTimeoutMs }: PasswordHashSlotsOptions): PasswordHashSlots {
   let active = 0;
   const queue: Waiter[] = [];
 
@@ -70,3 +74,4 @@ function createPasswordHashSlots({ concurrency, queueTimeoutMs }: PasswordHashSl
 }
 
 export { createPasswordHashSlots, HashSlotsBusy };
+export type { PasswordHashSlots };

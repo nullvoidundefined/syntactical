@@ -1,6 +1,7 @@
 import { access, mkdir, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
+import { symlinkSync } from 'node:fs';
 import { copyFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { writeRouteEntries } from '../writeRouteEntries.mjs';
@@ -93,6 +94,18 @@ describe('writeRouteEntries', () => {
     await mkdir(join(root, 'content'));
     await copyFile(manifestPath, join(root, 'content', 'manifest.json'));
     execFileSync('node', [script, outputDir], { cwd: root });
+    expect(await readFile(join(outputDir, 'settings', 'index.html'), 'utf8')).toBe(INDEX_HTML);
+  });
+
+  it('writes the entries when run as a script through a symlink to it', async () => {
+    const { outputDir, appDir, manifestPath } = await makeFixture();
+    const linkDir = await mkdtemp(join(tmpdir(), 'link-'));
+    const link = join(linkDir, 'writeRouteEntries.mjs');
+    symlinkSync(join(__dirname, '..', 'writeRouteEntries.mjs'), link);
+    const root = dirname(appDir);
+    await mkdir(join(root, 'content'));
+    await copyFile(manifestPath, join(root, 'content', 'manifest.json'));
+    execFileSync('node', [link, outputDir], { cwd: root });
     expect(await readFile(join(outputDir, 'settings', 'index.html'), 'utf8')).toBe(INDEX_HTML);
   });
 });

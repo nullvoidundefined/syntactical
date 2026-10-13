@@ -18,9 +18,14 @@ import { buildEntitlementsKey, fetchEntitlements } from './useEntitlements';
 // not list the product yet. cancelled and unavailable: nothing was bought.
 export type BuyOutcome = 'cancelled' | 'pending' | 'redirect' | 'unavailable' | 'unlocked';
 
+// A caller that gives up while GET /me is pending (the purchase-complete route
+// unmounting) aborts the signal; the refetch still lands in the cache, but the
+// result reads as not confirmed and no event is recorded.
+export type ConfirmOptions = { signal?: AbortSignal };
+
 export type PurchasesState = {
   buy: (productId: string) => Promise<BuyOutcome>;
-  confirm: (productId: string) => Promise<boolean>;
+  confirm: (productId: string, options?: ConfirmOptions) => Promise<boolean>;
   prices: Readonly<Record<string, string>>;
   restore: () => Promise<boolean>;
 };
@@ -56,11 +61,12 @@ export function usePurchases({ shouldLoadPrices = false } = {}): PurchasesState 
     }
   }, [queryClient, userId]);
 
-  // Refetches GET /me; true (and records purchase_completed) when it lists the product.
+  // Refetches GET /me; true (and records purchase_completed) when it lists the
+  // product and the caller has not aborted meanwhile.
   const confirm = useCallback(
-    async (productId: string): Promise<boolean> => {
+    async (productId: string, { signal }: ConfirmOptions = {}): Promise<boolean> => {
       const entitlements = await refetchEntitlements();
-      if (!entitlements?.includes(productId)) return false;
+      if (signal?.aborted || !entitlements?.includes(productId)) return false;
       trackEvent('purchase_completed', { productId });
       return true;
     },
