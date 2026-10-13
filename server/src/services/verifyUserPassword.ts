@@ -6,10 +6,10 @@
 // derivation runs inside a slot, and a slot that does not free rejects with HashSlotsBusy.
 // Nothing here logs or returns the password or a hash other than the one that verified.
 import type { Database } from '../clients/database.js';
-import type { PasswordHashSlots } from '../routes/authDeps.js';
 
 import { hashPassword, isUsableHash, needsRehash, verifyPassword } from './passwordHash.js';
 import type { DeriveKey } from './passwordHash.js';
+import type { PasswordHashSlots } from './passwordHashSlots.js';
 
 interface VerifyUserPasswordInput {
   deriveKey?: DeriveKey;

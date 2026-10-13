@@ -6,7 +6,7 @@ import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import type { SourceFetcher } from '../clients/sourceFetcher.js';
-import { writeJsonAtomic } from '../services/classify/writeJsonAtomic.js';
+import { writeJsonAtomic } from '../services/json/writeJsonAtomic.js';
 import { DOC_HOSTS } from '../services/references/DOC_HOSTS.js';
 import { readDocLinkChecks } from '../services/references/readDocLinkChecks.js';
 import { readReferences } from '../services/references/readReferences.js';

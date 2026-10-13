@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { SourceFetcher } from '../../clients/sourceFetcher.js';
 import { verifyDocLinks } from '../../commands/verifyDocLinks.js';
-import { writeJsonAtomic } from '../../services/classify/writeJsonAtomic.js';
+import { writeJsonAtomic } from '../../services/json/writeJsonAtomic.js';
 
 const GOOD = 'https://docs.python.org/3/library/stdtypes.html';
 const BROKEN = 'https://docs.python.org/3/made-up.html';

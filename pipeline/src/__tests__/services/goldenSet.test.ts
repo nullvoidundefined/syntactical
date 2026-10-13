@@ -17,18 +17,12 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ensureRunnerImage } from '../../clients/ensureRunnerImage.js';
 import { validateQuestion } from '../../services/validateQuestion.js';
 import type { Oracle } from '../../types/Oracle.js';
-import type { OracleLanguage } from '../../types/OracleLanguage.js';
+import { ORACLE_LANGUAGE_IDS, type OracleLanguage } from '../../types/OracleLanguage.js';
 import type { OracleRun } from '../../types/OracleRun.js';
 import type { ValidationResult } from '../../types/ValidationResult.js';
-import {
-    acquireDockerTestLock,
-    DOCKER_LOCK_WAIT_MS,
-    releaseDockerTestLock,
-} from '../fixtures/dockerTestLock.js';
+import { acquireDockerTestLock, DOCKER_LOCK_WAIT_MS, releaseDockerTestLock } from '../fixtures/dockerTestLock.js';
 
 const SKIP_DOCKER = process.env.SKIP_DOCKER_TESTS === '1';
-
-const LANGUAGES: OracleLanguage[] = ['python', 'node', 'postgres', 'ruby', 'rails', 'go', 'jsdom'];
 
 const MIN_ENTRIES = 10;
 
@@ -57,7 +51,7 @@ function replay(run: OracleRun): (oracle: Oracle) => Promise<OracleRun> {
 }
 
 describe('golden set', () => {
-    describe.each(LANGUAGES)('%s golden file', (language) => {
+    describe.each(ORACLE_LANGUAGE_IDS)('%s golden file', (language) => {
         const entries = loadGolden(language);
 
         it(`holds at least ${MIN_ENTRIES} questions, at least half deliberately wrong, the rest correct`, () => {
@@ -98,7 +92,7 @@ describe('golden set', () => {
 describe.skipIf(SKIP_DOCKER)('golden set (docker)', () => {
     beforeAll(async () => {
         await acquireDockerTestLock();
-        for (const language of LANGUAGES) {
+        for (const language of ORACLE_LANGUAGE_IDS) {
             await ensureRunnerImage(language);
         }
     }, DOCKER_LOCK_WAIT_MS + 600_000);
@@ -107,7 +101,7 @@ describe.skipIf(SKIP_DOCKER)('golden set (docker)', () => {
         releaseDockerTestLock();
     });
 
-    describe.each(LANGUAGES)('%s against the real runner', (language) => {
+    describe.each(ORACLE_LANGUAGE_IDS)('%s against the real runner', (language) => {
         const entries = loadGolden(language);
 
         it.each(entries.map((entry) => [entry.id, entry] as const))(

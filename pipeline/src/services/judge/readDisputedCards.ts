@@ -3,7 +3,7 @@
 import { z } from 'zod';
 
 import type { DisputedCard } from '../../types/judge/DisputedCard.js';
-import { readJsonIfPresent } from '../gapFill/readJsonIfPresent.js';
+import { readJsonIfPresent } from '../json/readJsonIfPresent.js';
 
 const SCHEMA = z.looseObject({
     cards: z.array(

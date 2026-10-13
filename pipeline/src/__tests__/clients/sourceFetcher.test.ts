@@ -6,6 +6,20 @@ import { EventEmitter } from 'node:events';
 import type { RequestOptions } from 'node:https';
 import { Readable } from 'node:stream';
 
+// The documentation hosts these cases fetch from.
+const HOSTS = [
+    'owasp.org',
+    'cheatsheetseries.owasp.org',
+    'developer.mozilla.org',
+    'rfc-editor.org',
+    'datatracker.ietf.org',
+    'docs.python.org',
+    'nodejs.org',
+    'postgresql.org',
+    'w3.org',
+    'whatwg.org',
+];
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -60,6 +74,7 @@ function harness(routes: Record<string, Spec>, dns: Record<string, string[]> = {
     const resolved: string[] = [];
     const states: ReturnType<typeof fakeResponse>['state'][] = [];
     const fetchSource = createSourceFetcher({
+        allowedHosts: HOSTS,
         limits,
         request: async (url, address) => {
             requested.push({ address, url: url.href });
@@ -147,6 +162,7 @@ describe('createSourceFetcher', () => {
         const empty = harness({}, { 'owasp.org': [] });
         expect(await empty.fetchSource(PAGE)).toEqual({ ok: false, reason: 'dns-failed' });
         const failing = createSourceFetcher({
+            allowedHosts: HOSTS,
             request: async () => {
                 throw new Error('unused');
             },
@@ -192,6 +208,7 @@ describe('createSourceFetcher', () => {
         let resolutions = 0;
         const requested: string[] = [];
         const fetchSource = createSourceFetcher({
+            allowedHosts: HOSTS,
             resolve: async () => (++resolutions === 3 ? ['10.0.0.1'] : [PUBLIC_IP]),
             request: async (url) => {
                 requested.push(url.href);
@@ -272,6 +289,7 @@ describe('createSourceFetcher', () => {
 
     it('times out a request that never answers', async () => {
         const fetchSource = createSourceFetcher({
+            allowedHosts: HOSTS,
             limits: { timeoutMs: 50 },
             request: (_url, _address, signal) =>
                 new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(signal.reason))),
@@ -282,6 +300,7 @@ describe('createSourceFetcher', () => {
 
     it('reports a connection error as network', async () => {
         const fetchSource = createSourceFetcher({
+            allowedHosts: HOSTS,
             request: async () => {
                 throw new Error('ECONNRESET');
             },
@@ -350,6 +369,7 @@ describe('createPinnedHttpsRequest', () => {
 describe('whole-fetch deadline', () => {
     it('times out after 50 ms even while DNS never answers', async () => {
         const fetchSource = createSourceFetcher({
+            allowedHosts: HOSTS,
             limits: { timeoutMs: 50 },
             resolve: () => new Promise(() => {}),
             request: async () => {
@@ -362,6 +382,7 @@ describe('whole-fetch deadline', () => {
     it('times out and cancels a response whose body stalls', async () => {
         let cancelled = false;
         const fetchSource = createSourceFetcher({
+            allowedHosts: HOSTS,
             limits: { timeoutMs: 50 },
             resolve: async () => [PUBLIC_IP],
             request: async (_url, _address, signal) => ({
@@ -386,6 +407,7 @@ describe('whole-fetch deadline', () => {
         vi.useFakeTimers();
         let aborted = false;
         const fetchSource = createSourceFetcher({
+            allowedHosts: HOSTS,
             limits: { timeoutMs: 50 },
             resolve: async () => [PUBLIC_IP],
             request: (url, _address, signal) =>

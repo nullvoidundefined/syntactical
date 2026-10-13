@@ -23,6 +23,18 @@
         "optimization",
         "wtf"
     ],
+    "nodejs": [
+        "event-loop-and-timers",
+        "event-emitter",
+        "streams",
+        "buffers-and-encodings",
+        "fs",
+        "path-and-url",
+        "modules",
+        "error-handling",
+        "process-and-env",
+        "async-patterns"
+    ],
     "postgres": [
         "operators-and-types",
         "numbers-and-math",
@@ -95,5 +107,17 @@
         "classes",
         "enums-and-const",
         "compile-vs-runtime"
+    ],
+    "typescript-types": [
+        "conditional-types",
+        "infer",
+        "mapped-types",
+        "template-literal-types",
+        "distributive-conditionals",
+        "variance-and-assignability",
+        "overloads-and-satisfies",
+        "discriminated-unions",
+        "generic-constraints",
+        "recursive-and-indexed-types"
     ]
 }

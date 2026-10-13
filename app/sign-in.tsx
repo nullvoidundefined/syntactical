@@ -1,7 +1,7 @@
 // Sign-in route: an email and password step first, or the email and code steps. Errors are announced in a
 // role="alert" region by reason only; the email and the code are never
 // echoed or logged. The password lives in memory only and is cleared on success.
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
@@ -11,6 +11,7 @@ import { EmailStep } from '../components/auth/EmailStep';
 import { PasswordSignInStep } from '../components/auth/PasswordSignInStep';
 import { readReturnTo } from '../services/auth/readReturnTo';
 import { useAuth, type AuthResult } from '../state/AuthProvider';
+import { useExclusiveAction } from '../state/useExclusiveAction';
 
 type FailureReason = Extract<AuthResult, { isOk: false }>['reason'];
 
@@ -40,16 +41,12 @@ export default function SignInScreen() {
   const [typedEmail, setTypedEmail] = useState('');
   const [typedPassword, setTypedPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isBusy, setIsBusy] = useState(false);
   const [cooldownRestartKey, setCooldownRestartKey] = useState(0);
-  const isInFlightRef = useRef(false);
+  const { isBusy, run } = useExclusiveAction();
 
   async function sendCode(address: string, isResend: boolean) {
-    if (isInFlightRef.current) return;
-    isInFlightRef.current = true;
-    setIsBusy(true);
-    setErrorMessage(null);
-    try {
+    await run(async () => {
+      setErrorMessage(null);
       const result = await requestCode(address);
       if (isResend) setCooldownRestartKey((key) => key + 1);
       const failureMessage = readFailureMessage(result);
@@ -58,18 +55,12 @@ export default function SignInScreen() {
         return;
       }
       setEmail(address);
-    } finally {
-      isInFlightRef.current = false;
-      setIsBusy(false);
-    }
+    });
   }
 
   async function signInPassword() {
-    if (isInFlightRef.current) return;
-    isInFlightRef.current = true;
-    setIsBusy(true);
-    setErrorMessage(null);
-    try {
+    await run(async () => {
+      setErrorMessage(null);
       const result = await signInWithPassword(typedEmail, typedPassword);
       const failureMessage = readFailureMessage(result);
       if (failureMessage !== null) {
@@ -78,10 +69,7 @@ export default function SignInScreen() {
       }
       setTypedPassword('');
       router.replace(readReturnTo(returnTo) as Href);
-    } finally {
-      isInFlightRef.current = false;
-      setIsBusy(false);
-    }
+    });
   }
 
   function openCodeSteps(isForgot: boolean) {
@@ -92,11 +80,9 @@ export default function SignInScreen() {
   }
 
   async function verify(code: string) {
-    if (email === null || isInFlightRef.current) return;
-    isInFlightRef.current = true;
-    setIsBusy(true);
-    setErrorMessage(null);
-    try {
+    if (email === null) return;
+    await run(async () => {
+      setErrorMessage(null);
       const result = await verifyCode(email, code);
       const failureMessage = readFailureMessage(result);
       if (failureMessage !== null) {
@@ -104,10 +90,7 @@ export default function SignInScreen() {
         return;
       }
       router.replace((isForgotFlow ? SETTINGS_PASSWORD_FORM : readReturnTo(returnTo)) as Href);
-    } finally {
-      isInFlightRef.current = false;
-      setIsBusy(false);
-    }
+    });
   }
 
   return (

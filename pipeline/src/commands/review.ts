@@ -13,13 +13,14 @@
 //
 // Free-bank output goes under `pipelineDir`. Paid-bank output carries paid question text,
 // so it goes under `contentRoot` (the private content repo), never under `pipelineDir`.
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { type Question, validateManifest } from '@syntactical/content-schema';
+import type { Question } from '@syntactical/content-schema';
 
 import type { ReviewResult } from '../types/review/ReviewResult.js';
-import { assertContentRootUsable } from '../services/classify/assertContentRootUsable.js';
+import { listBankEntries } from '../services/content/listBankEntries.js';
+import { loadCommandManifest } from '../services/content/loadCommandManifest.js';
+import { readBankQuestions } from '../services/content/readBankQuestions.js';
 import { createOracleSource } from '../services/createOracleSource.js';
 import { readLatestReport } from '../services/classify/readLatestReport.js';
 import { resolveBankFile } from '../services/resolveBankFile.js';
@@ -40,58 +41,35 @@ export interface ReviewOptions {
     validate?: QuestionValidator;
 }
 
-async function readJson(path: string): Promise<unknown> {
-    return JSON.parse(await readFile(path, 'utf8'));
-}
-
 export async function review(options: ReviewOptions): Promise<ReviewResult> {
     const { contentDir, contentRoot, pipelineDir } = options;
     const validate = options.validate ?? validateQuestion;
     const log = (line: string): void => options.log(sanitizeLogText(line));
-    // The manifest is untrusted: language ids, difficulty keys, and bank paths are joined
-    // into file paths below, so nothing is read or written before it validates.
-    const checked = validateManifest(await readJson(join(contentDir, 'manifest.json')));
-    if ('rule' in checked) {
-        throw new Error(`Manifest rejected: ${sanitizeLogText(checked.rule)}`);
-    }
-    const {
-        manifest: { languages },
-    } = checked;
-    if (languages.some(({ banks }) => Object.values(banks).some(({ access }) => access !== 'free'))) {
-        await assertContentRootUsable(contentRoot, pipelineDir, contentDir);
-    }
+    const manifest = await loadCommandManifest({ contentDir, contentRoot, pipelineDir });
     const report = await readLatestReport(join(pipelineDir, 'reports'));
     if (report === null) {
         throw new Error('no pipeline report found: run `pipeline validate` first');
     }
     const result: ReviewResult = { approved: 0, items: 0, pending: 0, problems: 0, rejected: 0 };
-    for (const { banks, id: languageId, kind } of languages) {
-        for (const [difficulty, { access, path }] of Object.entries(banks)) {
-            const bankKey = `${languageId}/${difficulty}`;
-            const bank = (await readJson(resolveBankFile(contentDir, contentRoot, { access, path }))) as {
-                questions: Question[];
-            };
-            const outRoot = resolveBankOutputRoot(pipelineDir, contentRoot, { access });
-            const oracleSource = createOracleSource(join(outRoot, 'oracles'));
-            const counts = await reviewBank({
-                bank: bank.questions,
-                scope: kind === 'topic' ? 'disputed' : 'all',
-                difficulty,
-                languageId,
-                log,
-                observe:
-                    options.observe ??
-                    (async (key, question) =>
-                        (await validate(question, await oracleSource(key, question.id))).observed),
-                // Free output stays in the public tree; paid output goes to the private content root.
-                outRoot,
-                statuses: new Map(
-                    report.questions.filter((each) => each.bankKey === bankKey).map(({ id, status }) => [id, status]),
-                ),
-            });
-            for (const key of Object.keys(result) as (keyof ReviewResult)[]) {
-                result[key] += counts[key];
-            }
+    for (const { bankKey, difficulty, entry, languageId } of listBankEntries(manifest)) {
+        const outRoot = resolveBankOutputRoot(pipelineDir, contentRoot, entry);
+        const oracleSource = createOracleSource(join(outRoot, 'oracles'));
+        const counts = await reviewBank({
+            bank: await readBankQuestions(resolveBankFile(contentDir, contentRoot, entry)),
+            difficulty,
+            languageId,
+            log,
+            observe:
+                options.observe ??
+                (async (key, question) => (await validate(question, await oracleSource(key, question.id))).observed),
+            // Free output stays in the public tree; paid output goes to the private content root.
+            outRoot,
+            statuses: new Map(
+                report.questions.filter((each) => each.bankKey === bankKey).map(({ id, status }) => [id, status]),
+            ),
+        });
+        for (const key of Object.keys(result) as (keyof ReviewResult)[]) {
+            result[key] += counts[key];
         }
     }
     return result;

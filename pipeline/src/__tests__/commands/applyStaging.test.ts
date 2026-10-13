@@ -9,7 +9,7 @@ import type { Question } from '@syntactical/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { applyStaging } from '../../commands/applyStaging.js';
-import { writeJsonAtomic } from '../../services/classify/writeJsonAtomic.js';
+import { writeJsonAtomic } from '../../services/json/writeJsonAtomic.js';
 
 const REPO_CONTENT = new URL('../../../../content', import.meta.url).pathname;
 const CONFIRMED = 'https://www.postgresql.org/docs/current/functions-string.html';

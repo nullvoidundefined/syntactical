@@ -7,6 +7,7 @@
 // dates; anything else throws rather than being resolved by array order.
 import { computeXp } from './computeXp.js';
 import { DAILY_GOALS } from './constants.js';
+import { findGoal } from './findGoal.js';
 import { isLocalDate } from './isLocalDate.js';
 import { toLocalDate } from './toLocalDate.js';
 import type { AnswerEvent } from './types/AnswerEvent.js';
@@ -39,21 +40,6 @@ function sortGoalHistory(goalHistory: readonly GoalChange[]): GoalChange[] {
         seenDates.add(from);
     }
     return [...goalHistory].sort((left, right) => compareText(left.from, right.from));
-}
-
-function findGoal(sortedGoals: readonly GoalChange[], localDate: string): number {
-    const [earliest] = sortedGoals;
-    if (!earliest) {
-        throw new RangeError('Goal history is empty; no daily goal applies');
-    }
-    let { goal } = earliest;
-    for (const change of sortedGoals) {
-        if (change.from > localDate) {
-            break;
-        }
-        ({ goal } = change);
-    }
-    return goal;
 }
 
 export function computeDailyProgress(

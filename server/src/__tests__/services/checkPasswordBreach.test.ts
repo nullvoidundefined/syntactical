@@ -9,7 +9,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import type { Logger } from 'pino';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createFakePasswordBreachClient } from '../../clients/fakePasswordBreachClient.js';
+import { createFakePasswordBreachClient } from '../../testing/fakePasswordBreachClient.js';
 import { createLogger } from '../../clients/logger.js';
 import type { PasswordBreachClient } from '../../clients/passwordBreachClient.js';
 import { AUTH } from '../../constants/auth.js';

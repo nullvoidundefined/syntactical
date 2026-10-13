@@ -10,7 +10,7 @@ import type { ClassifyBankArgs } from '../../types/ClassifyBankArgs.js';
 import { classifyTwice } from './classifyTwice.js';
 import { isWtfOveruse } from './isWtfOveruse.js';
 import { removeFileIfPresent } from './removeFileIfPresent.js';
-import { writeJsonAtomic } from './writeJsonAtomic.js';
+import { writeJsonAtomic } from '../json/writeJsonAtomic.js';
 
 // A question id becomes a file name, so it must be a plain slug.
 const SAFE_QUESTION_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;

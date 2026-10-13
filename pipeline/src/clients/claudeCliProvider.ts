@@ -14,6 +14,7 @@ import type { ModelProvider } from '../types/ModelProvider.js';
 import { ProviderTransientError } from '../types/ProviderTransientError.js';
 import { createSpawnExec } from './createSpawnExec.js';
 import { generateWithRetries } from './generateWithRetries.js';
+import { resolveModelId } from './resolveModelId.js';
 
 const UNKNOWN_MODEL = 'unknown';
 const KIBIBYTE = 1024;
@@ -83,7 +84,7 @@ function hasErrorEnvelope(stdout: string): boolean {
     }
 }
 
-// `model` picks the CLI's model (`--model=<id>`); without it the CLI uses its default.
+// `model` overrides the pipeline's model id (see resolveModelId) for this provider.
 export function createClaudeCliProvider(exec: ExecFn = defaultExec, model?: string): ModelProvider {
     return {
         generate(request) {
@@ -104,8 +105,9 @@ export function createClaudeCliProvider(exec: ExecFn = defaultExec, model?: stri
                             '--setting-sources',
                             '',
                             '--no-session-persistence',
+                            '--model',
+                            model ?? resolveModelId(),
                             `--system-prompt=${system}`,
-                            ...(model === undefined ? [] : [`--model=${model}`]),
                         ],
                         { cwd, env: buildCliEnv(process.env), input: prompt },
                     ));

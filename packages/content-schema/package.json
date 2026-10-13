@@ -17,9 +17,5 @@
       "react-native": "./src/index.ts",
       "default": "./dist/index.js"
     }
-  },
-  "devDependencies": {
-    "@types/node": "^22.20.5",
-    "vitest": "^3.2.7"
   }
 }

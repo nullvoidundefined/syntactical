@@ -1,4 +1,4 @@
-// Fetches a cited source page for the judged route. The URL comes from model output, so it is
+// Fetches a documentation page for the doc link check (see verifyDocLink). The URL comes from model output, so it is
 // untrusted: every hop (the first URL and each redirect, at most 3) passes checkSourceUrl, every
 // address its host resolves to must be public, and the connection goes to the address that was
 // checked (a pinned lookup), so DNS cannot swap in a private address between check and connect.
@@ -28,8 +28,8 @@ export interface SourceResponse {
 export type PinnedRequest = (url: URL, address: string, signal: AbortSignal) => Promise<SourceResponse>;
 
 export interface SourceFetcherDeps {
-    // The hosts every hop must be on; the judged route's SOURCE_ALLOWED_HOSTS by default.
-    allowedHosts?: readonly string[];
+    // The hosts every hop must be on.
+    allowedHosts: readonly string[];
     limits?: Partial<SourceFetchLimits>;
     request?: PinnedRequest;
     resolve?: HostResolver;
@@ -139,7 +139,7 @@ async function fetchWithinDeadline(
     request: PinnedRequest,
     resolve: HostResolver,
     signal: AbortSignal,
-    allowedHosts: readonly string[] | undefined,
+    allowedHosts: readonly string[],
 ): Promise<SourceFetchResult> {
     let current = rawUrl;
     for (let hop = 0; hop <= limits.maxRedirects; hop += 1) {
@@ -197,7 +197,7 @@ async function fetchWithinDeadline(
     return fail('too-many-redirects');
 }
 
-export function createSourceFetcher(deps: SourceFetcherDeps = {}): SourceFetcher {
+export function createSourceFetcher(deps: SourceFetcherDeps): SourceFetcher {
     const request = deps.request ?? createPinnedHttpsRequest();
     const resolve = deps.resolve ?? resolveAllAddresses;
     const limits: SourceFetchLimits = { ...SOURCE_FETCH_LIMITS, ...deps.limits };

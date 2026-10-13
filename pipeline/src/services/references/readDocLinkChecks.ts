@@ -2,7 +2,7 @@
 // result), which publish consults to keep only confirmed links. Missing file: an empty map.
 import { z } from 'zod';
 
-import { readJsonIfPresent } from '../gapFill/readJsonIfPresent.js';
+import { readJsonIfPresent } from '../json/readJsonIfPresent.js';
 
 const SCHEMA = z.record(
     z.string(),

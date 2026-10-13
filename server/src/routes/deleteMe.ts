@@ -10,6 +10,7 @@ import { withTransaction } from '../clients/withTransaction.js';
 import { sessionCookieOptions } from '../config/sessionCookieOptions.js';
 import { AUTH } from '../constants/auth.js';
 import { HTTP } from '../constants/http.js';
+import { requestLog } from '../middleware/requestLogger.js';
 import { createRequireSession } from '../middleware/requireSession.js';
 import { deleteUser } from '../services/deleteUser.js';
 
@@ -25,14 +26,13 @@ function createDeleteMeRouter(deps: ResolvedAuthDeps, logger: Logger): Router {
 
   router.delete('/me', createRequireSession({ database, now }), async (_req, res) => {
     const {
-      logger: requestLogger,
       session: { userId },
-    } = res.locals as { logger?: Logger; session: { userId: string } };
+    } = res.locals as { session: { userId: string } };
     const isDeleted = await withTransaction(database, (client) => deleteUser(client, { rateLimitKeySecret, userId }), {
       hasTimeouts: true,
     });
     if (isDeleted) {
-      (requestLogger ?? logger).info({ event: 'account_deleted' }, 'account deleted');
+      requestLog(res, logger).info({ event: 'account_deleted' }, 'account deleted');
     }
     res.clearCookie(COOKIE_NAME, sessionCookieOptions(isCookieSecure));
     res.status(HTTP.STATUS.NO_CONTENT).end();

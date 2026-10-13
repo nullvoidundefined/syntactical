@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { runnerImageTag } from '../../clients/runnerImageTag.js';
-import type { OracleLanguage } from '../../types/OracleLanguage.js';
+import { ORACLE_LANGUAGE_IDS, type OracleLanguage } from '../../types/OracleLanguage.js';
 
 const LOCK_DIR = join(tmpdir(), 'syntactical-docker-tests.lock');
 const POLL_MS = 200;
@@ -45,18 +45,16 @@ export function releaseDockerTestLock(): void {
 }
 
 export function runningRunnerContainers(language: OracleLanguage): string {
-    return execFileSync(
-        'docker',
-        ['ps', '-q', '--filter', `ancestor=${runnerImageTag(language)}`],
-        { encoding: 'utf8' },
-    ).trim();
+    return execFileSync('docker', ['ps', '-q', '--filter', `ancestor=${runnerImageTag(language)}`], {
+        encoding: 'utf8',
+    }).trim();
 }
 
 // Removes runner containers a failing hard-kill case left behind, so they
 // cannot leak into the next case's container check. Safe only while the lock
 // is held.
 export function killLeftoverRunnerContainers(): void {
-    for (const language of ['python', 'node', 'postgres', 'ruby', 'rails', 'go', 'jsdom'] as const) {
+    for (const language of ORACLE_LANGUAGE_IDS) {
         const ids = runningRunnerContainers(language).split('\n').filter(Boolean);
         if (ids.length > 0) {
             try {

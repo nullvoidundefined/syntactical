@@ -14,7 +14,7 @@ import type { ReviewBankInputs } from '../../types/review/ReviewBankInputs.js';
 
 import { readDisputedCards } from '../judge/readDisputedCards.js';
 import { isSafeItemId } from './isSafeItemId.js';
-import { readOptionalJson } from './readOptionalJson.js';
+import { readJsonIfPresent } from '../json/readJsonIfPresent.js';
 
 const classificationsSchema = z.record(z.string(), z.looseObject({ topic: z.string() }));
 const enrichmentSchema = z.record(
@@ -46,9 +46,9 @@ export async function readBankInputs(
     log: (line: string) => void,
 ): Promise<ReviewBankInputs> {
     const bankFile = `${difficulty}.json`;
-    const rawClassifications = await readOptionalJson(join(outRoot, 'classifications', languageId, bankFile));
-    const rawEnrichment = await readOptionalJson(join(outRoot, 'enrichment', languageId, bankFile));
-    const rawGenerated = await readOptionalJson(join(outRoot, 'generated', languageId, bankFile));
+    const rawClassifications = await readJsonIfPresent(join(outRoot, 'classifications', languageId, bankFile));
+    const rawEnrichment = await readJsonIfPresent(join(outRoot, 'enrichment', languageId, bankFile));
+    const rawGenerated = await readJsonIfPresent(join(outRoot, 'generated', languageId, bankFile));
     const queueDir = join(outRoot, 'review-queue', languageId, difficulty);
     const queue: ReviewBankInputs['queue'] = [];
     for (const name of await listJsonFiles(queueDir)) {

@@ -28,4 +28,9 @@ function createRequestLogger(logger: Logger) {
   };
 }
 
-export { createRequestLogger };
+// The request-bound logger, or the fallback for a router mounted without createRequestLogger (tests).
+function requestLog(res: Response, fallback: Logger): Logger {
+  return (res.locals as { logger?: Logger }).logger ?? fallback;
+}
+
+export { createRequestLogger, requestLog };

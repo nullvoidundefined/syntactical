@@ -8,20 +8,6 @@ const SECRET_MIN_LENGTH = 32;
 // At least 32 characters once trimmed, so padding cannot satisfy the length.
 const strongSecret = z.string().refine((value) => value.trim().length >= SECRET_MIN_LENGTH);
 
-// The one source for absolute URLs (sign-in links, webhooks), never the request's Host.
-// Refuses credentials, a query, or a fragment, and stores a normalized base with no trailing slash.
-const httpsUrl = z
-  .string()
-  .transform((value) => value.trim())
-  .refine((value) => {
-    if (!URL.canParse(value)) {
-      return false;
-    }
-    const { hash, password, protocol, search, username } = new URL(value);
-    return protocol === 'https:' && !username && !password && !search && !hash;
-  })
-  .transform((value) => new URL(value).href.replace(/\/$/, ''));
-
 const HASH_CONCURRENCY_MIN = 1;
 const HASH_CONCURRENCY_MAX = 8;
 const HASH_CONCURRENCY_DEFAULT = 2;
@@ -48,7 +34,6 @@ const envSchema = z.object({
     .refine((value) => isAbsolute(value)),
   // The cap on concurrent scrypt derivations; each holds about 128 MiB while it runs.
   PASSWORD_HASH_CONCURRENCY: hashConcurrency.default(HASH_CONCURRENCY_DEFAULT),
-  PUBLIC_BASE_URL: httpsUrl,
   RATE_LIMIT_KEY_SECRET: strongSecret,
   RESEND_API_KEY: z.string().trim().min(1),
   REVENUECAT_WEBHOOK_AUTH: strongSecret,
@@ -63,7 +48,6 @@ const RATE_LIMIT_STUB_BYTES = 32;
 const STUBBABLE = {
   ALLOWED_ORIGINS: () => 'https://stub.invalid',
   EMAIL_FROM: () => 'Syntactical <stub@stub.invalid>',
-  PUBLIC_BASE_URL: () => 'https://stub.invalid',
   // A fresh random value per boot, never logged: rate limit counters reset on each restart.
   RATE_LIMIT_KEY_SECRET: () => randomBytes(RATE_LIMIT_STUB_BYTES).toString('hex'),
   RESEND_API_KEY: () => 'stub',

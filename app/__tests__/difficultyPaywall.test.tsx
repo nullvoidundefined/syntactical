@@ -73,12 +73,9 @@ jest.mock('expo-router', () =>
     ),
 );
 jest.mock('../../state/useIsOnline', () => ({ useIsOnline: () => mockIsOnline.current }));
-// analyticsClient lands from a parallel PR; virtual until then.
 jest.mock(
     '../../clients/analyticsClient',
-    () => ({ trackEvent: (...args: unknown[]) => mockTrackEvent(...args) }),
-    { virtual: true },
-);
+    () => ({ trackEvent: (...args: unknown[]) => mockTrackEvent(...args) }));
 
 const MEDIUM_LOCKED = `Medium, locked, ${NATIVE_PRICES[MEDIUM_PRODUCT]}`;
 const HARD_LOCKED = `Hard, locked, ${NATIVE_PRICES[HARD_PRODUCT]}`;

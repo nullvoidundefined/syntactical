@@ -105,7 +105,6 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
       NODE_ENV: 'test',
       PAID_CONTENT_DIR: paidDir,
       PORT: '0',
-      PUBLIC_BASE_URL: 'https://api.syntactical.dev',
       RATE_LIMIT_KEY_SECRET: randomSecret(),
       RESEND_API_KEY: randomSecret(),
       REVENUECAT_WEBHOOK_AUTH: randomSecret(),
@@ -270,7 +269,6 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
     const STUBBED = [
       'ALLOWED_ORIGINS',
       'EMAIL_FROM',
-      'PUBLIC_BASE_URL',
       'RATE_LIMIT_KEY_SECRET',
       'RESEND_API_KEY',
       'REVENUECAT_WEBHOOK_AUTH',

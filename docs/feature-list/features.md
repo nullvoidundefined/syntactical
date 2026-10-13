@@ -1,28 +1,59 @@
 # Syntactical Feature List
 
-This document lists every product area of Syntactical with the completion status of each feature, so a reader can see what ships today and what is still planned.
+This document lists every product area of Syntactical with the completion status of each feature, so a reader can see what ships today and what is still open. Each row names the code that implements it; the tests sit in the `__tests__` directory beside that code unless a row says otherwise.
 
-Last updated: 2026-10-13
+Last updated: 2026-10-13 (checked against `main` at the engineering audit; see `docs/audits/2026-10-13-engineering.md`).
 
 ## Quiz
 
-| Feature | Status | Notes |
-|---|---|---|
-| Choosing a language and difficulty | Complete | The language step lists every language in the manifest; the difficulty step lists only that language's banks and disables a bank with no local copy while offline. |
-| Rounds | Complete | One shuffled pass through a bank; multiple-choice and true/false questions; progress bar; Next is unavailable until the question is answered. |
-| Explain | Complete | Appears after an incorrect answer and opens that question's query without advancing the round. |
-| Query drawer | Complete | Before an answer shows the title and documentation links; after an answer adds the syntax, explanation, and tags. Closes by its control, the backdrop, or the platform back gesture. |
-| Results and retry | Complete | Shows correct count, total, and percentage; Retry reshuffles and resets the round. |
-| Stats and streak | Complete | Lifetime stats persist in AsyncStorage under the key the earlier web build used, so existing stats carry over. |
-| Web keyboard navigation | Complete | Every binding in `KEY_BINDINGS` works on the web, with a hint bar; the hint bar is not rendered on native. |
-| Device builds (iOS and Android) | Partial | `eas.json` has an internal-distribution `preview` profile; the manual checklist in `docs/device-checklist.md` has not been run yet. |
+| Feature                         | Status   | Notes                                                                                                                                                                                                                |
+| ------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Choosing a track and difficulty | Complete | `app/index.tsx` lists the ten tracks in `content/manifest.json` (eight languages, two topic tracks); `app/[language]/index.tsx` lists that track's three banks and disables a bank with no local copy while offline. |
+| Round length and topic pools    | Complete | `app/[language]/[difficulty]/index.tsx` and `length.tsx` offer 20, 50, or every question (`ROUND_LENGTHS` in `constants/appConfig.ts`) from the whole bank or one topic (`?topic=`).                                 |
+| Rounds                          | Complete | `app/[language]/[difficulty]/play.tsx`, `state/useQuizEngine.ts`: one shuffled pass; multiple-choice, true/false, and A/B cards (`components/quiz/AbCard.tsx`); Next waits for an answer.                            |
+| Explain and the query drawer    | Complete | `components/query/QueryDrawer.tsx` shows only the title and documentation links before an answer, and the syntax, explanation, and tags after; closes by its control, the backdrop, or the back gesture.             |
+| Verified badge                  | Complete | `components/quiz/VerifiedBadge.tsx` shows "Output verified on <runtime>" when `provenance.validation` is `executed` and `passed`.                                                                                    |
+| Results and retry               | Complete | `components/quiz/ResultsScreen.tsx`: correct count, total, percentage; Retry reshuffles.                                                                                                                             |
+| Web keyboard navigation         | Complete | `KEY_BINDINGS` in `constants/appConfig.ts`, the hint bar in `components/quiz/KeyboardHintBar.tsx`; `e2e/specs/keyboardNavigation.spec.ts`.                                                                           |
+| Review rounds                   | Complete | `app/review.tsx` builds a round from due questions (`services/review/buildReviewQueue.ts`, `@syntactical/progress` with `ts-fsrs`); only missed questions are scheduled.                                             |
+| Weakness report                 | Complete | `components/stats/WeaknessReport.tsx`, `services/progress/buildWeaknessReport.ts`: the most-missed misconceptions.                                                                                                   |
+
+## Progress
+
+| Feature                        | Status   | Notes                                                                                                                                                                                                                                  |
+| ------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stats and answer streak        | Complete | `services/stats/`, stored in AsyncStorage under `STORAGE_KEY`; schema v2 with the answer event log, migrated from v1 on hydrate (`services/stats/migrateStatsV1.ts`).                                                                  |
+| XP, daily goal, and day streak | Complete | `packages/progress` computes XP per answer, daily progress against the goal in force, and the day streak; the goal (10, 20, or 50, default 20) is set in `app/settings.tsx`. The server recomputes the same values from synced events. |
+| Sync                           | Complete | `state/useSyncQueue.ts` uploads answer events in batches of `SYNC_BATCH_SIZE` to `POST /v1/answer-events`; `GET /v1/me` returns the server-derived profile. `e2e/specs/signInSync.spec.ts`.                                            |
 
 ## Content
 
-| Feature | Status | Notes |
-|---|---|---|
-| Runtime download with hash verification | Complete | The manifest and banks are fetched from the content base URL; a bank is accepted only when its SHA-256 equals the manifest bank hash. |
-| Offline fallback to cached and bundled banks | Complete | The cached bank is used first, then the bundled bank; a failed fetch leaves the current copy in use without an error. |
-| Download indicator | Complete | Visible while a bank transfers, announced once to assistive technology, and static under reduced motion. |
-| Adding a language with JSON | Complete | Add bank files and a manifest entry, then run `npm run content:build`; see the README. |
-| Content validation | Complete | Malformed manifests and questions are rejected or dropped with one logged warning naming the rule. |
+| Feature                                 | Status   | Notes                                                                                                                                                                                                                                                                      |
+| --------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Runtime download with hash verification | Complete | `services/content/`, `clients/fetchContentText.ts`: a bank is accepted only when its SHA-256 equals the manifest hash.                                                                                                                                                     |
+| Offline fallback                        | Complete | Cached bank first, then the bundled free bank; a failed fetch leaves the current copy in use. `e2e/specs/apiOutage.spec.ts` covers the API side.                                                                                                                           |
+| Download indicator                      | Complete | `components/layout/DownloadIndicator.tsx`: visible while a bank transfers, announced once, static under reduced motion.                                                                                                                                                    |
+| Content validation                      | Complete | `packages/content-schema` validates the manifest and every bank for the app, the build (`scripts/buildContentManifest.mjs`), the server, and the pipeline.                                                                                                                 |
+| Paid banks                              | Complete | Medium and hard banks come from the private content repo through `GET /v1/banks/:language/:difficulty` (`server/src/routes/banks.ts`) after an entitlement check; never bundled, never on the static host (`scripts/assertNoPaidBanks.mjs`). `e2e/specs/paidBank.spec.ts`. |
+| Topic tracks                            | Complete | `backend-security` and `frontend-security` are `kind: 'topic'` entries in the manifest and play like a language track.                                                                                                                                                     |
+| Content pipeline                        | Complete | `pipeline/` CLI (`npm run pipeline -- <command>`): `validate`, `classify`, `gapFill`, `enrich`, `review`, `publish`, `draftOracles`, `draftTaxonomy`, `rewritePrompts` (`pipeline/src/commands/`); oracles run in Docker (`pipeline/runners/`) for eight runtimes.         |
+
+## Accounts and purchases
+
+| Feature                      | Status   | Notes                                                                                                                                                                                                                                                                                                                                         |
+| ---------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sign-in by emailed code      | Complete | `app/sign-in.tsx`; `POST /v1/codes`, `POST /v1/sessions` (`server/src/routes/authCodes.ts`, `authSessions.ts`). Sessions are SHA-256 hashed tokens in a `SameSite=Lax` cookie on the web and `expo-secure-store` on native.                                                                                                                   |
+| Password sign-up and sign-in | Complete | `app/sign-up.tsx`, `app/sign-in.tsx`, the Settings password form; `POST /v1/signups`, `POST /v1/sessions/password`, `PUT /v1/me/password` (`server/src/routes/authSignups.ts`, `authPasswordSessions.ts`, `mePassword.ts`).                                                                                                                   |
+| Account deletion             | Complete | `app/delete-account.tsx`; `DELETE /v1/me` (`server/src/routes/deleteMe.ts`). `e2e/specs/accountDeletion.spec.ts`.                                                                                                                                                                                                                             |
+| Privacy and deletion pages   | Draft    | `app/privacy.tsx` and `app/delete-account.tsx` still carry owner placeholders (the file header comments say which).                                                                                                                                                                                                                           |
+| Paywall and purchase         | Partial  | `clients/purchaseStoreClient.ts` (RevenueCat on iOS and Android), `clients/webBillingClient/` (Web Billing), `app/purchase-complete.tsx`; the server records `POST /v1/webhooks/revenuecat` (`server/src/routes/revenueCatWebhook.ts`). The RevenueCat products, keys, and webhook secret are not configured (`docs/launch-placeholders.md`). |
+| Admin access                 | Complete | `app/admin.tsx`; `GET` and `PUT /v1/admin/access` (`server/src/routes/adminAccess.ts`) let a user with `users.is_admin` grant paid banks to their own account; purchases always win.                                                                                                                                                          |
+| Analytics                    | Partial  | `clients/analyticsClient.ts` sends the eight events in `constants/analyticsEvents.ts` through PostHog; a guest is anonymous. No PostHog key is configured, so every call is a no-op (`docs/launch-placeholders.md`).                                                                                                                          |
+
+## Platform
+
+| Feature                      | Status   | Notes                                                                                                                                                                                                                                                                             |
+| ---------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web on GitHub Pages          | Complete | `.github/workflows/deploy.yml` publishes the Expo export at the root of `https://syntactical.dev`.                                                                                                                                                                                |
+| API on Railway with Neon     | Partial  | Staging and production run (`server/DEPLOY.md`), but `api.syntactical.dev` and `staging-api.syntactical.dev` have no DNS records, so the API URL compiled into production builds (`app.config.ts`, `eas.json`) does not resolve. Both environments run with stubbed integrations. |
+| Device builds (iOS, Android) | Partial  | `eas.json` has the `preview` profile; `docs/device-checklist.md` records two runs with sign-in blocked by the unresolved API hostname.                                                                                                                                            |
