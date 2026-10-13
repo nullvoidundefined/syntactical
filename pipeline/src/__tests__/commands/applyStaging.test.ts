@@ -49,6 +49,7 @@ describe('applyStaging', () => {
                     { title: 'String functions', url: CONFIRMED },
                     { title: 'Unchecked', url: UNCHECKED },
                 ],
+                isSyntaxAfterAnswer: true,
                 syntax: 'text1 || text2',
                 title: 'String concatenation',
             },
@@ -72,6 +73,7 @@ describe('applyStaging', () => {
         expect(second?.query).toEqual({
             ...before.find(({ id }) => id === 'pg-easy-02')?.query,
             docs: [{ title: 'String functions', url: CONFIRMED }],
+            isSyntaxAfterAnswer: true,
             syntax: 'text1 || text2',
             title: 'String concatenation',
         });

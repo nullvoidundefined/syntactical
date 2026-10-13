@@ -27,15 +27,26 @@ const REFERENCE = {
     title: 'The || operator',
 };
 
-// Writes REFERENCE and answers leak checks from `leaks`, one boolean per call in order.
-function provider(leaks: boolean[], requests: ModelRequest<unknown>[] = []): ModelProvider {
+type Verdict = { asksForDefinition?: boolean; revealsAnswer?: boolean; titleRevealsAnswer?: boolean };
+
+// Writes REFERENCE and answers leak checks from `leaks`, one entry per call in order: a boolean is
+// `revealsAnswer` on an output question, an object sets each verdict field.
+function provider(leaks: (boolean | Verdict)[], requests: ModelRequest<unknown>[] = []): ModelProvider {
     return {
         async generate(request) {
             requests.push(request as ModelRequest<unknown>);
-            const value =
-                request.promptVersion === 'write-reference-v1'
-                    ? REFERENCE
-                    : { reason: 'r', revealsAnswer: leaks.shift() ?? false };
+            if (request.promptVersion === 'write-reference-v1') {
+                return { model: 'fake', value: request.schema.parse(REFERENCE) };
+            }
+            const next = leaks.shift() ?? false;
+            const verdict = typeof next === 'boolean' ? { revealsAnswer: next } : next;
+            const value = {
+                asksForDefinition: false,
+                reason: 'r',
+                revealsAnswer: false,
+                titleRevealsAnswer: false,
+                ...verdict,
+            };
             return { model: 'fake', value: request.schema.parse(value) };
         },
     };
@@ -73,5 +84,24 @@ describe('referenceQuestion', () => {
             secondProvider: provider([false, false]),
         });
         expect(outcome).toEqual({ reasons: ['r', 'r'], status: 'reveals-answer' });
+    });
+
+    it('holds the syntax back on a definition question and judges only its title and doc titles', async () => {
+        const outcome = await referenceQuestion(QUESTION, TRACK, {
+            provider: provider([{ asksForDefinition: true, revealsAnswer: true }]),
+            secondProvider: provider([{ revealsAnswer: true }]),
+        });
+        expect(outcome).toEqual({
+            reference: { ...REFERENCE, docs: [REFERENCE.docs[0]], isSyntaxAfterAnswer: true },
+            status: 'accepted',
+        });
+    });
+
+    it('rejects a definition question reference whose title gives the answer away', async () => {
+        const outcome = await referenceQuestion(QUESTION, TRACK, {
+            provider: provider([{ asksForDefinition: true }, { asksForDefinition: true }]),
+            secondProvider: provider([{ titleRevealsAnswer: true }, { titleRevealsAnswer: true }]),
+        });
+        expect(outcome.status).toBe('reveals-answer');
     });
 });

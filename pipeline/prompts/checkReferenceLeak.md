@@ -22,5 +22,11 @@ Rules:
   choice.
 - `revealsAnswer` is false when the reference only teaches the general rule, so the learner still
   has to apply it to the question's code to find the answer.
+- `titleRevealsAnswer` applies the same test to the reference's `title` and `docTitles` alone,
+  ignoring its syntax.
+- `asksForDefinition` is true when the question asks what a feature, operator, function, or
+  command is or does, so recalling the rule is the whole answer; it is false when the learner has
+  to work out what the question's specific code or input produces.
 - `reason` is one short sentence saying why, at most 150 characters.
-- Reply with JSON only, matching the schema: `revealsAnswer` and `reason`.
+- Reply with JSON only, matching the schema: `revealsAnswer`, `titleRevealsAnswer`,
+  `asksForDefinition`, and `reason`.
