@@ -8,16 +8,16 @@
       "code": "SELECT 'foo' || 'bar';",
       "choices": [
         {
-          "text": "Bitwise OR"
+          "text": "Logical OR, as in MySQL"
         },
         {
           "text": "String concatenation"
         },
         {
-          "text": "Logical OR"
+          "text": "Bitwise OR of the bytes"
         },
         {
-          "text": "Array union"
+          "text": "First non-NULL operand"
         }
       ],
       "answerIndex": 1,
@@ -72,13 +72,13 @@
           "text": "ILIKE matches case-insensitively; LIKE is case-sensitive"
         },
         {
-          "text": "ILIKE only works on integers"
+          "text": "ILIKE matches across lines; LIKE stops at a newline"
         },
         {
-          "text": "ILIKE is faster because it ignores indexes"
+          "text": "ILIKE uses regex syntax; LIKE uses % and _ wildcards"
         },
         {
-          "text": "ILIKE and LIKE are aliases for the exact same behavior"
+          "text": "ILIKE can use a plain B-tree index; LIKE cannot"
         }
       ],
       "answerIndex": 0,
@@ -106,16 +106,16 @@
       "prompt": "In psql, which meta-command lists all the tables in the current database?",
       "choices": [
         {
-          "text": "\\l"
+          "text": "\\dn"
         },
         {
           "text": "\\dt"
         },
         {
-          "text": "\\c"
+          "text": "\\ds"
         },
         {
-          "text": "\\d"
+          "text": "\\dv"
         }
       ],
       "answerIndex": 1,
@@ -180,16 +180,16 @@
       "prompt": "What does the psql meta-command `\\c mydb` do?",
       "choices": [
         {
-          "text": "Copies a table into mydb"
+          "text": "Sets mydb as the default for future sessions"
         },
         {
-          "text": "Switches the current psql session to connect to the mydb database"
+          "text": "Reconnects the session to the mydb database"
         },
         {
-          "text": "Creates a new database called mydb"
+          "text": "Creates mydb if it does not already exist"
         },
         {
-          "text": "Checks mydb for corruption"
+          "text": "Changes the session's search_path to mydb"
         }
       ],
       "answerIndex": 1,
@@ -240,16 +240,16 @@
       "prompt": "What does toggling `\\x` in psql change?",
       "choices": [
         {
-          "text": "It switches result output from tabular rows to one column-per-line \"expanded\" format"
+          "text": "Shows each row as a vertical list of column/value pairs"
         },
         {
-          "text": "It enables extended SQL syntax"
+          "text": "Prints EXPLAIN output alongside each query result"
         },
         {
-          "text": "It exports the last query result to a file"
+          "text": "Widens the output so long column values are never truncated"
         },
         {
-          "text": "It shows the query execution plan"
+          "text": "Prints how long each query took to execute"
         }
       ],
       "answerIndex": 0,
@@ -277,16 +277,16 @@
       "prompt": "When you create a column with `id SERIAL PRIMARY KEY`, what backing object does Postgres create alongside it?",
       "choices": [
         {
-          "text": "A trigger that runs on every SELECT"
+          "text": "A BEFORE INSERT trigger that fills in the id"
         },
         {
-          "text": "A sequence, by default named `<table>_<column>_seq`"
+          "text": "A sequence named `<table>_<column>_seq`"
         },
         {
-          "text": "A materialized view"
+          "text": "An identity constraint, as with GENERATED AS IDENTITY"
         },
         {
-          "text": "A second hidden table"
+          "text": "A hidden counter column stored in the same table"
         }
       ],
       "answerIndex": 1,
@@ -398,16 +398,16 @@
       "prompt": "What does `SELECT \"hello\"` do if no column named `hello` exists in scope?",
       "choices": [
         {
-          "text": "Returns the string value \"hello\""
+          "text": "Returns the text hello, as with single quotes"
         },
         {
-          "text": "Raises an error because double quotes denote an identifier, not a string literal"
+          "text": "Raises an error: \"hello\" is read as a column name"
         },
         {
-          "text": "Returns NULL"
+          "text": "Returns NULL, since the column is undefined"
         },
         {
-          "text": "Silently returns zero rows"
+          "text": "Returns zero rows, since no column matches"
         }
       ],
       "answerIndex": 1,
@@ -457,7 +457,7 @@
       "prompt": "A column declared `CHAR(10)` holding the value 'hi' will actually be stored as:",
       "choices": [
         {
-          "text": "'hi' exactly, 2 characters"
+          "text": "'hi' exactly; CHAR only sets a maximum length"
         },
         {
           "text": "'hi' padded with 8 trailing spaces, 10 characters"
@@ -466,7 +466,7 @@
           "text": "An error, because 'hi' is shorter than 10"
         },
         {
-          "text": "'hi' truncated to an empty string"
+          "text": "'hi' padded with 8 leading spaces, 10 characters"
         }
       ],
       "answerIndex": 1,
@@ -530,16 +530,16 @@
       "prompt": "What does `SET search_path TO app, public;` change for the current session?",
       "choices": [
         {
-          "text": "Which database the session is connected to"
+          "text": "Which directories Postgres searches for extension files"
         },
         {
-          "text": "The order of schemas Postgres searches when you reference an unqualified table or function name"
+          "text": "Which schemas unqualified table names resolve against, in order"
         },
         {
-          "text": "Which user the session is running as"
+          "text": "Which schemas the session is allowed to read from"
         },
         {
-          "text": "The default transaction isolation level"
+          "text": "Which databases cross-database queries can reach, in order"
         }
       ],
       "answerIndex": 1,
@@ -590,16 +590,16 @@
       "code": "INSERT INTO users (email) VALUES ('a@b.com') RETURNING *;",
       "choices": [
         {
-          "text": "Only the primary key column"
+          "text": "Only the primary key of the new row"
         },
         {
           "text": "Every column of the newly inserted row"
         },
         {
-          "text": "The number of rows inserted"
+          "text": "The inserted row count, like the INSERT 0 1 tag"
         },
         {
-          "text": "The full query plan used for the insert"
+          "text": "Only the columns named in the INSERT"
         }
       ],
       "answerIndex": 1,
@@ -627,16 +627,16 @@
       "prompt": "What does `INSERT INTO t (id) VALUES (1) ON CONFLICT DO NOTHING;` do if a row with `id = 1` already exists?",
       "choices": [
         {
-          "text": "Raises a unique-violation error as usual"
+          "text": "Raises a unique-violation error, but keeps the transaction open"
         },
         {
           "text": "Silently skips the insert for that row instead of erroring"
         },
         {
-          "text": "Overwrites the existing row with the new values"
+          "text": "Replaces the existing row with the new values, like an upsert"
         },
         {
-          "text": "Deletes the existing row"
+          "text": "Skips the row and rolls back earlier inserts in the statement"
         }
       ],
       "answerIndex": 1,
@@ -664,16 +664,16 @@
       "prompt": "What does the `(id)` in `ON CONFLICT (id) DO NOTHING` specify?",
       "choices": [
         {
-          "text": "The column(s) to update afterward"
+          "text": "The columns to overwrite when a conflict is found"
         },
         {
-          "text": "Which unique or exclusion constraint’s violation should be caught"
+          "text": "The unique constraint whose violation should be caught"
         },
         {
-          "text": "The columns to return"
+          "text": "The column whose value is returned for skipped rows"
         },
         {
-          "text": "A filter applied before the insert runs"
+          "text": "The columns that get a new unique index if none exists"
         }
       ],
       "answerIndex": 1,
@@ -707,7 +707,7 @@
           "text": "ARRAY[1, 2, 3]"
         },
         {
-          "text": "{{1, 2, 3}}"
+          "text": "ARRAY(1, 2, 3)"
         },
         {
           "text": "LIST(1, 2, 3)"
@@ -870,16 +870,16 @@
       "prompt": "What is the key difference between `data -> 'name'` and `data ->> 'name'` on a jsonb column?",
       "choices": [
         {
-          "text": "-> is faster but does the same thing as ->>"
+          "text": "-> reads one level deep; ->> follows a nested path"
         },
         {
           "text": "-> returns a jsonb value; ->> returns the value as text"
         },
         {
-          "text": "-> only works on arrays, ->> only works on objects"
+          "text": "-> errors on a missing key; ->> returns NULL instead"
         },
         {
-          "text": "They are interchangeable aliases"
+          "text": "-> returns text; ->> returns the value as jsonb"
         }
       ],
       "answerIndex": 1,
@@ -914,7 +914,7 @@
           "text": "Whether two jsonb values are byte-for-byte identical"
         },
         {
-          "text": "String concatenation of two jsonb values"
+          "text": "Whether the left value has every key of the right, ignoring values"
         },
         {
           "text": "Whether the left value is greater than the right, alphabetically"
@@ -945,13 +945,13 @@
       "prompt": "What does `jsonb_build_object('id', 1, 'active', true)` produce?",
       "choices": [
         {
-          "text": "The text '1, true'"
+          "text": "The jsonb array [\"id\", 1, \"active\", true]"
         },
         {
           "text": "The jsonb value {\"id\": 1, \"active\": true}"
         },
         {
-          "text": "An array [1, true]"
+          "text": "The jsonb value {\"id\": \"1\", \"active\": \"true\"}"
         },
         {
           "text": "An error, because the arguments must all share one type"
@@ -1005,16 +1005,16 @@
       "prompt": "What type does `CURRENT_DATE` return, compared to `NOW()`?",
       "choices": [
         {
-          "text": "CURRENT_DATE returns a date with no time component; NOW() returns a full timestamp with time zone"
+          "text": "CURRENT_DATE returns a date; NOW() returns a timestamptz"
         },
         {
-          "text": "They return the exact same type and value"
+          "text": "Both return timestamptz; CURRENT_DATE zeroes the time"
         },
         {
-          "text": "CURRENT_DATE includes the time zone offset; NOW() does not"
+          "text": "CURRENT_DATE returns a date; NOW() returns a plain timestamp"
         },
         {
-          "text": "CURRENT_DATE is a function you must call with parentheses; NOW() is not"
+          "text": "CURRENT_DATE returns text; NOW() returns a timestamptz"
         }
       ],
       "answerIndex": 0,
@@ -1100,7 +1100,7 @@
       "prompt": "What does `COALESCE(a, b, c, d)` return when `a` and `b` are both `NULL` but `c` is not?",
       "choices": [
         {
-          "text": "NULL"
+          "text": "NULL, since a is NULL"
         },
         {
           "text": "The value of a"
@@ -1138,16 +1138,16 @@
       "code": "SELECT DISTINCT ON (customer_id) *\nFROM orders\nORDER BY customer_id, created_at DESC;",
       "choices": [
         {
-          "text": "It removes duplicate rows across all columns, same as DISTINCT"
+          "text": "Drops every customer_id that appears more than once"
         },
         {
-          "text": "It picks one row per customer_id (the first, per ORDER BY), keeping every column from that row"
+          "text": "Keeps one whole row per customer_id, chosen by the ORDER BY"
         },
         {
-          "text": "It counts distinct customer_id values"
+          "text": "Keeps one row per customer_id, ignoring the ORDER BY"
         },
         {
-          "text": "It sorts customer_id values alphabetically"
+          "text": "Dedupes on customer_id but returns only that column"
         }
       ],
       "answerIndex": 1,
@@ -1258,16 +1258,16 @@
       "code": "CREATE TABLE products (\n  price NUMERIC CHECK (price > 0)\n);",
       "choices": [
         {
-          "text": "That the column cannot be NULL"
+          "text": "That price is checked on insert, but not on later updates"
         },
         {
-          "text": "That every row must satisfy the given boolean expression before it is allowed to commit"
+          "text": "That each inserted or updated row satisfies the expression"
         },
         {
-          "text": "That the column is unique"
+          "text": "That a failing expression is only logged as a warning"
         },
         {
-          "text": "That the table has at least one row"
+          "text": "That rows failing the expression are hidden from SELECT"
         }
       ],
       "answerIndex": 1,
@@ -1316,16 +1316,16 @@
       "prompt": "Which view is part of the SQL-standard `information_schema`, portable across databases in spirit, rather than being Postgres-specific?",
       "choices": [
         {
-          "text": "pg_stat_activity"
+          "text": "pg_catalog.pg_attribute"
         },
         {
           "text": "information_schema.columns"
         },
         {
-          "text": "pg_class"
+          "text": "pg_catalog.pg_stat_activity"
         },
         {
-          "text": "pg_indexes"
+          "text": "pg_catalog.pg_indexes"
         }
       ],
       "answerIndex": 1,
@@ -1352,16 +1352,16 @@
       "prompt": "What advantage does `pg_catalog.pg_tables` have over `information_schema.tables`?",
       "choices": [
         {
-          "text": "It is faster to type"
+          "text": "It includes tables in every database, not just the current one"
         },
         {
-          "text": "It exposes Postgres-specific detail like the tablespace and whether row security is enabled, which the standard view omits"
+          "text": "It shows Postgres-only detail, such as the tablespace and row security"
         },
         {
-          "text": "It works across multiple database engines"
+          "text": "It reports each table's row count and size on disk"
         },
         {
-          "text": "It shows only temporary tables"
+          "text": "It is part of the SQL standard, so it works on other databases"
         }
       ],
       "answerIndex": 1,
@@ -1485,16 +1485,16 @@
       "prompt": "What does the function `current_database()` return?",
       "choices": [
         {
-          "text": "The name of the database the current session is connected to"
+          "text": "The name of the database this session is connected to"
         },
         {
-          "text": "A list of all databases on the server"
+          "text": "The name of the default database set in postgresql.conf"
         },
         {
-          "text": "The current schema"
+          "text": "The name of the first schema on the search_path"
         },
         {
-          "text": "The size of the current database in bytes"
+          "text": "The OID of the database this session is connected to"
         }
       ],
       "answerIndex": 0,
@@ -1522,16 +1522,16 @@
       "prompt": "What does `current_user` return inside a session?",
       "choices": [
         {
-          "text": "The operating-system user running the Postgres server process"
+          "text": "The operating-system user running the server process"
         },
         {
-          "text": "The role name the current session is authenticated and executing as"
+          "text": "The role whose privileges the session is currently using"
         },
         {
-          "text": "The database owner, regardless of who is connected"
+          "text": "The role that originally logged in, even after SET ROLE"
         },
         {
-          "text": "The IP address of the client"
+          "text": "The owner of the database the session is connected to"
         }
       ],
       "answerIndex": 1,
@@ -1559,16 +1559,16 @@
       "prompt": "What does `SELECT version();` return?",
       "choices": [
         {
-          "text": "The version of your SQL client only"
+          "text": "A string with the version of your psql client, not the server"
         },
         {
-          "text": "A string describing the Postgres server version, build platform, and compiler"
+          "text": "A text string with the server version, platform, and compiler"
         },
         {
-          "text": "The current schema version number"
+          "text": "The schema version recorded by the last migration"
         },
         {
-          "text": "The highest supported SQL standard year"
+          "text": "The server version as a single integer such as 170002"
         }
       ],
       "answerIndex": 1,
@@ -1632,16 +1632,16 @@
       "prompt": "What does the `::` operator do in `SELECT '123'::int;`?",
       "choices": [
         {
-          "text": "Namespace qualification, like schema::table"
+          "text": "Schema qualification, as in schema::table"
         },
         {
           "text": "Type casting, equivalent to CAST('123' AS int)"
         },
         {
-          "text": "String repetition"
+          "text": "Names the output column int, like AS int"
         },
         {
-          "text": "Array slicing"
+          "text": "Asserts the type, raising an error if it is not already int"
         }
       ],
       "answerIndex": 1,
@@ -1691,16 +1691,16 @@
       "prompt": "What type does the literal `INTERVAL '1 day'` produce?",
       "choices": [
         {
-          "text": "A plain integer representing seconds"
+          "text": "An integer number of seconds, in this case 86400"
         },
         {
           "text": "A dedicated interval type representing a span of time"
         },
         {
-          "text": "A timestamp one day in the future"
+          "text": "A timestamp exactly one day after the current time"
         },
         {
-          "text": "A text string that must be parsed manually"
+          "text": "A text value that is parsed again each time it is used"
         }
       ],
       "answerIndex": 1,
@@ -1734,10 +1734,10 @@
           "text": "A timestamp exactly 7 days after the current transaction time"
         },
         {
-          "text": "The number 7"
+          "text": "A date 7 days from today, with the time part dropped"
         },
         {
-          "text": "An interval representing 7 days from an unspecified point"
+          "text": "A timestamp 7 days ahead, recomputed for every row returned"
         }
       ],
       "answerIndex": 1,
@@ -1764,16 +1764,16 @@
       "prompt": "What does `AGE(timestamp '2024-01-01', timestamp '2023-01-01')` return?",
       "choices": [
         {
-          "text": "The number 365"
+          "text": "The integer 365, a count of days"
         },
         {
           "text": "An interval, e.g. \"1 year\""
         },
         {
-          "text": "A boolean"
+          "text": "An interval, e.g. \"365 days\""
         },
         {
-          "text": "A date"
+          "text": "A negative interval, e.g. \"-1 year\""
         }
       ],
       "answerIndex": 1,
@@ -1839,16 +1839,16 @@
       "code": "SELECT STRING_AGG(name, ', ') FROM tags;",
       "choices": [
         {
-          "text": "Counts the number of distinct names"
+          "text": "Builds a text array of the names, like array_agg"
         },
         {
-          "text": "Concatenates every name in the group into one string, separated by the given delimiter"
+          "text": "Joins every name in the group into one string, separated by ', '"
         },
         {
-          "text": "Sorts the names alphabetically without combining them"
+          "text": "Joins the names into one string, always sorted alphabetically"
         },
         {
-          "text": "Returns only the first name in the group"
+          "text": "Splits each name on ', ' and returns one row per piece"
         }
       ],
       "answerIndex": 1,
@@ -1919,10 +1919,10 @@
           "text": "Whether name starts with \"jan\", case-insensitively"
         },
         {
-          "text": "Whether name equals exactly \"jan\""
+          "text": "Whether name contains \"jan\" anywhere, case-insensitively"
         },
         {
-          "text": "Whether name does not contain \"jan\""
+          "text": "Whether name does not start with \"jan\", case-insensitively"
         }
       ],
       "answerIndex": 1,
@@ -1972,16 +1972,16 @@
       "prompt": "`a IS DISTINCT FROM b` is preferred over `a <> b` when either side might be `NULL`. Why?",
       "choices": [
         {
-          "text": "IS DISTINCT FROM is faster to execute"
+          "text": "It treats NULL as an empty string, so NULL and '' are equal"
         },
         {
-          "text": "IS DISTINCT FROM treats two NULLs as equal and a NULL vs a value as distinct, instead of returning NULL for either case"
+          "text": "It treats NULL as a comparable value, so it always returns true or false"
         },
         {
-          "text": "They are exactly identical in every case"
+          "text": "It raises an error instead of returning NULL on NULL input"
         },
         {
-          "text": "IS DISTINCT FROM only works on numeric types"
+          "text": "It can use an index on either column, while <> cannot"
         }
       ],
       "answerIndex": 1,
@@ -2009,16 +2009,16 @@
       "prompt": "What does `CREATE TYPE mood AS ENUM ('sad', 'ok', 'happy');` create?",
       "choices": [
         {
-          "text": "A CHECK constraint template you must attach manually to every column"
+          "text": "A CHECK constraint you attach to each column that needs it"
         },
         {
-          "text": "A new named type whose values are restricted to the listed labels, usable as a column type"
+          "text": "A new type whose values are limited to the listed labels"
         },
         {
-          "text": "A lookup table populated with those three rows"
+          "text": "A small lookup table holding those three labels as rows"
         },
         {
-          "text": "A trigger that validates mood values"
+          "text": "A text domain that sorts its labels alphabetically"
         }
       ],
       "answerIndex": 1,
@@ -2046,16 +2046,16 @@
       "prompt": "What does `CREATE TYPE point_2d AS (x int, y int);` define?",
       "choices": [
         {
-          "text": "A view with columns x and y"
+          "text": "An alias for the built-in geometric point type"
         },
         {
-          "text": "A composite (structured) type bundling named, typed fields together"
+          "text": "A composite type with named, typed fields x and y"
         },
         {
-          "text": "A function returning a point"
+          "text": "A table named point_2d with columns x and y"
         },
         {
-          "text": "A table alias"
+          "text": "A two-element integer array type, int[2]"
         }
       ],
       "answerIndex": 1,
@@ -2083,16 +2083,16 @@
       "prompt": "What does `CREATE DOMAIN positive_int AS integer CHECK (VALUE > 0);` let you do?",
       "choices": [
         {
-          "text": "Nothing new, it is identical to using integer directly"
+          "text": "An alias for integer; the CHECK is only documentation"
         },
         {
-          "text": "Define a reusable type that behaves like integer but automatically enforces the CHECK on every column that uses it"
+          "text": "A reusable integer type that enforces the CHECK wherever it is used"
         },
         {
-          "text": "Restrict the domain to a single specific value"
+          "text": "A new type that must be cast explicitly to mix with integer"
         },
         {
-          "text": "Create a new network domain for DNS purposes"
+          "text": "A constraint added to every existing integer column"
         }
       ],
       "answerIndex": 1,
@@ -2143,16 +2143,16 @@
       "prompt": "Why is `COPY` typically much faster than issuing many individual `INSERT` statements for the same rows?",
       "choices": [
         {
-          "text": "It skips all constraint checking"
+          "text": "It skips CHECK and foreign key constraints during the load"
         },
         {
-          "text": "It streams rows in bulk through a specialized fast path instead of parsing and planning one statement per row"
+          "text": "It loads rows in one bulk stream instead of one planned statement per row"
         },
         {
-          "text": "It only works on empty tables"
+          "text": "It disables indexes and rebuilds them once at the end"
         },
         {
-          "text": "It disables the primary key temporarily"
+          "text": "It runs the inserts in parallel across several worker processes"
         }
       ],
       "answerIndex": 1,
@@ -2222,10 +2222,10 @@
           "text": "Advances the sequence and returns the new current value"
         },
         {
-          "text": "Resets the sequence back to 1"
+          "text": "Returns the next value, advancing only if the transaction commits"
         },
         {
-          "text": "Deletes the sequence"
+          "text": "Returns the last value this session got from the sequence"
         }
       ],
       "answerIndex": 1,
@@ -2275,16 +2275,16 @@
       "prompt": "What does `CREATE TABLE managers () INHERITS (employees);` set up?",
       "choices": [
         {
-          "text": "A foreign key from managers to employees"
+          "text": "A managers table whose rows reference employees by foreign key"
         },
         {
-          "text": "A child table that automatically includes every column of employees and appears in queries against employees unless excluded with ONLY"
+          "text": "A child table that gets employees' columns and shows up in its queries"
         },
         {
-          "text": "A view that unions managers and employees"
+          "text": "A copy of employees' columns, with no link between the tables afterwards"
         },
         {
-          "text": "A trigger that copies rows between the two tables"
+          "text": "A table sharing employees' storage, so rows appear in both"
         }
       ],
       "answerIndex": 1,
@@ -2312,16 +2312,16 @@
       "prompt": "What does `created_at TIMESTAMPTZ DEFAULT now()` set up?",
       "choices": [
         {
-          "text": "A CHECK constraint requiring a timestamp"
+          "text": "A default fixed to the moment the table was created"
         },
         {
-          "text": "A column default computed by calling the now() function at insert time, if no value is supplied"
+          "text": "A default that calls now() when an insert omits the column"
         },
         {
-          "text": "An automatic trigger that updates the column on every UPDATE"
+          "text": "A column refreshed with now() on every UPDATE"
         },
         {
-          "text": "A column that is always NULL until manually set"
+          "text": "A NOT NULL column that always holds the insert time"
         }
       ],
       "answerIndex": 1,
@@ -2349,7 +2349,7 @@
       "prompt": "What does `gen_random_uuid()` return?",
       "choices": [
         {
-          "text": "A random integer"
+          "text": "A time-ordered UUID built from the current clock"
         },
         {
           "text": "A randomly generated UUID value"
@@ -2386,16 +2386,16 @@
       "prompt": "What does `CREATE EXTENSION IF NOT EXISTS pgcrypto;` do?",
       "choices": [
         {
-          "text": "Creates a new database"
+          "text": "Turns on encryption at rest for this database's tables"
         },
         {
-          "text": "Loads a bundled, optional set of extra types/functions/operators into the current database"
+          "text": "Installs an optional package of functions and types into this database"
         },
         {
-          "text": "Encrypts every existing table automatically"
+          "text": "Downloads pgcrypto from the network and compiles it"
         },
         {
-          "text": "Installs a new version of Postgres itself"
+          "text": "Loads pgcrypto server-wide, for every database at once"
         }
       ],
       "answerIndex": 1,
@@ -2460,16 +2460,16 @@
       "code": "SELECT $$It's a string with an apostrophe$$;",
       "choices": [
         {
-          "text": "They make queries run faster"
+          "text": "They interpolate $-prefixed variables into the string"
         },
         {
-          "text": "They let you write a string containing single quotes without doubling or backslash-escaping them"
+          "text": "They let a string contain single quotes without escaping them"
         },
         {
-          "text": "They are required for every string in Postgres"
+          "text": "They make the string case-insensitive in comparisons"
         },
         {
-          "text": "They mark a string as case-insensitive"
+          "text": "They are the only way to write a multi-line string literal"
         }
       ],
       "answerIndex": 1,
@@ -2539,10 +2539,10 @@
           "text": "It is shorthand equivalent to SELECT * FROM orders"
         },
         {
-          "text": "It creates an empty table called orders"
+          "text": "It lists the orders table's column definitions, like \\d"
         },
         {
-          "text": "It drops the orders table"
+          "text": "It locks orders for the rest of the transaction"
         }
       ],
       "answerIndex": 1,
@@ -2570,16 +2570,16 @@
       "prompt": "What does a standalone `VALUES (1, 'a'), (2, 'b');` statement produce?",
       "choices": [
         {
-          "text": "An error, VALUES must appear inside an INSERT"
+          "text": "An error, since VALUES is only valid inside an INSERT"
         },
         {
           "text": "An ad hoc result set of rows, with no backing table required"
         },
         {
-          "text": "A new temporary table named VALUES"
+          "text": "A temporary table named values holding those two rows"
         },
         {
-          "text": "A single array containing both rows"
+          "text": "One row holding both tuples as a two-element array"
         }
       ],
       "answerIndex": 1,
@@ -2644,16 +2644,16 @@
       "code": "SELECT customer_id, array_agg(product) FROM orders GROUP BY customer_id;",
       "choices": [
         {
-          "text": "Counts how many products there are"
+          "text": "Collects the distinct values in the group into an array"
         },
         {
           "text": "Collects every value in the group into a single array"
         },
         {
-          "text": "Concatenates the products into one string"
+          "text": "Concatenates the products into one comma-separated string"
         },
         {
-          "text": "Returns only the first product per group"
+          "text": "Wraps each product in its own one-element array"
         }
       ],
       "answerIndex": 1,
@@ -2681,16 +2681,16 @@
       "prompt": "What does the psql meta-command `\\!` do?",
       "choices": [
         {
-          "text": "Reverses the last query"
+          "text": "Re-runs the previous query, like !! in a shell"
         },
         {
           "text": "Runs a shell command without leaving the psql session"
         },
         {
-          "text": "Marks a query as urgent"
+          "text": "Cancels the query that is currently running"
         },
         {
-          "text": "Deletes the current connection"
+          "text": "Forces psql to quit, discarding unsaved input"
         }
       ],
       "answerIndex": 1,
@@ -2718,16 +2718,16 @@
       "prompt": "What does `\\i setup.sql` do inside psql?",
       "choices": [
         {
-          "text": "Imports a CSV file into a table"
+          "text": "Imports setup.sql's rows into a table, like \\copy"
         },
         {
-          "text": "Reads and executes the SQL commands in setup.sql as if you had typed them"
+          "text": "Runs the SQL commands in setup.sql as if you typed them"
         },
         {
-          "text": "Installs a new extension named setup"
+          "text": "Shows the contents of setup.sql without running it"
         },
         {
-          "text": "Ignores the setup.sql file"
+          "text": "Runs setup.sql in a separate session in the background"
         }
       ],
       "answerIndex": 1,
@@ -2755,16 +2755,16 @@
       "prompt": "What does `pg_size_pretty(pg_total_relation_size('orders'))` return?",
       "choices": [
         {
-          "text": "The raw byte count as an integer"
+          "text": "The total size in bytes as a bigint, including indexes"
         },
         {
           "text": "The size formatted as a human-readable string like \"24 MB\""
         },
         {
-          "text": "The number of rows in orders"
+          "text": "A readable size such as \"24 MB\", excluding indexes and TOAST"
         },
         {
-          "text": "A boolean, whether the table fits in memory"
+          "text": "The estimated row count, formatted like \"24k rows\""
         }
       ],
       "answerIndex": 1,
@@ -2792,16 +2792,16 @@
       "prompt": "What does `pg_database_size('mydb')` return?",
       "choices": [
         {
-          "text": "The number of tables in mydb"
+          "text": "The size of mydb as readable text, such as \"8 MB\""
         },
         {
           "text": "The total on-disk size of the mydb database, in bytes"
         },
         {
-          "text": "The maximum allowed size for mydb"
+          "text": "The configured size limit for mydb, in bytes"
         },
         {
-          "text": "The number of active connections to mydb"
+          "text": "The size of mydb's data, excluding its indexes, in bytes"
         }
       ],
       "answerIndex": 1,
@@ -2902,16 +2902,16 @@
       "prompt": "What does `to_char(NOW(), 'YYYY-MM-DD')` produce?",
       "choices": [
         {
-          "text": "The timestamp unchanged"
+          "text": "A date value with the time of day stripped off"
         },
         {
           "text": "The date formatted as a string using the given pattern"
         },
         {
-          "text": "An error, to_char only works on numbers"
+          "text": "An error, because to_char only formats numbers"
         },
         {
-          "text": "The number of days since 1970"
+          "text": "A string in the session's DateStyle, ignoring the pattern"
         }
       ],
       "answerIndex": 1,
@@ -2939,16 +2939,16 @@
       "prompt": "What is `to_date('2024-05-01', 'YYYY-MM-DD')` used for?",
       "choices": [
         {
-          "text": "Converting a date into a formatted string"
+          "text": "Formatting a date as text using the given pattern"
         },
         {
-          "text": "Parsing a text string into a date, according to the given format pattern"
+          "text": "Parsing text into a date using the given format pattern"
         },
         {
-          "text": "Adding two dates together"
+          "text": "Checking whether a string is a valid date, returning a boolean"
         },
         {
-          "text": "Validating that a date is in the future"
+          "text": "Parsing text into a timestamp at midnight in the session time zone"
         }
       ],
       "answerIndex": 1,
@@ -3013,16 +3013,16 @@
       "prompt": "What does `date_trunc('month', order_date)` return?",
       "choices": [
         {
-          "text": "Just the month number"
+          "text": "The month number as an integer, such as 5 for May"
         },
         {
           "text": "A timestamp rounded down to the first moment of that month"
         },
         {
-          "text": "The number of days remaining in the month"
+          "text": "The date rounded to the nearest first-of-month"
         },
         {
-          "text": "The month name as text"
+          "text": "The month and year as text, such as '2024-05'"
         }
       ],
       "answerIndex": 1,
@@ -3147,7 +3147,7 @@
       "prompt": "What does `SHOW work_mem;` do?",
       "choices": [
         {
-          "text": "Changes the work_mem setting for the session"
+          "text": "Resets work_mem to its default and prints the new value"
         },
         {
           "text": "Displays the current value of the work_mem configuration parameter"
@@ -3156,7 +3156,7 @@
           "text": "Shows how much memory the current query is using right now"
         },
         {
-          "text": "Lists all configuration parameters at once"
+          "text": "Displays the work_mem value from postgresql.conf, ignoring SET"
         }
       ],
       "answerIndex": 1,
@@ -3183,16 +3183,16 @@
       "prompt": "What does `SET statement_timeout = '5s';` change?",
       "choices": [
         {
-          "text": "It changes the setting permanently for the whole server"
+          "text": "It changes the setting for every session on the server"
         },
         {
-          "text": "It changes the setting only for the current session, until the session ends or it is reset"
+          "text": "It changes the setting for the rest of this session"
         },
         {
-          "text": "It changes the setting only for the very next statement"
+          "text": "It changes the setting for the next statement only"
         },
         {
-          "text": "It has no effect unless the server is restarted"
+          "text": "It changes the setting only until the current transaction ends"
         }
       ],
       "answerIndex": 1,
@@ -3256,16 +3256,16 @@
       "code": "SELECT c.name, top.*\nFROM customers c,\nLATERAL (\n  SELECT * FROM orders o\n  WHERE o.customer_id = c.id\n  ORDER BY o.created_at DESC LIMIT 1\n) top;",
       "choices": [
         {
-          "text": "Run faster than any other join type"
+          "text": "Run the subquery once and reuse its result for every row"
         },
         {
-          "text": "Reference columns from an earlier FROM item inside the subquery itself, effectively looping \"for each row\""
+          "text": "Reference columns of earlier FROM items inside the subquery"
         },
         {
-          "text": "Return results without needing a FROM clause at all"
+          "text": "Return rows even when the subquery finds nothing, like LEFT JOIN"
         },
         {
-          "text": "Skip WHERE clause evaluation"
+          "text": "Run the subquery in parallel with the outer query"
         }
       ],
       "answerIndex": 1,
@@ -3330,16 +3330,16 @@
       "prompt": "What does `pg_sleep(2)` do when called in a query?",
       "choices": [
         {
-          "text": "Puts the whole Postgres server to sleep for 2 seconds"
+          "text": "Pauses every session on the server for 2 seconds"
         },
         {
-          "text": "Pauses execution of the current session for 2 seconds, then returns"
+          "text": "Pauses the current session for 2 seconds, then returns"
         },
         {
-          "text": "Deletes rows older than 2 seconds"
+          "text": "Pauses for 2 milliseconds before the query continues"
         },
         {
-          "text": "Schedules the query to run again in 2 seconds"
+          "text": "Releases the session's locks, waits 2 seconds, then returns"
         }
       ],
       "answerIndex": 1,
@@ -3389,16 +3389,16 @@
       "code": "INSERT INTO t (note) VALUES ('don''t');",
       "choices": [
         {
-          "text": "Postgres treats the doubled quote as a typo and ignores the second one"
+          "text": "Two adjacent literals 'don' and 't' are joined into one"
         },
         {
-          "text": "A doubled single quote inside a single-quoted literal is the standard way to escape an embedded quote character"
+          "text": "Inside a single-quoted literal, '' is the escape for one quote"
         },
         {
-          "text": "It is invalid syntax and would raise an error"
+          "text": "The second quote is dropped as a typo, with a warning"
         },
         {
-          "text": "It inserts two separate rows"
+          "text": "It is invalid unless standard_conforming_strings is off"
         }
       ],
       "answerIndex": 1,

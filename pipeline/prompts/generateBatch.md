@@ -10,6 +10,7 @@ Use one of the runners in the context for oracle.language.
 When the context's languageId is `sql`, use only portable standard SQL that runs the same on any major database (no Postgres-only features such as `::` casts, ILIKE, RETURNING, DISTINCT ON, arrays, jsonb, or generate_series), and supply table setup in setupSql; for `sql` and `postgres`, shown code must start with the same CREATE TABLE and INSERT statements as setupSql, followed by the query.
 On easy, the program prints at most two values.
 An mc card has exactly four choices {text, rationale?} and a zero-based answerIndex. Every wrong choice needs a clear one-line rationale of at most 280 characters.
+Wrong choices must be believable: base each on a real misconception, a near-miss, or behavior from another database or language, never a throwaway like "Deletes the table". Write all four choices in the same style, length, and level of detail, so the correct one is not given away by being the longest, most qualified, or most precise.
 A bool card has a boolean answer and a one-line question rationale of at most 280 characters explaining why the opposite answer is wrong.
 For bool cards, balance true and false answers: about half should be false.
 The shown code must contain every value or row the answer depends on.
