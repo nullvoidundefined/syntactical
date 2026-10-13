@@ -24,6 +24,14 @@ Updated 2026-10-14, after the engineering audit cleanup slices. Confirm with `gi
 
 ## Open
 
+The engineering-audit cleanup pass stopped early at the owner's request (2026-10-14). The ranked list is in `docs/audits/2026-10-13-engineering.md`, "Ranked cleanup opportunities"; the slices still open from it are:
+
+- app: one modal dialog shell (`useModalPanel` plus `DialogShell` for `SignOutDialog`, `DeleteAccountDialog`, and `PaywallSheet`; row 10),
+- app: test mock consolidation (the hand-mocked `expo-router` and `expo-constants` in the Jest files; row 17),
+- pipeline: test fixture consolidation (row 17),
+- server: one test-app factory in place of the five `createXTestApp` factories and the per-file `SKIP_DATABASE_TESTS` (row 17),
+- #178 (server `changePassword` service), open and security-touching, so the owner merges it.
+
 1. **Owner decisions** from `docs/audits/2026-10-13-engineering.md`, "Decisions for the owner": the DNS records (above), the 60% coverage rule (enforced nowhere), lint and Prettier as gates (323 files fail `prettier --check`), and workspace pruning (worktrees and merged branches).
 2. **Open PRs** (`gh pr list`): #177 (pipeline provider failure cap), #178 (server `changePassword` service, security-touching, the owner merges), #159 (query drawer before an answer), #160 and #162 (misconception taxonomies and references, content), #161 (pipeline references and enrichment).
 3. **Owner, outside the repo** (`docs/launch-placeholders.md`): RevenueCat products, keys, and the webhook secret; the PostHog project and key; the Resend key; the Apple Developer account for iOS builds; then remove `ALLOW_STUBBED_INTEGRATIONS`.
