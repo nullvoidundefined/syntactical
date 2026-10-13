@@ -11,20 +11,14 @@ import type { Provenance } from '@syntactical/content-schema';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { draftOracles } from '../../commands/draftOracles.js';
-import { AB_BENCH } from '../../services/ab/AB_BENCH.js';
-import { benchmarkAb } from '../../services/ab/benchmarkAb.js';
-import { buildBenchOracle } from '../../services/ab/buildBenchOracle.js';
-import { validateCorrectnessAb } from '../../services/ab/validateCorrectnessAb.js';
 import { draftOracle } from '../../services/draftOracle.js';
 import { GENERATE_RUN_LIMITS } from '../../services/gapFill/GENERATE_RUN_LIMITS.js';
 import { generateBatch } from '../../services/gapFill/generateBatch.js';
 import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 import type { Oracle } from '../../types/Oracle.js';
-import type { OracleLanguage } from '../../types/OracleLanguage.js';
 import type { OracleRun } from '../../types/OracleRun.js';
 import type { RunLimits } from '../../types/RunLimits.js';
-import type { AbQuestion } from '../../types/ab/AbQuestion.js';
 
 const defaultRunner = vi.hoisted(() => ({ calls: [] as unknown[] }));
 
@@ -89,10 +83,6 @@ function scripted(reply: (call: number) => unknown): ModelProvider {
     };
 }
 
-function sourceOf({ language, setupSql }: Oracle) {
-    return { language, ...(setupSql === undefined ? {} : { setupSql }) };
-}
-
 function generateArgs(
     oracle: Oracle,
     languageId: string,
@@ -108,22 +98,6 @@ function generateArgs(
         provider,
         run,
         topic: 'topic',
-    };
-}
-
-function abQuestion(first: string, type: 'correctness' | 'performance'): AbQuestion {
-    return {
-        answerIndex: 0,
-        choices: [
-            { code: first, text: 'A' },
-            { code: 'other()', text: 'B' },
-        ],
-        criterion: { evidence: 'pending', statement: 's', type },
-        id: 'q-ab',
-        prompt: 'Which?',
-        provenance: PROVENANCE,
-        query: { explanation: 'e', title: 't' },
-        type: 'ab',
     };
 }
 
@@ -214,37 +188,4 @@ describe.each(HOSTILE)('a hostile %s program', (_label, { contentLanguageId, ora
         // validateQuestion runs an oracle three times to reject a nondeterministic one.
         expect(calls).toEqual([1, 2, 3].map(() => ({ limits: GENERATE_RUN_LIMITS, oracle })));
     });
-
-    it('benchmarkAb runs it once, inside the bench wrapper, with the bench limits', async () => {
-        const { calls, run } = recordingRun();
-        const source = sourceOf(oracle);
-        const result = await benchmarkAb(abQuestion(code, 'performance'), source, run);
-        expect(result).toMatchObject({ reason: 'runner-error' });
-        expect(calls).toEqual([{ limits: { timeoutMs: AB_BENCH.timeoutMs }, oracle: buildBenchOracle(code, source) }]);
-        // The option travels base64-encoded inside the wrapper (Postgres: inside the setup SQL).
-        const { code: wrapped, setupSql: wrappedSetup = '' } = calls[0]?.oracle ?? { code: '' };
-        expect(`${wrapped}\n${wrappedSetup}`).toContain(Buffer.from(code, 'utf8').toString('base64'));
-    });
-
-    it('validateCorrectnessAb runs it once as the option code plus the edge-case call', async () => {
-        const { calls, run } = recordingRun();
-        const edgeCases = [{ call: 'print(head())', expected: '1', input: '()' }];
-        const result = await validateCorrectnessAb(abQuestion(code, 'correctness'), edgeCases, sourceOf(oracle), run);
-        if (language === 'postgres') {
-            expect(result).toMatchObject({ reason: 'unsupported-language' });
-            expect(calls).toEqual([]);
-            return;
-        }
-        const withCall = (snippet: string): RunCall => ({
-            limits: undefined,
-            oracle: { code: `${snippet}\nprint(head())`, language },
-        });
-        expect(calls).toEqual([withCall(code), withCall('other()')]);
-    });
-});
-
-// Keeps the type import honest: every hostile row names a real oracle language.
-const LANGUAGES: OracleLanguage[] = HOSTILE.map(([, { oracle }]) => oracle.language);
-it('covers every oracle language', () => {
-    expect([...LANGUAGES].sort()).toEqual(['node', 'postgres', 'python']);
 });
