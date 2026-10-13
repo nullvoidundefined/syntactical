@@ -14,6 +14,7 @@ import type { ModelProvider } from '../types/ModelProvider.js';
 import { ProviderTransientError } from '../types/ProviderTransientError.js';
 import { createSpawnExec } from './createSpawnExec.js';
 import { generateWithRetries } from './generateWithRetries.js';
+import { resolveModelId } from './resolveModelId.js';
 
 const UNKNOWN_MODEL = 'unknown';
 const KIBIBYTE = 1024;
@@ -103,6 +104,8 @@ export function createClaudeCliProvider(exec: ExecFn = defaultExec): ModelProvid
                             '--setting-sources',
                             '',
                             '--no-session-persistence',
+                            '--model',
+                            resolveModelId(),
                             `--system-prompt=${system}`,
                         ],
                         { cwd, env: buildCliEnv(process.env), input: prompt },

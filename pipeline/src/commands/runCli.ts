@@ -1,6 +1,6 @@
 // The pipeline CLI's command dispatch, with every side effect injected so the real
 // entry path can be tested: `validate [--content-root <path>]`, `draft-oracles [--api]`, or
-// `classify`, `gap-fill`, or `enrich [--api] [--content-root <path>]`, `rewrite-prompts [--content-root <path>]`,
+// `classify`, `gap-fill`, or `enrich [--api] [--content-root <path>]`, `rewrite-prompts [--api] [--content-root <path>]`,
 // `review [--content-root <path>]`, or `publish [--content-root <path>]`.
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
@@ -187,7 +187,7 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
             contentRoot,
             log: (line) => stdout(`${line}\n`),
             pipelineDir,
-            provider: createProvider('cli'),
+            provider: createProvider(pickProviderKind(argv)),
         });
         return 0;
     }
@@ -196,7 +196,7 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
     }
     if (command !== 'validate') {
         stderr(
-            'Usage: pipeline validate [--content-root <path>] | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | gap-fill [--api] [--content-root <path>] | enrich [--api] [--content-root <path>] | rewrite-prompts [--content-root <path>] | review [--content-root <path>] | publish [--content-root <path>]\n',
+            'Usage: pipeline validate [--content-root <path>] | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | gap-fill [--api] [--content-root <path>] | enrich [--api] [--content-root <path>] | rewrite-prompts [--api] [--content-root <path>] | review [--content-root <path>] | publish [--content-root <path>]\n',
         );
         return 1;
     }
