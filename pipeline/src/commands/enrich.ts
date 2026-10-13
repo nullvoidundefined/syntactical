@@ -8,20 +8,20 @@
 // Free-bank output goes under the public `pipelineDir`. Paid-bank output carries paid
 // question ids and rationale text, so it goes under `contentRoot` (the private content
 // repo), and nothing paid is ever written under `pipelineDir` or the content dir.
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { type Question, validateManifest } from '@syntactical/content-schema';
+import type { Question } from '@syntactical/content-schema';
 
 import type { EnrichBankResult } from '../types/EnrichBankResult.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 import type { OracleSource } from '../types/OracleSource.js';
 import type { PipelineReport } from '../types/PipelineReport.js';
-import { assertContentRootUsable } from '../services/classify/assertContentRootUsable.js';
+import { loadCommandManifest } from '../services/content/loadCommandManifest.js';
+import { readBankQuestions } from '../services/content/readBankQuestions.js';
 import { buildEnrichReport } from '../services/enrich/buildEnrichReport.js';
 import { createOracleSource } from '../services/createOracleSource.js';
 import { enrichBank } from '../services/enrich/enrichBank.js';
-import { readJsonIfPresent } from '../services/gapFill/readJsonIfPresent.js';
+import { readJsonIfPresent } from '../services/json/readJsonIfPresent.js';
 import { readLatestReport } from '../services/classify/readLatestReport.js';
 import { readTaxonomy } from '../services/enrich/readTaxonomy.js';
 import { resolveBankFile } from '../services/resolveBankFile.js';
@@ -44,29 +44,12 @@ export interface EnrichOptions {
     validate?: QuestionValidator;
 }
 
-async function readJson(path: string): Promise<unknown> {
-    return JSON.parse(await readFile(path, 'utf8'));
-}
-
 export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
     const { contentDir, contentRoot, newRunId, pipelineDir, provider } = options;
     const validate = options.validate ?? validateQuestion;
     const log = (line: string): void => options.log(sanitizeLogText(line));
     const startedAt = options.now();
-    // The manifest is untrusted: language ids, difficulty keys, and bank paths are joined
-    // into file paths below, so nothing is read or written before it validates.
-    const checked = validateManifest(await readJson(join(contentDir, 'manifest.json')));
-    if ('rule' in checked) {
-        const { rule } = checked;
-        throw new Error(`Manifest rejected: ${sanitizeLogText(rule)}`);
-    }
-    const {
-        manifest: { languages },
-    } = checked;
-    const hasPaidBanks = languages.some(({ banks }) => Object.values(banks).some(({ access }) => access !== 'free'));
-    if (hasPaidBanks) {
-        await assertContentRootUsable(contentRoot, pipelineDir, contentDir);
-    }
+    const { languages } = await loadCommandManifest({ contentDir, contentRoot, pipelineDir });
     // Reports hold ids and verdicts only; every command shares one report chain in the pipeline dir.
     const reportsDir = join(pipelineDir, 'reports');
     const previous = await readLatestReport(reportsDir);
@@ -79,9 +62,7 @@ export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
         }
         for (const [difficulty, { access, path }] of Object.entries(banks)) {
             const bankKey = `${languageId}/${difficulty}`;
-            const bank = (await readJson(resolveBankFile(contentDir, contentRoot, { access, path }))) as {
-                questions: Question[];
-            };
+            const questions = await readBankQuestions(resolveBankFile(contentDir, contentRoot, { access, path }));
             const outRoot = resolveBankOutputRoot(pipelineDir, contentRoot, { access });
             const oracleSource = options.oracleSource ?? createOracleSource(join(outRoot, 'oracles'));
             const staged = (await readJsonIfPresent(join(outRoot, 'generated', languageId, `${difficulty}.json`))) as
@@ -101,10 +82,8 @@ export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
                 provider,
                 // Publish keeps the staged file, so a published question can sit in both lists.
                 questions: [
-                    ...bank.questions,
-                    ...(staged?.questions ?? []).filter(
-                        ({ id }) => !bank.questions.some((question) => question.id === id),
-                    ),
+                    ...questions,
+                    ...(staged?.questions ?? []).filter(({ id }) => !questions.some((question) => question.id === id)),
                 ],
                 taxonomy,
             });

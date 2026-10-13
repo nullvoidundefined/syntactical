@@ -14,7 +14,7 @@ This document holds the user stories for choosing a language and difficulty, pla
 - [ ] The difficulty step lists only the difficulties that language provides, each with its label and description.
 - [ ] A difficulty with no cached or bundled bank is disabled and labeled "Needs a connection to load" while offline.
 
-**E2E test:** none (owner decision 9); covered by `components/menu/__tests__/menu.test.tsx`, `components/menu/__tests__/DifficultyStep.test.tsx`, `app/__tests__/menuRoutes.test.tsx`
+**E2E test:** none; covered by `components/menu/__tests__/menu.test.tsx`, `components/menu/__tests__/DifficultyStep.test.tsx`, `app/__tests__/menuRoutes.test.tsx`
 **Ticket:** IAN-564
 
 ## US-QUIZ-002: Play a round
@@ -31,7 +31,7 @@ This document holds the user stories for choosing a language and difficulty, pla
 - [ ] The progress bar shows the position out of the total.
 - [ ] Question text and choices containing HTML render as literal text.
 
-**E2E test:** none (owner decision 9); covered by `components/quiz/__tests__/QuizRound.test.tsx`, `components/quiz/__tests__/cards.test.tsx`, `state/__tests__/useQuizEngine.test.tsx`, `services/quiz/__tests__/quizService.test.ts`
+**E2E test:** `e2e/specs/guestRound.spec.ts`; also covered by `components/quiz/__tests__/QuizRound.test.tsx`, `components/quiz/__tests__/cards.test.tsx`, `state/__tests__/useQuizEngine.test.tsx`, `services/quiz/__tests__/quizService.test.ts`
 **Ticket:** IAN-564
 
 ## US-QUIZ-003: Read the explanation behind a question
@@ -47,7 +47,7 @@ This document holds the user stories for choosing a language and difficulty, pla
 - [ ] The drawer closes by its close control, by tapping the backdrop, and by the platform back gesture.
 - [ ] Answer and advance actions are inert while the drawer is open.
 
-**E2E test:** none (owner decision 9); covered by `components/query/__tests__/QueryDrawer.test.tsx`, `components/quiz/__tests__/QuizRound.test.tsx`
+**E2E test:** none; covered by `components/query/__tests__/QueryDrawer.test.tsx`, `components/quiz/__tests__/QuizRound.test.tsx`
 **Ticket:** IAN-564
 
 ## US-QUIZ-004: See results and retry
@@ -62,7 +62,7 @@ This document holds the user stories for choosing a language and difficulty, pla
 - [ ] Retry starts a new round with a fresh order and resets the index, answer, score, and drawer.
 - [ ] Leaving a round early records no completion, and a finished round records exactly one.
 
-**E2E test:** none (owner decision 9); covered by `components/quiz/__tests__/QuizRoundCompletion.test.tsx`, `app/__tests__/roundRoute.test.tsx`, `state/__tests__/useQuizEngine.test.tsx`
+**E2E test:** none; covered by `components/quiz/__tests__/QuizRoundCompletion.test.tsx`, `app/__tests__/roundRoute.test.tsx`, `state/__tests__/useQuizEngine.test.tsx`
 **Ticket:** IAN-564
 
 ## US-QUIZ-005: Track stats and streak
@@ -79,7 +79,7 @@ This document holds the user stories for choosing a language and difficulty, pla
 - [ ] Stats persist across restarts, and a failed write leaves the in-memory stats intact.
 - [ ] No round starts and no stats write happens before stats have loaded.
 
-**E2E test:** none (owner decision 9); covered by `components/stats/__tests__/StatsPanel.test.tsx`, `state/__tests__/StatsProvider.test.tsx`, `services/stats/__tests__/statsService.test.ts`, `clients/__tests__/storageClient.test.ts`
+**E2E test:** none; covered by `components/stats/__tests__/StatsPanel.test.tsx`, `state/__tests__/StatsProvider.test.tsx`, `services/stats/__tests__/statsService.test.ts`, `clients/__tests__/storageClient.test.ts`
 **Ticket:** IAN-564
 
 ## US-QUIZ-006: Highlighted code in questions
@@ -94,7 +94,7 @@ This document holds the user stories for choosing a language and difficulty, pla
 - [ ] A language whose grammar the build does not include renders as plain text.
 - [ ] Hostile code content renders as literal text and never as HTML.
 
-**E2E test:** none (owner decision 9); covered by `components/quiz/__tests__/CodeBlock.test.tsx`, `components/quiz/__tests__/codeWiring.test.tsx`, `services/codeBlock/__tests__/tokenizeCode.test.ts`, `services/codeBlock/__tests__/tokenizeCodeAllowlist.test.ts`
+**E2E test:** none; covered by `components/quiz/__tests__/CodeBlock.test.tsx`, `components/quiz/__tests__/codeWiring.test.tsx`, `services/codeBlock/__tests__/tokenizeCode.test.ts`, `services/codeBlock/__tests__/tokenizeCodeAllowlist.test.ts`
 **Ticket:** IAN-564
 
 ## US-QUIZ-007: Drive the quiz from the keyboard on the web
@@ -110,5 +110,5 @@ This document holds the user stories for choosing a language and difficulty, pla
 - [ ] A keyboard hint bar is shown on the web and not rendered on native.
 - [ ] The menu steps are operable from the keyboard.
 
-**E2E test:** none (owner decision 9); covered by `components/quiz/__tests__/keyboard.web.test.tsx`, `components/quiz/__tests__/KeyboardHintBar.web.test.tsx`, `components/quiz/__tests__/KeyboardHintBar.test.tsx`, `components/menu/__tests__/menuKeyboard.web.test.tsx`
+**E2E test:** `e2e/specs/keyboardNavigation.spec.ts`; also covered by `components/quiz/__tests__/keyboard.web.test.tsx`, `components/quiz/__tests__/KeyboardHintBar.web.test.tsx`, `components/quiz/__tests__/KeyboardHintBar.test.tsx`, `components/menu/__tests__/menuKeyboard.web.test.tsx`
 **Ticket:** IAN-564

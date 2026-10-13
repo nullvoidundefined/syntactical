@@ -15,7 +15,7 @@ This document holds the user stories for how question content is downloaded, ver
 - [ ] A downloaded bank whose SHA-256 does not equal its manifest bank hash is rejected and not cached.
 - [ ] A refresh that lands during a round leaves that round unchanged.
 
-**E2E test:** none (owner decision 9); covered by `services/content/__tests__/loadQuestionBank.test.ts`, `services/content/__tests__/verifyBankHash.test.ts`, `state/__tests__/useQuestionBank.test.tsx`, `clients/__tests__/contentClient.test.ts`
+**E2E test:** none; covered by `services/content/__tests__/loadQuestionBank.test.ts`, `services/content/__tests__/verifyBankHash.test.ts`, `state/__tests__/useQuestionBank.test.tsx`, `clients/__tests__/contentClient.test.ts`
 **Ticket:** IAN-564
 
 ## US-CONTENT-002: Keep working offline
@@ -30,7 +30,7 @@ This document holds the user stories for how question content is downloaded, ver
 - [ ] A fetch that fails, is redirected, or times out leaves the current copy in use and shows no error.
 - [ ] A bank with no local copy shows a loading state while online and an error state with Retry when its fetch fails.
 
-**E2E test:** none (owner decision 9); covered by `services/content/__tests__/contentCache.test.ts`, `services/content/__tests__/loadLanguageManifestOffline.test.ts`, `state/__tests__/useQuestionBankEdgeCases.test.tsx`, `clients/__tests__/contentClientTransport.test.ts`
+**E2E test:** `e2e/specs/apiOutage.spec.ts` (paid banks during an outage); also covered by `services/content/__tests__/contentCache.test.ts`, `services/content/__tests__/loadLanguageManifestOffline.test.ts`, `state/__tests__/useQuestionBankEdgeCases.test.tsx`, `clients/__tests__/contentClientTransport.test.ts`
 **Ticket:** IAN-564
 
 ## US-CONTENT-003: See when a bank is downloading
@@ -46,7 +46,7 @@ This document holds the user stories for how question content is downloaded, ver
 - [ ] It disappears when the transfer ends, whether it succeeded or failed.
 - [ ] With reduced motion requested, it renders without animation.
 
-**E2E test:** none (owner decision 9); covered by `components/layout/__tests__/DownloadIndicator.test.tsx`, `components/layout/__tests__/DownloadIndicatorLiveRegion.web.test.tsx`, `app/__tests__/rootLayout.test.tsx`
+**E2E test:** none; covered by `components/layout/__tests__/DownloadIndicator.test.tsx`, `components/layout/__tests__/DownloadIndicatorLiveRegion.web.test.tsx`, `app/__tests__/rootLayout.test.tsx`
 **Ticket:** IAN-564
 
 ## US-CONTENT-004: Reject malformed content
@@ -61,7 +61,7 @@ This document holds the user stories for how question content is downloaded, ver
 - [ ] A manifest or bank with a newer schema version, zero valid questions, or an oversized document is rejected as a whole, and the previous copy stays in use.
 - [ ] Each rejection logs one warning naming the document and the rule.
 
-**E2E test:** none (owner decision 9); covered by `services/content/__tests__/validateManifest.test.ts`, `services/content/__tests__/validateQuestionBank.test.ts`, `services/content/__tests__/loadQuestionBankWarnings.test.ts`, `services/content/__tests__/loadQuestionBankDroppedQuestions.test.ts`
+**E2E test:** none; covered by `packages/content-schema/src/__tests__/validateManifest.test.ts`, `packages/content-schema/src/__tests__/validateQuestionBank.test.ts`, `services/content/__tests__/loadQuestionBankWarnings.test.ts`, `services/content/__tests__/loadQuestionBankDroppedQuestions.test.ts`
 **Ticket:** IAN-564
 
 ## US-CONTENT-005: Edit questions and add a language with JSON
@@ -77,5 +77,5 @@ This document holds the user stories for how question content is downloaded, ver
 - [ ] An unsafe bank path or an oversized bank fails the build.
 - [ ] The deploy publishes `content/` next to the Expo web export.
 
-**E2E test:** none (owner decision 9); covered by `scripts/__tests__/buildContentManifest.test.ts`, `scripts/__tests__/buildContentManifestPathRule.test.ts`, `scripts/__tests__/buildContentManifestSizeLimits.test.ts`, `scripts/__tests__/packageScripts.test.ts`
+**E2E test:** none; covered by `scripts/__tests__/buildContentManifest.test.ts`, `scripts/__tests__/buildContentManifestPathRule.test.ts`, `scripts/__tests__/buildContentManifestSizeLimits.test.ts`, `scripts/__tests__/publicContentTree.test.ts`
 **Ticket:** IAN-564
