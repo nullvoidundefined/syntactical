@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 
 import type { Oracle } from '../types/Oracle.js';
+import { ORACLE_LANGUAGE_IDS } from '../types/OracleLanguage.js';
 import type { OracleOutcome, OracleRun } from '../types/OracleRun.js';
 import type { RunLimits } from '../types/RunLimits.js';
 
@@ -17,7 +18,7 @@ const RAW_OUTPUT_CAP_KIBIBYTES = 512;
 const VALUE_CAP_BYTES = VALUE_CAP_KIBIBYTES * KIBIBYTE;
 const RAW_OUTPUT_CAP_BYTES = RAW_OUTPUT_CAP_KIBIBYTES * KIBIBYTE;
 const OOM_EXIT_CODE = 137;
-const LANGUAGES: readonly string[] = ['python', 'node', 'postgres', 'ruby', 'rails', 'go', 'jsdom', 'typescript'];
+const LANGUAGES: readonly string[] = ORACLE_LANGUAGE_IDS;
 
 const OUTCOMES: OracleOutcome[] = ['value', 'exception', 'syntax-error', 'timeout', 'resource-limit'];
 

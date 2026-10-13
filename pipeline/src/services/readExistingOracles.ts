@@ -7,13 +7,14 @@ import { readFile } from 'node:fs/promises';
 import { z } from 'zod';
 
 import type { Oracle } from '../types/Oracle.js';
+import { ORACLE_LANGUAGE_IDS } from '../types/OracleLanguage.js';
 
 import { sanitizeLogText } from './sanitizeLogText.js';
 
 const oracleSchema = z.strictObject({
     choiceCode: z.array(z.string()).optional(),
     code: z.string(),
-    language: z.enum(['python', 'node', 'postgres', 'ruby', 'rails', 'go', 'jsdom', 'typescript']),
+    language: z.enum(ORACLE_LANGUAGE_IDS),
     setupSql: z.string().optional(),
 });
 

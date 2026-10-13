@@ -1,0 +1,467 @@
+[
+  {
+    "id": "ts-golden-01",
+    "note": "numeric enum members reverse-map to their names",
+    "question": {
+      "id": "ts-golden-01",
+      "type": "mc",
+      "prompt": "What does this print?",
+      "code": "enum Color { Red, Green }\nconsole.log(Color[0])",
+      "query": {
+        "title": "numeric enum members reverse-map to their names",
+        "explanation": "numeric enum members reverse-map to their names"
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
+      },
+      "choices": [
+        {
+          "text": "Red"
+        },
+        {
+          "text": "0"
+        },
+        {
+          "text": "undefined"
+        }
+      ],
+      "answerIndex": 0
+    },
+    "oracle": {
+      "language": "typescript",
+      "code": "enum Color { Red, Green }\nconsole.log(Color[0])"
+    },
+    "fakeRun": {
+      "outcome": "value",
+      "value": "Red",
+      "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+    },
+    "expected": {
+      "status": "passed"
+    }
+  },
+  {
+    "id": "ts-golden-02",
+    "note": "wrong: claims a numeric enum index prints the number",
+    "question": {
+      "id": "ts-golden-02",
+      "type": "mc",
+      "prompt": "What does this print?",
+      "code": "enum Color { Red, Green }\nconsole.log(Color[0])",
+      "query": {
+        "title": "claims a numeric enum index prints the number",
+        "explanation": "claims a numeric enum index prints the number"
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
+      },
+      "choices": [
+        {
+          "text": "Red"
+        },
+        {
+          "text": "0"
+        },
+        {
+          "text": "undefined"
+        }
+      ],
+      "answerIndex": 1
+    },
+    "oracle": {
+      "language": "typescript",
+      "code": "enum Color { Red, Green }\nconsole.log(Color[0])"
+    },
+    "fakeRun": {
+      "outcome": "value",
+      "value": "Red",
+      "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+    },
+    "expected": {
+      "status": "failed",
+      "reason": "answer-mismatch"
+    }
+  },
+  {
+    "id": "ts-golden-03",
+    "note": "type assertions do not change the runtime type",
+    "question": {
+      "id": "ts-golden-03",
+      "type": "mc",
+      "prompt": "What does this print?",
+      "code": "const n: number = (1 as unknown as string) as unknown as number\nconsole.log(typeof n)",
+      "query": {
+        "title": "type assertions do not change the runtime type",
+        "explanation": "type assertions do not change the runtime type"
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
+      },
+      "choices": [
+        {
+          "text": "number"
+        },
+        {
+          "text": "string"
+        },
+        {
+          "text": "unknown"
+        }
+      ],
+      "answerIndex": 0
+    },
+    "oracle": {
+      "language": "typescript",
+      "code": "const n: number = (1 as unknown as string) as unknown as number\nconsole.log(typeof n)"
+    },
+    "fakeRun": {
+      "outcome": "value",
+      "value": "number",
+      "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+    },
+    "expected": {
+      "status": "passed"
+    }
+  },
+  {
+    "id": "ts-golden-04",
+    "note": "wrong: claims an <any> assertion converts the value",
+    "question": {
+      "id": "ts-golden-04",
+      "type": "mc",
+      "prompt": "What does this print?",
+      "code": "const value = <any>'5'\nconst count: number = value\nconsole.log(typeof count)",
+      "query": {
+        "title": "claims an <any> assertion converts the value",
+        "explanation": "claims an <any> assertion converts the value"
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
+      },
+      "choices": [
+        {
+          "text": "number"
+        },
+        {
+          "text": "string"
+        },
+        {
+          "text": "any"
+        }
+      ],
+      "answerIndex": 0
+    },
+    "oracle": {
+      "language": "typescript",
+      "code": "const value = <any>'5'\nconst count: number = value\nconsole.log(typeof count)"
+    },
+    "fakeRun": {
+      "outcome": "value",
+      "value": "string",
+      "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+    },
+    "expected": {
+      "status": "failed",
+      "reason": "answer-mismatch"
+    }
+  },
+  {
+    "id": "ts-golden-05",
+    "note": "enum members after an initializer count up from it",
+    "question": {
+      "id": "ts-golden-05",
+      "type": "mc",
+      "prompt": "What does this print?",
+      "code": "enum Level { Low = 1, Mid, High }\nconsole.log(Level.High)",
+      "query": {
+        "title": "enum members after an initializer count up from it",
+        "explanation": "enum members after an initializer count up from it"
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
+      },
+      "choices": [
+        {
+          "text": "2"
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "High"
+        }
+      ],
+      "answerIndex": 1
+    },
+    "oracle": {
+      "language": "typescript",
+      "code": "enum Level { Low = 1, Mid, High }\nconsole.log(Level.High)"
+    },
+    "fakeRun": {
+      "outcome": "value",
+      "value": "3",
+      "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+    },
+    "expected": {
+      "status": "passed"
+    }
+  },
+  {
+    "id": "ts-golden-06",
+    "note": "wrong: claims a parameter property default is undefined",
+    "question": {
+      "id": "ts-golden-06",
+      "type": "mc",
+      "prompt": "What does this print?",
+      "code": "class Point { constructor(public x = 1) {} }\nconsole.log(new Point().x)",
+      "query": {
+        "title": "claims a parameter property default is undefined",
+        "explanation": "claims a parameter property default is undefined"
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
+      },
+      "choices": [
+        {
+          "text": "1"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "0"
+        }
+      ],
+      "answerIndex": 1
+    },
+    "oracle": {
+      "language": "typescript",
+      "code": "class Point { constructor(public x = 1) {} }\nconsole.log(new Point().x)"
+    },
+    "fakeRun": {
+      "outcome": "value",
+      "value": "1",
+      "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+    },
+    "expected": {
+      "status": "failed",
+      "reason": "answer-mismatch"
+    }
+  },
+  {
+    "id": "ts-golden-07",
+    "note": "satisfies keeps the value and its length",
+    "question": {
+      "id": "ts-golden-07",
+      "type": "mc",
+      "prompt": "What does this print?",
+      "code": "const word = 'abc' satisfies string\nconsole.log(word.length)",
+      "query": {
+        "title": "satisfies keeps the value and its length",
+        "explanation": "satisfies keeps the value and its length"
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
+      },
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "abc"
+        }
+      ],
+      "answerIndex": 0
+    },
+    "oracle": {
+      "language": "typescript",
+      "code": "const word = 'abc' satisfies string\nconsole.log(word.length)"
+    },
+    "fakeRun": {
+      "outcome": "value",
+      "value": "3",
+      "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+    },
+    "expected": {
+      "status": "passed"
+    }
+  },
+  {
+    "id": "ts-golden-08",
+    "note": "wrong: property access on a null-typed-as-object throws",
+    "question": {
+      "id": "ts-golden-08",
+      "type": "mc",
+      "prompt": "What happens?",
+      "code": "const point = null as unknown as { x: number }\nconsole.log(point.x)",
+      "query": {
+        "title": "property access on a null-typed-as-object throws",
+        "explanation": "property access on a null-typed-as-object throws"
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
+      },
+      "choices": [
+        {
+          "text": "It prints undefined"
+        },
+        {
+          "text": "It throws a TypeError"
+        },
+        {
+          "text": "It prints null"
+        }
+      ],
+      "answerIndex": 0
+    },
+    "oracle": {
+      "language": "typescript",
+      "code": "const point = null as unknown as { x: number }\nconsole.log(point.x)"
+    },
+    "fakeRun": {
+      "outcome": "exception",
+      "exceptionType": "TypeError",
+      "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+    },
+    "expected": {
+      "status": "failed",
+      "reason": "answer-mismatch"
+    }
+  },
+  {
+    "id": "ts-golden-09",
+    "note": "float addition is inexact in TypeScript as in JavaScript",
+    "question": {
+      "id": "ts-golden-09",
+      "type": "mc",
+      "prompt": "What does this print?",
+      "code": "console.log(0.1 + 0.2 === 0.3)",
+      "query": {
+        "title": "float addition is inexact in TypeScript as in JavaScript",
+        "explanation": "float addition is inexact in TypeScript as in JavaScript"
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
+      },
+      "choices": [
+        {
+          "text": "true"
+        },
+        {
+          "text": "false"
+        },
+        {
+          "text": "0.30000000000000004"
+        }
+      ],
+      "answerIndex": 1
+    },
+    "oracle": {
+      "language": "typescript",
+      "code": "console.log(0.1 + 0.2 === 0.3)"
+    },
+    "fakeRun": {
+      "outcome": "value",
+      "value": "false",
+      "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+    },
+    "expected": {
+      "status": "passed"
+    }
+  },
+  {
+    "id": "ts-golden-10",
+    "note": "wrong: claims a tuple's length is its declared arity plus one",
+    "question": {
+      "id": "ts-golden-10",
+      "type": "mc",
+      "prompt": "What does this print?",
+      "code": "const tuple: [number, string] = [1, 'a']\nconsole.log(tuple.length)",
+      "query": {
+        "title": "claims a tuple's length is its declared arity plus one",
+        "explanation": "claims a tuple's length is its declared arity plus one"
+      },
+      "provenance": {
+        "source": "original",
+        "validation": {
+          "method": "executed",
+          "status": "pending"
+        },
+        "isHumanReviewed": false
+      },
+      "choices": [
+        {
+          "text": "2"
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "1"
+        }
+      ],
+      "answerIndex": 1
+    },
+    "oracle": {
+      "language": "typescript",
+      "code": "const tuple: [number, string] = [1, 'a']\nconsole.log(tuple.length)"
+    },
+    "fakeRun": {
+      "outcome": "value",
+      "value": "2",
+      "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+    },
+    "expected": {
+      "status": "failed",
+      "reason": "answer-mismatch"
+    }
+  }
+]
