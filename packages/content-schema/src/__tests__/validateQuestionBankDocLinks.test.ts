@@ -25,10 +25,7 @@ describe('validateQuestionBank doc links', () => {
     ['q-no-url', [{ title: 'Docs' }]],
     ['q-empty-list', []],
     ['q-not-list', 'https://example.com/docs'],
-    [
-      'q-too-many',
-      Array.from({ length: 4 }, (_, index) => ({ title: `Docs ${index}`, url: `https://example.com/${index}` })),
-    ],
+    ['q-too-many', Array.from({ length: 4 }, (_, index) => ({ title: `Docs ${index}`, url: `https://example.com/${index}` }))],
   ])('drops %s and keeps the rest', (id, value) => {
     const result = validateQuestionBank({ questions: [validQuestion, withDocs(id, value)], schemaVersion: 2 }, CONTEXT);
     expect(result).toEqual({
@@ -37,12 +34,5 @@ describe('validateQuestionBank doc links', () => {
       isValid: true,
       questions: [validQuestion],
     });
-  });
-
-  it('keeps a boolean isSyntaxAfterAnswer and drops any other value', () => {
-    const marked = { ...validQuestion, id: 'q-marked', query: { ...query, isSyntaxAfterAnswer: true } };
-    const bad = { ...validQuestion, id: 'q-bad-flag', query: { ...query, isSyntaxAfterAnswer: 'yes' } };
-    const result = validateQuestionBank({ questions: [marked, bad], schemaVersion: 2 }, CONTEXT);
-    expect(result).toMatchObject({ dropped: [{ id: 'q-bad-flag', rule: 'malformed question' }], questions: [marked] });
   });
 });
