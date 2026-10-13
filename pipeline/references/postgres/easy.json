@@ -50,5 +50,35 @@
     "syntax": "-- General form\n-- string LIKE pattern [ESCAPE escape_char]\n-- string NOT LIKE pattern\n-- Pattern wildcards: % = any sequence (including empty), _ = exactly one character\n-- A pattern with no wildcards behaves like equality.\n\n-- Examples\nSELECT * FROM products WHERE sku LIKE 'AB_-%';      -- 'AB', any one char, '-', then anything\nSELECT * FROM products WHERE title NOT LIKE '%sale%';\n\n-- Related operators (PostgreSQL extensions / shorthand)\n--   ~~   is LIKE        !~~  is NOT LIKE\n--   ~~*  is the ILIKE-style variant   !~~* is NOT ILIKE\n--   SIMILAR TO and ~ / ~* are different: they use regular-expression-style syntax\n\n-- Escaping a literal wildcard\nSELECT * FROM files WHERE path LIKE '100\\%%';           -- default escape is backslash\nSELECT * FROM files WHERE path LIKE '100#%%' ESCAPE '#'; -- custom escape character\n\n-- Gotchas\n-- * The pattern must match the WHOLE string, not just part of it.\n-- * % and _ also match newline characters.\n-- * NULL on either side yields NULL, not true or false.\n-- * Leading wildcards ('%abc') generally prevent ordinary B-tree index use.\n-- * Prefix searches on a B-tree need the right operator class (text_pattern_ops) in non-C locales.\n-- * For substring or case-variant searches at scale, consider the pg_trgm extension with a GIN/GiST index.",
     "title": "Pattern matching with LIKE and related operators",
     "isSyntaxAfterAnswer": true
+  },
+  "pg-easy-04": {
+    "docs": [
+      {
+        "title": "psql — Meta-Commands",
+        "url": "https://www.postgresql.org/docs/current/app-psql.html#APP-PSQL-META-COMMANDS"
+      },
+      {
+        "title": "psql reference page",
+        "url": "https://www.postgresql.org/docs/current/app-psql.html"
+      }
+    ],
+    "syntax": "-- General form: \\d<letter>[S+] [pattern]\n--   S = include system objects, + = more detail (size, description)\n--   pattern uses psql wildcards: * (any chars), ? (one char); schema.name allowed\n\n-- Examples (different objects than the quiz):\n\\di              -- list indexes\n\\di+ *_idx       -- indexes ending in _idx, with size/description\n\\df public.*     -- functions in schema public\n\n-- Common members of the family:\n--   \\d name   describe one relation (columns, indexes, constraints)\n--   \\d        list tables, views, sequences, materialized views, foreign tables\n--   \\dn       schemas\n--   \\di       indexes\n--   \\dv       views\n--   \\dm       materialized views\n--   \\ds       sequences\n--   \\df       functions\n--   \\du / \\dg roles\n--   \\dt       tables\n--   \\l        databases\n--   \\dx       extensions\n--   \\dT       data types\n\n-- Gotchas:\n--  * Each letter selects ONE kind of object; read the letter as an abbreviation.\n--  * Lists only objects on your search_path unless you give a pattern\n--    like 'other_schema.*' or use \\d*.*\n--  * Meta-commands are psql features, not SQL; no trailing semicolon needed.\n--  * Use \\? inside psql to see the full list of commands.",
+    "title": "psql object-listing meta-commands (\\d family)",
+    "isSyntaxAfterAnswer": true
+  },
+  "pg-easy-05": {
+    "docs": [
+      {
+        "title": "psql – Meta-Commands",
+        "url": "https://www.postgresql.org/docs/current/app-psql.html#APP-PSQL-META-COMMANDS"
+      },
+      {
+        "title": "psql reference page",
+        "url": "https://www.postgresql.org/docs/current/app-psql.html"
+      }
+    ],
+    "syntax": "-- General form (typed at the psql prompt, not SQL; no semicolon needed):\n--   \\<command> [pattern]\n-- Meta-commands are handled by psql itself, not sent to the server.\n-- Most \"describe\" commands start with \\d and accept an optional name pattern.\n\n-- Examples:\n\\dt sales.*      -- tables whose schema is 'sales'\n\\df *count*      -- functions whose name contains 'count'\n\n-- Related families (letter after the backslash picks the object kind):\n--   \\dt   tables in the search path\n--   \\dv   views\n--   \\di   indexes\n--   \\ds   sequences\n--   \\dn   schemas\n--   \\du   roles (users and groups)\n--   \\df   functions\n--   \\d name   describe one relation (columns, indexes)\n--   \\conninfo show current connection details\n--   \\c dbname switch to another database\n--   \\?    list all meta-commands\n--   \\q    quit\n\n-- Gotchas:\n--   * Add + for more detail (e.g. \\dt+ shows size, \\du+ shows descriptions).\n--   * Add S to include system objects (e.g. \\dtS).\n--   * Commands are case-sensitive: \\dt and \\DT differ.\n--   * Patterns use * and ? wildcards, not SQL % and _.\n--   * Under the hood they query system catalogs (pg_catalog); psql -E shows the SQL used.\n--   * Some commands list server-wide things, others only the current database or schema search path.",
+    "title": "psql backslash meta-commands for listing objects",
+    "isSyntaxAfterAnswer": true
   }
 }

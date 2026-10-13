@@ -40,5 +40,19 @@
     ],
     "syntax": "// General form:\n//   typeof expression   -> returns a string naming the type\n//   typeof(expression)  // parentheses just group; typeof is an operator, not a function\n\n// Examples:\ntypeof 42;            // \"number\"\ntypeof \"hi\";          // \"string\"\ntypeof true;          // \"boolean\"\ntypeof Symbol();      // \"symbol\"\ntypeof 10n;           // \"bigint\"\ntypeof [1, 2];        // arrays are objects too\ntypeof class A {};    // classes are a special kind of function-like value\n\n// Possible result strings (always one of these):\n//   \"undefined\" \"boolean\" \"number\" \"bigint\" \"string\"\n//   \"symbol\" \"object\" \"function\"\n// Gotchas:\n// - typeof null is a historical quirk, not what you might expect\n// - typeof on an undeclared variable does not throw a ReferenceError\n// - typeof returns a string, so compare with quotes: typeof x === \"string\"\n// - Use Array.isArray() to tell arrays from plain objects\n// - Result names describe categories, there is no \"array\" or \"null\" result\n// - Any value with an internal [[Call]] method gets its own special result",
     "title": "The typeof operator and its result strings"
+  },
+  "js-easy-04": {
+    "docs": [
+      {
+        "title": "typeof - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof"
+      },
+      {
+        "title": "The typeof operator (ECMAScript spec)",
+        "url": "https://tc39.es/ecma262/#sec-typeof-operator"
+      }
+    ],
+    "syntax": "// General form:\n//   typeof operand      (returns a string)\n//   typeof (operand)\n\n// Possible result strings:\n//   \"undefined\", \"boolean\", \"number\", \"bigint\",\n//   \"string\", \"symbol\", \"function\", \"object\"\n\ntypeof 42;            // \"number\"\ntypeof \"hi\";          // \"string\"\ntypeof Symbol();      // \"symbol\"\ntypeof function () {};// \"function\"\ntypeof { a: 1 };      // plain object\n\n// Gotchas:\n// - typeof reports the language's primitive type or\n//   \"function\"; it does not report specific built-in\n//   kinds like Map, Date, or RegExp.\n// - typeof null is a historical quirk.\n// - Classes are functions, so typeof class {} is \"function\".\n// - An undeclared variable does not throw:\n//     typeof notDeclaredAnywhere; // \"undefined\"\n// - Variables in the temporal dead zone (let/const\n//   before declaration) DO throw a ReferenceError.\n// - To tell kinds of objects apart, use other tools:\n//     Array.isArray(value)\n//     value instanceof Date\n//     Object.prototype.toString.call(value)\n// - The result is always a string, so compare with\n//   quotes: typeof x === \"number\"",
+    "title": "The typeof operator"
   }
 }

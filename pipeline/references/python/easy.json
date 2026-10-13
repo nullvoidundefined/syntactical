@@ -48,5 +48,33 @@
     ],
     "syntax": "# General form\n#   a / b    true division\n#   a // b   floor division\n#   a % b    remainder (modulo)\n#   divmod(a, b) -> (a // b, a % b)\n\n# Examples (different values from the quiz)\nprint(type(9 / 3))     # check the type of a true-division result\nprint(9 // 4)          # floor division of two ints -> int\nprint(9.0 // 4)        # with a float operand -> float\nprint(-9 // 4)         # floors toward negative infinity, not toward zero\nprint(divmod(17, 5))   # (3, 2)\n\n# Gotchas\n# - In Python 3, the / operator always returns a float for int operands,\n#   even when the division is exact. Python 2 behaved differently.\n# - // returns int only if both operands are int; otherwise float.\n# - Dividing by zero raises ZeroDivisionError for / // and %.\n# - Float results can have rounding error: 0.1 + 0.2 != 0.3.\n# - For exact fractions use fractions.Fraction; for exact decimals use decimal.Decimal.\n# - int(x) truncates toward zero; math.floor(x) floors.",
     "title": "Arithmetic division operators and numeric result types"
+  },
+  "py-easy-04": {
+    "docs": [
+      {
+        "title": "Binary arithmetic operations (% operator)",
+        "url": "https://docs.python.org/3/reference/expressions.html#binary-arithmetic-operations"
+      },
+      {
+        "title": "Numeric types: int, float, complex",
+        "url": "https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex"
+      }
+    ],
+    "syntax": "# General form\n#   a % b   -> remainder r such that a == (a // b) * b + r\n#   Python's // floors (rounds toward negative infinity),\n#   so the result of % takes the sign of the divisor b.\n\n# Examples (different values from any quiz)\nprint(10 % 4)      # 2   (positive operands)\nprint(10 % -4)     # sign follows divisor b (negative or zero)\nprint(-10 % 4)     # result is in range 0..3 since b > 0\n\n# Check the identity with divmod\nq, r = divmod(-9, 5)\n# q == -9 // 5, r == -9 % 5\n# (q * 5 + r) == -9\n\n# Gotchas\n# - Result is 0 <= r < b when b > 0, and b < r <= 0 when b < 0.\n# - Differs from C/Java, where % truncates toward zero\n#   and takes the sign of the dividend.\n# - math.fmod(a, b) follows the C behavior (floats).\n# - x % 0 raises ZeroDivisionError.\n# - Works on floats too: 5.5 % 2 -> 1.5",
+    "title": "Modulo operator with negative operands"
+  },
+  "py-easy-05": {
+    "docs": [
+      {
+        "title": "Expressions: operator precedence",
+        "url": "https://docs.python.org/3/reference/expressions.html#operator-precedence"
+      },
+      {
+        "title": "Expressions: the power operator",
+        "url": "https://docs.python.org/3/reference/expressions.html#the-power-operator"
+      }
+    ],
+    "syntax": "# General form: precedence decides which operator grabs its operands first.\n# Highest to lowest (excerpt):\n#   (expr)            parentheses\n#   x[i], x.attr, f() subscripts, attributes, calls\n#   await x\n#   **                exponentiation\n#   +x, -x, ~x        unary plus, minus, bitwise not\n#   *, /, //, %       multiplication family\n#   +, -              addition, subtraction\n\n# ** binds tighter than a unary operator on its LEFT:\n#   -a ** b   is parsed as   -(a ** b)\n# ** accepts a unary operator on its RIGHT side:\n#   a ** -b   is parsed as   a ** (-b)\n\n# Example with different values:\nprint(-3 ** 3)     # grouping is -(3 ** 3)\nprint((-3) ** 3)   # parentheses change the grouping\nprint(2 ** -1)     # 0.5, negative exponent gives a float\n\n# ** is right-associative:\nprint(2 ** 3 ** 2)   # 2 ** (3 ** 2)\nprint((2 ** 3) ** 2) # explicit left grouping differs\n\n# Gotchas:\n# - A numeric literal like 5 has no sign; the minus is a separate unary operator.\n# - When unsure, add parentheses to make the intent explicit.\n# - Even powers of negative bases can differ in sign depending on grouping.",
+    "title": "Operator precedence: unary minus and the power operator"
   }
 }
