@@ -22,5 +22,5 @@ Rules:
   choice.
 - `revealsAnswer` is false when the reference only teaches the general rule, so the learner still
   has to apply it to the question's code to find the answer.
-- `reason` is one short sentence saying why.
+- `reason` is one short sentence saying why, at most 150 characters.
 - Reply with JSON only, matching the schema: `revealsAnswer` and `reason`.

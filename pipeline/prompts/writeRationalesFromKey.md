@@ -25,6 +25,8 @@ Misconceptions (choose exactly one id per rationale from this list; no other val
 Rules:
 - Ground every rationale in the correct answer and the explanation above. Never claim anything
   they contradict, and do not add facts about behavior they do not support.
+- Write to the learner about the language. Never mention the explanation, the answer key, the
+  question, or this task.
 - Each rationale is at most {{LENGTH}} characters, plain text, no markdown.
 - Reply with JSON only, matching the schema: `rationales`, a list of `choiceIndex`,
   `rationale`, and `misconceptionId`.

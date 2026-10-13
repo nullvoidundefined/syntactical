@@ -26,5 +26,5 @@ Rules:
   explanation contradicts, or claims a fact about the language you know to be false.
 - `isConsistent` is true when everything the rationale claims agrees with the correct answer, the
   explanation, and the language's documented behavior.
-- `reason` is one short sentence saying why.
+- `reason` is one short sentence saying why, at most 150 characters.
 - Reply with JSON only, matching the schema: `isConsistent` and `reason`.
