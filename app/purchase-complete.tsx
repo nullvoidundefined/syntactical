@@ -1,21 +1,16 @@
 // Purchase-complete route: where Web Billing checkout returns. It polls the
-// profile until the product's entitlement appears or the deadline passes, and
-// announces the outcome in a polite live region. A missing or invalid product,
-// or a guest, makes no request, and nothing is decided until AuthProvider hydrates.
+// profile through usePurchases().confirm until the product's entitlement appears
+// or the deadline passes, and announces the outcome in a polite live region. A
+// missing or invalid product, or a guest, makes no request, and nothing is
+// decided until AuthProvider hydrates.
 import { useEffect, useState } from 'react';
 
 import { Link, useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
 
-import { trackEvent } from '../clients/analyticsClient';
-import { apiFetch } from '../clients/apiClient';
-import {
-  HTTP_STATUS_OK,
-  PRODUCT_ID_PATTERN,
-  PURCHASE_POLL_DEADLINE_MS,
-  PURCHASE_POLL_INTERVAL_MS,
-} from '../constants/appConfig';
+import { PRODUCT_ID_PATTERN, PURCHASE_POLL_DEADLINE_MS, PURCHASE_POLL_INTERVAL_MS } from '../constants/appConfig';
 import { useAuth } from '../state/AuthProvider';
+import { usePurchases } from '../state/usePurchases';
 
 type PurchaseStatus = 'confirming' | 'unlocked' | 'timed-out';
 
@@ -30,16 +25,10 @@ function readProductId(value: string | string[] | undefined): string | null {
   return typeof value === 'string' && PRODUCT_ID_PATTERN.test(value) ? value : null;
 }
 
-// True when a profile response lists the product among its entitlements.
-function hasEntitlement({ body, status }: { status: number; body: unknown }, productId: string): boolean {
-  if (status !== HTTP_STATUS_OK) return false;
-  const data = (body as { data?: { entitlements?: unknown } } | null)?.data;
-  return Array.isArray(data?.entitlements) && data.entitlements.includes(productId);
-}
-
 export default function PurchaseCompleteScreen() {
   const { product } = useLocalSearchParams<{ product?: string | string[] }>();
   const { isHydrated, isSignedIn } = useAuth();
+  const { confirm } = usePurchases();
   const productId = readProductId(product);
   const canPoll = productId !== null && isHydrated && isSignedIn;
   const [status, setStatus] = useState<PurchaseStatus>('confirming');
@@ -57,16 +46,12 @@ export default function PurchaseCompleteScreen() {
       setStatus(outcome);
     }
 
+    // confirm never throws: a failed request reads as "not yet" and is retried at the next
+    // interval until the deadline.
     async function poll() {
-      let isUnlocked = false;
-      try {
-        isUnlocked = hasEntitlement(await apiFetch('me'), productId as string);
-      } catch {
-        // A failed request is retried at the next interval until the deadline.
-      }
+      const isUnlocked = await confirm(productId as string);
       if (isDecided) return;
       if (isUnlocked) {
-        trackEvent('purchase_completed', { productId: productId as string });
         decide('unlocked');
         return;
       }
@@ -80,7 +65,7 @@ export default function PurchaseCompleteScreen() {
       clearTimeout(pollTimer);
       clearTimeout(deadlineTimer);
     };
-  }, [canPoll, productId]);
+  }, [canPoll, confirm, productId]);
 
   // Before hydration the identity is unknown, so the route waits instead of calling it a guest.
   const isWaiting = productId !== null && !isHydrated;
