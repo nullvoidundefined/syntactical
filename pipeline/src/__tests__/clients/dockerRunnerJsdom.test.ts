@@ -292,8 +292,8 @@ describe.skipIf(SKIP_DOCKER)('runOracle jsdom (docker)', () => {
         it(
             'stops an oracle that builds a DOM past the heap cap',
             async () => {
-                // Each node holds a unique 64 MB string, so the heap cap trips on the third
-                // node. With 1 KB nodes V8 spent seconds in garbage collection before it hit
+                // Each node holds a unique 64 MB string, so the heap cap trips within a few
+                // nodes. With 1 KB nodes V8 spent seconds in garbage collection before it hit
                 // the cap, and on a slow runner the 6 s wall-clock timeout won the race
                 // (IAN-645). The runner clamps timeoutMs to 6 s whatever the test passes.
                 const code = [
