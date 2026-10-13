@@ -24,6 +24,7 @@ import {
 } from '../services/auth/passwordFailureMessages';
 import { buildAuthHref, readReturnTo } from '../services/auth/readReturnTo';
 import { useAuth, type StartSignUpResult } from '../state/AuthProvider';
+import { useExclusiveAction } from '../state/useExclusiveAction';
 
 type FailureReason = Extract<StartSignUpResult, { isOk: false }>['reason'];
 
@@ -61,21 +62,14 @@ export default function SignUpScreen() {
   const [isCodeStep, setIsCodeStep] = useState(false);
   const [isAccountExisting, setIsAccountExisting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isBusy, setIsBusy] = useState(false);
   const [cooldownRestartKey, setCooldownRestartKey] = useState(0);
-  const isInFlightRef = useRef(false);
+  const { isBusy, run } = useExclusiveAction();
 
   async function runExclusive(work: () => Promise<void>) {
-    if (isInFlightRef.current) return;
-    isInFlightRef.current = true;
-    setIsBusy(true);
-    setErrorMessage(null);
-    try {
+    await run(async () => {
+      setErrorMessage(null);
       await work();
-    } finally {
-      isInFlightRef.current = false;
-      setIsBusy(false);
-    }
+    });
   }
 
   function readLengthFailure(): FailureReason | null {
