@@ -69,3 +69,15 @@ describe('generateBatch nodejs note', () => {
         expect(prompt).toContain('require');
     });
 });
+
+describe('generateBatch nodejs module rule', () => {
+    // The node runner compiles an oracle as the body of an async function: static `import` is a
+    // syntax error there, so oracles load modules with the runner-provided `require`.
+    it('tells a nodejs batch to use require, not static import', async () => {
+        const prompt = await captureNodejsBatchPrompt();
+
+        expect(prompt).toMatch(/nodejs[^\n]*body of an async function/i);
+        expect(prompt).toMatch(/nodejs[^\n]*require\('node:/);
+        expect(prompt).toMatch(/nodejs[^\n]*(no|not|never)[^\n]*static import/i);
+    });
+});

@@ -24,18 +24,22 @@ const EXCEPTION_MARKER = '\u0000oracle-exception:';
 
 function buildChildSource(code) {
     return `
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const module = { exports: {} };
+const exports = module.exports;
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 const fail = (marker) => { process.stderr.write('\\n' + marker + '\\n', () => process.exit(${FAILURE_EXIT_CODE})); };
 let compiled;
 try {
-    compiled = new AsyncFunction(${JSON.stringify(code)});
+    compiled = new AsyncFunction('require', 'module', 'exports', ${JSON.stringify(code)});
 } catch (error) {
     if (error instanceof SyntaxError) { fail(${JSON.stringify(SYNTAX_MARKER)}); }
     else { throw error; }
 }
 if (compiled) {
     try {
-        await compiled();
+        await compiled(require, module, exports);
     } catch (error) {
         const name = error && typeof error === 'object' && error.name ? String(error.name) : 'Error';
         fail(${JSON.stringify(EXCEPTION_MARKER)} + name);
