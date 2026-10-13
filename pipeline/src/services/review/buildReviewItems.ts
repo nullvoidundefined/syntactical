@@ -10,7 +10,6 @@ import { isSafeItemId } from './isSafeItemId.js';
 import { pickSample } from './pickSample.js';
 
 interface BuildReviewItemsArgs {
-    scope?: 'all' | 'disputed';
     bank: Question[];
     bankKey: string;
     inputs: ReviewBankInputs;
@@ -69,7 +68,6 @@ export async function buildReviewItems(args: BuildReviewItemsArgs): Promise<Revi
     }
     const items: ReviewItem[] = [];
     for (const [id, itemKinds] of [...kinds.entries()].sort(([left], [right]) => (left < right ? -1 : 1))) {
-        if (args.scope === 'disputed' && !itemKinds.includes('disputed')) continue;
         const question = questions.get(id);
         const observed = question === undefined || disputedFacts.has(id) ? undefined : await observe(bankKey, question);
         const { provenance, topic: ownTopic } = question ?? ({} as Partial<Question>);
