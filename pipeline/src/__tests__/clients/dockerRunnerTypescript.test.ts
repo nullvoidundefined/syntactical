@@ -67,6 +67,61 @@ describe.skipIf(SKIP_DOCKER)('runOracle typescript (docker)', () => {
     );
 
     it(
+        'reports an oracle whose promise never settles as UnsettledPromise',
+        async () => {
+            const run = await runTypescript('const never: Promise<void> = new Promise(() => {});\nawait never;');
+
+            expect(run).toMatchObject({ outcome: 'exception', exceptionType: 'UnsettledPromise' });
+            expect(run.value).toBeUndefined();
+        },
+        RUN_TIMEOUT_MS,
+    );
+
+    it(
+        'supports top-level await',
+        async () => {
+            const run = await runTypescript('const n: number = await Promise.resolve(7);\nconsole.log(n);');
+
+            expect(run).toMatchObject({ outcome: 'value', value: '7' });
+        },
+        RUN_TIMEOUT_MS,
+    );
+
+    it(
+        'reports an async throw as an exception with its class',
+        async () => {
+            const run = await runTypescript("await Promise.reject(new TypeError('x'));");
+
+            expect(run).toMatchObject({ outcome: 'exception', exceptionType: 'TypeError' });
+            expect(run.value).toBeUndefined();
+        },
+        RUN_TIMEOUT_MS,
+    );
+
+    it(
+        'reports a throw inside an async function as an exception with its class',
+        async () => {
+            const run = await runTypescript(
+                "async function f(): Promise<void> { await null; throw new RangeError('x'); }\nawait f();",
+            );
+
+            expect(run).toMatchObject({ outcome: 'exception', exceptionType: 'RangeError' });
+        },
+        RUN_TIMEOUT_MS,
+    );
+
+    it(
+        'reports a thrown non-Error as the generic Error exception',
+        async () => {
+            const run = await runTypescript("throw 'boom';");
+
+            expect(run).toMatchObject({ outcome: 'exception', exceptionType: 'Error' });
+            expect(run.value).toBeUndefined();
+        },
+        RUN_TIMEOUT_MS,
+    );
+
+    it(
         'reports a syntax error as syntax-error',
         async () => {
             const run = await runTypescript('const x: number = ;');
@@ -193,19 +248,19 @@ describe.skipIf(SKIP_DOCKER)('runOracle typescript (docker)', () => {
 
     describe('sandbox', () => {
         it(
-            'gives the oracle no network',
+            'gives the oracle no network: the connect fails with a network error code',
             async () => {
                 const run = await runTypescript(
                     [
                         'const net = require("node:net");',
                         'const socket = net.connect(53, "1.1.1.1");',
                         'socket.on("connect", () => console.log("connected"));',
-                        'socket.on("error", (e: Error) => { throw e; });',
+                        'socket.on("error", (e: NodeJS.ErrnoException) => console.log(e.code));',
                     ].join('\n'),
                 );
 
-                expect(run.outcome).not.toBe('value');
-                expect(run.value).toBeUndefined();
+                expect(run.outcome).toBe('value');
+                expect(run.value).toMatch(/^(ENETUNREACH|EAI_AGAIN|ECONNREFUSED)$/);
             },
             RUN_TIMEOUT_MS,
         );
