@@ -7,9 +7,7 @@ import type { ModelProvider } from '../../types/ModelProvider.js';
 
 const PROVIDER = { generate: async () => ({ model: 'm', value: {} }) } as unknown as ModelProvider;
 
-function buildDeps(
-    env: Record<string, string | undefined> = {},
-): CliDeps & {
+function buildDeps(env: Record<string, string | undefined> = {}): CliDeps & {
     kinds: string[];
     drafted: number;
     reviewProblems: number;
@@ -18,18 +16,30 @@ function buildDeps(
     languages: string[];
     publishedBanks: Record<string, { isWritten: boolean }>;
     roots: string[];
+    models: (string | undefined)[];
+    calls: Record<string, unknown>[];
 } {
     const deps = {
-        buildManifest: async () => undefined,
+        applyStaging: async (options: { buildManifest: () => Promise<void> }) => {
+            await options.buildManifest();
+            deps.calls.push({ command: 'apply-staging' });
+            return { rationales: 0, references: 0 };
+        },
+        buildManifest: async (contentRoot: string) => {
+            deps.roots.push(contentRoot);
+        },
+        calls: [] as Record<string, unknown>[],
         classify: async (options: { contentRoot: string }) => {
             deps.roots.push(options.contentRoot);
             return {} as never;
         },
         contentDir: '/content',
-        createProvider: (kind: 'api' | 'cli') => {
+        createProvider: (kind: 'api' | 'cli', model?: string) => {
             deps.kinds.push(kind);
+            deps.models.push(model);
             return PROVIDER;
         },
+        createSourceFetcher: () => async () => ({ ok: false as const, reason: 'network' as const }),
         defaultContentRoot: '/default-root',
         draft: async () => {
             deps.drafted += 1;
@@ -45,13 +55,15 @@ function buildDeps(
             return '/x';
         },
         languages: [] as string[],
-        enrich: async (options: { contentRoot: string }) => {
+        enrich: async (options: { contentRoot: string; secondProvider?: ModelProvider }) => {
             deps.roots.push(options.contentRoot);
+            deps.calls.push({ command: 'enrich', hasSecondProvider: options.secondProvider !== undefined });
             return {} as never;
         },
         env,
         err: [] as string[],
         kinds: [] as string[],
+        models: [] as (string | undefined)[],
         pipelineDir: '/pipeline/',
         publish: async (options: { contentRoot: string }) => {
             deps.roots.push(options.contentRoot);
@@ -71,6 +83,14 @@ function buildDeps(
         stdout: () => undefined,
         validate: async () => {
             throw new Error('validate must not run');
+        },
+        verifyDocLinks: async (options: { recheck?: boolean }) => {
+            deps.calls.push({ command: 'verify-doc-links', recheck: options.recheck });
+            return { failed: 0, passed: 1 };
+        },
+        writeReferences: async (options: { languages?: readonly string[] }) => {
+            deps.calls.push({ command: 'write-references', languages: options.languages });
+            return { accepted: 0, revealedAnswer: 0, skipped: 0 };
         },
     };
     return deps;
@@ -197,5 +217,43 @@ describe('runCli', () => {
         expect([clean.roots, refused.roots]).toEqual([['/flag-root'], ['/default-root']]);
         expect(refused.err.join('')).toContain('bank refused: python/hard');
         expect(clean.kinds).toEqual([]);
+    });
+
+    it('enrich builds a second judge on the second model only with --judge-without-oracle', async () => {
+        const plain = buildDeps();
+        expect(await runCli(['node', 'cli.ts', 'enrich'], plain)).toBe(0);
+        expect(plain.calls).toEqual([{ command: 'enrich', hasSecondProvider: false }]);
+        const judged = buildDeps({ PIPELINE_SECOND_MODEL: 'claude-sonnet-5-5' });
+        expect(await runCli(['node', 'cli.ts', 'enrich', '--judge-without-oracle'], judged)).toBe(0);
+        expect(judged.calls).toEqual([{ command: 'enrich', hasSecondProvider: true }]);
+        expect(judged.models).toEqual([undefined, 'claude-sonnet-5-5']);
+    });
+
+    it('write-references passes the --language list and builds a default second model', async () => {
+        const deps = buildDeps();
+        expect(await runCli(['node', 'cli.ts', 'write-references', '--language', 'python,postgres'], deps)).toBe(0);
+        expect(deps.calls).toEqual([{ command: 'write-references', languages: ['python', 'postgres'] }]);
+        expect(deps.models).toEqual([undefined, 'claude-haiku-5-5']);
+    });
+
+    it('write-references refuses an empty --language list', async () => {
+        const deps = buildDeps();
+        expect(await runCli(['node', 'cli.ts', 'write-references', '--language'], deps)).toBe(1);
+        expect(deps.calls).toEqual([]);
+    });
+
+    it('verify-doc-links passes --recheck and builds no model', async () => {
+        const deps = buildDeps();
+        expect(await runCli(['node', 'cli.ts', 'verify-doc-links', '--recheck'], deps)).toBe(0);
+        expect(deps.calls).toEqual([{ command: 'verify-doc-links', recheck: true }]);
+        expect(deps.kinds).toEqual([]);
+    });
+
+    it('apply-staging rebuilds the manifest with the resolved content root', async () => {
+        const deps = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
+        expect(await runCli(['node', 'cli.ts', 'apply-staging'], deps)).toBe(0);
+        expect(deps.calls).toEqual([{ command: 'apply-staging' }]);
+        expect(deps.roots).toEqual(['/env-root']);
+        expect(deps.kinds).toEqual([]);
     });
 });

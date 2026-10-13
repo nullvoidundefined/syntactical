@@ -83,7 +83,8 @@ function hasErrorEnvelope(stdout: string): boolean {
     }
 }
 
-export function createClaudeCliProvider(exec: ExecFn = defaultExec): ModelProvider {
+// `model` picks the CLI's model (`--model=<id>`); without it the CLI uses its default.
+export function createClaudeCliProvider(exec: ExecFn = defaultExec, model?: string): ModelProvider {
     return {
         generate(request) {
             const { prompt, system } = request;
@@ -104,6 +105,7 @@ export function createClaudeCliProvider(exec: ExecFn = defaultExec): ModelProvid
                             '',
                             '--no-session-persistence',
                             `--system-prompt=${system}`,
+                            ...(model === undefined ? [] : [`--model=${model}`]),
                         ],
                         { cwd, env: buildCliEnv(process.env), input: prompt },
                     ));

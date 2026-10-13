@@ -1,14 +1,22 @@
 // The pipeline CLI's command dispatch, with every side effect injected so the real
 // entry path can be tested: `validate [--content-root <path>]`, `draft-oracles [--api]`, or
 // `classify`, `gap-fill`, or `enrich [--api] [--content-root <path>]`, `rewrite-prompts [--content-root <path>]`,
-// `review [--content-root <path>]`, or `publish [--content-root <path>]`.
+// `review [--content-root <path>]`, or `publish [--content-root <path>]`. `enrich --judge-without-oracle`
+// also enriches questions with no oracle from their answer key, judged by a second model;
+// `write-references [--api] [--language <id>[,<id>...]]` writes before-answer references (two
+// models check each one); `verify-doc-links [--recheck]` checks their links over the network; and
+// `apply-staging` merges staged rationales and references into the free banks. The second model
+// is PIPELINE_SECOND_MODEL, by default DEFAULT_SECOND_MODEL.
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 
 import { readContentRootFlag } from '../services/classify/readContentRootFlag.js';
 import { exitCodeFor } from '../services/exitCodeFor.js';
 import { pickProviderKind } from '../services/pickProviderKind.js';
+import type { SourceFetcher } from '../clients/sourceFetcher.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
+
+import type { applyStaging } from './applyStaging.js';
 
 import type { classify } from './classify.js';
 import type { draftOracles } from './draftOracles.js';
@@ -19,14 +27,20 @@ import type { publish } from './publish.js';
 import type { review } from './review.js';
 import type { rewritePrompts } from './rewritePrompts.js';
 import type { validateContent } from './validate.js';
+import type { verifyDocLinks } from './verifyDocLinks.js';
+import type { writeReferences } from './writeReferences.js';
+
+export const DEFAULT_SECOND_MODEL = 'claude-haiku-5-5';
 
 export interface CliDeps {
+    applyStaging: typeof applyStaging;
     buildManifest: (contentRoot: string) => Promise<void>;
     classify: typeof classify;
     contentDir: string;
     defaultContentRoot: string;
     env: Record<string, string | undefined>;
-    createProvider: (kind: 'api' | 'cli') => ModelProvider;
+    createProvider: (kind: 'api' | 'cli', model?: string) => ModelProvider;
+    createSourceFetcher: (allowedHosts: readonly string[]) => SourceFetcher;
     draft: typeof draftOracles;
     gapFill: typeof gapFill;
     draftTaxonomy: typeof draftTaxonomy;
@@ -38,6 +52,8 @@ export interface CliDeps {
     stderr: (text: string) => void;
     stdout: (text: string) => void;
     validate: typeof validateContent;
+    verifyDocLinks: typeof verifyDocLinks;
+    writeReferences: typeof writeReferences;
 }
 
 const FIRST_COMMAND_ARG = 2;
@@ -94,12 +110,73 @@ async function runReview(argv: string[], deps: CliDeps): Promise<number> {
     return result.problems > 0 ? 1 : 0;
 }
 
+// The provider for the second judge, on a different model from the first.
+function createSecondProvider(argv: string[], deps: CliDeps): ModelProvider {
+    const { createProvider, env } = deps;
+    return createProvider(pickProviderKind(argv), env.PIPELINE_SECOND_MODEL || DEFAULT_SECOND_MODEL);
+}
+
+// The comma-separated ids after `--language`, or undefined without the flag.
+function readLanguagesFlag(argv: string[]): string[] | undefined {
+    const index = argv.indexOf('--language');
+    if (index === -1) return undefined;
+    return (argv[index + 1] ?? '').split(',').filter((id) => id !== '');
+}
+
+async function runWriteReferences(argv: string[], deps: CliDeps): Promise<number> {
+    const { contentDir, createProvider, pipelineDir, stderr, stdout, writeReferences: run } = deps;
+    const languages = readLanguagesFlag(argv);
+    if (languages !== undefined && languages.length === 0) {
+        stderr('--language needs one or more language ids, separated by commas\n');
+        return 1;
+    }
+    const result = await run({
+        contentDir,
+        ...(languages === undefined ? {} : { languages }),
+        log: (line) => stdout(`${line}\n`),
+        pipelineDir,
+        provider: createProvider(pickProviderKind(argv)),
+        secondProvider: createSecondProvider(argv, deps),
+    });
+    stdout(`${JSON.stringify(result)}\n`);
+    return 0;
+}
+
+async function runVerifyDocLinks(argv: string[], deps: CliDeps): Promise<number> {
+    const { createSourceFetcher, pipelineDir, stdout, verifyDocLinks: run } = deps;
+    const { failed } = await run({
+        createFetcher: createSourceFetcher,
+        log: (line) => stdout(`${line}\n`),
+        now: () => new Date().toISOString(),
+        pipelineDir,
+        recheck: argv.includes('--recheck'),
+    });
+    return failed === 0 ? 0 : 1;
+}
+
+async function runApplyStaging(argv: string[], deps: CliDeps): Promise<number> {
+    const { applyStaging: run, buildManifest, contentDir, pipelineDir, stdout } = deps;
+    const contentRoot = resolveContentRoot(argv, deps);
+    if (contentRoot === undefined) {
+        return 1;
+    }
+    const tally = await run({
+        buildManifest: () => buildManifest(contentRoot),
+        contentDir,
+        log: (line) => stdout(`${line}\n`),
+        pipelineDir,
+    });
+    stdout(`${JSON.stringify(tally)}\n`);
+    return 0;
+}
+
 async function runEnrich(argv: string[], deps: CliDeps): Promise<number> {
     const { contentDir, createProvider, enrich: run, pipelineDir, stdout } = deps;
     const contentRoot = resolveContentRoot(argv, deps);
     if (contentRoot === undefined) {
         return 1;
     }
+    const isJudgedWithoutOracle = argv.includes('--judge-without-oracle');
     await run({
         contentDir,
         contentRoot,
@@ -108,6 +185,7 @@ async function runEnrich(argv: string[], deps: CliDeps): Promise<number> {
         now: () => new Date().toISOString(),
         pipelineDir,
         provider: createProvider(pickProviderKind(argv)),
+        ...(isJudgedWithoutOracle ? { secondProvider: createSecondProvider(argv, deps) } : {}),
     });
     return 0;
 }
@@ -179,6 +257,15 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
     if (command === 'review') {
         return runReview(argv, deps);
     }
+    if (command === 'write-references') {
+        return runWriteReferences(argv, deps);
+    }
+    if (command === 'verify-doc-links') {
+        return runVerifyDocLinks(argv, deps);
+    }
+    if (command === 'apply-staging') {
+        return runApplyStaging(argv, deps);
+    }
     if (command === 'rewrite-prompts') {
         const contentRoot = resolveContentRoot(argv, deps);
         if (contentRoot === undefined) return 1;
@@ -196,7 +283,7 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
     }
     if (command !== 'validate') {
         stderr(
-            'Usage: pipeline validate [--content-root <path>] | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | gap-fill [--api] [--content-root <path>] | enrich [--api] [--content-root <path>] | rewrite-prompts [--content-root <path>] | review [--content-root <path>] | publish [--content-root <path>]\n',
+            'Usage: pipeline validate [--content-root <path>] | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | gap-fill [--api] [--content-root <path>] | enrich [--api] [--judge-without-oracle] [--content-root <path>] | write-references [--api] [--language <ids>] | verify-doc-links [--recheck] | apply-staging [--content-root <path>] | rewrite-prompts [--content-root <path>] | review [--content-root <path>] | publish [--content-root <path>]\n',
         );
         return 1;
     }

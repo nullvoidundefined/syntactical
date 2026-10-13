@@ -10,6 +10,9 @@ export interface ModelProviderDeps {
     messages?: MessagesClient;
 }
 
-export function createModelProvider(kind: 'api' | 'cli', deps: ModelProviderDeps = {}): ModelProvider {
-    return kind === 'cli' ? createClaudeCliProvider(deps.exec) : createAnthropicApiProvider(deps.messages);
+// `model` picks a specific model; without it each path uses its own default.
+export function createModelProvider(kind: 'api' | 'cli', deps: ModelProviderDeps = {}, model?: string): ModelProvider {
+    return kind === 'cli'
+        ? createClaudeCliProvider(deps.exec, model)
+        : createAnthropicApiProvider(deps.messages, model);
 }

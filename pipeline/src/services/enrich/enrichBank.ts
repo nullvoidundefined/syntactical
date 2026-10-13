@@ -1,8 +1,9 @@
 // Enriches unsaved questions of one bank and saves each accepted question immediately to
 // `<outRoot>/enrichment/<language>/<difficulty>.json` (question id to its accepted
 // rationales). Content bank files are never touched: publish merges enrichment later.
-// A question with no oracle observation is skipped, because every rationale must be
-// conditioned on what the code really does.
+// A question with an oracle observation is conditioned on what the code really does. One with
+// none is grounded in its answer key and explanation and judged by two models when a second
+// provider is given, and skipped otherwise.
 // A transient provider failure skips that question; other errors stop the run.
 import { join } from 'node:path';
 
@@ -16,7 +17,8 @@ import { enrichQuestion } from './enrichQuestion.js';
 import { readEnrichment } from './readEnrichment.js';
 
 export async function enrichBank(args: EnrichBankArgs): Promise<EnrichBankResult> {
-    const { bankKey, difficulty, languageId, log, observe, outRoot, provider, questions, taxonomy } = args;
+    const { bankKey, difficulty, languageId, log, observe, outRoot, provider, questions, secondProvider, taxonomy } =
+        args;
     const result: EnrichBankResult = { accepted: 0, agreed: 0, compared: 0, contradicted: 0, dropped: 0 };
     const file = join(outRoot, 'enrichment', languageId, `${difficulty}.json`);
     // Resume from the earlier file without repeating accepted questions.
@@ -29,13 +31,13 @@ export async function enrichBank(args: EnrichBankArgs): Promise<EnrichBankResult
             continue;
         }
         const observed = await observe(question);
-        if (observed === undefined) {
+        if (observed === undefined && secondProvider === undefined) {
             log(`${bankKey} ${id}: skipped, no oracle observation to condition on`);
             continue;
         }
         let outcome: EnrichQuestionOutcome;
         try {
-            outcome = await enrichQuestion(question, observed, taxonomy, provider);
+            outcome = await enrichQuestion(question, observed, taxonomy, provider, secondProvider);
         } catch (error) {
             if (error instanceof ProviderTransientError) {
                 log(`${bankKey} ${id}: skipped, ${error.reason}`);

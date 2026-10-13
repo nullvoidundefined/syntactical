@@ -17,7 +17,8 @@ export interface MessagesClient {
     }): Promise<{ content: { text?: string; type: string }[]; model: string; stop_reason?: string | null }>;
 }
 
-export function createAnthropicApiProvider(messages?: MessagesClient): ModelProvider {
+// `model` overrides PIPELINE_MODEL, which overrides the default.
+export function createAnthropicApiProvider(messages?: MessagesClient, model?: string): ModelProvider {
     return {
         generate(request) {
             const { prompt, system } = request;
@@ -26,7 +27,7 @@ export function createAnthropicApiProvider(messages?: MessagesClient): ModelProv
                 const response = await client.create({
                     max_tokens: MAX_OUTPUT_TOKENS,
                     messages: [{ content: prompt, role: 'user' }],
-                    model: process.env.PIPELINE_MODEL || DEFAULT_MODEL,
+                    model: model ?? (process.env.PIPELINE_MODEL || DEFAULT_MODEL),
                     system,
                 });
                 if (response.stop_reason === 'max_tokens') {

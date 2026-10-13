@@ -51,4 +51,10 @@ describe('checkSourceUrl', () => {
     it('rejects a percent-encoded dot that would join an evil suffix', () => {
         expect(checkSourceUrl('https://owasp.org%2eevil.test/').ok).toBe(false);
     });
+
+    it('checks against a caller-given host list instead of the default one', () => {
+        expect(checkSourceUrl('https://go.dev/ref/spec', ['go.dev']).ok).toBe(true);
+        expect(checkSourceUrl('https://go.dev/ref/spec').ok).toBe(false);
+        expect(checkSourceUrl('https://owasp.org/', ['go.dev'])).toEqual({ ok: false, reason: 'host-not-allowed' });
+    });
 });

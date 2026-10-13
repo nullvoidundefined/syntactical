@@ -28,6 +28,8 @@ export interface SourceResponse {
 export type PinnedRequest = (url: URL, address: string, signal: AbortSignal) => Promise<SourceResponse>;
 
 export interface SourceFetcherDeps {
+    // The hosts every hop must be on; the judged route's SOURCE_ALLOWED_HOSTS by default.
+    allowedHosts?: readonly string[];
     limits?: Partial<SourceFetchLimits>;
     request?: PinnedRequest;
     resolve?: HostResolver;
@@ -137,10 +139,11 @@ async function fetchWithinDeadline(
     request: PinnedRequest,
     resolve: HostResolver,
     signal: AbortSignal,
+    allowedHosts: readonly string[] | undefined,
 ): Promise<SourceFetchResult> {
     let current = rawUrl;
     for (let hop = 0; hop <= limits.maxRedirects; hop += 1) {
-        const checked = checkSourceUrl(current);
+        const checked = checkSourceUrl(current, allowedHosts);
         if (!checked.ok) return fail(checked.reason);
         const { url } = checked;
         let addresses: string[];
@@ -202,7 +205,7 @@ export function createSourceFetcher(deps: SourceFetcherDeps = {}): SourceFetcher
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(new Error('source fetch timed out')), limits.timeoutMs);
         try {
-            return await fetchWithinDeadline(rawUrl, limits, request, resolve, controller.signal);
+            return await fetchWithinDeadline(rawUrl, limits, request, resolve, controller.signal, deps.allowedHosts);
         } finally {
             clearTimeout(timer);
         }

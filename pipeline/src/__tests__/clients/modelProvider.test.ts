@@ -46,6 +46,22 @@ describe('ModelProvider', () => {
         expect(exec).toHaveBeenCalledTimes(MAX_ATTEMPTS);
     });
 
+    it('passes a chosen model to the CLI as --model, and none by default', async () => {
+        const exec = vi.fn().mockResolvedValue(cliAnswer('{"topic":"strings"}'));
+        await createModelProvider('cli', { exec }, 'claude-haiku-5-5').generate(REQUEST);
+        await createModelProvider('cli', { exec }).generate(REQUEST);
+        const [[, chosenArgs], [, defaultArgs]] = exec.mock.calls as [string, string[]][];
+        expect(chosenArgs).toContain('--model=claude-haiku-5-5');
+        expect(defaultArgs.some((arg) => arg.startsWith('--model'))).toBe(false);
+    });
+
+    it('sends a chosen model to the API ahead of PIPELINE_MODEL', async () => {
+        vi.stubEnv('PIPELINE_MODEL', 'claude-sonnet-5-5');
+        const create = vi.fn().mockResolvedValue(apiAnswer('{"topic":"wtf"}'));
+        await createModelProvider('api', { messages: { create } }, 'claude-haiku-5-5').generate(REQUEST);
+        expect(create.mock.calls[0]?.[0]).toMatchObject({ model: 'claude-haiku-5-5' });
+    });
+
     it('parses structured output from the API path', async () => {
         const create = vi.fn().mockResolvedValue(apiAnswer('{"topic":"wtf"}'));
         await expect(createModelProvider('api', { messages: { create } }).generate(REQUEST)).resolves.toEqual({
