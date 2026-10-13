@@ -23,6 +23,18 @@
         "optimization",
         "wtf"
     ],
+    "nodejs": [
+        "event-loop-and-timers",
+        "event-emitter",
+        "streams",
+        "buffers-and-encodings",
+        "fs",
+        "path-and-url",
+        "modules",
+        "error-handling",
+        "process-and-env",
+        "async-patterns"
+    ],
     "postgres": [
         "operators-and-types",
         "numbers-and-math",

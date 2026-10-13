@@ -24,7 +24,7 @@ async function captureNodejsBatchPrompt(): Promise<string> {
         count: 4,
         difficulty: 'easy',
         existingPrompts: new Set<string>(),
-        language: 'javascript',
+        language: 'node',
         languageId: 'nodejs',
         provider,
         run: async () => ({ outcome: 'value', runtimeVersion: 'v22', value: '' }),
