@@ -9,6 +9,7 @@ import { writeJsonAtomic } from '../json/writeJsonAtomic.js';
 import { readExistingOracles } from '../readExistingOracles.js';
 
 import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
+import { ProviderFailureStop } from '../../types/ProviderFailureStop.js';
 import { ProviderTransientError } from '../../types/ProviderTransientError.js';
 import { countQuestionsNeeded } from './countQuestionsNeeded.js';
 import { createProviderFailureStreak } from './createProviderFailureStreak.js';
@@ -67,7 +68,10 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
                     const reason = error instanceof ProviderTransientError ? error.reason : 'model-output-invalid';
                     result.failed += requested;
                     log(`${bankKey} ${topic}: batch of ${requested}, kept 0 (${reason}: ${requested})`);
-                    failures.recordFailure(bankKey, topic);
+                    const streak = failures.recordFailure();
+                    if (streak !== null) {
+                        throw new ProviderFailureStop(bankKey, topic, streak, result);
+                    }
                     break;
                 }
                 failures.recordSuccess();

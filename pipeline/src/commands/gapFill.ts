@@ -13,6 +13,7 @@ import type { FillBankResult } from '../types/FillBankResult.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 import type { OracleLanguage } from '../types/OracleLanguage.js';
 import type { PipelineReport } from '../types/PipelineReport.js';
+import { ProviderFailureStop } from '../types/ProviderFailureStop.js';
 import type { runOracle } from '../clients/dockerRunner.js';
 import { ORACLE_LANGUAGES } from '../services/ORACLE_LANGUAGES.js';
 import { TRACK_RUNNERS } from '../services/TRACK_RUNNERS.js';
@@ -40,6 +41,14 @@ export interface GapFillOptions {
 }
 
 const STAGE = 'gap-fill';
+
+function addTotals(totals: FillBankResult, result: FillBankResult): void {
+    const { duplicate, failed, generated } = result;
+    totals.disputed = (totals.disputed ?? 0) + (result.disputed ?? 0);
+    totals.duplicate += duplicate;
+    totals.failed += failed;
+    totals.generated += generated;
+}
 
 function buildReport(
     previous: PipelineReport | null,
@@ -95,25 +104,30 @@ export async function gapFill(options: GapFillOptions): Promise<PipelineReport> 
                     continue;
                 }
                 const questions = await readBankQuestions(resolveBankFile(contentDir, contentRoot, { access, path }));
-                const result = await fillBank({
-                    bankKey,
-                    difficulty,
-                    failures,
-                    ...(runners ? { runners } : { language: language as OracleLanguage }),
-                    languageId,
-                    log,
-                    // Free output stays in the public tree; paid output goes to the private content root.
-                    outRoot: resolveBankOutputRoot(pipelineDir, contentRoot, { access }),
-                    provider,
-                    questions,
-                    topics,
-                    ...(run === undefined ? {} : { run }),
-                });
-                const { duplicate, failed, generated } = result;
-                totals.disputed = (totals.disputed ?? 0) + (result.disputed ?? 0);
-                totals.duplicate += duplicate;
-                totals.failed += failed;
-                totals.generated += generated;
+                let result: FillBankResult;
+                try {
+                    result = await fillBank({
+                        bankKey,
+                        difficulty,
+                        failures,
+                        ...(runners ? { runners } : { language: language as OracleLanguage }),
+                        languageId,
+                        log,
+                        // Free output stays in the public tree; paid output goes to the private content root.
+                        outRoot: resolveBankOutputRoot(pipelineDir, contentRoot, { access }),
+                        provider,
+                        questions,
+                        topics,
+                        ...(run === undefined ? {} : { run }),
+                    });
+                } catch (error) {
+                    // The stopping bank never returns; its tallies still belong in the partial report.
+                    if (error instanceof ProviderFailureStop) {
+                        addTotals(totals, error.partial);
+                    }
+                    throw error;
+                }
+                addTotals(totals, result);
             }
         }
         isCompleted = true;

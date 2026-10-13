@@ -1,21 +1,20 @@
-// Counts dropped batches in a row across a gap-fill run and stops the run at the cap. One
-// streak is shared by every bank of a run; a batch the provider answered resets it.
+// Counts dropped batches in a row across a gap-fill run. One streak is shared by every bank
+// of a run; a batch the provider answered resets it. fillBank throws ProviderFailureStop
+// when recordFailure reports the cap, so the bank's tallies travel with the stop.
 import { MAX_CONSECUTIVE_PROVIDER_FAILURES } from './MAX_CONSECUTIVE_PROVIDER_FAILURES.js';
 
 export interface ProviderFailureStreak {
-    // Records one dropped batch; throws when the streak reaches the cap.
-    recordFailure(bankKey: string, topic: string): void;
+    // Records one dropped batch and returns the streak length when it reached the cap, else null.
+    recordFailure(): number | null;
     recordSuccess(): void;
 }
 
 export function createProviderFailureStreak(max = MAX_CONSECUTIVE_PROVIDER_FAILURES): ProviderFailureStreak {
     let streak = 0;
     return {
-        recordFailure(bankKey, topic) {
+        recordFailure() {
             streak += 1;
-            if (streak >= max) {
-                throw new Error(`${bankKey} ${topic}: stopping after ${streak} consecutive dropped batches`);
-            }
+            return streak >= max ? streak : null;
         },
         recordSuccess() {
             streak = 0;
