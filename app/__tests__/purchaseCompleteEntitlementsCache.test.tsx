@@ -6,7 +6,7 @@ import { act, renderRouter, screen } from 'expo-router/testing-library';
 
 import { fakeAuth } from '../../components/purchase/__tests__/purchaseFlowFakes';
 import { createQueryClient } from '../../config/queryClient';
-import { installRoutedFetch, type RouteReply } from '../../state/__tests__/authTestSupport';
+import { holdReply, installRoutedFetch, type RouteReply } from '../../state/__tests__/authTestSupport';
 import { buildEntitlementsKey } from '../../state/useEntitlements';
 import PurchaseCompleteScreen from '../purchase-complete';
 
@@ -84,11 +84,12 @@ async function advance(ms: number): Promise<void> {
   }
 }
 
-async function open(product: string): Promise<void> {
-  await renderRouter(ROUTES, {
+async function open(product: string): Promise<{ unmount(): Promise<void> }> {
+  const rendered = await renderRouter(ROUTES, {
     initialUrl: `/purchase-complete?product=${encodeURIComponent(product)}`,
   });
   await flush();
+  return { unmount: () => rendered.unmount() };
 }
 
 function listPurchaseCompletedCalls(): unknown[][] {
@@ -107,6 +108,26 @@ describe('purchase-complete entitlements cache', () => {
   afterEach(() => {
     queryClient.clear();
     jest.useRealTimers();
+  });
+
+  it('records one purchase_completed when the route remounts while the first GET me is pending', async () => {
+    const held = holdReply();
+    const { requests } = installRoutedFetch({ 'GET me': [held, profileReply([PRODUCT])] });
+    const first = await open(PRODUCT);
+    expect(screen.getByText('Confirming your purchase')).toBeTruthy();
+    expect(requests.filter(({ method, path }) => method === 'GET' && path === 'me')).toHaveLength(1);
+
+    await first.unmount();
+    await open(PRODUCT);
+    expect(screen.getByText('Confirming your purchase')).toBeTruthy();
+    expect(requests.filter(({ method, path }) => method === 'GET' && path === 'me')).toHaveLength(1);
+    expect(listPurchaseCompletedCalls()).toHaveLength(0);
+
+    held.release(profileReply([PRODUCT]) as Parameters<typeof held.release>[0]);
+    await flush();
+
+    expect(screen.getByText('Unlocked')).toBeTruthy();
+    expect(listPurchaseCompletedCalls()).toHaveLength(1);
   });
 
   it('caches the unlocked product for the signed-in user and emits purchase_completed exactly once', async () => {
