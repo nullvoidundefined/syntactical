@@ -43,7 +43,8 @@ This document holds the user stories for choosing a language and difficulty, pla
 **Acceptance criteria:**
 
 - [ ] After an incorrect answer an Explain action appears and opens that question's query without advancing the round.
-- [ ] The query drawer shows the title, syntax, explanation, and tags.
+- [ ] Before an answer, the query drawer shows only the title and documentation links, with a note that the explanation follows an answer.
+- [ ] After an answer, the query drawer shows the title, syntax, explanation, tags, and documentation links.
 - [ ] The drawer closes by its close control, by tapping the backdrop, and by the platform back gesture.
 - [ ] Answer and advance actions are inert while the drawer is open.
 

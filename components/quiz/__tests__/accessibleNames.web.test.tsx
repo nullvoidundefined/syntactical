@@ -85,7 +85,7 @@ describe('quiz screens on the web expose accessible names and headings', () => {
   });
 
   it('names the query dialog after the query title', () => {
-    render(<QueryDrawer isOpen query={query} grammar="python" onClose={jest.fn()} />);
+    render(<QueryDrawer isAnswered isOpen query={query} grammar="python" onClose={jest.fn()} />);
     expect(screen.getByRole('dialog', { name: 'enumerate(iterable, start=0)' })).toBeTruthy();
   });
 
