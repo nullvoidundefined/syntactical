@@ -1,0 +1,44 @@
+{
+  "js-easy-01": {
+    "docs": [
+      {
+        "title": "typeof - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof"
+      },
+      {
+        "title": "ECMAScript: The typeof operator",
+        "url": "https://tc39.es/ecma262/#sec-typeof-operator"
+      }
+    ],
+    "syntax": "// General form\ntypeof operand\ntypeof (operand)   // parentheses optional\n\n// Always returns a string naming the operand's type\ntypeof 42;            // \"number\"\ntypeof \"hi\";          // \"string\"\ntypeof true;          // \"boolean\"\ntypeof Symbol();      // \"symbol\"\ntypeof 10n;           // \"bigint\"\ntypeof undefined;     // \"undefined\"\ntypeof function(){};  // \"function\"\ntypeof {a: 1};        // \"object\"\ntypeof [1, 2];        // \"object\" (arrays are objects)\n\n// Gotchas\n// - The result is a string, so compare with quotes:\n//     typeof x === \"string\"\n// - Undeclared identifiers do not throw:\n//     typeof notDeclaredAnywhere;  // \"undefined\"\n// - Variables in the temporal dead zone (let/const before\n//   declaration) DO throw a ReferenceError.\n// - typeof is a historical, limited check. The possible results\n//   are: undefined, object, boolean, number, bigint, string,\n//   symbol, function.\n// - Some values are not distinguished by typeof alone; to tell\n//   them apart use other checks such as Array.isArray(),\n//   x === someValue, or Object.prototype.toString.call(x).\n// - Language quirks from early JavaScript versions remain for\n//   backward compatibility: check the MDN page for the\n//   primitive values whose result may surprise you.\n// - typeof never returns \"null\" or \"array\".",
+    "title": "The typeof operator"
+  },
+  "js-easy-02": {
+    "docs": [
+      {
+        "title": "typeof - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof"
+      },
+      {
+        "title": "undefined - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined"
+      }
+    ],
+    "syntax": "// General form:\n//   typeof operand      -> returns a string naming the operand's type\n//   typeof (expression)\n\ntypeof 42;            // \"number\"\ntypeof \"hi\";          // \"string\"\ntypeof true;          // \"boolean\"\ntypeof Symbol();      // \"symbol\"\ntypeof 10n;           // \"bigint\"\ntypeof function(){};  // \"function\"\ntypeof [1, 2];        // \"object\" (arrays are objects)\ntypeof {a: 1};        // \"object\"\n\n// Gotchas:\n// - The result is always a string, so compare with quotes:\n//     typeof x === \"number\"\n// - typeof null is a historical quirk; check null with x === null.\n// - An identifier that was never declared does not throw with typeof:\n//     typeof notDeclaredAnywhere;  // a string, no error\n// - But a variable in its temporal dead zone (let/const before its\n//   declaration) DOES throw a ReferenceError.\n// - typeof typeof x is always \"string\".\n// - Possible results: \"undefined\", \"object\", \"boolean\", \"number\",\n//   \"bigint\", \"string\", \"symbol\", \"function\".",
+    "title": "The typeof operator and its result strings"
+  },
+  "js-easy-03": {
+    "docs": [
+      {
+        "title": "typeof - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof"
+      },
+      {
+        "title": "The typeof Operator - ECMAScript specification",
+        "url": "https://tc39.es/ecma262/#sec-typeof-operator"
+      }
+    ],
+    "syntax": "// General form:\n//   typeof expression   -> returns a string naming the type\n//   typeof(expression)  // parentheses just group; typeof is an operator, not a function\n\n// Examples:\ntypeof 42;            // \"number\"\ntypeof \"hi\";          // \"string\"\ntypeof true;          // \"boolean\"\ntypeof Symbol();      // \"symbol\"\ntypeof 10n;           // \"bigint\"\ntypeof [1, 2];        // arrays are objects too\ntypeof class A {};    // classes are a special kind of function-like value\n\n// Possible result strings (always one of these):\n//   \"undefined\" \"boolean\" \"number\" \"bigint\" \"string\"\n//   \"symbol\" \"object\" \"function\"\n// Gotchas:\n// - typeof null is a historical quirk, not what you might expect\n// - typeof on an undeclared variable does not throw a ReferenceError\n// - typeof returns a string, so compare with quotes: typeof x === \"string\"\n// - Use Array.isArray() to tell arrays from plain objects\n// - Result names describe categories, there is no \"array\" or \"null\" result\n// - Any value with an internal [[Call]] method gets its own special result",
+    "title": "The typeof operator and its result strings"
+  }
+}

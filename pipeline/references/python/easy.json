@@ -1,0 +1,52 @@
+{
+  "py-easy-01": {
+    "docs": [
+      {
+        "title": "Built-in functions: int",
+        "url": "https://docs.python.org/3/library/functions.html#int"
+      },
+      {
+        "title": "Numeric types: int, float, complex",
+        "url": "https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex"
+      },
+      {
+        "title": "math module: floor, ceil, trunc",
+        "url": "https://docs.python.org/3/library/math.html#number-theoretic-and-representation-functions"
+      }
+    ],
+    "syntax": "# General form\n#   int(x)            -> int built from a number or string\n#   int(s, base=10)   -> parse a string in the given base\n\n# How a float is converted: the fractional part is\n# discarded, with no rounding to nearest.\n# Compare related tools (positive and negative inputs):\nimport math\nx = 7.8\nint(x)          # conversion from float\nmath.floor(x)   # always toward negative infinity\nmath.ceil(x)    # always toward positive infinity\nround(x)        # nearest int, ties go to even\n\n# Strings\nint(\"42\")         # 42\nint(\"ff\", 16)     # 255\nint(\"  12  \")     # 12 (whitespace is stripped)\n# int(\"3.5\")      # ValueError: strings must be integer literals\n# int(None)       # TypeError\n\n# Gotchas\n# - int(float('nan')) raises ValueError\n# - int(float('inf')) raises OverflowError\n# - Compare int(), floor() and ceil() on negative numbers;\n#   they differ there, so check which direction each goes.\n# - Python ints have unlimited size.",
+    "title": "Converting floats to integers with int()"
+  },
+  "py-easy-02": {
+    "docs": [
+      {
+        "title": "Built-in Types: Numeric Types (float, nan, inf)",
+        "url": "https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex"
+      },
+      {
+        "title": "math.isnan",
+        "url": "https://docs.python.org/3/library/math.html#math.isnan"
+      },
+      {
+        "title": "Built-in function float()",
+        "url": "https://docs.python.org/3/library/functions.html#float"
+      }
+    ],
+    "syntax": "# General form: float(string) can build special values\n#   float('inf'), float('-inf'), float('nan')   (case-insensitive)\n#   import math; math.inf, math.nan\n\n# Example: infinity behaves like an ordinary, comparable number\nbig = float('inf')\nprint(big > 10**100)          # True\nprint(big == float('INF'))    # True\n\n# Example: testing for the special 'not a number' value\nimport math\nx = math.nan\nprint(math.isnan(x))          # the reliable test\n\n# Gotchas (comments only):\n# - Python follows IEEE 754 for floats: a 'not a number' value is\n#   unordered, so ==, <, >, <=, >= against anything (even itself)\n#   follow special rules; only != is treated differently.\n# - Do not rely on == to detect it; use math.isnan(x).\n# - Identity vs equality: `x is x` compares objects, not values.\n# - Containers (list, tuple) check identity first, then ==,\n#   so `in` and == on lists can differ from direct comparison.\n# - float('abc') raises ValueError, but only for strings that\n#   are not valid numbers or special names.\n# - Arithmetic with it generally yields another such value.",
+    "title": "Special float values and comparison semantics (IEEE 754)"
+  },
+  "py-easy-03": {
+    "docs": [
+      {
+        "title": "Built-in numeric types and operations",
+        "url": "https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex"
+      },
+      {
+        "title": "Binary arithmetic operations (language reference)",
+        "url": "https://docs.python.org/3/reference/expressions.html#binary-arithmetic-operations"
+      }
+    ],
+    "syntax": "# General form\n#   a / b    true division\n#   a // b   floor division\n#   a % b    remainder (modulo)\n#   divmod(a, b) -> (a // b, a % b)\n\n# Examples (different values from the quiz)\nprint(type(9 / 3))     # check the type of a true-division result\nprint(9 // 4)          # floor division of two ints -> int\nprint(9.0 // 4)        # with a float operand -> float\nprint(-9 // 4)         # floors toward negative infinity, not toward zero\nprint(divmod(17, 5))   # (3, 2)\n\n# Gotchas\n# - In Python 3, the / operator always returns a float for int operands,\n#   even when the division is exact. Python 2 behaved differently.\n# - // returns int only if both operands are int; otherwise float.\n# - Dividing by zero raises ZeroDivisionError for / // and %.\n# - Float results can have rounding error: 0.1 + 0.2 != 0.3.\n# - For exact fractions use fractions.Fraction; for exact decimals use decimal.Decimal.\n# - int(x) truncates toward zero; math.floor(x) floors.",
+    "title": "Arithmetic division operators and numeric result types"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "pg-easy-01": {
+    "docs": [
+      {
+        "title": "String Functions and Operators",
+        "url": "https://www.postgresql.org/docs/current/functions-string.html"
+      },
+      {
+        "title": "Operator Type Resolution",
+        "url": "https://www.postgresql.org/docs/current/typeconv-oper.html"
+      }
+    ],
+    "syntax": "-- General form\n--   expr1 || expr2\n-- The operator is chosen by the operand types (operator overloading).\n-- Postgres defines || for several type families (text, arrays, bytea, jsonb, tsvector...).\n\n-- Example 1: building a label from columns\nSELECT first_name || ' ' || last_name AS full_name FROM people;\n\n-- Example 2: array operand\nSELECT ARRAY[1,2] || 3;   -- appends an element to an array\n\n-- Gotchas / variations\n-- * NULL operand: with plain || the whole result is NULL.\n--     SELECT 'a' || NULL;          -- yields NULL\n--   concat(a, b, ...) skips NULLs; concat_ws(sep, a, b, ...) adds a separator.\n-- * Non-text operand: one side may be a non-text type, which is cast to text.\n--     SELECT 'n=' || 42;\n--   With two untyped literals or two non-text values, add an explicit cast: 42::text.\n-- * Precedence: || binds looser than + and -, so wrap mixed expressions in parentheses.\n-- * Logical OR is the keyword OR, not a symbol.\n-- * Bytea values use || too, joining the byte strings.",
+    "title": "The || operator and operator semantics in Postgres",
+    "isSyntaxAfterAnswer": true
+  },
+  "pg-easy-02": {
+    "docs": [
+      {
+        "title": "String Functions and Operators",
+        "url": "https://www.postgresql.org/docs/current/functions-string.html"
+      },
+      {
+        "title": "Comparison Functions and Operators (NULL handling)",
+        "url": "https://www.postgresql.org/docs/current/functions-comparison.html"
+      },
+      {
+        "title": "Conditional Expressions (COALESCE)",
+        "url": "https://www.postgresql.org/docs/current/functions-conditional.html"
+      }
+    ],
+    "syntax": "-- General form\n--   expr1 || expr2          -- operator form\n--   concat(expr1, expr2, ...) -- function form\n--   concat_ws(sep, expr1, expr2, ...) -- with separator\n\n-- Examples\nSELECT 'foo' || 'bar';               -- ordinary text concatenation\nSELECT 'id-' || 42;                  -- non-text operand is converted to text\nSELECT concat('x', NULL, 'y');       -- function form: see notes below\nSELECT concat_ws('-', 'a', NULL, 'c'); -- separator form: see notes below\n\n-- Gotchas\n-- * The || operator is strict: most operators and functions\n--   in Postgres that are strict return NULL when any input is NULL.\n--   Think of NULL as \"unknown value\", so combining it with\n--   anything stays unknown.\n-- * concat() and concat_ws() are not strict: they treat NULL\n--   arguments specially (check the docs for exact behavior).\n-- * COALESCE(col, '') replaces NULL with a fallback before\n--   using ||.\n--   e.g. SELECT first || ' ' || COALESCE(middle, '') FROM people;\n-- * Test for NULL with IS NULL, not = NULL.\n-- * || also works on arrays and bytea, with the same\n--   NULL-input considerations.",
+    "title": "String concatenation and NULL handling"
+  },
+  "pg-easy-03": {
+    "docs": [
+      {
+        "title": "Pattern Matching: LIKE",
+        "url": "https://www.postgresql.org/docs/current/functions-matching.html#FUNCTIONS-LIKE"
+      },
+      {
+        "title": "String Functions and Operators",
+        "url": "https://www.postgresql.org/docs/current/functions-string.html"
+      },
+      {
+        "title": "Operator Classes and Operator Families",
+        "url": "https://www.postgresql.org/docs/current/indexes-opclass.html"
+      }
+    ],
+    "syntax": "-- General form\n-- string LIKE pattern [ESCAPE escape_char]\n-- string NOT LIKE pattern\n-- Pattern wildcards: % = any sequence (including empty), _ = exactly one character\n-- A pattern with no wildcards behaves like equality.\n\n-- Examples\nSELECT * FROM products WHERE sku LIKE 'AB_-%';      -- 'AB', any one char, '-', then anything\nSELECT * FROM products WHERE title NOT LIKE '%sale%';\n\n-- Related operators (PostgreSQL extensions / shorthand)\n--   ~~   is LIKE        !~~  is NOT LIKE\n--   ~~*  is the ILIKE-style variant   !~~* is NOT ILIKE\n--   SIMILAR TO and ~ / ~* are different: they use regular-expression-style syntax\n\n-- Escaping a literal wildcard\nSELECT * FROM files WHERE path LIKE '100\\%%';           -- default escape is backslash\nSELECT * FROM files WHERE path LIKE '100#%%' ESCAPE '#'; -- custom escape character\n\n-- Gotchas\n-- * The pattern must match the WHOLE string, not just part of it.\n-- * % and _ also match newline characters.\n-- * NULL on either side yields NULL, not true or false.\n-- * Leading wildcards ('%abc') generally prevent ordinary B-tree index use.\n-- * Prefix searches on a B-tree need the right operator class (text_pattern_ops) in non-C locales.\n-- * For substring or case-variant searches at scale, consider the pg_trgm extension with a GIN/GiST index.",
+    "title": "Pattern matching with LIKE and related operators",
+    "isSyntaxAfterAnswer": true
+  }
+}
