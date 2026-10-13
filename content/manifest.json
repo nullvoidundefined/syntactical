@@ -47,9 +47,9 @@
       "banks": {
         "easy": {
           "path": "postgres/easy.json",
-          "hash": "fa617da931d21e67d804efac4e842088df836229930b512cd419d227d7adf641",
+          "hash": "279a8b3bb8c127b91da0a44d5716afa4103e8f6eadeeb0753aff61c9d0307928",
           "access": "free",
-          "contentVersion": 2,
+          "contentVersion": 3,
           "topicCounts": {}
         },
         "medium": {
