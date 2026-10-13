@@ -35,20 +35,6 @@
     "syntax": "# General form: float(string) can build special values\n#   float('inf'), float('-inf'), float('nan')   (case-insensitive)\n#   import math; math.inf, math.nan\n\n# Example: infinity behaves like an ordinary, comparable number\nbig = float('inf')\nprint(big > 10**100)          # True\nprint(big == float('INF'))    # True\n\n# Example: testing for the special 'not a number' value\nimport math\nx = math.nan\nprint(math.isnan(x))          # the reliable test\n\n# Gotchas (comments only):\n# - Python follows IEEE 754 for floats: a 'not a number' value is\n#   unordered, so ==, <, >, <=, >= against anything (even itself)\n#   follow special rules; only != is treated differently.\n# - Do not rely on == to detect it; use math.isnan(x).\n# - Identity vs equality: `x is x` compares objects, not values.\n# - Containers (list, tuple) check identity first, then ==,\n#   so `in` and == on lists can differ from direct comparison.\n# - float('abc') raises ValueError, but only for strings that\n#   are not valid numbers or special names.\n# - Arithmetic with it generally yields another such value.",
     "title": "Special float values and comparison semantics (IEEE 754)"
   },
-  "py-easy-03": {
-    "docs": [
-      {
-        "title": "Built-in numeric types and operations",
-        "url": "https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex"
-      },
-      {
-        "title": "Binary arithmetic operations (language reference)",
-        "url": "https://docs.python.org/3/reference/expressions.html#binary-arithmetic-operations"
-      }
-    ],
-    "syntax": "# General form\n#   a / b    true division\n#   a // b   floor division\n#   a % b    remainder (modulo)\n#   divmod(a, b) -> (a // b, a % b)\n\n# Examples (different values from the quiz)\nprint(type(9 / 3))     # check the type of a true-division result\nprint(9 // 4)          # floor division of two ints -> int\nprint(9.0 // 4)        # with a float operand -> float\nprint(-9 // 4)         # floors toward negative infinity, not toward zero\nprint(divmod(17, 5))   # (3, 2)\n\n# Gotchas\n# - In Python 3, the / operator always returns a float for int operands,\n#   even when the division is exact. Python 2 behaved differently.\n# - // returns int only if both operands are int; otherwise float.\n# - Dividing by zero raises ZeroDivisionError for / // and %.\n# - Float results can have rounding error: 0.1 + 0.2 != 0.3.\n# - For exact fractions use fractions.Fraction; for exact decimals use decimal.Decimal.\n# - int(x) truncates toward zero; math.floor(x) floors.",
-    "title": "Arithmetic division operators and numeric result types"
-  },
   "py-easy-04": {
     "docs": [
       {
@@ -62,35 +48,6 @@
     ],
     "syntax": "# General form\n#   a % b   -> remainder r such that a == (a // b) * b + r\n#   Python's // floors (rounds toward negative infinity),\n#   so the result of % takes the sign of the divisor b.\n\n# Examples (different values from any quiz)\nprint(10 % 4)      # 2   (positive operands)\nprint(10 % -4)     # sign follows divisor b (negative or zero)\nprint(-10 % 4)     # result is in range 0..3 since b > 0\n\n# Check the identity with divmod\nq, r = divmod(-9, 5)\n# q == -9 // 5, r == -9 % 5\n# (q * 5 + r) == -9\n\n# Gotchas\n# - Result is 0 <= r < b when b > 0, and b < r <= 0 when b < 0.\n# - Differs from C/Java, where % truncates toward zero\n#   and takes the sign of the dividend.\n# - math.fmod(a, b) follows the C behavior (floats).\n# - x % 0 raises ZeroDivisionError.\n# - Works on floats too: 5.5 % 2 -> 1.5",
     "title": "Modulo operator with negative operands"
-  },
-  "py-easy-05": {
-    "docs": [
-      {
-        "title": "Expressions: operator precedence",
-        "url": "https://docs.python.org/3/reference/expressions.html#operator-precedence"
-      },
-      {
-        "title": "Expressions: the power operator",
-        "url": "https://docs.python.org/3/reference/expressions.html#the-power-operator"
-      }
-    ],
-    "syntax": "# General form: precedence decides which operator grabs its operands first.\n# Highest to lowest (excerpt):\n#   (expr)            parentheses\n#   x[i], x.attr, f() subscripts, attributes, calls\n#   await x\n#   **                exponentiation\n#   +x, -x, ~x        unary plus, minus, bitwise not\n#   *, /, //, %       multiplication family\n#   +, -              addition, subtraction\n\n# ** binds tighter than a unary operator on its LEFT:\n#   -a ** b   is parsed as   -(a ** b)\n# ** accepts a unary operator on its RIGHT side:\n#   a ** -b   is parsed as   a ** (-b)\n\n# Example with different values:\nprint(-3 ** 3)     # grouping is -(3 ** 3)\nprint((-3) ** 3)   # parentheses change the grouping\nprint(2 ** -1)     # 0.5, negative exponent gives a float\n\n# ** is right-associative:\nprint(2 ** 3 ** 2)   # 2 ** (3 ** 2)\nprint((2 ** 3) ** 2) # explicit left grouping differs\n\n# Gotchas:\n# - A numeric literal like 5 has no sign; the minus is a separate unary operator.\n# - When unsure, add parentheses to make the intent explicit.\n# - Even powers of negative bases can differ in sign depending on grouping.",
-    "title": "Operator precedence: unary minus and the power operator"
-  },
-  "py-easy-06": {
-    "docs": [
-      {
-        "title": "Comparisons (Language Reference)",
-        "url": "https://docs.python.org/3/reference/expressions.html#comparisons"
-      },
-      {
-        "title": "Comparisons (Library Reference)",
-        "url": "https://docs.python.org/3/library/stdtypes.html#comparisons"
-      }
-    ],
-    "syntax": "# General form\n#   a OP1 b OP2 c ...   where OP is any comparison operator\n#   (<, <=, >, >=, ==, !=, is, is not, in, not in)\n#\n# Chains combine the individual comparisons with 'and':\n#   a OP1 b OP2 c   behaves like   (a OP1 b) and (b OP2 c)\n# The middle operand b is evaluated only once.\n# Evaluation short-circuits: if the first comparison is false,\n# the later ones are not evaluated.\n\n# Example 1: range check\nage = 30\nif 18 <= age < 65:\n    print(\"working age\")\n\n# Example 2: mixed operators\nx = 5\nprint(0 < x != 10)        # (0 < x) and (x != 10)\n\n# Gotchas\n# - Chains can be longer: a < b < c < d\n# - Operators can be mixed, including 'in' and 'is':\n#       a == b in items   -> (a == b) and (b in items)\n# - The outer ends a and c are never compared directly:\n#       5 > 3 < 4 is True, even though 5 > 4 isn't tested\n# - Chaining is not the same as grouping with parentheses;\n#   (a < b) < c compares a bool/result with c.",
-    "title": "Chained comparison operators",
-    "isSyntaxAfterAnswer": true
   },
   "py-easy-07": {
     "docs": [
@@ -124,123 +81,6 @@
     "syntax": "# General form\n#   not <expression>\n# 'not' first converts the operand to a truth value (truthiness),\n# then returns the opposite as a bool (True or False).\n\n# Examples\nnot 5            # operand is truthy, so the result is the opposite bool\nnot \"\"           # empty string is falsy\nnot [1, 2]       # non-empty list is truthy\n\n# Falsy values (everything else is truthy):\n#   None, False\n#   zero of any numeric type: 0, 0.0, 0j\n#   empty sequences/collections: '', (), [], {}, set(), range(0)\n#   objects whose __bool__ returns False or __len__ returns 0\n\n# Gotchas\n# - 'not' always returns a bool, unlike 'and' / 'or',\n#   which return one of their operands.\n#     0 or \"hi\"   -> \"hi\"   (operand, not bool)\n# - 'not' has lower precedence than comparisons:\n#     not a == b   means   not (a == b)\n# - 'not' binds tighter than 'and' / 'or':\n#     not x and y  means   (not x) and y\n# - bool(x) shows the truth value 'not' works from:\n#     bool([])  -> False\n# - not not x is a way to coerce x to a bool.",
     "title": "Logical negation operator and truthiness"
   },
-  "py-easy-09": {
-    "docs": [
-      {
-        "title": "Built-in Types: Numeric Types",
-        "url": "https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex"
-      },
-      {
-        "title": "Built-in Types: Boolean Type",
-        "url": "https://docs.python.org/3/library/stdtypes.html#boolean-type-bool"
-      },
-      {
-        "title": "Built-in functions: issubclass",
-        "url": "https://docs.python.org/3/library/functions.html#issubclass"
-      }
-    ],
-    "syntax": "# Subclass relationship check\n#   issubclass(Child, Parent) -> bool\n#   isinstance(obj, Parent)   -> True also for instances of subclasses\n#\n# Equality between numbers compares numeric value, not exact type:\n#   a == b   (int, float, complex, and subclasses of int compare by value)\n\nprint(issubclass(bool, int))   # check a class relationship\nprint(2.0 == 2)                # different types, compared by value\nprint(isinstance(False, int))  # instance of a subclass counts\n\n# Gotchas / variations:\n# - type(x) is int checks the exact type; isinstance(x, int) accepts subclasses.\n# - A subclass inherits the parent's operators, so arithmetic works on it:\n#     class Small(int): pass\n#     Small(3) + 4        # int arithmetic, result is a plain int\n# - Equal values need equal hashes, so equal numbers act as the same\n#   dict key / set member:\n#     {1, 1.0}            # one element\n# - 'is' tests identity, '==' tests value; do not use 'is' to compare numbers.\n# - Use type(x).__mro__ to see the full chain of parent classes.\n# - bool cannot be subclassed itself, but int can.",
-    "title": "Built-in numeric types, subclassing, and equality"
-  },
-  "py-easy-10": {
-    "docs": [
-      {
-        "title": "Expressions: Comparisons (identity and value)",
-        "url": "https://docs.python.org/3/reference/expressions.html#comparisons"
-      },
-      {
-        "title": "Data model: object.__eq__",
-        "url": "https://docs.python.org/3/reference/datamodel.html#object.__eq__"
-      }
-    ],
-    "syntax": "# Equality: a == b   -> calls a.__eq__(b); the class decides the result\n# Identity: a is b    -> True only if both names refer to the same object\n#                        (cannot be overridden by a class)\n\n# Example: a class that customizes equality\nclass Anything:\n    def __eq__(self, other):\n        return True          # custom rule: equal to every value\n\nobj = Anything()\nprint(obj == 42)       # uses the custom __eq__\nprint(obj is 42)       # identity check (SyntaxWarning for literals)\n\n# Example: singletons\nflag = None\nprint(flag is None)    # idiomatic test for None\nprint(flag is not None)\n\n# Notes:\n# - None, True, False, Ellipsis, NotImplemented are singletons: only one instance exists.\n# - Use `is` / `is not` for singleton checks; use == for value comparison.\n# - Libraries like NumPy overload == to work elementwise,\n#   so `arr == x` may return an array, not a single bool.\n# - If __eq__ is defined without __hash__, instances become unhashable.\n# - id(a) == id(b) is equivalent to `a is b`.\n# - Don't use `is` for numbers or strings; interning is an implementation detail.",
-    "title": "Identity vs equality comparison with singletons",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-11": {
-    "docs": [
-      {
-        "title": "Built-in functions: isinstance",
-        "url": "https://docs.python.org/3/library/functions.html#isinstance"
-      },
-      {
-        "title": "Built-in functions: issubclass",
-        "url": "https://docs.python.org/3/library/functions.html#issubclass"
-      }
-    ],
-    "syntax": "# General form\n#   isinstance(obj, classinfo) -> bool\n# classinfo may be:\n#   - a single class\n#   - a tuple of classes (nested tuples allowed)\n#   - a union type such as A | B (Python 3.10+)\n\n# Example 1: a single class\nname = \"abc\"\nisinstance(name, str)            # True\n\n# Example 2: several allowed types\nvalue = [1, 2]\nisinstance(value, (list, tuple))      # True if either type matches\nisinstance(value, list | tuple)       # same idea, 3.10+ union syntax\n\n# Gotchas\n# - isinstance takes exactly two arguments; extra classes are not\n#   passed as additional parameters.\n# - Only a tuple (or a | union) groups types; a list is not accepted\n#   and raises TypeError.\n# - Subclasses count: isinstance(True, int) is True because bool\n#   subclasses int.\n# - Use type(obj) is T for an exact-type check without subclasses.\n# - issubclass(cls, classinfo) works the same way, but on classes.",
-    "title": "Type checks with isinstance and multiple classes",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-12": {
-    "docs": [
-      {
-        "title": "Mutable sequence types (list)",
-        "url": "https://docs.python.org/3/library/stdtypes.html#mutable-sequence-types"
-      },
-      {
-        "title": "Tuples and immutable sequences",
-        "url": "https://docs.python.org/3/library/stdtypes.html#tuples"
-      },
-      {
-        "title": "Data model: objects, values and types",
-        "url": "https://docs.python.org/3/reference/datamodel.html#objects-values-and-types"
-      }
-    ],
-    "syntax": "# General form of item assignment:\n#   sequence[index] = new_value\n# It calls the object's __setitem__ method, so it only works\n# on types that define it (mutable types).\n\n# Example with a mutable type (dict-like and list-like objects):\nscores = [10, 20, 30]\nscores[1] = 99          # changes the object in place\nscores[-1] = 0          # negative indexes work too\nscores[0:2] = [7, 8, 9] # slice assignment can change length\n\n# Example with an immutable type:\npoint = (4, 5)\n# Immutable sequences (tuple, str, bytes) have no __setitem__,\n# so trying to assign to an index raises a TypeError.\n\n# Common variations and gotchas:\n# - Mutable: list, dict, set, bytearray\n# - Immutable: tuple, str, bytes, frozenset, int\n# - To \"change\" an immutable value, build a new one:\n#     point = (9,) + point[1:]\n# - A tuple can hold a mutable item, and that inner item can be changed:\n#     box = ([1, 2], 3)\n#     box[0].append(4)   # the inner list changes, the tuple's slots do not\n# - Out-of-range index assignment on a list raises IndexError.\n# - Check support with hasattr(obj, '__setitem__').",
-    "title": "Mutable vs immutable sequence types",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-13": {
-    "docs": [
-      {
-        "title": "Built-in types: immutable sequence types",
-        "url": "https://docs.python.org/3/library/stdtypes.html#immutable-sequence-types"
-      },
-      {
-        "title": "Text sequence type (str)",
-        "url": "https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str"
-      },
-      {
-        "title": "Data model: objects, values and types",
-        "url": "https://docs.python.org/3/reference/datamodel.html#objects-values-and-types"
-      }
-    ],
-    "syntax": "# General form: obj[index] = value\n# Item assignment calls obj.__setitem__(index, value).\n# It works only if the type defines __setitem__ (mutable types).\n\n# Mutable: list, bytearray, dict\nnums = [10, 20, 30]\nnums[1] = 99            # item assigned in place\n\nbuf = bytearray(b'abc')\nbuf[0] = 65             # bytearray items are ints\n\n# Immutable: str, tuple, bytes, frozenset\npoint = (1, 2)\n# point[0] = 5          # raises TypeError (no item assignment)\n\n# Building a changed copy of an immutable value:\nword = 'python'\nnew_word = 'P' + word[1:]      # concatenation + slicing\nnew_word2 = word.replace('p', 'P', 1)\nchars = list(word)             # convert to a mutable list\nchars[0] = 'P'\njoined = ''.join(chars)        # convert back to str\n\n# Gotchas:\n# - Rebinding a name (word = 'x') is not mutating the object.\n# - String methods return new strings; they never modify the original.\n# - A tuple holding a list can have that list's contents changed,\n#   but the tuple's own slots cannot be reassigned.\n# - Slice assignment (obj[a:b] = ...) also needs a mutable type.",
-    "title": "Mutable vs. immutable sequence types and item assignment"
-  },
-  "py-easy-14": {
-    "docs": [
-      {
-        "title": "Common sequence operations (slicing)",
-        "url": "https://docs.python.org/3/library/stdtypes.html#common-sequence-operations"
-      },
-      {
-        "title": "Lists in the Python tutorial",
-        "url": "https://docs.python.org/3/tutorial/introduction.html#lists"
-      }
-    ],
-    "syntax": "# General form: seq[start:stop] or seq[start:stop:step]\n# start is included, stop is excluded (half-open range)\n# Indexing starts at 0; result is a NEW sequence of the same type\n\nletters = ['a', 'b', 'c', 'd', 'e', 'f']\nletters[2:5]    # items at index 2, 3, 4\nletters[0:2]    # first two items\n\n# Variations and gotchas:\n# - Omitted start means 0; omitted stop means len(seq)\n#     letters[:3], letters[3:], letters[:] (shallow copy)\n# - Negative indexes count from the end: letters[-2:]\n# - Out-of-range bounds are clipped, no IndexError\n#     letters[4:100] works fine\n# - If start >= stop (with positive step), result is empty []\n# - step picks every nth item: letters[::2]; step -1 reverses\n# - Works on str, tuple, list, range, bytes\n# - Number of items returned = stop - start (when in range)\n# - slice() objects: letters[slice(1, 4)] is equivalent",
-    "title": "Sequence slicing with start:stop"
-  },
-  "py-easy-15": {
-    "docs": [
-      {
-        "title": "Sequence types: indexing and sequence operations",
-        "url": "https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range"
-      },
-      {
-        "title": "Common sequence operations",
-        "url": "https://docs.python.org/3/library/stdtypes.html#common-sequence-operations"
-      },
-      {
-        "title": "Tutorial: Strings and indexing",
-        "url": "https://docs.python.org/3/tutorial/introduction.html#strings"
-      }
-    ],
-    "syntax": "# General form\n#   seq[i]\n# Non-negative i counts from the left, starting at 0.\n# Negative i counts from the right: seq[-k] is seq[len(seq) - k].\n\n# Examples (different values from the question)\nword = 'garden'\nword[0]    # first character\nword[-1]   # last character (-1 is the final position)\nword[-3]   # counts back three from the end\n\nnums = [10, 20, 30, 40]\nnums[-1]   # works the same for lists and tuples\n\n# Gotchas\n# - Valid range is -len(seq) to len(seq)-1; outside it raises IndexError.\n# - There is no -0: seq[-0] is seq[0].\n# - Strings are immutable: word[-1] = 'x' raises TypeError.\n# - Indexing returns a single item (a 1-char str for strings);\n#   slicing seq[a:b] returns a sequence and never raises IndexError.",
-    "title": "Sequence indexing with negative indices"
-  },
   "py-easy-16": {
     "docs": [
       {
@@ -258,42 +98,6 @@
     ],
     "syntax": "# General forms\n#   seq[start:stop]        # items from start up to (not including) stop\n#   seq[start:stop:step]  # optional step\n#   seq[i]                # single index lookup\n\nletters = ['a', 'b', 'c', 'd', 'e']\n\n# Slicing example\nprint(letters[1:3])    # ['b', 'c']\nprint(letters[:2])     # ['a', 'b']\nprint(letters[::2])    # ['a', 'c', 'e']\n\n# Single index example\nprint(letters[4])      # 'e'\n# letters[9] would raise IndexError: list index out of range\n\n# Gotchas / variations\n# - A single index must be within range, otherwise IndexError.\n# - Slice bounds are not checked the same way: start and stop are\n#   clipped to the sequence length (see the language reference).\n# - A slice always produces a new object of the same kind (a list\n#   for a list), possibly empty.\n# - Negative values count from the end: letters[-2:] -> ['d', 'e']\n# - slice(start, stop, step) builds a slice object explicitly.\n# - Slicing makes a shallow copy: letters[:] copies the list.\n# - A step of 0 raises ValueError.",
     "title": "Sequence slicing and index bounds"
-  },
-  "py-easy-17": {
-    "docs": [
-      {
-        "title": "Common sequence operations (slicing)",
-        "url": "https://docs.python.org/3/library/stdtypes.html#common-sequence-operations"
-      },
-      {
-        "title": "Slicings in the language reference",
-        "url": "https://docs.python.org/3/reference/expressions.html#slicings"
-      },
-      {
-        "title": "range objects",
-        "url": "https://docs.python.org/3/library/stdtypes.html#ranges"
-      }
-    ],
-    "syntax": "# General form: sequence[start:stop:step]\n#   start: first index (default depends on step sign)\n#   stop:  index to stop BEFORE (exclusive)\n#   step:  stride between picked items (default 1)\n\nletters = list(\"abcdefghij\")   # 10 items, indices 0..9\nletters[2:8:2]    # start at 2, stop before 8, every 2nd item\nletters[1::4]     # from index 1 to the end, every 4th item\nletters[::-1]     # negative step walks backwards (reversed copy)\n\n# Notes and gotchas:\n# - Omitted start/stop mean \"from the beginning/to the end\"\n#   (reversed when step is negative).\n# - The first picked item is at start; then start+step, start+2*step, ...\n# - stop is never included.\n# - step cannot be 0 (raises ValueError).\n# - Out-of-range bounds are clipped, no IndexError for slices.\n# - A slice returns a new object of the same kind (list -> list,\n#   str -> str, tuple -> tuple).\n# - range(n) is a sequence: list(range(n)) gives [0, 1, ..., n-1].\n# - slice(start, stop, step) builds a reusable slice object.",
-    "title": "Extended slicing with a step"
-  },
-  "py-easy-18": {
-    "docs": [
-      {
-        "title": "Common sequence operations (s * n)",
-        "url": "https://docs.python.org/3/library/stdtypes.html#common-sequence-operations"
-      },
-      {
-        "title": "Lists: more on lists",
-        "url": "https://docs.python.org/3/tutorial/datastructures.html#more-on-lists"
-      },
-      {
-        "title": "copy: shallow and deep copy operations",
-        "url": "https://docs.python.org/3/library/copy.html"
-      }
-    ],
-    "syntax": "# General form\n#   seq * n        # repeat the elements of seq n times\n#   n * seq        # same thing\n# Repetition copies REFERENCES to the elements, not the objects themselves.\n\n# Example 1: immutable elements are harmless\nnames = ['x'] * 3          # three references to the same str; fine, since str can't change\n\n# Example 2: mutable elements are shared\ngrid = [{}] * 2            # one dict object, referenced twice\nprint(grid[0] is grid[1])  # identity check: shows whether both slots hold the same object\n\n# Checking sharing\n#   a is b          -> True if both names/slots refer to the same object\n#   id(a) == id(b)  -> same idea\n\n# Building independent mutable elements\n#   [[] for _ in range(n)]        # list comprehension runs the expression each time\n#   [dict() for _ in range(n)]    # new object per iteration\n#   [list(row) for row in src]    # shallow copy of each inner list\n\n# Gotchas\n#   - Applies to list, tuple, str, bytes, etc. (all sequences)\n#   - Nested mutable items are shared, not copied\n#   - copy.deepcopy(obj) duplicates nested objects recursively\n#   - Mutating a shared object is visible through every reference;\n#     rebinding a slot (s[i] = new_obj) affects only that slot",
-    "title": "Sequence repetition and object references in lists"
   },
   "py-easy-19": {
     "docs": [
@@ -327,34 +131,6 @@
     "syntax": "# General form\n#   seq_a + seq_b      -> new sequence built from both operands\n#   seq * n            -> sequence repeated n times\n#\n# Examples (different values from the quiz)\nletters = ['a', 'b'] + ['c']\n# a new list is created; the operands are not modified\nword = \"py\" + \"thon\"          # strings concatenate the same way\npair = (1,) + (2, 3)          # tuples too\npad = [0] * 3                 # repetition with *\n\n# Variations and gotchas\n# - Both operands must be the same sequence type.\n#   list + tuple raises TypeError; convert first: list(t) + lst\n# - + builds a new object each time, so repeated + in a loop is slow;\n#   prefer list.extend(), += , or ''.join(...) for strings.\n# - lst += other modifies lst in place (accepts any iterable),\n#   while lst = lst + other makes a new list.\n# - Nesting is different from joining: [lst_a, lst_b] makes a list of lists,\n#   whereas + joins the elements into one flat list.\n# - [x] * n repeats references to the same object (watch out for nested lists).\n# - Numbers add arithmetically: 2 + 3 -> 5; + on sequences never adds elements.",
     "title": "Sequence operators on built-in types"
   },
-  "py-easy-21": {
-    "docs": [
-      {
-        "title": "More on Lists (list methods)",
-        "url": "https://docs.python.org/3/tutorial/datastructures.html#more-on-lists"
-      },
-      {
-        "title": "Common Sequence Operations / Mutable Sequence Types",
-        "url": "https://docs.python.org/3/library/stdtypes.html#mutable-sequence-types"
-      }
-    ],
-    "syntax": "# General forms\n#   seq.append(obj)       # adds obj as ONE new last element\n#   seq.extend(iterable)  # adds EACH item of iterable, in order\n#\n# Example with different values\nbox = ['a']\nbox.append('b')          # box -> ['a', 'b']\nbox.extend(['c', 'd'])   # each item added separately\n\nitems = [10]\nitems.append((20, 30))   # a tuple stays together as one element\nitems.extend((40, 50))   # tuple is iterated; elements added one by one\n\n# Variations and gotchas\n# - Both modify the list in place and return None (don't write x = x.append(1)).\n# - append takes exactly one argument, whatever its type.\n# - extend accepts any iterable: list, tuple, set, generator, range, dict (keys).\n# - extend with a string adds each character: s = []; s.extend('hi') -> ['h', 'i']\n# - seq += iterable behaves like extend.\n# - seq + other builds a NEW list; it does not modify seq.\n# - Appending a list creates nesting; len grows by 1 per append call,\n#   but by len(iterable) per extend call.",
-    "title": "Adding items to a list: single item vs. iterable"
-  },
-  "py-easy-22": {
-    "docs": [
-      {
-        "title": "Mutable sequence types (list methods)",
-        "url": "https://docs.python.org/3/library/stdtypes.html#mutable-sequence-types"
-      },
-      {
-        "title": "More on lists (tutorial)",
-        "url": "https://docs.python.org/3/tutorial/datastructures.html#more-on-lists"
-      }
-    ],
-    "syntax": "# General form\n# list.insert(index, item)   -> returns None, modifies the list in place\n# list.append(item)         -> adds one item at the end\n# list.extend(iterable)     -> adds each element of iterable at the end\n\n# Example with different values\nnums = [10, 20, 30]\nnums.insert(0, 5)       # a method call on the list itself\nprint(nums)             # shows the list after the call\n\n# Related variations\n# nums[1] = 99          # item assignment: overwrites the element at that index\n# nums[1:1] = [7, 8]    # slice assignment: splices several items in\n\n# Gotchas\n# - insert() returns None, so don't write: nums = nums.insert(0, 5)\n# - Items at and after the index shift one position to the right.\n# - An index larger than len(list) is not an error; it goes at the end.\n# - A negative index counts from the end: insert(-1, x) goes before the last item.\n# - insert(len(lst), x) behaves like append(x).\n# - Inserting near the front is O(n); append is amortized O(1).",
-    "title": "List methods for adding items by position"
-  },
   "py-easy-23": {
     "docs": [
       {
@@ -367,8 +143,7 @@
       }
     ],
     "syntax": "# General forms\n#   seq.remove(x)    -> searches by value, returns None\n#   seq.pop()        -> removes item at the end, returns it\n#   seq.pop(i)       -> removes item at position i, returns it\n#   del seq[i]       -> removes by position, returns nothing\n\nletters = ['a', 'b', 'c', 'b', 'd']\n\nletters.remove('c')      # argument is a VALUE to look for\nprint(letters)           # ['a', 'b', 'b', 'd']\n\ngot = letters.pop(0)     # argument is an INDEX (position)\nprint(got)               # 'a'  (the removed item is returned)\n\nlast = letters.pop()     # no argument: uses the last position\n\n# Gotchas\n# - remove(x) affects only the FIRST matching element;\n#   later duplicates stay in the list.\n# - remove(x) raises ValueError if x is not in the list.\n# - pop(i) raises IndexError if the list is empty\n#   or i is out of range.\n# - Negative indexes work with pop: pop(-2).\n# - To drop all matches, build a new list:\n#   nums = [n for n in nums if n != 3]\n# - Avoid removing from a list while looping over it.",
-    "title": "Removing items from a Python list",
-    "isSyntaxAfterAnswer": true
+    "title": "Removing items from a Python list"
   },
   "py-easy-24": {
     "docs": [
@@ -382,8 +157,7 @@
       }
     ],
     "syntax": "# General form\n#   seq.pop()        -> removes and returns an item (default index argument)\n#   seq.pop(i)       -> removes and returns the item at index i\n#\n# Example\nletters = ['a', 'b', 'c', 'd']\nx = letters.pop(1)      # x is the item at index 1\nprint(x, letters)       # the list is modified in place\n\nnums = [10, 20, 30]\ny = nums.pop(0)         # explicit index\n\n# Notes and gotchas\n# - The signature is list.pop([i]); the index defaults to a fixed position.\n#   Check the docs to see which one the default is.\n# - Negative indexes count from the end: pop(-2).\n# - pop() mutates the list and returns the removed value.\n# - Empty list, or index out of range, raises IndexError.\n# - Cost depends on position: removing near the front shifts\n#   remaining items, so it is slower for long lists.\n# - Compare: remove(value) deletes by value and returns None;\n#   del lst[i] deletes by index without returning.\n# - dict.pop(key[, default]) and set.pop() behave differently.",
-    "title": "list.pop() method",
-    "isSyntaxAfterAnswer": true
+    "title": "list.pop() method"
   },
   "py-easy-25": {
     "docs": [
@@ -419,8 +193,7 @@
       }
     ],
     "syntax": "# General forms\n#   seq.method_name(...)      -> method called on an object\n#   builtin_name(iterable)    -> function called with an argument\n#\n# Both sorting tools accept key= and reverse= keyword arguments:\n#   list.sort(*, key=None, reverse=False)\n#   sorted(iterable, /, *, key=None, reverse=False)\n\n# Example 1: the method form on a list named nums\nnums = [9, 4, 7]\nr1 = nums.sort(reverse=True)\nprint(nums)   # inspect the list afterwards\nprint(r1)     # inspect what the call itself evaluated to\n\n# Example 2: the function form on a tuple named words\nwords = (\"pear\", \"fig\", \"apple\")\nr2 = sorted(words, key=len)\nprint(words)  # is the original touched?\nprint(r2)     # what type is the result?\n\n# Gotchas / variations\n# - Mutating methods in Python conventionally return None\n#   (e.g. list.append, list.reverse) to signal in-place change.\n#   So `x = y.sort()` is a common bug.\n# - sort() exists only on list; sorted() works on any iterable\n#   (tuple, set, dict keys, generator, str) and always returns a list.\n# - Sorting is stable: equal keys keep their original order.\n# - key= takes a one-argument function, called once per element.\n# - Mixed incomparable types (int vs str) raise TypeError.",
-    "title": "Sorting lists: list method vs built-in function",
-    "isSyntaxAfterAnswer": true
+    "title": "Sorting lists: list method vs built-in function"
   },
   "py-easy-27": {
     "docs": [
@@ -434,22 +207,7 @@
       }
     ],
     "syntax": "# General form\n# sorted(iterable, /, *, key=None, reverse=False) -> new list\n#   - returns a NEW list; the original is not modified\n#   - key and reverse are keyword-only (must be passed by name)\n#   - works on any iterable (list, tuple, str, dict keys, set...)\n\n# Example 1: key function\nwords = ['pear', 'fig', 'banana']\nby_len = sorted(words, key=len)\n\n# Example 2: combining key with another keyword\nnums = [4, 9, 1]\nresult = sorted(nums, key=lambda n: n % 3, reverse=False)\n\n# Variations and gotchas:\n# - Only the parameters listed in the signature exist; passing an\n#   unknown keyword name raises TypeError.\n# - Sorting is stable: equal items keep their original order,\n#   even when reverse is used.\n# - list.sort() is the in-place method with the same key/reverse\n#   options; it returns None.\n# - Slicing with [::-1] reverses a sequence; that is reversing,\n#   not sorting by a rule.\n# - reversed(seq) returns an iterator, and there is no builtin\n#   named reverse().\n# - Mixed types that can't be compared (int vs str) raise TypeError.",
-    "title": "sorted() builtin: keyword arguments and ordering",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-28": {
-    "docs": [
-      {
-        "title": "Sorting HOW TO (key functions)",
-        "url": "https://docs.python.org/3/howto/sorting.html#key-functions"
-      },
-      {
-        "title": "Built-in function sorted()",
-        "url": "https://docs.python.org/3/library/functions.html#sorted"
-      }
-    ],
-    "syntax": "# General form\nsorted(iterable, *, key=None, reverse=False)  # returns a NEW list\n\n# key is a callable (any one-argument function, not just a string).\n# Each element is passed to key once; the returned values are compared\n# to decide the order. The original elements are what end up in the result.\n\n# Example 1: built-in as key\nwords = ['pear', 'apple', 'plum']\nsorted(words, key=str.lower)      # sorts by lowercase form\n\n# Example 2: lambda as key\npairs = [(1, 'b'), (2, 'a')]\nsorted(pairs, key=lambda p: p[1]) # sorts by second item\n\n# Variations and gotchas\n# - reverse=True flips the order (equal items keep original order).\n# - Sorting is stable: items with equal keys keep their input order.\n# - Pass the function itself (key=len), do not call it (key=len() is wrong).\n# - key values must be comparable with each other.\n# - list.sort(key=...) works the same but sorts in place and returns None.\n# - Without key, items are compared directly (strings alphabetically).",
-    "title": "sorted() with a key function"
+    "title": "sorted() builtin: keyword arguments and ordering"
   },
   "py-easy-29": {
     "docs": [
@@ -478,25 +236,6 @@
     ],
     "syntax": "# General form\n# sum(iterable, /, start=0)\n#   Begins with `start`, then adds each item from the iterable, left to right.\n#   Returns the running total after the last item.\n\n# Example 1: default start\nsum([4, 5])            # start is 0 by default\n\n# Example 2: explicit start value\nsum([1.5, 2.5], 100)   # the total begins at 100 and the items are added to it\n\n# Variations and gotchas\n# - An empty iterable returns start unchanged: sum([], 7)\n# - start is positional-or-keyword in modern Python: sum(nums, start=5)\n# - start is NOT another item to add to the list; it is the initial accumulator\n# - Works with any iterable of numbers: tuples, sets, generators, range()\n# - Non-numeric items raise TypeError: sum([\"a\", \"b\"]) fails because start=0 is an int\n# - For lists, tuples, etc. pass a matching start, e.g. sum([[1], [2]], [])\n#   (but this is slow; prefer itertools.chain)\n# - Strings are rejected explicitly; use \"\".join(...)\n# - For exact float summation use math.fsum()",
     "title": "The built-in sum() function and its start argument"
-  },
-  "py-easy-31": {
-    "docs": [
-      {
-        "title": "Built-in functions: len()",
-        "url": "https://docs.python.org/3/library/functions.html#len"
-      },
-      {
-        "title": "Data model: object.__len__",
-        "url": "https://docs.python.org/3/reference/datamodel.html#object.__len__"
-      },
-      {
-        "title": "Common sequence and container operations",
-        "url": "https://docs.python.org/3/library/stdtypes.html#common-sequence-operations"
-      }
-    ],
-    "syntax": "# General form\n#   len(obj) -> int\n# Calls obj.__len__(); works for any object that defines it.\n# Objects without __len__ raise TypeError.\n\n# Examples\nlen(\"hello\")            # sequence: number of characters\nlen(range(2, 20, 3))     # range is also supported\nlen(b\"ab\")               # bytes too\n\nclass Bag:\n    def __init__(self, items):\n        self.items = items\n    def __len__(self):\n        return len(self.items)\n\nlen(Bag([1, 2, 3]))      # uses the custom __len__\n\n# Variations and gotchas\n# - Sequences (str, bytes, list, tuple, range) and\n#   collections (dict, frozenset, set) are the usual built-in\n#   types to check against the docs.\n# - Iterators and generators have no length:\n#   len(x for x in [1]) -> TypeError\n# - Numbers and None have no length:\n#   len(42) -> TypeError: object of type 'int' has no len()\n# - __len__ must return an int >= 0, else ValueError/TypeError.\n# - len(obj) == 0 also makes an object falsy if no __bool__.\n# - Check support with: hasattr(obj, \"__len__\")",
-    "title": "Built-in len() and the container protocol",
-    "isSyntaxAfterAnswer": true
   },
   "py-easy-32": {
     "docs": [
@@ -535,38 +274,6 @@
     ],
     "syntax": "# General form\n# enumerate(iterable, start=0)\n# Returns a lazy iterator of (index, item) tuples.\n# The counter begins at `start`; the items are not changed or skipped.\n\n# Example 1: loop with a counter\nfor n, color in enumerate(['red', 'green', 'blue']):\n    print(n, color)\n\n# Example 2: custom starting number, materialized into a list\nlist(enumerate('xyz', start=10))\n\n# Variations and gotchas\n# - start can be positional: enumerate(items, 5)\n# - The counter increases by 1 for each item, whatever start is.\n# - start only affects the number; it does not slice the iterable.\n# - Each pair is (index, item), index first.\n# - The result is an iterator: wrap in list() or tuple() to see it all,\n#   and it can be consumed only once.\n# - Works with any iterable (strings, files, generators, dicts).\n# - dict(enumerate(seq)) builds an index -> item mapping.",
     "title": "Built-in enumerate() and its start parameter"
-  },
-  "py-easy-35": {
-    "docs": [
-      {
-        "title": "zip() built-in function",
-        "url": "https://docs.python.org/3/library/functions.html#zip"
-      },
-      {
-        "title": "itertools.zip_longest",
-        "url": "https://docs.python.org/3/library/itertools.html#itertools.zip_longest"
-      }
-    ],
-    "syntax": "# General form\n# zip(*iterables, strict=False) -> iterator of tuples\n#   Each tuple holds one item from each iterable, by position.\n\n# Example with equal-length inputs\nnames = ['x', 'y', 'z']\nvals = [10, 20, 30]\nprint(list(zip(names, vals)))   # [('x', 10), ('y', 20), ('z', 30)]\n\n# Example with three iterables\nprint(list(zip('ab', [1, 2], (True, False))))\n\n# Gotchas and variations\n# - zip returns a lazy iterator, so wrap in list() to see all items.\n# - It can be consumed only once.\n# - Unequal lengths: the default behavior is decided by the SHORTEST\n#   input; check the docs for what happens to leftover items.\n# - strict=True (Python 3.10+) raises ValueError if lengths differ.\n# - To pad a shorter input with a fill value, use\n#   itertools.zip_longest(a, b, fillvalue=...).\n# - zip(*pairs) unpacks pairs back into separate sequences.\n# - zip() with no arguments yields nothing.\n# - dict(zip(keys, values)) builds a dict from two sequences.",
-    "title": "Combining iterables with zip() and unequal lengths"
-  },
-  "py-easy-36": {
-    "docs": [
-      {
-        "title": "Built-in Functions: reversed()",
-        "url": "https://docs.python.org/3/library/functions.html#reversed"
-      },
-      {
-        "title": "Glossary: iterator",
-        "url": "https://docs.python.org/3/glossary.html#term-iterator"
-      },
-      {
-        "title": "Iterator Types",
-        "url": "https://docs.python.org/3/library/stdtypes.html#iterator-types"
-      }
-    ],
-    "syntax": "# General form:\n#   it = builtin_func(iterable)      # many built-ins return an iterator, not a list\n#   next(it)                         # get one item at a time\n#   list(it)                         # materialize all items into a list\n\n# Example: map returns a lazy iterator\nm = map(str.upper, ['a', 'b', 'c'])\nprint(type(m))          # <class 'map'>\nprint(next(m))          # 'A'\nprint(list(m))          # ['B', 'C']  (already consumed 'A')\n\n# Example: materialize before indexing\nz = list(zip([1, 2], ['x', 'y']))\nprint(z[0])             # (1, 'x')\n\n# Gotchas:\n# - Indexing (obj[i]) needs __getitem__; many iterators don't have it.\n# - Iterators are single-use: once consumed, they are empty.\n# - Check with: type(obj), iter(obj) is obj (True for iterators).\n# - Same family: enumerate, filter, zip, map, reversed.\n# - To get a reversed list instead: list(reversed(seq)) or seq[::-1]\n# - sorted() is different: it always returns a new list.",
-    "title": "Built-in iterator-returning functions and sequence access"
   },
   "py-easy-37": {
     "docs": [
@@ -626,8 +333,7 @@
       }
     ],
     "syntax": "# General form:\n#   lambda <parameters>: <single expression>\n# - keyword `lambda`, then parameters separated by commas, NO parentheses around them\n# - a colon `:` separates parameters from the body\n# - the body is one expression; its value is returned automatically (no `return`)\n\nmultiply = lambda a, b: a * b\nprint(multiply(3, 4))          # call it like any function\n\nwords = [\"pear\", \"fig\", \"banana\"]\nwords.sort(key=lambda w: len(w))   # common use: inline key function\n\n# Variations:\n#   lambda: 42                    -> no parameters\n#   lambda n, step=1: n + step    -> default values allowed\n#   lambda *args, **kw: args      -> varargs allowed\n#   (lambda s: s.upper())(\"hi\")   -> can be called immediately\n#\n# Gotchas:\n# - Body must be an expression: no statements (assignment, return, if-block, etc.)\n# - Use a conditional expression for branching: lambda n: \"pos\" if n > 0 else \"non-pos\"\n# - No `->` return annotation and no `=` in the lambda header\n# - Python 3 does not allow tuple parameters like lambda(a, b): ...\n# - For anything longer than one expression, use `def`",
-    "title": "Python lambda expressions (anonymous functions)",
-    "isSyntaxAfterAnswer": true
+    "title": "Python lambda expressions (anonymous functions)"
   },
   "py-easy-41": {
     "docs": [
@@ -646,24 +352,6 @@
     ],
     "syntax": "# General form\n# [expression for item in iterable]\n# [expression for item in iterable if condition]\n\n# Example: build a new list from another sequence\nnames = [\"ada\", \"bob\", \"cy\"]\nlengths = [len(n) for n in names]   # one element per item, in order\n\n# Example: filter with a condition\nbig = [n for n in range(10, 15) if n % 2 == 0]\n\n# Variations and gotchas:\n# - Square brackets build a list immediately.\n#   Parentheses (expr for x in it) make a generator expression instead.\n#   Braces {expr for x in it} make a set; {k: v for ...} makes a dict.\n# - range(n) yields 0 up to n-1 (stop value is excluded).\n# - The expression is evaluated once per item, using that item's value.\n# - Conditional value (if/else) goes BEFORE the for:\n#     [a if a > 0 else 0 for a in values]\n# - Nested loops read left to right, like nested for statements:\n#     [(i, j) for i in range(2) for j in range(3)]\n# - The loop variable does not leak into the enclosing scope.",
     "title": "List comprehensions"
-  },
-  "py-easy-42": {
-    "docs": [
-      {
-        "title": "List comprehensions (Tutorial)",
-        "url": "https://docs.python.org/3/tutorial/datastructures.html#list-comprehensions"
-      },
-      {
-        "title": "Displays for lists, sets and dictionaries (Language Reference)",
-        "url": "https://docs.python.org/3/reference/expressions.html#displays-for-lists-sets-and-dictionaries"
-      },
-      {
-        "title": "range objects",
-        "url": "https://docs.python.org/3/library/stdtypes.html#range"
-      }
-    ],
-    "syntax": "# General form:\n# [expression for item in iterable if condition]\n#\n# Reads like this loop:\n# result = []\n# for item in iterable:\n#     if condition:\n#         result.append(expression)\n\nwords = [\"apple\", \"fig\", \"banana\", \"kiwi\"]\nshort = [w.upper() for w in words if len(w) <= 4]\n# built from only the items where the condition is True\n\n# Variations and gotchas:\n# - range(stop) yields 0 up to stop-1 (stop is excluded)\n# - the `if` filters items; items failing it are skipped, not replaced\n# - x % n is the remainder after dividing x by n; x % n == 0 means\n#   x is divisible by n\n# - the expression part can transform the item, the condition only\n#   decides whether the item is kept\n# - several conditions: [x for x in data if x > 2 if x < 8]\n# - if/else INSIDE the expression (before `for`) is different:\n#   [a if a > 0 else 0 for a in data]   # keeps every item\n# - nested loops: [(i, j) for i in A for j in B if i != j]\n# - the result is always a new list; the source is unchanged",
-    "title": "List comprehensions with a filter condition"
   },
   "py-easy-43": {
     "docs": [
@@ -701,39 +389,6 @@
     "syntax": "# General forms (the brackets decide the result type):\n#   [expr for item in iterable]            -> list\n#   {expr for item in iterable}            -> set\n#   {key: val for item in iterable}        -> dict\n#   (expr for item in iterable)            -> generator (not a tuple)\n#   optional filter: ... for item in it if cond\n\nwords = [\"a\", \"bb\", \"cc\", \"ddd\"]\n\nlengths_list = [len(w) for w in words]   # a list built item by item\nlengths_set  = {len(w) for w in words}   # a set built item by item\nby_word = {w: len(w) for w in words}     # a dict\n\n# Gotchas:\n# - A set literal/comprehension holds unique elements only;\n#   adding a value already present changes nothing.\n# - Sets are unordered: do not rely on display order.\n# - {} alone is an empty dict; use set() for an empty set.\n# - {k: v for ...} makes a dict, {e for ...} makes a set.\n# - Parentheses give a generator expression, not a tuple;\n#   use tuple(expr for ...) for a tuple.\n# - The loop variable does not leak out of a comprehension.\n# - x % n gives the remainder after division by n.",
     "title": "Comprehensions with braces"
   },
-  "py-easy-45": {
-    "docs": [
-      {
-        "title": "Mapping types — dict",
-        "url": "https://docs.python.org/3/library/stdtypes.html#mapping-types-dict"
-      },
-      {
-        "title": "Subscriptions (language reference)",
-        "url": "https://docs.python.org/3/reference/expressions.html#subscriptions"
-      },
-      {
-        "title": "Data structures tutorial: lists and dictionaries",
-        "url": "https://docs.python.org/3/tutorial/datastructures.html"
-      }
-    ],
-    "syntax": "# General form: apply one subscript per level, left to right\n#   container[index_or_key][index_or_key]...\n#   list  -> integer position (0-based, negative counts from the end)\n#   dict  -> key (must match exactly, strings need quotes)\n\n# Example: a list of dicts\nitems = [{'sku': 'A1', 'qty': 3}, {'sku': 'B2', 'qty': 7}]\nfirst = items[0]          # the whole dict at position 0\nitems[0]['sku']           # first pick the list element, then the key\nitems[-1]['qty']          # last element, then key\n\n# Example: a dict holding a list\nteam = {'langs': ['go', 'rust', 'c']}\nteam['langs'][2]          # key first, then position\n\n# Gotchas:\n# - Read the expression from left to right; each step must match\n#   the type of what the previous step returned.\n# - Dict keys are written as values: d['k'] uses a string, d[k] looks up a variable named k.\n# - Dict entries are not attributes: d.key raises AttributeError (dicts have no such attribute).\n# - A list needs an int index; a str index raises TypeError.\n# - Missing key -> KeyError; position out of range -> IndexError.\n# - d.get('k') returns None instead of raising KeyError.",
-    "title": "Indexing nested lists and dictionaries"
-  },
-  "py-easy-46": {
-    "docs": [
-      {
-        "title": "for statement (reference)",
-        "url": "https://docs.python.org/3/reference/compound_stmts.html#the-for-statement"
-      },
-      {
-        "title": "break and continue statements, and else clauses on loops",
-        "url": "https://docs.python.org/3/tutorial/controlflow.html#break-and-continue-statements-and-else-clauses-on-loops"
-      }
-    ],
-    "syntax": "# General form\nfor item in iterable:\n    ...            # loop body\n    if condition:\n        break      # optional early exit\nelse:\n    ...            # extra block attached to the loop\n\n# Example 1: searching a list\nnames = [\"ann\", \"bob\", \"cy\"]\nfor n in names:\n    if n.startswith(\"z\"):\n        print(\"found z-name\")\n        break\nelse:\n    print(\"no z-name in list\")\n\n# Example 2: while loop has the same form\ni = 0\nwhile i < 3:\n    i += 1\nelse:\n    print(\"while finished, i =\", i)\n\n# Notes / gotchas\n# - The else belongs to the loop, not to an if inside it.\n# - Think of it as \"no break happened\".\n# - Check what each way of leaving the loop does to the else block:\n#   break, return, raise, continue, and the iterable running out.\n# - An empty iterable (or a false while condition at the start)\n#   still lets the loop end normally; consider what that means for else.\n# - Common use: search loops, replacing a \"found\" flag variable.",
-    "title": "Loop else clauses (for/while ... else)",
-    "isSyntaxAfterAnswer": true
-  },
   "py-easy-47": {
     "docs": [
       {
@@ -750,22 +405,7 @@
       }
     ],
     "syntax": "# General form (inside for or while body):\n#   for item in iterable:\n#       ...\n#       break      # loop-control statement\n#       continue   # loop-control statement\n#   else:          # optional, runs if loop was not ended by break\n#       ...\n\n# Example 1: scanning for a value\nfor name in [\"ann\", \"bo\", \"cy\"]:\n    if name == \"bo\":\n        print(\"found\")\n        break\nelse:\n    print(\"not found\")\n\n# Example 2: filtering inside a loop\ntotal = 0\nfor n in range(6):\n    if n % 2 == 0:\n        continue\n    total += n\n\n# Notes and gotchas:\n# - Both statements work in for loops AND while loops.\n# - Both affect only the innermost enclosing loop.\n# - Using either outside a loop is a SyntaxError.\n# - In a while loop, continue jumps back to re-check the condition;\n#   make sure the counter is updated before continue, or it may loop forever.\n# - In a for loop, continue moves on to the next item from the iterator.\n# - The loop's else block is skipped when break runs.\n# - In try/finally, the finally clause still runs before leaving or moving on.",
-    "title": "Loop control statements: break, continue, and loop else",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-49": {
-    "docs": [
-      {
-        "title": "Assignment statements (language reference)",
-        "url": "https://docs.python.org/3/reference/simple_stmts.html#assignment-statements"
-      },
-      {
-        "title": "Tuples and Sequences (tutorial)",
-        "url": "https://docs.python.org/3/tutorial/datastructures.html#tuples-and-sequences"
-      }
-    ],
-    "syntax": "# General form: targets on the left, values on the right\n#   target1, target2, ... = value1, value2, ...\n# The right side is built first (a tuple), then its items are\n# assigned to the targets left to right, by position.\n\nx, y, z = 10, 20, 30      # three targets, three values\nprint(x, y, z)\n\n# Works with any iterable on the right side\nfirst, second = \"hi\"      # string of length 2\nm, n = [7, 8]             # list of length 2\n\n# Swapping uses the same rule: right side is evaluated fully first\np, q = 5, 6\np, q = q, p\n\n# Gotchas (as comments):\n# - Number of targets must match number of values, otherwise\n#   ValueError (too many / not enough values to unpack).\n# - Parentheses on either side are optional: (u, v) = (1, 2)\n# - A starred target collects the rest into a list:\n#     head, *rest = [1, 2, 3, 4]\n# - Each name is bound to one item, not to the whole tuple.\n# - Use _ by convention for values you want to ignore.",
-    "title": "Tuple packing and unpacking in assignment"
+    "title": "Loop control statements: break, continue, and loop else"
   },
   "py-easy-50": {
     "docs": [
@@ -784,68 +424,6 @@
     ],
     "syntax": "# General form: one starred target collects the \"leftover\" items\n#   first, *middle, last = iterable\n#   *head, tail = iterable\n#   head, *tail = iterable\n#\n# Rules:\n# - At most one starred target per assignment.\n# - Non-starred targets each take exactly one item (matched from the ends).\n# - The starred target always becomes a list (never a tuple or the original type).\n# - If nothing is left over, the starred target is an empty list.\n# - The iterable must have at least as many items as non-starred targets,\n#   otherwise ValueError.\n\n# Example 1\nx, *y, z = (10, 20, 30, 40)\n# x gets the first item, z gets the last, y is a list of what is between\n\n# Example 2: works with any iterable, including strings and ranges\nfirst, *rest = \"hey\"\n# first is a str of one char; rest is a list of the remaining chars\n\n# Variations\n# *a, b = [7]       -> a is [] (empty list), b is 7\n# a, b, *c = [1]    -> ValueError (not enough values)\n# *a, *b = [1, 2]   -> SyntaxError (two starred targets)\n# _, *middle, _ = data   # common idiom to ignore the ends\n\n# Also used in for loops:\n# for head, *tail in [[1, 2, 3], [4, 5]]:\n#     ...",
     "title": "Starred assignment (extended iterable unpacking)"
-  },
-  "py-easy-51": {
-    "docs": [
-      {
-        "title": "Assignment statements",
-        "url": "https://docs.python.org/3/reference/simple_stmts.html#assignment-statements"
-      },
-      {
-        "title": "Tuples and Sequences (tutorial)",
-        "url": "https://docs.python.org/3/tutorial/datastructures.html#tuples-and-sequences"
-      }
-    ],
-    "syntax": "# General form: the right side is evaluated fully first, then\n# its items are assigned to the targets on the left, left to right.\n#   target1, target2, ... = expr1, expr2, ...\n\n# Example 1: reorder values of two names\nx, y, z = 1, 2, 3\nz, x = x, z          # right side (x, z) is built BEFORE any name is rebound\n\n# Example 2: unpack any iterable\nfirst, second = [10, 20]\nhead, *rest = \"abc\"  # starred target collects the remainder as a list\n\n# Variations and gotchas:\n# - Number of targets must match the number of values (unless one is starred),\n#   otherwise ValueError.\n# - Sequential assignments (p = q; q = p) are separate statements: the first\n#   one overwrites a value the second one still needs.\n#   A helper variable fixes that, but takes extra lines.\n# - Works with indexes too: items[0], items[1] = items[1], items[0]\n# - Parentheses are optional: (m, n) = (n, m) is the same.\n# - Python has no built-in swap() function; a user-defined function cannot\n#   rebind the caller's local names.",
-    "title": "Tuple packing and unpacking in assignment",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-54": {
-    "docs": [
-      {
-        "title": "Assignment statements",
-        "url": "https://docs.python.org/3/reference/simple_stmts.html#assignment-statements"
-      },
-      {
-        "title": "Data model: objects, values and types",
-        "url": "https://docs.python.org/3/reference/datamodel.html#objects-values-and-types"
-      },
-      {
-        "title": "copy — Shallow and deep copy operations",
-        "url": "https://docs.python.org/3/library/copy.html"
-      }
-    ],
-    "syntax": "# General form: one value, several targets\n#   x = y = z = <expression>\n# The expression is evaluated ONCE; the resulting object is\n# bound to each target from left to right.\n\n# Example with an immutable value\np = q = 7\nprint(p is q)          # names refer to the same int object\n\n# Example with a different mutable value\nu = v = {\"k\": 1}\nu[\"j\"] = 2             # mutates the one shared dict\nprint(v)               # visible through every name bound to it\n\n# Checking sharing\n#   x is y             -> True if both names refer to the same object\n#   id(x) == id(y)     -> same idea\n\n# Gotchas\n# - Names are references, not copies; mutating via one name\n#   is seen through all names bound to the same object.\n# - Rebinding (x = new_value) only changes that one name.\n# - To get independent objects, evaluate separately:\n#       s = []; t = []\n#       s, t = [], []\n#   or copy: t = s.copy()  /  copy.deepcopy(s) for nested data\n# - Similar trap: [[]] * 3 repeats a reference to one inner list.",
-    "title": "Chained assignment and object identity"
-  },
-  "py-easy-55": {
-    "docs": [
-      {
-        "title": "Dictionary view objects",
-        "url": "https://docs.python.org/3/library/stdtypes.html#dict-views"
-      },
-      {
-        "title": "dict.items() in the mapping types reference",
-        "url": "https://docs.python.org/3/library/stdtypes.html#dict.items"
-      }
-    ],
-    "syntax": "# General form\n#   dict.keys(), dict.values(), dict.items()  -> \"dictionary view objects\"\n#\n# Example with different names/values\nstock = {\"pear\": 3, \"fig\": 7}\nv = stock.values()\nfor name, qty in stock.items():   # unpack each pair\n    print(name, qty)\n\n# Things to check about any view object:\n#   - type(view) is a special class (dict_items, dict_keys, dict_values),\n#     not list, tuple, or generator\n#   - Can it be iterated more than once? Is len() supported?\n#   - Does it reflect later changes to the dict, or not?\n#   - Does `in` work on it directly?\n#\n# Experiment yourself:\n#   w = stock.keys()\n#   stock[\"plum\"] = 1\n#   print(len(w), list(w))   # observe what happens\n#\n# Gotchas:\n#   - Changing dict size while iterating a view raises RuntimeError\n#   - list(view) makes an independent copy\n#   - keys() and items() views support set-like operations (&, |, -, ^)\n#   - values() views do not support set operations\n#   - Views are iterable in dict insertion order (Python 3.7+)\n#   - Views are not indexable: view[0] raises TypeError",
-    "title": "Dictionary view objects",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-56": {
-    "docs": [
-      {
-        "title": "dict.get and other mapping types",
-        "url": "https://docs.python.org/3/library/stdtypes.html#dict.get"
-      },
-      {
-        "title": "Mapping types — dict",
-        "url": "https://docs.python.org/3/library/stdtypes.html#mapping-types-dict"
-      }
-    ],
-    "syntax": "# General forms\n#   d[key]            -> value, or raises KeyError if key is missing\n#   d.get(key)        -> value, or None if key is missing\n#   d.get(key, dflt)  -> value, or dflt if key is missing\n\n# Examples\nstock = {'apple': 5, 'pear': 2}\nstock.get('apple', 99)    # key present: stored value is returned\nstock.get('plum')         # one-argument form: falls back to None\nlen(stock.get('kiwi', []))  # default can be any object\n\n# Gotchas\n# - .get() never raises KeyError and never modifies the dict.\n# - The default is evaluated every call, even if the key exists,\n#   so avoid expensive expressions as the default.\n# - If the key exists with value None, .get(key, dflt) returns None,\n#   not dflt (the default only applies to missing keys).\n# - To insert a missing key as well, use d.setdefault(key, dflt).\n# - Lookup uses the key itself, never the default, as the result of a miss.\n# - Keys must be hashable and match by equality: 1 and 1.0 are the same key.",
-    "title": "Dict lookup with a fallback value"
   },
   "py-easy-57": {
     "docs": [
@@ -877,26 +455,7 @@
       }
     ],
     "syntax": "# General form\n#   element in container      -> bool\n#   element not in container  -> bool\n#\n# For a dict, the container is searched according to the dict's own\n# iteration/lookup rules (hash lookup), the same thing you get\n# when you iterate over the dict directly.\n\nstock = {'apple': 3, 'pear': 0}\n\n# Example: test a name against the dict\nprint('pear' in stock)\n\n# Example: testing the other parts explicitly\nprint(3 in stock.values())      # search the values (linear scan)\nprint(('apple', 3) in stock.items())  # search key/value pairs\n\n# Variations and gotchas\n# - list(stock) and `for k in stock` yield the same things that\n#   `in` checks against.\n# - Key lookup is O(1) on average; .values() search is O(n).\n# - Keys must be hashable; `[1] in stock` raises TypeError.\n# - `not in` is the negated form: 'kiwi' not in stock\n# - .keys() gives a set-like view: 'apple' in stock.keys()\n# - Use stock.get(key) or `in` to avoid KeyError from stock[key].\n# - Equal keys match: 1, 1.0 and True hash and compare equal.",
-    "title": "Membership testing with the in operator on mappings",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-59": {
-    "docs": [
-      {
-        "title": "Membership test operations (in, not in)",
-        "url": "https://docs.python.org/3/reference/expressions.html#membership-test-operations"
-      },
-      {
-        "title": "Common sequence operations",
-        "url": "https://docs.python.org/3/library/stdtypes.html#common-sequence-operations"
-      },
-      {
-        "title": "Text sequence type: str",
-        "url": "https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str"
-      }
-    ],
-    "syntax": "# General form\n#   needle in haystack        -> bool\n#   needle not in haystack    -> bool (the negation)\n\n# For str haystacks, `in` tests for a contiguous substring\n# (the needle must itself be a str).\nprint('ab' in 'crabs')         # substring test example\nprint('xyz' not in 'crabs')    # negated form\n\n# For lists, tuples, sets, dicts: tests for an element\n# (for dict, tests keys).\nfruits = ['apple', 'pear']\nprint('pear' in fruits)        # element test\nprint('ear' in fruits)         # compares against whole elements, not parts\n\n# Variations and gotchas\n# - Matching is case-sensitive: 'A' in 'abc' differs from 'a' in 'abc'.\n# - Order and adjacency matter for strings: characters must appear\n#   consecutively, in the same order.\n# - The empty string is a substring of every string: '' in 'abc'.\n# - A non-str needle against a str haystack raises TypeError,\n#   e.g. 5 in 'abc5'.\n# - `in` only answers yes/no. To get a position, use\n#   str.find() (returns -1 if absent) or str.index() (raises ValueError).\n# - Sets and dicts use hashing, so membership is fast;\n#   lists and strings are scanned.",
-    "title": "The in operator for membership tests on strings and containers"
+    "title": "Membership testing with the in operator on mappings"
   },
   "py-easy-60": {
     "docs": [
@@ -926,20 +485,6 @@
     "syntax": "# General form\n#   set(iterable)   -> new set built from the items of any iterable\n#   set()           -> empty set (note: {} makes an empty dict, not a set)\n#   {a, b, c}       -> set literal (needs at least one element)\n\n# Examples\nletters = set(\"hello\")          # iterates the string's characters\nprint(len(letters))             # size of the resulting set\n\nnames = set((\"ann\", \"bob\", \"ann\"))\nprint(\"bob\" in names)           # fast membership test -> True\n\n# Key properties\n# - A set holds unique, hashable elements; each value is stored once.\n# - Sets are unordered: no indexing, and printed order is not guaranteed.\n# - Elements must be hashable: set([[1], [2]]) raises TypeError (lists are not).\n# - The repr uses curly braces, like a literal, e.g. {'a', 'b'}.\n#   An empty set prints as set().\n# - Sets are mutable: add(), remove(), discard(), update().\n# - frozenset(iterable) is the immutable, hashable variant.\n# - Common use: removing duplicates, e.g. list(set(items)) (order may change).\n# - Set operations: a | b (union), a & b (intersection), a - b (difference).\n# - Literal {1: 1} with key:value pairs is a dict, not a set.",
     "title": "The set() constructor and set literals"
   },
-  "py-easy-62": {
-    "docs": [
-      {
-        "title": "Built-in types: Set types (set, frozenset)",
-        "url": "https://docs.python.org/3/library/stdtypes.html#set-types-set-frozenset"
-      },
-      {
-        "title": "Tutorial: Sets",
-        "url": "https://docs.python.org/3/tutorial/datastructures.html#sets"
-      }
-    ],
-    "syntax": "# General form: operators combine two sets and return a NEW set\n#   a | b    union\n#   a & b    intersection\n#   a - b    difference\n#   a ^ b    symmetric difference\n\n# Example with different values:\nx = {10, 20, 30}\ny = {30, 40}\nprint(x | y)   # all elements from either set\nprint(x - y)   # elements in x but not in y\nprint(x ^ y)   # elements in exactly one of the sets\n\n# Method forms accept any iterable, not only sets:\nx.intersection([20, 30, 99])\nx.union(range(3))\nx.difference(\"ab\")\n\n# Gotchas:\n# - Operators require both sides to be sets (or frozensets);\n#   set & list raises TypeError, but set.intersection(list) works.\n# - Sets are unordered: printed order may vary.\n# - Augmented forms modify in place: a &= b, a |= b, a -= b, a ^= b\n# - {} is an empty dict; use set() for an empty set.\n# - Result type follows the left operand (set vs frozenset).",
-    "title": "Set operators and the equivalent set methods"
-  },
   "py-easy-64": {
     "docs": [
       {
@@ -956,22 +501,7 @@
       }
     ],
     "syntax": "# General form\n#   for key in mapping: ...        # iterates keys\n#   mapping.keys() / .values() / .items()   # views over the dict\n#\n# Example: building and iterating a dict\ncolors = {}\ncolors[\"red\"] = 1\ncolors[\"blue\"] = 2\ncolors[\"green\"] = 3\nfor name in colors:\n    print(name)\n\n# Example: updating and deleting\ncolors[\"red\"] = 10      # assigning to an existing key\ndel colors[\"blue\"]\ncolors[\"blue\"] = 4      # key added again\nprint(list(colors))\n\n# Variations and gotchas\n# - Language history: CPython 3.6 dicts happened to preserve order as an\n#   implementation detail; the language docs define the behavior from a later\n#   release. Check the docs' \"Changed in version\" notes.\n# - Views (keys, values, items) reflect the same order as the dict.\n# - Changing the value of an existing key does not change its position.\n# - Deleting then re-adding a key places it at the end.\n# - Equality: dict == dict ignores order; collections.OrderedDict == OrderedDict\n#   compares order too.\n# - reversed(d) works on dicts (3.8+).\n# - Do not add or remove keys while iterating (RuntimeError);\n#   iterate over list(d) instead.\n# - set does not guarantee insertion order.",
-    "title": "Dictionary ordering and iteration",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-65": {
-    "docs": [
-      {
-        "title": "str.strip in the Python standard library",
-        "url": "https://docs.python.org/3/library/stdtypes.html#str.strip"
-      },
-      {
-        "title": "Built-in string methods",
-        "url": "https://docs.python.org/3/library/stdtypes.html#string-methods"
-      }
-    ],
-    "syntax": "# General form\n# s.strip([chars])   -> new string (strings are immutable)\n# s.lstrip([chars]) -> removes from the left side only\n# s.rstrip([chars]) -> removes from the right side only\n\n# Examples\nname = \"\\t world \\n\"\nname.lstrip()          # removes leading whitespace only\nname.rstrip()          # removes trailing whitespace only\n\npath = \"xxdataxx\"\npath.strip(\"x\")        # chars argument: a SET of characters to remove\n\n# Variations and gotchas\n# - With no argument, strips all leading AND trailing whitespace\n#   (spaces, tabs, newlines, etc.).\n# - Whitespace in the middle of the string is never touched.\n# - The chars argument is not a prefix/suffix; every listed char is\n#   removed from both ends until a non-listed char is reached.\n# - The original string is unchanged; you must use the returned value.\n# - For removing an exact prefix/suffix use removeprefix()/removesuffix().\n# - If nothing is left to keep, the result is the empty string ''.",
-    "title": "Trimming whitespace from strings"
+    "title": "Dictionary ordering and iteration"
   },
   "py-easy-66": {
     "docs": [
@@ -985,8 +515,7 @@
       }
     ],
     "syntax": "# General form\n#   s.split(sep=None, maxsplit=-1)  -> list of str\n#\n# Two distinct modes depending on sep:\n#   sep=None (or omitted): whitespace mode\n#   sep given (e.g. ','):  literal separator mode\n\n# Example 1: explicit separator\nrow = 'x,,y,z'\nprint(row.split(','))        # compare each comma: consecutive separators\n                             # are handled one by one\n\n# Example 2: default mode on other text\nline = '  red\\tgreen\\n blue  '\nprint(line.split())          # leading/trailing whitespace is also considered\n\n# Variations and gotchas\n# - maxsplit limits the number of splits: s.split(None, 1)\n# - With sep=None, whitespace includes space, tab, newline, etc.\n# - With a literal sep, every occurrence counts as a boundary,\n#   so adjacent separators and separators at the ends matter.\n# - ''.split() and '   '.split() in default mode give a list\n#   with no items; ''.split(',') gives a list with one item.\n# - sep=' ' is NOT the same as sep=None.\n# - sep must not be an empty string (ValueError).\n# - rsplit() works from the right; splitlines() splits on line breaks.",
-    "title": "str.split() separator handling",
-    "isSyntaxAfterAnswer": true
+    "title": "str.split() separator handling"
   },
   "py-easy-67": {
     "docs": [
@@ -1001,20 +530,6 @@
     ],
     "syntax": "# General form\n#   s.split(sep=None, maxsplit=-1) -> list of str\n#\n# With an explicit sep, the string is cut at every occurrence of sep.\n# The pieces between/around separators become list items, one per cut + 1.\n\nrow = \"x;y;z\"\nrow.split(\";\")          # three pieces, one for each field\n\nline = \"p|q\"\nline.split(\"|\", 1)      # maxsplit limits the number of cuts\n\n# Variations and gotchas\n# - sep is matched literally (not a regex) and may be multiple characters:\n#     \"k--v--w\".split(\"--\")\n# - Adjacent separators, or a separator at the start or end, produce\n#   empty strings '' as items (they are NOT skipped) when sep is given.\n# - No argument (sep=None) is different: it splits on runs of whitespace\n#   and discards empty strings:\n#     \"  m   n \".split()\n# - \"\".split(\",\") gives [''] while \"\".split() gives [].\n# - sep=\"\" raises ValueError (empty separator).\n# - maxsplit=N gives at most N+1 items; rsplit() counts from the right.\n# - To drop empties yourself: [p for p in s.split(\",\") if p]",
     "title": "str.split with an explicit separator"
-  },
-  "py-easy-68": {
-    "docs": [
-      {
-        "title": "str.replace in the Python standard library docs",
-        "url": "https://docs.python.org/3/library/stdtypes.html#str.replace"
-      },
-      {
-        "title": "Built-in types: string methods",
-        "url": "https://docs.python.org/3/library/stdtypes.html#string-methods"
-      }
-    ],
-    "syntax": "# General form\n# s.replace(old, new)          -> replaces every occurrence\n# s.replace(old, new, count)   -> replaces only the first `count` occurrences, scanning left to right\n#\n# Strings are immutable: replace() returns a NEW string; the original is unchanged.\n\n# Example 1: no count\nword = 'mississippi'\nprint(word.replace('s', 'z'))      # every 's' is replaced\n\n# Example 2: with count\nprint(word.replace('i', '!', 1))   # only the first match, from the left\n\n# Variations and gotchas\n# - count=0 returns the string unchanged (as a copy-equal value).\n# - A negative count (the default is -1) means replace all.\n# - count may be passed by keyword in Python 3.13+: s.replace('a', 'b', count=2)\n# - Matching is case-sensitive: 'A' does not match 'a'.\n# - old may be a multi-character substring; matches do not overlap.\n# - If old is not found, the result equals the original string.\n# - Reassign to keep the result: word = word.replace('s', 'z', 2)",
-    "title": "str.replace with an optional count argument"
   },
   "py-easy-69": {
     "docs": [
@@ -1062,24 +577,6 @@
     "syntax": "# General form: prefix the literal with f or F; put expressions in braces\n#   f'text {expression} text'\n#   f'text {expression!r:format_spec} text'\n\ncity = 'Oslo'\ncount = 3\nprint(f'{city} has {count} visits')      # expressions are evaluated and inserted\nprint(f'{count * 2} and {city.upper()}')  # any expression works, including calls\n\n# Variations and gotchas:\n# - Without the f prefix, braces are ordinary characters and nothing is substituted.\n# - Use {{ and }} to write literal brace characters inside an f-string.\n# - Conversions: !s (str), !r (repr), !a (ascii), e.g. f'{city!r}'\n# - Format spec after a colon: f'{3.14159:.2f}', f'{count:05d}', f'{count:>6}'\n# - Self-documenting form: f'{count=}' shows the expression text and its value.\n# - The expression is evaluated at runtime in the current scope;\n#   an undefined name raises NameError.\n# - An empty expression f'{}' is a SyntaxError.\n# - Can combine with r prefix (rf'...') for raw f-strings.",
     "title": "Formatted string literals (f-strings)"
   },
-  "py-easy-73": {
-    "docs": [
-      {
-        "title": "Formatted string literals (f-strings)",
-        "url": "https://docs.python.org/3/reference/lexical_analysis.html#f-strings"
-      },
-      {
-        "title": "Format string syntax",
-        "url": "https://docs.python.org/3/library/string.html#formatstrings"
-      },
-      {
-        "title": "Input and Output: formatted string literals",
-        "url": "https://docs.python.org/3/tutorial/inputoutput.html#formatted-string-literals"
-      }
-    ],
-    "syntax": "# General form:\n#   f'text {expression} text'\n#   f'text {expression!r:format_spec} text'\n#\n# Each {...} holds a full Python expression. It is evaluated at runtime,\n# converted with format(), and inserted into the string. The result is always a str.\n\nprice = 4\nqty = 7\nprint(f'Total: {price * qty}')      # arithmetic is evaluated\nprint(f'{\"hi\".upper()} there')       # method calls work\nname = 'Ada'\nprint(f'{name}')                     # plain names are just one kind of expression\n\n# Variations and gotchas:\n# - Conversions: {x!r} repr, {x!s} str, {x!a} ascii\n# - Format spec after colon: {3.14159:.2f}, {42:05d}, {255:#x}\n# - Self-documenting: {qty=} shows the text 'qty=7'\n# - Literal braces: double them, {{ and }}\n# - Without the f prefix, braces are plain characters\n# - Calls, conditionals, comprehensions, and indexing are all allowed\n#   inside the braces; the value is formatted into text, not kept as a number",
-    "title": "f-string replacement fields"
-  },
   "py-easy-74": {
     "docs": [
       {
@@ -1096,8 +593,7 @@
       }
     ],
     "syntax": "# General form\n#   str(obj)   -> calls obj.__str__()\n#   repr(obj)  -> calls obj.__repr__()\n#   format(obj, spec) / f\"{obj}\" -> uses __format__, defaults to str()\n\n# Example with a user-defined class\nclass Point:\n    def __init__(self, x, y):\n        self.x, self.y = x, y\n    def __repr__(self):\n        return f\"Point({self.x!r}, {self.y!r})\"\n    def __str__(self):\n        return f\"({self.x}, {self.y})\"\n\np = Point(1, 2)\n# print(p), str(p), f\"{p}\"  use __str__\n# repr(p), debugger/REPL echo, f\"{p!r}\"  use __repr__\n\n# Example with a built-in type\nword = \"hi\\n\"\n# str(word) is the raw text; repr(word) is a quoted, escaped literal\n\n# Gotchas\n# - If __str__ is missing, str() falls back to __repr__.\n# - If __repr__ is missing, object's default is used: <Cls object at 0x...>\n# - Containers (list, dict, tuple) use repr() of their items, even when printed.\n# - Goal of __repr__: unambiguous, ideally eval-able; goal of __str__: readable.\n# - Conversion flags in f-strings: !s -> str, !r -> repr, !a -> ascii",
-    "title": "Object string conversion: str(), repr() and their dunder methods",
-    "isSyntaxAfterAnswer": true
+    "title": "Object string conversion: str(), repr() and their dunder methods"
   },
   "py-easy-75": {
     "docs": [
@@ -1112,54 +608,6 @@
     ],
     "syntax": "# General form: a backslash inside a normal string literal starts an escape sequence\n#   '\\X'  -> the interpreter replaces it with one special character\n#\n# Common escapes:\n#   \\n  newline          \\t  horizontal tab\n#   \\\\  one backslash   \\'  single quote   \\\"  double quote\n#   \\r  carriage return \\xhh  hex char   \\uXXXX  Unicode char\n\n# Examples (different from the quiz):\nword = 'x\\ny'        # string of 3 characters: x, newline, y\nlen('p\\tq')          # counts the escape as ONE character\npath = 'C:\\\\temp'    # \\\\ gives a single backslash in the value\n\n# Variations and gotchas:\n# - Raw strings r'...' keep the backslash as a literal character:\n#       r'p\\tq' has 4 characters: p, \\, t, q\n# - Escapes are processed when the source is read, not by print().\n# - repr() / the REPL display show escapes in written form,\n#   while print() writes the actual characters.\n# - A tab character moves to the next tab stop in the terminal,\n#   so its visual width depends on the display, not on Python.\n# - Unknown escapes like '\\q' keep the backslash (and warn in new versions).",
     "title": "Escape sequences in string literals"
-  },
-  "py-easy-76": {
-    "docs": [
-      {
-        "title": "Lexical analysis: String and bytes literals",
-        "url": "https://docs.python.org/3/reference/lexical_analysis.html#string-and-bytes-literals"
-      },
-      {
-        "title": "Lexical analysis: Escape sequences",
-        "url": "https://docs.python.org/3/reference/lexical_analysis.html#escape-sequences"
-      }
-    ],
-    "syntax": "# General form: <prefix>'text'  (prefix is case-insensitive, placed right before the opening quote)\n#   no prefix : backslash starts an escape sequence ('\\n' newline, '\\t' tab, '\\\\' backslash)\n#   r / R     : raw string literal\n#   b / B     : bytes literal\n#   f / F     : formatted string literal\n#   rb, br, rf, fr : combinations allowed\n\n# Example: escapes in a normal string\ns1 = 'a\\tb'        # contains a real tab character\nprint(len(s1))      # 3\n\n# Example: a different string written with a raw prefix\ns2 = r'x\\ty'\nprint(len(s2))      # 4: x, backslash, t, y\n\n# Comparison\n# 'a\\\\b' == r'a\\b'   -> True (both hold one backslash)\n\n# Gotchas\n# - A raw string cannot end in an odd number of backslashes:\n#     r'abc\\'    -> SyntaxError (backslash still escapes the quote)\n#     r'abc' '\\\\' or 'abc\\\\' works instead\n# - A backslash before a quote still stays in the raw string: r'\\'' has 2 characters\n# - Unknown escapes in normal strings like '\\d' give a warning in recent Python\n# - Raw prefix only changes how the literal is read in source; the result is an ordinary str\n# - It does not change path separators or validate anything\n# - Handy for regex patterns and Windows paths, but the prefix itself does not make a pattern",
-    "title": "String literal prefixes and escape sequences",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-77": {
-    "docs": [
-      {
-        "title": "Lexical analysis: String and bytes literals",
-        "url": "https://docs.python.org/3/reference/lexical_analysis.html#string-and-bytes-literals"
-      },
-      {
-        "title": "Lexical analysis: Explicit line joining",
-        "url": "https://docs.python.org/3/reference/lexical_analysis.html#explicit-line-joining"
-      },
-      {
-        "title": "Tutorial: Text (strings)",
-        "url": "https://docs.python.org/3/tutorial/introduction.html#text"
-      }
-    ],
-    "syntax": "# General forms for a string literal in source code:\n#   'text'  \"text\"          single-line quoting\n#   '''text'''  \"\"\"text\"\"\"  triple-quoted\n#   ( 'a' 'b' )               adjacent literals, joined at compile time\n#   'text \\n text'            escape sequences\n#   'text \\<newline> more'   backslash-newline continuation inside a literal\n\n# Example 1: triple quotes keep the newlines as written\nnote = \"\"\"first line\nsecond line\"\"\"\n\n# Example 2: adjacent literals inside parentheses\nmsg = (\n    \"alpha \"\n    \"beta \"\n    \"gamma\"\n)\n\n# Example 3: backslash at end of line inside a normal literal\npath = \"abc\\\ndef\"       # backslash and newline are removed\n\n# Gotchas:\n# - A plain '...' or \"...\" literal cannot contain a raw line break\n#   (SyntaxError), unless the line ends with a backslash.\n# - Triple-quoted text keeps indentation and newlines exactly.\n# - Adjacent literals do NOT add spaces or newlines by themselves.\n# - Put \\n in the text if you need real newlines when joining pieces.\n# - Prefixes (r, f, b) work with every quoting style.\n# - Triple-quoted strings not assigned to anything can act as docstrings.",
-    "title": "Writing string literals across several source lines",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-80": {
-    "docs": [
-      {
-        "title": "Built-in functions: float()",
-        "url": "https://docs.python.org/3/library/functions.html#float"
-      },
-      {
-        "title": "Numeric types: int, float, complex",
-        "url": "https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex"
-      }
-    ],
-    "syntax": "# General form\n#   float(x)   -> float; x may be a str, int, float, or other number-like object\n#\n# Examples\nfloat('2.5e3')      # exponent notation is accepted\nfloat(7)            # ints convert to 7.0\nfloat('-0.5')       # sign allowed\n\n# Rules for string input (see the docs grammar):\n# - Leading/trailing whitespace is stripped before parsing\n# - Optional sign, digits, optional '.', optional exponent\n# - Underscores are allowed only between digits: float('1_000.5')\n# - Special values (case-insensitive): 'inf', '-inf', 'nan', 'infinity'\n# - Internal spaces or stray characters are invalid: float('1 2') raises ValueError\n# - Empty or all-whitespace string raises ValueError\n# - Thousands separators like '1,000' are not accepted\n#\n# Gotchas\n# - The result is a float object, not a str; compare types with type()\n# - int('4.7') fails, but int(float('4.7')) works and truncates to 4\n# - float() with no argument returns 0.0",
-    "title": "Converting strings to numbers with float()"
   },
   "py-easy-81": {
     "docs": [
@@ -1177,8 +625,7 @@
       }
     ],
     "syntax": "# General form: any object can be used in a condition\n#   if obj:  /  while obj:  /  not obj  /  bool(obj)\n#\n# Python calls bool(obj), which uses:\n#   1. obj.__bool__()  -> must return True or False\n#   2. otherwise obj.__len__()  -> falsy if it returns 0\n#   3. otherwise the object is truthy\n\n# Built-in falsy values:\n#   None, False\n#   zero of any numeric type: 0, 0.0, 0j, Decimal(0), Fraction(0, 1)\n#   empty sequences/collections: '', (), [], {}, set(), range(0)\n\n# Example\nitems = []\nif not items:\n    print('no items')      # empty list is falsy\n\nprint(bool(0.0), bool([0]), bool(None))\n\n# Gotchas:\n# - Truthiness depends on the object's value, not on what it\n#   looks like when printed or what it represents.\n# - Containers are judged by their length, not by their contents.\n# - Use `is None` when you must tell None apart from other falsy values.\n# - `x or y` and `x and y` return one of the operands, not\n#   necessarily True/False.\n# - Custom classes are truthy by default; define __bool__ or\n#   __len__ to change that.",
-    "title": "Truth value testing in Python",
-    "isSyntaxAfterAnswer": true
+    "title": "Truth value testing in Python"
   },
   "py-easy-83": {
     "docs": [
@@ -1192,8 +639,7 @@
       }
     ],
     "syntax": "# General form\ntry:\n    <statements that may raise>\nexcept SomeError:\n    <handler statements>\n# code after the whole try statement\n\n# Example 1: matching a specific type\ntry:\n    n = int(text)\nexcept KeyError:      # does not match ValueError, so not handled here\n    n = 0\n\n# Example 2: binding the exception, several types\ntry:\n    data = load(path)\nexcept (OSError, TimeoutError) as err:\n    log(err)\n\n# Variations and gotchas\n# - Clauses are checked top to bottom; the first matching one runs.\n# - If no clause matches, the exception keeps propagating upward.\n# - A bare `raise` inside a handler re-raises the current exception;\n#   without it, the handler does not re-raise by itself.\n# - `else:` runs only if the try block raised nothing.\n# - `finally:` always runs, handled or not.\n# - Subclasses match: `except OSError` also catches FileNotFoundError.\n# - `as name` is deleted when the except block ends.\n# - Python 3.11+: `except*` handles ExceptionGroup members.",
-    "title": "Handling exceptions with try/except",
-    "isSyntaxAfterAnswer": true
+    "title": "Handling exceptions with try/except"
   },
   "py-easy-84": {
     "docs": [
@@ -1207,8 +653,7 @@
       }
     ],
     "syntax": "# General form\ntry:\n    risky()\nexcept <what to catch>:\n    handle()\n\n# <what to catch> is an expression that evaluates to\n# an exception class, or a tuple of exception classes.\n\n# Example: one class\ntry:\n    n = int(text)\nexcept KeyError:\n    n = 0\n\n# Example: bind the caught exception with 'as'\ntry:\n    data = lookup[key]\nexcept (KeyError, IndexError) as err:\n    print(type(err).__name__, err)\n\n# Variations and gotchas\n# - Separate except clauses give different handling per type:\n#     except OSError: ...\n#     except EOFError: ...\n# - Clauses are checked top to bottom; the first match wins,\n#   so put subclasses before their base classes.\n# - A tuple is a single object grouping classes; lists, sets,\n#   and boolean operators are not valid groupings here.\n# - 'a or b' is evaluated first as an ordinary expression,\n#   and yields just one object, not both.\n# - Older Python 2 code used a comma before a name to bind it;\n#   that meaning does not exist in Python 3.\n# - A bare 'except:' catches everything, including\n#   KeyboardInterrupt; prefer naming classes.",
-    "title": "Handling several exception types in one try statement",
-    "isSyntaxAfterAnswer": true
+    "title": "Handling several exception types in one try statement"
   },
   "py-easy-85": {
     "docs": [
@@ -1222,59 +667,7 @@
       }
     ],
     "syntax": "# General form\ntry:\n    <code that might raise>\nexcept SomeError as e:\n    <handle the error>\nelse:\n    <optional clause, placed after all except clauses>\nfinally:\n    <optional clause, cleanup>\n\n# Example 1: reading a config value\ndef load(path):\n    try:\n        f = open(path)\n    except FileNotFoundError:\n        print('missing file')\n        return None\n    else:\n        data = f.read()\n        f.close()\n        return data\n    finally:\n        print('done with', path)\n\n# Example 2: parsing\ntry:\n    n = int(text)\nexcept ValueError:\n    n = 0\nelse:\n    print('parsed', n)\n\n# Notes / gotchas\n# - else requires at least one except clause before it.\n# - Exceptions raised inside else are NOT caught by the\n#   except clauses of the same try statement.\n# - finally is the clause tied to cleanup and runs on the\n#   way out, even after return, break, or continue.\n# - Keep the try body small; put follow-up code in else.\n# - A return in the try body or an except clause affects\n#   whether later clauses are reached; check the docs.",
-    "title": "Python try statement clauses and their roles",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-86": {
-    "docs": [
-      {
-        "title": "Built-in Exceptions (exception hierarchy)",
-        "url": "https://docs.python.org/3/library/exceptions.html#exception-hierarchy"
-      },
-      {
-        "title": "Binary arithmetic operations",
-        "url": "https://docs.python.org/3/reference/expressions.html#binary-arithmetic-operations"
-      },
-      {
-        "title": "Errors and Exceptions tutorial",
-        "url": "https://docs.python.org/3/tutorial/errors.html"
-      }
-    ],
-    "syntax": "# General form\n#   a / b    true division (always returns float)\n#   a // b   floor division\n#   a % b    modulo\n#   divmod(a, b) -> (a // b, a % b)\n\n# Catching errors from arithmetic\ntry:\n    result = 10 % 0\nexcept SomeError as e:   # replace with a real exception class\n    print(type(e).__name__, e)\n\n# Exceptions form a class hierarchy; an except clause matches\n# the named class AND any of its subclasses:\n#   BaseException\n#    +-- Exception\n#         +-- ArithmeticError\n#         |    +-- OverflowError\n#         |    +-- FloatingPointError\n#         |    +-- (one more, for a bad divisor)\n#         +-- ValueError\n#         +-- TypeError\n#         +-- LookupError (KeyError, IndexError)\n\n# Check the hierarchy yourself:\nprint(issubclass(KeyError, LookupError))   # True\nprint(KeyError.__mro__)                     # chain of parents\n\n# Gotchas\n# - float infinity is produced by float('inf') or overflow\n#   in some float operations, not by dividing by a zero literal.\n# - Integer and float operands behave the same way for a zero divisor\n#   in /, //, %, and divmod().\n# - Catching a parent class (e.g. ArithmeticError) also catches\n#   its children; order specific handlers before general ones.\n# - Different types of bad input raise different exceptions:\n#   int('x') -> ValueError, 1 + 'a' -> TypeError.",
-    "title": "Arithmetic operators and the built-in exception hierarchy"
-  },
-  "py-easy-87": {
-    "docs": [
-      {
-        "title": "Built-in Exceptions: concrete exceptions",
-        "url": "https://docs.python.org/3/library/exceptions.html#concrete-exceptions"
-      },
-      {
-        "title": "Built-in Exceptions: exception hierarchy",
-        "url": "https://docs.python.org/3/library/exceptions.html#exception-hierarchy"
-      }
-    ],
-    "syntax": "# General form: subscripting obj[key] can raise a LookupError subclass\n#   LookupError                 <- base class (subclass of Exception)\n#     +-- IndexError\n#     +-- KeyError\n# Which one is raised depends on the kind of container, not on the key's value.\n\n# Example 1: a tuple (sequence type) with an out-of-range position\nitems = (10, 20, 30)\ntry:\n    items[7]\nexcept LookupError as e:      # catches either subclass\n    print(type(e).__name__, e)\n\n# Example 2: a mapping with an absent key\nprices = {\"tea\": 3}\ntry:\n    prices[\"milk\"]\nexcept LookupError as e:\n    print(type(e).__name__, e)\n\n# Variations and gotchas:\n# - Sequences (list, tuple, str, range) use integer positions; out of range -> IndexError.\n# - Mappings (dict and similar) use keys; a missing key -> KeyError.\n# - Neither is a subclass of the other; they are siblings under LookupError.\n#   `except IndexError` does not catch KeyError, and vice versa.\n# - `except LookupError` catches both.\n# - Avoid the exception: d.get(key, default), `key in d`, or `i < len(seq)`.\n# - Slices never raise IndexError: seq[5:10] just gives a shorter result.\n# - A wrong index type (e.g. seq[\"a\"]) raises TypeError, not IndexError.",
-    "title": "Lookup errors: exceptions raised by failed subscripting",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-88": {
-    "docs": [
-      {
-        "title": "Built-in Exceptions (ValueError, TypeError)",
-        "url": "https://docs.python.org/3/library/exceptions.html"
-      },
-      {
-        "title": "Built-in function int()",
-        "url": "https://docs.python.org/3/library/functions.html#int"
-      },
-      {
-        "title": "Errors and Exceptions tutorial",
-        "url": "https://docs.python.org/3/tutorial/errors.html"
-      }
-    ],
-    "syntax": "# General form\n#   int(x)            -> convert x to an integer\n#   int(text, base=10)\n#   float(x)\n#\n# Rule of thumb for which built-in exception is raised:\n#   TypeError  -> the argument's TYPE is not acceptable for the operation\n#   ValueError -> the TYPE is acceptable, but the VALUE is inappropriate\n#   SyntaxError-> raised by the parser when source code is compiled,\n#                 not by a running function call on a runtime value\n\n# Examples (different values from any quiz code)\ntry:\n    float('1.5.2')      # str is an accepted type, value is malformed\nexcept ValueError as e:\n    print(type(e).__name__)\n\ntry:\n    int([4, 5])         # list is not an accepted type at all\nexcept TypeError as e:\n    print(type(e).__name__)\n\n# Gotchas\n# - int('  42 ') works: surrounding whitespace is allowed\n# - int('4.2') fails for str input; int(4.2) truncates a float\n# - int('ff', 16) parses with an explicit base\n# - Conversion functions do not silently return 0 on bad input;\n#   they raise. Use try/except ValueError to handle user input.\n# - ValueError and TypeError are both subclasses of Exception,\n#   but neither is a subclass of the other.",
-    "title": "Built-in exceptions raised by type conversion functions"
+    "title": "Python try statement clauses and their roles"
   },
   "py-easy-89": {
     "docs": [
@@ -1292,23 +685,7 @@
       }
     ],
     "syntax": "# General form\n#   raise ExceptionClass(args)     # build an instance, then signal it\n#   raise instance                 # raise an existing exception object\n#   raise                          # bare: re-raise the exception being handled\n#   raise NewError(...) from err   # explicit chaining of causes\n\n# Example 1: validating a value\ndef set_age(age):\n    if age < 0:\n        raise KeyError('negative age')   # control leaves set_age here\n    return age\n\n# Example 2: handling it\ntry:\n    set_age(-3)\nexcept KeyError as e:\n    print('caught', e)\n\n# Example 3: build first, raise later\nerr = TypeError('wrong type')   # just an object; nothing happens yet\n# raise err                      # this line is what signals it\n\n# Gotchas\n# - Execution of the current block stops at the raise; the exception\n#   propagates up the call stack until an except clause matches.\n# - If nothing catches it, the program ends with a traceback.\n# - A try/except is only needed to handle an exception, not to raise one.\n# - Bare 'raise' outside an except block gives RuntimeError.\n# - Only BaseException subclasses (or instances) can be raised.\n# - Warnings are a separate mechanism: warnings.warn(...).",
-    "title": "The raise statement and exceptions",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-90": {
-    "docs": [
-      {
-        "title": "__main__ — Top-level code environment",
-        "url": "https://docs.python.org/3/library/__main__.html"
-      },
-      {
-        "title": "The import system",
-        "url": "https://docs.python.org/3/reference/import.html"
-      }
-    ],
-    "syntax": "# Every module has a built-in attribute __name__ (a string).\n# Python sets it when the module is loaded:\n#   - file executed as the program  -> __name__ is '__main__'\n#   - file loaded via import        -> __name__ is the module's name\n#\n# General form:\n# if __name__ == '__main__':\n#     <statements>\n\n# Example: file tools.py\ndef greet(who):\n    return 'hi ' + who\n\nprint('module name is', __name__)   # runs on every load\n\nif __name__ == '__main__':\n    print(greet('sam'))\n\n# Running `python tools.py`  -> __name__ == '__main__'\n# Running `import tools`     -> __name__ == 'tools'\n#\n# Gotchas:\n# - Top-level code outside the guard runs on any load.\n# - The guard is a convention; Python does not require a main() function\n#   or treat any function name specially.\n# - A module's top-level code is cached in sys.modules after the first\n#   import, so repeated imports do not re-run it.\n# - `python -m package.module` also sets __name__ to '__main__'.\n# - Useful so a file can be both a reusable library and a script,\n#   and so tests can import functions without side effects.",
-    "title": "The __name__ module attribute and top-level script environment",
-    "isSyntaxAfterAnswer": true
+    "title": "The raise statement and exceptions"
   },
   "py-easy-91": {
     "docs": [
@@ -1322,26 +699,7 @@
       }
     ],
     "syntax": "# General forms\nimport MODULE                 # binds the module object to a name\nimport MODULE as ALIAS        # binds the module object to ALIAS\nfrom MODULE import NAME       # binds NAME in the current namespace\nfrom MODULE import NAME as ALIAS\n\n# Example 1: whole-module import\nimport statistics\nprint(statistics.mean([1, 2, 3]))   # access via module name\n# 'mean' alone is NOT defined here\n\n# Example 2: from-import\nfrom os.path import join\nprint(join('a', 'b'))               # use name directly\n# 'os' and 'os.path' are NOT bound as names here\n\n# Gotchas / variations\n# - Either form runs the module's code the first time it is imported,\n#   and caches the whole module in sys.modules.\n# - The form only changes which names appear in YOUR namespace.\n# - from MODULE import * binds all public names (discouraged).\n# - Later imports of the same module reuse the cached module object.\n# - from-imported names are references: rebinding them locally does\n#   not change the module's own attribute.\n# - import a.b binds only 'a'; use a.b.name to reach inside.",
-    "title": "Import statement forms and name binding",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-92": {
-    "docs": [
-      {
-        "title": "Python FAQ: Rules for local and global variables",
-        "url": "https://docs.python.org/3/faq/programming.html#what-are-the-rules-for-local-and-global-variables-in-python"
-      },
-      {
-        "title": "The global statement",
-        "url": "https://docs.python.org/3/reference/simple_stmts.html#the-global-statement"
-      },
-      {
-        "title": "Naming and binding",
-        "url": "https://docs.python.org/3/reference/executionmodel.html#naming-and-binding"
-      }
-    ],
-    "syntax": "# Scope rule: Python decides a name's scope at compile time, per function.\n# If a name is assigned ANYWHERE in a function body, it is local\n# to that whole function (unless declared global/nonlocal).\n\ntotal = 10            # module-level (global) name\n\ndef show():\n    print(total)      # only reads -> looks up the global\n\ndef shadow():\n    total = 99        # assignment -> creates a separate local name\n    return total      # global 'total' is unchanged\n\ndef update():\n    global total      # declare: assignments rebind the module-level name\n    total = total + 5\n\n# Gotchas (as comments):\n# - Local-ness applies to the entire function body, even lines\n#   that run BEFORE the assignment line.\n# - Augmented assignment (x += 1) is also an assignment.\n# - Mutating an object (lst.append(1)) is not rebinding, so no\n#   global is needed for that.\n# - Error for using a local before it has a value: UnboundLocalError\n#   (a subclass of NameError).\n# - nonlocal name: rebind a variable in an enclosing function.\n# - Prefer passing arguments and returning values over global.",
-    "title": "Local vs global scope and the global statement"
+    "title": "Import statement forms and name binding"
   },
   "py-easy-93": {
     "docs": [
@@ -1359,26 +717,7 @@
       }
     ],
     "syntax": "# Name lookup inside a function follows LEGB:\n#   Local -> Enclosing -> Global -> Built-in\n#\n# Python decides at compile time whether a name is local to a function:\n# if the name is bound ANYWHERE in the body (assignment, for-target,\n# import, def, augmented assignment, etc.), it is local for the WHOLE body.\n\n# General form for rebinding a module-level name:\n#   def f():\n#       global name\n#       name = ...\n\nlimit = 10\n\ndef show():\n    return limit * 2      # only looks up 'limit' -> finds the global\n\ndef bump():\n    global limit          # needed because we rebind the name\n    limit = limit + 1\n\ndef shadow():\n    limit = 99            # new local; the global is untouched\n    return limit\n\n# Gotchas:\n# - Binding a name anywhere in the body makes it local everywhere in\n#   that body, so reading it earlier raises UnboundLocalError.\n# - 'total += 1' is an assignment, so it also makes 'total' local.\n# - Mutating an object (items.append(x)) is not rebinding the name.\n# - Nested functions use 'nonlocal name' to rebind an enclosing\n#   function's variable; 'global' targets module level.\n# - 'global' declaration must come before the name is used in the body.",
-    "title": "Variable scope: local, enclosing, and global names",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-94": {
-    "docs": [
-      {
-        "title": "Defining Functions: Default Argument Values",
-        "url": "https://docs.python.org/3/tutorial/controlflow.html#default-argument-values"
-      },
-      {
-        "title": "Keyword Arguments",
-        "url": "https://docs.python.org/3/tutorial/controlflow.html#keyword-arguments"
-      },
-      {
-        "title": "Function definitions (language reference)",
-        "url": "https://docs.python.org/3/reference/compound_stmts.html#function-definitions"
-      }
-    ],
-    "syntax": "# General form\n# def func(required, opt1=default1, opt2=default2): ...\n# func(positional..., name=value, ...)\n\ndef box(w, h=10, d=20, label=\"x\"):\n    return (w, h, d, label)\n\n# Positional args fill parameters left to right:\n#   box(1, 2)          -> w=1, h=2, others default\n# Keyword args bind by name, in any order:\n#   box(1, label=\"y\")  -> parameters not named keep their defaults\n#   box(label=\"y\", w=3)\n# Mixing: positional args first, then keywords.\n\n# Gotchas (comments only):\n# - Skipping a middle default is fine when you use a keyword\n#   for a later one; the skipped ones keep their defaults.\n# - A parameter given both positionally and by keyword -> TypeError\n#   (multiple values for argument).\n# - Missing required parameter (no default) -> TypeError.\n# - Unknown keyword name -> TypeError.\n# - Non-default parameters cannot follow default ones in a def.\n# - Defaults are evaluated once at definition time; avoid\n#   mutable defaults like [] (use None and create inside).",
-    "title": "Default parameters and keyword arguments"
+    "title": "Variable scope: local, enclosing, and global names"
   },
   "py-easy-95": {
     "docs": [
@@ -1410,45 +749,7 @@
       }
     ],
     "syntax": "# General form\n# def name(params):\n#     ...\n#     return expression      # hand a value back to the caller\n#     return                 # leave the function immediately, no expression given\n\n# Example 1: return a computed value\ndef area(w, h):\n    return w * h\n\nsize = area(3, 4)       # the call expression evaluates to what the function handed back\n\n# Example 2: early exit and multiple values\ndef describe(n):\n    if n < 0:\n        return \"negative\"       # stops here; the rest of the body is skipped\n    return \"non-negative\", n    # several values are packed into a tuple\n\nlabel, num = describe(5)       # unpack the tuple\n\n# Gotchas and variations\n# - A call is an expression: you can assign it, print it, or pass it on.\n# - return ends the function call at once, even inside a loop.\n# - To find out what any call evaluates to, try it: print(repr(describe(-1)))\n# - Code after a return in the same block never runs.\n# - Ask what a call evaluates to when execution never reaches a\n#   'return expression' line. The reference page linked below explains it.\n# - Generators use yield instead of return to produce values.",
-    "title": "Function return values and the return statement",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-97": {
-    "docs": [
-      {
-        "title": "Tuples and Sequences (tutorial)",
-        "url": "https://docs.python.org/3/tutorial/datastructures.html#tuples-and-sequences"
-      },
-      {
-        "title": "Assignment statements",
-        "url": "https://docs.python.org/3/reference/simple_stmts.html#assignment-statements"
-      },
-      {
-        "title": "The return statement",
-        "url": "https://docs.python.org/3/reference/simple_stmts.html#the-return-statement"
-      }
-    ],
-    "syntax": "# General form: a return with comma-separated values builds a tuple\ndef func(args):\n    return expr1, expr2        # same as return (expr1, expr2)\n\n# Capture: assign to a tuple of names (sequence unpacking)\na, b = func(args)              # number of names must match number of values\n\n# Example with different names/values\ndef bounds(words):\n    return len(words), words[0]\n\ncount, first = bounds([\"x\", \"y\", \"z\"])\n\n# Variations and gotchas\n# whole = bounds([\"x\"])        # keeps the tuple; index it with whole[0], whole[1]\n# a, b = (1, 2, 3)             # ValueError: too many values to unpack\n# head, *rest = [1, 2, 3]      # starred name collects the remainder into a list\n# _, second = bounds([\"q\"])    # use _ for a value you want to ignore\n# Unpacking works with any iterable (lists, strings, generators), not only tuples\n# Parentheses are optional: the comma makes the tuple, not the parentheses",
-    "title": "Returning and unpacking multiple values",
-    "isSyntaxAfterAnswer": true
-  },
-  "py-easy-98": {
-    "docs": [
-      {
-        "title": "Data model: objects, values and types",
-        "url": "https://docs.python.org/3/reference/datamodel.html#objects-values-and-types"
-      },
-      {
-        "title": "copy — Shallow and deep copy operations",
-        "url": "https://docs.python.org/3/library/copy.html"
-      },
-      {
-        "title": "Assignment statements",
-        "url": "https://docs.python.org/3/reference/simple_stmts.html#assignment-statements"
-      }
-    ],
-    "syntax": "# General form: name = existing_name   -> binds a second name to the SAME object (no copy)\n#   a = <object>\n#   b = a            # a and b refer to one object\n\n# Example with a different type (dict):\nconfig = {\"mode\": \"fast\"}\nalias = config\nalias[\"level\"] = 2       # mutates the shared object\n# config and alias both reflect in-place changes\n\n# Checking identity\n# alias is config        -> True  (same object)\n# id(alias) == id(config)\n\n# Making an independent (shallow) copy\nletters = [\"x\", \"y\"]\ncopy1 = letters.copy()    # also: list(letters), letters[:]\ncopy2 = dict(config)      # or config.copy()\n\n# Gotchas (as comments):\n# - Assignment never copies; it only binds a name.\n# - In-place methods (append, extend, sort, update, []=) change the shared object.\n# - Rebinding (b = something_new) only changes that one name.\n# - Immutable objects (int, str, tuple) cannot be changed in place,\n#   so sharing them is safe.\n# - Shallow copies share nested objects; use copy.deepcopy(x)\n#   (import copy) for fully independent nested data.",
-    "title": "Assignment, object references, and copying mutable objects"
+    "title": "Function return values and the return statement"
   },
   "py-easy-99": {
     "docs": [
@@ -1466,8 +767,7 @@
       }
     ],
     "syntax": "# General form\n# seq[start:stop:step]   -> a new object built from selected items\n#   start inclusive, stop exclusive, step defaults to 1\n#   any part may be omitted: seq[:], seq[2:], seq[:3], seq[::2]\n\n# Examples\nnums = [10, 20, 30, 40, 50]\npart = nums[1:4]        # slice with explicit bounds\nevery = nums[::2]       # every second item\nrev = nums[::-1]        # negative step walks backwards\n\n# Things to know\n# - A slice expression evaluates to a new object; the slice's\n#   container is separate from the source (use 'is' to compare identity).\n# - The items inside are the same objects, not copies of them\n#   (this is a shallow copy; nested mutables are shared).\n# - Out-of-range bounds are clipped, no IndexError for slices.\n# - Negative indices count from the end: nums[-2:]\n# - Slice assignment changes the original in place:\n#     nums[1:3] = [0]   # replaces a range, length may change\n# - Other copy tools: list(x), x.copy(), copy.deepcopy(x)\n# - Tuples and strings can be sliced too (they return their own type).",
-    "title": "Slicing sequences with start:stop:step",
-    "isSyntaxAfterAnswer": true
+    "title": "Slicing sequences with start:stop:step"
   },
   "py-easy-100": {
     "docs": [
@@ -1482,34 +782,6 @@
     ],
     "syntax": "# General form\n#   round(number)            -> int\n#   round(number, ndigits)   -> same type as number\n#\n# Python 3 uses \"round half to even\" (banker's rounding) for exact ties:\n# when a value is exactly halfway between two candidates, the result\n# is the one with an even last digit.\n\nprint(round(0.5))     # tie between 0 and 1\nprint(round(4.5))     # tie between 4 and 5\nprint(round(7.2))     # not a tie: nearest integer\n\n# With ndigits, the same tie rule applies to the last kept digit:\nprint(round(1.25, 1))\n\n# Gotchas:\n# - Floats are stored in binary, so many decimal \"ties\" such as 2.675\n#   are not exactly halfway; they round based on the stored value.\n# - round(x) with no ndigits returns an int; with ndigits returns a float\n#   for float input.\n# - Negative ndigits rounds to tens, hundreds, etc.: round(1234, -2)\n# - For explicit half-up rounding, use the decimal module:\n#     from decimal import Decimal, ROUND_HALF_UP\n#     Decimal('6.5').quantize(Decimal('1'), rounding=ROUND_HALF_UP)",
     "title": "Built-in round() and tie-breaking rules"
-  },
-  "py-easy-101": {
-    "docs": [
-      {
-        "title": "Common sequence operations (indexing)",
-        "url": "https://docs.python.org/3/library/stdtypes.html#common-sequence-operations"
-      },
-      {
-        "title": "Truth value testing",
-        "url": "https://docs.python.org/3/library/stdtypes.html#truth-value-testing"
-      },
-      {
-        "title": "Conditional expressions",
-        "url": "https://docs.python.org/3/reference/expressions.html#conditional-expressions"
-      }
-    ],
-    "syntax": "# General forms\n#   seq[i]            -> item at position i (0-based)\n#   seq[-k]           -> k-th item from the end (-1 is the last position)\n#   value_if_true if condition else value_if_false   (conditional expression)\n#\n# Truthiness: empty containers ([], (), {}, set(), \"\") are falsy;\n# non-empty ones are truthy, so `if seq:` tests \"has items\".\n\n# Example 1: negative indexing on a non-empty list\ncolors = [\"red\", \"green\", \"blue\"]\ncolors[0]     # first item\ncolors[-2]    # second from the end\n\n# Example 2: conditional expression with a truthiness test\ndef first_or_default(seq, default=None):\n    return seq[0] if seq else default\n\n# Gotchas\n# - Indexing outside the valid range raises IndexError,\n#   and this includes any index on an empty sequence.\n# - Slices never raise for out-of-range bounds; they return a\n#   (possibly empty) sequence instead: colors[5:] == []\n# - A conditional expression evaluates only the branch it selects,\n#   so the guard prevents the indexing from running.\n# - `if seq:` is not the same as `if seq is not None:`.\n# - Alternative styles: try/except IndexError, or len(seq) > 0.",
-    "title": "Sequence indexing, negative indices, and truthiness of containers"
-  },
-  "py-easy-102": {
-    "docs": [
-      {
-        "title": "str.split() in the Python standard library",
-        "url": "https://docs.python.org/3/library/stdtypes.html#str.split"
-      }
-    ],
-    "syntax": "# General form\n#   s.split(sep=None, maxsplit=-1) -> list of str\n\n# sep given: split on that exact string, every occurrence counts\n#   \"x,y,,z\".split(\",\")      -> ['x', 'y', '', 'z']   (empty field kept)\n#   \"\".split(\",\")            -> ['']                 (one empty string)\n\n# sep omitted (or None): split on runs of whitespace\n#   - leading/trailing whitespace is dropped\n#   - consecutive whitespace (spaces, tabs, newlines) acts as ONE separator\n#   - no empty strings appear in the result\n#   \"  p \\t q\\nr \".split()   -> ['p', 'q', 'r']\n#   \"   \".split()            -> []\n\n# Example: counting items in a list produced by split\ndef count_parts(s):\n    return len(s.split(\";\"))\n# count_parts(\"a;;b\") -> 3 because the middle empty field is kept\n\n# Gotchas\n# - split(\" \") and split() are NOT the same thing\n# - maxsplit limits the number of splits: \"a b c\".split(None, 1) -> ['a', 'b c']\n# - len(result) counts list items, so empty strings in the list are counted",
-    "title": "str.split() with and without a separator"
   },
   "py-easy-103": {
     "docs": [
@@ -1528,19 +800,5 @@
     ],
     "syntax": "# General form\n#   value in container        -> bool\n#   value not in container   -> bool\n#\n# How the work is done depends on the container type:\n#   list / tuple : compares items one at a time, left to right (linear scan)\n#   set / dict   : hashes the value and jumps to its bucket (average constant time)\n#   str          : substring search\n#   range        : arithmetic check, no scan\n\nnames_list = [\"ann\", \"bo\", \"cy\"]\nnames_set = {\"ann\", \"bo\", \"cy\"}\nprint(\"bo\" in names_list)   # True\nprint(\"zed\" in names_set)   # False\n\n# Building a set from an iterable (one-time cost, roughly linear)\nseen = set([4, 8, 15])\n\n# Gotchas\n# - Set/dict members must be hashable (no lists or dicts inside a set).\n# - A miss on a list must check every item; a hit may stop early.\n# - Converting to a set inside a loop repeats the build cost each time;\n#   build it once, outside the loop.\n# - Sets are unordered and drop duplicates.\n# - dict `in` tests keys, not values.\n# - Use timeit to measure rather than guess:\n#   import timeit; timeit.timeit(\"5 in c\", \"c = list(range(100))\")",
     "title": "Membership testing with the in operator"
-  },
-  "py-easy-104": {
-    "docs": [
-      {
-        "title": "Set types: set, frozenset",
-        "url": "https://docs.python.org/3/library/stdtypes.html#set-types-set-frozenset"
-      },
-      {
-        "title": "timeit: measure execution time of small code snippets",
-        "url": "https://docs.python.org/3/library/timeit.html"
-      }
-    ],
-    "syntax": "# Cost of common approaches (n = number of items)\n#\n# Nested loop over all pairs: about n*(n-1)/2 comparisons -> O(n^2)\n#   for i in range(len(items)):\n#       for j in range(i + 1, len(items)):\n#           ...compare items[i], items[j]\n#\n# set(iterable): hashes each item once, average O(n) time\n# len(x): O(1) for list, set, dict, str\n# item in some_set: average O(1)   (item in some_list is O(n))\n\n# Example: pair count grows quadratically\nn = 10\npairs = n * (n - 1) // 2      # 45 pairs for 10 items\n\n# Example: set membership vs list membership\nwords = [\"a\", \"b\", \"c\"]\nword_set = set(words)\n\"b\" in words       # scans the list element by element\n\"b\" in word_set    # one hash lookup on average\n\n# Gotchas:\n# - set() requires hashable items (no lists or dicts inside).\n# - A set drops repeated values, so its length can be smaller than the source's.\n# - Big-O describes growth; for tiny inputs constants matter.\n# - Python-level loops run bytecode per step; built-ins like set()\n#   do their looping in C, which is usually faster still.\n# - Measure with timeit when unsure:\n#   import timeit; timeit.timeit(\"f()\", globals=globals(), number=1000)",
-    "title": "Algorithmic cost: pairwise loops vs hash-based sets"
   }
 }
