@@ -46,13 +46,15 @@ describe('ModelProvider', () => {
         expect(exec).toHaveBeenCalledTimes(MAX_ATTEMPTS);
     });
 
-    it('passes a chosen model to the CLI as --model, and none by default', async () => {
+    it('passes a chosen model to the CLI as --model ahead of the pipeline model id', async () => {
+        vi.stubEnv('PIPELINE_MODEL', 'claude-sonnet-5-5');
         const exec = vi.fn().mockResolvedValue(cliAnswer('{"topic":"strings"}'));
         await createModelProvider('cli', { exec }, 'claude-haiku-5-5').generate(REQUEST);
         await createModelProvider('cli', { exec }).generate(REQUEST);
         const [[, chosenArgs], [, defaultArgs]] = exec.mock.calls as [string, string[]][];
-        expect(chosenArgs).toContain('--model=claude-haiku-5-5');
-        expect(defaultArgs.some((arg) => arg.startsWith('--model'))).toBe(false);
+        expect(chosenArgs.filter((arg) => arg === '--model')).toHaveLength(1);
+        expect(chosenArgs[chosenArgs.indexOf('--model') + 1]).toBe('claude-haiku-5-5');
+        expect(defaultArgs[defaultArgs.indexOf('--model') + 1]).toBe('claude-sonnet-5-5');
     });
 
     it('sends a chosen model to the API ahead of PIPELINE_MODEL', async () => {
@@ -119,6 +121,7 @@ describe('ModelProvider', () => {
     });
 
     it('runs the CLI with no tools, no MCP servers, no settings files, and the system prompt bound to its flag', async () => {
+        vi.stubEnv('PIPELINE_MODEL', '');
         const exec = vi.fn().mockResolvedValue(cliAnswer('{"topic":"a"}'));
         const system = 'sys; rm -rf / "quoted" $(whoami)';
         await createModelProvider('cli', { exec }).generate({ ...REQUEST, system });
@@ -133,8 +136,19 @@ describe('ModelProvider', () => {
             '--setting-sources',
             '',
             '--no-session-persistence',
+            '--model',
+            'claude-opus-5-5',
             `--system-prompt=${system}`,
         ]);
+    });
+
+    it('passes PIPELINE_MODEL as the CLI --model argument', async () => {
+        vi.stubEnv('PIPELINE_MODEL', 'claude-test-model');
+        const exec = vi.fn().mockResolvedValue(cliAnswer('{"topic":"a"}'));
+        await createModelProvider('cli', { exec }).generate(REQUEST);
+        const [, args] = exec.mock.calls[0] as [string, string[]];
+        const modelIndex = args.indexOf('--model');
+        expect(args.slice(modelIndex, modelIndex + 2)).toEqual(['--model', 'claude-test-model']);
     });
 
     it('sends the prompt on stdin, never in argv, so it cannot read as a flag or subcommand', async () => {

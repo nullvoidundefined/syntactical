@@ -9,8 +9,9 @@ import type { NextFunction, Request, Response } from 'express';
 import { withTransaction } from '../clients/withTransaction.js';
 import { AUTH } from '../constants/auth.js';
 import { HTTP } from '../constants/http.js';
-import { createErrorResponse, ERROR_CODES } from '../errors.js';
+import { ERROR_CODES, sendError } from '../errors.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
+import { keyOfEmail, keyOfIp } from '../middleware/rateLimitKeys.js';
 import { authSchemas } from '../schemas/authSchemas.js';
 import { createSession } from '../services/createSession.js';
 import { verifyOneTimeCode } from '../services/verifyOneTimeCode.js';
@@ -35,10 +36,7 @@ interface SignInRequest {
 function validateCreateSession(req: Request, res: Response, next: NextFunction): void {
   const { data, success } = authSchemas.createSession.safeParse(req.body);
   if (!success) {
-    const { requestId } = res.locals as { requestId: string };
-    res
-      .status(BAD_REQUEST)
-      .json(createErrorResponse(ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body', requestId));
+    sendError(res, BAD_REQUEST, ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body');
     return;
   }
   const { code, email, timezone } = data;
@@ -53,19 +51,19 @@ function createAuthSessionsRouter(deps: ResolvedAuthDeps): Router {
   const limits = { database, keySecret: rateLimitKeySecret, now, windowMs: WINDOW_MS };
   const perIp = createRateLimit({
     ...limits,
-    keyOf: (req) => req.ip ?? 'unknown',
+    keyOf: keyOfIp,
     limit: VERIFY_PER_IP,
     scope: VERIFY_IP,
   });
   const perEmail = createRateLimit({
     ...limits,
-    keyOf: (_req, res) => String(res.locals.email),
+    keyOf: keyOfEmail,
     limit: VERIFY_PER_EMAIL,
     scope: VERIFY_EMAIL,
   });
 
   router.post('/sessions', perIp, validateCreateSession, perEmail, async (req, res) => {
-    const { requestId, signIn } = res.locals as { requestId: string; signIn: SignInRequest };
+    const { signIn } = res.locals as { signIn: SignInRequest };
     const { code, email, timezone } = signIn;
     const at = now();
     const session = await withTransaction(database, async (client) => {
@@ -73,9 +71,7 @@ function createAuthSessionsRouter(deps: ResolvedAuthDeps): Router {
       return isValid ? createSession(client, { email, now: at, timezone }) : undefined;
     });
     if (!session) {
-      res
-        .status(BAD_REQUEST)
-        .json(createErrorResponse(ERROR_CODES.AUTH.INVALID_CODE, 'Invalid or expired code', requestId));
+      sendError(res, BAD_REQUEST, ERROR_CODES.AUTH.INVALID_CODE, 'Invalid or expired code');
       return;
     }
     sendSessionResponse(req, res, { ...session, isCookieSecure });

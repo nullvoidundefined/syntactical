@@ -4,7 +4,7 @@
 import { z } from 'zod';
 
 import type { StagedReference } from '../../types/StagedReference.js';
-import { readJsonIfPresent } from '../gapFill/readJsonIfPresent.js';
+import { readJsonIfPresent } from '../json/readJsonIfPresent.js';
 
 import { REFERENCE_SCHEMA } from './REFERENCE_SCHEMA.js';
 

@@ -12,7 +12,7 @@ import { type Question, validateManifest } from '@syntactical/content-schema';
 import type { ModelProvider } from '../types/ModelProvider.js';
 import { ProviderTransientError } from '../types/ProviderTransientError.js';
 import { ModelOutputInvalid } from '../types/ModelOutputInvalid.js';
-import { writeJsonAtomic } from '../services/classify/writeJsonAtomic.js';
+import { writeJsonAtomic } from '../services/json/writeJsonAtomic.js';
 import { DOC_HOSTS } from '../services/references/DOC_HOSTS.js';
 import { readReferences } from '../services/references/readReferences.js';
 import { referenceQuestion } from '../services/references/referenceQuestion.js';

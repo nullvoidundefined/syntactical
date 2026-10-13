@@ -1,7 +1,10 @@
 import { randomUUID } from 'node:crypto';
 
+import { QueryClientProvider } from '@tanstack/react-query';
+import { Slot } from 'expo-router';
 import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 
+import { createQueryClient } from '../../config/queryClient';
 import { installRoutedFetch, type RouteReply } from '../../state/__tests__/authTestSupport';
 import PurchaseCompleteScreen from '../purchase-complete';
 
@@ -35,6 +38,7 @@ jest.mock('../../state/AuthProvider', () => ({
     user: mockUserId === null ? null : { id: mockUserId },
     verifyCode: () => Promise.resolve({ isOk: false, reason: 'unavailable' }),
   }),
+  useSignedInUserId: () => mockUserId,
 }));
 
 const CONFIRMING = 'Confirming your purchase';
@@ -50,7 +54,16 @@ function MenuStub() {
   return null;
 }
 
-const ROUTES = { index: MenuStub, 'purchase-complete': PurchaseCompleteScreen };
+// The route confirms through the entitlements query, so the layout provides a query client.
+function QueryLayout() {
+  return (
+    <QueryClientProvider client={createQueryClient()}>
+      <Slot />
+    </QueryClientProvider>
+  );
+}
+
+const ROUTES = { _layout: QueryLayout, index: MenuStub, 'purchase-complete': PurchaseCompleteScreen };
 
 function profileReply(entitlements: string[]): RouteReply {
   return {
@@ -70,9 +83,7 @@ function profileReply(entitlements: string[]): RouteReply {
 }
 
 function urlFor(product: string | null): string {
-  return product === null
-    ? '/purchase-complete'
-    : `/purchase-complete?product=${encodeURIComponent(product)}`;
+  return product === null ? '/purchase-complete' : `/purchase-complete?product=${encodeURIComponent(product)}`;
 }
 
 // Lets pending promises (fetch, body read, state updates) settle without
@@ -179,7 +190,7 @@ describe('purchase-complete route', () => {
     expect(screen.queryByText(STILL_PROCESSING)).toBeNull();
   });
 
-  it('does not unlock on a different product\'s entitlement', async () => {
+  it("does not unlock on a different product's entitlement", async () => {
     installRoutedFetch({ 'GET me': profileReply([OTHER_PRODUCT, `${PRODUCT}-extra`]) });
     await open(PRODUCT);
     await advance(POLL_INTERVAL_MS * 3);
@@ -209,7 +220,12 @@ describe('purchase-complete route', () => {
 
   it('keeps polling through a network error and a non-200 response, then unlocks', async () => {
     const { requests } = installRoutedFetch({
-      'GET me': ['reject', { status: 500, body: { error: { code: 'INTERNAL', message: 'x' } } }, { status: 503 }, profileReply([PRODUCT])],
+      'GET me': [
+        'reject',
+        { status: 500, body: { error: { code: 'INTERNAL', message: 'x' } } },
+        { status: 503 },
+        profileReply([PRODUCT]),
+      ],
     });
     await open(PRODUCT);
     expect(screen.getByText(CONFIRMING)).toBeTruthy();

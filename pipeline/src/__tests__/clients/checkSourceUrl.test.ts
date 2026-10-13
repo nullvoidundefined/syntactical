@@ -5,6 +5,20 @@ import { describe, expect, it } from 'vitest';
 
 import { checkSourceUrl } from '../../clients/checkSourceUrl.js';
 
+// The documentation hosts these cases check against.
+const HOSTS = [
+    'owasp.org',
+    'cheatsheetseries.owasp.org',
+    'developer.mozilla.org',
+    'rfc-editor.org',
+    'datatracker.ietf.org',
+    'docs.python.org',
+    'nodejs.org',
+    'postgresql.org',
+    'w3.org',
+    'whatwg.org',
+];
+
 // Built at run time so no credential-shaped URL literal sits in the source.
 const NAME_AND_WORD_URL = `https://${['name', 'word'].join(':')}@owasp.org/`;
 
@@ -24,7 +38,7 @@ describe('checkSourceUrl', () => {
         'https://owasp.org./x',
         'https://owasp.org:443/x',
     ])('accepts %s', (raw) => {
-        expect(checkSourceUrl(raw).ok).toBe(true);
+        expect(checkSourceUrl(raw, HOSTS).ok).toBe(true);
     });
 
     it.each([
@@ -45,16 +59,16 @@ describe('checkSourceUrl', () => {
         ['not a url', 'malformed-url'],
         ['', 'malformed-url'],
     ])('rejects %s as %s', (raw, reason) => {
-        expect(checkSourceUrl(raw)).toEqual({ ok: false, reason });
+        expect(checkSourceUrl(raw, HOSTS)).toEqual({ ok: false, reason });
     });
 
     it('rejects a percent-encoded dot that would join an evil suffix', () => {
-        expect(checkSourceUrl('https://owasp.org%2eevil.test/').ok).toBe(false);
+        expect(checkSourceUrl('https://owasp.org%2eevil.test/', HOSTS).ok).toBe(false);
     });
 
-    it('checks against a caller-given host list instead of the default one', () => {
+    it('checks against the host list it is given', () => {
         expect(checkSourceUrl('https://go.dev/ref/spec', ['go.dev']).ok).toBe(true);
-        expect(checkSourceUrl('https://go.dev/ref/spec').ok).toBe(false);
+        expect(checkSourceUrl('https://go.dev/ref/spec', HOSTS).ok).toBe(false);
         expect(checkSourceUrl('https://owasp.org/', ['go.dev'])).toEqual({ ok: false, reason: 'host-not-allowed' });
     });
 });

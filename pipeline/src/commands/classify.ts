@@ -9,12 +9,10 @@
 // Free-bank output goes under the public `pipelineDir`. Paid-bank output goes under
 // `contentRoot` (the private content repo) and carries ids and topics only; no paid
 // question text is written anywhere, and nothing paid is ever written under `pipelineDir`.
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { type Question, validateManifest } from '@syntactical/content-schema';
-
-import { assertContentRootUsable } from '../services/classify/assertContentRootUsable.js';
+import { loadCommandManifest } from '../services/content/loadCommandManifest.js';
+import { readBankQuestions } from '../services/content/readBankQuestions.js';
 import { classifyBank } from '../services/classify/classifyBank.js';
 import { pickTopics } from '../services/classify/pickTopics.js';
 import { readFallbackTopics } from '../services/classify/readFallbackTopics.js';
@@ -22,6 +20,7 @@ import { readLatestReport } from '../services/classify/readLatestReport.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
 import { writePipelineReport } from '../services/writePipelineReport.js';
 import { resolveBankFile } from '../services/resolveBankFile.js';
+import { resolveBankOutputRoot } from '../services/resolveBankOutputRoot.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 import type { PipelineReport } from '../types/PipelineReport.js';
 
@@ -43,10 +42,6 @@ interface Totals {
 }
 
 const STAGE = 'classify';
-
-async function readJson(path: string): Promise<unknown> {
-    return JSON.parse(await readFile(path, 'utf8'));
-}
 
 function buildReport(
     previous: PipelineReport | null,
@@ -85,17 +80,7 @@ export async function classify(options: ClassifyOptions): Promise<PipelineReport
     const { contentDir, contentRoot, newRunId, pipelineDir, provider } = options;
     const log = (line: string): void => options.log(sanitizeLogText(line));
     const startedAt = options.now();
-    // The manifest is untrusted: language ids, difficulty keys, and bank paths are joined
-    // into file paths below, so nothing is read, queued, or written before it validates.
-    const checked = validateManifest(await readJson(join(contentDir, 'manifest.json')));
-    if ('rule' in checked) {
-        throw new Error(`Manifest rejected: ${sanitizeLogText(checked.rule)}`);
-    }
-    const { manifest } = checked;
-    const { languages } = manifest;
-    if (languages.some(({ banks }) => Object.values(banks).some(({ access }) => access !== 'free'))) {
-        await assertContentRootUsable(contentRoot, pipelineDir, contentDir);
-    }
+    const { languages } = await loadCommandManifest({ contentDir, contentRoot, pipelineDir });
     const fallbackTopics = await readFallbackTopics(join(pipelineDir, 'topics.json'));
     const previous = await readLatestReport(join(pipelineDir, 'reports'));
     const totals: Totals = { accepted: 0, agreed: 0, compared: 0, queued: 0 };
@@ -111,18 +96,16 @@ export async function classify(options: ClassifyOptions): Promise<PipelineReport
                 log(`skipping bank ${bankKey}: no topic list for language ${languageId}`);
                 continue;
             }
-            const bank = (await readJson(resolveBankFile(contentDir, contentRoot, { access, path }))) as {
-                questions: Question[];
-            };
+            const questions = await readBankQuestions(resolveBankFile(contentDir, contentRoot, { access, path }));
             const result = await classifyBank({
                 bankKey,
                 difficulty,
                 languageId,
                 log,
                 // Free output stays in the public tree; paid output goes to the private content root.
-                outRoot: access === 'free' ? pipelineDir : contentRoot,
+                outRoot: resolveBankOutputRoot(pipelineDir, contentRoot, { access }),
                 provider,
-                questions: bank.questions,
+                questions,
                 topics,
             });
             const { accepted, agreed, compared, isWtfOveruse, queued } = result;

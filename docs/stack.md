@@ -1,285 +1,113 @@
 # Syntactical Stack
 
-Every significant language, runtime, framework, library, tool, service, and
-infrastructure piece this application uses, grouped by layer. The repository holds
-one Expo universal app in `app/`, `components/`, `state/`, `services/`, `clients/`,
-`config/`, and `constants/`; it builds for iOS, Android, and the web.
+Every runtime, framework, library, tool, and service the repository uses, grouped by workspace and layer, with its declared version, its role, and where it is configured. The versions are the ranges in the `package.json` files named in each section; `package-lock.json` holds the exact installed versions.
 
-Last updated: 2026-10-02 (Vite app, gh-pages, and the Tailwind 4 alias removed at the cutover, EAS added, IAN-564)
+Last updated: 2026-10-13 (rewritten from the manifests after the engineering audit, `docs/audits/2026-10-13-engineering.md`).
+
+## Workspaces
+
+`package.json` at the root declares the workspaces `packages/*`, `pipeline`, and `server`. Shared dev tooling (`typescript ~6.0.3`, `vitest ^3.2.7`, `@types/node ^22.20.5`, `prettier 3.8.1`, `oxlint ^1.81.0`, `tsx ^4.23.15`) is declared once at the root; `server` also declares `typescript` because `server/Dockerfile` installs only that workspace before compiling.
+
+| Workspace                 | Package                       | Runtime target                                   | Test runner                                                 |
+| ------------------------- | ----------------------------- | ------------------------------------------------ | ----------------------------------------------------------- |
+| root                      | `syntactical` (the Expo app)  | iOS, Android, web (`expo export --platform web`) | Jest 29 with `jest-expo`, two projects (`native`, `web`)    |
+| `server/`                 | `@syntactical/server`         | Node 22 in Docker on Railway                     | Vitest; integration tests in `vitest.integration.config.ts` |
+| `pipeline/`               | `@syntactical/pipeline`       | Node 22 CLI, Docker for the oracle runners       | Vitest; Docker suites skipped with `SKIP_DOCKER_TESTS=1`    |
+| `packages/content-schema` | `@syntactical/content-schema` | TypeScript source for Metro, `dist/` for Node    | Vitest                                                      |
+| `packages/progress`       | `@syntactical/progress`       | TypeScript source for Metro, `dist/` for Node    | Vitest                                                      |
 
 ## Languages and runtimes
 
-### TypeScript
+| Piece      | Version  | Role                                                                                                                                   | Configured in                                                                                          |
+| ---------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| TypeScript | `~6.0.3` | Every workspace; `npx tsc --noEmit` at the root, `npm run typecheck -w <workspace>`, and `npm run typecheck:e2e` run in CI.            | `tsconfig.json` (extends `expo/tsconfig.base`), one `tsconfig.json` per workspace, `e2e/tsconfig.json` |
+| Node.js    | 22       | Build scripts, tests, the server, the pipeline. Every workflow pins `node-version: 22`; the API image is `node:22.21.1-bookworm-slim`. | `.github/workflows/*.yml`, `server/Dockerfile`                                                         |
 
-- **Version:** ~6.0.3
-- **What it is:** JavaScript with static types, checked at build time.
-- **Docs:** https://www.typescriptlang.org/docs/
-- **Role here:** The language of the Expo app; `npx tsc --noEmit` runs in CI.
-- **Why chosen:** Expo's templates and tooling are TypeScript-first, and the content validators and query layer benefit from checked shapes.
-- **Configured in:** `tsconfig.json` (extends `expo/tsconfig.base`, strict).
+## App (root `package.json`)
 
-### Node.js
+| Piece                                | Version                | Role                                                                                                                                                                                                             | Configured in                                                                                   |
+| ------------------------------------ | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Expo                                 | `^57.0.26` (SDK 57)    | Builds the app for iOS, Android, and the web.                                                                                                                                                                    | `app.config.ts`, `babel.config.js`, `metro.config.js`                                           |
+| Expo Router                          | `~57.0.24`             | File-based routes in `app/`: the track, difficulty, length, and play steps, review, settings, sign-in, sign-up, admin, privacy, deletion, purchase-complete. Web output is single-page, served at the site root. | `app.config.ts` (`web.output: single`), `app/`                                                  |
+| React, React DOM                     | `19.2.3`               | The UI library.                                                                                                                                                                                                  | `package.json`                                                                                  |
+| React Native                         | `0.86.3`               | Component primitives.                                                                                                                                                                                            | `package.json`                                                                                  |
+| react-native-web                     | `^0.21.2`              | Renders the app in the browser.                                                                                                                                                                                  | used by Expo's web bundler                                                                      |
+| NativeWind, react-native-css-interop | `^4.2.7`, `^0.2.7`     | Tailwind class names on React Native components.                                                                                                                                                                 | `tailwind.config.js`, `global.css`, `babel.config.js`, `metro.config.js`, `nativewind-env.d.ts` |
+| Tailwind CSS                         | `^3.4.19`              | The theme NativeWind consumes (NativeWind 4 requires Tailwind 3).                                                                                                                                                | `tailwind.config.js`                                                                            |
+| react-native-safe-area-context       | `~5.7.0`               | Device insets.                                                                                                                                                                                                   | `app/_layout.tsx`                                                                               |
+| react-native-screens                 | `~4.26.0`              | Native screen containers, a peer of Expo Router.                                                                                                                                                                 | `package.json`                                                                                  |
+| react-native-reanimated              | `4.5.1`                | A peer of NativeWind; the reduced-motion check in `state/useIsReducedMotion.ts`.                                                                                                                                 | `package.json`                                                                                  |
+| expo-linking, expo-constants         | `~57.0.11`, `~57.0.20` | Deep links (a peer of Expo Router); `expo-constants` reads `extra` from `app.config.ts`.                                                                                                                         | `app.config.ts`                                                                                 |
+| expo-crypto                          | `~57.0.3`              | SHA-256 of downloaded banks.                                                                                                                                                                                     | `clients/hashClient.ts`                                                                         |
+| expo-secure-store                    | `~57.0.4`              | The session token on native (`clients/readSessionToken.ts`, `writeSessionToken.ts`, `clearSessionToken.ts`).                                                                                                     | `package.json`                                                                                  |
+| AsyncStorage                         | `2.2.0`                | Stats, the answer event log, and the hash-bound content cache.                                                                                                                                                   | `clients/readJson.ts`, `clients/writeJson.ts`, `constants/appConfig.ts`                         |
+| TanStack Query                       | `^5.104.0`             | Fetches the manifest, banks, the profile, and entitlements; one in-flight request per key.                                                                                                                       | `config/queryClient.ts`, `services/content/`, `state/`                                          |
+| NetInfo                              | `12.0.1`               | Offline labelling of banks with no local copy.                                                                                                                                                                   | `package.json`                                                                                  |
+| Prism                                | `^1.30.0`              | Tokenizes question code for `components/quiz/CodeBlock.tsx`; grammars in `packages/content-schema/src/grammars.ts`.                                                                                              | `services/codeBlock/tokenizeCode.ts`                                                            |
+| react-native-purchases               | `^10.11.0`             | RevenueCat on iOS and Android (`clients/purchaseStoreClient.ts`, `clients/purchasesIdentity/`).                                                                                                                  | `package.json`                                                                                  |
+| @revenuecat/purchases-js             | `^1.67.1`              | RevenueCat Web Billing (`clients/webBillingClient/`).                                                                                                                                                            | `package.json`                                                                                  |
+| posthog-react-native                 | `^4.78.4`              | The eight analytics events in `constants/analyticsEvents.ts`; anonymous guests; a no-op without `POSTHOG_KEY`.                                                                                                   | `clients/analyticsClient.ts`, `app.config.ts`                                                   |
 
-- **Version:** 22 (CI)
-- **What it is:** The JavaScript runtime for build scripts, tests, and tooling.
-- **Docs:** https://nodejs.org/docs/latest-v22.x/api/
-- **Role here:** Runs Jest, the Expo CLI, and the content scripts in `scripts/`.
-- **Why chosen:** Required by the Expo and Jest toolchains.
-- **Configured in:** `.github/workflows/ci.yml`, `.github/workflows/deploy.yml` (`setup-node`).
+### App testing (root `devDependencies`)
 
-## Frontend
+| Piece                                                    | Version                                      | Role                                                                                                                                                                                               | Configured in                                     |
+| -------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Jest, jest-expo                                          | `^29.7.0`, `^57.0.5`                         | `npm test`: the `native` project and the `web` project (`*.web.test.tsx`); 233 test files under `app/`, `components/`, `state/`, `services/`, `clients/`, `config/`, `constants/`, and `scripts/`. | `jest.config.js`, `jest.setup.ts`                 |
+| React Native Testing Library                             | `^14.0.1`                                    | Native component and hook tests.                                                                                                                                                                   | `jest.config.js`                                  |
+| React Testing Library                                    | `^16.3.3`                                    | Web tests that need DOM elements.                                                                                                                                                                  | `jest.config.js` (web project)                    |
+| jest-axe, @types/jest-axe                                | `^11.0.0`, `^3.5.9`                          | axe-core accessibility rules in the web tests.                                                                                                                                                     | the `*.web.test.tsx` files                        |
+| Playwright                                               | `^1.63.0`                                    | `npm run e2e`: eight specs in `e2e/specs/` against a real API and a throwaway Postgres container.                                                                                                  | `e2e/playwright.config.ts`, `e2e/global-setup.ts` |
+| @types/jest, @types/node, @types/react, @types/react-dom | `^29.5.14`, `^22.20.5`, `~19.2.4`, `~19.2.3` | Type definitions for tests, scripts, and `app.config.ts`.                                                                                                                                          | `tsconfig.json` (`types`)                         |
 
-### Expo
+## Server (`server/package.json`)
 
-- **Version:** ^57.0.26 (SDK 57)
-- **What it is:** A framework and toolchain for building React Native apps for iOS, Android, and the web from one codebase.
-- **Docs:** https://docs.expo.dev/
-- **Role here:** Builds the app for all three platforms; `expo export --platform web` produces the GitHub Pages build.
-- **Why chosen:** Owner decision (IAN-564): one universal app instead of a separate web app and native apps; React Native without Expo would mean maintaining native projects by hand.
-- **Configured in:** `app.config.ts`, `package.json` (`main: expo-router/entry`), `babel.config.js`, `metro.config.js`.
+| Piece                                                                          | Version                                             | Role                                                                                                                                       | Configured in                                                    |
+| ------------------------------------------------------------------------------ | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| Express                                                                        | `^5.2.1`                                            | The API: codes, sessions, sign-ups, passwords, profile, answer events, paid banks, admin access, deletion, the RevenueCat webhook, health. | `server/src/app.ts`, `server/src/routes/`                        |
+| pg                                                                             | `^8.23.1`                                           | Postgres client (raw SQL, no ORM) against Neon.                                                                                            | `server/src/clients/`                                            |
+| node-pg-migrate                                                                | `^9.0.0`                                            | The 16 migrations in `server/migrations/`, run by `server/scripts/start.sh` before the server starts.                                      | `server/package.json` (`migrate:up`)                             |
+| helmet, cors, cookie-parser                                                    | `^8.3.0`, `^2.8.6`, `^1.4.7`                        | Security headers, the allowed web origin, the session cookie.                                                                              | `server/src/app.ts`                                              |
+| zod                                                                            | `^4.6.5`                                            | Request schemas (`server/src/schemas/`).                                                                                                   |                                                                  |
+| pino                                                                           | `^10.4.0`                                           | Structured logs with redaction.                                                                                                            | `server/src/`                                                    |
+| resend                                                                         | `^6.32.0`                                           | Sign-in code emails, behind an interface; stubbed when no key is set (`docs/launch-placeholders.md`).                                      | `server/src/config/env.ts`                                       |
+| supertest, pg-connection-string                                                | `^7.3.1`, `^2.14.1`                                 | Route tests and the integration tests' database handling.                                                                                  | `server/vitest.config.ts`, `server/vitest.integration.config.ts` |
+| @types/cookie-parser, @types/cors, @types/express, @types/pg, @types/supertest | `^1.4.10`, `^2.8.19`, `^5.0.6`, `^8.23.1`, `^7.2.1` | Type definitions for the server's dependencies.                                                                                            | `server/tsconfig.json`                                           |
+| @syntactical/content-schema, @syntactical/progress                             | `*` (workspace links)                               | The shared validators and progress functions, built to `dist/` before the server compiles.                                                 | `server/package.json`                                            |
 
-### Expo Router
+## Pipeline (`pipeline/package.json`)
 
-- **Version:** ~57.0.24
-- **What it is:** File-based routing for Expo apps: each file in `app/` is a screen with a URL.
-- **Docs:** https://docs.expo.dev/router/introduction/
-- **Role here:** Routes `/`, `/<language>`, and `/<language>/<difficulty>`; the web build uses single-page output with base URL `/syntactical`, and `404.html` serves deep links on GitHub Pages.
-- **Why chosen:** The Expo default; gives real URLs on the web and native navigation on devices from the same files.
-- **Configured in:** `app.config.ts` (`web.output: single`, `experiments.baseUrl`), `app/`.
+| Piece                       | Version              | Role                                                                                                                                                                                                               | Configured in                          |
+| --------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
+| @anthropic-ai/sdk           | `^0.131.0`           | The model provider behind the `ModelProvider` interface for drafting, classifying, enriching, and reviewing content.                                                                                               | `pipeline/src/clients/`                |
+| zod                         | `^4.6.5`             | Schemas for model output and oracle files.                                                                                                                                                                         | `pipeline/src/services/`               |
+| @syntactical/content-schema | `*` (workspace link) | The bank and manifest validators the pipeline publishes against.                                                                                                                                                   | `pipeline/package.json`                |
+| Docker                      | host install         | The eight oracle runners in `pipeline/runners/` (`python`, `node`, `postgres`, `ruby`, `rails`, `go`, `jsdom`, `typescript`), listed in `pipeline/src/types/OracleLanguage.ts`; golden sets in `pipeline/golden/`. | `pipeline/src/clients/dockerRunner.ts` |
 
-### React and React DOM
+## Shared packages
 
-- **Version:** 19.2.3
-- **What it is:** The UI library both apps are written in.
-- **Docs:** https://react.dev/
-- **Role here:** Components and hooks for every screen of the Expo app.
-- **Why chosen:** Already the project's UI library; the version is pinned to what Expo SDK 57 requires.
-- **Configured in:** `package.json`.
+| Piece   | Version | Role                                                                                                                   | Configured in                             |
+| ------- | ------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| ts-fsrs | `5.4.2` | The spaced-repetition scheduler in `@syntactical/progress`; pinned so the app and the server reach the same due dates. | `packages/progress/src/scheduleReview.ts` |
 
-### React Native
-
-- **Version:** 0.86.3
-- **What it is:** React for native mobile UIs, rendering platform views instead of HTML.
-- **Docs:** https://reactnative.dev/docs/getting-started
-- **Role here:** The component primitives (`View`, `Text`, `Pressable`, `Modal`) every Expo screen uses.
-- **Why chosen:** Required by Expo; the version matches SDK 57.
-- **Configured in:** `package.json`.
-
-### react-native-web
-
-- **Version:** ^0.21.2
-- **What it is:** An implementation of React Native's components on top of the DOM.
-- **Docs:** https://necolas.github.io/react-native-web/
-- **Role here:** Renders the Expo app in the browser, so one codebase serves the web build.
-- **Why chosen:** Expo's standard web target; the alternative, a separate web app, was rejected in favor of one codebase (owner decision 1).
-- **Configured in:** `package.json`; used automatically by Expo's web bundler.
-
-### NativeWind
-
-- **Version:** ^4.2.7 (with react-native-css-interop ^0.2.7)
-- **What it is:** Tailwind CSS class names for React Native components, compiled to native styles.
-- **Docs:** https://www.nativewind.dev/
-- **Role here:** Styles every Expo component with Tailwind utility classes, the same styling vocabulary the earlier web app used.
-- **Why chosen:** Owner decision 2 keeps Tailwind; v4 is the stable release (v5, which supports Tailwind 4, is a pre-release). `react-native-css-interop` is a direct dependency because npm nested it under NativeWind, where Babel's JSX runtime could not resolve it.
-- **Configured in:** `tailwind.config.js`, `global.css`, `babel.config.js`, `metro.config.js`, `nativewind-env.d.ts`.
-
-### Tailwind CSS
-
-- **Version:** ^3.4.19
-- **What it is:** A utility-first CSS framework.
-- **Docs:** https://v3.tailwindcss.com/docs
-- **Role here:** The theme (the obsidian/signal palette and fonts) in `tailwind.config.js`, consumed by NativeWind.
-- **Why chosen:** Already the project's styling system; version 3 because NativeWind 4 requires it.
-- **Configured in:** `tailwind.config.js`, `global.css`.
-
-### react-native-safe-area-context
-
-- **Version:** ~5.7.0
-- **What it is:** Insets for notches, status bars, and home indicators.
-- **Docs:** https://docs.expo.dev/versions/latest/sdk/safe-area-context/
-- **Role here:** Keeps the app shell clear of device cutouts.
-- **Why chosen:** The Expo-supported way to read safe areas; required by Expo Router.
-- **Configured in:** `app/_layout.tsx`.
-
-### react-native-screens
-
-- **Version:** ~4.26.0
-- **What it is:** Native screen containers for navigation.
-- **Docs:** https://docs.expo.dev/versions/latest/sdk/screens/
-- **Role here:** Used by Expo Router's navigators.
-- **Why chosen:** A required peer of Expo Router.
-- **Configured in:** `package.json`.
-
-### react-native-reanimated
-
-- **Version:** 4.5.1
-- **What it is:** An animation library that runs animations on the UI thread.
-- **Docs:** https://docs.swmansion.com/react-native-reanimated/
-- **Role here:** The download indicator's sweep and the reduced-motion check (`useReducedMotion`); also required by NativeWind.
-- **Why chosen:** Required by NativeWind 4; reusing it avoids a second animation library.
-- **Configured in:** `package.json`.
-
-### expo-linking, expo-constants, expo-status-bar
-
-- **Version:** ~57.0.11, ~57.0.20, ~57.0.1
-- **What it is:** Expo modules for deep links, build-time configuration, and the status bar.
-- **Docs:** https://docs.expo.dev/versions/latest/sdk/constants/
-- **Role here:** `expo-constants` reads the content base URL from `app.config.ts` (`extra.contentBaseUrl`); `expo-linking` is required by Expo Router; `expo-status-bar` was added by `expo install` for Expo Router's defaults.
-- **Why chosen:** Expo's own modules for these jobs.
-- **Configured in:** `app.config.ts`.
-
-### Prism
-
-- **Version:** ^1.30.0
-- **What it is:** A syntax highlighter that tokenizes code by language grammar.
-- **Docs:** https://prismjs.com/
-- **Role here:** Highlights question code. The app renders Prism tokens as nested `Text` runs and never renders HTML, and a grammar outside the build's `GRAMMARS` list renders as plain text.
-- **Why chosen:** Already in use; its tokenizer runs without a DOM, so the native app can reuse it.
-- **Configured in:** `services/codeBlock/tokenizeCode.ts` and `components/quiz/CodeBlock.tsx`; `services/codeBlock/types/prismjs.d.ts` holds local typings so no `@types/prismjs` dependency is needed.
-
-## Data
-
-### AsyncStorage
-
-- **Version:** 2.2.0
-- **What it is:** A key-value store for React Native, backed by `localStorage` on the web.
-- **Docs:** https://react-native-async-storage.github.io/async-storage/
-- **Role here:** Stores lifetime stats under `syntactical.stats.v1` and the hash-bound content cache under `syntactical.content.v1.`; on the web it reads the stats the earlier web app wrote under the same key.
-- **Why chosen:** Small JSON documents need no database; SQLite would not remove the hydration or ordering work (spec review stack option 7).
-- **Configured in:** `clients/readJson.ts`, `clients/writeJson.ts`, `constants/appConfig.ts`.
-
-### TanStack Query
-
-- **Version:** ^5.104.0
-- **What it is:** A server-state library that fetches, caches, and deduplicates requests.
-- **Docs:** https://tanstack.com/query/latest/docs/framework/react/overview
-- **Role here:** Fetches the manifest and banks, shares one in-flight request per bank, reports loading and error states with Retry, and drives the download indicator.
-- **Why chosen:** Owner decision 11, following the React convention that server state goes through TanStack Query; AsyncStorage still holds the cache so each bank stays bound to its verified hash.
-- **Configured in:** `config/queryClient.ts`, `services/content/buildBankQuery.ts`, `services/content/buildManifestQuery.ts`.
-
-## Integrations
-
-### expo-crypto
-
-- **Version:** ~57.0.3
-- **What it is:** Hashing and random-value functions for Expo (SubtleCrypto on the web).
-- **Docs:** https://docs.expo.dev/versions/latest/sdk/crypto/
-- **Role here:** Computes the SHA-256 of each downloaded bank so it can be compared with the manifest hash.
-- **Why chosen:** Expo's own crypto module; works on iOS, Android, and the web without a native setup.
-- **Configured in:** `clients/hashClient.ts`.
-
-### NetInfo
-
-- **Version:** 12.0.1
-- **What it is:** Network connectivity status for React Native.
-- **Docs:** https://github.com/react-native-netinfo/react-native-netinfo
-- **Role here:** Lets the difficulty step label a bank with no local copy as "Needs a connection to load" while offline.
-- **Why chosen:** The standard connectivity module for React Native.
-- **Configured in:** `package.json`.
-
-### posthog-react-native
-
-- **Version:** ^4.78.4
-- **What it is:** The PostHog product analytics SDK for React Native and Expo; it also runs in the web build.
-- **Docs:** https://posthog.com/docs/libraries/react-native
-- **Role here:** Sends the eight events of the fixed registry (`round_started`, `round_completed`, `signup_prompt_shown`, `signup_prompt_accepted`, `paywall_viewed`, `purchase_completed`, `review_round_completed`, `bank_exhausted`). A guest is anonymous: `persistence: 'memory'` writes no cookie and no AsyncStorage key. A signed-in user is identified by the server user id; sign-out resets. No event carries an email, code, or token. With no `POSTHOG_KEY` at build time every call is a no-op.
-- **Why chosen:** The spec names PostHog; this is its one SDK that covers iOS, Android, and the web from the same code, and its memory persistence gives the cookieless guest mode. Its native extras (session replay, device info) are optional peers and are not installed.
-- **Configured in:** `clients/analyticsClient.ts` (the only module that imports it), `constants/analyticsEvents.ts`, `app.config.ts` (`extra.posthogKey` from `POSTHOG_KEY`, a public `phc_` project key; `extra.posthogHost` from `POSTHOG_HOST`).
-
-## Testing
-
-### Jest with jest-expo
-
-- **Version:** jest ^29.7.0, jest-expo ^57.0.5
-- **What it is:** A JavaScript test runner, with Expo's presets for native and web.
-- **Docs:** https://docs.expo.dev/develop/unit-testing/
-- **Role here:** Runs every Expo test in two projects: `native` (iOS preset) and `web` (files ending `.web.test.tsx`).
-- **Why chosen:** The runner Expo supports out of the box; Vitest, the house default, has no maintained React Native preset.
-- **Configured in:** `jest.config.js`, `jest.setup.ts`, `config/jestStyleStub.js`.
-
-### React Native Testing Library
-
-- **Version:** ^14.0.1
-- **What it is:** Component testing for React Native, querying by role and text.
-- **Docs:** https://callstack.github.io/react-native-testing-library/
-- **Role here:** Native component and hook tests. Version 14 is asynchronous: `render`, `fireEvent`, and `renderHook` are awaited.
-- **Why chosen:** The standard for React Native; the version Expo SDK 57's router testing utilities require.
-- **Configured in:** `jest.config.js`.
-
-### React Testing Library
-
-- **Version:** ^16.3.3
-- **What it is:** DOM component testing.
-- **Docs:** https://testing-library.com/docs/react-testing-library/intro/
-- **Role here:** Web-only tests (`*.web.test.tsx`) that need real DOM elements, such as the single `h1`, rendered through react-native-web.
-- **Why chosen:** React Native Testing Library renders through a test renderer and cannot produce DOM elements.
-- **Configured in:** `jest.config.js` (web project).
-
-### jest-axe
-
-- **Version:** ^11.0.0 (with @types/jest-axe)
-- **What it is:** Runs the axe-core accessibility rules against rendered DOM and adds the `toHaveNoViolations` matcher.
-- **Docs:** https://github.com/NickColley/jest-axe
-- **Role here:** Web tests (`*.web.test.tsx`) that check a screen for accessibility violations, the same rule engine Lighthouse uses.
-- **Why chosen:** The project requires a 100 Lighthouse accessibility score; this checks signed-in views that a headless Lighthouse run cannot reach.
-- **Configured in:** `app/__tests__/settingsAccessibility.web.test.tsx`.
-
-### @types/jest and @types/node
-
-- **Version:** ^30.0.0, ^26.6.4
-- **What it is:** Type definitions for Jest's globals and Node's APIs.
-- **Docs:** https://github.com/DefinitelyTyped/DefinitelyTyped
-- **Role here:** Let `tsc` check tests and `app.config.ts`.
-- **Why chosen:** Expo's base tsconfig does not load them.
-- **Configured in:** `tsconfig.json` (`types`).
+`@syntactical/content-schema` has no runtime dependency; it holds the manifest and bank validators, the difficulties, and the grammars.
 
 ## Tooling
 
-### tsx
+| Piece    | Version    | Role                                                                                                     | Configured in     |
+| -------- | ---------- | -------------------------------------------------------------------------------------------------------- | ----------------- |
+| tsx      | `^4.23.15` | Runs `scripts/buildContentManifest.mjs` and the e2e API host with the TypeScript validators.             | `package.json`    |
+| oxlint   | `^1.81.0`  | `npm run lint` in CI (warnings do not fail the job).                                                     | `.oxlintrc.json`  |
+| Prettier | `3.8.1`    | `.prettierrc.mjs`: 2-space, 120 columns; 4-space in `pipeline/` and `packages/progress/`. Not a CI gate. | `.prettierrc.mjs` |
 
-- **Version:** ^4.23.15
-- **What it is:** Runs TypeScript files directly with Node.
-- **Docs:** https://tsx.is/
-- **Role here:** Runs `scripts/buildContentManifest.mjs`, which imports the app's TypeScript validators, so the build validates content with the same code the app uses.
-- **Why chosen:** The alternative, duplicating the validators in JavaScript, would let the two drift.
-- **Configured in:** `package.json` (`content:build`).
+## CI/CD and hosting
 
-### oxlint
-
-- **Version:** ^1.81.0
-- **What it is:** A fast JavaScript and TypeScript linter.
-- **Docs:** https://oxc.rs/docs/guide/usage/linter
-- **Role here:** `npm run lint` in CI.
-- **Why chosen:** Already the project's linter.
-- **Configured in:** `.oxlintrc.json`.
-
-## CI/CD
-
-### GitHub Actions
-
-- **Version:** none (hosted service)
-- **What it is:** GitHub's CI and deployment runner.
-- **Docs:** https://docs.github.com/actions
-- **Role here:** `ci.yml` runs lint, type check, tests, the web build, and the content drift check on every pull request; `deploy.yml` publishes to Pages on every push to `main`.
-- **Why chosen:** The repository already deploys through it.
-- **Configured in:** `.github/workflows/ci.yml`, `.github/workflows/deploy.yml`.
-
-## Hosting
-
-### GitHub Pages
-
-- **Version:** none (hosted service)
-- **What it is:** Static hosting from a GitHub repository.
-- **Docs:** https://docs.github.com/pages
-- **Role here:** Serves the Expo web export at `/syntactical/` and the question content (`content/`) the app downloads at runtime.
-- **Why chosen:** Free static hosting already in use; owner decision 3 serves question content from it instead of a CMS or API.
-- **Configured in:** `.github/workflows/deploy.yml`, `scripts/copySpaFallback.mjs`.
-
-### EAS (Expo Application Services)
-
-- **Version:** none (hosted service; the CLI runs through `npx eas-cli@latest`)
-- **What it is:** Expo's cloud build service for native iOS and Android binaries.
-- **Docs:** https://docs.expo.dev/eas/
-- **Role here:** Builds the internal-distribution `preview` profile (an Android APK and an iOS build) for the manual device checklist; it is not part of CI or the Pages deploy.
-- **Why chosen:** The build service Expo supports, so no local Xcode or Android Studio setup is required to produce a device build.
-- **Configured in:** `eas.json`, `docs/device-checklist.md`.
+| Piece          | Role                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Configured in                                                                |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| GitHub Actions | Five workflows. `ci.yml` (required checks `check`, `workspaces`, `server-integration`, `oracle-runners`) runs lint, the type checks, Jest, the content drift check, the web build, the workspace suites, the server integration tests against `postgres:17`, and the Docker oracle tests. `e2e.yml` runs Playwright on PRs that touch the web build's inputs. `server.yml` builds and health-checks the API image. `deploy.yml` publishes Pages on push to `main`. `server-deploy.yml` deploys staging on push and production on manual dispatch. All third-party actions are pinned to commit SHAs. | `.github/workflows/`, `.github/actions/check-api-image/`                     |
+| GitHub Pages   | Serves the Expo web export and `content/` at the root of `https://syntactical.dev`; `404.html` serves deep links.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `deploy.yml`, `scripts/copySpaFallback.mjs`, `scripts/writeRouteEntries.mjs` |
+| Railway        | Runs the API image in `staging` and `production` (`server/DEPLOY.md`). The custom hostnames `api.syntactical.dev` and `staging-api.syntactical.dev` have no DNS records yet.                                                                                                                                                                                                                                                                                                                                                                                                                         | `server/Dockerfile`, `server/scripts/deployToRailway.sh`                     |
+| Neon           | Postgres for both environments (`server/DEPLOY.md`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | `DATABASE_URL` on Railway                                                    |
+| RevenueCat     | Purchases on iOS, Android, and the web; entitlements arrive by webhook. Products and keys are not configured yet (`docs/launch-placeholders.md`).                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `clients/purchaseStoreClient.ts`, `server/src/routes/revenueCatWebhook.ts`   |
+| PostHog        | Product analytics; no key configured yet.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `clients/analyticsClient.ts`                                                 |
+| Resend         | Sign-in code emails; no key configured yet.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | `server/src/config/env.ts`                                                   |
+| EAS            | Internal `preview` builds for the device checklist (`docs/device-checklist.md`); not part of CI.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `eas.json`                                                                   |

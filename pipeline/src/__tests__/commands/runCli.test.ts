@@ -131,7 +131,17 @@ describe('runCli', () => {
         const deps = buildDeps();
         expect(await runCli(['node', 'cli.ts', 'nope'], deps)).toBe(1);
         expect(deps.err.join('')).toContain('Usage: pipeline');
+        expect(deps.err.join('')).toContain('rewrite-prompts [--api] [--content-root <path>]');
         expect(deps.kinds).toEqual([]);
+    });
+
+    it('rewrite-prompts builds the CLI provider by default and the API provider with --api', async () => {
+        const withDefault = buildDeps();
+        expect(await runCli(['node', 'cli.ts', 'rewrite-prompts'], withDefault)).toBe(0);
+        expect(withDefault.kinds).toEqual(['cli']);
+        const withApi = buildDeps();
+        expect(await runCli(['node', 'cli.ts', 'rewrite-prompts', '--api'], withApi)).toBe(0);
+        expect(withApi.kinds).toEqual(['api']);
     });
 
     it('classify takes the content root from the flag, then the env var, then the default', async () => {

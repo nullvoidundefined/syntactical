@@ -4,7 +4,7 @@
 import { Router } from 'express';
 
 import { HTTP } from '../constants/http.js';
-import { createErrorResponse, ERROR_CODES } from '../errors.js';
+import { ERROR_CODES, sendError } from '../errors.js';
 
 const {
   STATUS: { SERVICE_UNAVAILABLE },
@@ -13,10 +13,7 @@ const {
 function createDisabledWebhookRouter(): Router {
   const router = Router();
   router.use((_req, res) => {
-    const { requestId } = res.locals as { requestId: string };
-    res
-      .status(SERVICE_UNAVAILABLE)
-      .json(createErrorResponse(ERROR_CODES.WEBHOOK.NOT_CONFIGURED, 'Webhook not configured', requestId));
+    sendError(res, SERVICE_UNAVAILABLE, ERROR_CODES.WEBHOOK.NOT_CONFIGURED, 'Webhook not configured');
   });
   return router;
 }

@@ -1,7 +1,9 @@
 import { randomUUID } from 'node:crypto';
 
+import { QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react';
 
+import { createQueryClient } from '../../config/queryClient';
 import { installRoutedFetch, type RouteReply } from '../../state/__tests__/authTestSupport';
 import PurchaseCompleteScreen from '../purchase-complete';
 
@@ -36,6 +38,7 @@ jest.mock('../../state/AuthProvider', () => ({
     user: mockUserId === null ? null : { id: mockUserId },
     verifyCode: () => Promise.resolve({ isOk: false, reason: 'unavailable' }),
   }),
+  useSignedInUserId: () => mockUserId,
 }));
 
 const CONFIRMING = 'Confirming your purchase';
@@ -82,7 +85,12 @@ async function advance(ms: number): Promise<void> {
 
 async function open(product: string | string[] | undefined) {
   mockParams = product === undefined ? {} : { product };
-  const rendered = render(<PurchaseCompleteScreen />);
+  // The route confirms through the entitlements query, so it renders under a query client.
+  const rendered = render(
+    <QueryClientProvider client={createQueryClient()}>
+      <PurchaseCompleteScreen />
+    </QueryClientProvider>,
+  );
   await flush();
   return rendered;
 }
@@ -157,13 +165,16 @@ describe('purchase-complete route on the web', () => {
     ['an absolute URL', 'https://evil.example.test/me'],
     ['another namespace', 'other.python.medium'],
     ['a repeated parameter', [PRODUCT, PRODUCT]],
-  ])('makes no request for a %s product and announces "Still processing, check back shortly"', async (_label, product) => {
-    const { requests } = installRoutedFetch({ 'GET me': profileReply([PRODUCT]) });
-    await open(product);
-    await advance(DEADLINE_MS + POLL_INTERVAL_MS);
-    expect(requests).toHaveLength(0);
-    expect(readStatusRegion().textContent).toContain(STILL_PROCESSING);
-  });
+  ])(
+    'makes no request for a %s product and announces "Still processing, check back shortly"',
+    async (_label, product) => {
+      const { requests } = installRoutedFetch({ 'GET me': profileReply([PRODUCT]) });
+      await open(product);
+      await advance(DEADLINE_MS + POLL_INTERVAL_MS);
+      expect(requests).toHaveLength(0);
+      expect(readStatusRegion().textContent).toContain(STILL_PROCESSING);
+    },
+  );
 
   it('makes no request for a guest', async () => {
     mockUserId = null;

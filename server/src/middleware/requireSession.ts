@@ -9,7 +9,7 @@ import type { NextFunction, Request, Response } from 'express';
 import type { Database } from '../clients/database.js';
 import { AUTH } from '../constants/auth.js';
 import { HTTP } from '../constants/http.js';
-import { createErrorResponse, ERROR_CODES } from '../errors.js';
+import { ERROR_CODES, sendError } from '../errors.js';
 import { sha256 } from '../services/sha256.js';
 
 const {
@@ -58,10 +58,7 @@ function createRequireSession(options: RequireSessionOptions) {
         return;
       }
     }
-    const { requestId } = res.locals as { requestId: string };
-    res
-      .status(HTTP.STATUS.UNAUTHORIZED)
-      .json(createErrorResponse(ERROR_CODES.AUTH.SESSION_REQUIRED, 'Sign-in required', requestId));
+    sendError(res, HTTP.STATUS.UNAUTHORIZED, ERROR_CODES.AUTH.SESSION_REQUIRED, 'Sign-in required');
   };
 }
 

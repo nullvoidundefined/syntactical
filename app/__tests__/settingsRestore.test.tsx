@@ -73,9 +73,7 @@ jest.mock('../../state/useProgressSummary', () => ({
 }));
 jest.mock('../../components/auth/SignOutDialog', () => ({ SignOutDialog: () => null }));
 jest.mock('../../components/auth/DeleteAccountDialog', () => ({ DeleteAccountDialog: () => null }));
-jest.mock('../../clients/analyticsClient', () => ({ trackEvent: () => undefined }), {
-    virtual: true,
-});
+jest.mock('../../clients/analyticsClient', () => ({ trackEvent: () => undefined }));
 
 let queryClient: QueryClient;
 

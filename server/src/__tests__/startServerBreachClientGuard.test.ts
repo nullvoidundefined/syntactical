@@ -3,7 +3,7 @@
 // anything else or opens a database connection, like the email client guard.
 import { describe, expect, it } from 'vitest';
 
-import { createFakePasswordBreachClient } from '../clients/fakePasswordBreachClient.js';
+import { createFakePasswordBreachClient } from '../testing/fakePasswordBreachClient.js';
 import { startServer } from '../startServer.js';
 
 const GUARD_MESSAGE = /fake password breach client/i;

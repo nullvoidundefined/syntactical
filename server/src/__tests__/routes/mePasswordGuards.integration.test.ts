@@ -12,7 +12,7 @@ import pg from 'pg';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, inject, it } from 'vitest';
 
-import { createFakePasswordBreachClient } from '../../clients/fakePasswordBreachClient.js';
+import { createFakePasswordBreachClient } from '../../testing/fakePasswordBreachClient.js';
 import { createLogger } from '../../clients/logger.js';
 import type { DeriveKey } from '../../services/passwordHash.js';
 import { hashPassword, verifyPassword } from '../../services/passwordHash.js';
