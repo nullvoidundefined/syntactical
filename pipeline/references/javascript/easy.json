@@ -54,5 +54,1555 @@
     ],
     "syntax": "// General form:\n//   typeof operand      (returns a string)\n//   typeof (operand)\n\n// Possible result strings:\n//   \"undefined\", \"boolean\", \"number\", \"bigint\",\n//   \"string\", \"symbol\", \"function\", \"object\"\n\ntypeof 42;            // \"number\"\ntypeof \"hi\";          // \"string\"\ntypeof Symbol();      // \"symbol\"\ntypeof function () {};// \"function\"\ntypeof { a: 1 };      // plain object\n\n// Gotchas:\n// - typeof reports the language's primitive type or\n//   \"function\"; it does not report specific built-in\n//   kinds like Map, Date, or RegExp.\n// - typeof null is a historical quirk.\n// - Classes are functions, so typeof class {} is \"function\".\n// - An undeclared variable does not throw:\n//     typeof notDeclaredAnywhere; // \"undefined\"\n// - Variables in the temporal dead zone (let/const\n//   before declaration) DO throw a ReferenceError.\n// - To tell kinds of objects apart, use other tools:\n//     Array.isArray(value)\n//     value instanceof Date\n//     Object.prototype.toString.call(value)\n// - The result is always a string, so compare with\n//   quotes: typeof x === \"number\"",
     "title": "The typeof operator"
+  },
+  "js-easy-05": {
+    "docs": [
+      {
+        "title": "typeof - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof"
+      },
+      {
+        "title": "JavaScript data types and data structures | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Data_structures"
+      },
+      {
+        "title": "The typeof Operator (ECMAScript spec)",
+        "url": "https://tc39.es/ecma262/#sec-typeof-operator"
+      }
+    ],
+    "syntax": "// General form\n//   typeof operand      -> returns a string naming the operand's type\n//   typeof(operand)     -> same thing; parentheses just group\n\n// Examples\ntypeof \"hello\"        // a string value\ntypeof true           // a boolean value\ntypeof 10n            // BigInt literal\ntypeof Symbol()       // symbol\ntypeof function(){}   // functions get their own result\ntypeof undeclaredVar  // no ReferenceError for undeclared names\n\n// Possible results (always lowercase strings):\n//   \"undefined\" \"boolean\" \"number\" \"bigint\"\n//   \"string\" \"symbol\" \"function\" \"object\"\n\n// Gotchas\n// - typeof reports the type category of the VALUE, not a special\n//   name for each special value. Think about what kind of primitive\n//   each special numeric value belongs to (Infinity, -0, etc.).\n// - null is a historical quirk: it reports the same as objects.\n// - Arrays, dates, regexes and plain objects all report the same\n//   string; use Array.isArray() or instanceof to tell them apart.\n// - Classes are functions, so they report \"function\".\n// - typeof always returns a string, so typeof typeof x is \"string\".\n// - Using typeof on a let/const variable in its temporal dead zone\n//   throws a ReferenceError.",
+    "title": "The typeof operator and JavaScript types"
+  },
+  "js-easy-06": {
+    "docs": [
+      {
+        "title": "typeof - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof"
+      },
+      {
+        "title": "ECMAScript spec: The typeof Operator",
+        "url": "https://tc39.es/ecma262/#sec-typeof-operator"
+      }
+    ],
+    "syntax": "// General form\n//   typeof operand\n//   typeof (operand)\n// Returns a string naming the type of the operand's value.\n\nlet count = 5;\ntypeof count;          // \"number\"\ntypeof \"hi\";           // \"string\"\ntypeof {};             // \"object\"\ntypeof function () {}; // \"function\"\ntypeof Symbol();       // \"symbol\"\ntypeof 10n;            // \"bigint\"\n\n// Possible result strings:\n//   \"undefined\", \"boolean\", \"number\", \"bigint\", \"string\",\n//   \"symbol\", \"function\", \"object\"\n\n// Gotchas\n// - typeof is an operator, not a function; parentheses are optional.\n// - The result is always a string, so compare with quotes:\n//     typeof x === \"number\"\n// - Arrays, null, and plain objects all report the same string\n//   for some of these; use Array.isArray() or === null to tell apart.\n// - Reading an unresolvable name normally fails with a lookup error,\n//   so think about whether typeof treats a bare identifier\n//   reference specially compared with other operators.\n// - Variables in the temporal dead zone (let/const/class before\n//   their declaration runs) are different from never-declared names:\n//     typeof later; let later = 1;  // check how TDZ behaves\n// - Common use: feature detection, e.g. typeof window !== \"undefined\"",
+    "title": "The typeof operator and unresolvable names"
+  },
+  "js-easy-07": {
+    "docs": [
+      {
+        "title": "Equality comparisons and sameness",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Equality_comparisons_and_sameness"
+      },
+      {
+        "title": "Equality (==) operator",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Equality"
+      }
+    ],
+    "syntax": "// General form\n//   a == b   loose equality (may coerce types)\n//   a === b  strict equality (no coercion)\n\n// Rules of the Abstract Equality algorithm (simplified):\n// - Same type: compares like ===\n// - null == undefined is true; neither equals anything else\n// - Number vs String: the string is converted to a number\n// - Boolean vs other: the boolean is converted to a number first\n// - Object vs primitive: object is converted to a primitive\n//   (valueOf / toString) then compared again\n// - BigInt vs Number/String: compared by mathematical value\n\n// Examples (different values from any quiz)\n5 == \"5.0\";        // string \"5.0\" becomes number 5 before comparing\n0 == \"\";           // \"\" converts to 0\nnull == undefined; // special case\nnull == 0;         // no coercion for null here\n\n// Gotchas\n// NaN == NaN is false (NaN is never equal to anything)\n// [] == false involves object -> primitive and boolean -> number\n// Two objects are equal only if they are the same reference\n// Prefer === to avoid surprising coercions\n// Object.is(a, b) is another comparison (distinguishes +0/-0, NaN equals NaN)",
+    "title": "Loose equality and type coercion"
+  },
+  "js-easy-08": {
+    "docs": [
+      {
+        "title": "Strict equality (===) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Strict_equality"
+      },
+      {
+        "title": "Equality comparisons and sameness - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness"
+      }
+    ],
+    "syntax": "// General form\n//   a === b   strict equality: no type conversion\n//   a == b    loose equality: may convert types first\n//   a !== b / a != b   negated forms\n\n// Strict equality rules:\n//   - different types -> result is false\n//   - same type -> compare values\n//   - NaN is never equal to anything, even itself\n//   - objects/arrays compare by reference, not contents\n\n// Examples (different values from any quiz)\nconsole.log(7 === 7);          // same type, same value\nconsole.log(true === \"true\");  // boolean vs string\nconsole.log([] === []);        // two distinct objects\nconst o = {}; console.log(o === o); // same reference\n\n// Loose equality converts operands before comparing\nconsole.log(0 == \"\");          // string converted to number\nconsole.log(null == undefined); // special-case pair\nconsole.log(null === undefined);\n\n// Gotchas\n// - NaN === NaN is false; use Number.isNaN(x) or Object.is(x, x)\n// - +0 === -0 is true; Object.is(+0, -0) is false\n// - Neither operator throws for mismatched primitive types\n// - Prefer === unless you deliberately want coercion",
+    "title": "Equality operators: strict vs loose comparison"
+  },
+  "js-easy-09": {
+    "docs": [
+      {
+        "title": "Equality comparisons and sameness (MDN)",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Equality_comparisons_and_sameness"
+      },
+      {
+        "title": "Equality (==) operator (MDN)",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Equality"
+      },
+      {
+        "title": "IsLooselyEqual abstract operation (ECMAScript spec)",
+        "url": "https://tc39.es/ecma262/#sec-islooselyequal"
+      }
+    ],
+    "syntax": "// General form\n//   a == b   loose equality: may coerce operand types before comparing\n//   a === b  strict equality: no coercion, types must match\n\n// Same type: behaves like ===\n// Different types: the Abstract Equality algorithm applies, e.g.\nconsole.log(\"5\" == 5);        // string converted to number\nconsole.log(0 == false);      // boolean converted to number\nconsole.log(1 == true);\n\n// Objects are compared by reference (same type, no coercion)\nconsole.log({} == {});        // different objects\n\n// Special rules for the two \"absent value\" primitives:\n//  - null and undefined each have their own dedicated rule in ==\n//  - Neither one is converted to 0, \"\" or false by ==\n//  - So they do not loosely equal 0, \"\", false, or NaN\nconsole.log(null == 0);\nconsole.log(undefined == \"\");\nconsole.log(null == false);\n\n// Gotchas\n// - NaN is never equal to anything, even itself: NaN == NaN\n// - Use Object.is() to distinguish NaN and -0 reliably\n// - Strict === never coerces, so different types are never equal\n// - Common idiom: x == null checks for both of the \"absent\" values at once\n//   while x === null checks only one",
+    "title": "Loose equality (==) and type coercion rules"
+  },
+  "js-easy-10": {
+    "docs": [
+      {
+        "title": "Strict equality (===) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Strict_equality"
+      },
+      {
+        "title": "Equality comparisons and sameness - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness"
+      }
+    ],
+    "syntax": "// General form\n//   a === b   strict equality: no type conversion\n//   a == b    loose equality: may coerce operands first\n\n// Strict equality: different types are never equal\n// (except that NaN is never equal to anything, even itself)\nconsole.log(5 === \"5\");        // different types -> not equal\nconsole.log(NaN === NaN);      // NaN is never equal to itself\n\n// Loose equality applies coercion rules\nconsole.log(0 == \"\");          // coerces operands\nconsole.log(1 == true);        // boolean converted to number\n\n// Gotchas\n// - Two primitives of the same type compare by value\n// - Objects/arrays compare by reference identity\n//     [] === []   // separate objects\n// - typeof tells you the type of a value; strict equality\n//   first checks that both operands have the same type\n// - Use Object.is(a, b) for SameValue (distinguishes +0/-0,\n//   treats NaN as equal to NaN)\n// - Loose equality has a special rule for the two\n//   \"empty\" values null and undefined; check the spec\n//   table for how each operator treats them\n// - typeof null is \"object\" (historical quirk), while\n//   typeof undefined is \"undefined\"",
+    "title": "Strict vs loose equality across types"
+  },
+  "js-easy-11": {
+    "docs": [
+      {
+        "title": "Equality comparisons and sameness (MDN)",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness"
+      },
+      {
+        "title": "Equality (==) operator (MDN)",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Equality"
+      },
+      {
+        "title": "IsLooselyEqual abstract operation (ECMAScript spec)",
+        "url": "https://tc39.es/ecma262/#sec-islooselyequal"
+      }
+    ],
+    "syntax": "// General form\n//   a == b   // loose equality: if types differ, coerce, then compare\n//   a === b  // strict equality: no coercion, types must match\n\n// Simplified coercion rules for ==\n//  - Same type: compared like ===\n//  - null == undefined is true; neither equals anything else\n//  - Number vs string: the string is converted to a number\n//  - Boolean vs anything: the boolean is converted to a number first\n//    (true -> 1, false -> 0), then comparison continues\n//  - Object vs primitive: the object is converted to a primitive\n\n// Examples (different values from the quiz)\nconsole.log(\"5\" == 5);      // string -> number, then compared\nconsole.log(false == \"\");   // false -> 0, \"\" -> 0, then compared\nconsole.log(null == 0);     // null only loosely equals undefined\n\n// Gotchas\n//  - NaN is never equal to anything, even itself\n//  - Object.is() and === treat types strictly\n//  - Prefer === to avoid surprising conversions\n//  - Number(x) and Boolean(x) show how a value converts",
+    "title": "Loose equality (==) and type coercion"
+  },
+  "js-easy-12": {
+    "docs": [
+      {
+        "title": "Equality comparisons and sameness - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness"
+      },
+      {
+        "title": "Equality (==) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Equality"
+      },
+      {
+        "title": "IsLooselyEqual abstract operation - ECMAScript spec",
+        "url": "https://tc39.es/ecma262/#sec-islooselyequal"
+      }
+    ],
+    "syntax": "// General form\n// a == b   -> loose equality: if types differ, JS converts operands\n//             before comparing\n// a === b  -> strict equality: no conversion; different types => false\n\n// Examples (different values from the quiz)\nconsole.log(\"5\" == 5);    // string converted to number\nconsole.log(\"5\" === 5);   // strict: types differ\nconsole.log(null == undefined); // special case: equal to each other only\n\n// Rules of thumb (Abstract Equality Comparison)\n// - Same type: behaves like ===\n// - null/undefined: equal to each other, and to nothing else\n// - Number vs String: string is converted to a number\n// - Boolean vs anything: the boolean is converted to a number first\n//   (true -> 1, false -> 0), then comparison is repeated\n// - Object vs primitive: object is converted via ToPrimitive\n//   (valueOf / toString)\n// - NaN is never equal to anything, including itself\n// - Symbol and BigInt have their own comparison rules\n\n// Gotchas\n// \"\" == 0 and \"0\" == 0 both involve string->number conversion,\n//   but \"\" == \"0\" is compared as two strings\n// Prefer === unless you deliberately want coercion\n// Object.is(a, b) differs from === for NaN and +0/-0",
+    "title": "Loose equality (==) and type coercion"
+  },
+  "js-easy-13": {
+    "docs": [
+      {
+        "title": "Equality comparisons and sameness (MDN)",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness"
+      },
+      {
+        "title": "Equality (==) operator (MDN)",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Equality"
+      },
+      {
+        "title": "IsLooselyEqual abstract operation (ECMAScript spec)",
+        "url": "https://tc39.es/ecma262/#sec-islooselyequal"
+      }
+    ],
+    "syntax": "// General form\n//   a == b   // loose equality: coerces types if they differ\n//   a === b  // strict equality: no coercion, types must match\n\n// Simplified rules when types differ (Abstract Equality):\n//  - null == undefined is true; neither equals anything else\n//  - string vs number: string is converted to number\n//  - boolean vs anything: boolean is converted to number first (true->1, false->0)\n//  - object vs primitive: object is converted to a primitive (valueOf/toString)\n//  - same types: compares like ===\n\n// Examples (different values from any quiz)\nconsole.log(\"5\" == 5);      // string -> number, then compare\nconsole.log(true == \"1\");   // boolean -> 1, then string -> 1\nconsole.log(null == 0);     // null only equals undefined\nconsole.log([2] == 2);      // array -> \"2\" -> 2\n\n// Useful conversions to remember\n//  Number(\"\")    // empty/whitespace-only string converts to a specific number\n//  Number(\" 7 \") // 7 (whitespace trimmed)\n//  Number(\"abc\") // NaN, and NaN == anything is false\n\n// Gotchas\n//  - == is not transitive; comparisons can surprise\n//  - Loose equality never throws for ordinary primitives\n//  - Prefer === unless you intentionally want coercion",
+    "title": "Loose equality (==) and type coercion"
+  },
+  "js-easy-14": {
+    "docs": [
+      {
+        "title": "Equality comparisons and sameness",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness"
+      },
+      {
+        "title": "Equality (==) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Equality"
+      },
+      {
+        "title": "IsLooselyEqual abstract operation (ECMAScript spec)",
+        "url": "https://tc39.es/ecma262/#sec-islooselyequal"
+      }
+    ],
+    "syntax": "// General form: a == b\n// If types differ, the Abstract Equality algorithm coerces operands.\n//\n// Simplified rules when types differ:\n//  1. null == undefined is true; neither equals anything else\n//  2. Boolean operand -> converted to Number (true->1, false->0)\n//  3. String vs Number -> string converted to Number\n//  4. Object vs primitive -> object converted via ToPrimitive\n//     (valueOf(), then toString()), then comparison restarts\n//  5. Two objects -> compared by reference, no coercion\n//\n// Examples (different values from any quiz):\n// '5' == 5          // string -> number, then 5 == 5\n// '' == 0           // '' becomes 0\n// [7] == 7          // [7] -> '7' -> 7\n// ({}) == ({})      // two distinct objects: reference comparison\n// null == 0         // no coercion to number for null\n//\n// Gotchas:\n// - Step-by-step: apply rules repeatedly until both sides share a type\n// - Array toString joins elements with commas: [1,2].toString() is '1,2'\n// - Truthiness (if (x)) is NOT the same as == true/false\n// - NaN is never equal to anything, including itself\n// - Prefer === to avoid coercion; Object.is for NaN/-0 distinctions",
+    "title": "Loose equality (==) type coercion"
+  },
+  "js-easy-15": {
+    "docs": [
+      {
+        "title": "Strict equality (===) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Strict_equality"
+      },
+      {
+        "title": "NaN - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NaN"
+      },
+      {
+        "title": "Equality comparisons and sameness - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness"
+      }
+    ],
+    "syntax": "// General form\n//   a === b   -> strict equality: no type coercion\n//   Different types -> false\n//   Same type -> compare values (objects/arrays by reference)\n\nconsole.log(5 === \"5\");        // false (number vs string)\nconsole.log(\"hi\" === \"hi\");    // true\nconsole.log({} === {});        // false (different references)\n\nconst o = {};\nconsole.log(o === o);          // true (same reference)\n\n// Special numeric values\n//   NaN is the result of invalid math, e.g. 0 / 0 or Number(\"abc\")\n//   Check the spec rule for strict equality with NaN before assuming\n//   a value equals itself.\n//   +0 === -0 is true, but Object.is(+0, -0) is false\n\n// Reliable ways to test for NaN\n//   Number.isNaN(x)   -> true only if x is the number NaN\n//   Object.is(x, y)   -> SameValue comparison\n//   isNaN(x)          -> coerces first, so isNaN(\"abc\") is true (avoid)\n//   [x].includes(NaN) -> uses SameValueZero\n//   [x].indexOf(NaN)  -> uses ===\n\n// Gotchas\n//   null === undefined is false, but null == undefined is true\n//   === never throws a TypeError for ordinary values",
+    "title": "Strict equality and special numeric values"
+  },
+  "js-easy-16": {
+    "docs": [
+      {
+        "title": "Number.isNaN() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isNaN"
+      },
+      {
+        "title": "isNaN() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/isNaN"
+      }
+    ],
+    "syntax": "// General form\n//   isNaN(value)         -> coerces value to a number first, then checks for NaN\n//   Number.isNaN(value)  -> no coercion; true only if value is the number NaN\n\n// Examples with other inputs\nisNaN(undefined);          // undefined coerces to NaN\nNumber.isNaN(undefined);   // not a Number type at all\n\nisNaN(\"42\");               // \"42\" coerces to 42\nNumber.isNaN(\"42\");        // a string is never the number NaN\n\nisNaN({});                 // object coerces via ToNumber\nNumber.isNaN(0 / 0);       // 0/0 produces the number NaN\n\n// Gotchas\n// - Coercion: Number(\"abc\") is NaN, Number(\"\") is 0, Number(null) is 0.\n// - Global isNaN can report true for values that are not numbers at all.\n// - Number.isNaN is only true for the actual NaN value of type number.\n// - NaN !== NaN, so x !== x also detects NaN.\n// - Object.is(x, NaN) also works without coercion.\n// - Symbol and BigInt: isNaN(1n) throws TypeError; Number.isNaN(1n) is false.",
+    "title": "Global isNaN vs Number.isNaN: coercion differences"
+  },
+  "js-easy-17": {
+    "docs": [
+      {
+        "title": "Object.is() - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is"
+      },
+      {
+        "title": "Equality comparisons and sameness | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness"
+      }
+    ],
+    "syntax": "// General form\n// Object.is(a, b) -> boolean\n// Compares using the SameValue algorithm: no type coercion.\n\n// Example 1: compared with ===\nconsole.log(Object.is(7, 7));        // same number\nconsole.log(Object.is('a', 'b'));    // different strings\n\n// Example 2: values where it differs from ===\n// Object.is(0, -0)  vs  0 === -0\n// Object.is(Infinity, Infinity)\n\n// Gotchas\n// - No coercion: Object.is('1', 1) is false (unlike ==).\n// - Objects compare by reference: Object.is({}, {}) is false.\n// - Two special numeric cases make Object.is differ from ===:\n//   signed zeros, and how the not-a-number value is treated.\n// - Check how === and Number.isNaN() treat the not-a-number value\n//   and compare it to what SameValue does.\n// - Array.prototype.includes uses SameValueZero, which\n//   treats +0 and -0 as equal but is otherwise like SameValue.\n// - Never throws for any pair of arguments.",
+    "title": "Object.is and SameValue equality"
+  },
+  "js-easy-18": {
+    "docs": [
+      {
+        "title": "Object.is() - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is"
+      },
+      {
+        "title": "Equality comparisons and sameness - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness"
+      },
+      {
+        "title": "Strict equality (===) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Strict_equality"
+      }
+    ],
+    "syntax": "// General forms\nObject.is(a, b)   // SameValue comparison\na === b           // Strict equality comparison\n\n// Examples with other values\nObject.is(5, 5)           // same value, same type\nObject.is('x', 'y')       // different strings\nNaN === NaN               // compare NaN with strict equality\nObject.is(NaN, NaN)       // compare NaN with Object.is\n\n// Gotchas\n// - Both treat values of different types as unequal (no coercion).\n// - Both compare objects by reference, not contents:\n//     {} === {}  and  Object.is({}, {})  are both false for separate objects.\n// - They differ only in how they treat a few special numeric cases:\n//     * NaN: is it considered equal to itself?\n//     * signed zeros: are the two zeros distinguished or not?\n// - Number.prototype methods like Math.sign / 1/x can reveal the sign of a zero:\n//     1 / 0 -> Infinity, 1 / -0 -> -Infinity\n// - Array.prototype.includes uses SameValueZero (NaN equals NaN, zeros equal),\n//   while indexOf uses strict equality.\n// - Loose equality == adds type coercion; it is not used by either of these.",
+    "title": "Equality comparison: Object.is vs strict equality"
+  },
+  "js-easy-19": {
+    "docs": [
+      {
+        "title": "Number - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number"
+      },
+      {
+        "title": "Number.EPSILON - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON"
+      },
+      {
+        "title": "Equality comparisons and sameness - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness"
+      }
+    ],
+    "syntax": "// JS Numbers are IEEE 754 double-precision (64-bit) binary floats.\n// Many decimal fractions cannot be stored exactly in binary,\n// so they are stored as the nearest representable value.\n\n// General form: compare computed floats with a tolerance\n//   Math.abs(a - b) < Number.EPSILON   // fine for values near 1\n\n// Example 1: inspecting the stored value\nconsole.log((0.7).toFixed(20)); // shows digits beyond 0.7\n\n// Example 2: tolerance comparison\nconst nearlyEqual = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;\nconsole.log(nearlyEqual(0.4 * 3, 1.2)); // use this style, not ===\n\n// Variations and gotchas:\n// - Number.EPSILON is the gap between 1 and the next float;\n//   scale the tolerance for larger or smaller magnitudes.\n// - Integers are exact up to Number.MAX_SAFE_INTEGER (2**53 - 1).\n// - Rounding for display: n.toFixed(2) returns a string.\n// - Money: work in integer cents, or use BigInt for big integers.\n// - === on numbers compares exact stored values, no tolerance.\n// - NaN !== NaN; use Number.isNaN(x) to test for it.\n// - Overflow gives Infinity; it does not throw an error.",
+    "title": "Floating-point number precision and equality"
+  },
+  "js-easy-20": {
+    "docs": [
+      {
+        "title": "Number() constructor - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/Number"
+      },
+      {
+        "title": "ToNumber applied to Strings - ECMAScript spec",
+        "url": "https://tc39.es/ecma262/#sec-tonumber-applied-to-the-string-type"
+      }
+    ],
+    "syntax": "// General form\n// Number(value) -> converts value to a number primitive using the ToNumber rules\n//\n// For strings: leading/trailing whitespace is trimmed, then the rest\n// must be a valid numeric literal, otherwise the result is NaN.\n\nNumber(\"42\");        // 42\nNumber(\"  7.5  \");   // 7.5 (whitespace trimmed)\nNumber(\"12px\");      // NaN (trailing junk is not allowed)\nNumber(\"0x1F\");      // 31 (hex, also 0b and 0o prefixes)\nNumber(\"1e3\");       // 1000\n\n// Gotchas\n// - A string that is only whitespace is treated like an empty-ish\n//   string: think about what the trimmed text represents numerically.\n// - Other inputs: Number(true) -> 1, Number(false) -> 0,\n//   Number(null) -> 0, Number(undefined) -> NaN\n// - Number([]) and Number([5]) go through string conversion first\n// - Number(\"1,000\") -> NaN (no separators)\n// - parseInt/parseFloat are more lenient: parseInt(\"12px\") -> 12\n// - Unary + behaves like Number(): +\"3\" -> 3\n// - Check results with Number.isNaN(x), not x === NaN",
+    "title": "Number() conversion of strings"
+  },
+  "js-easy-21": {
+    "docs": [
+      {
+        "title": "Number() constructor - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/Number"
+      },
+      {
+        "title": "Number type conversion - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number#number_coercion"
+      },
+      {
+        "title": "parseFloat() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/parseFloat"
+      }
+    ],
+    "syntax": "// General form\n// Number(value) -> a number primitive (not a Number object without `new`)\n\n// Examples\nNumber(\"42\");      // 42\nNumber(\"  7.5  \");  // 7.5  (surrounding whitespace is trimmed)\nNumber(\"\");        // empty or whitespace-only string converts to a specific number\nNumber(true);      // 1\nNumber(null);      // 0\nNumber(undefined); // NaN\n\n// Rules (StringToNumber)\n// - The WHOLE trimmed string must be a valid numeric literal,\n//   otherwise the result is NaN.\n// - Accepted: decimals, exponents (\"1e3\"), \"Infinity\",\n//   prefixes \"0x\", \"0o\", \"0b\" (no sign allowed with these).\n// - Numeric separators (\"1_000\") are NOT accepted.\n//\n// Gotchas\n// - Number() is strict; parseInt()/parseFloat() read a leading\n//   numeric prefix and ignore trailing characters.\n//     parseInt(\"3abc\")   // reads the leading digits\n//     Number(\"3abc\")     // strict: whole string must be numeric\n// - NaN !== NaN; test with Number.isNaN(x).\n// - Unary plus (+str) behaves like Number(str).\n// - Number(1n) works (BigInt -> number), but +1n throws TypeError.",
+    "title": "Converting strings to numbers with Number()"
+  },
+  "js-easy-22": {
+    "docs": [
+      {
+        "title": "parseInt() - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/parseInt"
+      },
+      {
+        "title": "Number.parseInt - ECMAScript specification",
+        "url": "https://tc39.es/ecma262/#sec-parseint-string-radix"
+      }
+    ],
+    "syntax": "// General form\n// parseInt(string, radix)\n//   string: converted to a string, leading whitespace skipped\n//   radix:  integer 2-36 (use it explicitly; 10 for decimal)\n\n// Examples (different inputs from any quiz)\nparseInt(\"42\", 10);        // 42\nparseInt(\"  7 apples\", 10); // parses leading digits only, stops at first invalid char\nparseInt(\"ff\", 16);        // 255\nparseInt(\"101\", 2);        // 5\n\n// Rules and gotchas\n// - Parsing reads from the start and stops at the first character\n//   that is not a valid digit for the radix; the rest is ignored.\n// - If the first non-space character cannot be a digit, the result is NaN.\n// - Optional leading + or - sign is accepted.\n// - Result is always a Number (or NaN), never a string.\n// - Decimal points are not read: the fractional part is dropped.\n// - Omitted radix: \"0x\" prefix means 16, otherwise 10. Pass it anyway.\n// - Invalid input does not throw; it yields NaN.\n// - Compare with Number(str), which is strict and returns NaN\n//   if any trailing junk is present.\n// - Check failures with Number.isNaN(result).",
+    "title": "String-to-integer parsing with parseInt"
+  },
+  "js-easy-23": {
+    "docs": [
+      {
+        "title": "parseInt() - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/parseInt"
+      },
+      {
+        "title": "Number() - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/Number"
+      }
+    ],
+    "syntax": "// General form\n// parseInt(string, radix?)\n//   string: converted to a string, leading whitespace skipped\n//   radix:  integer 2-36 (omitted/0 => 10, except \"0x\" prefix => 16)\n//   returns an integer Number, or NaN if no leading digit is valid\n\nparseInt(\"42\", 10);      // 42\nparseInt(\"  17px\", 10);  // 17  (stops at first invalid character)\nparseInt(\"ff\", 16);      // 255\nparseInt(\"101\", 2);      // 5\nparseInt(\"abc\", 10);     // NaN\nparseInt(\"3.9\", 10);     // 3   (fraction is truncated, not rounded)\nparseInt(\"-12\", 10);     // -12 (leading sign allowed)\n\n// Gotchas\n// - Only the leading portion is parsed; trailing junk is ignored.\n// - Leading zeros are just digits when the radix is explicit.\n// - Always pass the radix to avoid ambiguity (e.g. \"0x1A\" is read as hex when radix is omitted).\n// - A radix outside 2-36 gives NaN.\n// - Number(\"17px\") is NaN, unlike parseInt: Number is strict, parseInt is lenient.\n// - Never use parseInt as a map callback without a wrapper: [\"1\",\"2\",\"3\"].map(parseInt) passes the index as radix.\n// - Very large or tiny numbers in exponent form are misparsed: parseInt(1e21) reads \"1e+21\" => 1.",
+    "title": "parseInt string-to-integer parsing and radix"
+  },
+  "js-easy-24": {
+    "docs": [
+      {
+        "title": "parseFloat() - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/parseFloat"
+      },
+      {
+        "title": "Number() - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/Number"
+      }
+    ],
+    "syntax": "// General form\n// parseFloat(string)  -> number\n//   1. Converts argument to a string, trims leading whitespace\n//   2. Reads the longest prefix that is a valid decimal literal\n//   3. Ignores the rest; returns NaN if no valid prefix exists\n\nparseFloat(\"2.5\");        // 2.5\nparseFloat(\"  7.25em\");   // 7.25 (leading whitespace ok, trailing text ignored)\nparseFloat(\"-.5x\");       // -0.5\nparseFloat(\"1e3px\");      // 1000 (exponent notation is understood)\n\n// Gotchas\n// parseFloat(\"abc9\")     -> NaN (prefix must start the string)\n// parseFloat(\"\")         -> NaN\n// parseFloat(\"1.2.3\")    -> stops at the second dot\n// parseFloat(\"Infinity\") -> Infinity\n// parseFloat(\"0x1F\")     -> 0 (no hex support; stops at x)\n// Always returns a number type, never a string.\n//\n// Compare with stricter conversion:\n// Number(\"7.25em\")       -> NaN (whole string must be numeric)\n// parseInt(\"7.25em\")     -> parses integers only, stops at the dot\n// Check failures with Number.isNaN(result)",
+    "title": "Parsing numbers from strings with parseFloat"
+  },
+  "js-easy-25": {
+    "docs": [
+      {
+        "title": "Unary plus (+) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Unary_plus"
+      },
+      {
+        "title": "Type coercion: Number conversion - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Representing_numbers"
+      },
+      {
+        "title": "ECMAScript: Unary + Operator",
+        "url": "https://tc39.es/ecma262/#sec-unary-plus-operator"
+      }
+    ],
+    "syntax": "// General form:\n//   +operand   -> ToNumber(ToPrimitive(operand, \"number\"))\n\n// Examples:\n+\"42\";        // 42\n+true;        // 1\n+null;        // 0\n+undefined;   // NaN\n+{};          // NaN (object -> primitive -> string \"[object Object]\" -> number)\n\n// How objects are converted (ToPrimitive, hint \"number\"):\n//   1. call valueOf(); if it returns a primitive, use it\n//   2. otherwise call toString() and use that result\n//   3. then convert the resulting primitive with ToNumber\n\n// Example of the steps with a custom object:\nconst o = { toString() { return \"7\"; } };\n+o;           // 7\n\n// String -> number rules (ToNumber):\n//   leading/trailing whitespace is trimmed\n//   empty or whitespace-only string -> 0\n//   invalid numeric text -> NaN\n+\"  12  \";     // 12\n+\"12px\";       // NaN\n\n// Gotchas:\n//   Arrays use Array.prototype.toString (join with \",\"), so\n//   their numeric value depends on the joined string.\n//   +[\"5\"] follows the same steps as above.\n//   +1n throws TypeError (BigInt cannot be converted with unary +).\n//   Number(x) behaves like +x but also accepts BigInt.",
+    "title": "Unary plus and type coercion to number"
+  },
+  "js-easy-26": {
+    "docs": [
+      {
+        "title": "Unary plus (+) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Unary_plus"
+      },
+      {
+        "title": "Type coercion: Number conversion - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Representing_numbers"
+      },
+      {
+        "title": "ECMAScript: Unary + Operator",
+        "url": "https://tc39.es/ecma262/#sec-unary-plus-operator"
+      }
+    ],
+    "syntax": "// General form:\n//   +operand   -> converts operand to a Number via ToNumber\n//\n// Primitives:\n//   +\"42\"     // string parsed as numeric literal\n//   +true     // booleans map to 1 or 0\n//   +null     // null maps to 0\n//   +undefined// undefined maps to NaN\n//   +\"abc\"    // unparseable string gives NaN\n//\n// Objects are first converted to a primitive (ToPrimitive, hint \"number\"):\n//   1. call valueOf(); if it returns a primitive, use it\n//   2. otherwise call toString(); use that primitive\n//   3. then apply ToNumber to the resulting primitive\n//\n// Example with custom conversion:\nconst temp = { valueOf() { return \"7\"; } };\n+temp;            // valueOf gives \"7\", then ToNumber parses it\n\nconst box = { toString() { return \"  12  \"; } };\n// default valueOf returns the object itself (not primitive),\n// so toString is used; whitespace is trimmed when parsing\n\n// Gotchas:\n// - Symbol.toPrimitive, if defined, takes priority over valueOf/toString\n// - Unary + throws TypeError on BigInt and Symbol\n// - Arrays convert via their toString (join), e.g. +[5] vs +[1,2]\n// - Empty or whitespace-only strings convert to 0\n// - Number(x) behaves like +x but supports BigInt",
+    "title": "Unary plus and ToNumber conversion of objects"
+  },
+  "js-easy-27": {
+    "docs": [
+      {
+        "title": "String() constructor and function - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/String"
+      },
+      {
+        "title": "ToString abstract operation - ECMAScript spec",
+        "url": "https://tc39.es/ecma262/#sec-tostring"
+      }
+    ],
+    "syntax": "// General form: String(value) -> primitive string (no `new`)\n// Converts via the spec's ToString abstract operation.\n\nString(42);          // a string made from the number\nString(true);        // boolean converted to text\nString([1, 2]);      // arrays use join(',')\nString({});          // plain objects use toString()\n\n// Variations and gotchas:\n// - Primitives convert to the text of their literal name/value.\n// - Objects call [Symbol.toPrimitive], then toString()/valueOf().\n// - String(Symbol('x')) works (gives \"Symbol(x)\"),\n//   but `'' + Symbol('x')` and template literals throw TypeError.\n// - `new String(x)` makes a wrapper OBJECT, not a primitive:\n//   typeof new String('a') === 'object'\n// - x.toString() throws on null/undefined, while String(x) does not\n//   because String() doesn't look up a method on those values.\n// - Template literal `${x}` and '' + x are similar but differ for\n//   symbols and objects with custom valueOf/toPrimitive.\n// - -0 becomes \"0\"; large/small numbers may use exponent form.",
+    "title": "The String() conversion function"
+  },
+  "js-easy-28": {
+    "docs": [
+      {
+        "title": "String() constructor and function - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/String"
+      },
+      {
+        "title": "ToString abstract operation - ECMAScript",
+        "url": "https://tc39.es/ecma262/#sec-tostring"
+      },
+      {
+        "title": "String() - ECMAScript spec",
+        "url": "https://tc39.es/ecma262/#sec-string-constructor-string-value"
+      }
+    ],
+    "syntax": "// General form\n// String(value)  -> returns a primitive string (no `new`)\n// Converts any value using the ToString rules.\n\nString(123);        // \"123\"\nString(true);       // \"true\"\nString([1, 2]);     // \"1,2\"  (array join)\nString({});         // \"[object Object]\"\n\n// Common conversions\n// numbers  -> decimal text (e.g. String(1e21) is \"1e+21\")\n// booleans -> \"true\" / \"false\"\n// objects  -> calls toString() (or valueOf via ToPrimitive hint \"string\")\n\n// Symbols: String() is special-cased and works\nString(Symbol(\"id\")); // \"Symbol(id)\"\n// but implicit conversion throws:\n// \"\" + Symbol(\"id\")  -> TypeError\n\n// Compare with other approaches\n// value.toString()  -> throws TypeError if value is a nullish value\n// `${value}`        -> template literal, uses ToString\n// value + \"\"        -> uses ToPrimitive (default hint), differs for some objects\n\n// Gotchas\n// new String(\"a\") creates a wrapper object, typeof is \"object\"\n// String(x) never needs a null/undefined check before calling\n// Primitive results: typeof String(5) === \"string\"",
+    "title": "String() conversion function"
+  },
+  "js-easy-29": {
+    "docs": [
+      {
+        "title": "Boolean - JavaScript (MDN)",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean"
+      },
+      {
+        "title": "Falsy - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Falsy"
+      },
+      {
+        "title": "Truthy - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Truthy"
+      }
+    ],
+    "syntax": "// General form\n// Boolean(value) -> converts any value to a primitive true or false\n// Uses the ToBoolean rule: every value is either \"truthy\" or \"falsy\"\n\n// Examples\nBoolean(42);        // number: nonzero values convert one way\nBoolean(\"hello\");   // non-empty string\nBoolean(0);         // zero\nBoolean(null);      // null\n\n// The complete list of falsy values:\n//   false, 0, -0, 0n (BigInt zero), NaN,\n//   null, undefined, document.all (legacy),\n//   and the empty string (zero-length string)\n// Everything else is truthy, including:\n//   \"0\", \"false\", \" \" (a space), [], {}, function(){}\n\n// Equivalent ways to coerce\n!!value;            // double negation\nif (value) { }      // conditions use the same rule\n\n// Gotchas\n// - Boolean(x) returns a primitive; new Boolean(x) returns an object,\n//   and any object is truthy, even new Boolean(false)\n// - Boolean() with no argument gives false (undefined is falsy)\n// - Boolean always returns true or false, never the original value\n//   (unlike || and &&, which return one of their operands)\n// - Truthiness is not the same as ==: [] is truthy but [] == false",
+    "title": "Boolean() conversion and truthiness"
+  },
+  "js-easy-30": {
+    "docs": [
+      {
+        "title": "Boolean - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean"
+      },
+      {
+        "title": "Falsy - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Falsy"
+      },
+      {
+        "title": "Truthy - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Truthy"
+      }
+    ],
+    "syntax": "// General form\n// Boolean(value) -> converts value to a primitive boolean\n// Uses the ToBoolean rule: only a fixed list of values is falsy;\n// everything else is truthy.\n\n// Falsy values (complete list):\n//   false, 0, -0, 0n, NaN, \"\" (empty string), null, undefined,\n//   and document.all (browser quirk)\n\n// Examples\nBoolean(0);          // a falsy number\nBoolean(\"\");         // empty string is falsy\nBoolean(\"hello\");    // non-empty string\nBoolean([]);         // objects are always truthy\n\n// Gotchas\n// - Strings are judged by length only, not by what they say.\n//   Any string with at least one character (even \" \" or \"0\")\n//   is truthy.\n// - Empty arrays [] and empty objects {} are truthy.\n// - !!value is equivalent to Boolean(value).\n// - new Boolean(false) creates an object, which is truthy.\n// - Boolean() never throws for ordinary values and never\n//   parses string contents (unlike JSON.parse).",
+    "title": "Boolean() conversion and truthiness"
+  },
+  "js-easy-31": {
+    "docs": [
+      {
+        "title": "Truthy - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Truthy"
+      },
+      {
+        "title": "Falsy - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Falsy"
+      },
+      {
+        "title": "Boolean - MDN JavaScript Reference",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean"
+      }
+    ],
+    "syntax": "// General form\n// Boolean(value)  -> converts value to a primitive true/false\n// !!value         -> same conversion via double negation\n// if (value) {...} uses the same ToBoolean rule\n\n// The falsy values (the complete list):\n//   false, 0, -0, 0n, \"\" (empty string), null, undefined, NaN\n// Also document.all (legacy browser quirk)\n// Everything else is truthy, including objects.\n\n// Examples\nBoolean(\"hello\");   // string with characters\nBoolean(null);      // a falsy value\nBoolean({});        // check: is an object in the falsy list?\n\n// Gotchas\n// - The rule checks the type/value, not whether a thing looks \"empty\".\n// - Strings: \"0\" and \"false\" are non-empty strings; only \"\" is falsy.\n// - Wrapper objects are objects: new Boolean(false) is an object.\n// - Boolean(x) returns a primitive; new Boolean(x) returns an object.\n// - Loose equality is a different algorithm from ToBoolean:\n//   a value can be truthy in if() yet not == true.",
+    "title": "Truthy and falsy values with Boolean()"
+  },
+  "js-easy-32": {
+    "docs": [
+      {
+        "title": "Boolean - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean"
+      },
+      {
+        "title": "Falsy - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Falsy"
+      },
+      {
+        "title": "Truthy - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Truthy"
+      }
+    ],
+    "syntax": "// General form\n// Boolean(value) -> converts any value to a primitive true or false\n// Same rule as !!value, and as conditions in if / while / ternary\n\n// Examples\nBoolean(\"hello\");   // a non-empty string is truthy\nBoolean(\"\");        // empty string is falsy\nBoolean(null);      // null is falsy\n\n// The complete list of falsy values:\n//   false, 0, -0, 0n (BigInt zero), \"\" (empty string),\n//   null, undefined, NaN\n// document.all is also falsy (legacy quirk)\n\n// Everything else is truthy, including surprising cases:\nBoolean([]);        // empty array -> truthy\nBoolean({});        // empty object -> truthy\nBoolean(\"0\");       // non-empty string -> truthy\nBoolean(\"false\");   // non-empty string -> truthy\nBoolean(-5);        // any non-zero number -> truthy\n\n// Gotchas\n// - Boolean(x) returns a primitive; new Boolean(x) returns an object,\n//   and objects are always truthy (even new Boolean(false)).\n// - Conversion does not change the value; it only decides the result.\n// - Boolean() with no argument returns false.",
+    "title": "Boolean() conversion and truthy/falsy values"
+  },
+  "js-easy-33": {
+    "docs": [
+      {
+        "title": "Boolean - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean"
+      },
+      {
+        "title": "Falsy - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Falsy"
+      },
+      {
+        "title": "Truthy - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Truthy"
+      }
+    ],
+    "syntax": "// General form\nBoolean(value)   // returns a primitive true or false\n!!value          // same conversion via double negation\n\n// The falsy values (the complete list):\n//   false, 0, -0, 0n, \"\" (empty string), null, undefined, NaN\n// Everything else is truthy.\n\n// Examples\nBoolean(\"hello\");   // string with content\nBoolean(0);         // a falsy number\nBoolean(null);      // a falsy value\nBoolean(\"0\");       // non-empty string\n\n// Gotchas\n// - Boolean() never returns NaN or undefined; the result is always a boolean.\n// - Truthiness checks only whether the value is in the falsy list above.\n//   Contents are not inspected, so containers are not tested for emptiness.\n// - Objects are always truthy, including arrays, functions, and Date objects.\n// - Don't use `new Boolean(x)`: it creates a wrapper object, which is\n//   always truthy, even for new Boolean(false).\n// - if, while, &&, ||, ?? and ternary conditions use the same conversion\n//   (?? only checks null/undefined).",
+    "title": "Truthy and falsy conversion with Boolean()"
+  },
+  "js-easy-34": {
+    "docs": [
+      {
+        "title": "Nullish coalescing operator (??) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing"
+      },
+      {
+        "title": "Nullish coalescing assignment (??=) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_assignment"
+      }
+    ],
+    "syntax": "// General form\n// left ?? right\n// Evaluates to `right` only when `left` is null or undefined;\n// otherwise evaluates to `left` (without evaluating `right`).\n\nconst config = { retries: 0, name: undefined };\n\nconst a = config.retries ?? 5;   // 0 is not null/undefined, so left is kept\nconst b = config.name ?? \"anon\"; // left is undefined, so the fallback is used\n\n// Short-circuits: right side only runs if needed\nfunction fallback() { return \"computed\"; }\nconst c = \"hi\" ?? fallback();     // fallback() never called\n\n// Gotchas / variations\n// - Differs from ||: || falls back on ANY falsy value (0, \"\", false, NaN),\n//   while ?? only checks null and undefined.\n// - Cannot be mixed directly with || or && without parentheses:\n//   a || b ?? c      // SyntaxError\n//   (a || b) ?? c    // OK\n// - Works well with optional chaining: obj?.prop ?? defaultValue\n// - Assignment form: x ??= value  (assigns only if x is null/undefined)\n// - Does not throw for null/undefined on the left; it simply picks the right.",
+    "title": "Nullish coalescing operator (??)"
+  },
+  "js-easy-35": {
+    "docs": [
+      {
+        "title": "Nullish coalescing operator (??) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing"
+      },
+      {
+        "title": "Nullish coalescing assignment (??=) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_assignment"
+      }
+    ],
+    "syntax": "// General form:\n//   left ?? right\n// Evaluates to `right` only when `left` is null or undefined.\n// Otherwise it evaluates to `left` (short-circuits: right is not evaluated).\n\nconst name = undefined ?? \"guest\";   // \"guest\"\nconst count = null ?? 10;            // 10\n\n// Compare with ||:\n//   a || b  -> b when a is ANY falsy value (0, \"\", false, NaN, null, undefined, 0n)\n//   a ?? b  -> b only when a is null or undefined\n// So ?? keeps \"real\" values that happen to be falsy:\nconst qty = \"\" ?? \"none\";           // \"\"  (empty string is kept)\nconst flag = NaN ?? 5;               // NaN\n\n// Chaining: a ?? b ?? c  picks the first non-nullish value\n// Mixing with || or && without parentheses is a SyntaxError:\n//   a || b ?? c      // SyntaxError\n//   (a || b) ?? c    // OK\n\n// Works well with optional chaining:\n//   obj?.size ?? 0\n\n// Assignment form:\n//   x ??= value   // assigns only if x is null or undefined",
+    "title": "Nullish coalescing operator"
+  },
+  "js-easy-36": {
+    "docs": [
+      {
+        "title": "Nullish coalescing operator (??) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing"
+      },
+      {
+        "title": "Falsy - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Falsy"
+      }
+    ],
+    "syntax": "// General form:\n//   left ?? right\n// Evaluates to `right` only when `left` is null or undefined.\n// Otherwise it evaluates to `left` (and `right` is not evaluated: short-circuit).\n\nconst a = null ?? \"fallback\";   // a is \"fallback\"\nconst count = 0;\nconst b = count ?? 10;          // decided by whether count is null/undefined\n\n// Compare with ||:\n//   || falls back on ANY falsy left value:\n//     false, 0, -0, 0n, NaN, \"\", null, undefined\n//   ?? falls back on ONLY the two nullish values:\n//     null, undefined\n\n// Gotchas:\n// - Mixing with || or && without parentheses is a SyntaxError:\n//     a || b ?? c        // error\n//     (a || b) ?? c      // OK\n// - Pairs well with optional chaining:\n//     user?.name ?? \"anonymous\"\n// - Assignment form: x ??= value  (assigns only if x is null/undefined)\n// - Chains left to right: a ?? b ?? c returns the first non-nullish value\n//   (or the last operand if all earlier ones are nullish).",
+    "title": "Nullish coalescing operator"
+  },
+  "js-easy-37": {
+    "docs": [
+      {
+        "title": "Nullish coalescing operator (??) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing"
+      },
+      {
+        "title": "Nullish coalescing assignment (??=) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_assignment"
+      }
+    ],
+    "syntax": "// General form:\n//   left ?? right\n// Returns `right` only when `left` is null or undefined (\"nullish\").\n// Otherwise returns `left` unchanged. Right side is short-circuited\n// (only evaluated when needed).\n\nconst config = { retries: 0, name: null };\n\nconst a = config.name ?? \"anonymous\";   // left is nullish -> uses right side\nconst b = config.retries ?? 3;          // left is 0, not nullish -> keeps left\nconst c = config.missing ?? \"fallback\"; // missing property is undefined -> right side\n\n// Gotchas and variations:\n// - Differs from ||, which falls back on ANY falsy value\n//   (0, \"\", false, NaN, null, undefined). ?? only checks null/undefined.\n// - Cannot be mixed with || or && without parentheses:\n//     a || b ?? c      // SyntaxError\n//     (a || b) ?? c    // OK\n// - Works well with optional chaining: user?.profile?.age ?? 18\n// - Logical assignment form: x ??= 5  (assigns only if x is nullish)\n// - Chains left to right: p ?? q ?? r  (first non-nullish value, or last)\n// - It never throws a TypeError by itself; it just tests the left value.",
+    "title": "Nullish coalescing operator"
+  },
+  "js-easy-38": {
+    "docs": [
+      {
+        "title": "Optional chaining (?.) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining"
+      },
+      {
+        "title": "OptionalExpression - ECMAScript specification",
+        "url": "https://tc39.es/ecma262/#prod-OptionalExpression"
+      }
+    ],
+    "syntax": "// General form\n//   obj?.prop        obj?.[expr]        fn?.(args)\n// The left side is checked: if it is nullish (null or undefined),\n// the rest of the chain is skipped (short-circuit) instead of\n// evaluating the property access.\n\nconst user = { profile: { name: \"Ana\" }, greet() { return \"hi\"; } };\nuser?.profile?.name;      // \"Ana\" (value present, normal access)\nuser.settings?.theme;     // settings is missing, so the chain stops there\nuser.greet?.();           // calls the method only if it exists\nuser.items?.[0];          // optional bracket access\n\n// Gotchas\n// - Only null and undefined trigger the short-circuit; 0, \"\", false, NaN do not.\n// - Short-circuiting skips the whole remaining chain: a?.b.c.d\n//   does not evaluate .c or .d when a is nullish.\n// - It guards only the value to its left. If a?.b is non-nullish\n//   but b's value lacks a property, later access can still fail.\n// - Cannot be used on the left of assignment: a?.b = 1 is a SyntaxError.\n// - Combine with ?? for defaults: a?.b ?? \"fallback\".\n// - Compare with plain access, which throws on a nullish base:\n//   let n = undefined; n.x  // TypeError\n// - Undeclared variables still throw ReferenceError.",
+    "title": "Optional chaining operator (?.)"
+  },
+  "js-easy-39": {
+    "docs": [
+      {
+        "title": "Optional chaining (?.) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining"
+      },
+      {
+        "title": "ECMAScript: Optional Chains",
+        "url": "https://tc39.es/ecma262/#sec-optional-chains"
+      }
+    ],
+    "syntax": "// General form\n//   callee?.(args)\n// The part after ?. is evaluated only if callee is not\n// null/undefined; otherwise the whole chain short-circuits.\n\nconst handler = {\n  greet(name) { return 'Hi ' + name; }\n};\n\nhandler.greet?.('Ana');      // method exists -> called normally\nhandler.missing?.('Ana');    // method absent -> see short-circuit rule\n\n// Variations\n//   obj.method?.(x)    optional method call\n//   obj?.method(x)     guards obj only, not method\n//   arr?.[0]           optional index access\n//   a?.b.c.d()         one ?. short-circuits the rest of the chain\n\n// Gotchas\n// - Short-circuits only on null or undefined (nullish),\n//   not on 0, '', false, or NaN.\n// - If the value is non-nullish but not callable (e.g. a number or\n//   string), calling it with ?.() still throws a TypeError.\n// - Arguments are not evaluated when the chain short-circuits.\n// - A short-circuited chain yields a single result value for the\n//   whole expression, so check which value that is.\n// - Cannot be used for assignment: a?.b = 1 is a SyntaxError.",
+    "title": "Optional chaining call syntax (?.())",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-40": {
+    "docs": [
+      {
+        "title": "Logical OR (||) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Logical_OR"
+      },
+      {
+        "title": "Falsy - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Falsy"
+      },
+      {
+        "title": "Nullish coalescing operator (??) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing"
+      }
+    ],
+    "syntax": "// General form\n//   left || right\n// Evaluates left first. If left is truthy, that value is returned\n// and right is never evaluated. Otherwise the result is right.\n// The result is one of the operands, not necessarily a boolean.\n\n// Examples\nconst name = \"\" || \"guest\";      // picks based on truthiness of \"\"\nconst port = 8080 || 3000;        // left is truthy, so right is skipped\nconst a = null || undefined;      // right operand is returned as-is\n\n// Falsy values (everything else is truthy):\n//   false, 0, -0, 0n, \"\", null, undefined, NaN\n// Truthy gotchas: \"0\", \"false\", [], {} are all truthy\n\n// Short-circuiting\n//   ok || expensive();   // expensive() runs only if ok is falsy\n\n// Chaining returns the first truthy value, or the last operand\n//   x || y || z\n\n// Variations\n//   ??  only treats null/undefined as \"missing\" (keeps 0 and \"\")\n//   ||= logical OR assignment: a ||= b  is  a || (a = b)\n//   &&  returns the first falsy value, else the last operand",
+    "title": "Logical OR operator and truthiness"
+  },
+  "js-easy-41": {
+    "docs": [
+      {
+        "title": "Logical AND (&&) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Logical_AND"
+      },
+      {
+        "title": "Falsy - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Falsy"
+      },
+      {
+        "title": "Binary Logical Operators (ECMAScript spec)",
+        "url": "https://tc39.es/ecma262/#sec-binary-logical-operators"
+      }
+    ],
+    "syntax": "// General form:\n//   left && right\n// Evaluates left first. Converts it to boolean only for the test.\n// - If left is truthy, the result is right (the operand itself).\n// - If left is falsy, evaluation stops and the result is left (the operand itself).\n// && returns one of its operands, not necessarily true/false.\n\nconst user = { name: \"Ana\" };\nconsole.log(user && user.name);   // left truthy -> right operand is returned\n\nlet count = \"\";\nlet label = count && \"has items\"; // left falsy -> short-circuits, right is never evaluated\n\n// Falsy values: false, 0, -0, 0n, \"\", null, undefined, NaN\n// Everything else is truthy (including \"0\", [], {}).\n\n// Short-circuit: right side is skipped when left decides the result\nisReady && start();               // start() only runs if isReady is truthy\n\n// Chaining: returns the first falsy operand, or the last operand if all are truthy\n// a && b && c\n\n// Gotchas:\n// - Precedence: && binds tighter than ||\n// - Use !!(a && b) or Boolean(a && b) to force a boolean\n// - Use ?? or ?. when you only want to treat null/undefined specially",
+    "title": "Logical AND operator and short-circuit evaluation"
+  },
+  "js-easy-42": {
+    "docs": [
+      {
+        "title": "Logical OR (||) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Logical_OR"
+      },
+      {
+        "title": "Falsy - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Falsy"
+      }
+    ],
+    "syntax": "// General form:\n//   left || right\n// Evaluates left first. If left is truthy, the result is left\n// and right is never evaluated. Otherwise the result is right.\n// The result is one of the operands, not necessarily a boolean.\n\nconst a = 0 || \"default\";\nconst b = \"hi\" || \"default\";\nconst c = null || undefined;\n\n// Falsy values: false, 0, -0, 0n, \"\", null, undefined, NaN\n// Everything else is truthy (including \"0\", \" \", [], {}).\n\n// Common uses:\n//   const name = input || \"anonymous\";   // default value\n//   ready || init();                     // short-circuit call\n\n// Chains return the first truthy operand, or the last operand\n// if none are truthy:\n//   x || y || z\n\n// Gotcha: valid values like 0 or \"\" are replaced by the default.\n// Use ?? to replace only null/undefined.\n//   const n = 0 ?? 5;   // 0 is kept\n\n// Mixing with ?? needs parentheses: (a || b) ?? c",
+    "title": "Logical OR operator and operand selection"
+  },
+  "js-easy-43": {
+    "docs": [
+      {
+        "title": "const - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const"
+      },
+      {
+        "title": "Assignment operators - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Assignment"
+      }
+    ],
+    "syntax": "// General form\nconst name = value;   // initializer is required\n\n// Example 1: a binding tied to an object\nconst config = { retries: 3 };\nconfig.retries = 5;        // changing a property is a separate operation from rebinding the name\n\n// Example 2: declaring in a loop\nfor (const item of ['a', 'b']) {\n  // each iteration gets a fresh binding\n}\n\n// Variations and gotchas (as comments):\n// - const is block scoped, like let.\n// - A const declaration without an initializer is rejected when the code is parsed.\n// - const stops the name from being rebound; it does not make the value immutable.\n//   Use Object.freeze(obj) for shallow immutability.\n// - Compound assignment (+=, ++) and destructuring assignment onto the name count as assignments too.\n// - Accessing a const before its declaration line runs is in the temporal dead zone (ReferenceError).\n// - Redeclaring the same name in the same scope is not allowed.\n// - Compare with let (reassignable) and var (function scoped, hoisted).",
+    "title": "const declarations and binding rules"
+  },
+  "js-easy-45": {
+    "docs": [
+      {
+        "title": "let - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let"
+      },
+      {
+        "title": "Temporal dead zone (TDZ) - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Temporal_dead_zone"
+      }
+    ],
+    "syntax": "// General form\n//   let name = initializer;\n//   const name = initializer;\n//\n// The scope of let/const is the enclosing block { }.\n// The binding exists from the start of that block,\n// but it is not initialized until execution reaches the declaration.\n// The span between block start and declaration is the\n// \"temporal dead zone\" (TDZ).\n\n// Example 1: using a binding inside its TDZ\n{\n  // TDZ for `count` begins here\n  // ...any access to `count` here is in the TDZ\n  let count = 5;   // TDZ ends once this line runs\n  console.log(count);\n}\n\n// Example 2: TDZ applies even inside functions\nfunction demo() {\n  const run = () => label;   // fine to define; only runs later\n  const label = \"ok\";\n  return run();              // called after initialization\n}\n\n// Gotchas\n// - The TDZ is based on execution time, not on text position.\n// - typeof is NOT safe for a variable in its TDZ.\n// - Shadowing: an inner let hides an outer variable for the\n//   WHOLE inner block, including lines before the declaration.\n// - Default parameters can hit the TDZ: function f(a = b, b) {}\n// - Contrast with var: hoisted and initialized to undefined.\n// - Redeclaring a let name in the same scope is an early error.",
+    "title": "Block-scoped declarations and the temporal dead zone"
+  },
+  "js-easy-46": {
+    "docs": [
+      {
+        "title": "var - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/var"
+      },
+      {
+        "title": "Hoisting - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Hoisting"
+      }
+    ],
+    "syntax": "// General form\n//   var name = expression;\n//   The declaration (the name) is processed before any code runs.\n//   The assignment stays where it is written.\n\n// Mental model: the engine treats\nfunction demo() {\n  console.log(typeof count);\n  var count = 10;\n  console.log(count);\n}\n// roughly as if written:\nfunction demoEquivalent() {\n  var count;        // declaration moved to top of its function scope\n  // ...code that runs before the assignment sees count in its initial state\n  count = 10;       // assignment happens in place\n}\n\n// Gotchas\n// - var is scoped to the function (or global), not to blocks like { }.\n// - var bindings are initialized automatically at scope entry.\n// - let and const are also hoisted, but they sit in the\n//   \"temporal dead zone\" until their declaration line runs.\n//   Accessing them early follows different rules than var.\n// - Function declarations are hoisted with their body;\n//   function expressions assigned to var are not.\n// - Redeclaring a var in the same scope is allowed.\n//   var a = 1; var a = 2;\n// - Undeclared names (never declared anywhere) are a different case\n//   from names declared later with var.",
+    "title": "Variable declarations and hoisting"
+  },
+  "js-easy-47": {
+    "docs": [
+      {
+        "title": "let - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let"
+      },
+      {
+        "title": "var - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/var"
+      },
+      {
+        "title": "Grammar and types: Variable scope - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Grammar_and_types#variable_scope"
+      }
+    ],
+    "syntax": "// General form\n//   var  name = value;   // scope: the enclosing function (or global)\n//   let  name = value;   // scope: the nearest enclosing { } block\n//   const name = value;  // same block scope as let, but cannot be reassigned\n\n// Example 1: a loop\nfunction count() {\n  for (var i = 0; i < 3; i++) {}\n  for (let j = 0; j < 3; j++) {}\n  // Which of i and j can be read here? Apply the scope rules above.\n}\n\n// Example 2: a bare block\nfunction tally() {\n  {\n    var x = 10;\n    let y = 20;\n  }\n  // x and y follow their own scope rules once the block ends\n}\n\n// Gotchas\n// - Block scope applies to any { }: if, for, while, try/catch, switch, bare blocks.\n// - Function bodies are the boundary for var; a var never stays local to an if/for block.\n// - Reading a name outside its scope throws ReferenceError (if it is not declared in any visible scope).\n// - Hoisting: var is hoisted and initialized as undefined;\n//   let/const are hoisted but uninitialized (temporal dead zone) until the declaration runs.\n// - Redeclaring the same name: var allows it in the same scope; let throws SyntaxError.\n// - Top-level var creates a property on the global object in scripts; let does not.",
+    "title": "Variable declaration scope: var, let, and blocks",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-48": {
+    "docs": [
+      {
+        "title": "Template literals (Template strings) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals"
+      }
+    ],
+    "syntax": "// General form:\n// `text ${expression} more text`\n// Backticks delimit the literal; ${...} holds any JS expression.\n// The expression is evaluated, converted to a string, and inserted.\n\nconst city = \"Oslo\";\nconst n = 3;\nconst msg = `Trip to ${city} in ${n * 2} days`;\n// msg is a string built from the pieces\n\n// Variations and gotchas:\n// - Expressions can be literals, variables, calls, ternaries:\n//     `${n > 1 ? \"many\" : \"one\"}`\n// - Non-strings are converted like String(value):\n//     `${[1, 2]}`  -> uses array toString\n// - Plain quotes '...' and \"...\" do NOT interpolate;\n//   ${...} is just ordinary text there.\n// - Template literals can span multiple lines;\n//   newlines are kept in the string.\n// - Escape a literal dollar-brace with a backslash: `\\${x}`\n// - Tagged templates: tag`a ${b}` call a function with\n//   the string parts and values.\n// - An unclosed ${ or missing backtick is a SyntaxError.",
+    "title": "Template literals and expression interpolation"
+  },
+  "js-easy-49": {
+    "docs": [
+      {
+        "title": "Template literals (MDN)",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals"
+      },
+      {
+        "title": "Template Literals (ECMAScript specification)",
+        "url": "https://tc39.es/ecma262/#sec-template-literals"
+      }
+    ],
+    "syntax": "// General form:\n//   `text ${expression} more text`\n// The expression inside ${...} is evaluated, converted to a string,\n// and spliced into the surrounding text.\n\nconst who = \"Sam\";\nconst k = 3;\nconst s1 = `Hi ${who}, you have ${k + 1} items`;\n\n// Any expression is allowed inside ${...}, including function calls,\n// ternaries, and other template literals:\nconst tag = (x) => `<${x}>`;\nconst s2 = `${tag(who)} is ${k > 2 ? \"big\" : \"small\"}`;\n\n// Gotchas:\n// - ${...} is a full JavaScript expression context, so the parser\n//   treats backticks inside it as the start of a new literal,\n//   not as text.\n// - Outside of ${...}, a backtick must be escaped as \\` and a\n//   literal \"${\" as \\${ to be kept as plain text.\n// - Values are converted with ToString: null -> \"null\",\n//   undefined -> \"undefined\", objects -> their toString().\n// - Newlines in the source are kept in the resulting string.\n// - Tagged form: fn`text ${v}` calls fn with the string parts\n//   and the values instead of building a string directly.",
+    "title": "Template literals and substitutions"
+  },
+  "js-easy-50": {
+    "docs": [
+      {
+        "title": "String.raw() - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/raw"
+      },
+      {
+        "title": "Template literals (Template strings) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals"
+      }
+    ],
+    "syntax": "// General form: tag`template literal ${expr}`\n// The tag function receives (strings, ...values).\n// strings is an array of the cooked pieces; strings.raw holds the raw source text of each piece.\n\nfunction show(strings, ...vals) {\n  return strings.raw.join('|') + ' / ' + vals.join(',');\n}\nshow`a\\tb${1}c`;   // uses the raw form of each piece, escapes are not processed\n\n// String.raw is a built-in tag: it joins the raw pieces and substitutions.\nconst dir = 'docs';\nString.raw`C:\\${dir}\\file`;   // substitutions still work via ${}\n\n// Cooked vs raw:\n//   normal template `\\t`  -> escape processed (a tab character)\n//   strings.raw[0]        -> the source characters as written: backslash and t\n\n// Gotchas:\n// - String.raw does not process escape sequences; it keeps the source text.\n// - In tagged templates, invalid escapes (like \\u not followed by hex) are allowed:\n//   cooked value is undefined, raw is still available.\n// - A raw string cannot end in an odd number of backslashes before the closing backtick.\n// - String.raw can also be called as a function: String.raw({ raw: ['x','y'] }, 0);",
+    "title": "Tagged templates and raw strings"
+  },
+  "js-easy-51": {
+    "docs": [
+      {
+        "title": "Array.prototype.map() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map"
+      },
+      {
+        "title": "Array.prototype.map - ECMAScript spec",
+        "url": "https://tc39.es/ecma262/#sec-array.prototype.map"
+      }
+    ],
+    "syntax": "// General form:\n// const result = array.map((element, index, array) => newValue, thisArg?)\n//\n// The callback runs once per element (skipping holes in sparse arrays).\n// Whatever the callback returns becomes the value at that position.\n\nconst names = ['ann', 'bo', 'cy'];\nconst lengths = names.map((s) => s.length);\n// lengths holds the callback results, one per element\n\nconst labeled = names.map((s, i) => `${i}:${s}`);\n\n// Notes and gotchas:\n// - Think of the return value as a separate array of the same length.\n// - The callback can still change objects it receives (reference types)\n//   or write to the outer array, but map itself does not do this for you.\n// - A callback with no return gives undefined for every slot.\n// - Use forEach when you only want side effects and no result array.\n// - Common surprise: ['1','2','3'].map(parseInt) passes index as radix.\n// - Chaining works because map returns an array: a.map(f).filter(g)\n// - Compare: Array.from(iterable, fn) maps any iterable;\n//   iterator helpers (.values().map(fn)) are the lazy variant.",
+    "title": "Array.prototype.map: callback transformation over arrays",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-52": {
+    "docs": [
+      {
+        "title": "Array.prototype.filter() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter"
+      },
+      {
+        "title": "Boolean - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean"
+      },
+      {
+        "title": "Falsy - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Falsy"
+      }
+    ],
+    "syntax": "// General form\n// const kept = array.filter(predicate)\n// predicate(element, index, array) -> value coerced to boolean\n// An element is kept when the predicate result is truthy.\n// filter returns a NEW array; the original is unchanged.\n\n// Passing a function by reference (no arrow wrapper needed)\nconst words = [\"a\", \"\", \"b\"];\nconst kept = words.filter(String);   // String(\"a\") -> \"a\" (truthy), String(\"\") -> \"\" (falsy)\n\n// Equivalent explicit form\nwords.filter(x => String(x));\n\n// Boolean(value) converts a value using truthiness rules.\n// Falsy values: false, 0, -0, 0n, \"\", null, undefined, NaN\n// Everything else is truthy (including \"0\", \"false\", [], {}).\n\n// Gotchas\n// - The kept elements are the ORIGINAL elements, not the converted results.\n// - The predicate also receives index and array as extra arguments,\n//   so functions that take extra parameters (e.g. parseInt) can misbehave.\n// - Sparse array holes are skipped, never passed to the predicate.\n// - Result is [] if nothing passes the test.",
+    "title": "Array filter with a built-in function as predicate"
+  },
+  "js-easy-53": {
+    "docs": [
+      {
+        "title": "Array.prototype.find() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find"
+      },
+      {
+        "title": "Array.prototype.findIndex() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex"
+      }
+    ],
+    "syntax": "// General form\n// array.find(callback(element, index, array), thisArg?)\n// Calls callback on each element in order until it returns a truthy value.\n// Returns what the method is documented to yield for a hit, or its\n// documented \"not found\" value if the callback never returns truthy.\n\nconst words = ['pear', 'fig', 'banana'];\n\nconst long = words.find((w) => w.length > 5);   // search by predicate\nconst idx  = words.findIndex((w) => w.length > 5); // sibling: index-based\n\n// Related methods\n// findLast / findLastIndex -> same idea, but search from the end\n// filter(fn)   -> new array of ALL elements passing the test\n// indexOf(x)   -> position by strict equality (no callback)\n// includes(x)  -> boolean by SameValueZero\n// some(fn)     -> boolean: does any element pass?\n\n// Gotchas\n// - Stops at the first truthy callback result; later items are not visited.\n// - Callback return value only needs to be truthy, not strictly true.\n// - Compare the \"not found\" results of find vs findIndex carefully:\n//   they are different kinds of value.\n// - Holes in sparse arrays are visited as undefined.\n// - An element that is itself undefined is indistinguishable from\n//   \"not found\" when using find; use findIndex if that matters.",
+    "title": "Array.prototype.find and related search methods"
+  },
+  "js-easy-54": {
+    "docs": [
+      {
+        "title": "Array.prototype.findIndex() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex"
+      },
+      {
+        "title": "Array.prototype.find() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find"
+      }
+    ],
+    "syntax": "// General form\n// array.findIndex(callback(element, index, array), thisArg?)\n// array.find(callback)  -> returns an element, not a position\n\nconst words = ['pear', 'fig', 'plum'];\n\nwords.findIndex((w) => w.length === 3);   // a position in the array\nwords.find((w) => w.startsWith('p'));      // the first matching element\n\n// Notes\n// - Callback runs in order and stops at the first truthy result.\n// - Only the first match is reported, later matches are ignored.\n// - The return type of findIndex is always a number.\n// - Compare with related methods:\n//     indexOf(value)        -> strict equality search, no callback\n//     includes(value)       -> returns a boolean\n//     some(cb) / every(cb)  -> return a boolean\n//     findLast / findLastIndex -> search from the end\n// - Always check the \"not found\" case of the method you use\n//   before using its result as an array index.\n// - find returns an element, so a found element that is itself\n//   undefined looks the same as \"not found\".\n// - Empty slots in sparse arrays are visited (as undefined).",
+    "title": "Array searching methods: find, findIndex and friends",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-55": {
+    "docs": [
+      {
+        "title": "Array.prototype.includes() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes"
+      },
+      {
+        "title": "Array.prototype.includes - ECMAScript spec",
+        "url": "https://tc39.es/ecma262/#sec-array.prototype.includes"
+      }
+    ],
+    "syntax": "// General form\n// array.includes(searchElement)\n// array.includes(searchElement, fromIndex)\n\n// Examples\nconst nums = [10, 20, 30];\nnums.includes(20);      // checks whether a value is present\nnums.includes(10, 1);   // search starts at index 1\n\n// Things to remember\n// - The return value is a single primitive type, not a position or the element itself.\n//   Compare with indexOf, which reports an index, and find, which returns an element.\n// - Comparison uses SameValueZero: like ===, except NaN matches NaN.\n//   [NaN].includes(NaN);  // differs from [NaN].indexOf(NaN)\n// - Strings are compared by value; objects are compared by reference.\n//   [{a: 1}].includes({a: 1});  // different object identity\n// - Negative fromIndex counts from the end of the array.\n// - Works on sparse arrays: holes are treated as undefined.\n// - Types are not coerced: [1, 2].includes(\"1\") does not match.",
+    "title": "Array membership testing with includes"
+  },
+  "js-easy-56": {
+    "docs": [
+      {
+        "title": "Array.prototype.indexOf() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf"
+      },
+      {
+        "title": "Array.prototype.includes() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes"
+      }
+    ],
+    "syntax": "// General form\n// array.indexOf(searchElement)\n// array.indexOf(searchElement, fromIndex)\n// Returns a number: a position in the array, or a sentinel number when no match is found.\n\nconst fruits = [\"apple\", \"pear\", \"plum\", \"pear\"];\n\nfruits.indexOf(\"plum\");      // 2  (zero-based position)\nfruits.indexOf(\"pear\");      // 1  (first match only)\nfruits.indexOf(\"pear\", 2);   // 3  (start searching at index 2)\n\n// Variations and gotchas:\n// - Uses strict equality (===): no type coercion, so \"1\" does not match 1.\n// - NaN is never found by indexOf (NaN !== NaN); use includes() or findIndex(Number.isNaN).\n// - Objects match by reference, not by contents.\n// - A negative fromIndex counts back from the end of the array.\n// - The return value is always a number, never a boolean, so a match at\n//   index 0 is falsy: use `!== <sentinel>` or includes() for existence checks.\n// - lastIndexOf() searches from the end instead.\n// - Sparse array holes are skipped.",
+    "title": "Array.prototype.indexOf search semantics",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-57": {
+    "docs": [
+      {
+        "title": "Array.prototype.push() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/push"
+      },
+      {
+        "title": "Array - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array"
+      }
+    ],
+    "syntax": "// General form\n// const result = array.method(...args);\n// Mutator methods change the array in place AND hand back a value\n// that is not always the array itself. Check each method's return.\n\n// Example 1: shift removes from the front\nconst queue = ['a', 'b', 'c'];\nconst first = queue.shift();\n// first is the removed element; queue is now changed\n\n// Example 2: unshift adds to the front\nconst stack = ['x'];\nconst r = stack.unshift('y', 'z');\n// check what r holds by reading the docs for unshift\n\n// Common variations (each mutates the original array):\n// pop()      -> returns the removed last element (undefined if empty)\n// shift()    -> returns the removed first element (undefined if empty)\n// splice()   -> returns an array of removed elements\n// sort()     -> returns the same array reference, sorted\n// reverse()  -> returns the same array reference, reversed\n// fill()     -> returns the same array reference\n\n// Gotchas:\n// - Return values differ per method: a length, an element,\n//   an array of removed items, or the array itself.\n// - Non-mutating alternatives return NEW arrays:\n//   concat, slice, map, filter, toSorted, toReversed, with.\n// - Chaining only works on methods that return the array.\n// - A method that returns a number cannot be chained like an array.",
+    "title": "Array mutator methods and their return values",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-58": {
+    "docs": [
+      {
+        "title": "Array.prototype.pop() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/pop"
+      },
+      {
+        "title": "Array.prototype.shift() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/shift"
+      },
+      {
+        "title": "Array.prototype.splice() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice"
+      }
+    ],
+    "syntax": "// General form\n// array.method(args) -> mutates the array AND gives back a value\n// The return value is often not the array itself.\n\nconst letters = ['a', 'b', 'c', 'd'];\n\nconst r1 = letters.push('e');   // adds to end\nconsole.log(letters);           // ['a','b','c','d','e']\n// r1 is a number (see docs for what it means)\n\nconst r2 = letters.shift();     // removes from the front\nconsole.log(letters);           // ['b','c','d','e']\n// r2 is not an array: check the docs for what it holds\n\n// Common variations and gotchas:\n// - pop() and shift() take no arguments and change the array's length.\n// - push() and unshift() return the new length.\n// - pop() and shift() return the removed element itself,\n//   not wrapped in an array.\n// - splice(start, count) is different: it returns an ARRAY of removed items.\n// - On an empty array, pop() and shift() return the value\n//   that means \"nothing here\".\n// - Mutating methods change the original; slice(), concat(),\n//   and toSpliced() do not.\n// - Ignoring the return value is fine when you only want the side effect.",
+    "title": "Array mutator methods and their return values",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-59": {
+    "docs": [
+      {
+        "title": "Array - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array"
+      },
+      {
+        "title": "Array.prototype.shift() | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/shift"
+      },
+      {
+        "title": "Array.prototype.pop() | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/pop"
+      }
+    ],
+    "syntax": "// General form\n// array.method(args) -> does something to the array AND returns a value\n// The return value is not always the array itself.\n\nconst letters = ['a', 'b', 'c', 'd'];\n\nconst last = letters.pop();\n// pop removes from the END; it returns the removed element\n// letters is now changed in place\n\nconst len = letters.push('x', 'y');\n// push adds to the END; it returns the NEW LENGTH\n\nconst n = letters.unshift('z');\n// unshift adds to the START; it returns the NEW LENGTH\n\n// Gotchas:\n// - These methods mutate the original array.\n// - Check what each method returns: a removed element,\n//   a length, or the array itself (sort, reverse).\n// - On an empty array, methods that remove an element\n//   return undefined.\n// - Don't confuse the returned value with the array's\n//   remaining contents; read them from the variable.\n// - splice(start, count) returns an ARRAY of removed items.\n// - Non-mutating alternatives: slice, concat, toSpliced,\n//   toSorted, toReversed, with.",
+    "title": "Array mutator methods and their return values",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-60": {
+    "docs": [
+      {
+        "title": "Array.prototype.unshift() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/unshift"
+      },
+      {
+        "title": "Array.prototype.push() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/push"
+      },
+      {
+        "title": "Array.prototype.unshift - ECMAScript spec",
+        "url": "https://tc39.es/ecma262/#sec-array.prototype.unshift"
+      }
+    ],
+    "syntax": "// General form\n// array.methodName(...args)  // some methods mutate the array in place\n// Every method has two outputs to keep apart:\n//   1) the side effect on the array\n//   2) the value the call evaluates to (its return value)\n\n// Example: shift removes from the front\nconst letters = ['a', 'b', 'c'];\nconst first = letters.shift();\n// letters is now ['b', 'c']; first holds what shift returned\n\n// Example: push adds to the end\nconst nums = [10, 20];\nconst r = nums.push(30, 40);\n// nums is now [10, 20, 30, 40]; r holds what push returned\n\n// Gotchas\n// - Mutators change the original array; they do not copy it.\n// - Return values differ by method: pop/shift return the removed\n//   element, push/unshift return a number, sort/reverse return the\n//   same array reference.\n// - Multiple arguments are inserted together, keeping their order:\n//   arr.unshift(x, y) puts x, y at the start in that order.\n// - To get a new array without mutating, use spread or toSpliced:\n//   const copy = [z, ...arr];\n// - Check the docs' \"Return value\" section instead of guessing.",
+    "title": "Array mutator methods at the front of an array",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-61": {
+    "docs": [
+      {
+        "title": "Array.prototype.slice() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice"
+      },
+      {
+        "title": "Array.prototype.slice - ECMAScript specification",
+        "url": "https://tc39.es/ecma262/#sec-array.prototype.slice"
+      }
+    ],
+    "syntax": "// General form\n// array.slice(start?, end?)\n//   start: index to begin copying (inclusive); default 0\n//   end:   index to stop before (exclusive); default array.length\n//   returns: a NEW array holding a shallow copy of the selected range\n\nconst letters = ['a', 'b', 'c', 'd', 'e'];\n\nconst mid = letters.slice(1, 3);   // elements at index 1 and 2\nconst tail = letters.slice(-2);    // negative index counts from the end\n\n// Variations and gotchas\n// - slice() with no arguments makes a shallow copy of the whole array.\n// - If start >= length, the result is an empty array [].\n// - Negative values are offsets from the end: length + value.\n// - end is exclusive: slice(1, 3) does not include index 3.\n// - Shallow copy: nested objects/arrays are shared by reference.\n// - Compare with splice(start, deleteCount, ...items), which is a\n//   different method that changes the array it is called on.\n// - Works on strings too (String.prototype.slice) and returns a string.\n// - Return value and original array are separate objects; check each\n//   one separately when reasoning about what a call produces.",
+    "title": "Array.prototype.slice basics"
+  },
+  "js-easy-62": {
+    "docs": [
+      {
+        "title": "Array.prototype.splice() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice"
+      },
+      {
+        "title": "Array.prototype.toSpliced() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSpliced"
+      }
+    ],
+    "syntax": "// General form:\n// array.splice(start, deleteCount, item1, item2, ...)\n//   start       index where changes begin (negative counts from the end)\n//   deleteCount how many elements to remove starting at start\n//   items       optional elements to insert at start\n\nconst letters = ['a', 'b', 'c', 'd', 'e'];\n\n// Remove two elements starting at index 2\nconst gone = letters.splice(2, 2);\n// Check what the return value is and what happened to `letters`\n// by logging both: console.log(gone, letters);\n\n// Insert without removing (deleteCount = 0)\nconst nums = [10, 20, 30];\nnums.splice(1, 0, 15, 17);\n\n// Replace: remove and insert in one call\nconst words = ['x', 'y', 'z'];\nwords.splice(0, 1, 'w1', 'w2');\n\n// Gotchas:\n// - splice MUTATES the array it is called on (in place).\n// - The return value is always an array of the removed elements,\n//   (empty array if nothing was removed).\n// - Omitting deleteCount removes everything from start to the end.\n// - Negative start: splice(-1, 1) targets the last element.\n// - Non-mutating alternatives: slice() to copy a range,\n//   toSpliced() to get a modified copy.",
+    "title": "Array.prototype.splice"
+  },
+  "js-easy-63": {
+    "docs": [
+      {
+        "title": "Array.prototype.concat() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat"
+      },
+      {
+        "title": "Array.prototype.concat - ECMAScript spec",
+        "url": "https://tc39.es/ecma262/#sec-array.prototype.concat"
+      }
+    ],
+    "syntax": "// General form\n// const result = base.concat(value1, value2, ..., valueN);\n// Each argument is either spread (if an array) or appended (if not).\n\nconst letters = ['a', 'b'];\nconst more = letters.concat(['c', 'd']);\n// more -> ['a', 'b', 'c', 'd']\n\nconst mixed = letters.concat('x', ['y'], [['z']]);\n// Non-array values are added as single elements.\n// Only one level of array is flattened, so ['z'] stays nested.\n\n// Variations and gotchas\n// - concat returns a NEW array (shallow copy); it is non-mutating.\n//   Compare with push(), which mutates and returns the new length.\n// - The original array is whatever it was before the call.\n// - Calling with no arguments makes a shallow copy: arr.concat()\n// - Object elements are copied by reference, not cloned.\n// - Arrays with Symbol.isConcatSpreadable = false are not spread.\n// - Spread syntax is an equivalent alternative: [...a, ...b]\n// - Holes in sparse arrays are preserved.",
+    "title": "Array.prototype.concat and array identity"
+  },
+  "js-easy-64": {
+    "docs": [
+      {
+        "title": "Spread syntax (...) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax"
+      },
+      {
+        "title": "structuredClone() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/API/Window/structuredClone"
+      },
+      {
+        "title": "Shallow copy - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Shallow_copy"
+      }
+    ],
+    "syntax": "// General form: [...iterable] builds a NEW array from the\n// elements of an iterable (array, string, Set, Map, ...)\n\nconst a = [1, 2, 3];\nconst b = [...a];          // new array, same element values\nconsole.log(a === b);      // false (different array objects)\n\n// Combining and inserting\nconst merged = [0, ...a, 4, ...'hi'];  // [0,1,2,3,4,'h','i']\n\n// Elements are copied by value for primitives,\n// but for objects/arrays the REFERENCE is copied.\nconst box = { label: 'x' };\nconst list = [box];\nconst list2 = [...list];\nconsole.log(list2[0] === list[0]); // true: same object\n\n// Gotchas:\n// - Spread makes a SHALLOW copy: only the top level is new.\n// - Nested objects/arrays are shared between original and copy,\n//   so mutating one through either array is visible via the other.\n// - Replacing an element (list2[0] = {...}) only affects list2.\n// - For an independent deep copy use structuredClone(value)\n//   (or copy nested levels manually).\n// - Object spread {...obj} is also shallow.\n// - Spreading a non-iterable into an array throws a TypeError.",
+    "title": "Spread syntax for copying arrays"
+  },
+  "js-easy-65": {
+    "docs": [
+      {
+        "title": "Spread syntax (...) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax"
+      },
+      {
+        "title": "Object initializer - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer"
+      }
+    ],
+    "syntax": "// General form:\n// const copy = { ...source1, ...source2, extraKey: value };\n//\n// Own enumerable properties of each source are copied in order,\n// left to right, into the new object.\n// When the same key appears more than once, the property is\n// assigned each time it is encountered, so position matters.\n\nconst defaults = { color: 'red', size: 10 };\nconst custom = { size: 20, weight: 5 };\n\nconst x = { ...defaults, ...custom, id: 7 };\n// keys: color, size, weight, id  (see order rule above to work out each value)\n\nconst y = { id: 1, ...defaults, id: 2 };\n// explicit keys are also subject to the same left-to-right order\n\n// Variations and gotchas:\n// - Spread is shallow: nested objects are shared by reference.\n// - null and undefined sources are ignored: { ...null } is {}.\n// - Primitives: strings spread as indexed characters, numbers add nothing.\n// - Only own enumerable properties are copied (no prototype props).\n// - Getters are invoked and their values copied as plain data.\n// - Symbol-keyed own enumerable properties are copied too.\n// - Arrays spread into objects as index keys: { ...['a','b'] } -> {0:'a',1:'b'}.\n// - Similar to Object.assign({}, a, b), but spread does not call setters on the target.",
+    "title": "Object spread syntax in object literals"
+  },
+  "js-easy-66": {
+    "docs": [
+      {
+        "title": "Destructuring assignment: Default value",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment#default_value"
+      },
+      {
+        "title": "undefined - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined"
+      }
+    ],
+    "syntax": "// General form:\n// const [name = defaultExpr] = iterable;\n// The default is used only when the matched value is\n// strictly the value undefined (or the element is missing).\n\nconst [x = 10] = [5];        // existing value is used\nconst [y = 10] = [];         // missing element -> default applies\n\n// Object destructuring follows the same rule:\nconst { p = 'dflt' } = { p: 'given' };\n\n// Variations and gotchas:\n// - The default is evaluated lazily, only when needed:\n//   const [m = compute()] = [3];   // compute() is not called\n// - Defaults can use earlier bindings:\n//   const [s = 1, t = s + 1] = [];\n// - Other falsy values (0, '', false, NaN) are real values,\n//   so they are kept rather than replaced.\n// - Compare with ?? and ||, which treat values differently:\n//   value ?? fallback   // nullish check\n//   value || fallback   // falsy check\n// - Defaults also work in function parameters:\n//   function f({ k = 2 } = {}) {}\n// - Check precisely which values trigger the default:\n//   only one specific value does, not every 'empty-looking' one.",
+    "title": "Default values in array destructuring"
+  },
+  "js-easy-67": {
+    "docs": [
+      {
+        "title": "Destructuring - MDN (Ignoring some returned values)",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring"
+      },
+      {
+        "title": "ECMAScript: Destructuring Assignment",
+        "url": "https://tc39.es/ecma262/#sec-destructuring-assignment"
+      }
+    ],
+    "syntax": "// General form: positions in the pattern match positions in the iterable\n// const [x, y, ...rest] = iterable;\n\n// Example 1: a comma with no name leaves that position unbound\nconst [first, , third] = ['red', 'green', 'blue'];\n// 'first' takes index 0; 'third' takes the index reached after counting the gap\n\n// Example 2: several holes, and a trailing rest element\nconst [, , p, ...others] = [10, 20, 30, 40, 50];\n// p comes from index 2; others collects whatever remains as an array\n\n// Variations\n// Default values:      const [m = 0, n = 5] = [7];       // used when value is undefined\n// Swapping:            [m, n] = [n, m];                    // assignment form, no declaration\n// Nested patterns:     const [[q], [, r]] = [[1], [2, 3]];\n// Works on any iterable (Set, Map, string, generators), not only arrays\n\n// Gotchas\n// - Each comma advances exactly one position; an empty slot consumes one value.\n// - Missing values give undefined (no error) unless the source is null/undefined,\n//   which throws a TypeError.\n// - The rest element must be last and cannot have a trailing comma.\n// - Elisions are legal syntax in patterns, just like holes in array literals.",
+    "title": "Array destructuring with skipped elements"
+  },
+  "js-easy-68": {
+    "docs": [
+      {
+        "title": "Destructuring assignment - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment"
+      },
+      {
+        "title": "Rest parameters - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/rest_parameters"
+      }
+    ],
+    "syntax": "// General form:\n// const [a, b, ...rest] = iterable;\n//   a, b   -> take the first values by position\n//   ...rest -> collects all remaining items into a NEW array\n\nconst [first, second, ...others] = ['a', 'b', 'c', 'd', 'e'];\n// first and second are single values; others is an array of what is left\n\nconst [x, ...more] = ['only'];\n// when nothing remains, the rest variable is an empty array (never undefined)\n\n// Variations and gotchas:\n// - The rest element must be last; no trailing comma allowed: [...r, ] is a SyntaxError\n// - Only one rest element per pattern\n// - Rest always produces an array, even from a string or Set:\n//     const [c, ...cs] = 'xyz';   // cs is an array of characters\n// - Skip positions with holes: const [, , ...r] = list;\n// - Defaults apply to single items, not to rest: [a = 0, ...r]\n// - Works in function parameters too: function f(a, ...args) {}\n// - Object rest is similar: const { k, ...others } = obj;\n// - Rest is a shallow copy; elements are not cloned",
+    "title": "Array destructuring with a rest element"
+  },
+  "js-easy-69": {
+    "docs": [
+      {
+        "title": "Destructuring - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring"
+      },
+      {
+        "title": "Destructuring assignment: assigning to new variable names",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring#assigning_to_new_variable_names"
+      }
+    ],
+    "syntax": "// General form:\n// const { propertyName: newBinding } = object;\n//   left of the colon  = the property to read from the object\n//   right of the colon = the variable name that gets declared\n\nconst { title: heading } = { title: \"Hello\" };\n// Which identifiers exist in scope afterwards? Only the ones\n// on the right-hand side of each colon.\n\n// Shorthand (no colon): property name and variable name are the same\nconst { size } = { size: 3 };\n\n// Mixing renaming, shorthand, and defaults\nconst { x: px, y = 10, z: pz = 5 } = { x: 1 };\n// px is 1, y is 10, pz is 5\n\n// Nested patterns: the part after the colon can itself be a pattern\nconst { pos: { left } } = { pos: { left: 4 } };\n// 'pos' is not bound here, only 'left'\n\n// Computed keys need a rename target\nconst key = \"k\";\nconst { [key]: val } = { k: 7 };\n\n// Gotchas:\n// - Reading a missing property gives undefined (no error)\n// - Destructuring null or undefined throws a TypeError\n// - In an assignment (not a declaration) wrap in parentheses:\n//   ({ a: target } = obj);",
+    "title": "Object destructuring with renaming"
+  },
+  "js-easy-70": {
+    "docs": [
+      {
+        "title": "Destructuring assignment: Default value",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment#default_value"
+      },
+      {
+        "title": "Destructuring assignment (MDN)",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment"
+      }
+    ],
+    "syntax": "// General form\n// const { prop = defaultValue } = object;\n// The default is used only when the extracted value is strictly undefined\n// (the property is missing, or explicitly holds undefined).\n\n// Example 1: missing property\nconst { color = 'red' } = { size: 10 };\n\n// Example 2: renaming plus a default\nconst { size: s = 5, weight: w = 0 } = { size: undefined, weight: 7 };\n\n// Example 3: function parameter\nfunction draw({ x = 0, y = 0 } = {}) {\n  return [x, y];\n}\n\n// Gotchas\n// - Only undefined triggers the default. Other falsy values\n//   (0, '', false, NaN, and null) are kept as they are.\n// - This differs from `||`, which replaces any falsy value,\n//   and from `??`, which replaces null as well as undefined.\n// - The default expression is evaluated lazily, only when needed.\n// - Defaults can refer to earlier destructured names:\n//   const { p = 1, q = p + 1 } = {};\n// - Destructuring null or undefined itself throws a TypeError;\n//   give the whole pattern a fallback: `= {}`.",
+    "title": "Default values in object destructuring"
+  },
+  "js-easy-71": {
+    "docs": [
+      {
+        "title": "Destructuring - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring"
+      }
+    ],
+    "syntax": "// General form\n// const { prop } = object;\n// const { prop: newName } = object;\n// const { prop = fallback } = object;\n// const { prop: newName = fallback } = object;\n\n// Example 1: reading and renaming\nconst user = { name: 'Ada', age: 36 };\nconst { name, age: years } = user;\n// name -> 'Ada', years -> 36\n\n// Example 2: default values\nconst { city = 'Unknown', name: n = 'Anon' } = { name: 'Bo' };\n// A default is used only when the property value is undefined\n\n// Variations and gotchas\n// - Nested: const { p: { q } } = obj;  (throws if obj.p is null/undefined)\n// - Rest: const { x, ...others } = obj;  collects remaining own enumerable props\n// - Destructuring null or undefined throws a TypeError\n// - Defaults do NOT apply to null, 0, '' or false\n// - Without const/let, wrap in parentheses: ({ x } = obj);\n// - In parameters: function f({ a = 1, b } = {}) { }\n// - Properties are looked up by name, not by position (unlike arrays)",
+    "title": "Object destructuring assignment and defaults"
+  },
+  "js-easy-72": {
+    "docs": [
+      {
+        "title": "Destructuring assignment - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment"
+      },
+      {
+        "title": "Destructuring binding patterns (MDN)",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment#object_destructuring"
+      }
+    ],
+    "syntax": "// General form\n// const { prop } = expression;\n// const { prop: alias = defaultValue } = expression;\n// The right-hand side is converted to an object first (like ToObject),\n// then properties are read from it.\n\n// Example 1: primitives are wrapped, so this works\nconst { length } = \"hello\";   // reads String wrapper's length\nconst { toFixed } = 42;        // reads a method from Number.prototype\n\n// Example 2: defaults apply only when the value is undefined\nconst { x = 10, y = 20 } = { x: undefined, y: null };\n// x is 10 (undefined -> default), y is null (null is kept)\n\n// Variations\n// const { a, ...rest } = obj;        // collect remaining own enumerable props\n// const { [key]: v } = obj;          // computed property name\n// const { p: { q } } = obj;          // nested pattern\n// function f({ id, name } = {}) {}   // parameter pattern with fallback\n// ({ a, b } = obj);                  // assignment form needs parentheses\n\n// Gotchas\n// - Which values cannot be converted to an object? Check the spec's\n//   RequireObjectCoercible / ToObject steps.\n// - A nested pattern on a missing property fails the same way,\n//   so give it a default: const { p: { q } = {} } = obj;\n// - A default parameter (= {}) only covers undefined, not other values.",
+    "title": "Object destructuring and what it can be applied to"
+  },
+  "js-easy-73": {
+    "docs": [
+      {
+        "title": "Object initializer: shorthand property names",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer#property_definitions"
+      },
+      {
+        "title": "Working with objects",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Working_with_objects"
+      }
+    ],
+    "syntax": "// General form: a bare identifier inside an object literal\n// is expanded into a property whose key is the identifier's\n// text and whose value is read from the variable of that name.\n//\n//   { identifier }   <->   { identifier: identifier }\n\nconst city = \"Oslo\";\nconst year = 2024;\nconst trip = { city, year };\n// Mixed with normal properties:\nconst trip2 = { city, days: 5, year };\n\n// Common variations\n// - Works in function returns:\n//     function make(id, tag) { return { id, tag }; }\n// - Works with destructuring patterns (the reverse idea):\n//     const { city: c, year } = trip;\n// - Method shorthand is a separate feature:\n//     const o = { greet() { return \"hi\"; } };\n// - Computed keys have no shorthand form:\n//     { [key]: value }\n\n// Gotchas\n// - The variable must be in scope, or a ReferenceError is thrown.\n// - The value is captured when the literal is evaluated;\n//   later reassignment of the variable does not change the property.\n// - Only plain identifiers qualify; { a.b } is a SyntaxError.\n// - Duplicate shorthand and explicit keys: the last one wins.",
+    "title": "Object literal shorthand syntax",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-74": {
+    "docs": [
+      {
+        "title": "Object initializer: Computed property names",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer#computed_property_names"
+      },
+      {
+        "title": "ECMAScript: Object Initializer",
+        "url": "https://tc39.es/ecma262/#sec-object-initializer"
+      }
+    ],
+    "syntax": "// General form:\n// { [expression]: value }\n// The expression inside the brackets is evaluated when the\n// object literal is created. The result is converted to a\n// property key (a string or a symbol).\n\nconst field = \"color\";\nconst item = { [field]: \"red\" };\n\n// Any expression is allowed, not just a variable:\nlet n = 0;\nconst row = {\n  [\"col\" + (n + 1)]: \"a\",\n  [`col${n + 2}`]: \"b\",\n};\n\n// Works for methods, getters, setters, and symbols:\nconst sym = Symbol(\"tag\");\nconst tool = {\n  [\"run\" + \"Now\"]() { return 1; },\n  get [\"is\" + \"Ready\"]() { return true; },\n  [sym]: \"s\",\n};\n\n// Gotchas:\n// - Non-symbol keys are converted with ToPropertyKey (string conversion).\n// - Expressions are evaluated in source order, once per literal evaluation.\n// - If two keys end up equal, the later one overwrites the earlier one.\n// - Without brackets, the name is taken literally: { field: 1 } has key \"field\".\n// - Shorthand { [x] } is not valid; a value or method body is required.\n// - Brackets in a class body work too: class A { [name]() {} }",
+    "title": "Object literal property names from bracketed expressions",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-75": {
+    "docs": [
+      {
+        "title": "for...of - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...of"
+      },
+      {
+        "title": "Iteration protocols - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols"
+      }
+    ],
+    "syntax": "// General form:\n// for (const|let|var binding of iterable) { body }\n// binding is assigned each item produced by the iterable's iterator\n\nconst fruits = [\"apple\", \"pear\", \"plum\"];\nfor (const f of fruits) {\n  console.log(f.toUpperCase());\n}\n\n// Works on any iterable: arrays, strings, Map, Set, NodeList,\n// generators, arguments, typed arrays\nfor (const ch of \"hey\") { /* one character per step */ }\n\n// Destructuring in the binding\nfor (const [k, v] of new Map([[1, \"x\"]])) { }\nfor (const [i, f] of fruits.entries()) { }\n\n// Gotchas:\n// - Plain objects are NOT iterable: for (x of {a:1}) throws TypeError\n//   (use Object.keys / values / entries instead)\n// - Contrast: for...in loops over enumerable property keys\n//   (strings), not over the iterable's items\n// - const is fine: each iteration creates a new binding\n// - break / return / throw close the iterator early\n// - Use `for await (const x of asyncIterable)` for async iterables",
+    "title": "Iterating with for...of loops",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-76": {
+    "docs": [
+      {
+        "title": "for...in - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in"
+      },
+      {
+        "title": "Enumerability and ownership of properties - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Enumerability_and_ownership_of_properties"
+      }
+    ],
+    "syntax": "// General form\nfor (const key in expression) {\n  // key is a string property name\n}\n\n// Example: a different shape of object\nconst base = { color: 'red' };\nconst item = Object.create(base);\nitem.size = 9;\nfor (const k in item) {\n  console.log(typeof k); // keys are always strings\n}\n\n// Related tools\n// Object.keys(o)     -> own enumerable string keys only\n// Object.entries(o)  -> own enumerable [key, value] pairs\n// Object.hasOwn(o, k) -> true if k is an own property\n// for (const k in o) { if (!Object.hasOwn(o, k)) continue; ... }\n\n// Gotchas\n// - Walks the prototype chain: enumerable properties of prototypes are visited too.\n// - Non-enumerable properties are skipped (e.g. built-in methods).\n// - Symbol keys are never visited.\n// - A property on the object shadows a same-named one on the prototype (visited once).\n// - Order: integer-like keys ascending first, then string keys in creation order.\n// - Avoid for...in on arrays: indexes are strings, and extra enumerable props appear.\n// - for...of iterates values of iterables; for...in iterates keys.",
+    "title": "for...in loop and property enumeration",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-77": {
+    "docs": [
+      {
+        "title": "for...in - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in"
+      },
+      {
+        "title": "Enumerability and ownership of properties - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Enumerability_and_ownership_of_properties"
+      }
+    ],
+    "syntax": "// General form\n// for (const name in object) { /* body */ }\n//   - visits enumerable string-keyed properties of the object\n//     AND those inherited through its prototype chain\n//   - Symbol keys are skipped\n\n// Example with a plain object\nconst car = { brand: \"Volvo\", year: 2020 };\nfor (const prop in car) {\n  console.log(prop, car[prop]); // key name, then lookup of its value\n}\n\n// Example with an inherited property\nconst base = { shared: 1 };\nconst child = Object.create(base);\nchild.own = 2;\nfor (const k in child) {\n  // visits \"own\" and also \"shared\" (inherited)\n}\n\n// Variations and gotchas\n// - Property names are always strings (or symbols, which are skipped),\n//   so think about what type the loop variable holds before doing math or\n//   strict comparisons with it.\n// - Order: integer-like keys ascending first, then other keys in\n//   creation order.\n// - Use Object.hasOwn(obj, k) to filter out inherited keys.\n// - Prefer for...of to iterate VALUES of arrays, strings, Maps, Sets.\n// - Object.keys(obj), Object.entries(obj) give own enumerable keys/pairs\n//   as arrays, without walking the prototype chain.\n// - Adding properties during the loop: they are not guaranteed to be\n//   visited; deleted ones not yet visited are skipped.",
+    "title": "Enumerating keys with for...in",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-78": {
+    "docs": [
+      {
+        "title": "JSON.stringify() - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify"
+      },
+      {
+        "title": "JSON - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON"
+      }
+    ],
+    "syntax": "// General form\n// JSON.stringify(value, replacer?, space?)\n// Returns a JSON string (or undefined for some top-level inputs).\n\n// Example 1: how different property values are handled\nconst s1 = JSON.stringify({ n: 5, f() {}, t: true, nul: null });\n// Each value type has its own rule in objects.\n\n// Example 2: arrays vs. objects\nconst s2 = JSON.stringify([function () {}, Symbol('x')]);\n// Array slots must keep their positions, so they are treated differently\n// from object properties.\n\n// Gotchas / variations\n// - Values with no JSON representation (undefined, functions, symbols)\n//   are handled differently depending on whether they appear in an\n//   object property, an array element, or at the top level.\n// - null is a valid JSON value and is kept.\n// - NaN, Infinity and -Infinity become null.\n// - Symbol-keyed properties are ignored.\n// - Only own enumerable string-keyed properties are included.\n// - Date uses toJSON; any object with toJSON() is serialized from its result.\n// - BigInt throws a TypeError unless you provide toJSON or a replacer.\n// - Circular references throw a TypeError.\n// - replacer (function or array of keys) can filter or transform values.\n// - space (number or string) pretty-prints the output.",
+    "title": "JSON.stringify value serialization rules"
+  },
+  "js-easy-79": {
+    "docs": [
+      {
+        "title": "JSON.stringify() - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify"
+      },
+      {
+        "title": "JSON.stringify - ECMAScript specification",
+        "url": "https://tc39.es/ecma262/#sec-json.stringify"
+      }
+    ],
+    "syntax": "// General form\n// JSON.stringify(value, replacer?, space?)  -> string (or undefined)\n\n// JSON has no representation for some JS values, so stringify\n// handles them differently depending on WHERE they appear.\n\n// 1) As object property values: the property is omitted\nJSON.stringify({ a: 1, b: function () {}, c: Symbol('s') });\n// -> '{\"a\":1}'\n\n// 2) As array elements: the slot must stay, so a placeholder is written\nJSON.stringify([function () {}, Symbol('s')]);\n// -> '[null,null]'\n\n// 3) As the top-level value: the result is the value undefined (not a string)\nJSON.stringify(function () {});\n// -> undefined\n\n// Gotchas (comments only):\n// - Values skipped in objects / replaced in arrays: undefined, functions, symbols.\n// - NaN, Infinity, -Infinity become null everywhere.\n// - Sparse array holes are visited as undefined, so follow the array rule.\n// - Date uses toJSON() and becomes an ISO string.\n// - BigInt throws a TypeError.\n// - A replacer function or toJSON() can change what gets serialized.",
+    "title": "JSON.stringify serialization of unsupported values"
+  },
+  "js-easy-80": {
+    "docs": [
+      {
+        "title": "JSON.stringify() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify"
+      },
+      {
+        "title": "JSON - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON"
+      }
+    ],
+    "syntax": "// General form\n// JSON.stringify(value, replacer?, space?)\n// Returns a JSON string (or undefined for some top-level inputs).\n\n// Example 1: which values survive inside an object\nconst o = { n: 5, s: \"hi\", t: true, nul: null, d: new Date(0) };\nJSON.stringify(o);\n// numbers, strings, booleans, null are kept; Date uses toJSON() -> ISO string\n\n// Example 2: arrays vs objects\nJSON.stringify([1, undefined, Symbol(\"x\")]);\n// In ARRAYS, unsupported values are converted to null (keeps positions)\n\n// Example 3: replacer and indentation\nJSON.stringify({ x: 1, y: 2 }, [\"x\"]);        // array replacer = allowed keys\nJSON.stringify({ x: 1 }, null, 2);             // pretty print with 2 spaces\nJSON.stringify({ x: 1, y: 2 }, (k, v) => typeof v === \"number\" ? v * 2 : v);\n\n// Gotchas (comments)\n// - Object properties whose values are undefined, functions, or symbols are\n//   handled specially: they are not written as normal values.\n// - Top-level undefined/function/symbol input returns undefined (not a string).\n// - NaN and Infinity become null.\n// - If an object has toJSON(), its return value is serialized instead.\n// - Circular references throw TypeError; BigInt throws TypeError.\n// - Only own enumerable string-keyed properties are included.\n// - Map/Set serialize as {} unless converted first.",
+    "title": "JSON.stringify value serialization rules"
+  },
+  "js-easy-81": {
+    "docs": [
+      {
+        "title": "JSON.parse() - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse"
+      },
+      {
+        "title": "JSON - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON"
+      }
+    ],
+    "syntax": "// General form\n// JSON.parse(text)\n// JSON.parse(text, reviver)   // reviver(key, value) can transform each value\n\n// Examples\nconst list = JSON.parse('[1, \"x\", true, null]');   // text describing an array\nconst user = JSON.parse('{\"name\":\"Ada\",\"tags\":[\"a\"]}');\nconst dates = JSON.parse('{\"d\":\"2020-01-01\"}', (k, v) =>\n  k === 'd' ? new Date(v) : v);\n\n// JSON value kinds and what they become\n// object -> object, array -> array, string -> string,\n// number -> number, true/false -> boolean, null -> null\n\n// Gotchas\n// - The argument must be a string; other values are converted to a string first.\n// - Invalid JSON throws SyntaxError (wrap in try/catch):\n//   single quotes, unquoted keys, trailing commas, comments, undefined.\n// - Strings inside JSON need double quotes, so in JS source the\n//   outer literal usually uses single quotes or escapes.\n// - Parsing a bare primitive text is valid: JSON.parse('42'), JSON.parse('\"hi\"').\n// - Dates are not a JSON type; they stay as strings unless revived.\n// - Duplicate keys: the last one wins.\n// - JSON.stringify is the inverse (value -> text).",
+    "title": "Parsing JSON text into JavaScript values",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-82": {
+    "docs": [
+      {
+        "title": "new operator - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/new"
+      },
+      {
+        "title": "Arrow function expressions - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions"
+      }
+    ],
+    "syntax": "// General form:\n//   new Constructor(...args)\n// new calls the internal [[Construct]] method of the target.\n// If the target has no [[Construct]], a TypeError is thrown\n// (\"... is not a constructor\").\n\n// Constructible: regular function declarations/expressions, classes\nfunction Point(x, y) { this.x = x; this.y = y; }\nconst p = new Point(1, 2);\n\nclass Box { constructor(v) { this.v = v; } }\nconst b = new Box(5);\n\n// Gotchas / variations:\n// - Not every function has [[Construct]]. Examples that lack it:\n//   methods in object literals/classes (shorthand), async functions,\n//   generator functions, and many built-in non-constructor functions.\n// - Functions without [[Construct]] also usually have no .prototype property.\n// - Arrow functions bind `this` lexically, so they have no own `this`\n//   for new to create; check by trying inside try/catch:\nfunction isConstructor(f) {\n  try { new (class extends f {}); return true; } catch { return false; }\n}\n// - new.target is undefined when a function is called without new,\n//   and refers to the constructor when called with new.\n// - Parentheses matter: new (expr)() evaluates expr first,\n//   then constructs the result.\n// - Class constructors throw if called without new.",
+    "title": "The new operator and constructible functions",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-83": {
+    "docs": [
+      {
+        "title": "Arrow function expressions",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions"
+      },
+      {
+        "title": "The arguments object",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments"
+      },
+      {
+        "title": "Rest parameters",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/rest_parameters"
+      }
+    ],
+    "syntax": "// General form\n// function name(...) { /* implicit local binding: arguments */ }\n// (params) => expression   // arrow form\n\n// Regular function: has its own array-like `arguments`\nfunction total() {\n  let sum = 0;\n  for (let i = 0; i < arguments.length; i++) sum += arguments[i];\n  return sum;\n}\n\n// Arrow function inside a regular function:\n// name lookup for `arguments` continues to the enclosing function's scope\nfunction outer() {\n  const inner = () => arguments[0];\n  return inner();\n}\n\n// Preferred modern alternative: rest parameters\nconst count = (...items) => items.length;\n\n// Notes / gotchas\n// - `arguments` is array-like: it has length and indexes, but no map/filter\n//   (convert with Array.from(arguments) or [...arguments])\n// - Arrow functions also take `this`, `super`, and `new.target`\n//   from the surrounding scope, rather than defining their own\n// - At top level of a module or in a global arrow, there may be no\n//   enclosing function `arguments` to find (Node CommonJS wraps modules in a\n//   function, so the lookup finds that wrapper's arguments instead)\n// - A parameter or variable named `arguments` shadows the built-in object\n// - Arrow functions cannot be used as constructors",
+    "title": "Function scope objects and lexical binding in functions",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-84": {
+    "docs": [
+      {
+        "title": "Hoisting - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Hoisting"
+      },
+      {
+        "title": "function declaration - JavaScript reference",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function"
+      }
+    ],
+    "syntax": "// General idea:\n// Before any code in a scope runs, the engine creates the bindings\n// for that scope. What each kind of binding holds at that point differs.\n\n// Example 1: using a name before its line in the source\nconsole.log(typeof early);   // look at what exists before the line runs\nvar early = 5;\n\n// Example 2: function expression assigned to a variable\n// later();                  // depends on what the variable holds right now\n// var later = function () { return 'x'; };\n\n// Example 3: let / const and the temporal dead zone\n// console.log(limit);       // accessing before the declaration line\n// let limit = 10;           // throws ReferenceError in that window\n\n// Variations and gotchas:\n// - var: binding exists from scope start, value is undefined until assigned.\n// - let / const / class: binding exists but is uninitialized (TDZ).\n// - Function declarations: name and body are both set up at scope start.\n// - Function expressions and arrow functions follow their variable's rules.\n// - Hoisting is per scope: function scope for var, block scope for let/const.\n// - Function declarations inside blocks have extra legacy rules in sloppy mode;\n//   in strict mode they are block scoped.\n// - If a var and a function declaration share a name, the function value\n//   is in place first, then later assignments overwrite it.",
+    "title": "Declaration hoisting and creation order",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-85": {
+    "docs": [
+      {
+        "title": "let - Temporal dead zone (MDN)",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let#temporal_dead_zone_tdz"
+      },
+      {
+        "title": "Hoisting (MDN glossary)",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Hoisting"
+      },
+      {
+        "title": "const (MDN)",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const"
+      }
+    ],
+    "syntax": "// General form:\n//   const name = initializer;   // binding exists from scope start, usable only after this line runs\n//   let name = initializer;\n//   var name = initializer;     // contrast: binding initialized to undefined at scope start\n//   function name() {}          // contrast: declaration fully hoisted with its body\n\n// Example 1: reading a lexical binding too early\n// console.log(total);   // would throw ReferenceError (binding not yet initialized)\nlet total = 5;\nconsole.log(total);      // 5\n\n// Example 2: functions stored in variables follow the variable's rules\n// greet();              // depends on how 'greet' was declared\nconst greet = () => 'hi';\ngreet();                 // fine: called after initialization\n\n// Example 3: calls inside other functions are fine if they run later\nfunction run() { return helper(); }\nconst helper = () => 'ok';\nrun();                   // works: helper is initialized by call time\n\n// Gotchas:\n// - The period from scope entry until the declaration line executes is the\n//   temporal dead zone (TDZ) for let, const, and class.\n// - Hoisting still happens for let/const: they shadow outer variables in the whole block.\n// - typeof on a TDZ variable also throws.\n// - var gives undefined before assignment; calling it then throws TypeError, not ReferenceError.\n// - Function declarations can be called before their position in the source.\n// - TDZ is based on execution order, not on where the text appears.",
+    "title": "let/const hoisting and initialization timing",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-86": {
+    "docs": [
+      {
+        "title": "Default parameters - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters"
+      },
+      {
+        "title": "Functions - JavaScript Guide | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Functions"
+      }
+    ],
+    "syntax": "// General form\nfunction name(param = defaultExpression) { /* ... */ }\nconst arrow = (param = defaultExpression) => { /* ... */ };\n\n// Example\nfunction greet(name = \"guest\", punct = \"!\") {\n  return \"Hi \" + name + punct;\n}\n\n// Notes and gotchas (as comments):\n// - The default expression is evaluated at call time, each call,\n//   only when the default is actually needed.\n// - Defaults can use earlier parameters:\n//     function box(w, h = w) { return w * h; }\n// - Defaults can call functions:\n//     function stamp(t = Date.now()) { return t; }\n// - A parameter with a default does not count toward fn.length\n//   (length stops counting at the first parameter with a default).\n// - Parameters with defaults may come before required ones, but\n//   callers must then pass undefined explicitly to get the default.\n// - Destructuring can have defaults too:\n//     function cfg({ mode = \"fast\" } = {}) { return mode; }\n// - Other falsy values (0, \"\", false, NaN) are ordinary values.\n//   Compare with the || operator, which tests truthiness instead.\n// - Think about which values count as \"missing\" for the parameter:\n//   the rule is a strict check against one specific value.",
+    "title": "Default function parameters",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-87": {
+    "docs": [
+      {
+        "title": "Default parameters - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters"
+      },
+      {
+        "title": "Functions - MDN guide",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Functions"
+      }
+    ],
+    "syntax": "// General form\n// function name(p1, p2 = expression, p3 = expression) { ... }\n//\n// A default is evaluated at call time, only when the argument is\n// undefined (missing or explicitly undefined). Not for null, 0, '' or false.\n// Parameters are initialized left to right, each in its own scope\n// step, like let bindings.\n\nfunction area(w, h = w * 2) {\n  return w * h;\n}\n\nfunction tag(name, label = name.toUpperCase(), note = label + '!') {\n  return note;\n}\n\n// Variations and gotchas:\n// - Defaults can call functions: function g(x = makeId()) {}\n//   makeId runs on every call that needs it, not once.\n// - Defaults can use outer variables and earlier parameters.\n// - Temporal dead zone applies to parameters: a default that reads\n//   a parameter declared later (or itself) throws a ReferenceError.\n//     function bad(a = b, b = 1) {}\n// - Parameters with defaults do not count toward function.length\n//   after the first default.\n// - Destructuring can have defaults too: function h({ x = 1 } = {}) {}\n// - With defaults present, the parameter list has its own scope,\n//   separate from the function body's var declarations.",
+    "title": "Default parameter initializers and scope",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-88": {
+    "docs": [
+      {
+        "title": "switch - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/switch"
+      },
+      {
+        "title": "Strict equality (===) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Strict_equality"
+      }
+    ],
+    "syntax": "// General form\nswitch (expression) {\n  case valueA:\n    // runs if expression matches valueA\n    break;\n  case valueB:\n  case valueC:      // grouped cases share one body\n    // ...\n    break;\n  default:\n    // runs if no case matched\n}\n\n// Example\nconst code = 404;\nswitch (code) {\n  case 200:\n    console.log(\"ok\");\n    break;\n  case 404:\n    console.log(\"not found\");\n    break;\n  default:\n    console.log(\"other\");\n}\n\n// Example with a string discriminant\nswitch (\"b\") {\n  case \"a\": console.log(1); break;\n  case \"b\": console.log(2); break;\n}\n\n// Gotchas:\n// - The expression is evaluated once, then compared to each case\n//   in order, using the strict equality algorithm (no type coercion).\n// - Special values follow strict equality rules, e.g. NaN never matches.\n// - Without break, execution falls through into the next case body.\n// - default may appear anywhere; it is used only if nothing matches.\n// - case expressions can be any expression, not only literals.\n// - All cases share one block scope; use { } inside a case for let/const.",
+    "title": "switch statement case matching",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-89": {
+    "docs": [
+      {
+        "title": "switch - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/switch"
+      },
+      {
+        "title": "The switch Statement (ECMAScript spec)",
+        "url": "https://tc39.es/ecma262/#sec-switch-statement"
+      }
+    ],
+    "syntax": "// General form\nswitch (expression) {\n  case valueA:\n    // statements\n    break;\n  case valueB:\n    // statements\n    break;\n  default:\n    // statements when no case matches\n}\n\n// Example 1: matching uses strict equality (===)\nlet color = \"red\";\nswitch (color) {\n  case \"red\":\n    console.log(\"stop\");\n    break;\n  case \"green\":\n    console.log(\"go\");\n    break;\n  default:\n    console.log(\"unknown\");\n}\n\n// Example 2: several labels sharing one block\nlet day = 6;\nswitch (day) {\n  case 6:\n  case 7:\n    console.log(\"weekend\");\n    break;\n  default:\n    console.log(\"weekday\");\n}\n\n// Notes and gotchas\n// - Execution starts at the first matching case, then continues\n//   statement by statement until a break, return, throw, or the end\n//   of the switch block. Labels themselves do not stop execution.\n// - An empty case with no statements simply continues into the next one.\n// - default can appear anywhere; it runs only if no case matches,\n//   but if it is not last, flow still continues past it without break.\n// - \"5\" and 5 do not match (strict equality).\n// - All cases share one block scope; wrap a case in { } to use let/const safely.\n// - Intentional continuing into the next case is best marked with a comment.",
+    "title": "switch statement case matching and control flow",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-90": {
+    "docs": [
+      {
+        "title": "void operator - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/void"
+      },
+      {
+        "title": "The void Operator - ECMAScript spec",
+        "url": "https://tc39.es/ecma262/#sec-void-operator"
+      }
+    ],
+    "syntax": "// General form\n//   void <expression>\n// A unary operator (same precedence level as typeof, delete, !).\n// The operand is evaluated for its side effects, and the\n// operator's own result is a fixed value you can look up in the docs.\n\n// Example 1: side effect still happens\nlet count = 0;\nconst r = void (count += 5);\nconsole.log(count); // 5  (operand was evaluated)\n// r holds whatever void always yields\n\n// Example 2: discarding a function's return value\nvoid console.log('hi'); // still logs\n\n// Common uses\n//   <a href=\"javascript:void(0)\">link</a>  (legacy: do nothing on click)\n//   Arrow function that must not return a value:\n//     const handler = () => void doWork();\n//   Immediately invoked function expression:\n//     void function () { /* ... */ }();\n\n// Gotchas\n//   - Precedence: void binds tightly, so use parentheses\n//     for compound expressions: void (a + b)\n//     versus (void a) + b\n//   - void is an operator, not a function: void(x) is just\n//     void applied to a parenthesized expression.\n//   - It always evaluates its operand, even if the result is ignored.",
+    "title": "The void operator",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-91": {
+    "docs": [
+      {
+        "title": "delete operator - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/delete"
+      },
+      {
+        "title": "Object.defineProperty - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty"
+      },
+      {
+        "title": "Reflect.deleteProperty - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/deleteProperty"
+      }
+    ],
+    "syntax": "// General form\n//   delete object.property\n//   delete object[expression]\n// The result is a boolean, not the deleted value.\n\nconst cfg = { host: \"x\", port: 80 };\nconst r1 = delete cfg.port;     // removes the property from cfg\nconst r2 = delete cfg.missing;  // property does not exist\n\n// Property attributes matter:\nconst locked = {};\nObject.defineProperty(locked, \"id\", { value: 7, configurable: false });\n// delete locked.id -> property stays\n//   sloppy mode: evaluates to false\n//   strict mode (\"use strict\", modules, classes): throws TypeError\n\n// Gotchas\n// - Only own properties are removed; inherited ones on the prototype are untouched.\n// - Deleting a nonexistent property does not fail.\n// - delete on a plain variable name is a SyntaxError in strict mode.\n// - Variables declared with var/let/const are not configurable properties.\n// - Array elements: delete arr[i] leaves a hole and does not change length.\n// - Use Reflect.deleteProperty(obj, key) to get a boolean without throwing.\n// - Object.freeze / Object.seal make all own properties non-configurable.",
+    "title": "The delete operator and property descriptors",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-92": {
+    "docs": [
+      {
+        "title": "delete operator - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/delete"
+      },
+      {
+        "title": "Array - Sparse arrays | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array#sparse_arrays"
+      }
+    ],
+    "syntax": "// General form\n//   delete object.property\n//   delete object[expression]\n// Returns true if the property is gone or never existed;\n// false (or TypeError in strict mode) if it is non-configurable.\n\n// Example with an object\nconst user = { name: \"Ana\", age: 30 };\ndelete user.age;\nconsole.log(\"age\" in user); // false\n\n// Example with an array (different values from any quiz code)\nconst nums = [10, 20, 30, 40];\ndelete nums[2];\n// Compare these afterwards:\n//   nums.length   -> read it and think about what delete touches\n//   2 in nums     -> checks whether the index property exists\n//   nums[2]       -> reading a missing property gives undefined\n\n// Gotchas\n// - delete removes a property; it does not shift other elements\n//   and does not renumber indexes.\n// - Arrays can become sparse (have empty slots).\n// - forEach, map, and for...in skip empty slots;\n//   a for loop with an index and for...of do not skip them\n//   (for...of yields undefined for them).\n// - To remove and re-pack elements, use splice(start, count).\n// - To set a value but keep the slot, assign undefined.\n// - delete on a plain variable does nothing useful.",
+    "title": "The delete operator on object properties and array elements",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-93": {
+    "docs": [
+      {
+        "title": "in operator - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/in"
+      },
+      {
+        "title": "Inheritance and the prototype chain | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Inheritance_and_the_prototype_chain"
+      },
+      {
+        "title": "Object.hasOwn() | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn"
+      }
+    ],
+    "syntax": "// General form\n//   propertyKey in object\n// Left side: string or symbol (numbers are converted to strings)\n// Right side: must be an object, otherwise TypeError\n// Returns a boolean\n\nconst base = { kind: \"base\" };\nconst child = Object.create(base);   // child's prototype is base\nchild.own = 1;\n\n\"own\" in child;      // checks child itself\n\"kind\" in child;     // also consults the prototype chain\n\"missing\" in child;  // not found anywhere on the chain\n\n// Arrays: the key is an index (as a string) or property name\n2 in [10, 20, 30];       // index 2 exists\n\"length\" in [];          // array own property\n\n// Gotchas\n// - `in` walks the whole prototype chain.\n// - Use Object.hasOwn(obj, key) to test only own properties.\n// - A property set to undefined still counts as present.\n// - Non-enumerable properties are still found by `in`.\n// - \"x\" in \"text\" throws TypeError (primitive on the right).\n// - Private fields: #priv in obj is a separate brand check form.\n// - Objects with a null prototype (Object.create(null)) inherit nothing.",
+    "title": "The `in` operator and property lookup"
+  },
+  "js-easy-94": {
+    "docs": [
+      {
+        "title": "Object.hasOwn() - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn"
+      },
+      {
+        "title": "Inheritance and the prototype chain | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Inheritance_and_the_prototype_chain"
+      }
+    ],
+    "syntax": "// General form\n// Object.hasOwn(obj, key) -> boolean\n// true only if `key` is a property stored directly on `obj`\n// (string or symbol key), not merely reachable through inheritance.\n\nconst base = { shared: 1 };\nconst child = Object.create(base);\nchild.mine = 2;\n\nObject.hasOwn(child, \"mine\");    // true  (defined on child)\nObject.hasOwn(child, \"shared\");  // false (found only via prototype)\nObject.hasOwn(child, \"absent\");  // false\n\n// Compare with the `in` operator, which DOES walk the prototype chain:\n\"shared\" in child;               // true\n\n// Variations and gotchas\n// - Own properties with value undefined still count:\n//     Object.hasOwn({ a: undefined }, \"a\") // true\n// - Works on arrays and strings' indices: Object.hasOwn([5], 0) // true\n// - Works on objects with a null prototype, unlike obj.hasOwnProperty:\n//     const bare = Object.create(null);\n//     Object.hasOwn(bare, \"k\")\n// - Throws TypeError if obj is null or undefined.\n// - Symbols work as keys: Object.hasOwn(o, Symbol.iterator)\n// - Replaces the older Object.prototype.hasOwnProperty.call(obj, key).",
+    "title": "Own-property checks with Object.hasOwn",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-95": {
+    "docs": [
+      {
+        "title": "Object.keys() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys"
+      },
+      {
+        "title": "Enumerability and ownership of properties - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Enumerability_and_ownership_of_properties"
+      },
+      {
+        "title": "Object.defineProperty() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty"
+      }
+    ],
+    "syntax": "// General form: methods that list an object's own keys\n// Object.keys(o)                    -> own enumerable string keys\n// Object.getOwnPropertyNames(o)     -> own string keys, enumerable or not\n// Object.getOwnPropertySymbols(o)   -> own symbol keys\n// Reflect.ownKeys(o)                -> all own keys (strings + symbols)\n\nconst box = {};\nObject.defineProperty(box, \"secret\", { value: 10, enumerable: false });\nconst tag = Symbol(\"tag\");\nbox[tag] = 20;\nbox.name = \"x\";\n\nconsole.log(Object.getOwnPropertyNames(box)); // includes non-enumerable strings\nconsole.log(Object.getOwnPropertySymbols(box)); // symbol keys only\nconsole.log(Reflect.ownKeys(box)); // everything own\n\n// Variations and gotchas:\n// - defineProperty defaults: enumerable, writable, configurable are all false\n// - Plain assignment (o.a = 1) creates an enumerable property\n// - Object.values / Object.entries / for...in / JSON.stringify also\n//   consider only enumerable string-keyed properties\n// - for...in also walks inherited enumerable properties; Object.keys does not\n// - Object.assign and spread {...o} copy own enumerable props,\n//   including enumerable symbols\n// - o.propertyIsEnumerable(key) tests a single own key",
+    "title": "Property enumeration and own-key listing methods",
+    "isSyntaxAfterAnswer": true
+  },
+  "js-easy-96": {
+    "docs": [
+      {
+        "title": "Math.max() - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/max"
+      },
+      {
+        "title": "Math.min() - JavaScript | MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/min"
+      }
+    ],
+    "syntax": "// General form\n// Math.max(...values)  -> largest of the numeric arguments\n// Math.min(...values)  -> smallest of the numeric arguments\n// Arguments are converted to numbers before comparing.\n\n// Examples\nMath.max(3, 9, 4);        // 9\nMath.min(3, 9, 4);        // 3\nMath.max(...[5, 12, 7]);  // 12 (spread an array into arguments)\n\n// Variations and gotchas\n// - Math.max/min do not accept an array directly: Math.max([1, 2]) converts the\n//   array to a number (NaN for multi-element arrays).\n// - If any argument converts to NaN, the result is NaN.\n// - Non-numbers are coerced: Math.max('8', 2) uses 8; null becomes 0; undefined becomes NaN.\n// - Think of each function as folding over its arguments, starting from an\n//   identity value that any real number would beat. Consider what that\n//   starting value must be for each function when nothing is passed.\n// - Very large arrays spread as arguments can exceed engine argument limits;\n//   use reduce for huge inputs:\n//   arr.reduce((a, b) => Math.max(a, b), -Infinity)\n// - Math.max(-0, 0) is 0 (+0 is treated as larger than -0).",
+    "title": "Math.max and Math.min argument handling"
+  },
+  "js-easy-97": {
+    "docs": [
+      {
+        "title": "Spread syntax (...) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax"
+      },
+      {
+        "title": "Math.max() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/max"
+      }
+    ],
+    "syntax": "// General form\n// fn(a, b, c)          -> each argument is passed separately\n// fn(...iterable)      -> iterable's elements become separate arguments\n// fn(arr)              -> the array itself is ONE argument\n\n// Example with a different function\nfunction add3(x, y, z) { return x + y + z; }\nconst nums = [10, 20, 30];\nadd3(...nums);   // same as add3(10, 20, 30)\nadd3(nums);      // x is the whole array; y and z are undefined\n\n// Variations\n// Mix spread with normal args: fn(0, ...list, 99)\n// Several spreads: fn(...a, ...b)\n// Works with any iterable (strings, Sets, Maps), not only arrays:\n//   Math.min(...new Set([4, 2, 8]))\n// Older alternative: fn.apply(null, arrayOfArgs)\n\n// Gotchas\n// - Variadic functions like Math.min/Math.max convert each argument\n//   to a number. An array converted to a number goes through its string form\n//   (\"5,6\" is not a valid number, but [7] becomes \"7\" then 7).\n// - Math.max() with no arguments is -Infinity; Math.min() is Infinity.\n// - Very large arrays spread into a call can exceed the engine's\n//   argument limit and throw a RangeError.\n// - Spread in a call (...x) differs from rest in a parameter list\n//   (function f(...args) {}), which collects arguments into an array.",
+    "title": "Spread syntax in function calls vs passing an array argument"
+  },
+  "js-easy-98": {
+    "docs": [
+      {
+        "title": "Addition (+) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Addition"
+      },
+      {
+        "title": "ApplyStringOrNumericBinaryOperator - ECMAScript spec",
+        "url": "https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator"
+      }
+    ],
+    "syntax": "// General form\n//   left + right\n// Evaluation (simplified):\n//   1. Convert both operands to primitives (objects -> valueOf/toString).\n//   2. If EITHER primitive is a string, convert the other to a string\n//      and concatenate.\n//   3. Otherwise convert both to numbers and add.\n\n// Examples with different values\nlet a = 'age: ' + 30;      // string side wins -> concatenation\nlet b = 2 + 3;             // both numbers -> numeric addition\nlet c = true + 1;          // no string: boolean becomes a number\n\n// Gotchas\n// - Evaluation is left to right, so grouping matters:\n//     1 + 2 + 'x'   // numbers added first, then joined with string\n//     'x' + 1 + 2   // string joined at each step\n// - Other arithmetic operators (-, *, /) always convert to numbers;\n//   only + has the string-concatenation behavior.\n// - Unary + converts to a number: +'7'\n// - Template literals avoid ambiguity: `${x}${y}`\n// - null -> 0, undefined -> NaN, arrays -> their toString() text\n//   when used with +.",
+    "title": "The + operator with mixed operand types"
+  },
+  "js-easy-99": {
+    "docs": [
+      {
+        "title": "Type coercion (MDN glossary)",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Type_coercion"
+      },
+      {
+        "title": "Subtraction (-) operator",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Subtraction"
+      },
+      {
+        "title": "Addition (+) operator",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Addition"
+      }
+    ],
+    "syntax": "// General form:\n//   left OP right      where OP is -, *, /, %, ** (and + with special rules)\n//\n// Most arithmetic operators convert both operands with ToNumeric first,\n// then perform numeric math on the results.\n\nlet a = '10' * 2;      // operands converted to numbers before multiplying\nlet b = '9' / '3';     // both strings are converted\n\n// Conversion rules (ToNumber):\n//   '  12 '  -> 12      (whitespace trimmed)\n//   ''       -> 0\n//   'abc'    -> NaN     (any non-numeric text)\n//   true     -> 1, false -> 0\n//   null     -> 0, undefined -> NaN\n//   [] -> 0, [7] -> 7 (via string conversion of the array)\n//\n// Gotchas:\n// - The + operator is different: if either operand is a string\n//   (after primitive conversion), it concatenates instead of adding.\n//   Only -, *, /, %, ** always use numeric conversion.\n// - NaN propagates: any math involving NaN gives NaN.\n// - BigInt cannot be mixed with Number: 1n * 2 throws TypeError.\n// - Unary + is a quick explicit conversion: +'42' -> 42.\n// - Prefer Number(x) or parseInt/parseFloat when intent matters.",
+    "title": "Implicit type coercion with arithmetic operators"
+  },
+  "js-easy-100": {
+    "docs": [
+      {
+        "title": "Addition (+) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Addition"
+      },
+      {
+        "title": "Type coercion - MDN Glossary",
+        "url": "https://developer.mozilla.org/en-US/docs/Glossary/Type_coercion"
+      },
+      {
+        "title": "ApplyStringOrNumericBinaryOperator - ECMAScript spec",
+        "url": "https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator"
+      }
+    ],
+    "syntax": "// General form\n//   left + right\n// 1. Both operands are converted to primitives.\n// 2. If either primitive is a string -> string concatenation.\n// 3. Otherwise both are converted to numbers (or BigInt) -> addition.\n\n// Examples\nnull + 5;        // number conversion path\n\"a\" + 1;         // string path\n\n// ToNumber conversions for non-string primitives:\n//   undefined -> NaN\n//   null      -> 0\n//   false     -> 0\n//   true      -> 1 (see the rule above)\n\n// Variations and gotchas\n// - Mixing BigInt and Number throws a TypeError.\n// - Objects use valueOf()/toString() (or Symbol.toPrimitive) first;\n//   Date objects prefer string.\n// - Unary + forces number conversion: +\"42\" -> 42\n// - Other arithmetic operators (-, *, /) always convert to numbers,\n//   so only + has the string-concatenation behavior.\n// - Evaluation is left to right: 1 + 2 + \"3\" differs from \"1\" + 2 + 3.\n// - Use Number(x) or template literals to make intent explicit.",
+    "title": "The + operator and implicit type conversion"
+  },
+  "js-easy-101": {
+    "docs": [
+      {
+        "title": "Array.prototype.sort() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort"
+      },
+      {
+        "title": "Array.prototype.toSorted() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted"
+      }
+    ],
+    "syntax": "// General form\n// arr.sort()                 // default ordering\n// arr.sort(compareFn)       // custom ordering\n// compareFn(a, b) returns:\n//   negative -> a goes before b\n//   positive -> a goes after b\n//   zero     -> keep relative order (sort is stable)\n\n// Example 1: default ordering of mixed values\nconst words = ['pear', 'Apple', 'fig'];\nwords.sort();                // default compares elements as strings\n                             // by UTF-16 code units (uppercase before lowercase)\n\n// Example 2: custom comparator, descending by length\nconst items = ['aaa', 'b', 'cc'];\nitems.sort((x, y) => y.length - x.length);\n\n// Gotchas\n// - sort() mutates the original array and returns the same array.\n//   Copy first to keep the original: [...arr].sort(fn)\n//   or use arr.toSorted(fn) (returns a new array).\n// - Without compareFn, non-undefined elements are converted to\n//   strings and compared as text, whatever their type.\n// - undefined elements are always placed at the end.\n// - The comparator should return a number; returning a boolean\n//   (x > y) is unreliable.\n// - For locale-aware text: a.localeCompare(b)\n// - Subtraction comparators can misbehave with NaN or Infinity.",
+    "title": "Array.prototype.sort and comparator functions"
+  },
+  "js-easy-102": {
+    "docs": [
+      {
+        "title": "Equality comparisons and sameness",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Equality_comparisons_and_sameness"
+      },
+      {
+        "title": "Strict equality (===)",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Strict_equality"
+      },
+      {
+        "title": "Equality (==)",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Equality"
+      }
+    ],
+    "syntax": "// General form\n//   a == b    loose equality: may convert operand types first\n//   a === b   strict equality: no conversion; types must match\n//   a != b / a !== b  are the negated forms\n\n// Examples (different values from any quiz)\nconsole.log(5 === 5);        // same type, same value\nconsole.log(true === 1);     // different types: strict never converts\n\n// Loose equality conversion rules (summary)\n// - If both operands have the same type, == behaves like ===\n// - null == undefined is true, and neither equals anything else loosely\n// - number vs string: the string is converted to a number\n// - boolean vs other: the boolean is converted to a number first\n// - object vs primitive: the object is converted to a primitive\n//   (via valueOf / toString) and then compared\n\n// Gotchas\n// - NaN is not equal to anything, even itself, under both operators\n//   Use Number.isNaN(x) or Object.is(x, NaN)\n// - +0 === -0 is true; Object.is(+0, -0) is false\n// - Objects compare by reference: {} === {} is false\n// - Loose comparisons are not transitive, so results can surprise\n// - Prefer === unless you deliberately want conversion\n//   (x == null is a common idiom to test null or undefined)",
+    "title": "Equality operators: == versus ==="
+  },
+  "js-easy-103": {
+    "docs": [
+      {
+        "title": "Set.prototype.has() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/has"
+      },
+      {
+        "title": "Array.prototype.includes() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes"
+      },
+      {
+        "title": "Set - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set"
+      }
+    ],
+    "syntax": "// General forms\n//   array.includes(value)   -> boolean, linear search\n//   set.has(value)          -> boolean, hash-based lookup\n//   new Set(iterable)       -> collection of unique values\n\n// Example: checking tags against a list\nconst tagList = ['a', 'b', 'c', 'd'];\ntagList.includes('c');      // walks elements one by one\n\nconst tagSet = new Set(tagList);\ntagSet.has('c');            // looks the value up by hash\n\n// Cost model (n = number of items in the collection)\n// - Array includes/indexOf: time grows roughly with n per call (O(n))\n// - Set has: roughly constant time on average per call (O(1))\n// - Building a Set costs O(n) once; it pays off when you do many lookups\n// - Few lookups or tiny collections: the difference is negligible\n\n// Gotchas\n// - Both use SameValueZero, so NaN is found; +0 and -0 are equal\n// - Objects compare by reference, not by contents\n// - Set keeps unique values in insertion order\n// - Total work for m lookups: array ~ m * n, set ~ n + m\n// - Where in the array a value sits matters: early items are found sooner,\n//   missing values scan the whole array",
+    "title": "Membership lookup in Set vs Array"
+  },
+  "js-easy-104": {
+    "docs": [
+      {
+        "title": "Array.prototype.map() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map"
+      },
+      {
+        "title": "Array.prototype.reduce() - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce"
+      },
+      {
+        "title": "Spread syntax (...) - MDN",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax"
+      }
+    ],
+    "syntax": "// Array.prototype.map(callback(element, index, array))\n//   -> new array, same length, one callback result per element\nconst names = ['ann', 'bo', 'cy'];\nconst upper = names.map((s) => s.toUpperCase());\n\n// Array.prototype.reduce(callback(acc, element, index, array), initialValue)\n//   -> single accumulated value; acc is whatever the callback returned last time\nconst total = [1, 2, 3].reduce((sum, n) => sum + n, 0);\n\n// Spread creates a NEW array by copying every element of the source:\nconst a = [1, 2, 3];\nconst b = [...a, 4];   // copies a (3 elements), then adds 4\n// Cost of one copy grows with the array's length: O(n).\n// Doing a copy inside a loop/callback repeats that cost on every iteration,\n// so total work is the sum of the copy sizes (1 + 2 + ... + n).\n\n// Mutating alternatives avoid the repeated copy:\n//   acc.push(x); return acc;       // amortized O(1) per step\n//   for (const x of src) out.push(x);\n\n// Gotchas:\n// - Count work per iteration, not just the number of iterations.\n// - reduce without initialValue uses the first element as acc and\n//   throws on an empty array.\n// - Big-O describes growth; for tiny inputs differences are negligible.\n// - Object spread ({...obj}) in a reduce has the same copy-per-step cost.",
+    "title": "Building arrays: reduce, map, and copying costs"
   }
 }
