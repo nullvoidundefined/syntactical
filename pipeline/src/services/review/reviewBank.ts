@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path';
 import type { Question } from '@syntactical/content-schema';
 
 import type { ReviewResult } from '../../types/review/ReviewResult.js';
-import { writeJsonAtomic } from '../classify/writeJsonAtomic.js';
+import { writeJsonAtomic } from '../json/writeJsonAtomic.js';
 import { writeFileAtomic } from '../writeFileAtomic.js';
 
 import { buildReviewItems } from './buildReviewItems.js';

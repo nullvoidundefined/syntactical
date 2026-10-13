@@ -14,7 +14,11 @@ export interface CommandManifestArgs {
     pipelineDir: string;
 }
 
-export async function loadCommandManifest({ contentDir, contentRoot, pipelineDir }: CommandManifestArgs): Promise<Manifest> {
+export async function loadCommandManifest({
+    contentDir,
+    contentRoot,
+    pipelineDir,
+}: CommandManifestArgs): Promise<Manifest> {
     const manifest = await loadValidatedManifest(contentDir);
     if (hasPaidBanks(manifest)) {
         await assertContentRootUsable(contentRoot, pipelineDir, contentDir);

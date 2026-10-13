@@ -30,18 +30,27 @@ function buildQuestion(id: string, prompt: string): Record<string, unknown> {
     };
 }
 
-function buildEntry(path: string, access: 'free' | 'paid'): Record<string, unknown> {
-    return { access, contentVersion: 1, hash: 'h', path, topicCounts: {} };
+const HASH = '0123456789abcdef'.repeat(4);
+
+function buildEntry(path: string, access: 'free' | 'paid', difficulty: string): Record<string, unknown> {
+    const productId = access === 'paid' ? { productId: `syntactical.python.${difficulty}` } : {};
+    return { access, contentVersion: 1, hash: HASH, path, topicCounts: {}, ...productId };
 }
 
 const MANIFEST = {
     languages: [
         {
             banks: {
-                easy: buildEntry('python/easy.json', 'free'),
-                medium: buildEntry('python/medium.json', 'paid'),
+                easy: buildEntry('python/easy.json', 'free', 'easy'),
+                medium: buildEntry('python/medium.json', 'paid', 'medium'),
             },
+            glyph: 'G',
+            grammar: 'plain',
             id: 'python',
+            label: 'Python',
+            misconceptions: [],
+            tagline: 'T',
+            topics: [],
         },
     ],
     schemaVersion: 2,

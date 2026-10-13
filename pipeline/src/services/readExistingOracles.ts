@@ -2,12 +2,11 @@
 // to oracle. A missing file is an empty Map. A file that is not a plain object of
 // oracle-shaped values stops the run with a message naming the file, so it is never
 // overwritten or merged into blindly.
-import { readFile } from 'node:fs/promises';
-
 import { z } from 'zod';
 
 import type { Oracle } from '../types/Oracle.js';
 
+import { readJsonIfPresent } from './json/readJsonIfPresent.js';
 import { sanitizeLogText } from './sanitizeLogText.js';
 
 const oracleSchema = z.strictObject({
@@ -22,20 +21,17 @@ function invalid(file: string, reason: string): Error {
 }
 
 export async function readExistingOracles(file: string): Promise<Map<string, Oracle>> {
-    let text: string;
+    let parsed: unknown;
     try {
-        text = await readFile(file, 'utf8');
+        parsed = await readJsonIfPresent(file);
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return new Map();
+        if (error instanceof SyntaxError) {
+            throw invalid(file, `not JSON (${String(error)})`);
         }
         throw error;
     }
-    let parsed: unknown;
-    try {
-        parsed = JSON.parse(text);
-    } catch (error) {
-        throw invalid(file, `not JSON (${String(error)})`);
+    if (parsed === undefined) {
+        return new Map();
     }
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
         throw invalid(file, 'expected an object of question id to oracle');
