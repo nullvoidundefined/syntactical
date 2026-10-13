@@ -1,0 +1,162 @@
+[
+  {
+    "description": "Believes typeof null returns \"null\" rather than \"object\", which is a long-standing quirk of the language.",
+    "id": "javascript.typeof-null-is-null"
+  },
+  {
+    "description": "Believes typeof [] returns \"array\" when arrays are reported as \"object\".",
+    "id": "javascript.typeof-array-is-array"
+  },
+  {
+    "description": "Believes NaN is not of type number, when typeof NaN is \"number\".",
+    "id": "javascript.typeof-nan-is-not-number"
+  },
+  {
+    "description": "Believes typeof on an undeclared identifier throws a ReferenceError, when it safely returns \"undefined\".",
+    "id": "javascript.typeof-undeclared-throws"
+  },
+  {
+    "description": "Believes == compares without type conversion, so 1 == \"1\" is false, or that [] == false is false.",
+    "id": "javascript.loose-equality-no-coercion"
+  },
+  {
+    "description": "Believes null and undefined are indistinguishable, or that null == undefined is false while null === undefined is true.",
+    "id": "javascript.null-equals-undefined-strict"
+  },
+  {
+    "description": "Believes NaN === NaN is true, rather than NaN being the only value not equal to itself.",
+    "id": "javascript.nan-equals-nan"
+  },
+  {
+    "description": "Believes global isNaN and Number.isNaN behave the same; isNaN coerces its argument first, so isNaN(\"foo\") is true.",
+    "id": "javascript.isnan-same-as-number-isnan"
+  },
+  {
+    "description": "Believes Object.is and === always agree, missing that they differ for NaN and for +0 versus -0.",
+    "id": "javascript.object-is-same-as-strict-equals"
+  },
+  {
+    "description": "Believes decimal floating-point arithmetic is exact, so 0.1 + 0.2 === 0.3 is true.",
+    "id": "javascript.float-arithmetic-exact"
+  },
+  {
+    "description": "Believes Number(\"\") is NaN, when an empty string converts to 0.",
+    "id": "javascript.number-empty-string-is-nan"
+  },
+  {
+    "description": "Believes parseInt and Number treat trailing junk the same, so Number(\"10px\") is 10 or parseInt(\"10px\") is NaN.",
+    "id": "javascript.parseint-vs-number-strictness"
+  },
+  {
+    "description": "Believes a leading zero makes parseInt(\"08\", 10) parse as octal or give NaN or 0, rather than 8.",
+    "id": "javascript.parseint-leading-zero-octal"
+  },
+  {
+    "description": "Believes empty arrays and empty objects are falsy, when Boolean([]) and Boolean({}) are true.",
+    "id": "javascript.empty-array-object-falsy"
+  },
+  {
+    "description": "Believes the non-empty string \"false\" is falsy, when Boolean(\"false\") is true.",
+    "id": "javascript.string-false-is-falsy"
+  },
+  {
+    "description": "Believes ?? falls back for any falsy value like ||, rather than only for null and undefined.",
+    "id": "javascript.nullish-coalescing-same-as-or"
+  },
+  {
+    "description": "Believes || and && always return true or false instead of one of their operand values.",
+    "id": "javascript.logical-operators-return-booleans"
+  },
+  {
+    "description": "Believes optional chaining on null throws a TypeError rather than short-circuiting to undefined.",
+    "id": "javascript.optional-chaining-throws-on-null"
+  },
+  {
+    "description": "Believes const makes the referenced object immutable, so changing obj.a on a const object throws.",
+    "id": "javascript.const-makes-value-immutable"
+  },
+  {
+    "description": "Believes reassigning a const binding silently fails or succeeds, rather than throwing a TypeError.",
+    "id": "javascript.const-reassign-silent"
+  },
+  {
+    "description": "Believes let variables read before declaration give undefined like var, rather than a ReferenceError from the temporal dead zone.",
+    "id": "javascript.let-hoisted-undefined"
+  },
+  {
+    "description": "Believes var is block scoped like let, rather than function scoped.",
+    "id": "javascript.var-block-scoped"
+  },
+  {
+    "description": "Believes function expressions assigned to variables are hoisted and callable before their line like function declarations.",
+    "id": "javascript.function-expression-hoisted"
+  },
+  {
+    "description": "Believes default parameters and destructuring defaults apply for null as well as undefined.",
+    "id": "javascript.default-param-applies-to-null"
+  },
+  {
+    "description": "Believes arrow functions have their own arguments object or can be used with new.",
+    "id": "javascript.arrow-function-own-arguments"
+  },
+  {
+    "description": "Believes map mutates the original array in place instead of returning a new one.",
+    "id": "javascript.map-mutates-array"
+  },
+  {
+    "description": "Confuses what array methods return, such as push returning the array or element rather than the new length, or unshift returning the array.",
+    "id": "javascript.array-method-return-values"
+  },
+  {
+    "description": "Believes find returns an array of matches or null on failure, rather than the first match or undefined; also that findIndex returns undefined.",
+    "id": "javascript.find-returns-array-or-null"
+  },
+  {
+    "description": "Believes slice mutates the original array, or that splice returns a single removed element and leaves the array unchanged.",
+    "id": "javascript.slice-splice-mutation-confusion"
+  },
+  {
+    "description": "Believes spreading an array or object makes a deep copy, so nested objects are independent of the original.",
+    "id": "javascript.spread-deep-copies"
+  },
+  {
+    "description": "Believes sort() without a comparator sorts numbers numerically, when it compares their string forms.",
+    "id": "javascript.default-sort-numeric"
+  },
+  {
+    "description": "Believes for...in yields array values rather than string keys, or that it excludes inherited enumerable properties.",
+    "id": "javascript.for-in-yields-values"
+  },
+  {
+    "description": "Believes JSON.stringify keeps undefined and function-valued properties, and doesn't convert undefined array elements to null.",
+    "id": "javascript.json-stringify-keeps-undefined-functions"
+  },
+  {
+    "description": "Believes delete on an array element removes it and shifts the others, rather than leaving a hole with the same length.",
+    "id": "javascript.delete-shrinks-array"
+  },
+  {
+    "description": "Believes the in operator checks only own properties, ignoring inherited ones such as toString.",
+    "id": "javascript.in-operator-own-only"
+  },
+  {
+    "description": "Believes Object.keys lists all properties, including non-enumerable ones and symbol keys.",
+    "id": "javascript.object-keys-includes-all"
+  },
+  {
+    "description": "Believes Math.max accepts an array directly, or that Math.max() with no arguments returns 0 or NaN.",
+    "id": "javascript.math-max-accepts-array"
+  },
+  {
+    "description": "Believes + always does numeric addition, so '5' + 1 is 6, and that - behaves the same way as + with strings.",
+    "id": "javascript.plus-always-numeric"
+  },
+  {
+    "description": "Believes array includes and Set has have the same lookup cost, or that reduce with spread is as efficient as map.",
+    "id": "javascript.includes-and-set-lookup-equal-cost"
+  },
+  {
+    "description": "Believes switch compares cases with == so \"1\" matches 1, or that cases never fall through without break.",
+    "id": "javascript.switch-uses-loose-equality"
+  }
+]
