@@ -7,8 +7,10 @@ import type { Logger } from 'pino';
 
 import { AUTH } from '../constants/auth.js';
 import { HTTP } from '../constants/http.js';
-import { createErrorResponse, ERROR_CODES } from '../errors.js';
+import { ERROR_CODES, sendError } from '../errors.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
+import { keyOfEmail, keyOfIp } from '../middleware/rateLimitKeys.js';
+import { requestLog } from '../middleware/requestLogger.js';
 import { authSchemas } from '../schemas/authSchemas.js';
 import { issueOneTimeCode } from '../services/issueOneTimeCode.js';
 
@@ -25,8 +27,7 @@ const {
 function validateIssueCode(req: Request, res: Response, next: NextFunction): void {
   const { data, success } = authSchemas.issueCode.safeParse(req.body);
   if (!success) {
-    const { requestId } = res.locals as { requestId: string };
-    res.status(BAD_REQUEST).json(createErrorResponse(ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body', requestId));
+    sendError(res, BAD_REQUEST, ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body');
     return;
   }
   res.locals.email = data.email;
@@ -39,23 +40,19 @@ function createAuthCodesRouter(deps: ResolvedAuthDeps, logger: Logger): Router {
   const limits = { database, keySecret: rateLimitKeySecret, now, windowMs: WINDOW_MS };
   const perIp = createRateLimit({
     ...limits,
-    keyOf: (req) => req.ip ?? 'unknown',
+    keyOf: keyOfIp,
     limit: ISSUE_PER_IP,
     scope: ISSUE_IP,
   });
   const perEmail = createRateLimit({
     ...limits,
-    keyOf: (_req, res) => String(res.locals.email),
+    keyOf: keyOfEmail,
     limit: ISSUE_PER_EMAIL,
     scope: ISSUE_EMAIL,
   });
 
   router.post('/codes', perIp, validateIssueCode, perEmail, async (_req, res) => {
-    const { email, logger: requestLogger, requestId } = res.locals as {
-      email: string;
-      logger?: Logger;
-      requestId: string;
-    };
+    const { email } = res.locals as { email: string };
     const isSent = await issueOneTimeCode({
       database,
       email,
@@ -64,10 +61,13 @@ function createAuthCodesRouter(deps: ResolvedAuthDeps, logger: Logger): Router {
       sendSignInCode: (to, code) => emailClient.sendSignInCode(to, code),
     });
     if (!isSent) {
-      (requestLogger ?? logger).warn({ event: 'sign_in_code_unsent' }, 'sign-in code not sent');
-      res
-        .status(SERVICE_UNAVAILABLE)
-        .json(createErrorResponse(ERROR_CODES.SERVER.EMAIL_UNAVAILABLE, 'Email is unavailable, try again later', requestId));
+      requestLog(res, logger).warn({ event: 'sign_in_code_unsent' }, 'sign-in code not sent');
+      sendError(
+        res,
+        SERVICE_UNAVAILABLE,
+        ERROR_CODES.SERVER.EMAIL_UNAVAILABLE,
+        'Email is unavailable, try again later',
+      );
       return;
     }
     res.status(ACCEPTED).json({ data: { status: 'code-sent' } });
