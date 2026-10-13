@@ -37,10 +37,14 @@ export default function PurchaseCompleteScreen() {
     if (!canPoll) return undefined;
     let isDecided = false;
     let pollTimer: ReturnType<typeof setTimeout> | undefined;
+    // Aborted once the outcome is decided or the screen leaves, so a request still pending
+    // then confirms nothing and records no event (a remount polls afresh).
+    const controller = new AbortController();
     setStatus('confirming');
 
     function decide(outcome: PurchaseStatus) {
       isDecided = true;
+      controller.abort();
       clearTimeout(pollTimer);
       clearTimeout(deadlineTimer);
       setStatus(outcome);
@@ -49,7 +53,7 @@ export default function PurchaseCompleteScreen() {
     // confirm never throws: a failed request reads as "not yet" and is retried at the next
     // interval until the deadline.
     async function poll() {
-      const isUnlocked = await confirm(productId as string);
+      const isUnlocked = await confirm(productId as string, { signal: controller.signal });
       if (isDecided) return;
       if (isUnlocked) {
         decide('unlocked');
@@ -62,6 +66,7 @@ export default function PurchaseCompleteScreen() {
     void poll();
     return () => {
       isDecided = true;
+      controller.abort();
       clearTimeout(pollTimer);
       clearTimeout(deadlineTimer);
     };
