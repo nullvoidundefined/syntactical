@@ -79,6 +79,22 @@ describe('QueryDrawer', () => {
     expect(screen.queryByText('Answer to see the full explanation.')).toBeNull();
   });
 
+  it('holds back syntax marked isSyntaxAfterAnswer until after an answer', async () => {
+    const marked = { ...query, isSyntaxAfterAnswer: true };
+    const view = await render(
+      <QueryDrawer isAnswered={false} isOpen query={marked} grammar="python" onClose={jest.fn()} />,
+    );
+    expect(screen.getByText('NaN is never equal')).toBeTruthy();
+    expect(screen.queryByTestId('code-block')).toBeNull();
+    await view.rerender(<QueryDrawer isAnswered isOpen query={marked} grammar="python" onClose={jest.fn()} />);
+    expect(screen.queryByTestId('code-block')).not.toBeNull();
+  });
+
+  it('shows unmarked syntax before an answer', async () => {
+    await render(<QueryDrawer isAnswered={false} isOpen query={query} grammar="python" onClose={jest.fn()} />);
+    expect(screen.queryByTestId('code-block')).not.toBeNull();
+  });
+
   it('closes from the close control, the backdrop, and the platform back action', async () => {
     await render(<DrawerHarness />);
     await fireEvent.press(screen.getByRole('button', { name: 'Close query' }));
