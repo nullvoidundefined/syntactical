@@ -1,10 +1,11 @@
 // GitHub Pages has no rewrite rules, so a direct load of a client route
 // would 404. Serving index.html as 404.html lets the router resolve any
 // path, and .nojekyll stops Pages from dropping Expo's underscore files.
-import { copyFile, writeFile } from 'node:fs/promises';
+import { promises, realpathSync } from 'node:fs';
 import { join } from 'node:path';
-import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+
+const { copyFile, writeFile } = promises;
 
 export async function copySpaFallback(outputDir) {
   await copyFile(join(outputDir, 'index.html'), join(outputDir, '404.html'));
