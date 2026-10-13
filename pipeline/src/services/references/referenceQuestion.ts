@@ -1,8 +1,7 @@
 // Writes one question's reference and keeps it only when it gives nothing away: links off the
-// track's hosts are dropped, and judges on two different models must both find that what the
-// learner sees before answering does not reveal the answer. When either judge finds the question
-// asks what a feature does, the syntax waits until after an answer (`isSyntaxAfterAnswer`), so only
-// the title and doc titles are judged. A rejected reference is rewritten up to MAX_ATTEMPTS times.
+// track's hosts are dropped, and judges on two different models must both find that the title and
+// doc link titles, the only parts shown before an answer, do not reveal it. A rejected reference
+// is rewritten up to MAX_ATTEMPTS times in all.
 import type { Question } from '@syntactical/content-schema';
 
 import { checkSourceUrl } from '../../clients/checkSourceUrl.js';
@@ -34,16 +33,8 @@ export async function referenceQuestion(
             await checkReferenceLeak(question, reference, provider),
             await checkReferenceLeak(question, reference, secondProvider),
         ];
-        const isSyntaxAfterAnswer = verdicts.some(({ asksForDefinition }) => asksForDefinition);
-        const leaks = verdicts.filter((verdict) =>
-            isSyntaxAfterAnswer ? verdict.titleRevealsAnswer : verdict.revealsAnswer,
-        );
-        if (leaks.length === 0) {
-            return {
-                reference: { ...reference, ...(isSyntaxAfterAnswer ? { isSyntaxAfterAnswer } : {}) },
-                status: 'accepted',
-            };
-        }
+        const leaks = verdicts.filter(({ revealsAnswer }) => revealsAnswer);
+        if (leaks.length === 0) return { reference, status: 'accepted' };
         reasons.push(...leaks.map(({ reason }) => reason));
     }
     return { reasons, status: 'reveals-answer' };

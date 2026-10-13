@@ -8,7 +8,7 @@ import { readJsonIfPresent } from '../gapFill/readJsonIfPresent.js';
 
 import { REFERENCE_SCHEMA } from './REFERENCE_SCHEMA.js';
 
-const SCHEMA = z.record(z.string(), REFERENCE_SCHEMA.extend({ isSyntaxAfterAnswer: z.boolean().optional() }));
+const SCHEMA = z.record(z.string(), REFERENCE_SCHEMA);
 
 export async function readReferences(file: string): Promise<Map<string, StagedReference>> {
     const value = await readJsonIfPresent(file);

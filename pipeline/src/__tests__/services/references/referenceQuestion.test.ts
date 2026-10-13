@@ -1,6 +1,6 @@
 // referenceQuestion with scripted providers (no model): the writer never sees the answer or the
-// explanation, links off the track's hosts are dropped, and a reference either judge flags as
-// revealing the answer is rewritten once and then given up on.
+// explanation, links off the track's hosts are dropped, the leak judges see only the title and
+// link titles, and a reference either judge flags is rewritten once and then given up on.
 import type { Question } from '@syntactical/content-schema';
 import { describe, expect, it } from 'vitest';
 
@@ -27,26 +27,15 @@ const REFERENCE = {
     title: 'The || operator',
 };
 
-type Verdict = { asksForDefinition?: boolean; revealsAnswer?: boolean; titleRevealsAnswer?: boolean };
-
-// Writes REFERENCE and answers leak checks from `leaks`, one entry per call in order: a boolean is
-// `revealsAnswer` on an output question, an object sets each verdict field.
-function provider(leaks: (boolean | Verdict)[], requests: ModelRequest<unknown>[] = []): ModelProvider {
+// Writes REFERENCE and answers leak checks from `leaks`, one `revealsAnswer` per call in order.
+function provider(leaks: boolean[], requests: ModelRequest<unknown>[] = []): ModelProvider {
     return {
         async generate(request) {
             requests.push(request as ModelRequest<unknown>);
             if (request.promptVersion === 'write-reference-v1') {
                 return { model: 'fake', value: request.schema.parse(REFERENCE) };
             }
-            const next = leaks.shift() ?? false;
-            const verdict = typeof next === 'boolean' ? { revealsAnswer: next } : next;
-            const value = {
-                asksForDefinition: false,
-                reason: 'r',
-                revealsAnswer: false,
-                titleRevealsAnswer: false,
-                ...verdict,
-            };
+            const value = { reason: 'r', revealsAnswer: leaks.shift() ?? false };
             return { model: 'fake', value: request.schema.parse(value) };
         },
     };
@@ -66,6 +55,10 @@ describe('referenceQuestion', () => {
         const writePrompt = requests.find(({ promptVersion }) => promptVersion === 'write-reference-v1')?.prompt ?? '';
         expect(writePrompt).not.toContain('SECRET-EXPLANATION-41');
         expect(writePrompt).toContain('postgresql.org');
+        const leakPrompt =
+            requests.find(({ promptVersion }) => promptVersion === 'check-reference-leak-v3')?.prompt ?? '';
+        expect(leakPrompt).toContain('The || operator');
+        expect(leakPrompt).not.toContain('text1 || text2');
     });
 
     it('rewrites a reference the second judge flags, then accepts the rewrite', async () => {
@@ -84,24 +77,5 @@ describe('referenceQuestion', () => {
             secondProvider: provider([false, false]),
         });
         expect(outcome).toEqual({ reasons: ['r', 'r'], status: 'reveals-answer' });
-    });
-
-    it('holds the syntax back on a definition question and judges only its title and doc titles', async () => {
-        const outcome = await referenceQuestion(QUESTION, TRACK, {
-            provider: provider([{ asksForDefinition: true, revealsAnswer: true }]),
-            secondProvider: provider([{ revealsAnswer: true }]),
-        });
-        expect(outcome).toEqual({
-            reference: { ...REFERENCE, docs: [REFERENCE.docs[0]], isSyntaxAfterAnswer: true },
-            status: 'accepted',
-        });
-    });
-
-    it('rejects a definition question reference whose title gives the answer away', async () => {
-        const outcome = await referenceQuestion(QUESTION, TRACK, {
-            provider: provider([{ asksForDefinition: true }, { asksForDefinition: true }]),
-            secondProvider: provider([{ titleRevealsAnswer: true }, { titleRevealsAnswer: true }]),
-        });
-        expect(outcome.status).toBe('reveals-answer');
     });
 });
