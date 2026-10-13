@@ -17,6 +17,7 @@ const REFERENCE_ID_LENGTH = 64;
 const MAX_TOPICS = 20;
 const MAX_MISCONCEPTIONS = 40;
 const MAX_EVIDENCE_SOURCES = 3;
+const MAX_DOC_LINKS = 3;
 const SOURCE_URL_LENGTH = 2048;
 const FETCH_TIMEOUT_MS = 8000;
 
@@ -28,6 +29,7 @@ export const CONTENT_LIMITS = {
   longTextLength: LONG_TEXT_LENGTH,
   manifestBytes: MANIFEST_KILOBYTES * BYTES_PER_KILOBYTE,
   maxChoices: MAX_CHOICES,
+  maxDocLinks: MAX_DOC_LINKS,
   maxEvidenceSources: MAX_EVIDENCE_SOURCES,
   maxMisconceptions: MAX_MISCONCEPTIONS,
   maxQuestions: MAX_QUESTIONS_PER_BANK,

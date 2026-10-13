@@ -2,7 +2,7 @@
 
 This document lists every product area of Syntactical with the completion status of each feature, so a reader can see what ships today and what is still planned.
 
-Last updated: 2026-10-02
+Last updated: 2026-10-13
 
 ## Quiz
 
@@ -11,7 +11,7 @@ Last updated: 2026-10-02
 | Choosing a language and difficulty | Complete | The language step lists every language in the manifest; the difficulty step lists only that language's banks and disables a bank with no local copy while offline. |
 | Rounds | Complete | One shuffled pass through a bank; multiple-choice and true/false questions; progress bar; Next is unavailable until the question is answered. |
 | Explain | Complete | Appears after an incorrect answer and opens that question's query without advancing the round. |
-| Query drawer | Complete | Shows title, syntax, explanation, and tags; closes by its control, the backdrop, or the platform back gesture. |
+| Query drawer | Complete | Before an answer shows the title, syntax, and documentation links; after an answer adds the explanation and tags. Closes by its control, the backdrop, or the platform back gesture. |
 | Results and retry | Complete | Shows correct count, total, and percentage; Retry reshuffles and resets the round. |
 | Stats and streak | Complete | Lifetime stats persist in AsyncStorage under the key the earlier web build used, so existing stats carry over. |
 | Web keyboard navigation | Complete | Every binding in `KEY_BINDINGS` works on the web, with a hint bar; the hint bar is not rendered on native. |

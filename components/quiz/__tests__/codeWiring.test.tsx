@@ -43,7 +43,7 @@ async function renderBoolCard(code: string | undefined, grammar: Grammar) {
 }
 
 async function renderDrawer(syntax: string, grammar: Grammar) {
-    await render(<QueryDrawer isOpen query={{ ...baseQuery, syntax }} grammar={grammar} onClose={jest.fn()} />);
+    await render(<QueryDrawer isAnswered isOpen query={{ ...baseQuery, syntax }} grammar={grammar} onClose={jest.fn()} />);
 }
 
 const RENDERERS = [

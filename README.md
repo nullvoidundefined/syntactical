@@ -36,7 +36,7 @@ Questions are not compiled into the app logic. `content/manifest.json` lists eve
 
 Paid banks are not in this repository. They live in the private repository `nullvoidundefined/syntactical-content` at the same `<language>/<difficulty>.json` paths, reach the API image as `PAID_CONTENT_DIR`, and reach entitled owners only through `GET /v1/banks/:language/:difficulty`. They are never bundled and never on the static host: `npm run content:build` fails on a paid bank file under `content/`, and `npm run build` fails when the web export holds one (`scripts/assertNoPaidBanks.mjs`).
 
-Each question is either multiple choice or true/false, and carries a `query` (`title`, `syntax`, `explanation`, `tags`) that backs the query drawer:
+Each question is either multiple choice or true/false, and carries a `query` (`title`, `syntax`, `explanation`, `tags`, `docs`) that backs the query drawer. Before the learner answers, the drawer shows only the title, syntax, and `docs` links, so those must not give the answer away; the explanation and tags appear after an answer. `docs` is an optional list of up to three `{ "title", "url" }` links (https only) to official documentation:
 
 ```json
 {
@@ -46,7 +46,13 @@ Each question is either multiple choice or true/false, and carries a `query` (`t
   "code": "...",
   "choices": ["...", "...", "...", "..."],
   "answerIndex": 0,
-  "query": { "title": "...", "syntax": "...", "explanation": "...", "tags": ["..."] }
+  "query": {
+    "title": "...",
+    "syntax": "...",
+    "explanation": "...",
+    "tags": ["..."],
+    "docs": [{ "title": "...", "url": "https://..." }]
+  }
 }
 ```
 

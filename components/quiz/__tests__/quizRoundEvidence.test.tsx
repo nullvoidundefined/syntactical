@@ -38,6 +38,7 @@ async function openDrawer(question: Question) {
       onRetry={jest.fn()}
     />,
   );
+  await fireEvent.press(screen.getByText('True'));
   await fireEvent.press(screen.getByRole('button', { name: 'Query' }));
 }
 

@@ -248,6 +248,7 @@ export function QuizRound(props: QuizRoundProps) {
       <QueryDrawer
         evidenceSource={readEvidenceSource(currentQuestion)}
         chosenRationale={explainRationale}
+        isAnswered={isAnswered}
         isOpen={isQueryOpen}
         query={query}
         grammar={questionGrammar}

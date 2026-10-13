@@ -132,16 +132,17 @@ describe('web keyboard navigation in a round', () => {
   it('Q toggles the query drawer', () => {
     render(<RoundHarness question={mcQuestion} />);
     pressKey('q');
-    expect(screen.queryByText('Because')).not.toBeNull();
+    expect(screen.queryByText('Answer to see the full explanation.')).not.toBeNull();
     pressKey('Q');
-    expect(screen.queryByText('Because')).toBeNull();
+    expect(screen.queryByText('Answer to see the full explanation.')).toBeNull();
   });
 
   it('Escape closes an open drawer before it leaves the round', () => {
     render(<RoundHarness question={mcQuestion} />);
     pressKey('q');
+    expect(screen.queryByText('Answer to see the full explanation.')).not.toBeNull();
     pressKey('Escape');
-    expect(screen.queryByText('Because')).toBeNull();
+    expect(screen.queryByText('Answer to see the full explanation.')).toBeNull();
     expect(screen.queryByText('menu screen')).toBeNull();
     pressKey('Escape');
     expect(screen.queryByText('menu screen')).not.toBeNull();

@@ -158,11 +158,21 @@ describe('QuizRound', () => {
       expect(screen.getByText('You think the first one wins.')).toBeTruthy();
     });
 
-    it('shows only the query when the Query button is used before answering', async () => {
+    it('shows the reference without the explanation when the Query button is used before answering', async () => {
       await renderMcRound();
       await fireEvent.press(screen.getByRole('button', { name: 'Query' }));
+      expect(screen.getByText('Why')).toBeTruthy();
+      expect(screen.getByText('Answer to see the full explanation.')).toBeTruthy();
+      expect(screen.queryByText('Because')).toBeNull();
       expect(screen.queryByText('Why that answer is tempting')).toBeNull();
+    });
+
+    it('shows the explanation when the Query button is used after answering', async () => {
+      await renderMcRound();
+      await fireEvent.press(screen.getByText('Second'));
+      await fireEvent.press(screen.getByRole('button', { name: 'Query' }));
       expect(screen.getByText('Because')).toBeTruthy();
+      expect(screen.queryByText('Answer to see the full explanation.')).toBeNull();
     });
 
     it('shows only the query when the Query button is used after a wrong answer', async () => {

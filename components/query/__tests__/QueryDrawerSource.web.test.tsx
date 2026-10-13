@@ -1,5 +1,5 @@
-// On the web the judged card's source renders as a real link that opens a new tab without
-// handing the opener over, and the drawer stays free of axe violations.
+// On the web the judged card's source and the query's doc links render as real links that open a
+// new tab without handing the opener over, and the drawer stays free of axe violations.
 import { render, screen } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 
@@ -18,7 +18,7 @@ const SOURCE = {
 
 describe('QueryDrawer source link on the web', () => {
   it('renders "Source: <title>" as a link with target _blank and rel noopener noreferrer', () => {
-    render(<QueryDrawer isOpen query={query} grammar="plain" evidenceSource={SOURCE} onClose={jest.fn()} />);
+    render(<QueryDrawer isAnswered isOpen query={query} grammar="plain" evidenceSource={SOURCE} onClose={jest.fn()} />);
     const link = screen.getByRole('link', { name: 'Source: SQL Injection Prevention Cheat Sheet' });
     expect(link.tagName).toBe('A');
     expect(link.getAttribute('href')).toBe(SOURCE.url);
@@ -27,13 +27,23 @@ describe('QueryDrawer source link on the web', () => {
   });
 
   it('renders no link without a source', () => {
-    render(<QueryDrawer isOpen query={query} grammar="plain" onClose={jest.fn()} />);
+    render(<QueryDrawer isAnswered isOpen query={query} grammar="plain" onClose={jest.fn()} />);
     expect(screen.queryByRole('link')).toBeNull();
   });
 
   it('has no axe violations with the link', async () => {
-    render(<QueryDrawer isOpen query={query} grammar="plain" evidenceSource={SOURCE} onClose={jest.fn()} />);
+    render(<QueryDrawer isAnswered isOpen query={query} grammar="plain" evidenceSource={SOURCE} onClose={jest.fn()} />);
     expect(screen.getByRole('link', { name: /^Source:/ })).toBeTruthy();
+    expect(await axe(document.body, { rules: { 'color-contrast': { enabled: false } } })).toHaveNoViolations();
+  });
+
+  it('renders doc links before an answer as new-tab links, with no axe violations', async () => {
+    const docs = [{ title: 'PREPARE', url: 'https://www.postgresql.org/docs/current/sql-prepare.html' }];
+    render(<QueryDrawer isAnswered={false} isOpen query={{ ...query, docs }} grammar="plain" onClose={jest.fn()} />);
+    const link = screen.getByRole('link', { name: 'PREPARE' });
+    expect(link.getAttribute('href')).toBe(docs[0].url);
+    expect(link.getAttribute('target')).toBe('_blank');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
     expect(await axe(document.body, { rules: { 'color-contrast': { enabled: false } } })).toHaveNoViolations();
   });
 });

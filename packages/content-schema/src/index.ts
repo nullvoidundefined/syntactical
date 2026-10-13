@@ -22,6 +22,7 @@ export type { BankEntry } from './types/BankEntry.js';
 export type { CachedBank } from './types/CachedBank.js';
 export type { Choice } from './types/Choice.js';
 export type { Criterion } from './types/Criterion.js';
+export type { DocLink } from './types/DocLink.js';
 export type { LanguageEntry } from './types/LanguageEntry.js';
 export type { Manifest } from './types/Manifest.js';
 export type { Provenance } from './types/Provenance.js';
