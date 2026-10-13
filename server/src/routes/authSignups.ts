@@ -17,12 +17,12 @@ import type { z } from 'zod';
 import { withTransaction } from '../clients/withTransaction.js';
 import { AUTH } from '../constants/auth.js';
 import { HTTP } from '../constants/http.js';
-import { createErrorResponse, ERROR_CODES } from '../errors.js';
-import type { ErrorCode } from '../errors.js';
+import { ERROR_CODES, sendError } from '../errors.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
+import { keyOfEmail, keyOfIp } from '../middleware/rateLimitKeys.js';
+import { requestLog } from '../middleware/requestLogger.js';
 import { authSchemas } from '../schemas/authSchemas.js';
 import { checkPasswordBreach } from '../services/checkPasswordBreach.js';
-import { checkPasswordPolicy } from '../services/checkPasswordPolicy.js';
 import { createUserWithPassword } from '../services/createUserWithPassword.js';
 import { insertSession } from '../services/insertSession.js';
 import { issueOneTimeCode } from '../services/issueOneTimeCode.js';
@@ -30,6 +30,7 @@ import { hashPassword } from '../services/passwordHash.js';
 import { HashSlotsBusy } from '../services/passwordHashSlots.js';
 import { verifyOneTimeCode } from '../services/verifyOneTimeCode.js';
 
+import { acceptPasswordPolicy } from './acceptPasswordPolicy.js';
 import type { SignUpAuthDeps } from './authDeps.js';
 import { sendSessionResponse } from './sendSessionResponse.js';
 
@@ -42,19 +43,8 @@ const {
   STATUS: { ACCEPTED, BAD_REQUEST, SERVICE_UNAVAILABLE },
 } = HTTP;
 
-const POLICY_MESSAGES: Record<string, string> = {
-  [ERROR_CODES.AUTH.PASSWORD_TOO_LONG]: 'Password is too long',
-  [ERROR_CODES.AUTH.PASSWORD_TOO_SHORT]: 'Password is too short',
-  [ERROR_CODES.INPUT.INVALID_BODY]: 'Invalid request body',
-};
-
 // The parsed body, kept whole in res.locals. On the start route code and timezone are absent.
 type SignUpBody = z.infer<typeof authSchemas.startSignUp> & Partial<z.infer<typeof authSchemas.verifySignUp>>;
-
-function sendError(res: Response, status: number, code: ErrorCode, message: string): void {
-  const { requestId } = res.locals as { requestId: string };
-  res.status(status).json(createErrorResponse(code, message, requestId));
-}
 
 function sendInvalidCode(res: Response): void {
   sendError(res, BAD_REQUEST, ERROR_CODES.AUTH.INVALID_CODE, 'Invalid or expired code');
@@ -87,8 +77,6 @@ function createAuthSignupsRouter(deps: SignUpAuthDeps, logger: Logger): Router {
   } = deps;
   const router = Router();
   const limits = { database, keySecret: rateLimitKeySecret, now, windowMs: WINDOW_MS };
-  const keyOfEmail = (_req: Request, res: Response): string => String(res.locals.email);
-  const keyOfIp = (req: Request): string => req.ip ?? 'unknown';
   const issuePerIp = createRateLimit({ ...limits, keyOf: keyOfIp, limit: ISSUE_PER_IP, scope: ISSUE_IP });
   const issuePerEmail = createRateLimit({ ...limits, keyOf: keyOfEmail, limit: ISSUE_PER_EMAIL, scope: ISSUE_EMAIL });
   const verifyPerIp = createRateLimit({ ...limits, keyOf: keyOfIp, limit: VERIFY_PER_IP, scope: VERIFY_IP });
@@ -99,23 +87,12 @@ function createAuthSignupsRouter(deps: SignUpAuthDeps, logger: Logger): Router {
     scope: VERIFY_EMAIL,
   });
 
-  function readLogger(res: Response): Logger {
-    return (res.locals as { logger?: Logger }).logger ?? logger;
-  }
-
-  // Resolves the NFKC form, or sends the policy error and resolves undefined.
-  function acceptPolicy(res: Response, raw: string): string | undefined {
-    const policy = checkPasswordPolicy(raw);
-    if (!policy.isOk) {
-      sendError(res, BAD_REQUEST, policy.code, POLICY_MESSAGES[policy.code] ?? 'Invalid password');
-      return undefined;
-    }
-    return policy.normalized;
-  }
-
   // Sends the breach error and resolves false when the secret is known to be breached.
   async function acceptBreachCheck(res: Response, normalized: string): Promise<boolean> {
-    const status = await checkPasswordBreach(normalized, { client: passwordBreachClient, logger: readLogger(res) });
+    const status = await checkPasswordBreach(normalized, {
+      client: passwordBreachClient,
+      logger: requestLog(res, logger),
+    });
     if (status === 'breached') {
       sendError(res, BAD_REQUEST, ERROR_CODES.AUTH.PASSWORD_BREACHED, 'Password appears in a known data breach');
       return false;
@@ -135,7 +112,7 @@ function createAuthSignupsRouter(deps: SignUpAuthDeps, logger: Logger): Router {
 
   router.post('/signups', issuePerIp, createValidator(authSchemas.startSignUp), issuePerEmail, async (_req, res) => {
     const { email, ...secret } = (res.locals as { signUp: SignUpBody }).signUp;
-    const normalized = acceptPolicy(res, secret.password);
+    const normalized = acceptPasswordPolicy(res, secret.password);
     if (normalized === undefined || !(await acceptBreachCheck(res, normalized))) {
       return;
     }
@@ -147,7 +124,7 @@ function createAuthSignupsRouter(deps: SignUpAuthDeps, logger: Logger): Router {
       sendSignInCode: (to, code) => emailClient.sendSignInCode(to, code),
     });
     if (!isSent) {
-      readLogger(res).warn({ event: 'sign_in_code_unsent' }, 'sign-in code not sent');
+      requestLog(res, logger).warn({ event: 'sign_in_code_unsent' }, 'sign-in code not sent');
       sendError(
         res,
         SERVICE_UNAVAILABLE,
@@ -166,7 +143,7 @@ function createAuthSignupsRouter(deps: SignUpAuthDeps, logger: Logger): Router {
     verifyPerEmail,
     async (req, res) => {
       const { code = '', email, timezone, ...secret } = (res.locals as { signUp: SignUpBody }).signUp;
-      const normalized = acceptPolicy(res, secret.password);
+      const normalized = acceptPasswordPolicy(res, secret.password);
       if (normalized === undefined) {
         return;
       }

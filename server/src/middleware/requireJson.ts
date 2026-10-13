@@ -5,7 +5,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
 import { HTTP } from '../constants/http.js';
-import { createErrorResponse, ERROR_CODES } from '../errors.js';
+import { ERROR_CODES, sendError } from '../errors.js';
 
 import { isJsonMediaType } from './isJsonMediaType.js';
 
@@ -29,10 +29,12 @@ function requireJson(req: Request, res: Response, next: NextFunction): void {
     next();
     return;
   }
-  const { requestId } = res.locals as { requestId: string };
-  res
-    .status(HTTP.STATUS.UNSUPPORTED_MEDIA_TYPE)
-    .json(createErrorResponse(ERROR_CODES.INPUT.UNSUPPORTED_MEDIA_TYPE, 'Content-Type must be application/json', requestId));
+  sendError(
+    res,
+    HTTP.STATUS.UNSUPPORTED_MEDIA_TYPE,
+    ERROR_CODES.INPUT.UNSUPPORTED_MEDIA_TYPE,
+    'Content-Type must be application/json',
+  );
 }
 
 export { requireJson };

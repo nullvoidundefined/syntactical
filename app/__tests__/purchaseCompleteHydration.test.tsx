@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { Slot } from 'expo-router';
 import { act, renderRouter, screen } from 'expo-router/testing-library';
 
+import { createQueryClient } from '../../config/queryClient';
 import { AUTH_STORAGE_KEY } from '../../constants/appConfig';
 import { AuthProvider } from '../../state/AuthProvider';
 import { installRoutedFetch, type RouteReply } from '../../state/__tests__/authTestSupport';
@@ -36,9 +38,11 @@ const POLL_INTERVAL_MS = 2000;
 
 function AuthLayout() {
   return (
-    <AuthProvider>
-      <Slot />
-    </AuthProvider>
+    <QueryClientProvider client={createQueryClient()}>
+      <AuthProvider>
+        <Slot />
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

@@ -29,7 +29,6 @@ docker run --detach --name "$name" --label throwaway=syntactical-image-check --n
   -e NODE_ENV=development \
   -e DATABASE_URL \
   -e ALLOWED_ORIGINS=https://syntactical.dev \
-  -e PUBLIC_BASE_URL=https://api.syntactical.dev \
   -e 'EMAIL_FROM=Syntactical <sign-in@syntactical.dev>' \
   -e "RESEND_API_KEY=$(secret)" \
   -e "RATE_LIMIT_KEY_SECRET=$(secret)" \

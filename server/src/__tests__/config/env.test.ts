@@ -26,7 +26,6 @@ function buildValidSource(): NodeJS.ProcessEnv {
     REVENUECAT_WEBHOOK_AUTH: randomBytes(RANDOM_SECRET_BYTES).toString('hex'),
     RATE_LIMIT_KEY_SECRET: randomBytes(RANDOM_SECRET_BYTES).toString('hex'),
     ALLOWED_ORIGINS: 'https://syntactical.dev',
-    PUBLIC_BASE_URL: 'https://api.syntactical.dev',
     RESEND_API_KEY: randomBytes(RANDOM_SECRET_BYTES).toString('hex'),
     EMAIL_FROM: 'Syntactical <sign-in@syntactical.dev>',
     PAID_CONTENT_DIR: '/srv/syntactical-content',

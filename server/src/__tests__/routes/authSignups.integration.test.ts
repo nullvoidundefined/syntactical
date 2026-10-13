@@ -10,7 +10,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, inject, it } from 'vitest';
 
 import type { Database } from '../../clients/database.js';
-import { createFakePasswordBreachClient } from '../../clients/fakePasswordBreachClient.js';
+import { createFakePasswordBreachClient } from '../../testing/fakePasswordBreachClient.js';
 import { createLogger } from '../../clients/logger.js';
 import { withTransaction } from '../../clients/withTransaction.js';
 import { AUTH } from '../../constants/auth.js';

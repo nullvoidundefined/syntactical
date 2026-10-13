@@ -6,8 +6,9 @@ import { Router } from 'express';
 
 import { HTTP } from '../constants/http.js';
 import { SYNC } from '../constants/sync.js';
-import { createErrorResponse, ERROR_CODES } from '../errors.js';
+import { ERROR_CODES, sendError } from '../errors.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
+import { keyOfUser } from '../middleware/rateLimitKeys.js';
 import { createRequireSession } from '../middleware/requireSession.js';
 import { meSchemas } from '../schemas/meSchemas.js';
 import { readProfile } from '../services/readProfile.js';
@@ -25,7 +26,7 @@ function createMeRouter(deps: ResolvedSyncDeps): Router {
   const requireSession = createRequireSession({ database, now });
   const perUser = createRateLimit({
     database,
-    keyOf: (_req, res) => String((res.locals.session as { userId: string }).userId),
+    keyOf: keyOfUser,
     keySecret: rateLimitKeySecret,
     limit: SYNC.RATE_LIMIT.PROFILE_UPDATE_PER_USER,
     now,
@@ -34,25 +35,25 @@ function createMeRouter(deps: ResolvedSyncDeps): Router {
   });
 
   router.get('/me', requireSession, async (_req, res) => {
-    const { requestId, session } = res.locals as { requestId: string; session: { userId: string } };
+    const { session } = res.locals as { session: { userId: string } };
     const profile = await readProfile(database, session.userId, now());
     if (!profile) {
-      res.status(UNAUTHORIZED).json(createErrorResponse(ERROR_CODES.AUTH.SESSION_REQUIRED, 'Sign-in required', requestId));
+      sendError(res, UNAUTHORIZED, ERROR_CODES.AUTH.SESSION_REQUIRED, 'Sign-in required');
       return;
     }
     res.status(OK).json({ data: profile });
   });
 
   router.patch('/me', requireSession, perUser, async (req, res) => {
-    const { requestId, session } = res.locals as { requestId: string; session: { userId: string } };
+    const { session } = res.locals as { session: { userId: string } };
     const { data, success } = meSchemas.update.safeParse(req.body);
     if (!success) {
-      res.status(BAD_REQUEST).json(createErrorResponse(ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body', requestId));
+      sendError(res, BAD_REQUEST, ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body');
       return;
     }
     const result = await updateProfile(database, session.userId, data, now());
     if (result.kind !== 'updated') {
-      res.status(UNAUTHORIZED).json(createErrorResponse(ERROR_CODES.AUTH.SESSION_REQUIRED, 'Sign-in required', requestId));
+      sendError(res, UNAUTHORIZED, ERROR_CODES.AUTH.SESSION_REQUIRED, 'Sign-in required');
       return;
     }
     const { profile } = result;

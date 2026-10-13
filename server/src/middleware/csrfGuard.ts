@@ -10,7 +10,7 @@ import type { NextFunction, Request, Response } from 'express';
 
 import { AUTH } from '../constants/auth.js';
 import { HTTP } from '../constants/http.js';
-import { createErrorResponse, ERROR_CODES } from '../errors.js';
+import { ERROR_CODES, sendError } from '../errors.js';
 
 const STATE_CHANGING_METHODS = new Set(['DELETE', 'PATCH', 'POST', 'PUT']);
 const WEBHOOK_PATH_PREFIX = '/v1/webhooks/';
@@ -37,10 +37,7 @@ function createCsrfGuard(allowedOrigins: string[]) {
     const { origin } = headers;
     const isOriginAllowed = origin === undefined || allowed.has(origin);
     if (req.get('X-Requested-With') !== REQUIRED_VALUE || !isOriginAllowed) {
-      const { requestId } = res.locals as { requestId: string };
-      res
-        .status(HTTP.STATUS.FORBIDDEN)
-        .json(createErrorResponse(ERROR_CODES.CSRF.HEADER_MISSING, 'Cross-site request refused', requestId));
+      sendError(res, HTTP.STATUS.FORBIDDEN, ERROR_CODES.CSRF.HEADER_MISSING, 'Cross-site request refused');
       return;
     }
     next();

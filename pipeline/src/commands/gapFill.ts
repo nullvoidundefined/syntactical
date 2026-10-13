@@ -7,10 +7,7 @@
 //
 // Free-bank output goes under the public `pipelineDir`. Paid-bank output goes under
 // `contentRoot` (the private content repo); nothing paid is ever written under `pipelineDir`.
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { type Question, validateManifest } from '@syntactical/content-schema';
 
 import type { FillBankResult } from '../types/FillBankResult.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
@@ -19,7 +16,8 @@ import type { PipelineReport } from '../types/PipelineReport.js';
 import type { runOracle } from '../clients/dockerRunner.js';
 import { ORACLE_LANGUAGES } from '../services/ORACLE_LANGUAGES.js';
 import { TRACK_RUNNERS } from '../services/TRACK_RUNNERS.js';
-import { assertContentRootUsable } from '../services/classify/assertContentRootUsable.js';
+import { loadCommandManifest } from '../services/content/loadCommandManifest.js';
+import { readBankQuestions } from '../services/content/readBankQuestions.js';
 import { createProviderFailureStreak } from '../services/gapFill/createProviderFailureStreak.js';
 import { fillBank } from '../services/gapFill/fillBank.js';
 import { pickTopics } from '../services/classify/pickTopics.js';
@@ -42,10 +40,6 @@ export interface GapFillOptions {
 }
 
 const STAGE = 'gap-fill';
-
-async function readJson(path: string): Promise<unknown> {
-    return JSON.parse(await readFile(path, 'utf8'));
-}
 
 function buildReport(
     previous: PipelineReport | null,
@@ -73,18 +67,7 @@ export async function gapFill(options: GapFillOptions): Promise<PipelineReport> 
     const { contentDir, contentRoot, newRunId, pipelineDir, provider, run } = options;
     const log = (line: string): void => options.log(sanitizeLogText(line));
     const startedAt = options.now();
-    // The manifest is untrusted: language ids, difficulty keys, and bank paths are joined
-    // into file paths below, so nothing is read or written before it validates.
-    const checked = validateManifest(await readJson(join(contentDir, 'manifest.json')));
-    if ('rule' in checked) {
-        throw new Error(`Manifest rejected: ${sanitizeLogText(checked.rule)}`);
-    }
-    const { manifest } = checked;
-    const { languages } = manifest;
-    const hasPaidBanks = languages.some(({ banks }) => Object.values(banks).some(({ access }) => access !== 'free'));
-    if (hasPaidBanks) {
-        await assertContentRootUsable(contentRoot, pipelineDir, contentDir);
-    }
+    const { languages } = await loadCommandManifest({ contentDir, contentRoot, pipelineDir });
     const fallbackTopics = await readFallbackTopics(join(pipelineDir, 'topics.json'));
     // Reports hold ids and verdicts only; every command shares one report chain in the pipeline dir.
     const reportsDir = join(pipelineDir, 'reports');
@@ -111,9 +94,7 @@ export async function gapFill(options: GapFillOptions): Promise<PipelineReport> 
                     log(`skipping bank ${bankKey}: no oracle runner or topic list for language ${languageId}`);
                     continue;
                 }
-                const bank = (await readJson(resolveBankFile(contentDir, contentRoot, { access, path }))) as {
-                    questions: Question[];
-                };
+                const questions = await readBankQuestions(resolveBankFile(contentDir, contentRoot, { access, path }));
                 const result = await fillBank({
                     bankKey,
                     difficulty,
@@ -124,7 +105,7 @@ export async function gapFill(options: GapFillOptions): Promise<PipelineReport> 
                     // Free output stays in the public tree; paid output goes to the private content root.
                     outRoot: resolveBankOutputRoot(pipelineDir, contentRoot, { access }),
                     provider,
-                    questions: bank.questions,
+                    questions,
                     topics,
                     ...(run === undefined ? {} : { run }),
                 });

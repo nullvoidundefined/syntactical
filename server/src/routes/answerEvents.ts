@@ -10,8 +10,9 @@ import type { Request, Response } from 'express';
 
 import { HTTP } from '../constants/http.js';
 import { SYNC } from '../constants/sync.js';
-import { createErrorResponse, ERROR_CODES } from '../errors.js';
+import { createErrorResponse, ERROR_CODES, sendError } from '../errors.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
+import { keyOfUser } from '../middleware/rateLimitKeys.js';
 import { createRequireSession } from '../middleware/requireSession.js';
 import { answerEventSchemas } from '../schemas/answerEventSchemas.js';
 import { ingestAnswerEvents } from '../services/ingestAnswerEvents.js';
@@ -34,7 +35,7 @@ function createAnswerEventsRouter(deps: ResolvedSyncDeps): Router {
   const requireSession = createRequireSession({ database, now });
   const perUser = createRateLimit({
     database,
-    keyOf: (_req, res) => String((res.locals.session as { userId: string }).userId),
+    keyOf: keyOfUser,
     keySecret: rateLimitKeySecret,
     limit: SYNC.RATE_LIMIT.UPLOAD_PER_USER,
     now,
@@ -44,7 +45,7 @@ function createAnswerEventsRouter(deps: ResolvedSyncDeps): Router {
 
   const downloadPerUser = createRateLimit({
     database,
-    keyOf: (_req, res) => String((res.locals.session as { userId: string }).userId),
+    keyOf: keyOfUser,
     keySecret: rateLimitKeySecret,
     limit: SYNC.RATE_LIMIT.DOWNLOAD_PER_USER,
     now,
@@ -53,62 +54,49 @@ function createAnswerEventsRouter(deps: ResolvedSyncDeps): Router {
   });
 
   router.get('/answer-events', requireSession, downloadPerUser, async (req: Request, res: Response) => {
-    const { requestId, session } = res.locals as { requestId: string; session: { userId: string } };
+    const { session } = res.locals as { session: { userId: string } };
     const parsed = answerEventSchemas.download.safeParse(req.query);
     if (!parsed.success) {
-      res
-        .status(BAD_REQUEST)
-        .json(createErrorResponse(ERROR_CODES.INPUT.INVALID_QUERY, 'Invalid query', requestId));
+      sendError(res, BAD_REQUEST, ERROR_CODES.INPUT.INVALID_QUERY, 'Invalid query');
       return;
     }
     res.status(OK).json({ data: await listAnswerEvents(database, session.userId, parsed.data.after) });
   });
 
-  router.post('/answer-events', requireSession,
+  router.post(
+    '/answer-events',
+    requireSession,
     perUser,
     express.json({ limit: SYNC.BODY_LIMIT }),
     async (req: Request, res: Response) => {
-    const { requestId, session } = res.locals as { requestId: string; session: { userId: string } };
-    if (isOverBatchLimit(req.body)) {
-      res
-        .status(PAYLOAD_TOO_LARGE)
-        .json(createErrorResponse(ERROR_CODES.INPUT.PAYLOAD_TOO_LARGE, 'Too many events in one batch', requestId));
-      return;
-    }
-    const parsed = answerEventSchemas.upload.safeParse(req.body);
-    if (!parsed.success) {
-      res
-        .status(BAD_REQUEST)
-        .json(createErrorResponse(ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body', requestId));
-      return;
-    }
-    const result = await ingestAnswerEvents(
-      database,
-      answerKey,
-      session.userId,
-      parsed.data.events,
-      now(),
-    );
-    if (result.kind === 'stored') {
-      const { totals } = result;
-      res.status(OK).json({ data: totals });
-      return;
-    }
-    if (result.kind === 'event-cap-reached') {
-      res
-        .status(UNPROCESSABLE_ENTITY)
-        .json(createErrorResponse(ERROR_CODES.SYNC.EVENT_CAP_REACHED, 'Stored event limit reached', requestId));
-      return;
-    }
-    const { eventIds, kind } = result;
-    const { code, message } =
-      kind === 'invalid-events'
-        ? { code: ERROR_CODES.SYNC.INVALID_EVENTS, message: 'Events do not match the answer key' }
-        : { code: ERROR_CODES.SYNC.TIMESTAMP_OUT_OF_RANGE, message: 'Event timestamps out of range' };
-    res
-      .status(UNPROCESSABLE_ENTITY)
-      .json(createErrorResponse(code, message, requestId, { eventIds }));
-  });
+      const { requestId, session } = res.locals as { requestId: string; session: { userId: string } };
+      if (isOverBatchLimit(req.body)) {
+        sendError(res, PAYLOAD_TOO_LARGE, ERROR_CODES.INPUT.PAYLOAD_TOO_LARGE, 'Too many events in one batch');
+        return;
+      }
+      const parsed = answerEventSchemas.upload.safeParse(req.body);
+      if (!parsed.success) {
+        sendError(res, BAD_REQUEST, ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body');
+        return;
+      }
+      const result = await ingestAnswerEvents(database, answerKey, session.userId, parsed.data.events, now());
+      if (result.kind === 'stored') {
+        const { totals } = result;
+        res.status(OK).json({ data: totals });
+        return;
+      }
+      if (result.kind === 'event-cap-reached') {
+        sendError(res, UNPROCESSABLE_ENTITY, ERROR_CODES.SYNC.EVENT_CAP_REACHED, 'Stored event limit reached');
+        return;
+      }
+      const { eventIds, kind } = result;
+      const { code, message } =
+        kind === 'invalid-events'
+          ? { code: ERROR_CODES.SYNC.INVALID_EVENTS, message: 'Events do not match the answer key' }
+          : { code: ERROR_CODES.SYNC.TIMESTAMP_OUT_OF_RANGE, message: 'Event timestamps out of range' };
+      res.status(UNPROCESSABLE_ENTITY).json(createErrorResponse(code, message, requestId, { eventIds }));
+    },
+  );
 
   return router;
 }
