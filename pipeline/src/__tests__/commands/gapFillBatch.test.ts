@@ -350,6 +350,29 @@ describe('gapFill batch generation', () => {
             await expect(completion).rejects.toThrow(/consecutive/);
         });
 
+        it('includes the terminating bank generated and failed counts in the partial report after five consecutive dropped batches', async () => {
+            await seed({ topics: ['strings', 'lists', 'loops', 'functions', 'classes', 'dicts', 'sets'] });
+            const provider = buildProvider((call) => {
+                if (call.n === 1) return validCards(call.count, 'x');
+                throw new ProviderTransientError('model-timeout', 'timed out');
+            });
+
+            await expect(run(provider)).rejects.toThrow(/consecutive/);
+            expect(provider.calls).toHaveLength(6);
+            const staged = await readJson<{ questions: { topic: string }[] }>(
+                join(outRoot, `generated/${id}/easy.json`),
+            );
+            expect(staged.questions).toHaveLength(TARGET);
+            expect(staged.questions.every(({ topic }) => topic === 'strings')).toBe(true);
+            expect(await readJson(join(pipelineDir, 'reports/latest.json'))).toMatchObject({
+                counts: {
+                    'gap-fill-failed': 5 * Math.min(10, TARGET),
+                    'gap-fill-generated': TARGET,
+                },
+                stage: 'gap-fill',
+            });
+        });
+
         it('resets consecutive failures after a successful batch between two streaks of four failures', async () => {
             await seed({
                 topics: ['strings', 'lists', 'loops', 'functions', 'classes', 'dicts', 'sets', 'tuples', 'files'],
