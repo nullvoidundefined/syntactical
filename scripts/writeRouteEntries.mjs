@@ -2,10 +2,11 @@
 // renders the app. Writing a copy of index.html at <route>/index.html for
 // every known route makes those paths return 200. Unknown paths still fall
 // through to 404.html and the app's not-found screen.
-import { copyFile, mkdir, readdir, readFile } from 'node:fs/promises';
+import { promises, realpathSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+
+const { copyFile, mkdir, readdir, readFile } = promises;
 
 const SKIPPED_NAMES = new Set(['_layout', '+not-found', '__tests__']);
 const SCREEN_EXTENSION = /\.(tsx|ts|jsx|js)$/;
