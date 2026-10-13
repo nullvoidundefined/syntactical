@@ -26,8 +26,8 @@ One line per domain noun used in this codebase's names (files, functions, variab
 - bundled bank: the copy of a free bank shipped inside the app build (`services/content/bundledBanks.generated.ts`), used when no cached bank exists. Chosen over `default bank`, `seed`.
 - cached bank: the last verified bank downloaded at runtime and stored on the device with its bank hash (`services/content/`). Chosen over `stored bank`, `local bank`.
 - content base URL: the absolute URL the manifest and free banks are fetched from, `extra.contentBaseUrl` in `app.config.ts`. Chosen over `api url`, because paid banks come from the API base URL, a separate setting.
-- bank access: `bankEntry.access`: `'free'` (easy banks, static host, bundled) or `'paid'` (medium and hard banks, served by `GET /v1/banks/:language/:difficulty` after an entitlement check). Chosen over `tier` (forbidden above) and `plan`.
-- product id: `bankEntry.productId`, the id of a paid bank's product, `syntactical.<language>.<difficulty>`, shared by the App Store, Play, and Web Billing through RevenueCat. Chosen over `sku`, `price id`.
+- bank access: `bankEntry.access`: `'free'` (easy banks, static host, bundled) or `'paid'` (medium and hard banks, served by `GET /v1/banks/:language/:difficulty` after an entitlement check; `packages/content-schema/src/types/BankEntry.ts`). Chosen over `tier` (forbidden above) and `plan`.
+- product id: `bankEntry.productId`, the id of a paid bank's product, `syntactical.<language>.<difficulty>`, shared by the App Store, Play, and Web Billing through RevenueCat (`packages/content-schema/src/types/BankEntry.ts`, `server/src/types/PaidBank.ts`). Chosen over `sku`, `price id`.
 - download indicator: the status line shown while a bank transfers (`components/layout/DownloadIndicator.tsx`). Chosen over `spinner`, `loader`.
 
 ### Play
@@ -43,7 +43,7 @@ One line per domain noun used in this codebase's names (files, functions, variab
 
 - stats: the device's stored learner record (`Stats`, `services/stats/types/Stats.ts`) under `STORAGE_KEY` (`syntactical.stats.v1`): totals, tracks, the answer streak, the goal history, and the answer event log; schema version 2, migrated from v1 by `services/stats/migrateStatsV1.ts`. Chosen over `progress` as the storage name, because the key is already shipped.
 - track: the stats record for one language and difficulty pair, `stats.tracks[<language>:<difficulty>]` (`services/stats/types/LanguageDifficultyStats.ts`). Chosen over `course`, `path`; never a synonym for language or difficulty.
-- answer streak: consecutive correct answers, reset by a wrong answer (`stats.answerStreak`). Chosen over plain `streak`, which the day streak makes ambiguous.
+- answer streak: consecutive correct answers, reset by a wrong answer (`stats.answerStreak`, `services/stats/types/Stats.ts`). Chosen over plain `streak`, which the day streak makes ambiguous.
 - day streak: consecutive calendar days, in the user's timezone, on which the daily goal was met (`packages/progress/src/computeDayStreak.ts`). Chosen over plain `streak`, `daily streak`.
 - answer event: one answered question, recorded append-only with a client-generated UUID `eventId`, `questionId`, `bankKey`, `choiceIndex`, `isCorrect`, `answeredAt`, and `roundKind`; the unit of sync (`packages/progress/src/types/AnswerEvent.ts`, `server/src/routes/answerEvents.ts`). Chosen over `attempt`, `response`.
 - XP: points per correct answer scaled by difficulty, plus a bonus for a correct due review (`packages/progress/src/computeXp.ts`). Chosen over `points`, `score`.
@@ -57,11 +57,11 @@ One line per domain noun used in this codebase's names (files, functions, variab
 - session: a sign-in session only: an opaque token whose SHA-256 is stored in `sessions`, carried in the `syntactical_session` cookie on the web or an `Authorization: Bearer` header on native (`server/src/routes/authSessions.ts`). Reserved so it never names a quiz pass.
 - one-time code: the 6-digit sign-in code sent by email, stored only as a SHA-256 hash, single use (`one_time_codes` table, `server/src/routes/authCodes.ts`). Chosen over `OTP`, `magic code`, `PIN`.
 - password: the optional secret a user may set beside the email code; never stored, logged, or kept on the device (`server/src/routes/authPasswordSessions.ts`, `authSignups.ts`, `mePassword.ts`). Chosen over `passphrase`, `PIN`.
-- password hash: `users.password_hash`, a PHC-format scrypt string. Chosen over `password digest`, `credential`.
-- password policy: the length rule plus the breach check, applied at sign-up and at every password write, never at sign-in. Chosen over `password strength`.
-- breach check: the Have I Been Pwned range lookup of a password's SHA-1 prefix, behind an interface (`server/src/`). Chosen over `pwned check`, `HIBP check`.
-- sign-up: creating an account with an email and a password, finished by a one-time code (`POST /v1/signups`). Chosen over `register`.
-- auth method: `sessions.auth_method`, how a session was created: `'code'` or `'password'`. Chosen over `login type`, `provider`.
+- password hash: `users.password_hash`, a PHC-format scrypt string (`server/src/types/PasswordHashParams.ts`, `server/src/constants/auth.ts`). Chosen over `password digest`, `credential`.
+- password policy: the length rule plus the breach check, applied at sign-up and at every password write, never at sign-in (`server/src/services/checkPasswordPolicy.ts`). Chosen over `password strength`.
+- breach check: the Have I Been Pwned range lookup of a password's SHA-1 prefix, behind an interface (`server/src/clients/passwordBreachClient.ts`). Chosen over `pwned check`, `HIBP check`.
+- sign-up: creating an account with an email and a password, finished by a one-time code (`POST /v1/signups`, `server/src/routes/authSignups.ts`). Chosen over `register`.
+- auth method: `sessions.auth_method`, how a session was created: `'code'` or `'password'` (`server/src/services/insertSession.ts`). Chosen over `login type`, `provider`.
 - fresh code sign-in: a session whose auth method is `'code'` and whose `created_at` is at most 10 minutes old; the only way to set a password without the current one (`server/src/routes/mePassword.ts`, `server/src/services/isFreshCodeSession.ts`). Chosen over `step-up`, `sudo mode`.
 - entitlement: the right of one user to one paid bank, whichever platform it was bought on (`entitlements` table; `server/src/routes/banks.ts`). Chosen over `purchase` (the event) and `license`.
 - purchase event: one RevenueCat webhook delivery, keyed by RevenueCat's event id (`purchase_events` table, `server/src/routes/revenueCatWebhook.ts`). Chosen over `transaction`, `order`.

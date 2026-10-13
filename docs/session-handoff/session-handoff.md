@@ -6,12 +6,22 @@ Updated 2026-10-14, after the engineering audit cleanup slices. Confirm with `gi
 
 - Web: https://syntactical.dev/ (GitHub Pages, `.github/workflows/deploy.yml`, deploys on every push to `main`).
 - API: Railway `staging` and `production`, Postgres on Neon (`server/DEPLOY.md`, "Live environments"). Both run with `ALLOW_STUBBED_INTEGRATIONS=true` and stubbed Resend, RevenueCat, and PostHog integrations (`docs/launch-placeholders.md`).
-- **The API hostnames do not resolve.** `dig +short api.syntactical.dev` and `dig +short staging-api.syntactical.dev` return nothing (checked 2026-10-13), while `app.config.ts` (`DEFAULT_API_BASE_URL`) and `eas.json` compile `https://api.syntactical.dev/v1/` and `https://staging-api.syntactical.dev/v1/` into production and preview builds. The owner must either add the CNAMEs per `server/DEPLOY.md` "DNS" or retarget those two files at the Railway hostnames in that runbook. Until then a production web build or an EAS build cannot sign in, which is what the two device-checklist runs in `docs/device-checklist.md` recorded as "blocked".
+- **The API hostnames do not resolve.** `dig +short api.syntactical.dev` and `dig +short staging-api.syntactical.dev` return nothing (checked 2026-10-13), while `app.config.ts` (`DEFAULT_API_BASE_URL`) and `eas.json` compile `https://api.syntactical.dev/v1/` and `https://staging-api.syntactical.dev/v1/` into production and preview builds. The owner must add the CNAMEs per `server/DEPLOY.md` "DNS". The web build needs the custom domain, not the Railway hostname: the session cookie is `SameSite=Lax` (`server/src/config/sessionCookieOptions.ts`), so the API must be same-site with `syntactical.dev` (`server/DEPLOY.md`, "Web app origin"). Only a native build, which sends the token in an `Authorization: Bearer` header, could be retargeted at the Railway hostname in `eas.json` as a stopgap. Until then a production web build or an EAS build cannot sign in, which is what the two device-checklist runs in `docs/device-checklist.md` recorded as "blocked".
 - Content: ten tracks and 30 banks in `content/manifest.json`; the 20 paid banks live in the private `syntactical-content` repo pinned by `content/paid-content.ref`.
 
 ## What shipped since the last handoff (#113)
 
-`git log --oneline 526c067..origin/main` is the full list. The audit and its cleanup, all merged 2026-10-13 and 2026-10-14:
+`git log --oneline 526c067..origin/main` is the full list.
+
+#114 to #165 (2026-10-06 to 2026-10-13):
+
+- Content: the Go (#122), Ruby (#119), Backend Security (#127), Rails (#129), Frontend Security (#131), SQL (#149), and TypeScript (#154) tracks; Go and Rails top-ups (#134, #138); misconception and wording fixes (#135, #140, #153, #155, #156, #158).
+- App: 20 and 50 question rounds (#117) and round lengths on the topic step (#118); tracks grouped by Frontend, Backend, Database (#142); shuffled choices once per round (#121); bank completion only when every question was played (#150); accessible names for answer choices (#126, #152); the query drawer clear of the status bar (#130); deep links served with HTTP 200 on Pages (#124); Settings password form follow-ups (#141); EAS builds linked to the Expo project (#128).
+- Server: admin grants never overwrite store purchases (#147).
+- Pipeline: batch question generation (#115, #116, #120, #125, #136, #151), the prompt-rewrite pass (#123), the TypeScript runner and track config (#148), the SQL, nodejs, and typescript-types track configs (#143, #164, #165), the rails runner's Action Pack (#137), jsdom heap-cap and harness fixes (#146, #157), review LOWs (#132).
+- Docs: the device-checklist runs (#139), the handoff through #113 (#114).
+
+The audit and its cleanup, merged 2026-10-13 and 2026-10-14:
 
 - The engineering audit (#166): `docs/audits/2026-10-13-engineering.md` with the four scoped reports beside it.
 - CI: the duplicate server test job deleted, `typecheck:e2e` added to the `check` job, the e2e path filter widened, every action pinned to a SHA (#167); the harness meta-tests deleted (#170).
