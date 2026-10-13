@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { buildReviewState } from '../buildReviewState.js';
 import { computeDailyProgress } from '../computeDailyProgress.js';
 import { findDueReviewEventIds } from '../findDueReviewEventIds.js';
-import { isDueReview } from '../isDueReview.js';
 
 import { buildEvent } from './support/buildEvent.js';
 
@@ -19,10 +18,11 @@ describe('reviews only for missed questions (owner decision 2026-10-03)', () => 
     it('never treats a later review round answer to a never-missed question as a due review', () => {
         const firstCorrect = buildEvent({ answeredAt: '2026-09-20T10:00:00Z', eventId: 'e-1', isCorrect: true });
         const laterReview = buildEvent({ answeredAt: '2026-10-20T10:00:00Z', eventId: 'e-2', roundKind: 'review' });
-        expect(isDueReview(laterReview, [firstCorrect])).toBe(false);
         const dueIds = findDueReviewEventIds([firstCorrect, laterReview]);
         expect(dueIds.size).toBe(0);
-        const progress = computeDailyProgress([firstCorrect, laterReview], 'UTC', GOALS, ({ eventId }) => dueIds.has(eventId));
+        const progress = computeDailyProgress([firstCorrect, laterReview], 'UTC', GOALS, ({ eventId }) =>
+            dueIds.has(eventId),
+        );
         expect(progress.map(({ xp }) => xp)).toEqual([1, 1]);
     });
 
