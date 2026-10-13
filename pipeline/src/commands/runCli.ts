@@ -34,7 +34,8 @@ export const DEFAULT_SECOND_MODEL = 'claude-haiku-5-5';
 
 export interface CliDeps {
     applyStaging: typeof applyStaging;
-    buildManifest: (contentRoot: string) => Promise<void>;
+    // Without a content root, paid manifest entries are kept as they are.
+    buildManifest: (contentRoot?: string) => Promise<void>;
     classify: typeof classify;
     contentDir: string;
     defaultContentRoot: string;
@@ -154,14 +155,11 @@ async function runVerifyDocLinks(argv: string[], deps: CliDeps): Promise<number>
     return failed === 0 ? 0 : 1;
 }
 
-async function runApplyStaging(argv: string[], deps: CliDeps): Promise<number> {
+// Free banks only, so the manifest build needs no content root: paid entries stay as they are.
+async function runApplyStaging(deps: CliDeps): Promise<number> {
     const { applyStaging: run, buildManifest, contentDir, pipelineDir, stdout } = deps;
-    const contentRoot = resolveContentRoot(argv, deps);
-    if (contentRoot === undefined) {
-        return 1;
-    }
     const tally = await run({
-        buildManifest: () => buildManifest(contentRoot),
+        buildManifest: () => buildManifest(),
         contentDir,
         log: (line) => stdout(`${line}\n`),
         pipelineDir,
@@ -264,7 +262,7 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
         return runVerifyDocLinks(argv, deps);
     }
     if (command === 'apply-staging') {
-        return runApplyStaging(argv, deps);
+        return runApplyStaging(deps);
     }
     if (command === 'rewrite-prompts') {
         const contentRoot = resolveContentRoot(argv, deps);
@@ -283,7 +281,7 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
     }
     if (command !== 'validate') {
         stderr(
-            'Usage: pipeline validate [--content-root <path>] | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | gap-fill [--api] [--content-root <path>] | enrich [--api] [--judge-without-oracle] [--content-root <path>] | write-references [--api] [--language <ids>] | verify-doc-links [--recheck] | apply-staging [--content-root <path>] | rewrite-prompts [--content-root <path>] | review [--content-root <path>] | publish [--content-root <path>]\n',
+            'Usage: pipeline validate [--content-root <path>] | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | gap-fill [--api] [--content-root <path>] | enrich [--api] [--judge-without-oracle] [--content-root <path>] | write-references [--api] [--language <ids>] | verify-doc-links [--recheck] | apply-staging | rewrite-prompts [--content-root <path>] | review [--content-root <path>] | publish [--content-root <path>]\n',
         );
         return 1;
     }
