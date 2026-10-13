@@ -49,7 +49,7 @@ describe('QueryDrawer', () => {
     expect(screen.getByText('float')).toBeTruthy();
   });
 
-  it('before an answer shows the title, syntax, and doc links, but not the explanation, tags, or rationale', async () => {
+  it('before an answer shows the title and doc links, but not the syntax, explanation, tags, or rationale', async () => {
     const docs = [{ title: 'Floating-point arithmetic', url: 'https://docs.python.org/3/tutorial/floatingpoint.html' }];
     await render(
       <QueryDrawer
@@ -65,34 +65,20 @@ describe('QueryDrawer', () => {
     expect(screen.getByText('NaN is never equal')).toBeTruthy();
     expect(screen.getByText('Floating-point arithmetic')).toBeTruthy();
     expect(screen.getByText('Answer to see the full explanation.')).toBeTruthy();
+    expect(screen.queryByTestId('code-block')).toBeNull();
     expect(screen.queryByText('<b>IEEE</b> 754')).toBeNull();
     expect(screen.queryByText('numbers')).toBeNull();
     expect(screen.queryByText('You treated NaN as a normal number.')).toBeNull();
   });
 
-  it('after an answer shows the explanation and doc links under an Explanation header', async () => {
+  it('after an answer shows the syntax, explanation, and doc links under an Explanation header', async () => {
     const docs = [{ title: 'Floating-point arithmetic', url: 'https://docs.python.org/3/tutorial/floatingpoint.html' }];
     await render(<QueryDrawer isAnswered isOpen query={{ ...query, docs }} grammar="python" onClose={jest.fn()} />);
     expect(screen.getByText('Explanation')).toBeTruthy();
+    expect(screen.queryByTestId('code-block')).not.toBeNull();
     expect(screen.getByText('<b>IEEE</b> 754')).toBeTruthy();
     expect(screen.getByText('Floating-point arithmetic')).toBeTruthy();
     expect(screen.queryByText('Answer to see the full explanation.')).toBeNull();
-  });
-
-  it('holds back syntax marked isSyntaxAfterAnswer until after an answer', async () => {
-    const marked = { ...query, isSyntaxAfterAnswer: true };
-    const view = await render(
-      <QueryDrawer isAnswered={false} isOpen query={marked} grammar="python" onClose={jest.fn()} />,
-    );
-    expect(screen.getByText('NaN is never equal')).toBeTruthy();
-    expect(screen.queryByTestId('code-block')).toBeNull();
-    await view.rerender(<QueryDrawer isAnswered isOpen query={marked} grammar="python" onClose={jest.fn()} />);
-    expect(screen.queryByTestId('code-block')).not.toBeNull();
-  });
-
-  it('shows unmarked syntax before an answer', async () => {
-    await render(<QueryDrawer isAnswered={false} isOpen query={query} grammar="python" onClose={jest.fn()} />);
-    expect(screen.queryByTestId('code-block')).not.toBeNull();
   });
 
   it('closes from the close control, the backdrop, and the platform back action', async () => {
