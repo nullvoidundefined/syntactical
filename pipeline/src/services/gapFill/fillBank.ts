@@ -11,6 +11,7 @@ import { readExistingOracles } from '../readExistingOracles.js';
 import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
 import { ProviderTransientError } from '../../types/ProviderTransientError.js';
 import { countQuestionsNeeded } from './countQuestionsNeeded.js';
+import { createProviderFailureStreak } from './createProviderFailureStreak.js';
 import { generateBatch } from './generateBatch.js';
 import { buildCardKey } from './buildCardKey.js';
 import { readJsonIfPresent } from './readJsonIfPresent.js';
@@ -34,6 +35,7 @@ function countByTopic(questions: Question[], classified: Map<string, { topic: st
 
 export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
     const { bankKey, difficulty, languageId, log, outRoot, questions, topics } = args;
+    const failures = args.failures ?? createProviderFailureStreak();
     const result: FillBankResult = { duplicate: 0, failed: 0, generated: 0 };
     const rawClassified = await readJsonIfPresent(join(outRoot, 'classifications', languageId, `${difficulty}.json`));
     if (rawClassified === undefined) {
@@ -65,8 +67,10 @@ export async function fillBank(args: FillBankArgs): Promise<FillBankResult> {
                     const reason = error instanceof ProviderTransientError ? error.reason : 'model-output-invalid';
                     result.failed += requested;
                     log(`${bankKey} ${topic}: batch of ${requested}, kept 0 (${reason}: ${requested})`);
+                    failures.recordFailure(bankKey, topic);
                     break;
                 }
+                failures.recordSuccess();
                 const { cards, drops } = outcome;
                 for (const { oracle, question } of cards) {
                     existingKeys.add(buildCardKey(question));

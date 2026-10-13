@@ -20,6 +20,7 @@ import type { runOracle } from '../clients/dockerRunner.js';
 import { ORACLE_LANGUAGES } from '../services/ORACLE_LANGUAGES.js';
 import { TRACK_RUNNERS } from '../services/TRACK_RUNNERS.js';
 import { assertContentRootUsable } from '../services/classify/assertContentRootUsable.js';
+import { createProviderFailureStreak } from '../services/gapFill/createProviderFailureStreak.js';
 import { fillBank } from '../services/gapFill/fillBank.js';
 import { pickTopics } from '../services/classify/pickTopics.js';
 import { readFallbackTopics } from '../services/classify/readFallbackTopics.js';
@@ -89,6 +90,8 @@ export async function gapFill(options: GapFillOptions): Promise<PipelineReport> 
     const reportsDir = join(pipelineDir, 'reports');
     const previous = await readLatestReport(reportsDir);
     const totals: FillBankResult = { disputed: 0, duplicate: 0, failed: 0, generated: 0 };
+    // One streak across every bank: a dead provider stops the run after a few calls.
+    const failures = createProviderFailureStreak();
     let isCompleted = false;
     let report: PipelineReport;
     try {
@@ -114,6 +117,7 @@ export async function gapFill(options: GapFillOptions): Promise<PipelineReport> 
                 const result = await fillBank({
                     bankKey,
                     difficulty,
+                    failures,
                     ...(runners ? { runners } : { language: language as OracleLanguage }),
                     languageId,
                     log,

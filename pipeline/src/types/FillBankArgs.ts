@@ -4,6 +4,7 @@
 import type { Question } from '@syntactical/content-schema';
 
 import type { runOracle } from '../clients/dockerRunner.js';
+import type { ProviderFailureStreak } from '../services/gapFill/createProviderFailureStreak.js';
 
 import type { ModelProvider } from './ModelProvider.js';
 import type { OracleLanguage } from './OracleLanguage.js';
@@ -11,6 +12,8 @@ import type { OracleLanguage } from './OracleLanguage.js';
 interface FillBankBase {
     bankKey: string;
     difficulty: string;
+    // The run's shared streak of dropped batches; a bank filled on its own gets a fresh one.
+    failures?: ProviderFailureStreak;
     languageId: string;
     log: (line: string) => void;
     outRoot: string;
