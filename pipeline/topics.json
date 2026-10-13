@@ -95,5 +95,17 @@
         "classes",
         "enums-and-const",
         "compile-vs-runtime"
+    ],
+    "typescript-types": [
+        "conditional-types",
+        "infer",
+        "mapped-types",
+        "template-literal-types",
+        "distributive-conditionals",
+        "variance-and-assignability",
+        "overloads-and-satisfies",
+        "discriminated-unions",
+        "generic-constraints",
+        "recursive-and-indexed-types"
     ]
 }
