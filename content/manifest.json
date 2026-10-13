@@ -12,9 +12,9 @@
       "banks": {
         "easy": {
           "path": "python/easy.json",
-          "hash": "057b1e64b23beaff7272c83341558f1ffbf83e752f37286e6f68fe80b21011da",
+          "hash": "e460969474dd7985c1d9a308438c90a2a2596c88e0000917be66da832a141851",
           "access": "free",
-          "contentVersion": 3,
+          "contentVersion": 4,
           "topicCounts": {}
         },
         "medium": {
@@ -47,9 +47,9 @@
       "banks": {
         "easy": {
           "path": "postgres/easy.json",
-          "hash": "279a8b3bb8c127b91da0a44d5716afa4103e8f6eadeeb0753aff61c9d0307928",
+          "hash": "924db911cfa7423e4bf24b962d99fc998c240eeee156f36dc939a11a0745e5e0",
           "access": "free",
-          "contentVersion": 3,
+          "contentVersion": 4,
           "topicCounts": {}
         },
         "medium": {
@@ -82,9 +82,9 @@
       "banks": {
         "easy": {
           "path": "javascript/easy.json",
-          "hash": "fdb5bd0a2e014446cc49d1e1d363eddfb636fcef98eae55b79b24dfc3af3055d",
+          "hash": "7565d950f91a962a29f9d63ceeaa8b64ab2bb989b5132fc77838b488fcf34aa8",
           "access": "free",
-          "contentVersion": 3,
+          "contentVersion": 4,
           "topicCounts": {}
         },
         "medium": {
