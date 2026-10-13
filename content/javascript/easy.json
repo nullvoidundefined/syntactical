@@ -1414,16 +1414,16 @@
       "code": "null?.prop",
       "choices": [
         {
-          "text": "undefined, and it does not throw"
+          "text": "Returns undefined"
         },
         {
-          "text": "null"
+          "text": "Returns null"
         },
         {
           "text": "Throws a TypeError"
         },
         {
-          "text": "\"undefined\""
+          "text": "Returns \"undefined\""
         }
       ],
       "answerIndex": 0,
@@ -1452,16 +1452,16 @@
       "code": "const fn = null;\nfn?.();",
       "choices": [
         {
-          "text": "Throws a TypeError"
+          "text": "Throws a TypeError: fn is not a function"
         },
         {
-          "text": "undefined, and it does not call anything"
+          "text": "Returns undefined; nothing is called"
         },
         {
-          "text": "null"
+          "text": "Returns null, the value of fn"
         },
         {
-          "text": "false"
+          "text": "Returns false, since fn is falsy"
         }
       ],
       "answerIndex": 1,
@@ -1572,7 +1572,7 @@
           "text": "false"
         },
         {
-          "text": "null"
+          "text": "undefined"
         },
         {
           "text": "\"fallback\""
@@ -1872,7 +1872,7 @@
           "text": "A string of one newline character"
         },
         {
-          "text": "undefined"
+          "text": "The string \"n\", with the backslash dropped"
         },
         {
           "text": "Throws a SyntaxError"
@@ -1913,10 +1913,10 @@
           "text": "It returns a new array and leaves items unchanged"
         },
         {
-          "text": "It returns the length of items"
+          "text": "It mutates items in place and returns undefined"
         },
         {
-          "text": "It returns undefined"
+          "text": "It returns an iterator over the doubled values"
         }
       ],
       "answerIndex": 1,
@@ -1983,16 +1983,16 @@
       "code": "[1, 2, 3].find((n) => n > 9)",
       "choices": [
         {
-          "text": "The index, or -1 when nothing matches"
+          "text": "The first match's index, or -1 if none"
         },
         {
-          "text": "A new array of every match"
+          "text": "An array of every match, or [] if none"
         },
         {
-          "text": "The first matching element, or undefined when nothing matches"
+          "text": "The first match, or undefined if none"
         },
         {
-          "text": "true when something matches, otherwise false"
+          "text": "The first match, or null if none"
         }
       ],
       "answerIndex": 2,
@@ -2255,10 +2255,10 @@
           "text": "The array [0, 1]"
         },
         {
-          "text": "0"
+          "text": "The added value, 0"
         },
         {
-          "text": "undefined"
+          "text": "Nothing (undefined)"
         }
       ],
       "answerIndex": 0,
@@ -2591,13 +2591,13 @@
       "code": "const { a: b } = { a: 1 };",
       "choices": [
         {
-          "text": "Both a and b, each equal to 1"
+          "text": "Both a and b, each 1"
         },
         {
-          "text": "a equal to 1, and no b"
+          "text": "Only a, equal to 1"
         },
         {
-          "text": "b equal to 1, and this pattern does not declare a"
+          "text": "Only b, equal to 1"
         },
         {
           "text": "Throws a SyntaxError"

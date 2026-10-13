@@ -721,16 +721,16 @@
       "prompt": "What is the key difference between `lst.remove(value)` and `lst.pop(index)`?",
       "choices": [
         {
-          "text": "remove deletes by value (the first matching one); pop deletes by index and returns the removed item"
+          "text": "remove takes a value; pop takes an index and returns the item"
         },
         {
-          "text": "remove returns the removed item; pop does not"
+          "text": "remove returns the removed value; pop returns nothing"
         },
         {
-          "text": "They are aliases for the same operation"
+          "text": "remove takes an index; pop takes a value and returns the item"
         },
         {
-          "text": "pop only works on tuples"
+          "text": "remove deletes every matching value; pop deletes only the last item"
         }
       ],
       "answerIndex": 0,
@@ -833,16 +833,16 @@
       "prompt": "What is the difference between `lst.sort()` and `sorted(lst)`?",
       "choices": [
         {
-          "text": "sort() mutates lst in place and returns None; sorted(lst) returns a new sorted list and leaves lst unchanged"
+          "text": "sort() changes lst in place and returns None; sorted() returns a new list"
         },
         {
-          "text": "sorted(lst) mutates lst in place; sort() returns a new list"
+          "text": "sorted() changes lst in place; sort() returns a new sorted list"
         },
         {
-          "text": "They both return a new list and leave lst unchanged"
+          "text": "Both sort in place; sorted() also returns the sorted list"
         },
         {
-          "text": "sort() only works on strings"
+          "text": "sort() changes lst in place and returns it; sorted() returns a new list"
         }
       ],
       "answerIndex": 0,
@@ -1603,16 +1603,16 @@
       "code": "def todo():\n    pass",
       "choices": [
         {
-          "text": "Nothing, it is a no-op placeholder required wherever a statement is syntactically needed"
+          "text": "Nothing; it is a placeholder where a statement is required"
         },
         {
-          "text": "Skips to the next loop iteration"
+          "text": "Skips to the next loop iteration, like continue"
         },
         {
-          "text": "Exits the current function immediately"
+          "text": "Returns None from the function immediately, like return"
         },
         {
-          "text": "Passes control to a parent class method"
+          "text": "Marks the function as abstract until it is overridden"
         }
       ],
       "answerIndex": 0,
@@ -1820,16 +1820,16 @@
       "prompt": "What type does `d.items()` return for a dict `d`?",
       "choices": [
         {
-          "text": "A view object of (key, value) tuples that stays in sync with the dict"
+          "text": "A view of (key, value) pairs that stays in sync with the dict"
         },
         {
-          "text": "A plain list of (key, value) tuples, a snapshot at call time"
+          "text": "A list of (key, value) tuples, a snapshot at call time"
         },
         {
-          "text": "A generator that can only be consumed once"
+          "text": "A one-shot iterator of (key, value) pairs, like a generator"
         },
         {
-          "text": "A new dict"
+          "text": "A view of (key, value) pairs, frozen when items() was called"
         }
       ],
       "answerIndex": 0,
@@ -1896,16 +1896,16 @@
       "code": "d = {}\nd.setdefault('x', []).append(1)",
       "choices": [
         {
-          "text": "Inserts 'x': [] into d, then appends 1 to that new list, leaving d as {'x': [1]}"
+          "text": "Adds 'x': [] to d, then appends 1, so d is {'x': [1]}"
         },
         {
-          "text": "Raises KeyError because 'x' does not exist"
+          "text": "Raises KeyError, since 'x' is not in d yet"
         },
         {
-          "text": "Does nothing since 'x' is not present"
+          "text": "Appends 1 to a new list but leaves d as {}"
         },
         {
-          "text": "Overwrites d entirely with [1]"
+          "text": "Sets d['x'] to [], but the append is lost, so d is {'x': []}"
         }
       ],
       "answerIndex": 0,
@@ -1993,16 +1993,16 @@
       "prompt": "What is the time complexity of checking `x in some_list` for a plain Python list?",
       "choices": [
         {
-          "text": "O(n) in the worst case"
+          "text": "O(n)"
         },
         {
-          "text": "O(1) always"
+          "text": "O(1)"
         },
         {
           "text": "O(log n)"
         },
         {
-          "text": "O(n^2)"
+          "text": "O(n log n)"
         }
       ],
       "answerIndex": 0,
@@ -2471,16 +2471,16 @@
       "prompt": "For an object like a `datetime`, what is the main difference between `str(obj)` and `repr(obj)`?",
       "choices": [
         {
-          "text": "str() aims for a readable display; repr() aims for an unambiguous, often code-like representation"
+          "text": "str() is for readable display; repr() is unambiguous, often valid code"
         },
         {
-          "text": "They always return identical strings"
+          "text": "repr() is for readable display; str() is unambiguous, often valid code"
         },
         {
-          "text": "repr() is only usable in the interactive shell, never in scripts"
+          "text": "They match; repr() only differs for user-defined classes"
         },
         {
-          "text": "str() raises an error for objects without a custom __str__"
+          "text": "str() returns the text form; repr() returns the memory address"
         }
       ],
       "answerIndex": 0,
@@ -2512,13 +2512,13 @@
           "text": "a followed by a tab then b"
         },
         {
-          "text": "a\\tb literally"
+          "text": "a\\tb, with the backslash printed"
         },
         {
-          "text": "ab"
+          "text": "a and b on separate lines"
         },
         {
-          "text": "A SyntaxError"
+          "text": "a, four spaces, then b"
         }
       ],
       "answerIndex": 0,
@@ -2546,16 +2546,16 @@
       "prompt": "What is the purpose of the `r` prefix on a string literal, as in `r'C:\\new\\folder'`?",
       "choices": [
         {
-          "text": "It disables escape sequence processing, so backslashes are kept literally"
+          "text": "It keeps backslashes literal instead of treating them as escapes"
         },
         {
-          "text": "It marks the string as read-only"
+          "text": "It marks the string as a regular expression pattern"
         },
         {
-          "text": "It converts the string to bytes"
+          "text": "It converts the string to bytes, like the b prefix"
         },
         {
-          "text": "It forces the string to lowercase"
+          "text": "It turns backslashes into forward slashes on any OS"
         }
       ],
       "answerIndex": 0,
@@ -2749,16 +2749,16 @@
       "code": "try:\n    risky()\nexcept ValueError:\n    handle()",
       "choices": [
         {
-          "text": "Execution jumps to the except block, and the program continues after the try/except"
+          "text": "except runs, then the program continues after the try/except"
         },
         {
-          "text": "The program terminates immediately regardless of the except clause"
+          "text": "except runs, then the exception is re-raised automatically"
         },
         {
-          "text": "The try block re-runs automatically"
+          "text": "The rest of the try block finishes first, then except runs"
         },
         {
-          "text": "The except clause is ignored unless finally is also present"
+          "text": "except runs, then the try block is retried from the top"
         }
       ],
       "answerIndex": 0,
@@ -2896,16 +2896,16 @@
       "prompt": "What is the difference between `IndexError` and `KeyError`?",
       "choices": [
         {
-          "text": "IndexError is raised for an out-of-range sequence index; KeyError is raised for a missing dict key"
+          "text": "IndexError is for a bad sequence index; KeyError for a missing dict key"
         },
         {
-          "text": "They are the same exception under different names"
+          "text": "KeyError is for a bad list index; IndexError for a missing dict key"
         },
         {
-          "text": "KeyError applies to lists; IndexError applies to dicts"
+          "text": "IndexError is for negative indexes; KeyError for any missing lookup"
         },
         {
-          "text": "IndexError is only raised for negative indices"
+          "text": "KeyError subclasses IndexError, so except IndexError catches both"
         }
       ],
       "answerIndex": 0,
@@ -2935,16 +2935,16 @@
       "code": "int('abc')",
       "choices": [
         {
-          "text": "ValueError, because the argument is the right type (a string) but has an inappropriate value/content"
+          "text": "ValueError: the type (str) is right, but its content is not a number"
         },
         {
-          "text": "TypeError, because strings can never be converted to int"
+          "text": "TypeError: int() accepts strings only when they contain digits"
         },
         {
-          "text": "KeyError, because 'abc' is not a valid key"
+          "text": "SyntaxError, because 'abc' is not a valid integer literal"
         },
         {
-          "text": "It raises nothing and returns 0"
+          "text": "It returns 0, since no digits could be parsed"
         }
       ],
       "answerIndex": 0,
@@ -2972,16 +2972,16 @@
       "code": "raise ValueError('bad input')",
       "choices": [
         {
-          "text": "Immediately raises a ValueError with that message, interrupting normal flow unless caught"
+          "text": "Raises ValueError with that message, stopping unless caught"
         },
         {
-          "text": "Logs a warning and continues execution"
+          "text": "Prints the message as a warning and keeps running"
         },
         {
-          "text": "Defines a new exception type named ValueError"
+          "text": "Creates a ValueError object but does not throw it yet"
         },
         {
-          "text": "Only works inside an except block"
+          "text": "Raises ValueError only if inside a try or except block"
         }
       ],
       "answerIndex": 0,
@@ -3009,16 +3009,16 @@
       "code": "if __name__ == '__main__':\n    main()",
       "choices": [
         {
-          "text": "The guarded code only runs when the file is executed directly, not when it's imported as a module"
+          "text": "Code inside runs only when the file is run directly, not when imported"
         },
         {
-          "text": "It marks the entry point for the Python interpreter itself, required in every file"
+          "text": "Code inside runs only when the file is imported as a module"
         },
         {
-          "text": "It disables the garbage collector for that block"
+          "text": "It marks main() as the entry point Python must call first"
         },
         {
-          "text": "It's required syntax for defining a main function"
+          "text": "Code inside runs once, even if the module is imported twice"
         }
       ],
       "answerIndex": 0,
@@ -3046,16 +3046,16 @@
       "prompt": "What is the difference between `import math` and `from math import sqrt`?",
       "choices": [
         {
-          "text": "import math binds the name 'math' and requires math.sqrt(); from math import sqrt binds 'sqrt' directly into the current namespace"
+          "text": "import math binds math; from math import sqrt binds only sqrt"
         },
         {
-          "text": "They are functionally identical in every way"
+          "text": "from math import sqrt loads only sqrt; import math loads the whole module"
         },
         {
-          "text": "from math import sqrt imports the entire module renamed as sqrt"
+          "text": "import math binds every name in math; from math import sqrt binds sqrt"
         },
         {
-          "text": "import math only works for standard library modules"
+          "text": "Both bind math; from math import sqrt also binds sqrt"
         }
       ],
       "answerIndex": 0,
@@ -3081,19 +3081,19 @@
       "id": "py-easy-92",
       "type": "mc",
       "prompt": "Without the `global` keyword, what happens when a function assigns to a variable that also exists at module level?",
-      "code": "count = 0\ndef increment():\n    count = count + 1  # UnboundLocalError\nincrement()",
+      "code": "count = 0\ndef increment():\n    count = count + 1\nincrement()",
       "choices": [
         {
-          "text": "Python treats the name as local to the function, and referencing it before that local assignment raises UnboundLocalError"
+          "text": "count is local to the function, so reading it first fails"
         },
         {
-          "text": "It transparently modifies the module-level variable"
+          "text": "count reads the global, then the assignment updates the global"
         },
         {
-          "text": "It raises NameError immediately at function definition time"
+          "text": "count reads the global, then assigns a new local copy"
         },
         {
-          "text": "It silently creates a second module-level variable"
+          "text": "It raises NameError, since count is not defined in the function"
         }
       ],
       "answerIndex": 0,
