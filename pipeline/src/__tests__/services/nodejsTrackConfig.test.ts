@@ -69,3 +69,15 @@ describe('generateBatch nodejs note', () => {
         expect(prompt).toContain('require');
     });
 });
+
+describe('generateBatch nodejs module rule', () => {
+    // The node runner executes oracles as ES modules, where a bare `require` is a ReferenceError;
+    // a live batch lost most cards to answer-mismatch for this reason.
+    it('tells a nodejs batch the oracle runs as an ES module: import, or createRequire for CommonJS', async () => {
+        const prompt = await captureNodejsBatchPrompt();
+
+        expect(prompt).toMatch(/nodejs[^\n]*ES module/i);
+        expect(prompt).toMatch(/nodejs[^\n]*\bimport\b/);
+        expect(prompt).toMatch(/nodejs[^\n]*createRequire/);
+    });
+});
