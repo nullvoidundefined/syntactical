@@ -1,58 +1,58 @@
-# Session Handoff: password sign-in done (Stage 7), admin access live
+# Session handoff
 
-## Last commit
+Updated 2026-10-14, after the engineering audit cleanup slices. Confirm with `git log -1 origin/main` that nothing newer has replaced this file.
 
-- `chore/handoff-through-113`: refreshes this handoff through #113. Before it, `main` was at `526c067` (#113, signed-out users leave /admin).
+## Where things stand
 
-## Production state
+- Web: https://syntactical.dev/ (GitHub Pages, `.github/workflows/deploy.yml`, deploys on every push to `main`).
+- API: Railway `staging` and `production`, Postgres on Neon (`server/DEPLOY.md`, "Live environments"). Both run with `ALLOW_STUBBED_INTEGRATIONS=true` and stubbed Resend, RevenueCat, and PostHog integrations (`docs/launch-placeholders.md`).
+- **The API hostnames do not resolve.** `dig +short api.syntactical.dev` and `dig +short staging-api.syntactical.dev` return nothing (checked 2026-10-13), while `app.config.ts` (`DEFAULT_API_BASE_URL`) and `eas.json` compile `https://api.syntactical.dev/v1/` and `https://staging-api.syntactical.dev/v1/` into production and preview builds. The owner must add the CNAMEs per `server/DEPLOY.md` "DNS". The web build needs the custom domain, not the Railway hostname: the session cookie is `SameSite=Lax` (`server/src/config/sessionCookieOptions.ts`), so the API must be same-site with `syntactical.dev` (`server/DEPLOY.md`, "Web app origin"). Only a native build, which sends the token in an `Authorization: Bearer` header, could be retargeted at the Railway hostname in `eas.json` as a stopgap. Until then a production web build or an EAS build cannot sign in, which is what the two device-checklist runs in `docs/device-checklist.md` recorded as "blocked".
+- Content: ten tracks and 30 banks in `content/manifest.json`; the 20 paid banks live in the private `syntactical-content` repo pinned by `content/paid-content.ref`.
 
-- Web: https://syntactical.dev/ (GitHub Pages, deploys on every push to `main`). Password sign-in, sign-up, the Settings password form, the admin page, and the UI fixes are live; the owner checked them on iPhone Safari on 2026-10-05.
-- API on Railway (`server/DEPLOY.md`): https://api.syntactical.dev (production) and https://staging-api.syntactical.dev (staging).
-  - Staging deploys on pushes to `main` that touch `server/`, `packages/`, `content/`, or `package-lock.json`.
-  - Production deploys only by a manual `server-deploy.yml` run on `main`. Last run: `9642e83` on 2026-10-05 (run 37303153341), which added `users.is_admin` and `/v1/admin/access`.
-- The owner's account (ian.greenough.developer@gmail.com) has `is_admin = true` in production, set by a one-row guarded update; no API can set the flag. The owner turned on all six paid banks from the admin page.
-- `content/manifest.json` still lists only Python, Postgres, and JavaScript (9 banks). Paid banks live in the private syntactical-content repo, pinned by `content/paid-content.ref` (#54, #62).
+## What shipped since the last handoff (#113)
 
-## Session metrics
+`git log --oneline 526c067..origin/main` is the full list.
 
-- Since the #108 handoff: #109 (Task 7.9 Settings password form), #100 (privacy page, Task 7.10), #110 and #111 (admin self-service access, server and app), #112 (visible email labels, full-width inputs, spacing, admin switches, home link), #113 (sign-out on /admin goes home).
-- Under the saved process rules (one round of each review, LOWs ticketed) each PR took one review round; LOWs are in IAN-634 to IAN-637.
+#114 to #165 (2026-10-06 to 2026-10-13):
 
-## What shipped
+- Content: the Go (#122), Ruby (#119), Backend Security (#127), Rails (#129), Frontend Security (#131), SQL (#149), and TypeScript (#154) tracks; Go and Rails top-ups (#134, #138); misconception and wording fixes (#135, #140, #153, #155, #156, #158).
+- App: 20 and 50 question rounds (#117) and round lengths on the topic step (#118); tracks grouped by Frontend, Backend, Database (#142); shuffled choices once per round (#121); bank completion only when every question was played (#150); accessible names for answer choices (#126, #152); the query drawer clear of the status bar (#130); deep links served with HTTP 200 on Pages (#124); Settings password form follow-ups (#141); EAS builds linked to the Expo project (#128).
+- Server: admin grants never overwrite store purchases (#147).
+- Pipeline: batch question generation (#115, #116, #120, #125, #136, #151), the prompt-rewrite pass (#123), the TypeScript runner and track config (#148), the SQL, nodejs, and typescript-types track configs (#143, #164, #165), the rails runner's Action Pack (#137), jsdom heap-cap and harness fixes (#146, #157), review LOWs (#132).
+- Docs: the device-checklist runs (#139), the handoff through #113 (#114).
 
-- App: sign-in and sync (#33, #35), paywall and purchase (#52), privacy and deletion pages (#59, #100), syntactical.dev (#76), topic-track menu (#71), quality page removed (#84), admin page (#111), auth and admin UI fixes (#112, #113).
-- Server: one-time-code sessions (#19 to #32), paid banks and RevenueCat (#36, #37), PostHog (#50), account deletion (#41), container and Railway deploy (#53, #58, #65, #67), admin access (#110).
-- Pipeline: oracle runners (#14, #63, #64), gap-fill and enrich (#24, #25, #27, #70, #77), topic tracks slices 1 to 3 and 5 (#71, #72, #74, #79, #91, #92), hardening (#73, #81, #86).
-- Password sign-in, plan Stage 7 complete (spec #85): #88, #89, #90, #93, #97, #99, #104, #106, #107, #109, #100.
-- Admin access (owner request 2026-10-05): `users.is_admin` set only in the database; `/v1/admin/access` lets an admin grant or revoke paid banks for their own account; purchases always win (an admin toggle never revokes a `revenuecat` row; a refunded purchase may be re-granted as `admin`).
-- Tests: Playwright e2e against the real API and Postgres (#60), A/B cards for every bank (#61), CodeBlock tests (#101).
+The audit and its cleanup, merged 2026-10-13 and 2026-10-14:
 
-## Pending
+- The engineering audit (#166): `docs/audits/2026-10-13-engineering.md` with the four scoped reports beside it.
+- CI: the duplicate server test job deleted, `typecheck:e2e` added to the `check` job, the e2e path filter widened, every action pinned to a SHA (#167); the harness meta-tests deleted (#170).
+- Dependencies: `vitest`, `@types/node`, and `typescript` hoisted to the root, `@types/jest` aligned to Jest 29, `expo-status-bar` removed (#172).
+- `packages/progress`: `findGoal` and `DEFAULT_DAILY_GOAL` exported and shared by the app and the server; four unused exports removed (#171).
+- Pipeline: the dead judged route, A/B validators, and v1 migration deleted (#169); one runner id list and a TypeScript golden set (#173); a shared command preamble and JSON I/O (#175); review lists topic-track cards (#168); `nodejs` and `typescript-types` track configs (#164, #165).
+- App: one exclusive-action hook, and purchase-complete confirms through `usePurchases` (#174).
+- Server: shared `sendError`, rate-limit keys, layering and dead-config fixes (#176).
+- Docs: this rewrite (README, `docs/stack.md`, the user stories, the feature list, the lexicon, this file).
 
-1. **Topic tracks, slices 4 and 6** (`docs/superpowers/plans/2026-10-04-topic-tracks.md`): Backend and Frontend Security content. Gap-fill ran in the `backend-track` and `frontend-track` worktrees. Frontend oracles run on jsdom and must print synchronously (#92). Decide the pending disputed cards first (#79 LOW).
-2. **Owner, outside the repo:**
-   - RevenueCat: create the Web Billing products, give the key "Apps: read"; then the agent wires entitlements, offering, webhook, and `REVENUECAT_WEBHOOK_AUTH` (the last stub on the servers). Topic tracks need four more products, `syntactical.{backend,frontend}-security.{medium,hard}` (#68).
-   - PostHog: create the Syntactical organization; then the agent creates the project and wires the keys.
-   - Store accounts and the device checklist (IAN-595: no EAS builds have run).
-3. **Owner review:**
-   - 9 readability A/B cards await human approval (#61). An agent must not set `isHumanReviewed`.
-   - The privacy and deletion pages still carry `[OWNER NAME]`, `[CONTACT EMAIL]`, and `[EFFECTIVE DATE]` (#59).
-4. **LOW review findings, ticketed:** IAN-634 (Settings password form), IAN-635 (admin server), IAN-636 (admin page), IAN-637 (auth and admin UI). Notable: the admin page lists never refetch on revisit, and the switch focus ring is unconfirmed in a browser.
-5. **Carried over:** IAN-596 (Lighthouse, VoiceOver, reduced motion on the live site); monetization is per-bank products (#36, #37, #52) with no decision record.
+## Open
 
-## Next session
+The engineering-audit cleanup pass stopped early at the owner's request (2026-10-14). The ranked list is in `docs/audits/2026-10-13-engineering.md`, "Ranked cleanup opportunities"; the slices still open from it are:
 
-- Start from `main`. Run `git log -1 origin/main` and confirm this handoff is the one you are reading.
-- Process: one general and one security review per high-risk PR; ticket LOWs, never fix them after the security review; no scope added mid-PR; flag past about 90 minutes per task (`feedback-rapid-process` memory).
-- Gotchas:
-  - GitHub can stop syncing a PR to new pushes (#104 merged a stale head). Before merging, compare `gh api repos/nullvoidundefined/syntactical/pulls/<n> --jq .head.sha` with `git ls-remote origin refs/heads/<branch>`, and merge with `--match-head-commit`.
-  - GitGuardian flags names like `mockSignInWithPassword = ...` and keeps flagging the old commit after a rename (incidents 37869767, 37871242 are false positives; the check is not required).
-  - Production SQL: read `neonctl connection-string main --project-id rough-paper-04073210 --ssl verify-full` into a variable, append `&sslrootcert=/etc/ssl/cert.pem` (local psql 14), and guard one-row updates in a DO block.
-  - The local web build fails to resolve `@syntactical/content-schema` in a fresh worktree; visual checks happen on the live site after merge.
-  - Run `~/.claude/hooks/harness-sync.sh </dev/null` by hand; without the redirect it waits on stdin.
-  - `tdd.sh amend` cannot re-prove RED once the implementation exists.
-  - Railway rejects BuildKit secret mounts, `railway up` needs `--path-as-root`, and service settings live in Railway (#58, #65, #67).
-  - Docker-backed tests and e2e need `DOCKER_CONFIG=/tmp/dcfg`. A stale Metro cache in `$TMPDIR` can bake production URLs into local e2e runs (#60, #76).
-  - Check `pgrep -fl "src/cli.ts"` before starting a pipeline run on the shared content root.
-  - macOS `sed` has no `\|` alternation; use `sed -E`. A guard blocks force pushes: push a rebased branch under a new name.
-  - The pipeline needs Node 22.18 or later (#86).
+- app: one modal dialog shell (`useModalPanel` plus `DialogShell` for `SignOutDialog`, `DeleteAccountDialog`, and `PaywallSheet`; row 10),
+- app: test mock consolidation (the hand-mocked `expo-router` and `expo-constants` in the Jest files; row 17),
+- pipeline: test fixture consolidation (row 17),
+- server: one test-app factory in place of the five `createXTestApp` factories and the per-file `SKIP_DATABASE_TESTS` (row 17),
+- #178 (server `changePassword` service), open and security-touching, so the owner merges it.
+
+1. **Owner decisions** from `docs/audits/2026-10-13-engineering.md`, "Decisions for the owner": the DNS records (above), the 60% coverage rule (enforced nowhere), lint and Prettier as gates (323 files fail `prettier --check`), and workspace pruning (worktrees and merged branches).
+2. **Open PRs** (`gh pr list`): #177 (pipeline provider failure cap), #178 (server `changePassword` service, security-touching, the owner merges), #159 (query drawer before an answer), #160 and #162 (misconception taxonomies and references, content), #161 (pipeline references and enrichment).
+3. **Owner, outside the repo** (`docs/launch-placeholders.md`): RevenueCat products, keys, and the webhook secret; the PostHog project and key; the Resend key; the Apple Developer account for iOS builds; then remove `ALLOW_STUBBED_INTEGRATIONS`.
+4. **Drafts awaiting the owner:** `app/privacy.tsx` and `app/delete-account.tsx` carry owner placeholders (see each file's header comment).
+5. **Topic tracks:** `docs/superpowers/plans/2026-10-04-topic-tracks.md` is the live plan; the 2026-10-02 v2 plan and spec were executed and are deleted.
+
+## Working rules and gotchas
+
+- Process: `/Users/iangreenough/Desktop/code/personal/.claude/CLAUDE.md` (one review per PR, merge on green, LOWs waived, no scope added mid-PR).
+- Before merging, compare the PR head with the branch tip (`gh api repos/nullvoidundefined/syntactical/pulls/<n> --jq .head.sha` against `git ls-remote origin refs/heads/<branch>`); GitHub once merged a stale head (#104).
+- `server/Dockerfile` installs only the server workspace before running `tsc`, so `typescript` must stay in `server/package.json` even though it is also at the root (#172 review).
+- Docker-backed tests: `SKIP_DOCKER_TESTS=1` skips the pipeline's oracle suites locally; CI runs them in `oracle-runners`. The server integration tests need `TEST_DATABASE_URL` or a local Docker.
+- The pipeline's golden files are hand-written; a new runner needs `pipeline/golden/<id>.json` recorded against the real runner, and `pipeline/src/__tests__/types/oracleLanguageIds.test.ts` fails until it exists.
+- Production SQL: read the Neon connection string with `neonctl connection-string main --project-id rough-paper-04073210 --ssl verify-full` into a variable and guard one-row updates in a `DO` block (`server/DEPLOY.md`).
