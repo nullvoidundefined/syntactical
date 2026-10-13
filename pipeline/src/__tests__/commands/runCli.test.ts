@@ -25,8 +25,8 @@ function buildDeps(env: Record<string, string | undefined> = {}): CliDeps & {
             deps.calls.push({ command: 'apply-staging' });
             return { rationales: 0, references: 0 };
         },
-        buildManifest: async (contentRoot: string) => {
-            deps.roots.push(contentRoot);
+        buildManifest: async (contentRoot?: string) => {
+            deps.roots.push(contentRoot ?? '(none)');
         },
         calls: [] as Record<string, unknown>[],
         classify: async (options: { contentRoot: string }) => {
@@ -249,11 +249,11 @@ describe('runCli', () => {
         expect(deps.kinds).toEqual([]);
     });
 
-    it('apply-staging rebuilds the manifest with the resolved content root', async () => {
+    it('apply-staging rebuilds the manifest without a content root, since it touches free banks only', async () => {
         const deps = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
         expect(await runCli(['node', 'cli.ts', 'apply-staging'], deps)).toBe(0);
         expect(deps.calls).toEqual([{ command: 'apply-staging' }]);
-        expect(deps.roots).toEqual(['/env-root']);
+        expect(deps.roots).toEqual(['(none)']);
         expect(deps.kinds).toEqual([]);
     });
 });

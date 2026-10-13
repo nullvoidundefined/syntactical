@@ -27,7 +27,7 @@ process.exitCode = await runCli(argv, {
     // The build script is plain JS outside this package; load it by URL so tsc does not follow it.
     buildManifest: async (contentRoot) => {
         const { buildRepoContent } = (await import(buildScript)) as {
-            buildRepoContent: (repoDir: string, contentRoot: string) => Promise<void>;
+            buildRepoContent: (repoDir: string, contentRoot?: string) => Promise<void>;
         };
         await buildRepoContent(repoDir, contentRoot);
     },
