@@ -9,12 +9,14 @@
 // A paid bank file found under `contentDir` refuses the whole run before anything is written
 // (B-60): paid banks are never public, so one there is a mistake to fix, not a source to read.
 // The manifest build runs once, and only when at least one bank was written.
-import { readFile, stat } from 'node:fs/promises';
+import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { validateManifest, type Manifest } from '@syntactical/content-schema';
+import type { Manifest } from '@syntactical/content-schema';
 
-import { assertContentRootUsable } from '../services/classify/assertContentRootUsable.js';
+import { listBankEntries } from '../services/content/listBankEntries.js';
+import { loadCommandManifest } from '../services/content/loadCommandManifest.js';
+import { readBankQuestions } from '../services/content/readBankQuestions.js';
 import { readFallbackTopics } from '../services/classify/readFallbackTopics.js';
 import { readLatestReport } from '../services/classify/readLatestReport.js';
 import { readTaxonomy } from '../services/enrich/readTaxonomy.js';
@@ -22,8 +24,9 @@ import { buildPublishContext } from '../services/publish/buildPublishContext.js'
 import { buildPublishReport } from '../services/publish/buildPublishReport.js';
 import { fillEmptyTopics } from '../services/publish/fillEmptyTopics.js';
 import { publishBank } from '../services/publish/publishBank.js';
-import { readSourceQuestions } from '../services/publish/readSourceQuestions.js';
 import { readVerdicts } from '../services/publish/readVerdicts.js';
+import { resolveBankFile } from '../services/resolveBankFile.js';
+import { resolveBankOutputRoot } from '../services/resolveBankOutputRoot.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
 import { writePipelineReport } from '../services/writePipelineReport.js';
 import type { PipelineReport } from '../types/PipelineReport.js';
@@ -45,20 +48,14 @@ export interface PublishResult {
     report: PipelineReport;
 }
 
-async function readJson(path: string): Promise<unknown> {
-    return JSON.parse(await readFile(path, 'utf8'));
-}
-
 async function isFilePresent(path: string): Promise<boolean> {
     return (await stat(path).catch(() => null))?.isFile() ?? false;
 }
 
-async function assertNoPublicPaidBank(contentDir: string, languages: Manifest['languages']): Promise<void> {
-    for (const { banks, id } of languages) {
-        for (const [difficulty, { access, path }] of Object.entries(banks)) {
-            if (access === 'paid' && (await isFilePresent(join(contentDir, path)))) {
-                throw new Error(`paid bank in public content: ${id}/${difficulty}`);
-            }
+async function assertNoPublicPaidBank(contentDir: string, manifest: Manifest): Promise<void> {
+    for (const { bankKey, entry } of listBankEntries(manifest)) {
+        if (entry.access === 'paid' && (await isFilePresent(join(contentDir, entry.path)))) {
+            throw new Error(`paid bank in public content: ${bankKey}`);
         }
     }
 }
@@ -68,42 +65,29 @@ export async function publish(options: PublishOptions): Promise<PublishResult> {
     const log = (line: string): void => options.log(sanitizeLogText(line));
     const startedAt = now();
     const manifestPath = join(contentDir, 'manifest.json');
-    // The manifest is untrusted: language ids and bank paths are joined into file paths below.
-    const checked = validateManifest(await readJson(manifestPath));
-    if ('rule' in checked) {
-        const { rule } = checked;
-        throw new Error(`Manifest rejected: ${sanitizeLogText(rule)}`);
-    }
-    const {
-        manifest: { languages },
-    } = checked;
-    if (languages.some(({ banks }) => Object.values(banks).some(({ access }) => access !== 'free'))) {
-        await assertContentRootUsable(contentRoot, pipelineDir, contentDir);
-    }
-    await assertNoPublicPaidBank(contentDir, languages);
+    const manifest = await loadCommandManifest({ contentDir, contentRoot, pipelineDir });
+    await assertNoPublicPaidBank(contentDir, manifest);
     const previous = await readLatestReport(join(pipelineDir, 'reports'));
     const verdicts = readVerdicts(previous);
     const fallbackTopics = await readFallbackTopics(join(pipelineDir, 'topics.json'));
     const banks: Record<string, PublishBankResult> = {};
-    for (const language of languages) {
+    for (const language of manifest.languages) {
         const { banks: entries, id: languageId } = language;
         const taxonomy = (await readTaxonomy(pipelineDir, languageId)) ?? [];
         const context = buildPublishContext(language, taxonomy, fallbackTopics[languageId]);
-        for (const [difficulty, { access, path }] of Object.entries(entries)) {
+        for (const [difficulty, entry] of Object.entries(entries)) {
             const bankKey = `${languageId}/${difficulty}`;
-            const publicFile = join(contentDir, path);
-            const privateFile = join(contentRoot, path);
-            const isFree = access === 'free';
+            const bankFile = resolveBankFile(contentDir, contentRoot, entry);
             banks[bankKey] = await publishBank({
-                bankFile: isFree ? publicFile : privateFile,
+                bankFile,
                 bankKey,
                 context,
                 difficulty,
                 languageId,
                 log,
-                outRoot: isFree ? pipelineDir : contentRoot,
+                outRoot: resolveBankOutputRoot(pipelineDir, contentRoot, entry),
                 reported: verdicts.get(bankKey) ?? new Map(),
-                source: await readSourceQuestions([isFree ? publicFile : privateFile]),
+                source: await readBankQuestions(bankFile),
             });
         }
     }

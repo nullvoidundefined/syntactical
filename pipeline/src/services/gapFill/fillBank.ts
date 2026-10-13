@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 import type { FillBankArgs } from '../../types/FillBankArgs.js';
 import type { FillBankResult } from '../../types/FillBankResult.js';
-import { writeJsonAtomic } from '../classify/writeJsonAtomic.js';
+import { writeJsonAtomic } from '../json/writeJsonAtomic.js';
 import { readExistingOracles } from '../readExistingOracles.js';
 
 import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
@@ -13,7 +13,7 @@ import { ProviderTransientError } from '../../types/ProviderTransientError.js';
 import { countQuestionsNeeded } from './countQuestionsNeeded.js';
 import { generateBatch } from './generateBatch.js';
 import { buildCardKey } from './buildCardKey.js';
-import { readJsonIfPresent } from './readJsonIfPresent.js';
+import { readJsonIfPresent } from '../json/readJsonIfPresent.js';
 
 const classificationsSchema = z.record(z.string(), z.looseObject({ topic: z.string() }));
 
