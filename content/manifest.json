@@ -920,6 +920,115 @@
         }
       },
       "category": "frontend"
+    },
+    {
+      "id": "typescript-types",
+      "label": "TypeScript Types",
+      "glyph": "TYPES",
+      "tagline": "Type-level TypeScript: conditional, mapped, and template types.",
+      "grammar": "typescript",
+      "topics": [
+        {
+          "id": "conditional-types",
+          "label": "Conditional types"
+        },
+        {
+          "id": "infer",
+          "label": "Infer"
+        },
+        {
+          "id": "mapped-types",
+          "label": "Mapped types"
+        },
+        {
+          "id": "template-literal-types",
+          "label": "Template literal types"
+        },
+        {
+          "id": "distributive-conditionals",
+          "label": "Distributive conditionals"
+        },
+        {
+          "id": "variance-and-assignability",
+          "label": "Variance and assignability"
+        },
+        {
+          "id": "overloads-and-satisfies",
+          "label": "Overloads and satisfies"
+        },
+        {
+          "id": "discriminated-unions",
+          "label": "Discriminated unions"
+        },
+        {
+          "id": "generic-constraints",
+          "label": "Generic constraints"
+        },
+        {
+          "id": "recursive-and-indexed-types",
+          "label": "Recursive and indexed types"
+        }
+      ],
+      "misconceptions": [],
+      "banks": {
+        "easy": {
+          "path": "typescript-types/easy.json",
+          "hash": "06390a9873d0854f3f80ae423a4ba3e0d84a52e5edae0667db4be996d4011d3f",
+          "access": "free",
+          "contentVersion": 3,
+          "topicCounts": {
+            "conditional-types": 10,
+            "infer": 10,
+            "mapped-types": 10,
+            "template-literal-types": 10,
+            "distributive-conditionals": 9,
+            "variance-and-assignability": 10,
+            "overloads-and-satisfies": 10,
+            "discriminated-unions": 10,
+            "generic-constraints": 10,
+            "recursive-and-indexed-types": 10
+          }
+        },
+        "medium": {
+          "path": "typescript-types/medium.json",
+          "hash": "26acec77110e8083b41e8f990b4c0fc99cea7dab581b6111f9f4401250fd117a",
+          "access": "paid",
+          "contentVersion": 3,
+          "topicCounts": {
+            "infer": 10,
+            "mapped-types": 10,
+            "template-literal-types": 10,
+            "distributive-conditionals": 10,
+            "variance-and-assignability": 10,
+            "overloads-and-satisfies": 10,
+            "discriminated-unions": 10,
+            "generic-constraints": 10,
+            "recursive-and-indexed-types": 10,
+            "conditional-types": 9
+          },
+          "productId": "syntactical.typescript-types.medium"
+        },
+        "hard": {
+          "path": "typescript-types/hard.json",
+          "hash": "4f78162c0bfcff627b2c877399983add018bb0cba00f98ea7ee7a0cc14e8cdfc",
+          "access": "paid",
+          "contentVersion": 3,
+          "topicCounts": {
+            "conditional-types": 10,
+            "infer": 10,
+            "mapped-types": 10,
+            "template-literal-types": 10,
+            "distributive-conditionals": 10,
+            "variance-and-assignability": 10,
+            "overloads-and-satisfies": 10,
+            "discriminated-unions": 10,
+            "generic-constraints": 10,
+            "recursive-and-indexed-types": 10
+          },
+          "productId": "syntactical.typescript-types.hard"
+        }
+      },
+      "category": "frontend"
     }
   ]
 }
