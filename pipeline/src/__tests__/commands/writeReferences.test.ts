@@ -21,7 +21,7 @@ function provider(revealsAnswer: boolean, calls: string[] = []): ModelProvider {
     return {
         async generate(request) {
             calls.push(request.promptVersion);
-            const value = request.promptVersion === 'write-reference-v1' ? REFERENCE : { reason: 'r', revealsAnswer };
+            const value = request.promptVersion === 'write-reference-v2' ? REFERENCE : { reason: 'r', revealsAnswer };
             return { model: 'fake', value: request.schema.parse(value) };
         },
     };
