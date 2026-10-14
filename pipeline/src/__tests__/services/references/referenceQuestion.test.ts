@@ -32,7 +32,7 @@ function provider(leaks: boolean[], requests: ModelRequest<unknown>[] = []): Mod
     return {
         async generate(request) {
             requests.push(request as ModelRequest<unknown>);
-            if (request.promptVersion === 'write-reference-v1') {
+            if (request.promptVersion === 'write-reference-v2') {
                 return { model: 'fake', value: request.schema.parse(REFERENCE) };
             }
             const value = { reason: 'r', revealsAnswer: leaks.shift() ?? false };
@@ -52,11 +52,11 @@ describe('referenceQuestion', () => {
             reference: { ...REFERENCE, docs: [REFERENCE.docs[0]] },
             status: 'accepted',
         });
-        const writePrompt = requests.find(({ promptVersion }) => promptVersion === 'write-reference-v1')?.prompt ?? '';
+        const writePrompt = requests.find(({ promptVersion }) => promptVersion === 'write-reference-v2')?.prompt ?? '';
         expect(writePrompt).not.toContain('SECRET-EXPLANATION-41');
         expect(writePrompt).toContain('postgresql.org');
         const leakPrompt =
-            requests.find(({ promptVersion }) => promptVersion === 'check-reference-leak-v3')?.prompt ?? '';
+            requests.find(({ promptVersion }) => promptVersion === 'check-reference-leak-v4')?.prompt ?? '';
         expect(leakPrompt).toContain('The || operator');
         expect(leakPrompt).not.toContain('text1 || text2');
     });
@@ -68,7 +68,7 @@ describe('referenceQuestion', () => {
             secondProvider: provider([true, false]),
         });
         expect(outcome.status).toBe('accepted');
-        expect(requests.filter(({ promptVersion }) => promptVersion === 'write-reference-v1')).toHaveLength(2);
+        expect(requests.filter(({ promptVersion }) => promptVersion === 'write-reference-v2')).toHaveLength(2);
     });
 
     it('gives up after two references that reveal the answer', async () => {
