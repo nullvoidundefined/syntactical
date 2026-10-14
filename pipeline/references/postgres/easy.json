@@ -2,529 +2,905 @@
   "pg-easy-01": {
     "docs": [
       {
-        "title": "String Functions and Operators",
+        "title": "String functions and operators",
         "url": "https://www.postgresql.org/docs/current/functions-string.html"
       },
       {
-        "title": "Operator Type Resolution",
+        "title": "Operator type conversion rules",
         "url": "https://www.postgresql.org/docs/current/typeconv-oper.html"
       }
     ],
     "syntax": "-- General form\n--   expr1 || expr2\n-- The operator is chosen by the operand types (operator overloading).\n-- Postgres defines || for several type families (text, arrays, bytea, jsonb, tsvector...).\n\n-- Example 1: building a label from columns\nSELECT first_name || ' ' || last_name AS full_name FROM people;\n\n-- Example 2: array operand\nSELECT ARRAY[1,2] || 3;   -- appends an element to an array\n\n-- Gotchas / variations\n-- * NULL operand: with plain || the whole result is NULL.\n--     SELECT 'a' || NULL;          -- yields NULL\n--   concat(a, b, ...) skips NULLs; concat_ws(sep, a, b, ...) adds a separator.\n-- * Non-text operand: one side may be a non-text type, which is cast to text.\n--     SELECT 'n=' || 42;\n--   With two untyped literals or two non-text values, add an explicit cast: 42::text.\n-- * Precedence: || binds looser than + and -, so wrap mixed expressions in parentheses.\n-- * Logical OR is the keyword OR, not a symbol.\n-- * Bytea values use || too, joining the byte strings.",
-    "title": "The || operator and operator semantics in Postgres"
+    "title": "SQL operators on text values"
   },
   "pg-easy-07": {
     "docs": [
       {
-        "title": "psql reference (meta-commands)",
+        "title": "psql interactive terminal behavior",
         "url": "https://www.postgresql.org/docs/current/app-psql.html"
       },
       {
-        "title": "Transactions tutorial",
+        "title": "Transaction basics in SQL",
         "url": "https://www.postgresql.org/docs/current/tutorial-transactions.html"
       },
       {
-        "title": "BEGIN command",
+        "title": "Starting transaction blocks",
         "url": "https://www.postgresql.org/docs/current/sql-begin.html"
       }
     ],
     "syntax": "-- psql meta-commands start with a backslash and are handled by psql itself,\n-- not sent to the server as SQL.\n--   \\q          quit psql (also \\quit)\n--   \\conninfo   show current connection details\n--   \\set        show or set psql variables\n--   \\echo text  print text\n\n-- Explicit transaction control is plain SQL sent to the server:\nBEGIN;\nINSERT INTO audit_log(msg) VALUES ('hello');\n-- choose one way to end the transaction:\nCOMMIT;      -- make changes permanent\n-- ROLLBACK; -- discard changes\n\n-- Gotchas (as comments):\n-- * psql is only a client; the transaction lives on the server\n--   and belongs to the connection.\n-- * Think about what the server does when a connection\n--   closes while a transaction is still open.\n-- * Check state with the prompt: %x in PROMPT1 shows\n--   '*' when in a transaction block, '!' when failed.\n--     \\set PROMPT1 '%/%x%R%# '\n-- * \\set AUTOCOMMIT off makes psql open a transaction\n--   implicitly before your first command; you must\n--   COMMIT explicitly.\n-- * Ctrl-D (end of input) also ends the session, like \\q.",
-    "title": "psql meta-commands and transaction state at session end"
+    "title": "PostgreSQL client sessions and transactions"
   },
   "pg-easy-08": {
     "docs": [
       {
-        "title": "psql — Meta-Commands",
+        "title": "psql meta-commands reference",
         "url": "https://www.postgresql.org/docs/current/app-psql.html#APP-PSQL-META-COMMANDS"
       },
       {
-        "title": "psql reference page",
+        "title": "psql command-line client overview",
         "url": "https://www.postgresql.org/docs/current/app-psql.html"
       }
     ],
     "syntax": "-- psql backslash meta-commands are handled by the psql client, not the server.\n-- General form:\n--   \\command [argument]\n\n-- Display-related toggles (no argument flips the current state):\n--   \\timing [on|off]    client-side timing of statements\n--   \\pset [option [value]]   set a table output option\n--   \\a                  toggle aligned / unaligned output\n--   \\H                  toggle HTML output\n--   \\x [on|off|auto]    toggle expanded output mode\n\n-- Example session:\n--   mydb=> \\pset border 2\n--   mydb=> \\pset null '(null)'\n--   mydb=> \\pset format aligned\n\n-- Gotchas:\n-- * Calling a toggle with no argument flips it; passing on/off sets it explicitly.\n-- * \\pset with no arguments lists nothing; use \\pset OPTION to show one setting.\n-- * Settings last only for the current session unless placed in ~/.psqlrc.\n-- * \\x auto picks the layout per result, based on terminal width.\n-- * Meta-commands end at the end of the line; they take no semicolon.\n-- * Related: \\pset pager, \\pset columns, \\pset format (aligned, csv, html, wrapped).\n-- * Use \\? inside psql to list all meta-commands.",
-    "title": "psql meta-commands for output display formatting"
-  },
-  "pg-easy-10": {
-    "docs": [
-      {
-        "title": "Numeric Types: Serial Types",
-        "url": "https://www.postgresql.org/docs/current/datatype-numeric.html#DATATYPE-SERIAL"
-      },
-      {
-        "title": "Sequence Manipulation Functions",
-        "url": "https://www.postgresql.org/docs/current/functions-sequence.html"
-      }
-    ],
-    "syntax": "-- General form\n-- column_name  SMALLSERIAL | SERIAL | BIGSERIAL  [constraints]\n-- Each is shorthand (not a true type) that expands to:\n--   CREATE SEQUENCE tbl_col_seq AS <int type>;\n--   col <int type> NOT NULL DEFAULT nextval('tbl_col_seq');\n--   ALTER SEQUENCE tbl_col_seq OWNED BY tbl.col;\n\n-- Example 1: declare\nCREATE TABLE invoices (\n  id    BIGSERIAL PRIMARY KEY,\n  label text\n);\n\n-- Example 2: the identity-column alternative (SQL standard)\nCREATE TABLE tickets (\n  id   integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n  note text\n);\n\n-- Underlying types and sequence ranges (check the docs table):\n--   SMALLSERIAL -> smallint\n--   SERIAL      -> integer\n--   BIGSERIAL   -> bigint\n-- Compare the storage size and range of each underlying type.\n\n-- Gotchas\n-- * Sequences do not roll back; gaps are normal.\n-- * The sequence is created with the column's type, so its maximum matches that type.\n-- * Exceeding the maximum raises an error on nextval.\n-- * Dropping the column drops its owned sequence.\n-- * Inspect: SELECT pg_get_serial_sequence('invoices','id');\n-- * Foreign keys referencing the column should use the matching plain type (bigint/integer), not serial.",
-    "title": "Auto-incrementing column types (serial pseudo-types)"
+    "title": "psql interactive terminal behavior"
   },
   "pg-easy-12": {
     "docs": [
       {
-        "title": "SQL Syntax: Identifiers and Key Words",
+        "title": "PostgreSQL lexical structure: identifiers",
         "url": "https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS"
       }
     ],
     "syntax": "-- General form:\n--   unquoted_identifier   -> case-insensitive name\n--   \"Quoted Identifier\"   -> exact name, case and spaces preserved\n\n-- Example 1: unquoted names\nCREATE TABLE Orders (OrderId int, CustomerName text);\nSELECT CustomerName FROM ORDERS;      -- same table and column as above\n\n-- Example 2: quoted names\nCREATE TABLE \"Invoices\" (\"InvoiceId\" int, total numeric);\nSELECT \"InvoiceId\" FROM \"Invoices\";   -- must match exactly\n\n-- Gotchas / variations:\n-- * The rule applies to identifiers (tables, columns, aliases, functions),\n--   not to string literals, which use single quotes and keep their case.\n-- * Once created with double quotes and mixed case, every later reference\n--   must also be quoted with the same case.\n-- * Double quotes also allow reserved words and special characters in names.\n-- * Inside a quoted identifier, write a literal double quote as \"\".\n-- * Folding is done by the parser at parse time, so the catalogs\n--   (pg_class, information_schema) store the folded form.\n-- * Common convention: use lowercase snake_case and avoid quoting.",
-    "title": "Identifier case handling and double-quoted identifiers"
+    "title": "SQL identifiers and naming rules"
   },
   "pg-easy-16": {
     "docs": [
       {
-        "title": "Schemas: The Schema Search Path",
+        "title": "Schema search path and name lookup",
         "url": "https://www.postgresql.org/docs/current/ddl-schemas.html#DDL-SCHEMAS-PATH"
       },
       {
-        "title": "Schemas (DDL)",
+        "title": "Schemas in PostgreSQL databases",
         "url": "https://www.postgresql.org/docs/current/ddl-schemas.html"
       },
       {
-        "title": "search_path runtime setting",
+        "title": "Client connection configuration settings",
         "url": "https://www.postgresql.org/docs/current/runtime-config-client.html#GUC-SEARCH-PATH"
       }
     ],
     "syntax": "-- Unqualified names are resolved using the search_path setting.\n-- General form:\n--   SHOW search_path;\n--   SET search_path TO schema_a, schema_b, ...;\n--   CREATE TABLE [schema.]table_name (...);\n\n-- Example: inspect the path and see where a new table lands\nSHOW search_path;                      -- lists schemas searched, in order\nCREATE TABLE inventory (id int);       -- unqualified: created in the FIRST existing\n                                       -- schema on the search_path\nSELECT schemaname, tablename\nFROM pg_tables\nWHERE tablename = 'inventory';         -- shows which schema holds it\n\n-- Example: qualify explicitly or change the path\nCREATE SCHEMA staging;\nCREATE TABLE staging.orders (id int);  -- explicit schema\nSET search_path TO staging, public;    -- now unqualified creates go to staging\n\n-- Gotchas:\n-- * The default search_path value is \"$user\", <default schema>.\n--   \"$user\" is skipped if no schema has the current user's name.\n-- * System catalogs (pg_catalog) are always searched implicitly,\n--   even if not listed in the path.\n-- * information_schema is a standard-views schema, not a place for user tables.\n-- * Lookups search in order; creation uses only the first existing schema.\n-- * ALTER ROLE ... SET search_path / ALTER DATABASE ... SET makes it persistent.\n-- * Since PostgreSQL 15, ordinary users lack CREATE on the default schema\n--   unless granted.",
-    "title": "Schema name resolution and the search_path setting"
-  },
-  "pg-easy-18": {
-    "docs": [
-      {
-        "title": "Returning Data From Modified Rows",
-        "url": "https://www.postgresql.org/docs/current/dml-returning.html"
-      },
-      {
-        "title": "DELETE command reference",
-        "url": "https://www.postgresql.org/docs/current/sql-delete.html"
-      }
-    ],
-    "syntax": "-- General form\nINSERT INTO t (cols) VALUES (...) RETURNING output_expr [, ...];\nUPDATE t SET col = expr WHERE cond RETURNING output_expr [AS name] [, ...];\nDELETE FROM t WHERE cond RETURNING output_expr [, ...];\n\n-- Examples (different table/columns)\nINSERT INTO users (name) VALUES ('Ana') RETURNING id, name;\n\nUPDATE items SET qty = qty - 1 WHERE sku = 'A7'\n  RETURNING sku, qty AS qty_now;\n\nDELETE FROM sessions WHERE expired_at < now()\n  RETURNING token;\n\n-- Variations and gotchas\n-- * RETURNING * returns all columns of the affected rows; expressions are allowed.\n-- * One result row is produced per row the statement affected.\n--   If no rows match, the result set is empty.\n-- * Which row version is shown depends on the command: check the\n--   docs for INSERT, UPDATE and DELETE.\n-- * Since PostgreSQL 18, OLD and NEW can be referenced explicitly:\n--     UPDATE t SET v = v + 1 RETURNING old.v AS before, new.v AS after;\n-- * Works inside CTEs to chain results:\n--     WITH gone AS (DELETE FROM a WHERE x > 5 RETURNING *)\n--     INSERT INTO a_archive SELECT * FROM gone;\n-- * BEFORE triggers can change what is stored, which affects the returned values.",
-    "title": "RETURNING clause in data-modifying statements"
+    "title": "PostgreSQL schemas and object name resolution"
   },
   "pg-easy-21": {
     "docs": [
       {
-        "title": "INSERT - ON CONFLICT Clause",
+        "title": "Conflict handling clauses in SQL inserts",
         "url": "https://www.postgresql.org/docs/current/sql-insert.html#SQL-ON-CONFLICT"
       },
       {
-        "title": "INSERT command reference",
+        "title": "SQL INSERT statement overview",
         "url": "https://www.postgresql.org/docs/current/sql-insert.html"
       }
     ],
     "syntax": "-- General form\nINSERT INTO table (cols...)\nVALUES (...)\nON CONFLICT [ conflict_target ] conflict_action;\n\n-- conflict_target is one of:\n--   ( col [, ...] )                 -- inference by column list\n--   ( expr )                        -- index expression\n--   ON CONSTRAINT constraint_name   -- name a constraint directly\n--   optional WHERE predicate        -- for partial indexes\n\n-- conflict_action is one of:\n--   DO NOTHING\n--   DO UPDATE SET col = expr [, ...] [WHERE cond]\n\n-- Example 1: target a column list\nCREATE TABLE users (email text UNIQUE, name text);\nINSERT INTO users (email, name)\nVALUES ('a@example.com', 'Ann')\nON CONFLICT (email) DO NOTHING;\n\n-- Example 2: update using the proposed row via EXCLUDED\nINSERT INTO users (email, name)\nVALUES ('a@example.com', 'Anna')\nON CONFLICT (email) DO UPDATE\n  SET name = EXCLUDED.name;\n\n-- Gotchas\n-- * For DO UPDATE the conflict target is required.\n--   For DO NOTHING it may be omitted (any conflict is skipped).\n-- * A column-list target must match an existing unique index or\n--   unique/exclusion-compatible constraint, otherwise an error is raised.\n-- * Only conflicts on the inferred index are handled by the clause;\n--   a violation of a different unique constraint still raises an error.\n-- * RETURNING yields only rows actually inserted or updated;\n--   skipped rows are not returned.\n-- * One command cannot update the same row twice via DO UPDATE.",
-    "title": "INSERT ... ON CONFLICT (upsert clause)"
+    "title": "Handling insert conflicts in SQL"
   },
   "pg-easy-26": {
     "docs": [
       {
-        "title": "JSON Functions and Operators",
+        "title": "JSON functions and operators",
         "url": "https://www.postgresql.org/docs/current/functions-json.html"
       },
       {
-        "title": "JSON Types",
+        "title": "JSON data types",
         "url": "https://www.postgresql.org/docs/current/datatype-json.html"
       }
     ],
     "syntax": "-- General form\n--   jsonb_expr -> 'key'      -- object field by key\n--   jsonb_expr -> int        -- array element by 0-based index (negative counts from end)\n--   jsonb_expr ->> 'key'     -- same lookup, result converted to text\n--   jsonb_expr #> '{a,b}'    -- path lookup (jsonb);  #>> returns text\n\n-- Example setup: col `doc` is jsonb = {\"shop\": {\"city\": \"Oslo\", \"tags\": [\"a\",\"b\"]}}\nSELECT doc -> 'shop'              FROM t;  -- lookup one level\nSELECT doc -> 'shop' -> 'city'    FROM t;  -- operators chain left to right\nSELECT doc -> 'shop' -> 'tags' -> 0 FROM t;  -- array index\nSELECT doc #>> '{shop,city}'      FROM t;  -- path form, text result\n\n-- Gotchas\n-- * The result type of -> is jsonb (or json for json columns); ->> is text.\n-- * Text key on an object, integer on an array; a mismatch yields NULL.\n-- * A missing key or index yields NULL, not an error.\n-- * Chaining after ->> fails: text has no -> operator.\n-- * Comparing to a string: use ->> 'k' = 'x', or -> 'k' = '\"x\"'::jsonb.\n-- * Operator precedence: parenthesize, e.g. (doc -> 'k') IS NULL.",
-    "title": "jsonb accessor operators (-> and ->>)"
+    "title": "PostgreSQL JSON data access"
   },
   "pg-easy-27": {
     "docs": [
       {
-        "title": "JSON Functions and Operators",
+        "title": "PostgreSQL JSON functions and operators",
         "url": "https://www.postgresql.org/docs/current/functions-json.html"
       },
       {
-        "title": "JSON Types",
+        "title": "PostgreSQL JSON data types",
         "url": "https://www.postgresql.org/docs/current/datatype-json.html"
       }
     ],
     "syntax": "-- General form\n--   jsonb_expr  <operator>  key_or_index\n-- Operators that extract a single element:\n--   ->   extract an object field by key, or an array element by integer index\n--   ->>  same lookup, but with a different result type than ->\n-- Path variants (take a text[] path):\n--   #>   and   #>>\n\n-- Example table: orders(info jsonb)\n-- info = '{\"customer\": {\"city\": \"Oslo\"}, \"tags\": [\"a\",\"b\"], \"qty\": 3}'\n\nSELECT info -> 'customer'              FROM orders;  -- lookup by key\nSELECT info -> 'tags' -> 0             FROM orders;  -- chain operators; integer = array index\nSELECT info #> '{customer,city}'       FROM orders;  -- path lookup\n\n-- Check the result type with pg_typeof():\nSELECT pg_typeof(info -> 'qty'), pg_typeof(info ->> 'qty') FROM orders;\n\n-- Gotchas\n-- * Missing key or out-of-range index yields SQL NULL for both operators.\n-- * A JSON null value is different from SQL NULL when the result stays jsonb.\n-- * Operators can be chained, but the left side must be jsonb (or json).\n-- * Casting is needed for numeric comparisons on extracted values:\n--     WHERE (info ->> 'qty')::int > 2\n-- * Use the result type to decide which operator can be chained further.\n-- * Negative integer index counts from the end of an array: info -> 'tags' -> -1",
-    "title": "jsonb field access operators"
+    "title": "JSON data access in PostgreSQL"
   },
   "pg-easy-29": {
     "docs": [
       {
-        "title": "JSON Creation Functions",
+        "title": "JSON creation functions and operators",
         "url": "https://www.postgresql.org/docs/current/functions-json.html#FUNCTIONS-JSON-CREATION-TABLE"
       },
       {
-        "title": "JSON Types",
+        "title": "JSON data types",
         "url": "https://www.postgresql.org/docs/current/datatype-json.html"
       }
     ],
     "syntax": "-- General form (variadic, arguments alternate key, value, key, value, ...)\njsonb_build_object(key1, value1, key2, value2, ...)  -- returns jsonb object\njsonb_build_array(value1, value2, ...)               -- returns jsonb array\n\n-- Examples\nSELECT jsonb_build_object('name', 'Ada', 'age', 36, 'admin', false);\nSELECT jsonb_build_array('x', 2, NULL, true);\n\n-- Notes and gotchas\n-- * Arguments are taken in pairs; an odd number of arguments raises an error.\n-- * Keys are converted to text; a key cannot be NULL.\n-- * Each value keeps its SQL type when converted to JSON:\n--     numbers become JSON numbers, booleans become JSON booleans,\n--     text becomes JSON strings, NULL becomes JSON null.\n-- * Values may be of mixed types (the function accepts \"any\" arguments).\n-- * Values can be nested: another jsonb_build_object(...) or an array.\n-- * Untyped literals like 'abc' are treated as text.\n-- * json_build_object is the json (not jsonb) variant; jsonb sorts keys\n--   and removes duplicate keys (last value wins).\n-- * Empty call: jsonb_build_object() returns {}.",
-    "title": "Building JSON with jsonb_build_object and jsonb_build_array"
+    "title": "JSON construction functions"
   },
   "pg-easy-33": {
     "docs": [
       {
-        "title": "Conditional Expressions: COALESCE",
+        "title": "Conditional expressions",
         "url": "https://www.postgresql.org/docs/current/functions-conditional.html#FUNCTIONS-COALESCE-NVL-IFNULL"
       },
       {
-        "title": "Comparison Functions and Operators (NULL handling)",
+        "title": "Comparison functions and operators",
         "url": "https://www.postgresql.org/docs/current/functions-comparison.html"
       }
     ],
     "syntax": "-- General form:\n-- COALESCE(value1, value2, ..., valueN)\n-- Evaluates arguments left to right and yields the first\n-- argument that is not NULL. If all are NULL, yields NULL.\n\n-- Example 1: fallback to a literal\nSELECT COALESCE(nickname, 'anonymous') FROM users;\n\n-- Example 2: chain of fallbacks\nSELECT COALESCE(mobile_phone, home_phone, work_phone, 'none') AS contact\nFROM people;\n\n-- Variations and gotchas:\n-- * Later arguments are only evaluated if needed (short-circuit).\n-- * All arguments must resolve to a compatible common type,\n--   otherwise Postgres raises a type error.\n-- * Only NULL triggers the fallback; empty strings and 0\n--   are real values and are returned as-is.\n-- * If every argument is NULL the result is NULL, so end the\n--   list with a non-null literal when you need a guaranteed value.\n-- * Useful in aggregates: COALESCE(SUM(x), 0) for empty groups.\n-- * Related: NULLIF(a, b) returns NULL when a = b.",
-    "title": "COALESCE for handling missing values"
+    "title": "Handling missing values in SQL"
   },
   "pg-easy-34": {
     "docs": [
       {
-        "title": "COALESCE in Conditional Expressions",
+        "title": "Conditional expressions in SQL functions",
         "url": "https://www.postgresql.org/docs/current/functions-conditional.html#FUNCTIONS-COALESCE-NVL-IFNULL"
       }
     ],
     "syntax": "-- General form\nCOALESCE(value1, value2, ..., valueN)\n\n-- Arguments are evaluated left to right; the result is the\n-- first argument that is not NULL. If every argument is NULL,\n-- the result is NULL.\n\n-- Example 1: fallback for an optional column\nSELECT COALESCE(nickname, first_name, 'guest') AS display_name\nFROM users;\n\n-- Example 2: replace NULL in an aggregate\nSELECT COALESCE(SUM(amount), 0) AS total\nFROM payments\nWHERE customer_id = 42;\n\n-- Notes and gotchas\n-- * Later arguments are only evaluated if needed (short-circuit),\n--   so COALESCE(x, 1/0) will not error when x is not NULL.\n-- * All arguments must resolve to a common data type, or Postgres\n--   raises a type error.\n-- * An empty string '' is NOT NULL, so COALESCE does not skip it.\n--   Use COALESCE(NULLIF(col, ''), 'default') to treat '' as missing.\n-- * Equivalent to CASE WHEN v1 IS NOT NULL THEN v1 ... END.\n-- * COALESCE is standard SQL; NVL / IFNULL are not Postgres functions.",
-    "title": "COALESCE conditional expression"
+    "title": "SQL conditional expressions"
   },
   "pg-easy-38": {
+    "docs": [
+      {
+        "title": "Boolean data type",
+        "url": "https://www.postgresql.org/docs/current/datatype-boolean.html"
+      },
+      {
+        "title": "Lexical structure: identifiers and keywords",
+        "url": "https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS"
+      }
+    ],
+    "syntax": "-- Boolean constants (SQL key words):\n--   TRUE | FALSE | NULL (unknown)\n-- Also accepted as string literals cast to boolean:\n--   'true','t','yes','y','on','1'  /  'false','f','no','n','off','0'\n--   (leading/trailing whitespace ignored; string input is case-insensitive)\n\n-- Examples\nSELECT TRUE AS a, false AS b;\nSELECT 'Yes'::boolean;\nCREATE TABLE flags (id int, active boolean DEFAULT true);\nINSERT INTO flags VALUES (1, 'on'), (2, FALSE);\nSELECT * FROM flags WHERE active IS TRUE;\n\n-- Key words and unquoted identifiers: PostgreSQL folds them\n-- to a single case when parsing (lower case for identifiers),\n-- so SELECT, select, SeLeCt are the same.\n-- Quoted identifiers (\"Name\") ARE case-sensitive.\n-- String literal contents are NOT folded, but boolean input\n-- parsing of strings ignores case.\n\n-- Gotchas\n--   Output is displayed as t / f in psql.\n--   Use IS TRUE / IS NOT TRUE / IS UNKNOWN to handle NULL.\n--   Numbers other than '1'/'0' strings are not valid boolean strings.",
+    "title": "SQL keywords and literal values"
+  },
+  "pg-easy-39": {
+    "docs": [
+      {
+        "title": "Constraints in table definitions",
+        "url": "https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS"
+      },
+      {
+        "title": "Creating and defining tables",
+        "url": "https://www.postgresql.org/docs/current/sql-createtable.html"
+      }
+    ],
+    "syntax": "-- Column constraint:\n--   column_name type CHECK (boolean_expression)\n-- Table constraint (may reference several columns):\n--   [CONSTRAINT name] CHECK (boolean_expression)\n\nCREATE TABLE members (\n  age      INTEGER CONSTRAINT age_adult CHECK (age >= 18),\n  min_qty  INTEGER,\n  max_qty  INTEGER,\n  CONSTRAINT qty_order CHECK (min_qty <= max_qty)\n);\n\n-- Add to an existing table:\nALTER TABLE members\n  ADD CONSTRAINT age_cap CHECK (age < 150);\n\n-- Add without scanning existing rows, validate later:\nALTER TABLE members\n  ADD CONSTRAINT age_cap2 CHECK (age < 150) NOT VALID;\nALTER TABLE members VALIDATE CONSTRAINT age_cap2;\n\n-- Notes / gotchas:\n-- * The expression must evaluate to boolean.\n-- * A row is rejected only if the result is FALSE;\n--   TRUE and NULL both pass. Add NOT NULL to forbid NULLs.\n-- * Violations raise an error (SQLSTATE 23514) and the\n--   statement fails.\n-- * Only the row's own columns may be used; no subqueries\n--   to other tables. Expression should be immutable.\n-- * Auto-generated name looks like table_column_check.\n-- * Drop with: ALTER TABLE t DROP CONSTRAINT name;",
+    "title": "Table constraints and data integrity"
+  },
+  "pg-easy-46": {
+    "docs": [
+      {
+        "title": "System information functions and operators",
+        "url": "https://www.postgresql.org/docs/current/functions-info.html"
+      },
+      {
+        "title": "System catalogs for databases",
+        "url": "https://www.postgresql.org/docs/current/catalog-pg-database.html"
+      }
+    ],
+    "syntax": "-- General form: functions that take no arguments report session state\n-- SELECT <function>();   -- some are also usable without parentheses (e.g. current_user)\n\n-- Examples\nSELECT current_user;            -- role the session is running as\nSELECT session_user;            -- role that opened the session\nSELECT current_schema();        -- first existing schema on search_path\nSELECT current_schemas(false);  -- array of schemas searched, excluding implicit ones\nSELECT inet_server_port();      -- server port of the connection\nSELECT version();               -- server version string\n\n-- Gotchas\n-- * Return values describe the current session/connection, not server-wide config.\n-- * Many return type name (identifier) or text; names are not the same as OIDs.\n-- * OIDs are numeric identifiers in system catalogs (e.g. pg_database.oid),\n--   and are looked up there rather than returned by most session functions.\n-- * Values may differ between sessions, e.g. after SET ROLE or SET search_path.\n-- * Settings in postgresql.conf are read with SHOW or current_setting('name').\n-- * pg_database lists all databases in the cluster: SELECT datname, oid FROM pg_database;",
+    "title": "PostgreSQL session information functions"
+  },
+  "pg-easy-48": {
+    "docs": [
+      {
+        "title": "System information functions and operators",
+        "url": "https://www.postgresql.org/docs/current/functions-info.html"
+      },
+      {
+        "title": "Displaying server runtime settings",
+        "url": "https://www.postgresql.org/docs/current/sql-show.html"
+      }
+    ],
+    "syntax": "-- General forms (system information functions and settings)\nSELECT <function_or_setting>;\nSHOW <parameter>;\nSELECT current_setting('<parameter>');\n\n-- Examples of related version-inspection tools\nSHOW server_version;                    -- version number text only, e.g. 16.3\nSELECT current_setting('server_version_num');  -- integer-style version as text\nSELECT current_database(), current_user;       -- other session info functions\n\n-- psql client side (not SQL, run at the psql prompt or shell):\n--   \\conninfo          -- describes the current connection\n--   psql --version     -- prints the client program's version (shell)\n\n-- Variations and gotchas:\n-- * Server-side functions run on the server, so they describe the server,\n--   not the psql program you typed into.\n-- * Some functions return descriptive text, others return a bare number;\n--   check the return type with pg_typeof(...), e.g.\n--     SELECT pg_typeof(current_setting('server_version_num'));\n-- * current_setting() returns text, so cast it when comparing numerically:\n--     SELECT current_setting('server_version_num')::int >= 140000;\n-- * Application code should prefer the numeric setting for version checks\n--   rather than parsing descriptive text.\n-- * Migration tools keep their own schema version tables; Postgres itself\n--   has no built-in notion of an application schema version.",
+    "title": "PostgreSQL system information"
+  },
+  "pg-easy-49": {
+    "docs": [
+      {
+        "title": "Server connection configuration settings",
+        "url": "https://www.postgresql.org/docs/current/runtime-config-connection.html"
+      },
+      {
+        "title": "Client connection parameters and libraries",
+        "url": "https://www.postgresql.org/docs/current/libpq-connect.html"
+      }
+    ],
+    "syntax": "-- General form: how a client picks the server endpoint\n--   postgresql://user@host:PORT/dbname\n--   psql -h HOST -p PORT -U USER -d DBNAME\n\n-- Server side (postgresql.conf):\n--   port = <integer>              -- TCP port the server listens on\n--   listen_addresses = 'localhost' -- which interfaces to bind\n--   unix_socket_directories = '/var/run/postgresql'\n\n-- Example: connecting to a server configured for a custom port\n--   psql -h db.example.com -p 6543 -U app -d shop\n--   postgresql://app@db.example.com:6543/shop\n\n-- Inspect the running server's setting from SQL:\nSHOW port;\nSELECT name, setting, source FROM pg_settings WHERE name = 'port';\n\n-- Gotchas:\n-- * If -p / the URL port / PGPORT is omitted, the client uses its compiled-in\n--   default (the same default the server ships with).\n-- * Changing port requires a server restart, not just a reload.\n-- * The port also names the Unix socket file (.s.PGSQL.<port>).\n-- * Several clusters on one host each need a distinct port.\n-- * Other database products use their own, different default ports;\n--   do not assume one product's port applies to another.\n-- * Env var PGPORT sets the client's default port.",
+    "title": "Database server networking basics"
+  },
+  "pg-easy-57": {
+    "docs": [
+      {
+        "title": "SQL string functions and operators",
+        "url": "https://www.postgresql.org/docs/current/functions-string.html"
+      },
+      {
+        "title": "Pattern matching with regular expressions",
+        "url": "https://www.postgresql.org/docs/current/functions-matching.html#FUNCTIONS-POSIX-REGEXP"
+      }
+    ],
+    "syntax": "-- General form:\n-- regexp_replace(source, pattern, replacement [, flags])\n-- regexp_replace(source, pattern, replacement, start [, N [, flags]])  -- PG 15+\n\n-- Examples (different inputs):\nSELECT regexp_replace('a.b.c.d', '\\.', ':');        -- one replacement, see flags below\nSELECT regexp_replace('a.b.c.d', '\\.', ':', 'g');   -- flag changes scope\nSELECT regexp_replace('Hello World', 'o', '0', 'gi');\nSELECT regexp_replace('John Smith', '(\\w+) (\\w+)', '\\2, \\1');  -- backrefs \\1..\\9\n\n-- Notes / gotchas:\n-- * Pattern is a POSIX regular expression, not a literal string.\n-- * Without flags, only the FIRST match is replaced.\n-- * 'g' = replace all matches (global); 'i' = case-insensitive;\n--   flags can be combined, e.g. 'gi'.\n-- * Replacement: \\1-\\9 insert captured groups, \\& inserts whole match;\n--   write \\\\ for a literal backslash.\n-- * If there is no match, the source string is returned unchanged.\n-- * Result is text. Input is not modified.\n-- * For plain literal replacement of all occurrences, replace(src, from, to)\n--   is simpler and does not use regex.\n-- * Invalid regex or unknown flag raises an error.",
+    "title": "Text pattern handling in SQL"
+  },
+  "pg-easy-64": {
+    "docs": [
+      {
+        "title": "SQL commands for bulk data transfer",
+        "url": "https://www.postgresql.org/docs/current/sql-copy.html"
+      },
+      {
+        "title": "Interactive command-line client tools",
+        "url": "https://www.postgresql.org/docs/current/app-psql.html"
+      }
+    ],
+    "syntax": "-- Server-side form (SQL command):\nCOPY table_name [(col, ...)] FROM 'path' | PROGRAM 'cmd' | STDIN [WITH (option, ...)];\nCOPY table_name | (query) TO 'path' | PROGRAM 'cmd' | STDOUT [WITH (option, ...)];\n\n-- Client-side form (psql meta-command, one line, no trailing semicolon needed):\n\\copy table_name [(col, ...)] FROM 'path' | STDIN [WITH (option, ...)]\n\\copy (query) TO 'path' | STDOUT [WITH (option, ...)]\n\n-- Examples:\nCOPY invoices TO '/var/lib/postgresql/out/invoices.csv' WITH (FORMAT csv, HEADER);\n\\copy invoices FROM 'invoices_in.csv' WITH (FORMAT csv, HEADER)\n\n-- Notes / gotchas:\n-- * COPY with a file name: the file is read/written by the server process,\n--   path resolved on the server's filesystem, using the server OS account's permissions.\n-- * COPY with a file needs superuser or membership in pg_read_server_files /\n--   pg_write_server_files; PROGRAM needs pg_execute_server_program.\n-- * \\copy: psql opens the file itself as the client user, then streams the data\n--   to the server via COPY ... FROM STDIN / TO STDOUT. Path is relative to psql's\n--   working directory.\n-- * COPY ... FROM STDIN / TO STDOUT transfers data over the connection (used by drivers).\n-- * Options: FORMAT text|csv|binary, DELIMITER, NULL, HEADER, QUOTE, ESCAPE.\n-- * COPY is not a normal INSERT: it is fast, and triggers fire but rules do not.\n-- * Whole load fails if any row is bad (unless ON_ERROR is set in newer versions).",
+    "title": "Bulk data import and export in PostgreSQL"
+  },
+  "pg-easy-67": {
+    "docs": [
+      {
+        "title": "Sequence manipulation functions",
+        "url": "https://www.postgresql.org/docs/current/functions-sequence.html"
+      },
+      {
+        "title": "Creating and configuring sequences",
+        "url": "https://www.postgresql.org/docs/current/sql-createsequence.html"
+      }
+    ],
+    "syntax": "-- General forms\nnextval(regclass)  -> bigint\ncurrval(regclass)  -> bigint\nlastval()          -> bigint\nsetval(regclass, bigint [, is_called boolean]) -> bigint\n\n-- Example setup\nCREATE SEQUENCE order_no START 100 INCREMENT 5;\n\nSELECT currval('order_no');      -- error if nextval not yet called in this session\nSELECT setval('order_no', 500);  -- next nextval returns 505\nSELECT setval('order_no', 500, false); -- next nextval returns 500\nSELECT lastval();                -- latest value returned by nextval in this session, any sequence\n\n-- Typical use\nINSERT INTO orders(id, item) VALUES (nextval('order_no'), 'pen');\n\n-- Gotchas (as comments)\n-- * Sequence state is shared by all sessions; currval/lastval are session-local.\n-- * Sequence operations are non-transactional: they are not rolled back\n--   on ROLLBACK, so gaps in values are normal.\n-- * Concurrent sessions each receive distinct values, never blocked by\n--   other transactions' uncommitted calls.\n-- * CACHE n makes a session preallocate values; other sessions may see\n--   out-of-order values.\n-- * Argument is regclass: a quoted name, resolved via search_path;\n--   use 'schema.seq' to be explicit.\n-- * serial / identity columns use a sequence behind the scenes.",
+    "title": "PostgreSQL sequences"
+  },
+  "pg-easy-68": {
+    "docs": [
+      {
+        "title": "Sequence manipulation functions",
+        "url": "https://www.postgresql.org/docs/current/functions-sequence.html"
+      },
+      {
+        "title": "Creating and configuring sequences",
+        "url": "https://www.postgresql.org/docs/current/sql-createsequence.html"
+      }
+    ],
+    "syntax": "-- General form\nCREATE SEQUENCE seq_name [INCREMENT BY n] [START WITH n] [CACHE n] [CYCLE];\nSELECT nextval('seq_name');   -- advance and return the new value\nSELECT currval('seq_name');  -- last value nextval returned in THIS session\nSELECT setval('seq_name', 100);         -- set current value explicitly\nSELECT setval('seq_name', 100, false);  -- next nextval returns 100\n\n-- Example\nCREATE SEQUENCE invoice_no START 500;\nCREATE TABLE invoice (id bigint DEFAULT nextval('invoice_no'), note text);\nINSERT INTO invoice (note) VALUES ('first');\n\n-- Gotchas (as comments)\n-- * Sequence operations are non-transactional: they are designed so that\n--   concurrent sessions never block each other on nextval.\n-- * Consider how the effect of nextval interacts with transaction\n--   commit/abort, and what that means for numbering continuity.\n-- * Other causes of unused numbers: failed INSERTs, CACHE preallocation,\n--   crash recovery.\n-- * currval errors if nextval was not yet called in the session.\n-- * serial / GENERATED ... AS IDENTITY columns use sequences internally,\n--   so they follow the same rules.\n-- * Do not rely on sequences for gap-free numbering; use a separate\n--   counter table with row locking if that is required.",
+    "title": "Database sequences and transactions"
+  },
+  "pg-easy-70": {
+    "docs": [
+      {
+        "title": "Default values for table columns",
+        "url": "https://www.postgresql.org/docs/current/ddl-default.html"
+      },
+      {
+        "title": "Creating tables and column definitions",
+        "url": "https://www.postgresql.org/docs/current/sql-createtable.html"
+      }
+    ],
+    "syntax": "-- General form\n-- column_name data_type [ DEFAULT default_expr ] [ constraints ]\n-- default_expr is a value expression evaluated per row at INSERT time\n-- whenever the column is not supplied (omitted or DEFAULT keyword).\n\nCREATE TABLE ticket (\n  id        BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n  status    TEXT NOT NULL DEFAULT 'open',\n  priority  INT DEFAULT 3,\n  opened_on DATE DEFAULT CURRENT_DATE\n);\n\n-- Default applies: column omitted, or DEFAULT keyword used\nINSERT INTO ticket (priority) VALUES (1);\nINSERT INTO ticket (status, priority) VALUES (DEFAULT, 2);\n\n-- Change or remove a default later (affects only future inserts)\nALTER TABLE ticket ALTER COLUMN priority SET DEFAULT 5;\nALTER TABLE ticket ALTER COLUMN priority DROP DEFAULT;\n\n-- Gotchas\n-- * An explicit NULL is stored as NULL; the default is NOT used.\n-- * A default does not imply NOT NULL; add that constraint separately.\n-- * A default is not applied by UPDATE (use a trigger for that).\n-- * Volatile functions (random(), clock_timestamp()) run per row;\n--   now() returns the current transaction's start time.\n-- * Defaults cannot reference other columns or contain subqueries.\n-- * Without DEFAULT, an omitted column becomes NULL.",
+    "title": "Column defaults in table definitions"
+  },
+  "pg-easy-71": {
+    "docs": [
+      {
+        "title": "UUID functions",
+        "url": "https://www.postgresql.org/docs/current/functions-uuid.html"
+      },
+      {
+        "title": "UUID data type",
+        "url": "https://www.postgresql.org/docs/current/datatype-uuid.html"
+      }
+    ],
+    "syntax": "-- General form: a function call returning a value of type uuid\n--   <function_name>()\n\n-- Example: using a UUID generator as a column default\nCREATE TABLE invoices (\n    id    uuid PRIMARY KEY DEFAULT <uuid_function>(),\n    label text\n);\n\nINSERT INTO invoices (label) VALUES ('march') RETURNING id;\n\n-- Call it directly in a query:\nSELECT <uuid_function>();\n\n-- Notes / gotchas:\n-- * The result has type uuid (128-bit), shown as 8-4-4-4-12 hex digits.\n-- * Core Postgres (13+) provides gen_random_uuid() with no extension needed;\n--   older versions needed the pgcrypto extension.\n-- * Newer versions (18+) also add uuidv4() and uuidv7(); check the docs\n--   for what each version-specific function guarantees.\n-- * The uuid-ossp extension offers other generators, e.g. uuid_generate_v1(),\n--   uuid_generate_v3()/v5() (namespace + name based).\n-- * Each call is evaluated per row when used in DEFAULT or SELECT lists.\n-- * The ordering of generated values affects index locality on a primary key.",
+    "title": "UUID generation in PostgreSQL"
+  },
+  "pg-easy-73": {
+    "docs": [
+      {
+        "title": "psql meta-commands for inspecting database objects",
+        "url": "https://www.postgresql.org/docs/current/app-psql.html#APP-PSQL-META-COMMANDS"
+      },
+      {
+        "title": "psql interactive terminal reference",
+        "url": "https://www.postgresql.org/docs/current/app-psql.html"
+      }
+    ],
+    "syntax": "-- General form (run inside psql, not as SQL):\n--   \\d<letter>[S+] [pattern]\n-- The letter after \\d picks the kind of object to list.\n-- Suffix + adds more detail (size, description, etc.).\n-- Suffix S includes system objects.\n-- pattern is an optional name filter; supports * and ?.\n\n-- Examples:\n--   \\dv+ report_*     -- views whose names start with report_, with detail\n--   \\dT               -- user-defined data types\n\n-- Common letters in the family:\n--   \\d name   describe one relation (columns, indexes)\n--   \\dt       tables\n--   \\dv       views\n--   \\di       indexes\n--   \\ds       sequences\n--   \\dn       schemas\n--   \\df       functions\n--   \\du       roles\n--   \\dT       data types\n--   \\dE       foreign tables\n--   \\l        databases (not a \\d form)\n\n-- Gotchas:\n--   * Letters are case-sensitive: \\dt and \\dT differ.\n--   * Meta-commands are psql features, not server SQL;\n--     they work by querying the system catalogs.\n--   * Use psql -E to echo the SQL a meta-command runs.\n--   * Another letter in this family covers installed\n--     extensions; check \\? for the full list.\n--   * Without a pattern, only objects visible on the\n--     search_path are listed for many kinds.",
+    "title": "psql meta-commands"
+  },
+  "pg-easy-81": {
+    "docs": [
+      {
+        "title": "psql meta-commands reference",
+        "url": "https://www.postgresql.org/docs/current/app-psql.html#APP-PSQL-META-COMMANDS"
+      },
+      {
+        "title": "psql command-line client overview",
+        "url": "https://www.postgresql.org/docs/current/app-psql.html"
+      }
+    ],
+    "syntax": "-- General form (typed at the psql prompt, not sent to the server):\n--   \\meta-command [arguments]\n\n-- Commands that take a file name:\n\\i  filename        -- \\include\n\\ir filename        -- \\include_relative (path relative to the current script)\n\\copy table FROM 'file' ...   -- client-side bulk data load/export\n\\o  filename        -- send query output to a file\n\\e  [filename]      -- open an editor\n\n-- Examples with other names:\n\\i  /tmp/migrations/001_schema.sql\n\\ir ../seed/data.sql\n\n-- Related, from the shell rather than inside psql:\n--   psql -f file.sql dbname      (run a file, then exit)\n--   psql -c 'SELECT 1' dbname    (run one command string)\n\n-- Notes and gotchas:\n-- * Backslash commands are handled by psql itself, not by the server.\n-- * Relative paths in \\i resolve against psql's current working directory;\n--   use \\ir inside nested scripts to resolve against the calling script.\n-- * Errors in a file do not stop it by default; set ON_ERROR_STOP to on to abort.\n-- * Files are read on the client machine, not the server.\n-- * \\copy moves data rows; it does not execute SQL statements found in a file.\n-- * Use \\? to list all meta-commands and \\? variables for settings.",
+    "title": "PostgreSQL interactive terminal basics"
+  },
+  "pg-easy-85": {
+    "docs": [
+      {
+        "title": "PostgreSQL conditional expressions and related functions",
+        "url": "https://www.postgresql.org/docs/current/functions-conditional.html#FUNCTIONS-GREATEST-LEAST"
+      }
+    ],
+    "syntax": "-- General form\nGREATEST(value [, ...])\nLEAST(value [, ...])\n\n-- Examples\nSELECT LEAST(10, 4, 8);            -- picks from the list of arguments\nSELECT GREATEST('apple', 'pear');  -- works on text using collation ordering\nSELECT GREATEST(price, 0) FROM items;  -- per-row clamp to a floor\n\n-- Notes and gotchas\n-- * Takes one or more expressions; returns a single scalar value, not an array.\n-- * All arguments must resolve to a common data type (same rules as UNION/CASE);\n--   mixing int and numeric promotes to numeric.\n-- * NULL arguments are ignored; the result is NULL only if ALL arguments are NULL.\n--   (This differs from the MAX()/MIN() aggregates' behavior across rows? No: those\n--   also skip NULLs, but they work over rows, not over an argument list.)\n-- * GREATEST/LEAST compare values within one row; MAX/MIN aggregate across rows.\n-- * To compare values from an array, use an aggregate or unnest:\n--     SELECT max(x) FROM unnest(ARRAY[5,9,1]) AS x;",
+    "title": "SQL conditional expressions"
+  },
+  "pg-easy-87": {
+    "docs": [
+      {
+        "title": "Data type formatting functions",
+        "url": "https://www.postgresql.org/docs/current/functions-formatting.html"
+      },
+      {
+        "title": "Date/time functions and operators",
+        "url": "https://www.postgresql.org/docs/current/functions-datetime.html"
+      }
+    ],
+    "syntax": "-- General forms\n--   to_char(value, 'pattern')       -> text\n--   to_date(text, 'pattern')        -> ?\n--   to_timestamp(text, 'pattern')   -> ?\n--   to_number(text, 'pattern')      -> numeric\n\n-- Examples (different values)\nSELECT to_char(now(), 'DD Mon YYYY');\nSELECT to_date('15/08/2023', 'DD/MM/YYYY');\nSELECT to_timestamp('2023-08-15 14:30', 'YYYY-MM-DD HH24:MI');\n\n-- Common pattern tokens\n--   YYYY year, MM month number, Mon abbreviated month name,\n--   DD day of month, HH24 hour 0-23, MI minute, SS second\n\n-- Gotchas\n-- * The pattern describes how the input text is laid out; it is not validated\n--   like a strict parser: extra or mismatched separators are often tolerated.\n-- * Fields missing from the input take defaults (e.g. no day -> day 1).\n-- * Out-of-range values raise an error (e.g. month 13), not NULL.\n-- * No built-in boolean 'is valid date' function; wrap a cast in\n--   exception handling (PL/pgSQL) or validate with a regex.\n-- * For ISO-style text, a plain cast works: '2023-08-15'::date\n-- * Check each function's return type in the docs before relying on it.",
+    "title": "Date and time conversion functions"
+  },
+  "pg-easy-94": {
+    "docs": [
+      {
+        "title": "SQL commands for changing settings",
+        "url": "https://www.postgresql.org/docs/current/sql-set.html"
+      },
+      {
+        "title": "Configuration parameter scope and methods",
+        "url": "https://www.postgresql.org/docs/current/config-setting.html"
+      }
+    ],
+    "syntax": "-- General form\nSET [ SESSION | LOCAL ] parameter { TO | = } { value | 'value' | DEFAULT };\nSET [ SESSION | LOCAL ] TIME ZONE { value | 'value' | LOCAL | DEFAULT };\n\n-- Examples (different parameters from any quiz code)\nSET work_mem = '64MB';\nSET LOCAL lock_timeout = '2s';\n\n-- Inspect and undo\nSHOW work_mem;\nSELECT current_setting('work_mem');\nRESET work_mem;          -- same as SET work_mem TO DEFAULT\n\n-- Scope notes / gotchas\n-- * SESSION is the default keyword when none is written.\n-- * SET LOCAL lasts only until the end of the current transaction\n--   (COMMIT or ROLLBACK). Outside a transaction block it has no lasting effect.\n-- * A plain SET inside a transaction that is later rolled back is undone;\n--   if the transaction commits, the value persists for the session.\n-- * SET affects only the current connection, not other sessions.\n-- * Server-wide defaults: ALTER SYSTEM, postgresql.conf,\n--   or ALTER ROLE/DATABASE ... SET (applied to new sessions).\n-- * Function-scoped: CREATE FUNCTION ... SET param = value.\n-- * set_config('name','value', is_local) is the function form.\n-- * Durations accept units such as ms, s, min; a bare number uses the parameter's default unit.",
+    "title": "PostgreSQL runtime configuration settings"
+  },
+  "pg-easy-02": {
+    "docs": [
+      {
+        "title": "String Functions and Operators",
+        "url": "https://www.postgresql.org/docs/current/functions-string.html"
+      },
+      {
+        "title": "Conditional Expressions",
+        "url": "https://www.postgresql.org/docs/current/functions-conditional.html"
+      }
+    ],
+    "syntax": "-- General form: string concatenation\n-- text || text            -> text\n-- text || anynonarray      -> text (non-string operand is cast to text)\n-- concat(val1, val2, ...)  -> text\n-- concat_ws(sep, val1, ...) -> text\n\nSELECT 'Post' || 'greSQL';          -- 'PostgreSQL'\nSELECT 'Value: ' || 42;             -- 'Value: 42'\n\n-- Gotcha: || is a strict operator. If either operand is NULL,\n-- the whole result is NULL.\nSELECT 'x' || NULL::text;           -- NULL\nSELECT first_name || ' ' || middle_name FROM people;  -- NULL whenever middle_name IS NULL\n\n-- Workarounds:\nSELECT 'x' || coalesce(NULL, '');   -- 'x'\nSELECT concat('x', NULL, 'y');      -- 'xy'  (concat ignores NULL arguments)\nSELECT concat_ws('-', 'a', NULL, 'b'); -- 'a-b' (NULLs skipped, separator not doubled)\n\n-- Note: concat_ws returns NULL only if the separator itself is NULL.\n-- Note: an empty string '' is NOT NULL in Postgres (unlike Oracle).\n-- Note: 'a' || NULL with untyped NULL resolves to text || text -> NULL.",
+    "title": "String functions and operators"
+  },
+  "pg-easy-03": {
+    "docs": [
+      {
+        "title": "Pattern Matching",
+        "url": "https://www.postgresql.org/docs/current/functions-matching.html#FUNCTIONS-LIKE"
+      },
+      {
+        "title": "pg_trgm module",
+        "url": "https://www.postgresql.org/docs/current/pgtrgm.html"
+      }
+    ],
+    "syntax": "-- General form\n-- string LIKE pattern [ESCAPE escape_char]\n-- string ILIKE pattern [ESCAPE escape_char]\n-- string NOT LIKE / NOT ILIKE pattern\n-- Wildcards: % = any sequence of chars, _ = exactly one char\n\n-- Case-sensitive: matches 'Paris' but not 'paris'\nSELECT city FROM offices WHERE city LIKE 'Par%';\n\n-- Case-insensitive: matches 'Paris', 'PARIS', 'paris'\nSELECT city FROM offices WHERE city ILIKE 'par%';\n\n-- Operator shorthands:\n--   ~~  = LIKE      ~~*  = ILIKE\n--   !~~ = NOT LIKE  !~~* = NOT ILIKE\nSELECT 'Berlin' ~~* 'ber%';  -- true\n\n-- Gotchas:\n-- ILIKE is a PostgreSQL extension, not standard SQL;\n--   portable alternative: lower(col) LIKE lower('...')\n-- Pattern must match the WHOLE string; use % at both ends\n--   for 'contains': col ILIKE '%lon%'\n-- Default escape char is backslash: '50\\%' matches literal '50%'\n-- Both use the same % and _ wildcards; for regex use ~ or ~*\n-- Neither is limited to one line; % also matches newlines\n-- A plain B-tree index can help left-anchored LIKE only with\n--   C collation or text_pattern_ops; ILIKE usually needs a\n--   pg_trgm GIN/GiST index or an index on lower(col)",
+    "title": "Pattern matching"
+  },
+  "pg-easy-05": {
+    "docs": [
+      {
+        "title": "psql interactive terminal reference",
+        "url": "https://www.postgresql.org/docs/current/app-psql.html"
+      },
+      {
+        "title": "psql commands section",
+        "url": "https://www.postgresql.org/docs/current/app-psql.html#APP-PSQL-META-COMMANDS"
+      }
+    ],
+    "syntax": "-- General form (typed at the psql prompt, not SQL; no semicolon needed)\n-- \\command [pattern]      add + for extra detail, S to include system objects\n\n-- List all databases on the server\n\\l\n\\l+            -- also shows size, tablespace, description\n\\l sales*      -- only databases whose names match the pattern\n\n-- Other common listing commands\n\\dt            -- tables in the current search_path\n\\dt inventory.* -- tables in schema inventory\n\\dn            -- schemas\n\\du            -- roles (users/groups)\n\\di            -- indexes\n\\dv            -- views\n\\df            -- functions\n\\d orders      -- describe one relation (columns, indexes)\n\n-- Switch to another database\n\\c analytics\n\n-- Gotchas:\n-- \\l lists databases cluster-wide; \\dt and friends only see the current database.\n-- \\list is the long form of \\l.\n-- From the shell: psql -l lists databases without opening a session.\n-- Patterns use * and ? wildcards, not SQL LIKE's % and _.\n-- \\? shows help for all meta-commands; \\h shows help for SQL commands.",
+    "title": "psql meta-commands"
+  },
+  "pg-easy-10": {
+    "docs": [
+      {
+        "title": "Numeric Types",
+        "url": "https://www.postgresql.org/docs/current/datatype-numeric.html#DATATYPE-SERIAL"
+      },
+      {
+        "title": "CREATE SEQUENCE",
+        "url": "https://www.postgresql.org/docs/current/sql-createsequence.html"
+      }
+    ],
+    "syntax": "-- General form: serial pseudo-types create an integer column\n-- plus an owned sequence and a DEFAULT nextval(...)\nCREATE TABLE t (col SMALLSERIAL | SERIAL | BIGSERIAL);\n\n-- Example\nCREATE TABLE orders (\n  order_id  BIGSERIAL PRIMARY KEY,  -- bigint, 1 .. 9223372036854775807\n  line_no   SERIAL                  -- integer, 1 .. 2147483647\n);\n\n-- Roughly equivalent to:\n-- CREATE SEQUENCE orders_line_no_seq AS integer;\n-- line_no integer NOT NULL DEFAULT nextval('orders_line_no_seq')\n-- ALTER SEQUENCE orders_line_no_seq OWNED BY orders.line_no;\n\n-- Ranges / storage:\n-- SMALLSERIAL = smallint, 2 bytes, 1 .. 32767\n-- SERIAL      = integer,  4 bytes, 1 .. 2147483647\n-- BIGSERIAL   = bigint,   8 bytes, 1 .. 9223372036854775807\n\n-- Gotchas:\n-- * Not true types: no UNIQUE/PK added automatically.\n-- * Gaps occur (rolled-back txns consume values).\n-- * SERIAL can run out on busy tables; prefer BIGSERIAL.\n-- * Modern alternative: col bigint GENERATED ALWAYS AS IDENTITY",
+    "title": "Numeric data types"
+  },
+  "pg-easy-14": {
+    "docs": [
+      {
+        "title": "Character Types",
+        "url": "https://www.postgresql.org/docs/current/datatype-character.html"
+      },
+      {
+        "title": "Data Types",
+        "url": "https://www.postgresql.org/docs/current/datatype.html"
+      }
+    ],
+    "syntax": "-- General form\n-- column_name TEXT              -- unlimited length\n-- column_name VARCHAR(n)        -- length limit n characters (checked on write)\n-- column_name CHAR(n)           -- blank-padded to n characters\n\nCREATE TABLE customer (\n  id      bigint PRIMARY KEY,\n  nick    text,                          -- no limit\n  country varchar(2),                    -- errors if longer than 2\n  sku     text CHECK (char_length(sku) <= 12)  -- limit via constraint\n);\n\nINSERT INTO customer VALUES (1, 'zed', 'NZ', 'AB-1001');\n-- INSERT ... country = 'NZL'  -> ERROR: value too long for type character varying(2)\n\n-- Performance: text, varchar(n) and varchar share the same varlena storage.\n-- There is no speed or size advantage to varchar(n); the length check adds\n-- a tiny cost on write. char(n) is usually the slowest (padding).\n-- Short values (< 127 bytes) use a 1-byte header; long ones may be TOASTed.\n-- Gotchas:\n--   varchar without (n) behaves like text.\n--   Explicit cast 'abcdef'::varchar(3) silently truncates to 'abc'.\n--   Raising a varchar(n) limit later needs ALTER TABLE; a CHECK is easier to change.\n--   char(n) trailing spaces are ignored in comparisons.",
+    "title": "Character data types"
+  },
+  "pg-easy-15": {
+    "docs": [
+      {
+        "title": "Character Types",
+        "url": "https://www.postgresql.org/docs/current/datatype-character.html"
+      }
+    ],
+    "syntax": "-- General form\n-- character(n) / char(n)              fixed length, blank-padded\n-- character varying(n) / varchar(n)   variable length, limit n\n-- text                                 variable, unlimited\n\nCREATE TABLE codes (\n  tag   char(6),\n  label varchar(20),\n  note  text\n);\n\nINSERT INTO codes VALUES ('ab', 'ab', 'ab');\n\nSELECT octet_length(tag),   -- 6: stored as 'ab' + 4 trailing spaces\n       length(tag),         -- 2: trailing spaces ignored for char(n)\n       octet_length(label)  -- 2: varchar is not padded\nFROM codes;\n\n-- Gotchas:\n-- * Shorter values in char(n) are padded with trailing spaces to n.\n-- * Longer values raise an error unless the excess is all spaces\n--   (then it is truncated silently).\n-- * Explicit cast 'abcdefgh'::char(3) truncates to 'abc', no error.\n-- * char(n) trailing spaces are insignificant in comparisons:\n--   'ab'::char(4) = 'ab  '::char(4) is true.\n-- * Casting char(n) to text/varchar drops trailing spaces.\n-- * char without (n) means char(1).\n-- * No performance benefit for char(n); text or varchar is preferred.",
+    "title": "Character data types"
+  },
+  "pg-easy-20": {
+    "docs": [
+      {
+        "title": "INSERT",
+        "url": "https://www.postgresql.org/docs/current/sql-insert.html#SQL-ON-CONFLICT"
+      },
+      {
+        "title": "Inserting Data",
+        "url": "https://www.postgresql.org/docs/current/dml-insert.html"
+      }
+    ],
+    "syntax": "-- General form\nINSERT INTO table_name (col1, col2, ...)\nVALUES (...)\n[ ON CONFLICT [ conflict_target ] conflict_action ]\n[ RETURNING ... ];\n\n-- conflict_target: (col, ...) | ON CONSTRAINT constraint_name\n-- conflict_action: DO NOTHING\n--                | DO UPDATE SET col = EXCLUDED.col [WHERE ...]\n\n-- Skip rows that would violate a unique constraint\nINSERT INTO users (email) VALUES ('a@example.com')\nON CONFLICT DO NOTHING;   -- reports INSERT 0 0, no error\n\n-- Upsert: update the existing row instead\nINSERT INTO stock (sku, qty) VALUES ('X9', 5)\nON CONFLICT (sku) DO UPDATE SET qty = stock.qty + EXCLUDED.qty;\n\n-- Gotchas:\n-- * DO NOTHING may omit the conflict target; DO UPDATE requires one.\n-- * Other rows in a multi-row INSERT are still inserted; nothing is\n--   rolled back, and the transaction stays healthy.\n-- * Only unique/exclusion constraint conflicts are handled; NOT NULL,\n--   CHECK, and foreign-key violations still raise errors.\n-- * RETURNING yields no row for skipped inserts.\n-- * EXCLUDED refers to the row proposed for insertion.\n-- * DO UPDATE cannot touch the same row twice in one statement.",
+    "title": "Inserting data"
+  },
+  "pg-easy-22": {
+    "docs": [
+      {
+        "title": "Value expressions",
+        "url": "https://www.postgresql.org/docs/current/sql-expressions.html#SQL-SYNTAX-ARRAY-CONSTRUCTORS"
+      },
+      {
+        "title": "Arrays",
+        "url": "https://www.postgresql.org/docs/current/arrays.html"
+      },
+      {
+        "title": "Array functions and operators",
+        "url": "https://www.postgresql.org/docs/current/functions-array.html"
+      }
+    ],
+    "syntax": "-- General form: array constructor\nARRAY[expr1, expr2, ...]\n-- Alternative: string literal cast to an array type\n'{val1,val2,...}'::type[]\n\n-- Examples\nSELECT ARRAY[10, 20, 30];            -- {10,20,30} (integer[])\nSELECT ARRAY['red', 'green'];        -- {red,green} (text[])\nSELECT '{4,5,6}'::int[];             -- {4,5,6}\nSELECT ARRAY[[1,2],[3,4]];           -- 2-D array {{1,2},{3,4}}\n\n-- Variations & gotchas\n-- Square brackets, not parentheses: ARRAY(...) is a different form that\n--   takes a subquery, e.g. ARRAY(SELECT id FROM users ORDER BY id)\n-- Text literal form uses curly braces '{...}', not '[...]'\n-- Empty array needs an explicit type: ARRAY[]::text[]  or  '{}'::text[]\n-- Element types must be compatible; cast if needed: ARRAY[1, 2.5]::numeric[]\n-- Arrays are 1-based: (ARRAY[7,8,9])[1] -> 7\n-- Slices: (ARRAY[7,8,9])[2:3] -> {8,9}\n-- Membership: 8 = ANY(ARRAY[7,8,9]) -> true",
+    "title": "Array types"
+  },
+  "pg-easy-23": {
+    "docs": [
+      {
+        "title": "Arrays",
+        "url": "https://www.postgresql.org/docs/current/arrays.html"
+      },
+      {
+        "title": "Value Expressions",
+        "url": "https://www.postgresql.org/docs/current/sql-expressions.html#SQL-SYNTAX-ARRAY-CONSTRUCTORS"
+      }
+    ],
+    "syntax": "-- Array literal (text form), cast to an array type\n'{elem1,elem2,...}'::type[]\n-- Array constructor syntax\nARRAY[expr1, expr2, ...]\n\n-- Examples\nSELECT '{10,20,30}'::int[];          -- {10,20,30}\nSELECT ARRAY[10,20,30];              -- {10,20,30}\nSELECT '{a,b}'::text[] = ARRAY['a','b'];  -- true\n\n-- Multidimensional\nSELECT '{{1,2},{3,4}}'::int[];\nSELECT ARRAY[[1,2],[3,4]];\n\n-- Gotchas:\n-- * Literal form: elements are parsed as text by the element type's\n--   input function; quote elements containing commas, braces, spaces:\n--   '{\"x,y\",\"z\"}'::text[]\n-- * NULL (unquoted) in a literal is a null element; \"NULL\" is a string.\n-- * ARRAY[...] elements are SQL expressions; type is inferred from\n--   them. Empty needs a cast: ARRAY[]::int[]  or  '{}'::int[]\n-- * Arrays are 1-based by default: (ARRAY[5,6,7])[1] -> 5\n-- * Custom bounds via literal: '[0:1]={8,9}'::int[]\n-- * Delimiter is ',' for most types (box uses ';').",
+    "title": "Array types"
+  },
+  "pg-easy-24": {
+    "docs": [
+      {
+        "title": "Arrays",
+        "url": "https://www.postgresql.org/docs/current/arrays.html#ARRAYS-ACCESSING"
+      },
+      {
+        "title": "Value expressions",
+        "url": "https://www.postgresql.org/docs/current/sql-expressions.html#SQL-EXPRESSIONS-SUBSCRIPTS"
+      }
+    ],
+    "syntax": "-- General form: subscript an array value\n-- array_expr[index]          -- single element\n-- array_expr[lower:upper]    -- slice (returns an array)\n\nSELECT (ARRAY['a','b','c','d'])[2];    -- 'b'\nSELECT (ARRAY['a','b','c','d'])[2:3];  -- {b,c}\n\n-- Column references need no parentheses\nSELECT tags[1] FROM posts;\n\n-- Gotchas:\n-- * Default lower bound is 1, not 0; [0] is valid syntax but\n--   usually returns NULL.\n-- * Out-of-range subscripts return NULL, not an error.\n-- * Wrap a constructor or function result in parentheses before\n--   subscripting: (ARRAY[...])[n], (string_to_array(s, ','))[1].\n--   Only a plain column reference or positional parameter\n--   may omit them.\n-- * Omitted slice bounds: arr[:2], arr[3:]\n-- * Multi-dim: matrix[row][col]\n-- * array_lower(arr, 1) and array_upper(arr, 1) report the bounds;\n--   cardinality(arr) gives the total element count.",
+    "title": "Array types and expressions"
+  },
+  "pg-easy-28": {
+    "docs": [
+      {
+        "title": "JSON Types",
+        "url": "https://www.postgresql.org/docs/current/datatype-json.html#JSON-CONTAINMENT"
+      },
+      {
+        "title": "JSON Functions and Operators",
+        "url": "https://www.postgresql.org/docs/current/functions-json.html"
+      }
+    ],
+    "syntax": "-- General form: does the left jsonb contain the right jsonb?\n-- jsonb_left @> jsonb_right   -> boolean\n-- jsonb_left <@ jsonb_right   -> boolean (is left contained in right?)\n\nSELECT '{\"name\": \"kim\", \"role\": \"admin\", \"age\": 40}'::jsonb\n       @> '{\"role\": \"admin\"}'::jsonb;          -- true\n\nSELECT '{\"tags\": [\"red\", \"blue\", \"green\"]}'::jsonb\n       @> '{\"tags\": [\"green\"]}'::jsonb;        -- true (nested array subset)\n\n-- Values must match, not just keys:\nSELECT '{\"role\": \"admin\"}'::jsonb @> '{\"role\": \"user\"}'::jsonb;  -- false\n\n-- Arrays: order and duplicates are ignored\nSELECT '[3, 1, 2]'::jsonb @> '[1, 1, 3]'::jsonb;   -- true\n\n-- Gotchas:\n-- * Matching is recursive/structural: nested objects must match too.\n-- * A primitive in an array: '[\"x\", 5]' @> '\"x\"' is true (special case).\n-- * Key-only checks use ? , ?| , ?& instead.\n-- * Only for jsonb, not plain json.\n-- * GIN indexes (jsonb_ops or jsonb_path_ops) speed up @> queries:\n--   CREATE INDEX ON docs USING gin (body jsonb_path_ops);",
+    "title": "JSON operators"
+  },
+  "pg-easy-30": {
+    "docs": [
+      {
+        "title": "Date/Time Functions and Operators",
+        "url": "https://www.postgresql.org/docs/current/functions-datetime.html#FUNCTIONS-DATETIME-CURRENT"
+      }
+    ],
+    "syntax": "-- Current date/time functions (no parentheses for SQL-standard forms)\n-- now() / CURRENT_TIMESTAMP / transaction_timestamp() -> start of current TRANSACTION\n-- statement_timestamp()  -> start of current statement\n-- clock_timestamp()      -> actual wall-clock time, changes during a statement\n-- CURRENT_DATE, CURRENT_TIME, LOCALTIME, LOCALTIMESTAMP -> also transaction start\n\nBEGIN;\nSELECT transaction_timestamp();   -- e.g. 2024-03-05 09:00:00.12+00\nSELECT pg_sleep(3);\nSELECT CURRENT_TIMESTAMP;         -- same value as above (frozen per transaction)\nSELECT clock_timestamp();         -- ~3 seconds later\nCOMMIT;\n\n-- clock_timestamp() differs even within one statement:\nSELECT clock_timestamp(), clock_timestamp();  -- two different values\n\n-- Gotchas:\n-- * Outside an explicit BEGIN, each statement is its own transaction,\n--   so now() changes between separate statements.\n-- * Use clock_timestamp() to measure elapsed time inside a transaction.\n-- * CURRENT_TIMESTAMP(2) / LOCALTIMESTAMP(0) accept a precision argument.\n-- * 'now'::timestamp is evaluated at parse time; avoid it in DEFAULT clauses.",
+    "title": "Date/time functions"
+  },
+  "pg-easy-31": {
+    "docs": [
+      {
+        "title": "Date/Time Functions and Operators",
+        "url": "https://www.postgresql.org/docs/current/functions-datetime.html#FUNCTIONS-DATETIME-CURRENT"
+      },
+      {
+        "title": "Date/Time Types",
+        "url": "https://www.postgresql.org/docs/current/datatype-datetime.html"
+      }
+    ],
+    "syntax": "-- General form: current date/time values (fixed at transaction start)\nSELECT CURRENT_DATE;                -- type: date\nSELECT CURRENT_TIME;                -- type: time with time zone\nSELECT CURRENT_TIMESTAMP;           -- type: timestamp with time zone\nSELECT now();                       -- same as CURRENT_TIMESTAMP (timestamptz)\nSELECT LOCALTIME, LOCALTIMESTAMP;   -- time / timestamp WITHOUT time zone\n\n-- Examples\nSELECT order_id FROM shipments\nWHERE  shipped_on = CURRENT_DATE - 1;          -- date - integer = date\n\nSELECT pg_typeof(CURRENT_DATE), pg_typeof(now());\n-- date | timestamp with time zone\n\n-- Variations & gotchas:\n-- * CURRENT_DATE/CURRENT_TIMESTAMP take no parentheses; now() needs them.\n-- * CURRENT_TIMESTAMP(2) / LOCALTIMESTAMP(0) set fractional-second precision.\n-- * All of these return the transaction START time, constant within a txn.\n--   Use clock_timestamp() for the real wall-clock time, statement_timestamp()\n--   for the statement start.\n-- * now()::date and CURRENT_DATE both depend on the session TimeZone setting.\n-- * date_trunc('day', now()) stays timestamptz (midnight), not a date.\n-- * 'now'::timestamptz in a DEFAULT is evaluated once at table creation; use now().",
+    "title": "Date/time functions"
+  },
+  "pg-easy-32": {
+    "docs": [
+      {
+        "title": "Date/Time Functions and Operators",
+        "url": "https://www.postgresql.org/docs/current/functions-datetime.html#FUNCTIONS-DATETIME-CURRENT"
+      }
+    ],
+    "syntax": "-- General form: current date/time functions\n-- Transaction-start time (fixed for the whole transaction):\n--   now(), current_timestamp, transaction_timestamp()\n-- Statement-start time:\n--   statement_timestamp()\n-- Actual wall-clock time (changes during a statement):\n--   clock_timestamp(), timeofday()  -- timeofday() returns text\n\nBEGIN;\nSELECT transaction_timestamp() AS tx_start,\n       statement_timestamp()   AS stmt_start,\n       clock_timestamp()       AS wall_clock;\nSELECT pg_sleep(1.5);\nSELECT now() AS still_tx_start,     -- same as before\n       clock_timestamp() AS later;  -- about 1.5s later\nCOMMIT;\n\n-- Measure elapsed time inside one statement:\nSELECT clock_timestamp() - statement_timestamp() AS elapsed;\n\n-- Gotchas:\n-- * now() = current_timestamp = transaction_timestamp().\n-- * current_timestamp is written with no parentheses; current_timestamp(3)\n--   sets the precision.\n-- * clock_timestamp() is VOLATILE, so it can differ between rows of the same\n--   query (for example, generate_series rows).\n-- * In a DEFAULT, now() gives every row inserted in the transaction the same value.\n-- * localtimestamp and localtime return values without a time zone.",
+    "title": "Date/time functions"
+  },
+  "pg-easy-36": {
+    "docs": [
+      {
+        "title": "SELECT command reference",
+        "url": "https://www.postgresql.org/docs/current/sql-select.html#SQL-DISTINCT"
+      },
+      {
+        "title": "Queries: SELECT lists",
+        "url": "https://www.postgresql.org/docs/current/queries-select-lists.html#QUERIES-DISTINCT"
+      }
+    ],
+    "syntax": "-- General form\nSELECT DISTINCT ON (expr1 [, expr2 ...]) col_list\nFROM tbl\nORDER BY expr1 [, expr2 ...], tiebreak_expr [ASC|DESC];\n\n-- Latest reading per sensor\nSELECT DISTINCT ON (sensor_id) sensor_id, reading, taken_at\nFROM readings\nORDER BY sensor_id, taken_at DESC;\n\n-- Cheapest product per category (id breaks ties)\nSELECT DISTINCT ON (category) category, name, price\nFROM products\nORDER BY category, price, id;\n\n-- Gotchas:\n-- * Keeps the FIRST row of each group of rows equal on the\n--   DISTINCT ON expressions. \"First\" is unpredictable unless\n--   ORDER BY sorts so the wanted row comes first.\n-- * The leftmost ORDER BY items must match the DISTINCT ON\n--   expressions (an error is raised otherwise).\n-- * Add extra ORDER BY columns after them to choose the row;\n--   add a unique column (e.g. id) to break remaining ties.\n-- * With no ORDER BY at all, the row kept per group can vary\n--   between runs or plans: it is not deterministic.\n-- * Plain DISTINCT removes rows that are duplicates across\n--   all selected columns, which is a different operation.",
+    "title": "Query result deduplication"
+  },
+  "pg-easy-37": {
     "docs": [
       {
         "title": "Boolean Type",
         "url": "https://www.postgresql.org/docs/current/datatype-boolean.html"
       },
       {
-        "title": "Lexical Structure: Identifiers and Key Words",
-        "url": "https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS"
+        "title": "Logical Operators",
+        "url": "https://www.postgresql.org/docs/current/functions-logical.html"
       }
     ],
-    "syntax": "-- Boolean constants (SQL key words):\n--   TRUE | FALSE | NULL (unknown)\n-- Also accepted as string literals cast to boolean:\n--   'true','t','yes','y','on','1'  /  'false','f','no','n','off','0'\n--   (leading/trailing whitespace ignored; string input is case-insensitive)\n\n-- Examples\nSELECT TRUE AS a, false AS b;\nSELECT 'Yes'::boolean;\nCREATE TABLE flags (id int, active boolean DEFAULT true);\nINSERT INTO flags VALUES (1, 'on'), (2, FALSE);\nSELECT * FROM flags WHERE active IS TRUE;\n\n-- Key words and unquoted identifiers: PostgreSQL folds them\n-- to a single case when parsing (lower case for identifiers),\n-- so SELECT, select, SeLeCt are the same.\n-- Quoted identifiers (\"Name\") ARE case-sensitive.\n-- String literal contents are NOT folded, but boolean input\n-- parsing of strings ignores case.\n\n-- Gotchas\n--   Output is displayed as t / f in psql.\n--   Use IS TRUE / IS NOT TRUE / IS UNKNOWN to handle NULL.\n--   Numbers other than '1'/'0' strings are not valid boolean strings.",
-    "title": "Boolean literals and keyword case rules in PostgreSQL"
+    "syntax": "-- General form: boolean column accepts TRUE, FALSE, NULL\n-- plus certain quoted string literals (unknown-type input)\nCREATE TABLE flags (id int, active boolean);\n\n-- Keyword literals (preferred, SQL standard)\nINSERT INTO flags VALUES (10, TRUE), (11, FALSE), (12, NULL);\n\n-- Quoted string input forms (case-insensitive, leading/trailing space ok)\n-- true:  'true' 't' 'yes' 'y' 'on' '1'\n-- false: 'false' 'f' 'no' 'n' 'off' '0'\nINSERT INTO flags VALUES (13, 'on'), (14, 'n');\n\n-- Unique prefixes also work: 'tr', 'fa', 'ye'\n-- But 'o' is ambiguous (on/off) -> error\n\n-- Gotchas:\n-- Bare integers are NOT accepted: int -> boolean cast is explicit only\n--   INSERT INTO flags VALUES (15, 0);       -- ERROR\n--   INSERT INTO flags VALUES (15, 0::boolean); -- ok\n-- Quoted '0'/'1' are fine (string input, not integer)\n-- Empty string '' is not NULL and not valid boolean input -> error\n-- Unrecognized words (e.g. 'perhaps') -> invalid input syntax error\n-- Output is always displayed as t / f in psql\n-- Use IS TRUE / IS NOT FALSE to handle NULLs explicitly",
+    "title": "Data types"
   },
-  "pg-easy-39": {
+  "pg-easy-42": {
     "docs": [
       {
-        "title": "Constraints: Check Constraints",
-        "url": "https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS"
+        "title": "System views overview",
+        "url": "https://www.postgresql.org/docs/current/view-pg-tables.html"
       },
       {
-        "title": "CREATE TABLE",
-        "url": "https://www.postgresql.org/docs/current/sql-createtable.html"
+        "title": "The information schema",
+        "url": "https://www.postgresql.org/docs/current/infoschema-tables.html"
       }
     ],
-    "syntax": "-- Column constraint:\n--   column_name type CHECK (boolean_expression)\n-- Table constraint (may reference several columns):\n--   [CONSTRAINT name] CHECK (boolean_expression)\n\nCREATE TABLE members (\n  age      INTEGER CONSTRAINT age_adult CHECK (age >= 18),\n  min_qty  INTEGER,\n  max_qty  INTEGER,\n  CONSTRAINT qty_order CHECK (min_qty <= max_qty)\n);\n\n-- Add to an existing table:\nALTER TABLE members\n  ADD CONSTRAINT age_cap CHECK (age < 150);\n\n-- Add without scanning existing rows, validate later:\nALTER TABLE members\n  ADD CONSTRAINT age_cap2 CHECK (age < 150) NOT VALID;\nALTER TABLE members VALIDATE CONSTRAINT age_cap2;\n\n-- Notes / gotchas:\n-- * The expression must evaluate to boolean.\n-- * A row is rejected only if the result is FALSE;\n--   TRUE and NULL both pass. Add NOT NULL to forbid NULLs.\n-- * Violations raise an error (SQLSTATE 23514) and the\n--   statement fails.\n-- * Only the row's own columns may be used; no subqueries\n--   to other tables. Expression should be immutable.\n-- * Auto-generated name looks like table_column_check.\n-- * Drop with: ALTER TABLE t DROP CONSTRAINT name;",
-    "title": "CHECK constraints in table definitions"
+    "syntax": "-- General form: list tables via the Postgres catalog view\nSELECT schemaname, tablename, tableowner, tablespace,\n       hasindexes, hasrules, hastriggers, rowsecurity\nFROM pg_catalog.pg_tables\nWHERE schemaname NOT IN ('pg_catalog', 'information_schema');\n\n-- Example: tables with row-level security enabled\nSELECT schemaname, tablename\nFROM pg_tables\nWHERE rowsecurity;\n\n-- Example: the portable SQL-standard alternative\nSELECT table_schema, table_name, table_type\nFROM information_schema.tables\nWHERE table_schema = 'inventory';\n\n-- Notes / gotchas:\n-- pg_tables is Postgres-specific: exposes tablespace, owner,\n--   index/rule/trigger flags and rowsecurity.\n-- information_schema is SQL-standard (portable) but omits\n--   Postgres-only details; it also lists views (table_type = 'VIEW').\n-- Both only cover the CURRENT database; catalogs are per-database.\n-- Neither gives row counts or sizes: use pg_class.reltuples,\n--   pg_stat_user_tables.n_live_tup, or pg_total_relation_size().\n-- information_schema shows only objects you have privileges on;\n--   pg_tables lists all tables regardless.\n-- tablespace is NULL when the table uses the database default.",
+    "title": "System catalogs and metadata"
   },
-  "pg-easy-40": {
+  "pg-easy-45": {
     "docs": [
       {
-        "title": "EXPLAIN command reference",
-        "url": "https://www.postgresql.org/docs/current/sql-explain.html"
+        "title": "psql interactive terminal reference",
+        "url": "https://www.postgresql.org/docs/current/app-psql.html"
       },
       {
         "title": "Using EXPLAIN",
         "url": "https://www.postgresql.org/docs/current/using-explain.html"
       }
     ],
-    "syntax": "-- General form\nEXPLAIN [ ( option [, ...] ) ] statement\nEXPLAIN [ ANALYZE ] [ VERBOSE ] statement\n\n-- option examples: ANALYZE, VERBOSE, COSTS, BUFFERS, FORMAT { TEXT | JSON | XML | YAML }\n\n-- Example 1: show the planner's chosen plan with estimates\nEXPLAIN SELECT * FROM orders WHERE customer_id = 42;\n\n-- Example 2: options in parentheses, with measured numbers\nEXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)\nSELECT count(*) FROM invoices WHERE paid = false;\n\n-- Notes / gotchas:\n-- * Without ANALYZE, output shows the planner's estimates (cost, rows, width) only.\n-- * With ANALYZE, the statement is run, and actual time, actual rows and loops are reported.\n-- * Costs are in arbitrary planner units, not milliseconds.\n-- * Because ANALYZE really runs the statement, INSERT/UPDATE/DELETE take effect.\n--   Wrap them to discard changes:\n--     BEGIN;\n--     EXPLAIN ANALYZE UPDATE accounts SET balance = 0 WHERE id = 7;\n--     ROLLBACK;\n-- * Timing overhead can be turned off with (ANALYZE, TIMING OFF).\n-- * Read plans from the innermost (most indented) node outward.",
-    "title": "Inspecting query plans with EXPLAIN options"
+    "syntax": "-- General form (psql client command, not SQL; no semicolon needed)\n\\timing [ on | off ]\n\n-- Example: toggle on, then run a query\n\\timing on\nSELECT count(*) FROM orders;\n--  count\n-- -------\n--   4821\n-- (1 row)\n--\n-- Time: 3.142 ms\n\n\\timing off   -- explicitly disable\n\\timing       -- no argument: toggles current state\n\n-- Gotchas:\n-- * Measured by the client: includes network round-trip and\n--   result transfer, not just server execution time.\n-- * Output is in milliseconds; long runs also show e.g. 01:02.345.\n-- * Applies to every subsequent statement until turned off.\n-- * For server-side timing per plan node, use EXPLAIN ANALYZE.\n-- * Put \\timing on in ~/.psqlrc to enable it by default.",
+    "title": "psql meta-commands"
   },
-  "pg-easy-46": {
-    "docs": [
-      {
-        "title": "Session Information Functions",
-        "url": "https://www.postgresql.org/docs/current/functions-info.html"
-      },
-      {
-        "title": "System Catalog pg_database",
-        "url": "https://www.postgresql.org/docs/current/catalog-pg-database.html"
-      }
-    ],
-    "syntax": "-- General form: functions that take no arguments report session state\n-- SELECT <function>();   -- some are also usable without parentheses (e.g. current_user)\n\n-- Examples\nSELECT current_user;            -- role the session is running as\nSELECT session_user;            -- role that opened the session\nSELECT current_schema();        -- first existing schema on search_path\nSELECT current_schemas(false);  -- array of schemas searched, excluding implicit ones\nSELECT inet_server_port();      -- server port of the connection\nSELECT version();               -- server version string\n\n-- Gotchas\n-- * Return values describe the current session/connection, not server-wide config.\n-- * Many return type name (identifier) or text; names are not the same as OIDs.\n-- * OIDs are numeric identifiers in system catalogs (e.g. pg_database.oid),\n--   and are looked up there rather than returned by most session functions.\n-- * Values may differ between sessions, e.g. after SET ROLE or SET search_path.\n-- * Settings in postgresql.conf are read with SHOW or current_setting('name').\n-- * pg_database lists all databases in the cluster: SELECT datname, oid FROM pg_database;",
-    "title": "Session information functions"
-  },
-  "pg-easy-48": {
+  "pg-easy-47": {
     "docs": [
       {
         "title": "System Information Functions and Operators",
         "url": "https://www.postgresql.org/docs/current/functions-info.html"
       },
       {
-        "title": "SHOW (SQL command)",
-        "url": "https://www.postgresql.org/docs/current/sql-show.html"
+        "title": "SQL Commands: Session Role Settings",
+        "url": "https://www.postgresql.org/docs/current/sql-set-role.html"
       }
     ],
-    "syntax": "-- General forms (system information functions and settings)\nSELECT <function_or_setting>;\nSHOW <parameter>;\nSELECT current_setting('<parameter>');\n\n-- Examples of related version-inspection tools\nSHOW server_version;                    -- version number text only, e.g. 16.3\nSELECT current_setting('server_version_num');  -- integer-style version as text\nSELECT current_database(), current_user;       -- other session info functions\n\n-- psql client side (not SQL, run at the psql prompt or shell):\n--   \\conninfo          -- describes the current connection\n--   psql --version     -- prints the client program's version (shell)\n\n-- Variations and gotchas:\n-- * Server-side functions run on the server, so they describe the server,\n--   not the psql program you typed into.\n-- * Some functions return descriptive text, others return a bare number;\n--   check the return type with pg_typeof(...), e.g.\n--     SELECT pg_typeof(current_setting('server_version_num'));\n-- * current_setting() returns text, so cast it when comparing numerically:\n--     SELECT current_setting('server_version_num')::int >= 140000;\n-- * Application code should prefer the numeric setting for version checks\n--   rather than parsing descriptive text.\n-- * Migration tools keep their own schema version tables; Postgres itself\n--   has no built-in notion of an application schema version.",
-    "title": "Inspecting server and client version information"
+    "syntax": "-- General form: no parentheses (SQL-standard keywords)\nSELECT current_user, session_user, current_role;\n\n-- current_user  = role whose privileges are used for permission checks right now\n-- session_user  = role that authenticated (the login role)\n-- current_role  = same as current_user\n-- user          = same as current_user\n\n-- Example: switch identity inside a session\nSET ROLE report_reader;\nSELECT current_user, session_user;\n--  current_user  | session_user\n--  report_reader | app_login\n\nRESET ROLE;   -- back to session_user's identity\n\n-- Inside a SECURITY DEFINER function, current_user is the function owner\nCREATE FUNCTION whoami() RETURNS name\n  LANGUAGE sql SECURITY DEFINER\n  AS 'SELECT current_user';\n\n-- Gotchas:\n-- * Write current_user, not current_user(): the parenthesized form is a syntax error.\n-- * SET ROLE changes current_user but never session_user.\n-- * SET SESSION AUTHORIZATION (superuser only) changes both.\n-- * Database owner and OS user are unrelated:\n--   use pg_database.datdba for the owner.\n-- * Compare with a role name: WHERE owner = current_user",
+    "title": "Session information functions"
   },
-  "pg-easy-49": {
+  "pg-easy-50": {
     "docs": [
       {
-        "title": "Connection settings (port, listen_addresses)",
-        "url": "https://www.postgresql.org/docs/current/runtime-config-connection.html"
+        "title": "Value expressions",
+        "url": "https://www.postgresql.org/docs/current/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS"
       },
       {
-        "title": "libpq connection parameters",
-        "url": "https://www.postgresql.org/docs/current/libpq-connect.html"
+        "title": "Lexical structure",
+        "url": "https://www.postgresql.org/docs/current/sql-syntax-lexical.html"
       }
     ],
-    "syntax": "-- General form: how a client picks the server endpoint\n--   postgresql://user@host:PORT/dbname\n--   psql -h HOST -p PORT -U USER -d DBNAME\n\n-- Server side (postgresql.conf):\n--   port = <integer>              -- TCP port the server listens on\n--   listen_addresses = 'localhost' -- which interfaces to bind\n--   unix_socket_directories = '/var/run/postgresql'\n\n-- Example: connecting to a server configured for a custom port\n--   psql -h db.example.com -p 6543 -U app -d shop\n--   postgresql://app@db.example.com:6543/shop\n\n-- Inspect the running server's setting from SQL:\nSHOW port;\nSELECT name, setting, source FROM pg_settings WHERE name = 'port';\n\n-- Gotchas:\n-- * If -p / the URL port / PGPORT is omitted, the client uses its compiled-in\n--   default (the same default the server ships with).\n-- * Changing port requires a server restart, not just a reload.\n-- * The port also names the Unix socket file (.s.PGSQL.<port>).\n-- * Several clusters on one host each need a distinct port.\n-- * Other database products use their own, different default ports;\n--   do not assume one product's port applies to another.\n-- * Env var PGPORT sets the client's default port.",
-    "title": "Server connection settings: port and listen addresses"
+    "syntax": "-- General form: two equivalent ways to convert a value to another type\n-- expression::target_type          (PostgreSQL-specific shorthand)\n-- CAST(expression AS target_type)  (SQL-standard form)\n\nSELECT '2024-03-15'::date;          -- text literal -> date\nSELECT CAST('2024-03-15' AS date);  -- same result\n\nSELECT 7::numeric / 2;              -- 3.5000000000000000 (not integer division)\nSELECT price::text || ' USD' FROM products;\n\n-- Gotchas:\n-- :: binds tighter than most operators: -5::int is -(5::int).\n--   Use parentheses: (a + b)::bigint\n-- Invalid input raises an error, e.g. 'abc'::integer\n--   -> invalid input syntax for type integer\n-- Converting to a narrower type can round or truncate:\n--   3.7::int = 4, 'hello'::varchar(3) = 'hel'\n-- Alternative function-like form for some types: int8('42'), date('2024-01-01')\n-- typename 'literal' form works for literals only: DATE '2024-03-15'\n-- Not schema qualification: schema.table uses a dot\n-- Not a column alias: use AS name for that\n-- Arrays: '{1,2,3}'::int[]",
+    "title": "SQL expression syntax"
   },
-  "pg-easy-57": {
+  "pg-easy-51": {
     "docs": [
       {
-        "title": "String Functions and Operators",
-        "url": "https://www.postgresql.org/docs/current/functions-string.html"
+        "title": "Value Expressions",
+        "url": "https://www.postgresql.org/docs/current/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS"
       },
       {
-        "title": "POSIX Regular Expressions (pattern matching)",
+        "title": "Type Conversion",
+        "url": "https://www.postgresql.org/docs/current/typeconv.html"
+      },
+      {
+        "title": "CREATE CAST",
+        "url": "https://www.postgresql.org/docs/current/sql-createcast.html"
+      }
+    ],
+    "syntax": "-- General forms of a type cast\nCAST ( expression AS type )   -- SQL-standard syntax\nexpression::type              -- historical PostgreSQL syntax\ntype 'string literal'         -- typed literal (string constants only)\ntypename ( expression )       -- function-like syntax (only some type names)\n\n-- Examples\nSELECT CAST('2024-03-15' AS date);       -- 2024-03-15\nSELECT '42.7'::numeric(5,1);             -- 42.7\nSELECT date '2024-03-15';                -- typed literal\nSELECT float8(7);                        -- function-like cast\n\n-- Variations and gotchas\n-- CAST(x AS t) and x::t are equivalent: both invoke the same\n--   conversion and give the same result.\n-- :: binds tighter than most operators, so add parentheses:\n--   SELECT -5::text;        -- unary minus applied after ::text, fails\n--   SELECT (-5)::text;      -- '-5'\n--   SELECT (2 + 3)::text;   -- '5'\n-- Casting a value that is not valid for the type raises an error:\n--   SELECT 'abc'::int;      -- ERROR: invalid input syntax\n-- Casts can be chained: SELECT '3.9'::numeric::int;  -- 4 (rounds)\n-- Casting to a length-limited type such as varchar(n) truncates\n--   silently with an explicit cast; an implicit assignment raises an error.\n-- \\dC in psql lists the casts that are defined.",
+    "title": "Type conversion"
+  },
+  "pg-easy-52": {
+    "docs": [
+      {
+        "title": "Date/Time Types",
+        "url": "https://www.postgresql.org/docs/current/datatype-datetime.html"
+      },
+      {
+        "title": "Date/Time Functions and Operators",
+        "url": "https://www.postgresql.org/docs/current/functions-datetime.html"
+      }
+    ],
+    "syntax": "-- General form: typed literal of a time span\nINTERVAL 'quantity unit [quantity unit ...]' [fields]\n'quantity unit'::interval\n\n-- Examples\nSELECT INTERVAL '3 hours 15 minutes';      -- 03:15:00\nSELECT now() + INTERVAL '2 weeks';         -- timestamptz shifted by 14 days\nSELECT '1 year 2 mons'::interval;          -- 1 year 2 mons\nSELECT pg_typeof(INTERVAL '5 minutes');    -- interval\n\n-- Variations and gotchas:\n-- Stored as months, days, and microseconds separately, so\n--   '1 month' <> '30 days' when added to dates, and\n--   '1 day' <> '24 hours' across DST changes for timestamptz.\n-- ISO 8601 form also works: INTERVAL 'P1Y2M3DT4H5M6S'\n-- Field restriction: INTERVAL '90' MINUTE; INTERVAL '1-2' YEAR TO MONTH\n-- extract(epoch FROM INTERVAL '2 hours') -> 7200 (seconds as numeric)\n-- make_interval(days => 3, hours => 4) builds one from parts\n-- date - date returns integer days, but timestamp - timestamp returns interval\n-- justify_hours / justify_days normalize 36 hours -> 1 day 12:00:00\n-- Output style is controlled by the IntervalStyle setting",
+    "title": "Date/time types"
+  },
+  "pg-easy-53": {
+    "docs": [
+      {
+        "title": "Date/Time Functions and Operators",
+        "url": "https://www.postgresql.org/docs/current/functions-datetime.html"
+      },
+      {
+        "title": "Date/Time Types",
+        "url": "https://www.postgresql.org/docs/current/datatype-datetime.html"
+      }
+    ],
+    "syntax": "-- General form: timestamp +/- interval -> timestamp\nSELECT <timestamp_expr> + INTERVAL '<quantity> <unit>';\n\n-- Examples\nSELECT current_timestamp - INTERVAL '3 hours';\nSELECT TIMESTAMP '2024-03-01 09:30' + INTERVAL '2 days 4 hours';\n-- => 2024-03-03 13:30:00\n\n-- now() = current_timestamp = transaction_timestamp():\n--   fixed at the START of the current transaction, so it returns\n--   the same value for every row and every call in that transaction.\n-- clock_timestamp()      -> real wall-clock time, changes per call\n-- statement_timestamp()  -> start of the current statement\n\n-- Gotchas:\n-- date + integer -> date        (CURRENT_DATE + 5)\n-- date + interval -> timestamp  (time part becomes 00:00:00)\n-- timestamptz + '1 day' respects DST (keeps wall-clock time);\n--   '24 hours' adds exactly 24h.\n-- Cast to drop the time: (now() + INTERVAL '1 month')::date\n-- Month math clamps: DATE '2024-01-31' + INTERVAL '1 month'\n--   => 2024-02-29 00:00:00",
+    "title": "Date/time functions and operators"
+  },
+  "pg-easy-54": {
+    "docs": [
+      {
+        "title": "Date/Time Functions and Operators",
+        "url": "https://www.postgresql.org/docs/current/functions-datetime.html"
+      },
+      {
+        "title": "Date/Time Types",
+        "url": "https://www.postgresql.org/docs/current/datatype-datetime.html"
+      }
+    ],
+    "syntax": "-- General form: symbolic difference as an interval\nAGE(later timestamp, earlier timestamp) -> interval\nAGE(ts timestamp) -> interval  -- vs current_date (midnight)\n\n-- Examples\nSELECT age(timestamp '2020-06-15', timestamp '2018-03-10');\n-- 2 years 3 mons 5 days  (years/months/days, not raw days)\n\nSELECT age(timestamp '2019-03-01', timestamp '2019-02-01');\n-- 1 mon  (not '28 days')\n\n-- Gotchas:\n-- * Result is calendar-aware: whole years/months first, then days.\n-- * Argument order matters: age(earlier, later) gives a negative interval.\n-- * Plain subtraction differs: timestamp - timestamp gives days/hours,\n--   e.g. timestamp '2020-03-01' - timestamp '2019-03-01' = '366 days'.\n-- * date - date returns an integer number of days.\n-- * Extract parts with EXTRACT(YEAR FROM age(...)) or date_part('year', ...).\n-- * justify_days()/justify_interval() normalize day-based intervals.",
+    "title": "Date/time functions"
+  },
+  "pg-easy-56": {
+    "docs": [
+      {
+        "title": "Aggregate Functions",
+        "url": "https://www.postgresql.org/docs/current/functions-aggregate.html"
+      },
+      {
+        "title": "Aggregate Expressions",
+        "url": "https://www.postgresql.org/docs/current/sql-expressions.html#SYNTAX-AGGREGATES"
+      }
+    ],
+    "syntax": "-- General form\n-- STRING_AGG(expression text, delimiter text [ORDER BY ...]) -> text\n-- Concatenates non-null input values into one string, delimiter between them.\n\n-- Example: one comma-separated list per group\nSELECT dept, STRING_AGG(employee, '; ') AS staff\nFROM employees\nGROUP BY dept;\n\n-- Example: control the order inside the aggregate\nSELECT STRING_AGG(city, ' | ' ORDER BY city DESC) FROM offices;\n\n-- Variations & gotchas:\n-- * Order is NOT guaranteed unless you add ORDER BY inside the call.\n-- * NULL values are skipped; if all inputs are NULL (or no rows), result is NULL.\n--   Wrap with COALESCE(..., '') to get an empty string instead.\n-- * Delimiter is not added before the first or after the last value.\n-- * Non-text inputs need a cast: STRING_AGG(id::text, ',').\n-- * DISTINCT works: STRING_AGG(DISTINCT color, ',' ORDER BY color).\n-- * Also accepts bytea: STRING_AGG(bytes_col, '\\x00'::bytea).\n-- * Need an array instead? Use ARRAY_AGG(expr).\n-- * The reverse (text -> rows) is STRING_TO_TABLE(text, delim) or\n--   REGEXP_SPLIT_TO_TABLE.",
+    "title": "Aggregate functions"
+  },
+  "pg-easy-58": {
+    "docs": [
+      {
+        "title": "Pattern Matching",
+        "url": "https://www.postgresql.org/docs/current/functions-matching.html"
+      },
+      {
+        "title": "POSIX Regular Expressions",
         "url": "https://www.postgresql.org/docs/current/functions-matching.html#FUNCTIONS-POSIX-REGEXP"
       }
     ],
-    "syntax": "-- General form:\n-- regexp_replace(source, pattern, replacement [, flags])\n-- regexp_replace(source, pattern, replacement, start [, N [, flags]])  -- PG 15+\n\n-- Examples (different inputs):\nSELECT regexp_replace('a.b.c.d', '\\.', ':');        -- one replacement, see flags below\nSELECT regexp_replace('a.b.c.d', '\\.', ':', 'g');   -- flag changes scope\nSELECT regexp_replace('Hello World', 'o', '0', 'gi');\nSELECT regexp_replace('John Smith', '(\\w+) (\\w+)', '\\2, \\1');  -- backrefs \\1..\\9\n\n-- Notes / gotchas:\n-- * Pattern is a POSIX regular expression, not a literal string.\n-- * Without flags, only the FIRST match is replaced.\n-- * 'g' = replace all matches (global); 'i' = case-insensitive;\n--   flags can be combined, e.g. 'gi'.\n-- * Replacement: \\1-\\9 insert captured groups, \\& inserts whole match;\n--   write \\\\ for a literal backslash.\n-- * If there is no match, the source string is returned unchanged.\n-- * Result is text. Input is not modified.\n-- * For plain literal replacement of all occurrences, replace(src, from, to)\n--   is simpler and does not use regex.\n-- * Invalid regex or unknown flag raises an error.",
-    "title": "regexp_replace pattern substitution and flags"
+    "syntax": "-- General form: POSIX regular expression match operators\n-- string ~   pattern   -- matches, case-sensitive\n-- string ~*  pattern   -- matches, case-insensitive\n-- string !~  pattern   -- does NOT match, case-sensitive\n-- string !~* pattern   -- does NOT match, case-insensitive\n\nSELECT 'Postgres' ~  '^post';    -- false (case differs)\nSELECT 'Postgres' ~* '^post';    -- true  (case ignored, anchored at start)\nSELECT 'Postgres' ~* 'GRE';      -- true  (unanchored: matches anywhere)\nSELECT 'Postgres' !~* '^sql';    -- true  (does not start with sql)\n\nSELECT city FROM offices WHERE city ~* '^san ';\n\n-- Gotchas:\n-- Regex is unanchored by default; use ^ for start, $ for end.\n-- LIKE/ILIKE must match the WHOLE string; ~ / ~* match any substring.\n-- ILIKE 'abc%' is the LIKE equivalent of ~* '^abc'.\n-- Escape metacharacters (. * + ? ( ) [ ] { } | \\) to match literally.\n-- NULL ~ 'x' yields NULL, not false.",
+    "title": "Pattern matching"
   },
-  "pg-easy-61": {
+  "pg-easy-60": {
     "docs": [
       {
-        "title": "Enumerated Types",
-        "url": "https://www.postgresql.org/docs/current/datatype-enum.html"
+        "title": "Comparison Functions and Operators",
+        "url": "https://www.postgresql.org/docs/current/functions-comparison.html"
       },
       {
-        "title": "CREATE TYPE",
-        "url": "https://www.postgresql.org/docs/current/sql-createtype.html"
+        "title": "Value Expressions and Null Handling",
+        "url": "https://www.postgresql.org/docs/current/sql-expressions.html"
       }
     ],
-    "syntax": "-- General form\nCREATE TYPE name AS ENUM ('label1', 'label2', ...);\n\n-- Example: define, then use like any other type\nCREATE TYPE priority AS ENUM ('low', 'medium', 'high', 'urgent');\nCREATE TABLE ticket (\n  id    serial PRIMARY KEY,\n  level priority NOT NULL DEFAULT 'medium'\n);\nINSERT INTO ticket (level) VALUES ('high');\n\n-- Comparison and ordering follow the order labels were declared\nSELECT * FROM ticket WHERE level > 'low' ORDER BY level;\n\n-- Modify an existing enum\nALTER TYPE priority ADD VALUE 'critical' AFTER 'high';\nALTER TYPE priority RENAME VALUE 'low' TO 'minor';\n\n-- Helper functions\nSELECT enum_range(NULL::priority);      -- all labels in order\nSELECT enum_first(NULL::priority);\n\n-- Gotchas\n-- * Labels are case-sensitive, max 63 bytes each.\n-- * An enum type is distinct: values of different enum types\n--   cannot be compared directly without casting.\n-- * Inserting a label not in the list raises an error.\n-- * Existing labels cannot be removed with ALTER TYPE.\n-- * Cast to text to use string operators: level::text LIKE 'h%'",
-    "title": "Enumerated types in PostgreSQL"
+    "syntax": "-- General form: NULL-safe comparison\n-- expr IS DISTINCT FROM expr      -- like <>, but NULL-aware\n-- expr IS NOT DISTINCT FROM expr  -- like =,  but NULL-aware\n\n-- Ordinary comparison returns NULL if either side is NULL\nSELECT 5 <> NULL;                          -- NULL (unknown)\nSELECT NULL = NULL;                        -- NULL (unknown)\n\n-- NULL-aware comparison always returns true or false\nSELECT 5 IS DISTINCT FROM NULL;            -- true\nSELECT NULL IS DISTINCT FROM NULL;         -- false\nSELECT NULL IS NOT DISTINCT FROM NULL;     -- true\n\n-- Find rows whose value changed, including to or from NULL\nSELECT id FROM orders o JOIN orders_audit h USING (id)\nWHERE o.status IS DISTINCT FROM h.status;\n\n-- Gotchas:\n-- * WHERE x <> 'shipped' silently skips rows where x is NULL;\n--   WHERE x IS DISTINCT FROM 'shipped' includes them.\n-- * NULL is not treated as ''; '' IS DISTINCT FROM NULL is true.\n-- * No error is raised on NULL input; the result is just never NULL.\n-- * IS NOT DISTINCT FROM usually can't use a plain btree index the way\n--   '=' can, so prefer '=' when columns are NOT NULL.\n-- * For a single value use IS NULL / IS NOT NULL instead.",
+    "title": "Comparison operators"
   },
-  "pg-easy-64": {
+  "pg-easy-65": {
     "docs": [
       {
-        "title": "COPY (SQL command)",
+        "title": "SQL commands reference: data import and export",
         "url": "https://www.postgresql.org/docs/current/sql-copy.html"
       },
       {
-        "title": "psql: \\copy meta-command",
-        "url": "https://www.postgresql.org/docs/current/app-psql.html"
-      }
-    ],
-    "syntax": "-- Server-side form (SQL command):\nCOPY table_name [(col, ...)] FROM 'path' | PROGRAM 'cmd' | STDIN [WITH (option, ...)];\nCOPY table_name | (query) TO 'path' | PROGRAM 'cmd' | STDOUT [WITH (option, ...)];\n\n-- Client-side form (psql meta-command, one line, no trailing semicolon needed):\n\\copy table_name [(col, ...)] FROM 'path' | STDIN [WITH (option, ...)]\n\\copy (query) TO 'path' | STDOUT [WITH (option, ...)]\n\n-- Examples:\nCOPY invoices TO '/var/lib/postgresql/out/invoices.csv' WITH (FORMAT csv, HEADER);\n\\copy invoices FROM 'invoices_in.csv' WITH (FORMAT csv, HEADER)\n\n-- Notes / gotchas:\n-- * COPY with a file name: the file is read/written by the server process,\n--   path resolved on the server's filesystem, using the server OS account's permissions.\n-- * COPY with a file needs superuser or membership in pg_read_server_files /\n--   pg_write_server_files; PROGRAM needs pg_execute_server_program.\n-- * \\copy: psql opens the file itself as the client user, then streams the data\n--   to the server via COPY ... FROM STDIN / TO STDOUT. Path is relative to psql's\n--   working directory.\n-- * COPY ... FROM STDIN / TO STDOUT transfers data over the connection (used by drivers).\n-- * Options: FORMAT text|csv|binary, DELIMITER, NULL, HEADER, QUOTE, ESCAPE.\n-- * COPY is not a normal INSERT: it is fast, and triggers fire but rules do not.\n-- * Whole load fails if any row is bad (unless ON_ERROR is set in newer versions).",
-    "title": "Bulk loading and exporting with COPY and psql's \\copy"
-  },
-  "pg-easy-67": {
-    "docs": [
-      {
-        "title": "Sequence Manipulation Functions",
-        "url": "https://www.postgresql.org/docs/current/functions-sequence.html"
-      },
-      {
-        "title": "CREATE SEQUENCE",
-        "url": "https://www.postgresql.org/docs/current/sql-createsequence.html"
-      }
-    ],
-    "syntax": "-- General forms\nnextval(regclass)  -> bigint\ncurrval(regclass)  -> bigint\nlastval()          -> bigint\nsetval(regclass, bigint [, is_called boolean]) -> bigint\n\n-- Example setup\nCREATE SEQUENCE order_no START 100 INCREMENT 5;\n\nSELECT currval('order_no');      -- error if nextval not yet called in this session\nSELECT setval('order_no', 500);  -- next nextval returns 505\nSELECT setval('order_no', 500, false); -- next nextval returns 500\nSELECT lastval();                -- latest value returned by nextval in this session, any sequence\n\n-- Typical use\nINSERT INTO orders(id, item) VALUES (nextval('order_no'), 'pen');\n\n-- Gotchas (as comments)\n-- * Sequence state is shared by all sessions; currval/lastval are session-local.\n-- * Sequence operations are non-transactional: they are not rolled back\n--   on ROLLBACK, so gaps in values are normal.\n-- * Concurrent sessions each receive distinct values, never blocked by\n--   other transactions' uncommitted calls.\n-- * CACHE n makes a session preallocate values; other sessions may see\n--   out-of-order values.\n-- * Argument is regclass: a quoted name, resolved via search_path;\n--   use 'schema.seq' to be explicit.\n-- * serial / identity columns use a sequence behind the scenes.",
-    "title": "Sequence manipulation functions (nextval, currval, lastval, setval)"
-  },
-  "pg-easy-68": {
-    "docs": [
-      {
-        "title": "Sequence Manipulation Functions",
-        "url": "https://www.postgresql.org/docs/current/functions-sequence.html"
-      },
-      {
-        "title": "CREATE SEQUENCE",
-        "url": "https://www.postgresql.org/docs/current/sql-createsequence.html"
-      }
-    ],
-    "syntax": "-- General form\nCREATE SEQUENCE seq_name [INCREMENT BY n] [START WITH n] [CACHE n] [CYCLE];\nSELECT nextval('seq_name');   -- advance and return the new value\nSELECT currval('seq_name');  -- last value nextval returned in THIS session\nSELECT setval('seq_name', 100);         -- set current value explicitly\nSELECT setval('seq_name', 100, false);  -- next nextval returns 100\n\n-- Example\nCREATE SEQUENCE invoice_no START 500;\nCREATE TABLE invoice (id bigint DEFAULT nextval('invoice_no'), note text);\nINSERT INTO invoice (note) VALUES ('first');\n\n-- Gotchas (as comments)\n-- * Sequence operations are non-transactional: they are designed so that\n--   concurrent sessions never block each other on nextval.\n-- * Consider how the effect of nextval interacts with transaction\n--   commit/abort, and what that means for numbering continuity.\n-- * Other causes of unused numbers: failed INSERTs, CACHE preallocation,\n--   crash recovery.\n-- * currval errors if nextval was not yet called in the session.\n-- * serial / GENERATED ... AS IDENTITY columns use sequences internally,\n--   so they follow the same rules.\n-- * Do not rely on sequences for gap-free numbering; use a separate\n--   counter table with row locking if that is required.",
-    "title": "Sequence functions: nextval, currval, setval"
-  },
-  "pg-easy-69": {
-    "docs": [
-      {
-        "title": "Inheritance (Data Definition)",
-        "url": "https://www.postgresql.org/docs/current/ddl-inherit.html"
-      },
-      {
-        "title": "CREATE TABLE – INHERITS",
-        "url": "https://www.postgresql.org/docs/current/sql-createtable.html"
-      }
-    ],
-    "syntax": "-- General form\nCREATE TABLE child_table (\n  extra_col type, ...\n) INHERITS (parent_table [, other_parent ...]);\n\n-- Example (different names)\nCREATE TABLE vehicles (id serial PRIMARY KEY, wheels int);\nCREATE TABLE trucks (payload_kg int) INHERITS (vehicles);\n\nINSERT INTO trucks (wheels, payload_kg) VALUES (6, 9000);\n\n-- Querying a parent includes rows from its children by default\nSELECT * FROM vehicles;        -- parent plus all descendants\nSELECT * FROM ONLY vehicles;   -- parent's own rows only\nSELECT * FROM vehicles*;       -- explicit 'include children'\n\n-- Variations and gotchas (as comments)\n-- * Child gets all parent columns, then its own; same-named columns are merged.\n-- * Each table keeps its own storage; a row lives in exactly one table.\n-- * CHECK and NOT NULL constraints are inherited; PRIMARY KEY, UNIQUE\n--   and FOREIGN KEY constraints and indexes are NOT.\n-- * Parent-level UPDATE/DELETE also affect child rows unless ONLY is used.\n-- * Later ALTER TABLE on the parent propagates to children.\n-- * Add/remove link later: ALTER TABLE t INHERIT p; / NO INHERIT p;\n-- * Dropping the parent needs CASCADE if children exist.\n-- * CREATE TABLE ... (LIKE p) copies columns only, with no link.\n-- * Declarative partitioning (PARTITION BY) is usually preferred now.",
-    "title": "Table inheritance (INHERITS clause)"
-  },
-  "pg-easy-70": {
-    "docs": [
-      {
-        "title": "Default Values (DDL)",
-        "url": "https://www.postgresql.org/docs/current/ddl-default.html"
-      },
-      {
-        "title": "CREATE TABLE",
-        "url": "https://www.postgresql.org/docs/current/sql-createtable.html"
-      }
-    ],
-    "syntax": "-- General form\n-- column_name data_type [ DEFAULT default_expr ] [ constraints ]\n-- default_expr is a value expression evaluated per row at INSERT time\n-- whenever the column is not supplied (omitted or DEFAULT keyword).\n\nCREATE TABLE ticket (\n  id        BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n  status    TEXT NOT NULL DEFAULT 'open',\n  priority  INT DEFAULT 3,\n  opened_on DATE DEFAULT CURRENT_DATE\n);\n\n-- Default applies: column omitted, or DEFAULT keyword used\nINSERT INTO ticket (priority) VALUES (1);\nINSERT INTO ticket (status, priority) VALUES (DEFAULT, 2);\n\n-- Change or remove a default later (affects only future inserts)\nALTER TABLE ticket ALTER COLUMN priority SET DEFAULT 5;\nALTER TABLE ticket ALTER COLUMN priority DROP DEFAULT;\n\n-- Gotchas\n-- * An explicit NULL is stored as NULL; the default is NOT used.\n-- * A default does not imply NOT NULL; add that constraint separately.\n-- * A default is not applied by UPDATE (use a trigger for that).\n-- * Volatile functions (random(), clock_timestamp()) run per row;\n--   now() returns the current transaction's start time.\n-- * Defaults cannot reference other columns or contain subqueries.\n-- * Without DEFAULT, an omitted column becomes NULL.",
-    "title": "Column DEFAULT expressions"
-  },
-  "pg-easy-71": {
-    "docs": [
-      {
-        "title": "UUID Functions",
-        "url": "https://www.postgresql.org/docs/current/functions-uuid.html"
-      },
-      {
-        "title": "UUID Type",
-        "url": "https://www.postgresql.org/docs/current/datatype-uuid.html"
-      }
-    ],
-    "syntax": "-- General form: a function call returning a value of type uuid\n--   <function_name>()\n\n-- Example: using a UUID generator as a column default\nCREATE TABLE invoices (\n    id    uuid PRIMARY KEY DEFAULT <uuid_function>(),\n    label text\n);\n\nINSERT INTO invoices (label) VALUES ('march') RETURNING id;\n\n-- Call it directly in a query:\nSELECT <uuid_function>();\n\n-- Notes / gotchas:\n-- * The result has type uuid (128-bit), shown as 8-4-4-4-12 hex digits.\n-- * Core Postgres (13+) provides gen_random_uuid() with no extension needed;\n--   older versions needed the pgcrypto extension.\n-- * Newer versions (18+) also add uuidv4() and uuidv7(); check the docs\n--   for what each version-specific function guarantees.\n-- * The uuid-ossp extension offers other generators, e.g. uuid_generate_v1(),\n--   uuid_generate_v3()/v5() (namespace + name based).\n-- * Each call is evaluated per row when used in DEFAULT or SELECT lists.\n-- * The ordering of generated values affects index locality on a primary key.",
-    "title": "Built-in UUID generation functions"
-  },
-  "pg-easy-73": {
-    "docs": [
-      {
-        "title": "psql – Meta-Commands",
-        "url": "https://www.postgresql.org/docs/current/app-psql.html#APP-PSQL-META-COMMANDS"
+        "title": "Performance tips: populating a database",
+        "url": "https://www.postgresql.org/docs/current/populate.html"
       },
       {
         "title": "psql reference",
         "url": "https://www.postgresql.org/docs/current/app-psql.html"
       }
     ],
-    "syntax": "-- General form (run inside psql, not as SQL):\n--   \\d<letter>[S+] [pattern]\n-- The letter after \\d picks the kind of object to list.\n-- Suffix + adds more detail (size, description, etc.).\n-- Suffix S includes system objects.\n-- pattern is an optional name filter; supports * and ?.\n\n-- Examples:\n--   \\dv+ report_*     -- views whose names start with report_, with detail\n--   \\dT               -- user-defined data types\n\n-- Common letters in the family:\n--   \\d name   describe one relation (columns, indexes)\n--   \\dt       tables\n--   \\dv       views\n--   \\di       indexes\n--   \\ds       sequences\n--   \\dn       schemas\n--   \\df       functions\n--   \\du       roles\n--   \\dT       data types\n--   \\dE       foreign tables\n--   \\l        databases (not a \\d form)\n\n-- Gotchas:\n--   * Letters are case-sensitive: \\dt and \\dT differ.\n--   * Meta-commands are psql features, not server SQL;\n--     they work by querying the system catalogs.\n--   * Use psql -E to echo the SQL a meta-command runs.\n--   * Another letter in this family covers installed\n--     extensions; check \\? for the full list.\n--   * Without a pattern, only objects visible on the\n--     search_path are listed for many kinds.",
-    "title": "psql describe meta-commands (\\d family)"
+    "syntax": "-- General form\nCOPY table_name [(col1, col2, ...)]\n  FROM { 'server_file' | STDIN | PROGRAM 'cmd' }\n  [WITH (FORMAT csv|text|binary, HEADER, DELIMITER ',', NULL '')];\nCOPY { table_name | (SELECT ...) } TO { 'file' | STDOUT };\n\n-- Load a CSV into a table (one command, rows streamed in)\nCOPY products (sku, name, price)\n  FROM '/srv/import/products.csv'\n  WITH (FORMAT csv, HEADER);\n\n-- Export query results\nCOPY (SELECT sku, price FROM products WHERE price > 50)\n  TO STDOUT WITH (FORMAT csv, HEADER);\n\n-- psql client-side variant: reads a file on YOUR machine\n-- \\copy products FROM 'products.csv' WITH (FORMAT csv, HEADER)\n\n-- Gotchas:\n-- * Server-side files need superuser or pg_read_server_files /\n--   pg_write_server_files; use \\copy or STDIN otherwise.\n-- * Parsed and planned once, not once per row.\n-- * Constraints, triggers and index updates still happen per row.\n-- * One bad row aborts the whole COPY by default\n--   (PG 17+: ON_ERROR ignore for data type errors).\n-- * For big loads: drop indexes/FKs first, recreate after;\n--   raise maintenance_work_mem; run ANALYZE afterward.\n-- * FREEZE option works only if the table was created or\n--   truncated in the same transaction.",
+    "title": "Data loading"
   },
-  "pg-easy-75": {
+  "pg-easy-74": {
     "docs": [
       {
-        "title": "INSERT statement reference",
-        "url": "https://www.postgresql.org/docs/current/sql-insert.html"
+        "title": "Lexical Structure: Constants",
+        "url": "https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-DOLLAR-QUOTING"
       },
       {
-        "title": "VALUES lists",
-        "url": "https://www.postgresql.org/docs/current/queries-values.html"
-      },
-      {
-        "title": "Inserting data (tutorial)",
-        "url": "https://www.postgresql.org/docs/current/dml-insert.html"
+        "title": "PL/pgSQL: Tips for Developing",
+        "url": "https://www.postgresql.org/docs/current/plpgsql-development-tips.html"
       }
     ],
-    "syntax": "-- General form\nINSERT INTO table_name (col1, col2, ...)\nVALUES (expr, expr, ...) [, (expr, expr, ...) ...]\n[ON CONFLICT ...]\n[RETURNING output_expr [, ...]];\n\n-- Example: a VALUES list with several parenthesized tuples\nINSERT INTO pets (name, age)\nVALUES ('Rex', 3), ('Mia', 5)\nRETURNING name, age;\n\n-- Example: DEFAULT and omitted columns\nINSERT INTO pets (name, age)\nVALUES ('Bo', DEFAULT);\n\n-- Notes / gotchas:\n-- * Each parenthesized tuple in VALUES describes one row.\n--   Tuples are separated by commas.\n-- * Every tuple must have the same number of expressions,\n--   matching the column list; otherwise Postgres raises an error.\n-- * Columns not listed in the column list get their default\n--   (or NULL if no default).\n-- * Multi-row VALUES is a single statement: it succeeds or\n--   fails as a whole.\n-- * VALUES can also be used standalone as a table expression:\n--   SELECT * FROM (VALUES (1,'x'), (2,'y')) AS v(id, label);\n-- * Alternative: INSERT INTO ... SELECT ... inserts rows\n--   produced by a query.",
-    "title": "INSERT with a VALUES list"
+    "syntax": "-- General form: $tag$ ... $tag$  (tag is optional, may be empty)\n-- Text between the delimiters is taken literally: no escape processing,\n-- single quotes and backslashes need no doubling.\nSELECT $$O'Brien's book$$;          -- O'Brien's book\nSELECT 'O''Brien''s book';          -- same value, standard quoting\n\n-- Tagged form lets you nest dollar quotes (e.g. function bodies)\nCREATE FUNCTION greet(name text) RETURNS text AS $fn$\n  SELECT 'Hi, ' || name || $q$ -- it's $$ fine $$ here$q$;\n$fn$ LANGUAGE sql;\n\n-- Gotchas:\n-- * Tags are case-sensitive: $Tag$ ... $tag$ do not match.\n-- * Tag follows identifier rules, no $ inside it; $1 is a parameter, not a quote.\n-- * No variable interpolation: $$x = $var$$ is just text.\n-- * Backslashes are literal: $$a\\nb$$ is 4 chars (a, \\, n, b).\n-- * Result type is unknown/text like any literal; no effect on collation\n--   or case sensitivity of comparisons.\n-- * Multi-line strings also work with ordinary '...' literals.\n-- * A dollar-quote following an identifier char needs whitespace: x$$..$$ fails.",
+    "title": "String literals and quoting"
   },
-  "pg-easy-77": {
+  "pg-easy-76": {
     "docs": [
       {
-        "title": "VALUES Lists (queries)",
-        "url": "https://www.postgresql.org/docs/current/queries-values.html"
+        "title": "SELECT command reference",
+        "url": "https://www.postgresql.org/docs/current/sql-select.html"
       },
       {
-        "title": "VALUES command reference",
-        "url": "https://www.postgresql.org/docs/current/sql-values.html"
+        "title": "Queries: table expressions and select lists",
+        "url": "https://www.postgresql.org/docs/current/queries-overview.html"
       }
     ],
-    "syntax": "-- General form\nVALUES (expr [, ...]) [, ...]\n    [ ORDER BY sort_expr [ASC | DESC] [, ...] ]\n    [ LIMIT count ] [ OFFSET start ];\n\n-- Example: used as a row source in FROM, with aliases for table and columns\nSELECT *\nFROM (VALUES (10, 'x'), (20, 'y'), (30, 'z')) AS t(num, label)\nWHERE num > 10;\n\n-- Example: used in INSERT\nINSERT INTO items (id, name) VALUES (1, 'pen'), (2, 'ink');\n\n-- Notes and gotchas\n-- * VALUES is a command in its own right, not only part of INSERT.\n-- * Every row must have the same number of columns.\n-- * Without aliases, columns are named column1, column2, ...\n-- * Column types are resolved across all rows (like UNION);\n--   incompatible types raise an error.\n-- * In FROM, the VALUES list must be in parentheses and needs an alias\n--   if you want to name its columns.\n-- * Can be used in CTEs: WITH v(a, b) AS (VALUES (1, 2)) SELECT * FROM v;\n-- * Row order is not guaranteed unless you add ORDER BY.",
-    "title": "VALUES lists in PostgreSQL"
+    "syntax": "-- General form: TABLE name is shorthand for SELECT * FROM name\nTABLE [ ONLY ] table_name [ * ];\n\n-- Equivalent pair: both return every column and row of products\nTABLE products;\nSELECT * FROM products;\n\n-- Can be combined with ORDER BY / LIMIT / OFFSET\nTABLE products ORDER BY price DESC LIMIT 5;\n\n-- Works inside set operations, CTEs, and subqueries\nTABLE archived_products\nUNION ALL\nTABLE products;\n\nWITH recent AS (TABLE products ORDER BY created_at DESC LIMIT 10)\nSELECT name FROM recent;\n\nINSERT INTO products_backup TABLE products;\n\n-- Gotchas:\n-- * No WHERE, GROUP BY, or column list: use a full SELECT for those\n-- * ONLY excludes rows from inheritance child tables\n-- * Works on views too (TABLE my_view;)\n-- * Standard SQL; not a psql meta-command (unlike \\d)",
+    "title": "Query syntax"
   },
   "pg-easy-79": {
     "docs": [
       {
-        "title": "Aggregate Functions (general-purpose)",
+        "title": "Aggregate Functions",
         "url": "https://www.postgresql.org/docs/current/functions-aggregate.html"
       },
       {
-        "title": "Aggregate Expressions (syntax)",
+        "title": "Aggregate Expressions",
         "url": "https://www.postgresql.org/docs/current/sql-expressions.html#SYNTAX-AGGREGATES"
-      },
-      {
-        "title": "GROUP BY and HAVING clauses",
-        "url": "https://www.postgresql.org/docs/current/queries-table-expressions.html#QUERIES-GROUP"
       }
     ],
-    "syntax": "-- General form\nSELECT group_col, agg_func(expr [ORDER BY sort_expr])\nFROM table_name\nGROUP BY group_col;\n\n-- Example 1: a different aggregate, string_agg, builds text\nSELECT dept, string_agg(emp_name, ', ' ORDER BY emp_name)\nFROM staff\nGROUP BY dept;\n\n-- Example 2: array-building aggregates, with options\nSELECT region,\n       array_agg(city ORDER BY city) AS cities,\n       count(*)                      AS n_rows\nFROM offices\nGROUP BY region;\n\n-- Notes / gotchas\n-- * An aggregate runs once per group and returns ONE value per group.\n-- * Without ORDER BY inside the call, element order is unspecified.\n-- * Aggregates do not remove duplicates unless you ask: agg(DISTINCT col).\n-- * NULL inputs: most aggregates (sum, count(col), avg) skip NULLs;\n--   array_agg is an exception and includes NULLs as elements.\n-- * Empty input (no rows in group/table) gives NULL for most aggregates, 0 for count.\n-- * FILTER limits rows per aggregate: agg(col) FILTER (WHERE cond)\n-- * Every non-aggregated selected column must appear in GROUP BY.\n-- * unnest(array_col) reverses array building: one row per element.",
-    "title": "Aggregate functions with GROUP BY"
+    "syntax": "-- General form: collect input values (including NULLs) into an array\narray_agg(expression [ORDER BY sort_expr [ASC|DESC]])\n\n-- One array per group\nSELECT dept_id, array_agg(employee_name)\nFROM staff\nGROUP BY dept_id;\n-- dept_id | array_agg\n--       1 | {Ana,Ben,Ana}\n\n-- Control element order inside the array\nSELECT team, array_agg(score ORDER BY score DESC)\nFROM results\nGROUP BY team;\n\n-- Variations & gotchas:\n-- * Duplicates are kept; use array_agg(DISTINCT x) to drop them.\n-- * NULL inputs become NULL elements; filter with\n--   array_agg(x) FILTER (WHERE x IS NOT NULL).\n-- * Without ORDER BY, element order is unspecified.\n-- * With no input rows, the result is NULL, not '{}';\n--   use COALESCE(array_agg(x), '{}').\n-- * Array inputs produce a multidimensional array (all must match size).\n-- * For a delimited text string instead, use string_agg(x, ', ').",
+    "title": "Aggregate functions"
   },
-  "pg-easy-81": {
+  "pg-easy-80": {
     "docs": [
       {
-        "title": "psql – Meta-Commands (\\i, \\ir, \\copy, \\o)",
-        "url": "https://www.postgresql.org/docs/current/app-psql.html#APP-PSQL-META-COMMANDS"
-      },
-      {
-        "title": "psql reference page",
+        "title": "psql — PostgreSQL interactive terminal",
         "url": "https://www.postgresql.org/docs/current/app-psql.html"
-      }
-    ],
-    "syntax": "-- General form (typed at the psql prompt, not sent to the server):\n--   \\meta-command [arguments]\n\n-- Commands that take a file name:\n\\i  filename        -- \\include\n\\ir filename        -- \\include_relative (path relative to the current script)\n\\copy table FROM 'file' ...   -- client-side bulk data load/export\n\\o  filename        -- send query output to a file\n\\e  [filename]      -- open an editor\n\n-- Examples with other names:\n\\i  /tmp/migrations/001_schema.sql\n\\ir ../seed/data.sql\n\n-- Related, from the shell rather than inside psql:\n--   psql -f file.sql dbname      (run a file, then exit)\n--   psql -c 'SELECT 1' dbname    (run one command string)\n\n-- Notes and gotchas:\n-- * Backslash commands are handled by psql itself, not by the server.\n-- * Relative paths in \\i resolve against psql's current working directory;\n--   use \\ir inside nested scripts to resolve against the calling script.\n-- * Errors in a file do not stop it by default; set ON_ERROR_STOP to on to abort.\n-- * Files are read on the client machine, not the server.\n-- * \\copy moves data rows; it does not execute SQL statements found in a file.\n-- * Use \\? to list all meta-commands and \\? variables for settings.",
-    "title": "psql meta-commands for files and input"
-  },
-  "pg-easy-85": {
-    "docs": [
-      {
-        "title": "Conditional Expressions: GREATEST and LEAST",
-        "url": "https://www.postgresql.org/docs/current/functions-conditional.html#FUNCTIONS-GREATEST-LEAST"
-      }
-    ],
-    "syntax": "-- General form\nGREATEST(value [, ...])\nLEAST(value [, ...])\n\n-- Examples\nSELECT LEAST(10, 4, 8);            -- picks from the list of arguments\nSELECT GREATEST('apple', 'pear');  -- works on text using collation ordering\nSELECT GREATEST(price, 0) FROM items;  -- per-row clamp to a floor\n\n-- Notes and gotchas\n-- * Takes one or more expressions; returns a single scalar value, not an array.\n-- * All arguments must resolve to a common data type (same rules as UNION/CASE);\n--   mixing int and numeric promotes to numeric.\n-- * NULL arguments are ignored; the result is NULL only if ALL arguments are NULL.\n--   (This differs from the MAX()/MIN() aggregates' behavior across rows? No: those\n--   also skip NULLs, but they work over rows, not over an argument list.)\n-- * GREATEST/LEAST compare values within one row; MAX/MIN aggregate across rows.\n-- * To compare values from an array, use an aggregate or unnest:\n--     SELECT max(x) FROM unnest(ARRAY[5,9,1]) AS x;",
-    "title": "Conditional expressions: GREATEST and LEAST"
-  },
-  "pg-easy-87": {
-    "docs": [
-      {
-        "title": "Data Type Formatting Functions",
-        "url": "https://www.postgresql.org/docs/current/functions-formatting.html"
       },
       {
-        "title": "Date/Time Functions and Operators",
-        "url": "https://www.postgresql.org/docs/current/functions-datetime.html"
+        "title": "psql meta-commands reference",
+        "url": "https://www.postgresql.org/docs/current/app-psql.html#APP-PSQL-META-COMMANDS"
       }
     ],
-    "syntax": "-- General forms\n--   to_char(value, 'pattern')       -> text\n--   to_date(text, 'pattern')        -> ?\n--   to_timestamp(text, 'pattern')   -> ?\n--   to_number(text, 'pattern')      -> numeric\n\n-- Examples (different values)\nSELECT to_char(now(), 'DD Mon YYYY');\nSELECT to_date('15/08/2023', 'DD/MM/YYYY');\nSELECT to_timestamp('2023-08-15 14:30', 'YYYY-MM-DD HH24:MI');\n\n-- Common pattern tokens\n--   YYYY year, MM month number, Mon abbreviated month name,\n--   DD day of month, HH24 hour 0-23, MI minute, SS second\n\n-- Gotchas\n-- * The pattern describes how the input text is laid out; it is not validated\n--   like a strict parser: extra or mismatched separators are often tolerated.\n-- * Fields missing from the input take defaults (e.g. no day -> day 1).\n-- * Out-of-range values raise an error (e.g. month 13), not NULL.\n-- * No built-in boolean 'is valid date' function; wrap a cast in\n--   exception handling (PL/pgSQL) or validate with a regex.\n-- * For ISO-style text, a plain cast works: '2023-08-15'::date\n-- * Check each function's return type in the docs before relying on it.",
-    "title": "Data type formatting functions (to_char, to_date, to_timestamp)"
+    "syntax": "-- General form (psql client only, not SQL; no trailing semicolon)\n\\! [ command ]\n\n-- Runs an OS shell command and returns to the psql prompt\n\\! ls -l /var/backups\n\\! date\n\n-- With no argument: starts an interactive subshell;\n-- type 'exit' to come back to psql\n\\!\n\n-- Example: check a file before importing it\n\\! head -n 3 /data/orders.csv\n\\copy orders FROM '/data/orders.csv' CSV HEADER\n\n-- Gotchas:\n-- * Runs on the CLIENT machine, not the database server\n-- * The rest of the line is passed to the shell unchanged\n--   (psql does not expand :variables or handle quoting)\n-- * The shell comes from $SHELL (default /bin/sh); Windows uses cmd.exe\n-- * Cannot be used inside a single-line \\\\ separated list reliably;\n--   put it on its own line\n-- Related: \\cd dir changes the client working directory,\n--   \\setenv NAME value sets an env var for child processes,\n--   \\g | cmd pipes a query's output to a shell command",
+    "title": "psql meta-commands"
+  },
+  "pg-easy-82": {
+    "docs": [
+      {
+        "title": "System Administration Functions: Database Object Management",
+        "url": "https://www.postgresql.org/docs/current/functions-admin.html#FUNCTIONS-ADMIN-DBOBJECT"
+      },
+      {
+        "title": "Determining Disk Usage",
+        "url": "https://www.postgresql.org/docs/current/disk-usage.html"
+      }
+    ],
+    "syntax": "-- General form\npg_size_pretty(bigint | numeric) -> text   -- e.g. '8192 bytes', '24 MB'\npg_total_relation_size(regclass) -> bigint  -- table + indexes + TOAST\npg_relation_size(regclass [, fork text]) -> bigint  -- main fork only by default\npg_table_size(regclass) -> bigint           -- table + TOAST, no indexes\npg_indexes_size(regclass) -> bigint         -- all indexes on the table\n\n-- Examples\nSELECT pg_size_pretty(pg_total_relation_size('invoices'));\n-- e.g. '156 MB' (text)\n\nSELECT relname,\n       pg_size_pretty(pg_table_size(oid))   AS data,\n       pg_size_pretty(pg_indexes_size(oid)) AS idx\nFROM pg_class\nWHERE relkind = 'r'\nORDER BY pg_total_relation_size(oid) DESC\nLIMIT 5;\n\n-- Gotchas\n-- pg_size_pretty returns text: sort by the raw bigint, not the\n--   pretty string ('9 MB' > '10 GB' as text).\n-- Units are powers of 1024 (kB, MB, GB, TB, PB).\n-- pg_size_bytes('1.5 GB') converts back to bigint.\n-- pg_database_size('mydb') sizes a whole database.\n-- Sizes are on-disk bytes, not row counts; use\n--   pg_class.reltuples for an estimated row count.",
+    "title": "System administration functions"
+  },
+  "pg-easy-84": {
+    "docs": [
+      {
+        "title": "Conditional Expressions",
+        "url": "https://www.postgresql.org/docs/current/functions-conditional.html"
+      }
+    ],
+    "syntax": "-- General form\nNULLIF(value1, value2)\n-- Returns NULL if value1 = value2; otherwise returns value1.\n-- Equivalent to: CASE WHEN value1 = value2 THEN NULL ELSE value1 END\n\n-- Example: avoid division-by-zero errors\nSELECT total_cost / NULLIF(units_sold, 0) AS unit_price\nFROM sales;\n-- units_sold = 0  -> divisor is NULL -> result is NULL (no error)\n\n-- Example: treat empty strings as missing\nSELECT NULLIF(trim(nickname), '') AS nickname FROM members;\n-- '' -> NULL ; 'Sam' -> 'Sam'\n\n-- Combine with COALESCE to supply a fallback\nSELECT COALESCE(NULLIF(region, 'n/a'), 'Unknown') FROM offices;\n\n-- Gotchas:\n-- * NULLIF(5, 7) returns 5 (first argument, unchanged).\n-- * NULLIF(NULL, 3) returns NULL; NULLIF(4, NULL) returns 4\n--   (comparison with NULL is never true).\n-- * Arguments must be comparable types; result type is that of the first argument.\n-- * Not the inverse of COALESCE: COALESCE replaces NULLs, NULLIF creates them.",
+    "title": "Conditional expressions"
   },
   "pg-easy-88": {
     "docs": [
       {
-        "title": "Date/Time Functions: EXTRACT",
+        "title": "Date/Time Functions and Operators",
         "url": "https://www.postgresql.org/docs/current/functions-datetime.html#FUNCTIONS-DATETIME-EXTRACT"
       },
       {
+        "title": "Data Type Formatting Functions",
+        "url": "https://www.postgresql.org/docs/current/functions-formatting.html"
+      }
+    ],
+    "syntax": "-- General form\nEXTRACT(field FROM source)   -- source: date, timestamp, time, interval\n-- Returns numeric (PG 14+; double precision before 14)\n\n-- Examples\nSELECT EXTRACT(YEAR  FROM DATE '2023-11-07');        -- 2023\nSELECT EXTRACT(MONTH FROM DATE '2023-11-07');        -- 11 (a number, not 'November')\nSELECT EXTRACT(DOW   FROM DATE '2023-11-07');        -- 2 (Sunday = 0)\nSELECT EXTRACT(EPOCH FROM TIMESTAMP '2023-11-07 00:00'); -- seconds since 1970\n\n-- Common fields: CENTURY, YEAR, QUARTER, MONTH, WEEK, DAY, DOW, ISODOW,\n--   DOY, HOUR, MINUTE, SECOND, EPOCH\n-- date_part('month', ts) is the older equivalent (returns double precision)\n\n-- Gotchas:\n-- * For a month NAME, use to_char(ship_date, 'Month') or 'Mon' -> text\n--   ('Month' is blank-padded to 9 chars; use 'FMMonth' to trim)\n-- * To round down to the 1st of the month, use date_trunc('month', ship_date)\n-- * Months between dates: use age() and extract YEAR*12 + MONTH from it\n-- * EXTRACT(MONTH FROM INTERVAL '14 months') -> 2 (the remainder, not 14)\n-- * Grouping by month alone mixes years; group by YEAR and MONTH together",
+    "title": "Date/time functions"
+  },
+  "pg-easy-89": {
+    "docs": [
+      {
         "title": "Date/Time Functions and Operators",
-        "url": "https://www.postgresql.org/docs/current/functions-datetime.html"
-      }
-    ],
-    "syntax": "-- General form\nEXTRACT(field FROM source)\n-- source: timestamp, timestamptz, date (cast to timestamp), time, or interval\n-- field: YEAR, QUARTER, MONTH, WEEK, DAY, DOW, DOY, HOUR, MINUTE, SECOND, EPOCH ...\n\n-- Examples (different values from the quiz)\nSELECT EXTRACT(YEAR FROM DATE '2021-11-30');\nSELECT EXTRACT(DOW FROM TIMESTAMP '2024-02-14 10:30:00');\nSELECT EXTRACT(HOUR FROM INTERVAL '3 hours 20 minutes');\n\n-- Equivalent function style\nSELECT date_part('quarter', TIMESTAMP '2024-08-01');\n\n-- Related, but different purpose:\n--   date_trunc('month', ts)  -> rounds a timestamp down, keeps a timestamp type\n--   to_char(ts, 'Month')     -> formats a value as text\n\n-- Gotchas\n-- * Return type is numeric since PG 14 (double precision in PG 13 and earlier).\n-- * The field name is a keyword or string, not a column.\n-- * On an interval, MONTH is the months component (0-11), not total months.\n-- * DOW: Sunday=0; ISODOW: Monday=1, Sunday=7.\n-- * Use it in WHERE / GROUP BY: GROUP BY EXTRACT(YEAR FROM created_at)",
-    "title": "Extracting date/time fields with EXTRACT and date_part"
-  },
-  "pg-easy-90": {
-    "docs": [
-      {
-        "title": "Returning Data from Modified Rows",
-        "url": "https://www.postgresql.org/docs/current/dml-returning.html"
+        "url": "https://www.postgresql.org/docs/current/functions-datetime.html#FUNCTIONS-DATETIME-TRUNC"
       },
       {
-        "title": "UPDATE command reference",
-        "url": "https://www.postgresql.org/docs/current/sql-update.html"
+        "title": "Data Type Formatting Functions",
+        "url": "https://www.postgresql.org/docs/current/functions-formatting.html"
       }
     ],
-    "syntax": "-- General form\nINSERT INTO tbl (cols) VALUES (...) RETURNING output_expr [, ...];\nUPDATE tbl SET col = expr WHERE cond RETURNING output_expr [, ...];\nDELETE FROM tbl WHERE cond RETURNING output_expr [, ...];\n\n-- Examples\nUPDATE accounts SET balance = balance + 50 WHERE id = 7\n  RETURNING id, balance;\n\nDELETE FROM sessions WHERE expires_at < now()\n  RETURNING user_id;\n\nINSERT INTO items (name) VALUES ('pen') RETURNING id AS new_id;\n\n-- Notes and gotchas\n-- * RETURNING yields one result row per affected row; zero rows if none matched.\n-- * Expressions can use any column of the target table, or * for all columns.\n-- * For INSERT and UPDATE, plain column references see the row as stored by the\n--   statement (including defaults and BEFORE trigger changes).\n-- * For DELETE, the values are those of the deleted row.\n-- * Postgres 18+ lets you use OLD. and NEW. aliases to choose which version of the\n--   row to read:\n--     UPDATE t SET x = 2 WHERE id = 1 RETURNING OLD.x, NEW.x;\n--   Older versions have no direct way to get the pre-update value\n--   (use a CTE or self-join on a prior SELECT).\n-- * Works inside CTEs: WITH moved AS (DELETE ... RETURNING *) INSERT ... SELECT * FROM moved;",
-    "title": "RETURNING clause on data-modifying statements"
+    "syntax": "-- General form\ndate_trunc(field, source [, time_zone])\n-- field: 'microseconds','milliseconds','second','minute','hour',\n--        'day','week','month','quarter','year','decade','century','millennium'\n-- Truncates (rounds DOWN) to the start of that unit; smaller fields are zeroed.\n\nSELECT date_trunc('hour', timestamp '2023-11-17 14:47:09');\n-- 2023-11-17 14:00:00\n\nSELECT date_trunc('year', timestamp '2023-11-17 14:47:09');\n-- 2023-01-01 00:00:00\n\n-- Group rows per week\nSELECT date_trunc('week', created_at) AS wk, count(*)\nFROM signups GROUP BY 1 ORDER BY 1;\n\n-- Gotchas:\n-- * Never rounds to nearest: '2023-11-29' -> 2023-11-01, not 12-01.\n-- * A date input is cast to timestamp(tz), so the result is a timestamp,\n--   not a date; add ::date if you want a date.\n-- * 'week' truncates to Monday (ISO weeks).\n-- * To get a part as a number use extract(month FROM ts) / date_part.\n-- * For text like '2023-11' use to_char(ts, 'YYYY-MM').\n-- * With timestamptz, truncation uses the session TimeZone unless\n--   the third time_zone argument is given (PG 12+).\n-- * date_bin(stride, ts, origin) (PG 14+) buckets into arbitrary intervals.",
+    "title": "Date/time functions"
   },
-  "pg-easy-94": {
+  "pg-easy-91": {
     "docs": [
       {
-        "title": "SET command",
-        "url": "https://www.postgresql.org/docs/current/sql-set.html"
-      },
-      {
-        "title": "Setting Parameters (Server Configuration)",
-        "url": "https://www.postgresql.org/docs/current/config-setting.html"
+        "title": "psql interactive terminal",
+        "url": "https://www.postgresql.org/docs/current/app-psql.html"
       }
     ],
-    "syntax": "-- General form\nSET [ SESSION | LOCAL ] parameter { TO | = } { value | 'value' | DEFAULT };\nSET [ SESSION | LOCAL ] TIME ZONE { value | 'value' | LOCAL | DEFAULT };\n\n-- Examples (different parameters from any quiz code)\nSET work_mem = '64MB';\nSET LOCAL lock_timeout = '2s';\n\n-- Inspect and undo\nSHOW work_mem;\nSELECT current_setting('work_mem');\nRESET work_mem;          -- same as SET work_mem TO DEFAULT\n\n-- Scope notes / gotchas\n-- * SESSION is the default keyword when none is written.\n-- * SET LOCAL lasts only until the end of the current transaction\n--   (COMMIT or ROLLBACK). Outside a transaction block it has no lasting effect.\n-- * A plain SET inside a transaction that is later rolled back is undone;\n--   if the transaction commits, the value persists for the session.\n-- * SET affects only the current connection, not other sessions.\n-- * Server-wide defaults: ALTER SYSTEM, postgresql.conf,\n--   or ALTER ROLE/DATABASE ... SET (applied to new sessions).\n-- * Function-scoped: CREATE FUNCTION ... SET param = value.\n-- * set_config('name','value', is_local) is the function form.\n-- * Durations accept units such as ms, s, min; a bare number uses the parameter's default unit.",
-    "title": "Changing run-time settings with SET"
+    "syntax": "-- General form: backslash + d + object-type letter(s), optional modifiers and pattern\n-- \\d[S+] [pattern]   describe one relation, or list relations if no pattern\n\\dv                   -- list views in the search path\n\\dv+ sales.*          -- views in schema sales, with size/description\n\\dt inventory_*       -- ordinary tables matching a pattern\n\\di                   -- indexes\n\\dm                   -- materialized views\n\\ds                   -- sequences\n\\dE                   -- foreign tables\n\\d order_summary      -- describe a single view: columns plus its definition\n\\sv order_summary     -- show the view's CREATE statement\n\n-- Letters combine: \\dtv lists tables AND views together\n-- S adds system objects:  \\dvS  (includes pg_catalog/information_schema views)\n-- + adds extra columns (size, description, persistence)\n-- Patterns use * and ? wildcards; 'schema.name' qualifies by schema\n-- Gotchas:\n--   \\dv does NOT include materialized views; use \\dm for those\n--   Without a pattern, only objects visible in search_path are listed\n--   Meta-commands run in psql only, not as SQL from other clients",
+    "title": "psql meta-commands"
+  },
+  "pg-easy-92": {
+    "docs": [
+      {
+        "title": "psql interactive terminal reference",
+        "url": "https://www.postgresql.org/docs/current/app-psql.html"
+      },
+      {
+        "title": "Database roles",
+        "url": "https://www.postgresql.org/docs/current/database-roles.html"
+      }
+    ],
+    "syntax": "-- General form (typed at the psql prompt, not SQL):\n--   \\d<letter>[S][+] [pattern]\n\n-- Examples:\n\\du                -- list roles with their attributes and memberships\n\\du app_*          -- only roles whose names start with app_\n\\du+               -- adds the Description column\n\\dg                -- same output as \\du (kept for 'groups')\n\n-- Related listing commands:\n--   \\dt  tables       \\dv  views       \\dn  schemas\n--   \\di  indexes      \\ds  sequences   \\df  functions\n--   \\l   databases    \\dp  access privileges\n\n-- Gotchas:\n--  * Meta-commands start with a backslash and need no semicolon.\n--  * They only work in psql, not in other clients or drivers.\n--  * Patterns are wildcards (* and ?), not LIKE syntax.\n--  * Add S to include system objects, e.g. \\dtS.\n--  * The SQL equivalent for roles is:\n--      SELECT rolname FROM pg_roles;\n--  * PostgreSQL has only roles; 'users' and 'groups' are roles\n--    with or without LOGIN.",
+    "title": "psql meta-commands"
   },
   "pg-easy-95": {
     "docs": [
       {
-        "title": "Arrays: Accessing Arrays",
+        "title": "Arrays",
         "url": "https://www.postgresql.org/docs/current/arrays.html#ARRAYS-ACCESSING"
       },
       {
@@ -532,13 +908,13 @@
         "url": "https://www.postgresql.org/docs/current/functions-array.html"
       }
     ],
-    "syntax": "-- Single element (one subscript):\n--   array_expr[index]\n-- Slice (lower and upper bound):\n--   array_expr[lower:upper]\n\n-- Examples (different values from any quiz):\nSELECT (ARRAY['a','b','c','d','e'])[2];      -- one element, a scalar\nSELECT (ARRAY['a','b','c','d','e'])[2:4];    -- a slice, still an array\n\n-- Notes / gotchas:\n-- * Arrays are 1-based by default (first element is [1]).\n-- * Slice bounds are inclusive on both ends.\n-- * A slice returns an array; a single subscript returns one element.\n-- * Out-of-range single subscript returns NULL, no error.\n-- * Slice partly out of range is clipped to existing elements.\n-- * Slice entirely out of range returns an empty array '{}'.\n-- * Omitting a bound ([:3] or [2:]) means from start / to end.\n-- * If any subscript is written as a slice (lower:upper), all\n--   dimensions are treated as slices.\n-- * Wrap an array expression in parentheses before subscripting:\n--   (ARRAY[1,2,3])[1]  or  (col)[1:2]\n-- * A column's array can be subscripted directly: tags[1:2]",
-    "title": "Array subscripts and slices"
+    "syntax": "-- General form: subscripts are 1-based; slices use lower:upper (inclusive)\n-- array_expr[n]          -> single element\n-- array_expr[lo:hi]      -> sub-array from lo to hi, both inclusive\n\nSELECT (ARRAY['a','b','c','d','e'])[4];      -- 'd'\nSELECT (ARRAY['a','b','c','d','e'])[2:4];    -- {b,c,d}\nSELECT (ARRAY[5,6,7,8,9])[:2];               -- {5,6}   (omitted lower = start)\nSELECT (ARRAY[5,6,7,8,9])[4:];               -- {8,9}   (omitted upper = end)\n\n-- Gotchas:\n-- * Indexing starts at 1, not 0.\n-- * A slice always returns an array, even [3:3] -> {7}; plain [3] returns a scalar.\n-- * Out-of-range subscript returns NULL; out-of-range slice returns an empty array '{}'.\n-- * A literal ARRAY[...] needs parentheses before subscripting: (ARRAY[...])[i].\n-- * If any dimension is written as a slice, all dimensions are treated as slices;\n--   for 2-D arrays, arr[1:2][2] means arr[1:2][1:2].\n-- * Arrays display with braces, e.g. {6,7}, not square brackets.\n-- * array_lower/array_upper/array_length(arr, 1) report the bounds.",
+    "title": "Arrays"
   },
   "pg-easy-96": {
     "docs": [
       {
-        "title": "SELECT: LATERAL subqueries",
+        "title": "Table Expressions: the FROM clause",
         "url": "https://www.postgresql.org/docs/current/queries-table-expressions.html#QUERIES-LATERAL"
       },
       {
@@ -546,21 +922,73 @@
         "url": "https://www.postgresql.org/docs/current/sql-select.html"
       }
     ],
-    "syntax": "-- General form\n-- FROM item1, LATERAL (subquery) alias\n-- FROM item1 [LEFT] JOIN LATERAL (subquery) alias ON condition\n\n-- Example 1: per-row subquery for each department\nSELECT d.title, e.*\nFROM departments d\nCROSS JOIN LATERAL (\n  SELECT * FROM employees m\n  WHERE m.dept_id = d.id\n  ORDER BY m.salary DESC\n  LIMIT 3\n) e;\n\n-- Example 2: set-returning function using an earlier column\nSELECT p.id, t.tag\nFROM posts p\nLEFT JOIN LATERAL unnest(p.tags) AS t(tag) ON true;\n\n-- Notes / gotchas\n-- * Without LATERAL, a subquery in FROM cannot see\n--   other FROM items at the same level.\n-- * LATERAL may refer only to items listed BEFORE it\n--   (to its left); not to later ones.\n-- * The subquery is evaluated conceptually once per row\n--   of the preceding item(s), then joined.\n-- * Comma + LATERAL behaves like an inner/cross join:\n--   rows with an empty subquery result disappear.\n-- * To keep such rows, use LEFT JOIN LATERAL (...) ON true.\n-- * Functions in FROM are implicitly LATERAL; the\n--   keyword is optional there.\n-- * Cannot reference the nullable side of an outer join\n--   in a way that breaks join ordering (e.g. RIGHT/FULL\n--   JOIN with LATERAL referencing the left side is an error).",
-    "title": "LATERAL subqueries in FROM"
+    "syntax": "-- General form: a LATERAL item may reference columns of FROM items listed before it\nSELECT ...\nFROM left_item alias,\n     LATERAL (subquery using alias.col) sub_alias;\n\n-- Explicit join form (same as comma for inner semantics)\nSELECT ... FROM a CROSS JOIN LATERAL (...) s;\n\n-- Example: latest 2 posts per author\nSELECT au.username, p.title\nFROM authors au\nCROSS JOIN LATERAL (\n  SELECT title FROM posts\n  WHERE posts.author_id = au.author_id\n  ORDER BY published_at DESC\n  LIMIT 2\n) p;\n\n-- Keep outer rows with no match: LEFT JOIN LATERAL ... ON true\nSELECT d.dept_name, e.emp_name\nFROM departments d\nLEFT JOIN LATERAL (\n  SELECT emp_name FROM employees\n  WHERE employees.dept_id = d.dept_id\n  ORDER BY salary DESC LIMIT 1\n) e ON true;\n\n-- Gotchas:\n-- * Comma / CROSS JOIN LATERAL drops outer rows whose subquery returns nothing.\n-- * The subquery is conceptually evaluated once per row of the preceding items.\n-- * Only items to the LEFT can be referenced.\n-- * Functions in FROM are implicitly lateral: FROM t, generate_series(1, t.n)\n-- * Without LATERAL, referencing an earlier FROM item in a subquery is an error.",
+    "title": "Subqueries in the FROM clause"
+  },
+  "pg-easy-97": {
+    "docs": [
+      {
+        "title": "Lexical Structure: Identifiers and Key Words",
+        "url": "https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS"
+      },
+      {
+        "title": "SQL Key Words appendix",
+        "url": "https://www.postgresql.org/docs/current/sql-keywords-appendix.html"
+      }
+    ],
+    "syntax": "-- General form: wrap an identifier in double quotes\nSELECT \"column_name\" FROM \"table_name\";\n\n-- Reserved words must be quoted when used as identifiers\nCREATE TABLE \"user\" (id int, \"select\" text);\nSELECT \"select\" FROM \"user\" WHERE id = 1;\n\n-- Schema-qualified: quote each part separately\nSELECT * FROM public.\"group\";\n\n-- Gotchas:\n-- 'text' in single quotes is a string literal, never an identifier\n--   SELECT * FROM 'group';   -- syntax error\n-- Unquoted names are folded to lower case:\n--   MyTable = mytable, but \"MyTable\" is a different, case-sensitive name\n-- Once created quoted with capitals, you must always quote it the same way\n-- To include a double quote inside a name, write it twice: \"a\"\"b\"\n-- Non-reserved key words (e.g. name, value) may be used unquoted\n-- quote_ident('group') returns the safely quoted form for dynamic SQL\n-- Best practice: avoid reserved words as names to skip quoting entirely",
+    "title": "Identifiers and key words"
+  },
+  "pg-easy-98": {
+    "docs": [
+      {
+        "title": "Date/Time Functions and Operators",
+        "url": "https://www.postgresql.org/docs/current/functions-datetime.html#FUNCTIONS-DATETIME-DELAY"
+      },
+      {
+        "title": "Client Connection Defaults (runtime configuration)",
+        "url": "https://www.postgresql.org/docs/current/runtime-config-client.html"
+      }
+    ],
+    "syntax": "-- General form: delay the CURRENT session's execution\npg_sleep(seconds double precision)        -- returns void\npg_sleep_for(interval)                    -- PG 9.4+\npg_sleep_until(timestamp with time zone)  -- PG 9.4+\n\n-- Examples\nSELECT pg_sleep(0.5);                     -- half a second (fractions allowed)\nSELECT pg_sleep_for('3 minutes');\nSELECT pg_sleep_until('tomorrow 03:00');\n\n-- Only the calling backend sleeps; other sessions keep running.\n-- Argument is in SECONDS, not milliseconds: pg_sleep(1.5) = 1.5 s.\n-- Effective resolution is platform-specific; 0.01 s is common.\n-- Locks already held are NOT released while sleeping, so sleeping\n-- inside a transaction can block other sessions.\n-- statement_timeout still applies and can cancel a long sleep.\n-- Called once per row if used in a SELECT list over a table:\n--   SELECT pg_sleep(0.1) FROM generate_series(1,5);  -- ~0.5 s total\n-- Handy for testing timeouts, lock waits, and monitoring scripts.",
+    "title": "Date/time functions and server utilities"
   },
   "pg-easy-99": {
     "docs": [
       {
-        "title": "Mathematical Functions: random functions",
-        "url": "https://www.postgresql.org/docs/current/functions-math.html#FUNCTIONS-MATH-RANDOM-TABLE"
-      },
-      {
         "title": "Mathematical Functions and Operators",
-        "url": "https://www.postgresql.org/docs/current/functions-math.html"
+        "url": "https://www.postgresql.org/docs/current/functions-math.html#FUNCTIONS-MATH-RANDOM-TABLE"
       }
     ],
-    "syntax": "-- General forms\nrandom()                        -- double precision value in a documented range\nrandom(min, max)                -- PG 17+: random integer/numeric in [min, max]\nsetseed(dp)                     -- dp between -1.0 and 1.0; makes later random() calls repeatable\n\n-- Examples\nSELECT random();                          -- a double precision value\nSELECT floor(random() * 6) + 1;           -- integer 1..6 on older versions\nSELECT random(10, 20);                    -- PG 17+, bounds inclusive\nSELECT setseed(0.42); SELECT random();    -- repeatable sequence in this session\n\n-- Gotchas\n-- The docs define the range of random() as a half-open interval: check whether\n--   each end point is included or excluded (the bracket/parenthesis notation matters).\n-- random() is volatile: evaluated once per row when used in a SELECT list.\n-- ORDER BY random() shuffles rows, but is slow on big tables.\n-- Not cryptographically secure; for secrets use gen_random_uuid() or pgcrypto's gen_random_bytes().\n-- Scaling: random() * N gives a continuous value; wrap in floor() for whole numbers.",
-    "title": "Random number functions in PostgreSQL"
+    "syntax": "-- General form\nrandom()                      -- double precision, 0.0 <= x < 1.0\nrandom(min, max)              -- PG17+: integer/bigint/numeric, min <= x <= max (both inclusive)\nrandom_normal(mean, stddev)   -- PG16+: normally distributed value\nsetseed(seed)                 -- seed between -1.0 and 1.0\n\n-- Examples\nSELECT floor(random() * 6)::int + 1 AS die_roll;   -- 1..6\nSELECT random(10, 20);                             -- 10..20, PG17+\nSELECT setseed(0.42); SELECT random();             -- repeatable sequence\nSELECT * FROM products ORDER BY random() LIMIT 3;  -- random sample (slow on big tables)\n\n-- Gotchas\n-- random() includes 0.0 but excludes 1.0 (half-open range)\n-- floor(random() * n) gives 0..n-1; round() makes the end values half as likely\n-- random() is VOLATILE: it is evaluated again for every row\n-- setseed() affects only the current session\n-- Not cryptographically secure; use pgcrypto gen_random_bytes() for secrets\n-- For sampling large tables, consider TABLESAMPLE SYSTEM / BERNOULLI",
+    "title": "Mathematical functions"
+  },
+  "pg-easy-100": {
+    "docs": [
+      {
+        "title": "Lexical structure: constants",
+        "url": "https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS"
+      },
+      {
+        "title": "Lexical structure",
+        "url": "https://www.postgresql.org/docs/current/sql-syntax-lexical.html"
+      }
+    ],
+    "syntax": "-- General form: a string constant is text enclosed in single quotes\n'text here'\n\n-- To include a single quote inside, write two adjacent single quotes\nSELECT 'it''s here';            -- result: it's here\nSELECT 'O''Brien''s pub';       -- result: O'Brien's pub\nSELECT '''quoted''';            -- result: 'quoted'\n\n-- Variations:\n-- Escape string syntax (E prefix) also accepts backslash escapes\nSELECT E'can\\'t stop';          -- result: can't stop\n\n-- Dollar quoting avoids doubling quotes entirely\nSELECT $$won't need doubling$$;\nSELECT $tag$a 'b' c$tag$;\n\n-- Gotchas:\n-- Double quotes (\") delimit identifiers, not strings: \"col\" is a column name\n-- Two literals separated only by whitespace that includes a newline are\n--   concatenated: 'foo'\n--   'bar' -> 'foobar' (but 'foo' 'bar' on one line is a syntax error)\n-- With standard_conforming_strings = on (default), a backslash in '...'\n--   is a literal backslash; use E'...' for backslash escapes\n-- In application code, prefer bound parameters over manual quote escaping",
+    "title": "String constants and literals"
+  },
+  "pg-easy-104": {
+    "docs": [
+      {
+        "title": "Index types",
+        "url": "https://www.postgresql.org/docs/current/indexes-types.html"
+      },
+      {
+        "title": "Operator classes and operator families",
+        "url": "https://www.postgresql.org/docs/current/indexes-opclass.html"
+      }
+    ],
+    "syntax": "-- A B-tree index can serve an anchored prefix match when the\n-- column is compared directly, not wrapped in a function.\n-- General form:\n--   WHERE col LIKE 'prefix%'\n-- The planner rewrites it to a range: col >= 'prefix' AND col < 'prefiy'\n\nCREATE INDEX orders_code_idx ON orders (code COLLATE \"C\");\n\n-- Uses the index (Index/Bitmap scan):\nSELECT * FROM orders WHERE code LIKE 'ORD-77%';\n\n-- Same idea, written as an explicit range:\nSELECT * FROM orders WHERE code >= 'ORD-77' AND code < 'ORD-78';\n\n-- Cannot use a plain index on code (function hides the column):\n--   WHERE substr(code, 1, 6) = 'ORD-77'\n--   WHERE lower(code) LIKE 'ord-77%'\n-- Fix: index the expression itself:\nCREATE INDEX orders_code_lower_idx ON orders (lower(code));\n\n-- Gotchas:\n-- * Non-C collations: a default B-tree index cannot serve LIKE.\n--   Use an operator class instead:\n--   CREATE INDEX ON orders (code text_pattern_ops);\n-- * Leading wildcard ('%77') cannot use B-tree; consider pg_trgm.\n-- * ILIKE uses the index only when the prefix has no letters.\n-- * Check with EXPLAIN (ANALYZE) to confirm the plan.",
+    "title": "Indexes and query planning"
   }
 }
