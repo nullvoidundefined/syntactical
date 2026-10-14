@@ -5,6 +5,10 @@
 // results land in `enrichment/<language>/<difficulty>.json` (question id to rationales)
 // and merging them into banks is publish's job.
 //
+// A question with no passing oracle observation is skipped, unless `secondProvider` is set: then
+// its rationales are grounded in the answer key and explanation and must pass judges on both
+// providers (see enrichQuestion).
+//
 // Free-bank output goes under the public `pipelineDir`. Paid-bank output carries paid
 // question ids and rationale text, so it goes under `contentRoot` (the private content
 // repo), and nothing paid is ever written under `pipelineDir` or the content dir.
@@ -41,11 +45,12 @@ export interface EnrichOptions {
     oracleSource?: OracleSource;
     pipelineDir: string;
     provider: ModelProvider;
+    secondProvider?: ModelProvider;
     validate?: QuestionValidator;
 }
 
 export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
-    const { contentDir, contentRoot, newRunId, pipelineDir, provider } = options;
+    const { contentDir, contentRoot, newRunId, pipelineDir, provider, secondProvider } = options;
     const validate = options.validate ?? validateQuestion;
     const log = (line: string): void => options.log(sanitizeLogText(line));
     const startedAt = options.now();
@@ -85,6 +90,7 @@ export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
                     ...questions,
                     ...(staged?.questions ?? []).filter(({ id }) => !questions.some((question) => question.id === id)),
                 ],
+                secondProvider,
                 taxonomy,
             });
             const { accepted, agreed, compared, contradicted, dropped } = result;

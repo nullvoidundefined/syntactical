@@ -84,7 +84,8 @@ function hasErrorEnvelope(stdout: string): boolean {
     }
 }
 
-export function createClaudeCliProvider(exec: ExecFn = defaultExec): ModelProvider {
+// `model` overrides the pipeline's model id (see resolveModelId) for this provider.
+export function createClaudeCliProvider(exec: ExecFn = defaultExec, model?: string): ModelProvider {
     return {
         generate(request) {
             const { prompt, system } = request;
@@ -105,7 +106,7 @@ export function createClaudeCliProvider(exec: ExecFn = defaultExec): ModelProvid
                             '',
                             '--no-session-persistence',
                             '--model',
-                            resolveModelId(),
+                            model ?? resolveModelId(),
                             `--system-prompt=${system}`,
                         ],
                         { cwd, env: buildCliEnv(process.env), input: prompt },

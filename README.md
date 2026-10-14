@@ -71,6 +71,15 @@ Each question is multiple choice (`mc`), true/false (`bool`), or A/B (`ab`), and
 
 Clone `nullvoidundefined/syntactical-content` beside this repository (`../syntactical-content`), or pass `--content-root <path>` or set `SYNTACTICAL_CONTENT_ROOT`. The pipeline reads and writes paid banks there and refuses a content root inside this repository. Run `npm run pipeline -- publish`; it writes changed paid banks into the content checkout and rewrites `content/manifest.json` with their hashes. Commit and push in `syntactical-content` first, then commit the manifest and generated files here. In the same PR, set `content/paid-content.ref` to the full sha of that pushed `syntactical-content` commit. Deploys stage exactly that commit, so the manifest hashes and the private banks always match; a manifest change without the matching ref fails the deploy hash check (`server/scripts/stageBuildContent.sh`).
 
+### Rationales and before-answer references for free banks
+
+Each step saves as it goes and skips what is already done, so a rerun only pays for what is missing. Commands run through `claude -p` unless you pass `--api`, which uses `ANTHROPIC_API_KEY`. The second model, which double-checks each result, is `PIPELINE_SECOND_MODEL` (default `claude-haiku-5-5`).
+
+1. `npm run pipeline -- enrich --judge-without-oracle` writes a rationale and misconception tag for each wrong choice into `pipeline/enrichment/`. A language needs an approved `pipeline/taxonomy/<language>.json` (draft one with `draft-taxonomy <language>`). A question without a recorded oracle run is grounded in its answer key and explanation, and both models' judges must accept each rationale.
+2. `npm run pipeline -- write-references [--language python,postgres]` writes each question's reference into `pipeline/references/`: a broad topic title and links on the track's documentation hosts, shown before an answer, and a syntax reference with examples, shown after (`pipeline/src/services/references/DOC_HOSTS.ts`). Both models must agree the title and link titles do not give the answer away; a reference that does is rewritten once, then left out.
+3. `npm run pipeline -- verify-doc-links` fetches every staged link (no model, but it needs network access to the documentation hosts) and records the results in `pipeline/references/doc-links.json`. A link to a `#section` passes only when that section is on the page.
+4. `npm run pipeline -- apply-staging` merges the staged rationales and references into the free banks without adding or dropping any question, keeping only links that passed step 3, then runs the content build (no content root needed: paid manifest entries stay as they are). Commit the banks, the manifest, the generated files, and `pipeline/enrichment`, `pipeline/references` together.
+
 ## Deploying
 
 - **Web.** Pushing to `main` runs `.github/workflows/deploy.yml`, which runs `npm run build` and publishes `dist/` (the Expo web export plus `content/`) to GitHub Pages at the root of `https://syntactical.dev`; `404.html` serves deep links. Banks pushed to `main` reach installed apps on their next manifest refresh, with no new build.

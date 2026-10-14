@@ -14,5 +14,9 @@ export interface EnrichBankArgs {
     outRoot: string;
     provider: ModelProvider;
     questions: Question[];
+    // A judge on a different model. With it, a question without an oracle observation is enriched
+    // from its answer key and explanation, and both judges must accept each rationale; without
+    // it, such a question is skipped.
+    secondProvider?: ModelProvider;
     taxonomy: TaxonomyEntry[];
 }
