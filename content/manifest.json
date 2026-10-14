@@ -973,12 +973,11 @@
       "banks": {
         "easy": {
           "path": "typescript-types/easy.json",
-          "hash": "06390a9873d0854f3f80ae423a4ba3e0d84a52e5edae0667db4be996d4011d3f",
+          "hash": "39f2c5a319429eeec431b102e95903fc05462d37ff31f06a1e6a6481b14b0d9f",
           "access": "free",
-          "contentVersion": 3,
+          "contentVersion": 4,
           "topicCounts": {
             "conditional-types": 10,
-            "infer": 10,
             "mapped-types": 10,
             "template-literal-types": 10,
             "distributive-conditionals": 9,
@@ -986,7 +985,8 @@
             "overloads-and-satisfies": 10,
             "discriminated-unions": 10,
             "generic-constraints": 10,
-            "recursive-and-indexed-types": 10
+            "recursive-and-indexed-types": 10,
+            "infer": 10
           }
         },
         "medium": {

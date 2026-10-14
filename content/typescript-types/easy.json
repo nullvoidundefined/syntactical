@@ -327,356 +327,6 @@
       }
     },
     {
-      "id": "gen-typescript-types-easy-337cb9c7",
-      "prompt": "What is the type of x?",
-      "topic": "infer",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "5"
-        },
-        {
-          "text": "number",
-          "rationale": "`number` is the widened type used for `let x = 5`; a `const` binding keeps the narrower literal type."
-        },
-        {
-          "text": "5 | number",
-          "rationale": "TypeScript never forms a union of a literal and its own base type; such a union would collapse to `number`."
-        },
-        {
-          "text": "any",
-          "rationale": "`any` only appears without an initializer or annotation under non-strict settings; here the initializer supplies a type."
-        }
-      ],
-      "code": "const x = 5;",
-      "query": {
-        "explanation": "A `const` declaration initialized with a numeric literal keeps the literal type `5`, because the binding can never be reassigned. Using `let` instead would widen the inferred type to `number`.",
-        "syntax": "const name = literal",
-        "tags": [
-          "inference",
-          "literal-types",
-          "const"
-        ],
-        "title": "const literal widening"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
-      }
-    },
-    {
-      "id": "gen-typescript-types-easy-a063fde3",
-      "prompt": "Is the inferred type of count `number`?",
-      "topic": "infer",
-      "answer": true,
-      "code": "let count = 0;",
-      "query": {
-        "explanation": "A mutable `let` binding widens the literal `0` to `number`, so later assignments of other numbers are allowed.",
-        "syntax": "let name = literal",
-        "tags": [
-          "inference",
-          "widening",
-          "let"
-        ],
-        "title": "let widens literal types"
-      },
-      "rationale": "The type is not the literal `0`: because `count` is reassignable, TypeScript widens the inferred literal type to `number`.",
-      "type": "bool",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
-      }
-    },
-    {
-      "id": "gen-typescript-types-easy-9a292e82",
-      "prompt": "What is the type of names?",
-      "topic": "infer",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "string[]"
-        },
-        {
-          "text": "(\"a\" | \"b\")[]",
-          "rationale": "Element literal types are widened inside array literals unless `as const` is used."
-        },
-        {
-          "text": "readonly string[]",
-          "rationale": "Arrays are inferred as mutable; `readonly` appears only with `as const` or an explicit annotation."
-        },
-        {
-          "text": "[string, string]",
-          "rationale": "Tuple types are only inferred from a const assertion or a contextual tuple type, not from a plain array literal."
-        }
-      ],
-      "code": "const names = ['a', 'b'];",
-      "query": {
-        "explanation": "An array literal is inferred as a mutable array of the widened element types, so string literals become `string` and the result is `string[]` rather than a tuple.",
-        "syntax": "const name = [a, b]",
-        "tags": [
-          "inference",
-          "arrays",
-          "widening"
-        ],
-        "title": "array literal inference"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
-      }
-    },
-    {
-      "id": "gen-typescript-types-easy-179fdc62",
-      "prompt": "Does TypeScript infer `number[]` for pair?",
-      "topic": "infer",
-      "answer": false,
-      "code": "const pair = [1, 2] as const;",
-      "query": {
-        "explanation": "`as const` makes the array literal a readonly tuple of its literal element types, so the inferred type is `readonly [1, 2]`, not `number[]`.",
-        "syntax": "[a, b] as const",
-        "tags": [
-          "inference",
-          "const-assertion",
-          "tuples"
-        ],
-        "title": "const assertions on arrays"
-      },
-      "rationale": "`number[]` would be inferred without the assertion; `as const` yields the readonly tuple `readonly [1, 2]` instead.",
-      "type": "bool",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
-      }
-    },
-    {
-      "id": "gen-typescript-types-easy-be3d9396",
-      "prompt": "What is the type of d?",
-      "topic": "infer",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "number"
-        },
-        {
-          "text": "6",
-          "rationale": "TypeScript does not evaluate arithmetic to produce literal types; `n * 2` has type `number`."
-        },
-        {
-          "text": "void",
-          "rationale": "`void` is inferred only when a function body returns nothing; this body returns a value."
-        },
-        {
-          "text": "any",
-          "rationale": "The return type is inferred from the body, so no implicit `any` is involved here."
-        }
-      ],
-      "code": "function double(n: number) {\n  return n * 2;\n}\nconst d = double(3);",
-      "query": {
-        "explanation": "The return type of `double` is inferred from the returned expression `n * 2`, which is `number`, so the call result `d` is `number`.",
-        "syntax": "function f(p: T) { return expr; }",
-        "tags": [
-          "inference",
-          "functions",
-          "return-type"
-        ],
-        "title": "inferred return types"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
-      }
-    },
-    {
-      "id": "gen-typescript-types-easy-66701ea3",
-      "prompt": "What is the type of b?",
-      "topic": "infer",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "boolean"
-        },
-        {
-          "text": "false",
-          "rationale": "Literal boolean types come from boolean literals like `const b = false`, not from evaluating a comparison."
-        },
-        {
-          "text": "true | false",
-          "rationale": "That union is equivalent to `boolean` but TypeScript reports the result of a comparison simply as `boolean`."
-        },
-        {
-          "text": "number",
-          "rationale": "The operands are numbers, but the `>` operator itself yields a boolean result."
-        }
-      ],
-      "code": "const b = 1 > 2;",
-      "query": {
-        "explanation": "Relational operators always produce the type `boolean`; TypeScript does not evaluate the comparison to infer the literal `false`.",
-        "syntax": "a > b",
-        "tags": [
-          "inference",
-          "operators",
-          "boolean"
-        ],
-        "title": "comparison operator result"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
-      }
-    },
-    {
-      "id": "gen-typescript-types-easy-72ca4be5",
-      "prompt": "Does this snippet compile with no type errors?",
-      "topic": "infer",
-      "answer": false,
-      "code": "let s = 'hi';\ns = 42;",
-      "query": {
-        "explanation": "`let s = 'hi'` widens to `string`, so assigning the number `42` is an error. Inference fixes the variable's type at its declaration; it does not re-infer on assignment.",
-        "syntax": "let name = value",
-        "tags": [
-          "inference",
-          "widening",
-          "assignability"
-        ],
-        "title": "widened type restricts assignment"
-      },
-      "rationale": "The variable is inferred as `string` from its initializer, so `s = 42` reports a type error rather than changing the variable's type.",
-      "type": "bool",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
-      }
-    },
-    {
-      "id": "gen-typescript-types-easy-51a01fbe",
-      "prompt": "How many type errors does this snippet contain?",
-      "topic": "infer",
-      "answerIndex": 1,
-      "choices": [
-        {
-          "text": "0",
-          "rationale": "Assigning the string-typed `x` to a `number` annotation is not allowed, so at least one error is reported."
-        },
-        {
-          "text": "1"
-        },
-        {
-          "text": "2",
-          "rationale": "Only the `number` annotation fails; the literal type `\"a\"` is assignable to `string`."
-        },
-        {
-          "text": "3",
-          "rationale": "The first declaration is a plain inferred `const` and reports nothing on its own."
-        }
-      ],
-      "code": "const x = 'a';\nconst y: number = x;\nconst z: string = x;",
-      "query": {
-        "explanation": "`x` is inferred as the literal type `\"a\"`, which is assignable to `string` but not to `number`, so exactly one of the two annotated declarations fails.",
-        "syntax": "const name: Type = value",
-        "tags": [
-          "inference",
-          "assignability",
-          "literal-types"
-        ],
-        "title": "inferred literal vs annotation"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
-      }
-    },
-    {
-      "id": "gen-typescript-types-easy-64e1efb4",
-      "prompt": "Does TypeScript infer `string` for m?",
-      "topic": "infer",
-      "answer": true,
-      "code": "const config = { mode: 'dark' };\nconst m = config.mode;",
-      "query": {
-        "explanation": "Properties of a mutable object literal are widened, so `config.mode` has type `string` and `m` is `string` rather than the literal `\"dark\"`.",
-        "syntax": "const o = { key: literal }",
-        "tags": [
-          "inference",
-          "widening",
-          "objects"
-        ],
-        "title": "property widening in object literals"
-      },
-      "rationale": "The literal type `\"dark\"` is not kept: object literal properties are mutable, so the property type widens to `string` unless `as const` is used.",
-      "type": "bool",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
-      }
-    },
-    {
       "id": "gen-typescript-types-easy-b343d26c",
       "prompt": "Is the assignment `p.n = 2` accepted by the compiler here?",
       "topic": "mapped-types",
@@ -3741,6 +3391,338 @@
       "provenance": {
         "isHumanReviewed": false,
         "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "number"
+        },
+        {
+          "text": "number[]",
+          "rationale": "infer U captures the element type inside the array pattern, not the whole array that was matched."
+        },
+        {
+          "text": "never",
+          "rationale": "number[] matches the (infer U)[] pattern, so the true branch is taken and never is not returned."
+        },
+        {
+          "text": "unknown",
+          "rationale": "unknown would only appear if nothing could be inferred. Here U is inferred from the array as number."
+        }
+      ],
+      "code": "type ElementType<T> = T extends (infer U)[] ? U : never;\n\ndeclare const e: ElementType<number[]>;",
+      "prompt": "Which type does e get from ElementType here?",
+      "query": {
+        "explanation": "In a conditional type, `infer U` declares a type variable that TypeScript fills in while matching the pattern. Matching number[] against (infer U)[] binds U to number.",
+        "syntax": "T extends (infer U)[] ? U : never",
+        "tags": [
+          "infer",
+          "conditional-types",
+          "arrays"
+        ],
+        "title": "Inferring an array element type"
+      },
+      "type": "mc",
+      "id": "gen-typescript-types-easy-8c7fa26b",
+      "topic": "infer",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5-5",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "answer": true,
+      "code": "type ReturnOf<T> = T extends (...args: any[]) => infer R ? R : never;\n\ndeclare const r: ReturnOf<() => boolean>;",
+      "prompt": "Is r inferred as boolean by ReturnOf in this snippet?",
+      "query": {
+        "explanation": "Placing `infer R` in the return position of a function type pattern captures the return type. This is how the built-in ReturnType utility is defined.",
+        "syntax": "T extends (...args: any[]) => infer R ? R : never",
+        "tags": [
+          "infer",
+          "conditional-types",
+          "functions"
+        ],
+        "title": "Inferring a function's return type"
+      },
+      "rationale": "The function type matches the pattern, and infer R captures its return type, boolean. The result is not never or the function type itself.",
+      "type": "bool",
+      "id": "gen-typescript-types-easy-ce2f13d1",
+      "topic": "infer",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5-5",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "never"
+        },
+        {
+          "text": "string",
+          "rationale": "The false branch returns never, not T. A non-function input does not pass through unchanged."
+        },
+        {
+          "text": "unknown",
+          "rationale": "When the pattern fails, R is not used. The false branch is taken instead, and it says never."
+        },
+        {
+          "text": "undefined",
+          "rationale": "TypeScript does not fall back to undefined. The conditional's false branch decides the result, which is never here."
+        }
+      ],
+      "code": "type ReturnOf<T> = T extends (...args: any[]) => infer R ? R : never;\n\ndeclare const out: ReturnOf<string>;",
+      "prompt": "Which type does out get when ReturnOf is given string?",
+      "query": {
+        "explanation": "If the checked type does not match the pattern, the infer variable is discarded and the false branch is used. Here that branch is never.",
+        "syntax": "T extends Pattern<infer X> ? X : Fallback",
+        "tags": [
+          "infer",
+          "conditional-types"
+        ],
+        "title": "When the infer pattern does not match"
+      },
+      "type": "mc",
+      "id": "gen-typescript-types-easy-747f7b51",
+      "topic": "infer",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5-5",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "answer": false,
+      "code": "type FirstArg<T> = T extends (a: infer A, ...rest: any[]) => any ? A : never;\n\ndeclare const a: FirstArg<(s: string, n: number) => void>;",
+      "prompt": "Does FirstArg pick number as the type of a here?",
+      "query": {
+        "explanation": "infer can appear in parameter positions. Here A matches the first parameter, so A is string.",
+        "syntax": "T extends (a: infer A, ...rest: any[]) => any ? A : never",
+        "tags": [
+          "infer",
+          "conditional-types",
+          "parameters"
+        ],
+        "title": "Inferring a parameter type"
+      },
+      "rationale": "infer A sits in the first parameter position, so it captures string, the type of the first parameter. number is the second parameter's type.",
+      "type": "bool",
+      "id": "gen-typescript-types-easy-f4ebe2d5",
+      "topic": "infer",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5-5",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "answer": false,
+      "code": "type Bad<T> = T extends string ? infer U : never;",
+      "prompt": "Does the compiler accept infer in the position used below?",
+      "query": {
+        "explanation": "An infer declaration may only appear inside the extends clause of a conditional type. You can use the inferred variable in the true branch, but you cannot declare it there.",
+        "syntax": "T extends Pattern<infer U> ? U : never",
+        "tags": [
+          "infer",
+          "conditional-types",
+          "errors"
+        ],
+        "title": "Where infer is allowed"
+      },
+      "rationale": "infer declarations are only permitted in the extends clause of a conditional type. Using infer U in the true branch is a compile error.",
+      "type": "bool",
+      "id": "gen-typescript-types-easy-4cd6551f",
+      "topic": "infer",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5-5",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string"
+        },
+        {
+          "text": "Promise<string>",
+          "rationale": "Promise<string> matches the pattern, so the true branch returns the inferred V, not the original T."
+        },
+        {
+          "text": "unknown",
+          "rationale": "V is inferred from the type argument of Promise, which is string. It is not left as unknown."
+        },
+        {
+          "text": "never",
+          "rationale": "Neither branch returns never. The match succeeds and yields the inferred type V."
+        }
+      ],
+      "code": "type Unwrap<T> = T extends Promise<infer V> ? V : T;\n\ndeclare const u: Unwrap<Promise<string>>;",
+      "prompt": "What does Unwrap produce for u?",
+      "query": {
+        "explanation": "Matching Promise<string> against Promise<infer V> binds V to string. This is the idea behind the built-in Awaited type, which also handles nested promises.",
+        "syntax": "T extends Promise<infer V> ? V : T",
+        "tags": [
+          "infer",
+          "conditional-types",
+          "promises"
+        ],
+        "title": "Unwrapping a Promise with infer"
+      },
+      "type": "mc",
+      "id": "gen-typescript-types-easy-b0a4b7b4",
+      "topic": "infer",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5-5",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "answer": false,
+      "code": "type Unwrap<T> = T extends Promise<infer V> ? V : T;\n\ndeclare const k: Unwrap<number>;",
+      "prompt": "Is k typed as never in this snippet?",
+      "query": {
+        "explanation": "When the pattern fails, the false branch is used. Here the false branch is T itself, so non-promise types pass through unchanged.",
+        "syntax": "T extends Promise<infer V> ? V : T",
+        "tags": [
+          "infer",
+          "conditional-types"
+        ],
+        "title": "Fallback branch returning T"
+      },
+      "rationale": "number does not match Promise<infer V>, so the false branch returns T, which is number. It is not never.",
+      "type": "bool",
+      "id": "gen-typescript-types-easy-7f72c1f5",
+      "topic": "infer",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5-5",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string"
+        },
+        {
+          "text": "number",
+          "rationale": "H is in the first tuple slot, so it captures the first element, string, not the second."
+        },
+        {
+          "text": "string | number | boolean",
+          "rationale": "That union would come from indexing with T[number]. Here infer H binds only the first element."
+        },
+        {
+          "text": "never",
+          "rationale": "A three-element tuple matches [infer H, ...any[]], so the true branch is used."
+        }
+      ],
+      "code": "type Head<T> = T extends [infer H, ...any[]] ? H : never;\n\ndeclare const h: Head<[string, number, boolean]>;",
+      "prompt": "Which type does Head give h for this tuple?",
+      "query": {
+        "explanation": "Tuple patterns can place infer in specific slots. [infer H, ...any[]] binds H to the first element and ignores the rest.",
+        "syntax": "T extends [infer H, ...any[]] ? H : never",
+        "tags": [
+          "infer",
+          "conditional-types",
+          "tuples"
+        ],
+        "title": "Inferring the first tuple element"
+      },
+      "type": "mc",
+      "id": "gen-typescript-types-easy-89221399",
+      "topic": "infer",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5-5",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "answer": true,
+      "code": "type Head<T> = T extends [infer H, ...any[]] ? H : never;\n\ndeclare const h: Head<[]>;",
+      "prompt": "Is h typed as never when Head receives []?",
+      "query": {
+        "explanation": "[infer H, ...any[]] requires a first element. The empty tuple [] does not match, so the conditional type takes the false branch.",
+        "syntax": "T extends [infer H, ...any[]] ? H : never",
+        "tags": [
+          "infer",
+          "conditional-types",
+          "tuples"
+        ],
+        "title": "Tuple patterns and empty tuples"
+      },
+      "rationale": "The pattern requires at least one element. An empty tuple has none, so the match fails and the false branch, never, is used.",
+      "type": "bool",
+      "id": "gen-typescript-types-easy-710f16bc",
+      "topic": "infer",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5-5",
         "promptVersion": "generate-batch-v2",
         "source": "generated",
         "validation": {
