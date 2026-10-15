@@ -4,6 +4,7 @@
 import { TRACK_CATEGORIES, type LanguageEntry, type TrackCategory } from '@syntactical/content-schema';
 import { Text, View } from 'react-native';
 
+import { KEY_BINDINGS } from '../../constants/appConfig';
 import { useKeyboardNav } from '../../state/useKeyboardNav';
 
 import { SelectionCard } from './SelectionCard';
@@ -44,7 +45,7 @@ export function LanguageStep({ languages, onSelectLanguage }: LanguageStepProps)
             {entries.map((entry) => (
               <SelectionCard
                 key={entry.id}
-                keyHint={ordered.indexOf(entry) + 1}
+                keyHint={ordered.indexOf(entry) < KEY_BINDINGS.choice.length / 2 ? ordered.indexOf(entry) + 1 : undefined}
                 title={entry.label}
                 subtitle={entry.tagline}
                 onSelect={() => onSelectLanguage(entry.id)}
