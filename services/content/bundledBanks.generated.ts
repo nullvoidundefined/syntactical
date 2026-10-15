@@ -11,5 +11,6 @@ export const BUNDLED_BANKS: Record<string, unknown> = {
   'rails/easy': require('../../content/rails/easy.json'),
   'ruby/easy': require('../../content/ruby/easy.json'),
   'sql/easy': require('../../content/sql/easy.json'),
+  'typescript-types/easy': require('../../content/typescript-types/easy.json'),
   'typescript/easy': require('../../content/typescript/easy.json'),
 };
