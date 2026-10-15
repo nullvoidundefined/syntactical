@@ -45,7 +45,9 @@ export function LanguageStep({ languages, onSelectLanguage }: LanguageStepProps)
             {entries.map((entry) => (
               <SelectionCard
                 key={entry.id}
-                keyHint={ordered.indexOf(entry) < KEY_BINDINGS.choice.length / 2 ? ordered.indexOf(entry) + 1 : undefined}
+                keyHint={
+                  ordered.indexOf(entry) < KEY_BINDINGS.choice.length / 2 ? ordered.indexOf(entry) + 1 : undefined
+                }
                 title={entry.label}
                 subtitle={entry.tagline}
                 onSelect={() => onSelectLanguage(entry.id)}
