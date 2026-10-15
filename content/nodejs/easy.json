@@ -1989,7 +1989,7 @@
           "rationale": "The event name is not included in the array, and both emitted arguments do appear in it."
         }
       ],
-      "code": "const events = require('node:events');\n\nconst e = new events.EventEmitter();\nsetTimeout(() => e.emit('ready', 'ok', 7), 0);\n\nconst args = await events.once(e, 'ready');\nconsole.log(args.join(','));",
+      "code": "(async () => {\n  const events = require('node:events');\n\n  const e = new events.EventEmitter();\n  setTimeout(() => e.emit('ready', 'ok', 7), 0);\n\n  const args = await events.once(e, 'ready');\n  console.log(args.join(','));\n})();\n",
       "prompt": "What does this program print?",
       "query": {
         "explanation": "events.once(emitter, name) returns a promise that resolves with an array of every argument passed to emit for that event. Here emit('ready', 'ok', 7) resolves the promise with ['ok', 7]; the event name itself is not part of the array.",
@@ -2065,7 +2065,7 @@
           "rationale": "The loop iterates every chunk of the stream, so all three values are collected, not just the first."
         }
       ],
-      "code": "const { Readable } = require('node:stream');\n\nconst rs = Readable.from(['a', 'b', 'c']);\nconst parts = [];\nfor await (const c of rs) parts.push(c);\nconsole.log(parts.join('-'));",
+      "code": "(async () => {\n  const { Readable } = require('node:stream');\n\n  const rs = Readable.from(['a', 'b', 'c']);\n  const parts = [];\n  for await (const c of rs) parts.push(c);\n  console.log(parts.join('-'));\n})();\n",
       "prompt": "What does this program print?",
       "query": {
         "explanation": "Readable.from(array) yields one chunk per array element in object mode, so the for-await loop pushes 'a', 'b' and 'c' into parts. join('-') then inserts the given separator between the three elements, printing a-b-c.",
@@ -2215,7 +2215,7 @@
     {
       "id": "gen-nodejs-easy-c97c0403",
       "answer": false,
-      "code": "const { Readable, Writable } = require('node:stream');\n\nconst rs = new Readable({ read() { this.destroy(new Error('bad')); } });\nconst w = new Writable({ write(c, e, cb) { cb(); } });\nlet destErr = false;\nw.on('error', () => { destErr = true; });\nrs.on('error', () => {});\nrs.pipe(w);\nawait new Promise((r) => setTimeout(r, 20));\nconsole.log(destErr);",
+      "code": "(async () => {\n  const { Readable, Writable } = require('node:stream');\n\n  const rs = new Readable({ read() { this.destroy(new Error('bad')); } });\n  const w = new Writable({ write(c, e, cb) { cb(); } });\n  let destErr = false;\n  w.on('error', () => { destErr = true; });\n  rs.on('error', () => {});\n  rs.pipe(w);\n  await new Promise((r) => setTimeout(r, 20));\n  console.log(destErr);\n})();\n",
       "prompt": "Does the destination writable receive an 'error' event here?",
       "query": {
         "explanation": "pipe() only forwards data and end-of-stream; an error on the source is not re-emitted on the destination (and the destination is left open). This is why stream.pipeline is preferred, since it propagates errors and destroys every stream in the chain.",
@@ -2354,7 +2354,7 @@
           "rationale": "That error comes from writing to an already-ended writable, which never happens in this chain."
         }
       ],
-      "code": "const { Readable, Transform, Writable } = require('node:stream');\nconst { pipeline } = require('node:stream/promises');\n\nconst t = new Transform({ transform(c, e, cb) { cb(new Error('boom')); } });\nconst sink = new Writable({ write(c, e, cb) { cb(); } });\ntry {\n  await pipeline(Readable.from(['a']), t, sink);\n  console.log('ok');\n} catch (err) {\n  console.log('caught: ' + err.message);\n}",
+      "code": "(async () => {\n  const { Readable, Transform, Writable } = require('node:stream');\n  const { pipeline } = require('node:stream/promises');\n\n  const t = new Transform({ transform(c, e, cb) { cb(new Error('boom')); } });\n  const sink = new Writable({ write(c, e, cb) { cb(); } });\n  try {\n    await pipeline(Readable.from(['a']), t, sink);\n    console.log('ok');\n  } catch (err) {\n    console.log('caught: ' + err.message);\n  }\n})();\n",
       "prompt": "What does this program print?",
       "query": {
         "explanation": "Calling the transform callback with an Error destroys the pipeline, so the promise returned by stream/promises pipeline rejects with that same Error. The catch block prints caught: boom and 'ok' is never reached.",
@@ -2750,7 +2750,7 @@
           "rationale": "The await unwraps the promise, so a string is in hand before toUpperCase() is called."
         }
       ],
-      "code": "const fsp = require('node:fs/promises');\nawait fsp.writeFile('/tmp/card4.txt', 'node');\nconst text = await fsp.readFile('/tmp/card4.txt', 'utf8');\nconsole.log(text.toUpperCase());",
+      "code": "(async () => {\n  const fsp = require('node:fs/promises');\n  await fsp.writeFile('/tmp/card4.txt', 'node');\n  const text = await fsp.readFile('/tmp/card4.txt', 'utf8');\n  console.log(text.toUpperCase());\n})();\n",
       "prompt": "What does this program print?",
       "query": {
         "explanation": "The promise-based readFile with 'utf8' resolves to the string 'node', and calling toUpperCase() on it logs NODE.",
@@ -3949,7 +3949,7 @@
           "rationale": "The event name is not prepended to the resolved array; only the arguments given to emit appear."
         }
       ],
-      "code": "const { once, EventEmitter } = require('node:events');\n\nconst ee = new EventEmitter();\nsetTimeout(() => ee.emit('ready', 'a', 'b'), 0);\n\nconst result = await once(ee, 'ready');\nconsole.log(JSON.stringify(result));",
+      "code": "(async () => {\n  const { once, EventEmitter } = require('node:events');\n\n  const ee = new EventEmitter();\n  setTimeout(() => ee.emit('ready', 'a', 'b'), 0);\n\n  const result = await once(ee, 'ready');\n  console.log(JSON.stringify(result));\n})();\n",
       "prompt": "What JSON text does this program print?",
       "query": {
         "explanation": "events.once(emitter, name) returns a promise that resolves with an array containing every argument passed to emit, in order. Here emit('ready', 'a', 'b') supplies two arguments, so the promise resolves to ['a','b'] and JSON.stringify prints [\"a\",\"b\"]. The event name itself is not included in the array.",
@@ -3978,7 +3978,7 @@
     {
       "id": "gen-nodejs-easy-4accaecc",
       "answer": false,
-      "code": "const { setTimeout: delay } = require('node:timers/promises');\n\nconst v = await delay(5, 'done');\nconsole.log(v);",
+      "code": "(async () => {\n  const { setTimeout: delay } = require('node:timers/promises');\n\n  const v = await delay(5, 'done');\n  console.log(v);\n})();\n",
       "prompt": "Does this program print 5?",
       "query": {
         "explanation": "The promisified setTimeout takes (delay, value): the first argument is how long to wait in milliseconds and the second is the value the promise resolves with. After 5 ms the promise resolves with 'done', so the program prints done, not the delay.",
