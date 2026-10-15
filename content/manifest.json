@@ -1119,9 +1119,9 @@
         },
         "hard": {
           "path": "nodejs/hard.json",
-          "hash": "f6995d71ce5210c8d4bbde065828979b3b8ab8a588e08699b95b41ac75fd9432",
+          "hash": "c2e63c45c58ac7b2784e7791cfaee1529309d4ce5c0861119e26140269e474fc",
           "access": "paid",
-          "contentVersion": 4,
+          "contentVersion": 5,
           "topicCounts": {
             "event-loop-and-timers": 10,
             "buffers-and-encodings": 10,
