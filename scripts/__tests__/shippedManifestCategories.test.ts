@@ -29,6 +29,7 @@ describe('shipped content manifest categories', () => {
       postgres: 'database',
       sql: 'database',
       typescript: 'frontend',
+      'typescript-types': 'frontend',
     });
   });
 });
