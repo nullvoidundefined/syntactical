@@ -250,9 +250,9 @@
       ],
       "answerIndex": 0,
       "query": {
-        "title": "Loose equality coerces the string",
+        "title": "JavaScript · Easy",
         "syntax": "1 == \"1\"  // true",
-        "explanation": "The `==` operator converts operands of different types before comparing. A numeric comparison converts the string \"1\" with `ToNumber`, and `1 == 1` is true. This is not a type match: `===` on the same operands is false.",
+        "explanation": "Loose equality coerces the string\n\nThe `==` operator converts operands of different types before comparing. A numeric comparison converts the string \"1\" with `ToNumber`, and `1 == 1` is true. This is not a type match: `===` on the same operands is false.",
         "tags": [
           "equality",
           "coercion"
@@ -326,9 +326,9 @@
       ],
       "answerIndex": 2,
       "query": {
-        "title": "null loosely equals undefined",
+        "title": "JavaScript · Easy",
         "syntax": "null == undefined  // true",
-        "explanation": "Abstract equality defines `null == undefined` as true, and it does not convert either value to 0 or to a string first. No other value loosely equals null: `null == 0` and `null == false` are both false. `===` still treats null and undefined as different.",
+        "explanation": "null loosely equals undefined\n\nAbstract equality defines `null == undefined` as true, and it does not convert either value to 0 or to a string first. No other value loosely equals null: `null == 0` and `null == false` are both false. `===` still treats null and undefined as different.",
         "tags": [
           "equality",
           "null"
@@ -440,9 +440,9 @@
       ],
       "answerIndex": 1,
       "query": {
-        "title": "false loosely equals 0",
+        "title": "JavaScript · Easy",
         "syntax": "false == 0  // true",
-        "explanation": "`==` converts the boolean before comparing it with a number. `ToNumber(false)` is 0, so `false == 0` is true. Strict equality does not do that conversion: `false === 0` is false.",
+        "explanation": "false loosely equals 0\n\n`==` converts the boolean before comparing it with a number. `ToNumber(false)` is 0, so `false == 0` is true. Strict equality does not do that conversion: `false === 0` is false.",
         "tags": [
           "equality",
           "coercion"
@@ -554,9 +554,9 @@
       ],
       "answerIndex": 1,
       "query": {
-        "title": "NaN is not strictly equal to itself",
+        "title": "JavaScript · Easy",
         "syntax": "NaN === NaN  // false",
-        "explanation": "IEEE-754 says NaN compares unequal to every value, including itself, and both `===` and `==` follow that rule. A self-check with `===` can never detect NaN. `Object.is(NaN, NaN)` and `Number.isNaN` are the tests that return true.",
+        "explanation": "NaN is not strictly equal to itself\n\nIEEE-754 says NaN compares unequal to every value, including itself, and both `===` and `==` follow that rule. A self-check with `===` can never detect NaN. `Object.is(NaN, NaN)` and `Number.isNaN` are the tests that return true.",
         "tags": [
           "nan",
           "equality"
@@ -592,9 +592,9 @@
       ],
       "answerIndex": 3,
       "query": {
-        "title": "Number.isNaN does not coerce",
+        "title": "JavaScript · Easy",
         "syntax": "Number.isNaN(\"foo\")  // false\nisNaN(\"foo\")         // true",
-        "explanation": "`Number.isNaN` returns true only when the argument is already the number NaN, so the string \"foo\" is false. The global `isNaN` converts its argument with `ToNumber` first, `ToNumber(\"foo\")` is NaN, and that coerced result makes `isNaN(\"foo\")` true. They are not aliases.",
+        "explanation": "Number.isNaN does not coerce\n\n`Number.isNaN` returns true only when the argument is already the number NaN, so the string \"foo\" is false. The global `isNaN` converts its argument with `ToNumber` first, `ToNumber(\"foo\")` is NaN, and that coerced result makes `isNaN(\"foo\")` true. They are not aliases.",
         "tags": [
           "nan",
           "coercion"
@@ -706,9 +706,9 @@
       ],
       "answerIndex": 1,
       "query": {
-        "title": "Binary floats do not sum to 0.3",
+        "title": "JavaScript · Easy",
         "syntax": "0.1 + 0.2 === 0.3  // false",
-        "explanation": "JavaScript numbers are IEEE-754 binary floats, and 0.1 and 0.2 have no exact binary representation. Their sum is a value slightly larger than 0.3, so `===` against the literal 0.3 is false. The addition does not throw, and `===` is not broken for integers.",
+        "explanation": "Binary floats do not sum to 0.3\n\nJavaScript numbers are IEEE-754 binary floats, and 0.1 and 0.2 have no exact binary representation. Their sum is a value slightly larger than 0.3, so `===` against the literal 0.3 is false. The addition does not throw, and `===` is not broken for integers.",
         "tags": [
           "numbers",
           "equality"
@@ -744,9 +744,9 @@
       ],
       "answerIndex": 0,
       "query": {
-        "title": "Number of an empty string is 0",
+        "title": "JavaScript · Easy",
         "syntax": "Number(\"\")  // 0",
-        "explanation": "`Number` converts its argument with `ToNumber`. An empty string, and a string of only whitespace, converts to 0 rather than to NaN. A non-numeric string such as \"10px\" is the case that becomes NaN.",
+        "explanation": "Number of an empty string is 0\n\n`Number` converts its argument with `ToNumber`. An empty string, and a string of only whitespace, converts to 0 rather than to NaN. A non-numeric string such as \"10px\" is the case that becomes NaN.",
         "tags": [
           "coercion",
           "numbers"
@@ -782,9 +782,9 @@
       ],
       "answerIndex": 3,
       "query": {
-        "title": "Number rejects a trailing unit",
+        "title": "JavaScript · Easy",
         "syntax": "Number(\"10px\")  // NaN",
-        "explanation": "`Number` requires the whole string, after trimming whitespace, to be a numeric literal. The trailing \"px\" makes \"10px\" invalid, so the result is NaN, not the leading 10. `parseInt(\"10px\", 10)` is the call that stops at the first bad character and returns 10.",
+        "explanation": "Number rejects a trailing unit\n\n`Number` requires the whole string, after trimming whitespace, to be a numeric literal. The trailing \"px\" makes \"10px\" invalid, so the result is NaN, not the leading 10. `parseInt(\"10px\", 10)` is the call that stops at the first bad character and returns 10.",
         "tags": [
           "coercion",
           "numbers"
@@ -934,9 +934,9 @@
       ],
       "answerIndex": 1,
       "query": {
-        "title": "Unary plus on an empty array is 0",
+        "title": "JavaScript · Easy",
         "syntax": "+[]  // 0",
-        "explanation": "Unary `+` converts with `ToNumber`. An array's primitive form is its `toString` join, an empty array joins to \"\", and `ToNumber(\"\")` is 0. The expression does not stay an array, and it is not NaN. A plain object is the value that becomes NaN under the same operator.",
+        "explanation": "Unary plus on an empty array is 0\n\nUnary `+` converts with `ToNumber`. An array's primitive form is its `toString` join, an empty array joins to \"\", and `ToNumber(\"\")` is 0. The expression does not stay an array, and it is not NaN. A plain object is the value that becomes NaN under the same operator.",
         "tags": [
           "coercion",
           "arrays"
@@ -972,9 +972,9 @@
       ],
       "answerIndex": 3,
       "query": {
-        "title": "Unary plus on a plain object is NaN",
+        "title": "JavaScript · Easy",
         "syntax": "+{}  // NaN",
-        "explanation": "Unary `+` asks the object for a primitive. A plain object's `toString` is \"[object Object]\", and that string is not numeric, so the result is NaN. It does not become 0 the way `+[]` does, and the result is not the string \"[object Object]\" itself.",
+        "explanation": "Unary plus on a plain object is NaN\n\nUnary `+` asks the object for a primitive. A plain object's `toString` is \"[object Object]\", and that string is not numeric, so the result is NaN. It does not become 0 the way `+[]` does, and the result is not the string \"[object Object]\" itself.",
         "tags": [
           "coercion",
           "objects"
@@ -1010,9 +1010,9 @@
       ],
       "answerIndex": 0,
       "query": {
-        "title": "String(null) is the word null",
+        "title": "JavaScript · Easy",
         "syntax": "String(null)  // \"null\"",
-        "explanation": "`String` has an explicit case for null: it returns the four-character string \"null\". It does not return an empty string, and it does not throw the way `` `${null.missing}` `` would. `String(undefined)` is the separate string \"undefined\".",
+        "explanation": "String(null) is the word null\n\n`String` has an explicit case for null: it returns the four-character string \"null\". It does not return an empty string, and it does not throw the way `` `${null.missing}` `` would. `String(undefined)` is the separate string \"undefined\".",
         "tags": [
           "coercion",
           "null"
@@ -1048,9 +1048,9 @@
       ],
       "answerIndex": 2,
       "query": {
-        "title": "String(undefined) is the word undefined",
+        "title": "JavaScript · Easy",
         "syntax": "String(undefined)  // \"undefined\"",
-        "explanation": "`String` converts undefined to the string \"undefined\", not to an empty string and not to \"null\". The conversion does not throw. Concatenation does the same conversion: `\"\" + undefined` is also \"undefined\".",
+        "explanation": "String(undefined) is the word undefined\n\n`String` converts undefined to the string \"undefined\", not to an empty string and not to \"null\". The conversion does not throw. Concatenation does the same conversion: `\"\" + undefined` is also \"undefined\".",
         "tags": [
           "coercion",
           "undefined"
@@ -1086,9 +1086,9 @@
       ],
       "answerIndex": 1,
       "query": {
-        "title": "An empty string is falsy",
+        "title": "JavaScript · Easy",
         "syntax": "Boolean(\"\")  // false",
-        "explanation": "`Boolean` uses the falsy list, and the empty string is on it, so `Boolean(\"\")` is false. The result is an actual boolean, not the empty string echoed back. A string of the word \"false\", or a string of spaces, is non-empty and therefore true.",
+        "explanation": "An empty string is falsy\n\n`Boolean` uses the falsy list, and the empty string is on it, so `Boolean(\"\")` is false. The result is an actual boolean, not the empty string echoed back. A string of the word \"false\", or a string of spaces, is non-empty and therefore true.",
         "tags": [
           "boolean",
           "coercion"
@@ -1124,9 +1124,9 @@
       ],
       "answerIndex": 0,
       "query": {
-        "title": "The string false is truthy",
+        "title": "JavaScript · Easy",
         "syntax": "Boolean(\"false\")  // true",
-        "explanation": "Any non-empty string is truthy, including the characters f-a-l-s-e. `Boolean` does not parse the string the way `JSON.parse` would, so it does not produce false. Only the empty string is a falsy string.",
+        "explanation": "The string false is truthy\n\nAny non-empty string is truthy, including the characters f-a-l-s-e. `Boolean` does not parse the string the way `JSON.parse` would, so it does not produce false. Only the empty string is a falsy string.",
         "tags": [
           "boolean",
           "coercion"
@@ -1162,9 +1162,9 @@
       ],
       "answerIndex": 3,
       "query": {
-        "title": "An empty array is truthy",
+        "title": "JavaScript · Easy",
         "syntax": "Boolean([])  // true",
-        "explanation": "Objects, arrays included, are truthy. `Boolean` does not convert the array to a string or a number first, so the empty array is true even though `[] == false` is also true. Emptiness is not the same rule as falsiness.",
+        "explanation": "An empty array is truthy\n\nObjects, arrays included, are truthy. `Boolean` does not convert the array to a string or a number first, so the empty array is true even though `[] == false` is also true. Emptiness is not the same rule as falsiness.",
         "tags": [
           "boolean",
           "arrays"
@@ -1200,9 +1200,9 @@
       ],
       "answerIndex": 1,
       "query": {
-        "title": "Zero is falsy",
+        "title": "JavaScript · Easy",
         "syntax": "Boolean(0)  // false",
-        "explanation": "0 is on the falsy list, along with -0, NaN, \"\", null, undefined, and false. `Boolean(0)` is therefore the boolean false, not the number 0 left in place. A non-zero number, including a negative one, is truthy.",
+        "explanation": "Zero is falsy\n\n0 is on the falsy list, along with -0, NaN, \"\", null, undefined, and false. `Boolean(0)` is therefore the boolean false, not the number 0 left in place. A non-zero number, including a negative one, is truthy.",
         "tags": [
           "boolean",
           "numbers"
@@ -1238,9 +1238,9 @@
       ],
       "answerIndex": 2,
       "query": {
-        "title": "A plain object is truthy",
+        "title": "JavaScript · Easy",
         "syntax": "Boolean({})  // true",
-        "explanation": "Every object is truthy, including an object with no own properties. `Boolean` does not look inside the object and does not use the `ToNumber` path that makes `+{}` NaN. `null` is the empty-looking value that is falsy, and null is not an object you can use this way.",
+        "explanation": "A plain object is truthy\n\nEvery object is truthy, including an object with no own properties. `Boolean` does not look inside the object and does not use the `ToNumber` path that makes `+{}` NaN. `null` is the empty-looking value that is falsy, and null is not an object you can use this way.",
         "tags": [
           "boolean",
           "objects"
@@ -1504,9 +1504,9 @@
       ],
       "answerIndex": 2,
       "query": {
-        "title": "Or replaces a falsy zero",
+        "title": "JavaScript · Easy",
         "syntax": "0 || \"fallback\"  // \"fallback\"",
-        "explanation": "`||` returns the first operand if it is truthy, otherwise the second. 0 is falsy, so the result is \"fallback\", and the result is that string rather than the boolean false. `??` would have kept the 0, because 0 is not nullish.",
+        "explanation": "Or replaces a falsy zero\n\n`||` returns the first operand if it is truthy, otherwise the second. 0 is falsy, so the result is \"fallback\", and the result is that string rather than the boolean false. `??` would have kept the 0, because 0 is not nullish.",
         "tags": [
           "operators",
           "coercion"
@@ -1542,9 +1542,9 @@
       ],
       "answerIndex": 0,
       "query": {
-        "title": "And returns the falsy operand",
+        "title": "JavaScript · Easy",
         "syntax": "0 && \"value\"  // 0",
-        "explanation": "`&&` returns the first operand when that operand is falsy, and it does not evaluate the second. The returned value is the number 0, not the boolean false and not \"value\". `||` on the same operands would return \"value\".",
+        "explanation": "And returns the falsy operand\n\n`&&` returns the first operand when that operand is falsy, and it does not evaluate the second. The returned value is the number 0, not the boolean false and not \"value\". `||` on the same operands would return \"value\".",
         "tags": [
           "operators",
           "coercion"
@@ -1580,9 +1580,9 @@
       ],
       "answerIndex": 3,
       "query": {
-        "title": "Or replaces an empty string",
+        "title": "JavaScript · Easy",
         "syntax": "\"\" || \"fallback\"  // \"fallback\"",
-        "explanation": "The empty string is falsy, so `||` skips it and returns \"fallback\". It does not return a boolean, and it does not keep the empty string. `??` would keep \"\", because an empty string is not null or undefined.",
+        "explanation": "Or replaces an empty string\n\nThe empty string is falsy, so `||` skips it and returns \"fallback\". It does not return a boolean, and it does not keep the empty string. `??` would keep \"\", because an empty string is not null or undefined.",
         "tags": [
           "operators",
           "coercion"
@@ -1618,9 +1618,9 @@
       ],
       "answerIndex": 1,
       "query": {
-        "title": "const cannot be reassigned",
+        "title": "JavaScript · Easy",
         "syntax": "const n = 1;\nn = 2;  // TypeError",
-        "explanation": "A `const` binding cannot be assigned again after its initializer runs. The second assignment throws a TypeError at runtime. It is not a SyntaxError, because the statement is grammatically valid, and it is not a silent no-op.",
+        "explanation": "const cannot be reassigned\n\nA `const` binding cannot be assigned again after its initializer runs. The second assignment throws a TypeError at runtime. It is not a SyntaxError, because the statement is grammatically valid, and it is not a silent no-op.",
         "tags": [
           "const",
           "scope"
@@ -1656,9 +1656,9 @@
       ],
       "answerIndex": 2,
       "query": {
-        "title": "const does not freeze the object",
+        "title": "JavaScript · Easy",
         "syntax": "const obj = { a: 1 };\nobj.a = 2;  // obj.a is 2",
-        "explanation": "`const` protects the binding, not the value. Replacing `obj` with another object would throw, but writing `obj.a` mutates the existing object and leaves the binding in place. `Object.freeze` is what would reject the property write.",
+        "explanation": "const does not freeze the object\n\n`const` protects the binding, not the value. Replacing `obj` with another object would throw, but writing `obj.a` mutates the existing object and leaves the binding in place. `Object.freeze` is what would reject the property write.",
         "tags": [
           "const",
           "objects"
@@ -1732,9 +1732,9 @@
       ],
       "answerIndex": 3,
       "query": {
-        "title": "var hoists as undefined",
+        "title": "JavaScript · Easy",
         "syntax": "console.log(value);  // undefined\nvar value = 1;",
-        "explanation": "A `var` declaration is hoisted to the top of its function and initialized to undefined immediately. The assignment `value = 1` still happens on the original line, so an earlier read sees undefined rather than 1. It does not throw the ReferenceError that `let` throws in the same position.",
+        "explanation": "var hoists as undefined\n\nA `var` declaration is hoisted to the top of its function and initialized to undefined immediately. The assignment `value = 1` still happens on the original line, so an earlier read sees undefined rather than 1. It does not throw the ReferenceError that `let` throws in the same position.",
         "tags": [
           "var",
           "scope"
@@ -1770,9 +1770,9 @@
       ],
       "answerIndex": 1,
       "query": {
-        "title": "var is function-scoped, let is block-scoped",
+        "title": "JavaScript · Easy",
         "syntax": "if (true) {\n  var a = 1;\n  let b = 2;\n}\n// a is visible here, b is not",
-        "explanation": "`var` is scoped to the enclosing function, so `a` remains visible after the `if` block ends. `let` is scoped to the block, so `b` cannot be read outside that block. Swapping those two scopes is the usual mix-up with `var`.",
+        "explanation": "var is function-scoped, let is block-scoped\n\n`var` is scoped to the enclosing function, so `a` remains visible after the `if` block ends. `let` is scoped to the block, so `b` cannot be read outside that block. Swapping those two scopes is the usual mix-up with `var`.",
         "tags": [
           "var",
           "let",
@@ -1959,9 +1959,9 @@
       ],
       "answerIndex": 0,
       "query": {
-        "title": "filter keeps truthy callback results",
+        "title": "JavaScript · Easy",
         "syntax": "[0, 1, \"\", 2].filter(Boolean)  // [1, 2]",
-        "explanation": "`filter` keeps an element when the callback's return value is truthy, and it drops the element when that return value is falsy. `Boolean` is falsy for 0 and \"\", so those two are removed and `[1, 2]` remains. The test is truthiness of the callback result, not a required `=== true`, and the original array is not edited in place.",
+        "explanation": "filter keeps truthy callback results\n\n`filter` keeps an element when the callback's return value is truthy, and it drops the element when that return value is falsy. `Boolean` is falsy for 0 and \"\", so those two are removed and `[1, 2]` remains. The test is truthiness of the callback result, not a required `=== true`, and the original array is not edited in place.",
         "tags": [
           "arrays",
           "filter"
@@ -2415,9 +2415,9 @@
       ],
       "answerIndex": 3,
       "query": {
-        "title": "Array spread is a shallow copy",
+        "title": "JavaScript · Easy",
         "syntax": "const inner = { n: 1 };\nconst copy = [...[inner]];\ncopy[0].n = 9;  // inner.n is 9",
-        "explanation": "Spreading an array allocates a new array and copies the element references into it. The object `inner` is not cloned, so `copy[0]` and `inner` are the same object and the write to `n` is visible through both. A change to `copy.length` or a replacement of `copy[0]` would not rewrite the source array. Spread is not a deep copy.",
+        "explanation": "Array spread is a shallow copy\n\nSpreading an array allocates a new array and copies the element references into it. The object `inner` is not cloned, so `copy[0]` and `inner` are the same object and the write to `n` is visible through both. A change to `copy.length` or a replacement of `copy[0]` would not rewrite the source array. Spread is not a deep copy.",
         "tags": [
           "arrays",
           "spread"
@@ -2453,9 +2453,9 @@
       ],
       "answerIndex": 2,
       "query": {
-        "title": "Later object-spread keys win",
+        "title": "JavaScript · Easy",
         "syntax": "{ ...{ a: 1, b: 2 }, ...{ b: 3 } }  // { a: 1, b: 3 }",
-        "explanation": "Object spread copies enumerable own string properties from left to right. When `b` appears again, the later value 3 overwrites the earlier 2, and `a` stays 1. A \"first key wins\" reading is backwards. Non-enumerable properties and symbol keys are not copied by spread at all.",
+        "explanation": "Later object-spread keys win\n\nObject spread copies enumerable own string properties from left to right. When `b` appears again, the later value 3 overwrites the earlier 2, and `a` stays 1. A \"first key wins\" reading is backwards. Non-enumerable properties and symbol keys are not copied by spread at all.",
         "tags": [
           "objects",
           "spread"
@@ -2785,9 +2785,9 @@
       "code": "const proto = { inherited: 1 };\nconst obj = Object.create(proto);\nobj.own = 2;\nfor (const key in obj) {\n  key;\n}",
       "answer": true,
       "query": {
-        "title": "for...in walks enumerable keys",
+        "title": "JavaScript · Easy",
         "syntax": "for (const key in obj) {\n  key;  // \"own\" and \"inherited\"\n}",
-        "explanation": "`for...in` enumerates enumerable string keys on the object and continues up the prototype chain, so both \"own\" and \"inherited\" appear. It does not yield values, and it skips non-enumerable properties and symbol keys. `Object.keys` is the own-only list, so an inherited enumerable key shows up in `for...in` and not in `Object.keys`.",
+        "explanation": "for...in walks enumerable keys\n\n`for...in` enumerates enumerable string keys on the object and continues up the prototype chain, so both \"own\" and \"inherited\" appear. It does not yield values, and it skips non-enumerable properties and symbol keys. `Object.keys` is the own-only list, so an inherited enumerable key shows up in `for...in` and not in `Object.keys`.",
         "tags": [
           "for-in",
           "objects"
@@ -2809,9 +2809,9 @@
       "code": "for (const key in [\"a\", \"b\"]) {\n  key;\n}",
       "answer": true,
       "query": {
-        "title": "Array indexes in for...in are strings",
+        "title": "JavaScript · Easy",
         "syntax": "for (const key in [\"a\", \"b\"]) {\n  key;  // \"0\", then \"1\"\n}",
-        "explanation": "Array indexes are property keys, and property keys that `for...in` visits are strings. The loop variable is \"0\" and then \"1\", not the numbers 0 and 1, and not the elements \"a\" and \"b\". `for...of` is what yields the elements. Other enumerable keys, including inherited ones, are visited too.",
+        "explanation": "Array indexes in for...in are strings\n\nArray indexes are property keys, and property keys that `for...in` visits are strings. The loop variable is \"0\" and then \"1\", not the numbers 0 and 1, and not the elements \"a\" and \"b\". `for...of` is what yields the elements. Other enumerable keys, including inherited ones, are visited too.",
         "tags": [
           "for-in",
           "arrays"
@@ -2927,9 +2927,9 @@
       "code": "new (() => {});",
       "answer": true,
       "query": {
-        "title": "Arrows are not constructors",
+        "title": "JavaScript · Easy",
         "syntax": "new (() => {});  // TypeError",
-        "explanation": "Arrow functions do not have a `[[Construct]]` internal method and do not get a `prototype` property. Calling one with `new` throws a TypeError. A `function` declaration or expression can be constructed with `new`. The arrow still runs fine as an ordinary call.",
+        "explanation": "Arrows are not constructors\n\nArrow functions do not have a `[[Construct]]` internal method and do not get a `prototype` property. Calling one with `new` throws a TypeError. A `function` declaration or expression can be constructed with `new`. The arrow still runs fine as an ordinary call.",
         "tags": [
           "arrow-functions"
         ]
@@ -2950,9 +2950,9 @@
       "code": "const f = () => arguments;",
       "answer": true,
       "query": {
-        "title": "Arrows have no own arguments",
+        "title": "JavaScript · Easy",
         "syntax": "const f = () => arguments;\n// in a module, f() throws ReferenceError",
-        "explanation": "An arrow function does not create an `arguments` binding for its own parameters. At the top of a module, `arguments` is unresolved, so calling that arrow throws a ReferenceError. Nested inside a traditional function, the arrow sees that outer `arguments` object lexically, which lists the outer function's arguments, not the arrow's.",
+        "explanation": "Arrows have no own arguments\n\nAn arrow function does not create an `arguments` binding for its own parameters. At the top of a module, `arguments` is unresolved, so calling that arrow throws a ReferenceError. Nested inside a traditional function, the arrow sees that outer `arguments` object lexically, which lists the outer function's arguments, not the arrow's.",
         "tags": [
           "arrow-functions"
         ]
@@ -2997,9 +2997,9 @@
       "code": "expression();\nconst expression = function () {\n  return 1;\n};",
       "answer": true,
       "query": {
-        "title": "A const function expression is not hoisted",
+        "title": "JavaScript · Easy",
         "syntax": "expression();  // ReferenceError\nconst expression = function () {\n  return 1;\n};",
-        "explanation": "The `const` binding is hoisted but uninitialized, so a call before the declaration line throws a ReferenceError. The function value does not exist until that line runs. This is not the TypeError you would get from `var expression = function () {}`, where the hoisted binding is undefined and you try to call it. A function declaration, by contrast, can be called earlier in the same scope.",
+        "explanation": "A const function expression is not hoisted\n\nThe `const` binding is hoisted but uninitialized, so a call before the declaration line throws a ReferenceError. The function value does not exist until that line runs. This is not the TypeError you would get from `var expression = function () {}`, where the hoisted binding is undefined and you try to call it. A function declaration, by contrast, can be called earlier in the same scope.",
         "tags": [
           "functions",
           "hoisting"
@@ -3021,9 +3021,9 @@
       "code": "function f(a = 1) {\n  return a;\n}",
       "answer": true,
       "query": {
-        "title": "Defaults trigger on undefined only",
+        "title": "JavaScript · Easy",
         "syntax": "function f(a = 1) {\n  return a;\n}\nf(undefined)  // 1\nf(null)       // null",
-        "explanation": "A default parameter initializer runs when the argument is undefined, including when the caller omits it. `f(undefined)` therefore returns 1. `null` is a passed value, so `f(null)` returns null and the default does not run. The same rule rejects the idea that every falsy argument, such as 0, is replaced.",
+        "explanation": "Defaults trigger on undefined only\n\nA default parameter initializer runs when the argument is undefined, including when the caller omits it. `f(undefined)` therefore returns 1. `null` is a passed value, so `f(null)` returns null and the default does not run. The same rule rejects the idea that every falsy argument, such as 0, is replaced.",
         "tags": [
           "functions",
           "default-parameters"
@@ -3069,9 +3069,9 @@
       "code": "switch (1) {\n  case \"1\":\n    break;\n}",
       "answer": true,
       "query": {
-        "title": "switch uses strict equality",
+        "title": "JavaScript · Easy",
         "syntax": "switch (1) {\n  case \"1\":\n    break;  // does not match\n  case 1:\n    break;  // matches\n}",
-        "explanation": "Each `case` label is compared with the discriminant using `===`. The number 1 does not match the string \"1\", so that branch is skipped. There is no `ToNumber` coercion the way `==` would apply. The comparison is not a truthiness test of the case label.",
+        "explanation": "switch uses strict equality\n\nEach `case` label is compared with the discriminant using `===`. The number 1 does not match the string \"1\", so that branch is skipped. There is no `ToNumber` coercion the way `==` would apply. The comparison is not a truthiness test of the case label.",
         "tags": [
           "switch",
           "equality"
@@ -3235,9 +3235,9 @@
       "code": "const obj = {};\nObject.defineProperty(obj, \"hidden\", { value: 1, enumerable: false });\nconst sym = Symbol(\"s\");\nobj[sym] = 2;\nobj.visible = 3;\nObject.keys(obj);",
       "answer": true,
       "query": {
-        "title": "Object.keys lists enumerable string keys",
+        "title": "JavaScript · Easy",
         "syntax": "Object.keys(obj)  // [\"visible\"]",
-        "explanation": "`Object.keys` returns an array of the object's own enumerable string keys. A non-enumerable property such as \"hidden\" is left out, and a symbol key is left out, so the list is `[\"visible\"]`. `Object.getOwnPropertyNames` includes non-enumerable string keys, and `Object.getOwnPropertySymbols` lists symbol keys. Inherited enumerable names are omitted too.",
+        "explanation": "Object.keys lists enumerable string keys\n\n`Object.keys` returns an array of the object's own enumerable string keys. A non-enumerable property such as \"hidden\" is left out, and a symbol key is left out, so the list is `[\"visible\"]`. `Object.getOwnPropertyNames` includes non-enumerable string keys, and `Object.getOwnPropertySymbols` lists symbol keys. Inherited enumerable names are omitted too.",
         "tags": [
           "objects",
           "object-keys"
@@ -3283,9 +3283,9 @@
       "code": "Math.max([1, 2, 3])\nMath.max(...[1, 2, 3])",
       "answer": true,
       "query": {
-        "title": "Math.max does not unpack an array",
+        "title": "JavaScript · Easy",
         "syntax": "Math.max([1, 2, 3])      // NaN\nMath.max(...[1, 2, 3])   // 3",
-        "explanation": "`Math.max` converts each argument with `ToNumber`. One array argument becomes `ToNumber([1, 2, 3])`, the array stringifies to \"1,2,3\", and that is NaN. Spreading passes three separate numbers, and the greatest is 3. An empty array is a different input: `Math.max([])` is 0, because an empty array converts to 0.",
+        "explanation": "Math.max does not unpack an array\n\n`Math.max` converts each argument with `ToNumber`. One array argument becomes `ToNumber([1, 2, 3])`, the array stringifies to \"1,2,3\", and that is NaN. Spreading passes three separate numbers, and the greatest is 3. An empty array is a different input: `Math.max([])` is 0, because an empty array converts to 0.",
         "tags": [
           "math",
           "arrays"
@@ -3307,9 +3307,9 @@
       "code": "'5' + 1",
       "answer": true,
       "query": {
-        "title": "Plus concatenates when either side is a string",
+        "title": "JavaScript · Easy",
         "syntax": "'5' + 1  // \"51\"",
-        "explanation": "If either operand of `+` is a string, both sides are converted to strings and concatenated. The number 1 becomes \"1\", so the result is the string \"51\", not the number 6. Subtraction does not have a string mode: `'5' - 1` is the number 4. Evaluation is left to right, so `1 + 1 + \"5\"` is \"25\".",
+        "explanation": "Plus concatenates when either side is a string\n\nIf either operand of `+` is a string, both sides are converted to strings and concatenated. The number 1 becomes \"1\", so the result is the string \"51\", not the number 6. Subtraction does not have a string mode: `'5' - 1` is the number 4. Evaluation is left to right, so `1 + 1 + \"5\"` is \"25\".",
         "tags": [
           "coercion",
           "operators"
@@ -3331,9 +3331,9 @@
       "code": "'5' - 1",
       "answer": true,
       "query": {
-        "title": "Minus always coerces to numbers",
+        "title": "JavaScript · Easy",
         "syntax": "'5' - 1  // 4",
-        "explanation": "The `-` operator converts both operands with `ToNumber` and subtracts. `ToNumber(\"5\")` is 5, so the result is the number 4, not the string \"4\" and not NaN. `+` is the operator that would have concatenated these operands into \"51\". A string that is not numeric, such as \"5px\", becomes NaN under subtraction.",
+        "explanation": "Minus always coerces to numbers\n\nThe `-` operator converts both operands with `ToNumber` and subtracts. `ToNumber(\"5\")` is 5, so the result is the number 4, not the string \"4\" and not NaN. `+` is the operator that would have concatenated these operands into \"51\". A string that is not numeric, such as \"5px\", becomes NaN under subtraction.",
         "tags": [
           "coercion",
           "operators"
@@ -3355,9 +3355,9 @@
       "code": "true + true",
       "answer": true,
       "query": {
-        "title": "Plus numeric-coerces booleans",
+        "title": "JavaScript · Easy",
         "syntax": "true + true  // 2",
-        "explanation": "Neither operand of `+` is a string, so both are converted with `ToNumber`. `ToNumber(true)` is 1, and `1 + 1` is the number 2, not the boolean true. `true + false` is 1 by the same rule. `Boolean` context is unrelated: this expression never asks whether the sum is truthy.",
+        "explanation": "Plus numeric-coerces booleans\n\nNeither operand of `+` is a string, so both are converted with `ToNumber`. `ToNumber(true)` is 1, and `1 + 1` is the number 2, not the boolean true. `true + false` is 1 by the same rule. `Boolean` context is unrelated: this expression never asks whether the sum is truthy.",
         "tags": [
           "coercion",
           "boolean"
@@ -3474,8 +3474,8 @@
         "evidence": "A: 0.6 ms, B: 3.1 ms median on Node 24.21.0"
       },
       "query": {
-        "title": "Membership tests: Array.includes versus Set.has",
-        "explanation": "`array.includes(x)` is a linear scan. A `Set` is a hash table, so `set.has(x)` takes about the same time however many items it holds. For repeated lookups, build the Set once.",
+        "title": "JavaScript · Easy",
+        "explanation": "Membership tests: Array.includes versus Set.has\n\n`array.includes(x)` is a linear scan. A `Set` is a hash table, so `set.has(x)` takes about the same time however many items it holds. For repeated lookups, build the Set once.",
         "tags": [
           "sets",
           "arrays",
@@ -3514,8 +3514,8 @@
         "evidence": "A: 2.6 ms, B: 0.094 ms median on Node 24.21.0"
       },
       "query": {
-        "title": "Spreading inside reduce() is quadratic",
-        "explanation": "`[...result, value]` allocates a new array and copies all of `result` into it. Doing that once per element copies about n * n / 2 elements in total. `map()` writes each result once.",
+        "title": "JavaScript · Easy",
+        "explanation": "Spreading inside reduce() is quadratic\n\n`[...result, value]` allocates a new array and copies all of `result` into it. Doing that once per element copies about n * n / 2 elements in total. `map()` writes each result once.",
         "tags": [
           "arrays",
           "spread",

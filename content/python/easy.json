@@ -174,8 +174,8 @@
       ],
       "answerIndex": 1,
       "query": {
-        "title": "Exponentiation binds tighter than unary minus",
-        "explanation": "`**` has higher precedence than unary minus, so `-2 ** 2` parses as `-(2 ** 2)`, which is `-4`, not `(-2) ** 2`, which would be `4`. Parenthesize explicitly when the base itself should be negative.",
+        "title": "Python · Easy",
+        "explanation": "Exponentiation binds tighter than unary minus\n\n`**` has higher precedence than unary minus, so `-2 ** 2` parses as `-(2 ** 2)`, which is `-4`, not `(-2) ** 2`, which would be `4`. Parenthesize explicitly when the base itself should be negative.",
         "tags": [
           "operators",
           "precedence"
@@ -402,8 +402,8 @@
       "prompt": "Given `s = 'hello'`, running `s[0] = 'H'` successfully changes `s` to `'Hello'`.",
       "answer": false,
       "query": {
-        "title": "Strings are immutable",
-        "explanation": "Strings in Python cannot be modified in place; every string method that looks like a mutation actually returns a brand-new string object. `s[0] = 'H'` raises `TypeError: 'str' object does not support item assignment`. To get the capitalized version you'd write `s = 'H' + s[1:]` or call `s.capitalize()`.",
+        "title": "Python · Easy",
+        "explanation": "Strings are immutable\n\nStrings in Python cannot be modified in place; every string method that looks like a mutation actually returns a brand-new string object. `s[0] = 'H'` raises `TypeError: 'str' object does not support item assignment`. To get the capitalized version you'd write `s = 'H' + s[1:]` or call `s.capitalize()`.",
         "tags": [
           "strings",
           "immutability"
@@ -1195,9 +1195,9 @@
       "prompt": "`reversed([1, 2, 3])` returns a list, so you can index into it immediately, like `reversed([1, 2, 3])[0]`.",
       "answer": false,
       "query": {
-        "title": "reversed() returns an iterator, not a list",
+        "title": "Python · Easy",
         "syntax": "list(reversed([1, 2, 3]))  # [3, 2, 1]",
-        "explanation": "reversed returns a lazy list_reverseiterator object, not a list, so it supports `next()` and `for` iteration but not indexing. Wrapping it in `list(...)` materializes it into an indexable list.",
+        "explanation": "reversed() returns an iterator, not a list\n\nreversed returns a lazy list_reverseiterator object, not a list, so it supports `next()` and `for` iteration but not indexing. Wrapping it in `list(...)` materializes it into an indexable list.",
         "tags": [
           "builtins",
           "lists"
@@ -1498,9 +1498,9 @@
       ],
       "answerIndex": 0,
       "query": {
-        "title": "Set comprehensions",
+        "title": "Python · Easy",
         "syntax": "{expression for item in iterable}",
-        "explanation": "Curly braces around a single expression (no colon) build a set comprehension. Since sets discard duplicates automatically, the repeating pattern 0, 1, 2, 0, 1, 2 collapses down to just {0, 1, 2}.",
+        "explanation": "Set comprehensions\n\nCurly braces around a single expression (no colon) build a set comprehension. Since sets discard duplicates automatically, the repeating pattern 0, 1, 2, 0, 1, 2 collapses down to just {0, 1, 2}.",
         "tags": [
           "comprehensions",
           "sets"
@@ -1634,8 +1634,8 @@
       ],
       "answerIndex": 0,
       "query": {
-        "title": "pass as a syntactic placeholder",
-        "explanation": "Python requires an indented block wherever one is syntactically expected (function bodies, if/else branches, loop bodies), and `pass` is a statement that does literally nothing, letting you write an empty block without a SyntaxError while you stub something out.",
+        "title": "Python · Easy",
+        "explanation": "pass as a syntactic placeholder\n\nPython requires an indented block wherever one is syntactically expected (function bodies, if/else branches, loop bodies), and `pass` is a statement that does literally nothing, letting you write an empty block without a SyntaxError while you stub something out.",
         "tags": [
           "syntax",
           "control-flow"
@@ -1746,8 +1746,8 @@
       ],
       "answerIndex": 0,
       "query": {
-        "title": "Swapping via tuple unpacking",
-        "explanation": "`a, b = b, a` builds the tuple `(b, a)` on the right-hand side first, using the original values, then unpacks it into `a` and `b`. Because the right side is fully evaluated before any assignment happens, no temporary variable is needed and neither original value is lost.",
+        "title": "Python · Easy",
+        "explanation": "Swapping via tuple unpacking\n\n`a, b = b, a` builds the tuple `(b, a)` on the right-hand side first, using the original values, then unpacks it into `a` and `b`. Because the right side is fully evaluated before any assignment happens, no temporary variable is needed and neither original value is lost.",
         "tags": [
           "unpacking",
           "assignment"
@@ -1851,9 +1851,9 @@
       ],
       "answerIndex": 0,
       "query": {
-        "title": "dict.items() returns a dynamic view",
+        "title": "Python · Easy",
         "syntax": "d.keys()\nd.values()\nd.items()",
-        "explanation": "`.keys()`, `.values()`, and `.items()` all return dict view objects, which are iterable and reflect later changes to the dict rather than freezing a snapshot at call time. If you need an actual list, you have to wrap it explicitly: `list(d.items())`.",
+        "explanation": "dict.items() returns a dynamic view\n\n`.keys()`, `.values()`, and `.items()` all return dict view objects, which are iterable and reflect later changes to the dict rather than freezing a snapshot at call time. If you need an actual list, you have to wrap it explicitly: `list(d.items())`.",
         "tags": [
           "dicts",
           "methods"
@@ -1927,9 +1927,9 @@
       ],
       "answerIndex": 0,
       "query": {
-        "title": "dict.setdefault(key, default)",
+        "title": "Python · Easy",
         "syntax": "d.setdefault(key, default)  # inserts default if key is missing, then returns the value",
-        "explanation": "`setdefault` checks whether the key exists; if not, it inserts the given default and then, either way, returns the value now stored under that key. Because it returns the actual stored object, chaining `.append(1)` mutates the list that is now living inside the dict.",
+        "explanation": "dict.setdefault(key, default)\n\n`setdefault` checks whether the key exists; if not, it inserts the given default and then, either way, returns the value now stored under that key. Because it returns the actual stored object, chaining `.append(1)` mutates the list that is now living inside the dict.",
         "tags": [
           "dicts",
           "methods"
@@ -1988,8 +1988,8 @@
       ],
       "answerIndex": 0,
       "query": {
-        "title": "`in` as a substring test on strings",
-        "explanation": "For strings, `in` checks for substring containment rather than exact element membership. `'lo'` appears as a contiguous substring inside `'hello'` (at index 3), so the expression is `True`.",
+        "title": "Python · Easy",
+        "explanation": "`in` as a substring test on strings\n\nFor strings, `in` checks for substring containment rather than exact element membership. `'lo'` appears as a contiguous substring inside `'hello'` (at index 3), so the expression is `True`.",
         "tags": [
           "strings",
           "operators"
@@ -2282,9 +2282,9 @@
       ],
       "answerIndex": 0,
       "query": {
-        "title": "str.replace(old, new, count)",
+        "title": "Python · Easy",
         "syntax": "s.replace(old, new, count=-1)   # count limits how many replacements happen, left to right",
-        "explanation": "The optional third argument caps how many occurrences get replaced, scanning left to right; without it every occurrence is replaced. Here only the first two of banana's three 'a's are swapped for 'o', leaving the third untouched.",
+        "explanation": "str.replace(old, new, count)\n\nThe optional third argument caps how many occurrences get replaced, scanning left to right; without it every occurrence is replaced. Here only the first two of banana's three 'a's are swapped for 'o', leaving the third untouched.",
         "tags": [
           "strings",
           "methods"
@@ -2433,9 +2433,9 @@
       ],
       "answerIndex": 0,
       "query": {
-        "title": "f-strings interpolate expressions directly",
+        "title": "Python · Easy",
         "syntax": "f'{expression}'",
-        "explanation": "Prefixing a string literal with `f` marks it as an f-string, in which anything inside `{...}` is evaluated as a live Python expression and substituted into the string, converted to its string form automatically. This replaces the older, more verbose `%`-formatting and `.format()` call for most everyday use.",
+        "explanation": "f-strings interpolate expressions directly\n\nPrefixing a string literal with `f` marks it as an f-string, in which anything inside `{...}` is evaluated as a live Python expression and substituted into the string, converted to its string form automatically. This replaces the older, more verbose `%`-formatting and `.format()` call for most everyday use.",
         "tags": [
           "strings",
           "f-strings"
@@ -2606,9 +2606,9 @@
       "prompt": "Triple-quoted strings (`'''...'''` or `\"\"\"...\"\"\"`) are the only way to write a string literal that spans multiple lines.",
       "answer": false,
       "query": {
-        "title": "Triple quotes are one way to span lines, not the only way",
+        "title": "Python · Easy",
         "syntax": "'''line one\nline two'''\n\n'line one\\nline two'   # also spans two logical lines",
-        "explanation": "Triple-quoted strings can contain literal newlines directly, which is convenient for docstrings and blocks of text, but an ordinary quoted string can represent multiple lines too, either via an escaped `\\n` or by ending each line with a backslash continuation. Triple quotes are a convenience, not the only mechanism.",
+        "explanation": "Triple quotes are one way to span lines, not the only way\n\nTriple-quoted strings can contain literal newlines directly, which is convenient for docstrings and blocks of text, but an ordinary quoted string can represent multiple lines too, either via an escaped `\\n` or by ending each line with a backslash continuation. Triple quotes are a convenience, not the only mechanism.",
         "tags": [
           "strings",
           "syntax"
@@ -2749,9 +2749,9 @@
       ],
       "answerIndex": 0,
       "query": {
-        "title": "Falsy values beyond just 0 and empty containers",
+        "title": "Python · Easy",
         "syntax": "Falsy: 0, 0.0, '', [], {}, (), set(), None, False",
-        "explanation": "`0.0` is numerically zero and is falsy, same as the int `0`. Every other option here is truthy: `'False'` and `' '` are non-empty strings, and `[0]` is a non-empty list even though its only element is falsy.",
+        "explanation": "Falsy values beyond just 0 and empty containers\n\n`0.0` is numerically zero and is falsy, same as the int `0`. Every other option here is truthy: `'False'` and `' '` are non-empty strings, and `[0]` is a non-empty list even though its only element is falsy.",
         "tags": [
           "truthiness",
           "booleans"
@@ -2935,9 +2935,9 @@
       ],
       "answerIndex": 0,
       "query": {
-        "title": "IndexError vs KeyError",
+        "title": "Python · Easy",
         "syntax": "[1, 2][5]      # IndexError\n{'a': 1}['b']  # KeyError",
-        "explanation": "IndexError fires when you index a sequence (list, tuple, string) with a position outside its valid range. KeyError fires when you look up a dict (or similar mapping) with a key that isn’t present. They’re raised by different container types and are not interchangeable.",
+        "explanation": "IndexError vs KeyError\n\nIndexError fires when you index a sequence (list, tuple, string) with a position outside its valid range. KeyError fires when you look up a dict (or similar mapping) with a key that isn’t present. They’re raised by different container types and are not interchangeable.",
         "tags": [
           "exceptions",
           "lists",
@@ -3329,9 +3329,9 @@
       "prompt": "`lst[:]` creates a new list containing the same elements, rather than returning a reference to the original list.",
       "answer": true,
       "query": {
-        "title": "Full-slice copying",
+        "title": "Python · Easy",
         "syntax": "copy = lst[:]\ncopy is lst   # False, a distinct new list object",
-        "explanation": "Any slice, including the full slice `[:]`, always constructs a brand-new list object, even when the bounds cover the entire sequence. This makes `lst[:]` (along with `.copy()` and `list(lst)`) one of the standard idioms for a shallow copy, distinct from plain assignment, which shares the same object.",
+        "explanation": "Full-slice copying\n\nAny slice, including the full slice `[:]`, always constructs a brand-new list object, even when the bounds cover the entire sequence. This makes `lst[:]` (along with `.copy()` and `list(lst)`) one of the standard idioms for a shallow copy, distinct from plain assignment, which shares the same object.",
         "tags": [
           "lists",
           "slicing"
@@ -3391,8 +3391,8 @@
         "evidence": "Fails for input []: IndexError"
       },
       "query": {
-        "title": "Negative indexing needs a non-empty list",
-        "explanation": "`items[-1]` reads the last element, but on an empty list there is no element to read and Python raises IndexError. An empty list is falsy, so `items[-1] if items else None` checks for it first.",
+        "title": "Python · Easy",
+        "explanation": "Negative indexing needs a non-empty list\n\n`items[-1]` reads the last element, but on an empty list there is no element to read and Python raises IndexError. An empty list is falsy, so `items[-1] if items else None` checks for it first.",
         "tags": [
           "lists",
           "indexing"
@@ -3430,8 +3430,8 @@
         "evidence": "Fails for input \"a  b\": expected 2, got 3"
       },
       "query": {
-        "title": "split() versus split(\" \")",
-        "explanation": "With no argument, `str.split()` splits on runs of whitespace and drops empty strings. With an explicit separator, every occurrence splits, so two adjacent spaces produce an empty word and `''.split(' ')` is `['']`.",
+        "title": "Python · Easy",
+        "explanation": "split() versus split(\" \")\n\nWith no argument, `str.split()` splits on runs of whitespace and drops empty strings. With an explicit separator, every occurrence splits, so two adjacent spaces produce an empty word and `''.split(' ')` is `['']`.",
         "tags": [
           "strings",
           "split"
@@ -3469,8 +3469,8 @@
         "evidence": "A: 0.1 ms, B: 20.3 ms median on Python 3.13.16"
       },
       "query": {
-        "title": "Membership tests: list versus set",
-        "explanation": "`x in some_list` is a linear scan, so its cost grows with the list. `x in some_set` hashes `x` and checks one bucket, which takes about the same time however large the set is. For repeated lookups, build a set once.",
+        "title": "Python · Easy",
+        "explanation": "Membership tests: list versus set\n\n`x in some_list` is a linear scan, so its cost grows with the list. `x in some_set` hashes `x` and checks one bucket, which takes about the same time however large the set is. For repeated lookups, build a set once.",
         "tags": [
           "sets",
           "lists",
@@ -3509,8 +3509,8 @@
         "evidence": "A: 8.6 ms, B: 0.012 ms median on Python 3.13.16"
       },
       "query": {
-        "title": "Finding duplicates with a set",
-        "explanation": "Comparing every pair takes n * (n - 1) / 2 comparisons, which grows with the square of the list length. A set drops duplicates as it is built, so `len(set(values)) != len(values)` answers the question in one pass.",
+        "title": "Python · Easy",
+        "explanation": "Finding duplicates with a set\n\nComparing every pair takes n * (n - 1) / 2 comparisons, which grows with the square of the list length. A set drops duplicates as it is built, so `len(set(values)) != len(values)` answers the question in one pass.",
         "tags": [
           "sets",
           "loops",
