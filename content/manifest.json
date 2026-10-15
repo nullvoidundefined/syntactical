@@ -920,6 +920,115 @@
         }
       },
       "category": "frontend"
+    },
+    {
+      "id": "nodejs",
+      "label": "Node.js",
+      "glyph": "NODE",
+      "tagline": "The runtime: event loop, streams, buffers, fs, and modules.",
+      "grammar": "javascript",
+      "topics": [
+        {
+          "id": "event-loop-and-timers",
+          "label": "Event loop and timers"
+        },
+        {
+          "id": "event-emitter",
+          "label": "Event emitter"
+        },
+        {
+          "id": "streams",
+          "label": "Streams"
+        },
+        {
+          "id": "buffers-and-encodings",
+          "label": "Buffers and encodings"
+        },
+        {
+          "id": "fs",
+          "label": "Fs"
+        },
+        {
+          "id": "path-and-url",
+          "label": "Path and url"
+        },
+        {
+          "id": "modules",
+          "label": "Modules"
+        },
+        {
+          "id": "error-handling",
+          "label": "Error handling"
+        },
+        {
+          "id": "process-and-env",
+          "label": "Process and env"
+        },
+        {
+          "id": "async-patterns",
+          "label": "Async patterns"
+        }
+      ],
+      "misconceptions": [],
+      "banks": {
+        "easy": {
+          "path": "nodejs/easy.json",
+          "hash": "207f23cdd89d6dce0d065fca26b5b5fe81ca126dab87e831aa883ccff72d403a",
+          "access": "free",
+          "contentVersion": 3,
+          "topicCounts": {
+            "event-loop-and-timers": 10,
+            "buffers-and-encodings": 10,
+            "path-and-url": 10,
+            "error-handling": 10,
+            "process-and-env": 10,
+            "async-patterns": 10,
+            "event-emitter": 10,
+            "streams": 10,
+            "fs": 10,
+            "modules": 10
+          }
+        },
+        "medium": {
+          "path": "nodejs/medium.json",
+          "hash": "9a23663dc03ead570534037138848bd712060a2a1f21b50555a49008885d326c",
+          "access": "paid",
+          "contentVersion": 3,
+          "topicCounts": {
+            "event-loop-and-timers": 10,
+            "buffers-and-encodings": 10,
+            "path-and-url": 10,
+            "error-handling": 10,
+            "process-and-env": 10,
+            "async-patterns": 9,
+            "event-emitter": 10,
+            "streams": 10,
+            "fs": 10,
+            "modules": 10
+          },
+          "productId": "syntactical.nodejs.medium"
+        },
+        "hard": {
+          "path": "nodejs/hard.json",
+          "hash": "913601b23fc602a98d05e54ad9d0ce609f31f3234ac4e90dd9385c6b6efc5695",
+          "access": "paid",
+          "contentVersion": 3,
+          "topicCounts": {
+            "event-loop-and-timers": 10,
+            "buffers-and-encodings": 10,
+            "event-emitter": 10,
+            "streams": 10,
+            "fs": 10,
+            "path-and-url": 10,
+            "modules": 10,
+            "error-handling": 10,
+            "process-and-env": 10,
+            "async-patterns": 10
+          },
+          "productId": "syntactical.nodejs.hard"
+        }
+      },
+      "category": "backend"
     }
   ]
 }
