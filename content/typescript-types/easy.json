@@ -297,36 +297,6 @@
       }
     },
     {
-      "id": "gen-typescript-types-easy-6e1bdb71",
-      "prompt": "Is the type of z `string[] | number[]`?",
-      "topic": "conditional-types",
-      "answer": false,
-      "code": "type ToArray<T> = [T] extends [unknown] ? T[] : never;\ntype R = ToArray<string | number>;\ndeclare const z: R;",
-      "query": {
-        "explanation": "Wrapping both sides in a one-element tuple (`[T] extends [unknown]`) stops the conditional type from distributing over the union, so T stays as `string | number` and the result is `(string | number)[]`.",
-        "syntax": "type X<T> = [T] extends [U] ? A : B",
-        "tags": [
-          "conditional-types",
-          "distributive",
-          "generics"
-        ],
-        "title": "Blocking distribution with tuple wrapping"
-      },
-      "rationale": "Tuple-wrapping the checked type prevents distribution, so the result is the single type `(string | number)[]` rather than the union `string[] | number[]`.",
-      "type": "bool",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
-      }
-    },
-    {
       "id": "gen-typescript-types-easy-b343d26c",
       "prompt": "Is the assignment `p.n = 2` accepted by the compiler here?",
       "topic": "mapped-types",
@@ -996,35 +966,6 @@
       }
     },
     {
-      "id": "gen-typescript-types-easy-d1552781",
-      "prompt": "Is y's type a single array of a union rather than a union of arrays?",
-      "topic": "distributive-conditionals",
-      "answer": true,
-      "code": "type ToArray<T> = [T] extends [any] ? T[] : never;\ntype Y = ToArray<string | number>;\ndeclare const y: Y;",
-      "query": {
-        "explanation": "Wrapping the checked type in a one-element tuple (`[T] extends [any]`) means T is no longer naked, so no distribution happens: T stays `string | number` and the result is the single array type `(string | number)[]`.",
-        "syntax": "type C<T> = [T] extends [U] ? X : Y",
-        "tags": [
-          "conditional-types",
-          "distributive"
-        ],
-        "title": "Turning distribution off with a tuple wrapper"
-      },
-      "rationale": "The tuple wrapper blocks distribution, so the result is `(string | number)[]` instead of `string[] | number[]`.",
-      "type": "bool",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
-      }
-    },
-    {
       "id": "gen-typescript-types-easy-7ad76808",
       "prompt": "Is n's type `never[]`?",
       "topic": "distributive-conditionals",
@@ -1164,82 +1105,6 @@
       },
       "rationale": "Because T sits inside an object type, there is no distribution: the single check fails and the result is just `\"n\"`.",
       "type": "bool",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
-      }
-    },
-    {
-      "id": "gen-typescript-types-easy-975aac3b",
-      "prompt": "Does wrapping the checked type in a tuple here make the result a single array type?",
-      "topic": "distributive-conditionals",
-      "answer": true,
-      "code": "type ToArray<T> = [T] extends [unknown] ? T[] : never;\ntype X = ToArray<string | number>;\ndeclare const x: X;",
-      "query": {
-        "explanation": "Putting the type parameter inside a tuple (`[T] extends [unknown]`) means the checked type is no longer a naked type parameter, so the conditional is not distributive. `T` stays the whole union, and `T[]` becomes `(string | number)[]`.",
-        "syntax": "[T] extends [U] ? X : Y",
-        "tags": [
-          "conditional-types",
-          "distributive",
-          "tuples"
-        ],
-        "title": "Tuple wrapping disables distribution"
-      },
-      "rationale": "Without the brackets the naked `T` would distribute and give `string[] | number[]`, but the tuple wrapper keeps `T` as the full union, yielding `(string | number)[]`.",
-      "type": "bool",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
-      }
-    },
-    {
-      "id": "gen-typescript-types-easy-e4f1c8af",
-      "prompt": "What is the type of x?",
-      "topic": "distributive-conditionals",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "never"
-        },
-        {
-          "text": "never[]",
-          "rationale": "That would be the answer if the true branch were applied once with `T = never`, which happens only when distribution is blocked, e.g. with `[T] extends [unknown]`."
-        },
-        {
-          "text": "unknown[]",
-          "rationale": "`unknown` appears only as the type being extended; it is never substituted for `T` in the true branch."
-        },
-        {
-          "text": "any[]",
-          "rationale": "Nothing in the snippet introduces `any`; the branch uses `T[]`, and `T` is instantiated with `never`."
-        }
-      ],
-      "code": "type ToArray<T> = T extends unknown ? T[] : never;\ntype X = ToArray<never>;\ndeclare const x: X;",
-      "query": {
-        "explanation": "A distributive conditional type maps over each member of the union it receives. `never` is the empty union, so there are no members to map and the result of the distribution is `never` — not `never[]`.",
-        "syntax": "T extends U ? X : Y",
-        "tags": [
-          "conditional-types",
-          "distributive",
-          "never"
-        ],
-        "title": "Distributing over never"
-      },
-      "type": "mc",
       "provenance": {
         "isHumanReviewed": false,
         "model": "claude-opus-5[1m]",
@@ -1574,52 +1439,6 @@
       },
       "rationale": "Only the extra-parameter direction is allowed to shrink: the source may ignore parameters, but it cannot demand more than the target signature supplies.",
       "type": "bool",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
-      }
-    },
-    {
-      "id": "gen-typescript-types-easy-4433fdd8",
-      "prompt": "How many type errors does this snippet contain?",
-      "topic": "variance-and-assignability",
-      "answerIndex": 1,
-      "choices": [
-        {
-          "text": "0",
-          "rationale": "Assignability between mutable and readonly arrays is not symmetric, so the last line is rejected."
-        },
-        {
-          "text": "1"
-        },
-        {
-          "text": "2",
-          "rationale": "The first assignment is legal: a mutable array satisfies every member required by a readonly array type."
-        },
-        {
-          "text": "3",
-          "rationale": "Only two assignments exist here, and the array literal initializing nums matches number[] exactly."
-        }
-      ],
-      "code": "const nums: number[] = [1, 2, 3];\nconst ro: readonly number[] = nums;\nconst back: number[] = ro;",
-      "query": {
-        "explanation": "A mutable `number[]` is assignable to `readonly number[]`, because dropping the mutating methods only removes capabilities. The reverse is rejected: `readonly number[]` lacks `push`, `pop`, and index-write permission, so assigning it to `number[]` would let callers mutate a value that was declared immutable. So only the last line errors.",
-        "syntax": "readonly T[]",
-        "tags": [
-          "variance",
-          "assignability",
-          "readonly"
-        ],
-        "title": "readonly arrays and assignability"
-      },
-      "type": "mc",
       "provenance": {
         "isHumanReviewed": false,
         "model": "claude-opus-5[1m]",
@@ -3720,6 +3539,192 @@
       "type": "bool",
       "id": "gen-typescript-types-easy-710f16bc",
       "topic": "infer",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5-5",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-easy-db7ed91c",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string",
+          "rationale": "The conditional distributes over the union. The null member maps to never, which drops out, so only string is left."
+        },
+        {
+          "text": "string | null",
+          "rationale": "This assumes the conditional checks the whole union and falls through to T. A naked type parameter distributes over each member instead."
+        },
+        {
+          "text": "never",
+          "rationale": "This assumes the union as a whole extends null. It is checked member by member, and string does not extend null, so it is kept."
+        },
+        {
+          "text": "null",
+          "rationale": "This reverses the branches. Members that extend null become never, so null is removed rather than kept."
+        }
+      ],
+      "code": "type NoNull<T> = T extends null ? never : T;\ndeclare const v: NoNull<string | null>;",
+      "prompt": "Which type does v get from NoNull here?",
+      "query": {
+        "explanation": "When a conditional type's checked type is a naked type parameter and it receives a union, it is applied to each member separately and the results are combined. Here string maps to string and null maps to never. never vanishes from a union, so the result is string. This is how the built-in NonNullable and Exclude work.",
+        "syntax": "type F<T> = T extends U ? X : Y;",
+        "tags": [
+          "conditional-types",
+          "distributive",
+          "never",
+          "union"
+        ],
+        "title": "Distributive conditional types filtering a union"
+      },
+      "type": "mc",
+      "topic": "conditional-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5-5",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-easy-7edddd7b",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"n\"",
+          "rationale": "Correct: the tuple wrapper stops distribution, so the whole union is checked against string, and the check fails."
+        },
+        {
+          "text": "\"y\" | \"n\"",
+          "rationale": "This is the result if T were bare. Wrapping T in [T] turns off distribution over the union."
+        },
+        {
+          "text": "\"y\"",
+          "rationale": "string | number is not assignable to string, because the number member fails the check."
+        },
+        {
+          "text": "never",
+          "rationale": "never results only from distributing over an empty union. Here the non-distributive check simply takes the false branch."
+        }
+      ],
+      "code": "type IsStr<T> = [T] extends [string] ? \"y\" : \"n\";\ndeclare const r: IsStr<string | number>;",
+      "prompt": "Which type does r get from IsStr here?",
+      "query": {
+        "explanation": "A conditional type distributes over a union only when the checked type is a naked type parameter. Writing [T] extends [string] checks the whole union at once. [string | number] is not assignable to [string], so the result is \"n\".",
+        "syntax": "[T] extends [U] ? X : Y",
+        "tags": [
+          "conditional-types",
+          "distributive",
+          "tuple-wrapping"
+        ],
+        "title": "Disabling distribution with tuple wrapping"
+      },
+      "type": "mc",
+      "topic": "distributive-conditionals",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5-5",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-easy-e5b5039a",
+      "answer": false,
+      "code": "type F<T> = T extends string ? 1 : 0;\ndeclare const z: F<never>;",
+      "prompt": "Does F<never> give z the type `0`?",
+      "query": {
+        "explanation": "A distributive conditional type applied to never yields never. This is because never is the empty union, and there are no members to map over.",
+        "syntax": "T extends U ? X : Y",
+        "tags": [
+          "conditional-types",
+          "distributive",
+          "never"
+        ],
+        "title": "Distributive conditionals over never"
+      },
+      "rationale": "never is treated as an empty union. A distributive conditional maps over zero members, so the result is never rather than the false branch 0.",
+      "type": "bool",
+      "topic": "distributive-conditionals",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5-5",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-easy-e911df28",
+      "answer": true,
+      "code": "type MyExclude<T, U> = T extends U ? never : T;\ndeclare const w: MyExclude<\"a\" | \"b\" | \"c\", \"a\">;",
+      "prompt": "Does MyExclude leave w with the type `\"b\" | \"c\"`?",
+      "query": {
+        "explanation": "Each member of the union is tested separately. Members that extend U become never, and never vanishes from a union. This is how the built-in Exclude works.",
+        "syntax": "T extends U ? never : T",
+        "tags": [
+          "conditional-types",
+          "distributive",
+          "exclude"
+        ],
+        "title": "Filtering unions with distributive conditionals"
+      },
+      "rationale": "The conditional distributes, so \"a\" maps to never and \"b\" and \"c\" are kept. never disappears from the union, which leaves \"b\" | \"c\".",
+      "type": "bool",
+      "topic": "distributive-conditionals",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5-5",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-easy-495ef719",
+      "answer": true,
+      "code": "type Animal = { name: string };\ntype Dog = { name: string; bark(): void };\n\ninterface Handler {\n  handle(a: Animal): void;\n}\n\nconst dogHandler = {\n  handle(d: Dog) {\n    d.bark();\n  },\n};\n\nconst h: Handler = dogHandler;",
+      "prompt": "Is assigning dogHandler to h on the last line accepted by the compiler?",
+      "query": {
+        "explanation": "Under strictFunctionTypes, function-typed properties compare parameters contravariantly. Members declared with method syntax, such as `handle(a: Animal): void`, are exempt and compare parameters bivariantly. Here Dog is assignable to Animal, so a handler that expects a Dog is accepted where one expecting an Animal is required. This is accepted even though it is unsound at runtime. Writing `handle: (a: Animal) => void` instead would make the assignment an error.",
+        "syntax": "interface I { m(x: T): void }  // bivariant params\ninterface J { m: (x: T) => void }  // contravariant params",
+        "tags": [
+          "variance",
+          "assignability",
+          "strictFunctionTypes",
+          "methods"
+        ],
+        "title": "Method parameter bivariance"
+      },
+      "rationale": "It would be rejected only if parameters were checked contravariantly. Handler declares handle with method syntax, and method parameters stay bivariant even under strictFunctionTypes.",
+      "type": "bool",
+      "topic": "variance-and-assignability",
       "provenance": {
         "isHumanReviewed": false,
         "model": "claude-opus-5-5",
