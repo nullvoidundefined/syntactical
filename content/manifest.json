@@ -973,15 +973,15 @@
       "banks": {
         "easy": {
           "path": "typescript-types/easy.json",
-          "hash": "39f2c5a319429eeec431b102e95903fc05462d37ff31f06a1e6a6481b14b0d9f",
+          "hash": "54cdd2e803fda0d21f00197e7e161cdc2ba91d41fdd676b0fefc84267f97fe71",
           "access": "free",
-          "contentVersion": 4,
+          "contentVersion": 6,
           "topicCounts": {
             "conditional-types": 10,
             "mapped-types": 10,
             "template-literal-types": 10,
-            "distributive-conditionals": 9,
-            "variance-and-assignability": 10,
+            "distributive-conditionals": 8,
+            "variance-and-assignability": 9,
             "overloads-and-satisfies": 10,
             "discriminated-unions": 10,
             "generic-constraints": 10,
@@ -1082,16 +1082,16 @@
       "banks": {
         "easy": {
           "path": "nodejs/easy.json",
-          "hash": "dab11d9df1e3bb9baff26167218c048d7c7c7e94dc911527b11868fdcfffbb46",
+          "hash": "c58dbc9c3c78cad20acb2d43d45d38b135654c52068e8115f1ee52059e23e3b9",
           "access": "free",
-          "contentVersion": 4,
+          "contentVersion": 6,
           "topicCounts": {
             "event-loop-and-timers": 10,
-            "buffers-and-encodings": 10,
+            "buffers-and-encodings": 8,
             "path-and-url": 10,
             "error-handling": 10,
             "process-and-env": 10,
-            "async-patterns": 10,
+            "async-patterns": 9,
             "event-emitter": 10,
             "streams": 10,
             "fs": 10,
