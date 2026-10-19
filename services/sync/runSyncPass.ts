@@ -5,6 +5,7 @@ import type { AnswerEvent } from '@syntactical/progress';
 
 import type { apiFetch } from '../../clients/apiClient';
 import { logWarning } from '../../clients/logClient';
+import { readErrorCode } from '../../clients/readErrorCode';
 import {
   HTTP_STATUS_BAD_REQUEST,
   HTTP_STATUS_MULTIPLE_CHOICES,
@@ -39,11 +40,6 @@ function isSuccess(status: number): boolean {
 
 function isStoredBody(body: unknown): boolean {
   return isRecord(body) && isRecord(body.data);
-}
-
-function readErrorCode(body: unknown): string | null {
-  if (!isRecord(body) || !isRecord(body.error)) return null;
-  return typeof body.error.code === 'string' ? body.error.code : null;
 }
 
 function readRejectedIds(body: unknown): string[] {
@@ -88,7 +84,10 @@ async function uploadBatch(input: SyncPassInput, batch: AnswerEvent[]): Promise<
       await input.markHeld(pending.map(({ eventId }) => eventId));
       return 'ok';
     }
-    if (status !== HTTP_STATUS_UNPROCESSABLE || (code !== 'SYNC_INVALID_EVENTS' && code !== 'SYNC_TIMESTAMP_OUT_OF_RANGE')) {
+    if (
+      status !== HTTP_STATUS_UNPROCESSABLE ||
+      (code !== 'SYNC_INVALID_EVENTS' && code !== 'SYNC_TIMESTAMP_OUT_OF_RANGE')
+    ) {
       return 'failed';
     }
     const named = new Set(readRejectedIds(body));

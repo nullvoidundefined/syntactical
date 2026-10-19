@@ -5,13 +5,14 @@
 // of this language the user does not own (an owned bank shows no paywall).
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { DIFFICULTIES } from '@syntactical/content-schema';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 
 import NotFoundScreen from '../+not-found';
 import { DifficultyStep } from '../../components/menu/DifficultyStep';
 import { PaywallSheet } from '../../components/purchase/PaywallSheet';
+import { findDifficulty } from '../../services/content/findDifficulty';
+import { findLanguageEntry } from '../../services/content/findLanguageEntry';
 import { useSignedInUserId } from '../../state/AuthProvider';
 import { useEntitlements } from '../../state/useEntitlements';
 import { useLanguageManifest } from '../../state/useLanguageManifest';
@@ -34,7 +35,7 @@ export default function DifficultyScreen() {
   const [dismissedParam, setDismissedParam] = useState<string | string[] | undefined>(undefined);
   const [isBuying, setIsBuying] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const languageEntry = languages.find(({ id }) => id === language);
+  const languageEntry = findLanguageEntry(languages, language);
 
   function readPaidProductId(difficultyId: string | string[] | undefined): string | null {
     if (typeof difficultyId !== 'string' || !languageEntry) return null;
@@ -121,7 +122,7 @@ export default function DifficultyScreen() {
   const paywallProductId = readPaidProductId(openDifficulty ?? undefined);
   const isOwned =
     entitlements.status === 'ready' && paywallProductId !== null && entitlements.productIds.has(paywallProductId);
-  const paywallLabel = DIFFICULTIES.find(({ id }) => id === openDifficulty)?.label ?? '';
+  const paywallLabel = (openDifficulty === null ? undefined : findDifficulty(openDifficulty)?.label) ?? '';
   return (
     <ScrollView contentContainerClassName="flex-grow items-center justify-center px-4 py-8">
       <View className="w-full max-w-xl">

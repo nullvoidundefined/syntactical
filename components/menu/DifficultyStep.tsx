@@ -5,6 +5,8 @@
 import { DIFFICULTIES } from '@syntactical/content-schema';
 import { Pressable, Text, View } from 'react-native';
 
+import { findDifficulty } from '../../services/content/findDifficulty';
+import { findLanguageEntry } from '../../services/content/findLanguageEntry';
 import { useIsOnline } from '../../state/useIsOnline';
 import { useKeyboardNav } from '../../state/useKeyboardNav';
 import { useLanguageManifest } from '../../state/useLanguageManifest';
@@ -41,7 +43,7 @@ function describeBankStatus(bankState: QuestionBankState, isOnline: boolean): st
 
 function readDifficultyCopy(difficultyId: string) {
   return (
-    DIFFICULTIES.find(({ id }) => id === difficultyId) ?? {
+    findDifficulty(difficultyId) ?? {
       description: '',
       label: difficultyId,
     }
@@ -102,7 +104,7 @@ export function DifficultyStep({
   prices = {},
 }: DifficultyStepProps) {
   const { languages } = useLanguageManifest();
-  const languageEntry = languages.find(({ id }) => id === language);
+  const languageEntry = findLanguageEntry(languages, language);
   const difficultyIds = DIFFICULTIES.map(({ id }) => id).filter(
     (id) => languageEntry && Object.hasOwn(languageEntry.banks, id),
   );
