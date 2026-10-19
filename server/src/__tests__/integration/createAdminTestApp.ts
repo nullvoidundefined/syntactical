@@ -4,18 +4,12 @@
 // rate-limit key secret and webhook authorization value are generated at run time. The paid
 // product ids handed to the admin and webhook routes come from the paid banks, as startServer
 // derives them from the server manifest.
-import { randomBytes } from 'node:crypto';
-
 import type pg from 'pg';
-import { pino } from 'pino';
 
-import { createApp } from '../../app.js';
+import { createTestApp } from './createTestApp.js';
 import type { AnswerKey } from '../../types/AnswerKey.js';
 import type { PaidBank } from '../../types/PaidBank.js';
 import type { PaidBanks } from '../../types/PaidBanks.js';
-
-const SECRET_BYTES = 32;
-const ALLOWED_ORIGIN = 'https://syntactical.dev';
 
 export const ADMIN_TEST_PRODUCTS = {
   HARD: 'syntactical.python.hard',
@@ -49,39 +43,21 @@ function buildPaidBanks(): PaidBanks {
   ]);
 }
 
-interface TestClock {
-  advance(milliseconds: number): void;
-  now(): Date;
-}
-
 interface AdminTestAppOptions {
   pool: pg.Pool;
 }
 
 export function createAdminTestApp(options: AdminTestAppOptions) {
   const { pool } = options;
-  let currentTime = Date.now();
-  const clock: TestClock = {
-    advance(milliseconds: number): void {
-      currentTime += milliseconds;
-    },
-    now(): Date {
-      return new Date(currentTime);
-    },
-  };
   const paidBanks = buildPaidBanks();
   const paidProductIds: ReadonlySet<string> = new Set([...paidBanks.values()].map(({ productId }) => productId));
-  const rateLimitKeySecret = randomBytes(SECRET_BYTES).toString('hex');
-  const revenueCatAuth = randomBytes(SECRET_BYTES).toString('hex');
   const answerKey: AnswerKey = new Map();
-  const app = createApp({
-    admin: { database: pool, now: clock.now, paidProductIds, rateLimitKeySecret },
-    allowedOrigins: [ALLOWED_ORIGIN],
-    banks: { database: pool, now: clock.now, paidBanks },
-    db: pool,
-    logger: pino({ level: 'silent' }),
-    sync: { answerKey, database: pool, now: clock.now, rateLimitKeySecret },
-    webhooks: { database: pool, now: clock.now, paidProductIds, revenueCatAuth },
+  const { app, clock, rateLimitKeySecret, revenueCatAuth } = createTestApp({
+    admin: { paidProductIds },
+    banks: { paidBanks },
+    pool,
+    sync: { answerKey },
+    webhooks: { paidProductIds },
   });
   return { app, clock, paidProductIds, rateLimitKeySecret, revenueCatAuth };
 }

@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, inject, it } from 'vitest';
 
 import { createScratchDatabase } from '../integration/createScratchDatabase.js';
 import { runMigrations } from '../integration/runMigrations.js';
+import { SKIP_DATABASE_TESTS } from '../integration/skipDatabaseTests.js';
 
 const MIGRATION_TIMEOUT_MS = 60_000;
 const CHECK_VIOLATION = '23514';
@@ -26,8 +27,6 @@ const SESSION_TTL_MS = 2_592_000_000;
 const LAST_MIGRATION_BEFORE_PASSWORDS = 1790985600013;
 const PASSWORD_MIGRATION_NAME = /^\d+_users-password-and-session-auth-method\.js$/;
 const MIGRATIONS_DIRECTORY = fileURLToPath(new URL('../../../migrations/', import.meta.url));
-
-const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.env.TEST_DATABASE_URL;
 
 interface ColumnShape {
   column_default: string | null;

@@ -16,8 +16,7 @@ import { rateLimitKey } from '../../services/rateLimitKey.js';
 import { createAuthTestApp } from '../integration/createAuthTestApp.js';
 import { createMigratedDatabase } from '../integration/createMigratedDatabase.js';
 import { insertSession } from '../integration/insertSession.js';
-
-const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.env.TEST_DATABASE_URL;
+import { SKIP_DATABASE_TESTS } from '../integration/skipDatabaseTests.js';
 
 const DELETE_ME_ROUTE = '/v1/me';
 const CODES_ROUTE = '/v1/auth/codes';

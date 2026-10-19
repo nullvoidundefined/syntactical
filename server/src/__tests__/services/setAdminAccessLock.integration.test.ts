@@ -10,8 +10,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, inject, it } from 'v
 import { setAdminAccess } from '../../services/setAdminAccess.js';
 import { createMigratedDatabase } from '../integration/createMigratedDatabase.js';
 import { insertSession } from '../integration/insertSession.js';
-
-const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.env.TEST_DATABASE_URL;
+import { SKIP_DATABASE_TESTS } from '../integration/skipDatabaseTests.js';
 
 const SETUP_TIMEOUT_MS = 120_000;
 const WAIT_LIMIT_MS = 5_000;
