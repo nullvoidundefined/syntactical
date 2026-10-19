@@ -7,7 +7,7 @@ import { useEffect, useRef } from 'react';
 
 import { Platform } from 'react-native';
 
-import { KEY_BINDINGS } from '../constants/appConfig';
+import { CHOICE_KEYS_PER_ROW, KEY_BINDINGS } from '../constants/appConfig';
 
 import { isModalOpen } from './modalOpenSignal';
 
@@ -20,17 +20,13 @@ type KeyboardHandlers = {
   onToggleQuery?: () => void;
 };
 
-// Two rows of choice keys (digits, then letters) bind the same choices.
-const CHOICE_KEY_ROWS = 2;
-const CHOICES_PER_ROW = KEY_BINDINGS.choice.length / CHOICE_KEY_ROWS;
-
 function isBoundKey(bindings: readonly string[], key: string): boolean {
   return bindings.some((binding) => binding.toUpperCase() === key.toUpperCase());
 }
 
 function readChoiceIndex(key: string): number | null {
   const position = KEY_BINDINGS.choice.findIndex((binding) => binding.toUpperCase() === key.toUpperCase());
-  return position === -1 ? null : position % CHOICES_PER_ROW;
+  return position === -1 ? null : position % CHOICE_KEYS_PER_ROW;
 }
 
 // A modifier means the key belongs to a browser or OS shortcut (Cmd+C,
@@ -42,7 +38,17 @@ function isBrowserShortcutOrRepeat(event: KeyboardEvent): boolean {
 
 // Input types that take no typed text; a key pressed on one of these
 // (a checkbox, a button) still belongs to the bindings.
-const NON_TEXT_INPUT_TYPES = new Set(['button', 'checkbox', 'color', 'file', 'image', 'radio', 'range', 'reset', 'submit']);
+const NON_TEXT_INPUT_TYPES = new Set([
+  'button',
+  'checkbox',
+  'color',
+  'file',
+  'image',
+  'radio',
+  'range',
+  'reset',
+  'submit',
+]);
 
 // A key pressed inside a text field is text, not a command.
 function isTextInput(input: HTMLInputElement): boolean {

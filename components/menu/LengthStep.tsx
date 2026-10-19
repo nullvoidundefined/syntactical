@@ -11,6 +11,7 @@ import { useKeyboardNav } from '../../state/useKeyboardNav';
 import { useLanguageManifest } from '../../state/useLanguageManifest';
 
 import { SelectionCard } from './SelectionCard';
+import { pickKeyHint } from './pickKeyHint';
 
 type LengthStepProps = {
   difficulty: string;
@@ -51,14 +52,14 @@ export function LengthStep({ difficulty, language, onBack, onSelectLength, poolS
         {lengths.map((length, index) => (
           <SelectionCard
             key={length}
-            keyHint={index + 1}
+            keyHint={pickKeyHint(index + 1)}
             title={`${length} questions`}
             subtitle={poolSize === undefined ? `A random ${length}` : `A random ${length} of ${poolSize}`}
             onSelect={() => onSelectLength(length)}
           />
         ))}
         <SelectionCard
-          keyHint={lengths.length + 1}
+          keyHint={pickKeyHint(lengths.length + 1)}
           title={poolSize === undefined ? 'All questions' : `All ${poolSize} questions`}
           subtitle="Every question in this pool"
           onSelect={() => onSelectLength(undefined)}

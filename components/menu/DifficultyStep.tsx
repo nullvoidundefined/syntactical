@@ -11,10 +11,11 @@ import { useLanguageManifest } from '../../state/useLanguageManifest';
 import { useQuestionBank, type QuestionBankState } from '../../state/useQuestionBank';
 
 import { SelectionCard } from './SelectionCard';
+import { pickKeyHint } from './pickKeyHint';
 
 type DifficultyOptionProps = {
   difficultyId: string;
-  keyHint: number;
+  keyHint: number | undefined;
   language: string;
   onSelect: () => void;
   onSelectLocked: () => void;
@@ -77,7 +78,7 @@ function DifficultyOption({ difficultyId, keyHint, language, onSelect, onSelectL
   const handleSelect = pickSelectHandler(bankState, onSelect, onSelectLocked);
   useKeyboardNav({
     onSelectChoice: (index) => {
-      if (index === keyHint - 1 && !isDisabled) handleSelect();
+      if (keyHint !== undefined && index === keyHint - 1 && !isDisabled) handleSelect();
     },
   });
   return (
@@ -121,7 +122,7 @@ export function DifficultyStep({
           <DifficultyOption
             key={difficultyId}
             difficultyId={difficultyId}
-            keyHint={index + 1}
+            keyHint={pickKeyHint(index + 1)}
             language={language}
             onSelect={() => onSelectDifficulty(difficultyId)}
             onSelectLocked={() => onSelectLockedDifficulty?.(difficultyId)}
