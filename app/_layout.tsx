@@ -5,13 +5,13 @@ import '../global.css';
 import { useState } from 'react';
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import Constants from 'expo-constants';
 import { Slot } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { logWarning } from '../clients/logClient';
 import { AccountControl } from '../components/auth/AccountControl';
 import { AppShell } from '../components/layout/AppShell';
+import { readExtraString } from '../config/readExtraString';
 import { createQueryClient } from '../config/queryClient';
 import { AdminCacheReset } from '../state/AdminCacheReset';
 import { AuthProvider } from '../state/AuthProvider';
@@ -21,8 +21,8 @@ import { PaidBankPrefetch } from '../state/PaidBankPrefetch';
 import { SyncProvider } from '../state/SyncProvider';
 
 function readContentBaseUrl(): string | null {
-  const contentBaseUrl: unknown = Constants.expoConfig?.extra?.contentBaseUrl;
-  if (typeof contentBaseUrl !== 'string' || contentBaseUrl === '') {
+  const contentBaseUrl = readExtraString('contentBaseUrl');
+  if (contentBaseUrl === null) {
     logWarning({}, 'content base URL is missing; content fetching is disabled');
     return null;
   }

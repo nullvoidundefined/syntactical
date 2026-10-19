@@ -22,6 +22,7 @@ import { clearSessionToken } from '../clients/clearSessionToken';
 import { logWarning } from '../clients/logClient';
 import { onUnauthorized } from '../clients/onUnauthorized';
 import { identifyPurchaser, resetPurchaser } from '../clients/purchasesIdentity';
+import { readErrorCode } from '../clients/readErrorCode';
 import { readStoredJson } from '../clients/readStoredJson';
 import { writeJson } from '../clients/writeJson';
 import { writeSessionToken } from '../clients/writeSessionToken';
@@ -83,11 +84,6 @@ function readSessionResponse(body: unknown): { sessionValue: string | null; user
     sessionValue: typeof token === 'string' ? token : null,
     userId: typeof userId === 'string' ? userId : null,
   };
-}
-
-function readErrorCode(body: unknown): string | null {
-  const code = (body as { error?: { code?: unknown } } | null)?.error?.code;
-  return typeof code === 'string' ? code : null;
 }
 
 const SIGN_UP_REFUSALS: Record<string, SignUpFailure['reason']> = {

@@ -9,10 +9,10 @@ import { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
-import { DIFFICULTIES } from '@syntactical/content-schema';
-
 import NotFoundScreen from '../../+not-found';
 import { QuizRound } from '../../../components/quiz/QuizRound';
+import { findDifficulty } from '../../../services/content/findDifficulty';
+import { findLanguageEntry } from '../../../services/content/findLanguageEntry';
 import { readRoundCount } from '../../../services/quiz/roundLength';
 import { useQuizStats } from '../../../state/StatsProvider';
 import { useLanguageManifest } from '../../../state/useLanguageManifest';
@@ -40,8 +40,8 @@ export default function RoundScreen() {
   const { isHydrated } = useQuizStats();
   const { languages } = useLanguageManifest();
   const bankState = useQuestionBank(language, difficulty);
-  const languageEntry = languages.find(({ id }) => id === language);
-  const difficultyEntry = DIFFICULTIES.find(({ id }) => id === difficulty);
+  const languageEntry = findLanguageEntry(languages, language);
+  const difficultyEntry = findDifficulty(difficulty);
 
   const { status } = bankState;
   // A locked paid bank (no entitlement) is not playable from a deep link.

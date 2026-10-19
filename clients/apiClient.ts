@@ -1,14 +1,15 @@
 // The API client: every request goes to the build-time API base URL, with a
 // path from the app's own code. A missing base URL or a failed fetch throws
 // ApiUnavailable. Redirects, timeouts, and stream failures are ApiUnavailable too.
-import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
+import { readExtraString } from '../config/readExtraString';
 import { API_FETCH_TIMEOUT_MS, HTTP_STATUS_UNAUTHORIZED } from '../constants/appConfig';
 
 import { ApiUnavailable } from './ApiUnavailable';
 import { apiRequestState } from './apiRequestState';
 import { clearSessionToken } from './clearSessionToken';
+import { createTimeoutRace } from './createTimeoutRace';
 import { readSessionToken } from './readSessionToken';
 
 type ApiResponse = { status: number; body: unknown };
@@ -22,8 +23,8 @@ type ApiRequestInit = {
 };
 
 function resolveRequestUrl(path: string): string {
-  const base: unknown = Constants.expoConfig?.extra?.apiBaseUrl;
-  if (typeof base !== 'string' || base === '') {
+  const base = readExtraString('apiBaseUrl');
+  if (base === null) {
     throw new ApiUnavailable('API base URL is not configured');
   }
   return `${base}${path}`;
@@ -89,20 +90,6 @@ async function requestAndRead(
   return { body: await parseBody(response, responseType), status };
 }
 
-function createTimeoutRace(controller: AbortController): {
-  promise: Promise<never>;
-  clear: () => void;
-} {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const promise = new Promise<never>((_resolve, reject) => {
-    timer = setTimeout(() => {
-      controller.abort();
-      reject(new ApiUnavailable('API request timed out'));
-    }, API_FETCH_TIMEOUT_MS);
-  });
-  return { clear: () => clearTimeout(timer), promise };
-}
-
 async function handleUnauthorized(sentSession: string | null): Promise<void> {
   try {
     if (sentSession !== null && (await readSessionToken()) === sentSession) {
@@ -138,7 +125,11 @@ async function sendRequest(path: string, init: SentRequestInit): Promise<ApiResp
   const hasBody = body !== undefined;
   const { headers, sentSession } = await buildRequest(hasBody);
   const controller = new AbortController();
-  const timeout = createTimeoutRace(controller);
+  const timeout = createTimeoutRace(
+    API_FETCH_TIMEOUT_MS,
+    () => new ApiUnavailable('API request timed out'),
+    controller,
+  );
   let result: ApiResponse;
   try {
     result = await Promise.race([

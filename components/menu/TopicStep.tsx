@@ -4,9 +4,10 @@
 // pick the length cards, then the topics in order; Escape goes back.
 import { Pressable, Text, View } from 'react-native';
 
-import { DIFFICULTIES } from '@syntactical/content-schema';
-
 import { KEY_BINDINGS } from '../../constants/appConfig';
+import { findBankInLanguage } from '../../services/content/findBankInLanguage';
+import { findDifficulty } from '../../services/content/findDifficulty';
+import { findLanguageEntry } from '../../services/content/findLanguageEntry';
 import { listRoundLengths, readPoolSize, reconcilePoolSize } from '../../services/quiz/roundLength';
 import { useKeyboardNav } from '../../state/useKeyboardNav';
 import { useLanguageManifest } from '../../state/useLanguageManifest';
@@ -47,19 +48,12 @@ export function TopicStep({
   onSelectTopic,
 }: TopicStepProps) {
   const { languages } = useLanguageManifest();
-  const {
-    banks,
-    label,
-    topics: listedTopics,
-  } = languages.find(({ id }) => id === language) ?? {
-    banks: {},
-    label: language,
-    topics: [],
-  };
-  const topicCounts =
-    (banks as Record<string, { topicCounts: Record<string, number> } | undefined>)[difficulty]?.topicCounts ?? {};
+  const languageEntry = findLanguageEntry(languages, language);
+  const label = languageEntry?.label ?? language;
+  const listedTopics = languageEntry?.topics ?? [];
+  const topicCounts = (languageEntry && findBankInLanguage(languageEntry, difficulty))?.topicCounts ?? {};
   const topics = listedTopics.filter(({ id }) => (topicCounts[id] ?? 0) > 0);
-  const difficultyLabel = DIFFICULTIES.find(({ id }) => id === difficulty)?.label ?? difficulty;
+  const difficultyLabel = findDifficulty(difficulty)?.label ?? difficulty;
   const poolSize = reconcilePoolSize(readPoolSize(topicCounts, undefined), bankQuestions, undefined);
   const lengths = listRoundLengths(poolSize);
   // Whole-bank cards come first: each fixed length, then every question.

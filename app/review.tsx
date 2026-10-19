@@ -9,11 +9,12 @@ import { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator } from 'react-native';
 
-import { DIFFICULTIES } from '@syntactical/content-schema';
 import type { Manifest } from '@syntactical/content-schema';
 
 import { QuizRound, type QuestionSource } from '../components/quiz/QuizRound';
 import { NothingDue } from '../components/review/NothingDue';
+import { findDifficulty } from '../services/content/findDifficulty';
+import { findLanguageEntry } from '../services/content/findLanguageEntry';
 import { listMisconceptionQuestions } from '../services/review/listMisconceptionQuestions';
 import type { ReviewQuestion } from '../services/review/types/ReviewQuestion';
 import { useQuizStats } from '../state/StatsProvider';
@@ -30,8 +31,9 @@ const ROUND_SOURCE: QuestionSource = {
 
 function describeSource(reviewQuestion: ReviewQuestion, manifest: Manifest): QuestionSource {
   const { difficulty, language } = reviewQuestion;
-  const { grammar = ROUND_SOURCE.grammar, label: languageLabel = language } = manifest.languages.find(({ id }) => id === language) ?? {};
-  const difficultyLabel = DIFFICULTIES.find(({ id }) => id === difficulty)?.label ?? difficulty;
+  const { grammar = ROUND_SOURCE.grammar, label: languageLabel = language } =
+    findLanguageEntry(manifest.languages, language) ?? {};
+  const difficultyLabel = findDifficulty(difficulty)?.label ?? difficulty;
   return { difficulty, difficultyLabel, grammar, language, languageLabel };
 }
 
@@ -39,8 +41,12 @@ function ReviewRound({ misconceptionId }: { misconceptionId: string | undefined 
   const { dueQuestions, nextDueAt, questionIndex } = useReviewQueue();
   const manifest = useLanguageManifest();
   const [roundKey, setRoundKey] = useState(0);
-  const [snapshot] = useState(() => (misconceptionId ? listMisconceptionQuestions(questionIndex, misconceptionId) : dueQuestions));
-  const [sources] = useState(() => new Map(snapshot.map((entry) => [entry.question.id, describeSource(entry, manifest)])));
+  const [snapshot] = useState(() =>
+    misconceptionId ? listMisconceptionQuestions(questionIndex, misconceptionId) : dueQuestions,
+  );
+  const [sources] = useState(
+    () => new Map(snapshot.map((entry) => [entry.question.id, describeSource(entry, manifest)])),
+  );
   const exitToMenu = () => router.replace('/');
   if (snapshot.length === 0) return <NothingDue nextDueAt={nextDueAt} onBack={exitToMenu} />;
   return (
@@ -61,5 +67,9 @@ export default function ReviewScreen() {
   const { misconception } = useLocalSearchParams<{ misconception?: string }>();
   const { isHydrated } = useQuizStats();
   if (!isHydrated) return <ActivityIndicator className="flex-1" />;
-  return <ReviewRound misconceptionId={typeof misconception === 'string' && misconception !== '' ? misconception : undefined} />;
+  return (
+    <ReviewRound
+      misconceptionId={typeof misconception === 'string' && misconception !== '' ? misconception : undefined}
+    />
+  );
 }

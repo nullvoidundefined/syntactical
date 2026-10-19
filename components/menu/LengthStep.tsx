@@ -4,8 +4,8 @@
 // options in order, Escape goes back to the topic step.
 import { Pressable, Text, View } from 'react-native';
 
-import { DIFFICULTIES } from '@syntactical/content-schema';
-
+import { findDifficulty } from '../../services/content/findDifficulty';
+import { findLanguageEntry } from '../../services/content/findLanguageEntry';
 import { listRoundLengths } from '../../services/quiz/roundLength';
 import { useKeyboardNav } from '../../state/useKeyboardNav';
 import { useLanguageManifest } from '../../state/useLanguageManifest';
@@ -24,8 +24,8 @@ type LengthStepProps = {
 
 export function LengthStep({ difficulty, language, onBack, onSelectLength, poolSize }: LengthStepProps) {
   const { languages } = useLanguageManifest();
-  const label = languages.find(({ id }) => id === language)?.label ?? language;
-  const difficultyLabel = DIFFICULTIES.find(({ id }) => id === difficulty)?.label ?? difficulty;
+  const label = findLanguageEntry(languages, language)?.label ?? language;
+  const difficultyLabel = findDifficulty(difficulty)?.label ?? difficulty;
   const lengths = listRoundLengths(poolSize);
   useKeyboardNav({
     onEscape: onBack,
