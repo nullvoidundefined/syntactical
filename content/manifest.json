@@ -1082,12 +1082,12 @@
       "banks": {
         "easy": {
           "path": "nodejs/easy.json",
-          "hash": "dab11d9df1e3bb9baff26167218c048d7c7c7e94dc911527b11868fdcfffbb46",
+          "hash": "92c57324e1f4772e8103e93fde83cfb886da4916905357a31a5b70f306ac9759",
           "access": "free",
-          "contentVersion": 4,
+          "contentVersion": 5,
           "topicCounts": {
             "event-loop-and-timers": 10,
-            "buffers-and-encodings": 10,
+            "buffers-and-encodings": 8,
             "path-and-url": 10,
             "error-handling": 10,
             "process-and-env": 10,
