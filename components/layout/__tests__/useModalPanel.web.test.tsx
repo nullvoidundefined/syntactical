@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { createRef, useRef, type RefObject } from 'react';
+import { createElement, createRef, useRef, type RefObject } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { isModalOpen } from '../../../state/modalOpenSignal';
@@ -20,7 +20,15 @@ function PanelHarness({ onClose, returnFocusTo, allDisabled = false }: PanelHarn
       <Pressable role="button" aria-label="Disabled first" aria-disabled={true} disabled />
       <Pressable role="button" aria-label="First enabled" disabled={allDisabled} />
       <Pressable role="button" aria-label="Last enabled" disabled={allDisabled} />
-      <Pressable role="button" aria-label="Aria disabled last" aria-disabled={true} tabIndex={0} />
+      {/* Author's single amendment: a react-native-web Pressable derives aria-disabled from its
+          disabled prop and drops an explicit aria-disabled, so the focusable-but-aria-disabled
+          control is a DOM element, as AuthButton's web submit button is. */}
+      {createElement('div', {
+        'aria-disabled': 'true',
+        'aria-label': 'Aria disabled last',
+        role: 'button',
+        tabIndex: 0,
+      })}
     </View>
   );
 }
@@ -83,7 +91,8 @@ describe('useModalPanel on the web', () => {
     expect(document.activeElement).toBe(target);
   });
 
-  it.each([false, true])('prevents Tab and keeps focus on the panel when all controls are disabled (shiftKey=%s)',
+  it.each([false, true])(
+    'prevents Tab and keeps focus on the panel when all controls are disabled (shiftKey=%s)',
     (shiftKey) => {
       render(<PanelHarness onClose={jest.fn()} allDisabled />);
       const panel = screen.getByRole('dialog');

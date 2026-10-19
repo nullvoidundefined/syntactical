@@ -1,21 +1,25 @@
-import { render, screen, within } from '@testing-library/react-native';
-import { Modal, Text } from 'react-native';
+import { render, screen } from '@testing-library/react-native';
+import { Text } from 'react-native';
 
 import { DialogShell } from '../DialogShell';
 
 describe('DialogShell on native', () => {
   it.each([undefined, 'none', 'slide'] as const)(
     'renders children in a visible transparent Modal with animationType=%s and the supplied close callback',
-    (animationType) => {
+    async (animationType) => {
       const onRequestClose = jest.fn();
-      render(
+      await render(
         <DialogShell onRequestClose={onRequestClose} animationType={animationType}>
           <Text>Dialog content</Text>
         </DialogShell>,
       );
 
-      const modal = screen.UNSAFE_getByType(Modal);
-      expect(within(modal).getByText('Dialog content')).toBeTruthy();
+      // Author's single amendment: RNTL 14 has no UNSAFE_getByType; the Modal is the node that
+      // carries onRequestClose, as SignOutDialogRaces.test.tsx finds it.
+      const modals = screen.container.queryAll((node) => typeof node.props.onRequestClose === 'function');
+      expect(modals.length).toBeGreaterThan(0);
+      const [modal] = modals;
+      expect(screen.getByText('Dialog content')).toBeTruthy();
       expect(modal.props.transparent).toBe(true);
       expect(modal.props.visible).toBe(true);
       expect(modal.props.animationType).toBe(animationType ?? 'none');
