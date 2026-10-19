@@ -6,12 +6,12 @@ import { Pressable, Text, View } from 'react-native';
 
 import { DIFFICULTIES } from '@syntactical/content-schema';
 
-import { KEY_BINDINGS } from '../../constants/appConfig';
 import { listRoundLengths, readPoolSize, reconcilePoolSize } from '../../services/quiz/roundLength';
 import { useKeyboardNav } from '../../state/useKeyboardNav';
 import { useLanguageManifest } from '../../state/useLanguageManifest';
 
 import { SelectionCard } from './SelectionCard';
+import { pickKeyHint } from './pickKeyHint';
 
 type TopicStepProps = {
   // The loaded bank's questions when known; their count corrects a stale manifest count.
@@ -23,16 +23,6 @@ type TopicStepProps = {
   onSelectLength: (count: number | undefined) => void;
   onSelectTopic: (topic: string) => void;
 };
-
-// Choice keys come in two rows
-// (digits, letters) that bind the same choices, so only this many positions exist.
-const CHOICE_KEY_ROWS = 2;
-const BOUND_KEY_COUNT = KEY_BINDINGS.choice.length / CHOICE_KEY_ROWS;
-
-// A hint only for an item a bound key reaches; later items stay mouse and Tab operable.
-function pickKeyHint(position: number): number | undefined {
-  return position <= BOUND_KEY_COUNT ? position : undefined;
-}
 
 function describeCount(count: number): string {
   return `${count} ${count === 1 ? 'question' : 'questions'}`;

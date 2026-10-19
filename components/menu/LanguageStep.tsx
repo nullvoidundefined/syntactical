@@ -4,10 +4,10 @@
 import { TRACK_CATEGORIES, type LanguageEntry, type TrackCategory } from '@syntactical/content-schema';
 import { Text, View } from 'react-native';
 
-import { KEY_BINDINGS } from '../../constants/appConfig';
 import { useKeyboardNav } from '../../state/useKeyboardNav';
 
 import { SelectionCard } from './SelectionCard';
+import { pickKeyHint } from './pickKeyHint';
 
 type LanguageStepProps = { languages: readonly LanguageEntry[]; onSelectLanguage: (languageId: string) => void };
 
@@ -42,17 +42,18 @@ export function LanguageStep({ languages, onSelectLanguage }: LanguageStepProps)
             {heading}
           </Text>
           <View className="gap-3">
-            {entries.map((entry) => (
-              <SelectionCard
-                key={entry.id}
-                keyHint={
-                  ordered.indexOf(entry) < KEY_BINDINGS.choice.length / 2 ? ordered.indexOf(entry) + 1 : undefined
-                }
-                title={entry.label}
-                subtitle={entry.tagline}
-                onSelect={() => onSelectLanguage(entry.id)}
-              />
-            ))}
+            {entries.map((entry) => {
+              const index = ordered.indexOf(entry);
+              return (
+                <SelectionCard
+                  key={entry.id}
+                  keyHint={pickKeyHint(index + 1)}
+                  title={entry.label}
+                  subtitle={entry.tagline}
+                  onSelect={() => onSelectLanguage(entry.id)}
+                />
+              );
+            })}
           </View>
         </View>
       ))}
