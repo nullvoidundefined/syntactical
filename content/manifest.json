@@ -973,9 +973,9 @@
       "banks": {
         "easy": {
           "path": "typescript-types/easy.json",
-          "hash": "39f2c5a319429eeec431b102e95903fc05462d37ff31f06a1e6a6481b14b0d9f",
+          "hash": "1dcd2512fc224f21424a2bdcb7a7a75c232c6c336e04944bd42e4da8d3c5638f",
           "access": "free",
-          "contentVersion": 4,
+          "contentVersion": 5,
           "topicCounts": {
             "conditional-types": 10,
             "mapped-types": 10,
