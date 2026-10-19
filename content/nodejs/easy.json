@@ -3864,54 +3864,6 @@
         },
         "runtimeVersion": "Node v24.21.0"
       }
-    },
-    {
-      "id": "gen-nodejs-easy-68602f6c",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "[1,2]",
-          "rationale": "Correct: events.once resolves with an array of every argument passed to emit."
-        },
-        {
-          "text": "1",
-          "rationale": "once does not resolve with only the first argument. It wraps all emitted arguments in an array."
-        },
-        {
-          "text": "[\"ready\",1,2]",
-          "rationale": "The event name is not included. Only the arguments passed after the name to emit are collected."
-        },
-        {
-          "text": "undefined",
-          "rationale": "once registers its listener synchronously, so the later emit is caught and the promise resolves with the arguments."
-        }
-      ],
-      "code": "const { EventEmitter, once } = require('node:events');\nconst e = new EventEmitter();\nonce(e, 'ready').then(r => console.log(JSON.stringify(r)));\ne.emit('ready', 1, 2);",
-      "prompt": "What does the then callback print here?",
-      "query": {
-        "explanation": "events.once(emitter, name) returns a promise. The listener is attached immediately, so an emit that happens later in the same tick is still caught. The promise resolves with an array holding all the arguments given to emit, so [1, 2] is logged as [1,2].",
-        "syntax": "const args = await once(emitter, 'event');",
-        "tags": [
-          "events",
-          "once",
-          "promises",
-          "async-patterns"
-        ],
-        "title": "events.once resolves with an argument array"
-      },
-      "type": "mc",
-      "topic": "async-patterns",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5-5",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Node v24.21.0"
-      }
     }
   ],
   "schemaVersion": 2
