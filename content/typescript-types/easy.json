@@ -3647,36 +3647,6 @@
       }
     },
     {
-      "id": "gen-typescript-types-easy-e5b5039a",
-      "answer": false,
-      "code": "type F<T> = T extends string ? 1 : 0;\ndeclare const z: F<never>;",
-      "prompt": "Does F<never> give z the type `0`?",
-      "query": {
-        "explanation": "A distributive conditional type applied to never yields never. This is because never is the empty union, and there are no members to map over.",
-        "syntax": "T extends U ? X : Y",
-        "tags": [
-          "conditional-types",
-          "distributive",
-          "never"
-        ],
-        "title": "Distributive conditionals over never"
-      },
-      "rationale": "never is treated as an empty union. A distributive conditional maps over zero members, so the result is never rather than the false branch 0.",
-      "type": "bool",
-      "topic": "distributive-conditionals",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5-5",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
-      }
-    },
-    {
       "id": "gen-typescript-types-easy-e911df28",
       "answer": true,
       "code": "type MyExclude<T, U> = T extends U ? never : T;\ndeclare const w: MyExclude<\"a\" | \"b\" | \"c\", \"a\">;",
@@ -3694,37 +3664,6 @@
       "rationale": "The conditional distributes, so \"a\" maps to never and \"b\" and \"c\" are kept. never disappears from the union, which leaves \"b\" | \"c\".",
       "type": "bool",
       "topic": "distributive-conditionals",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5-5",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
-      }
-    },
-    {
-      "id": "gen-typescript-types-easy-495ef719",
-      "answer": true,
-      "code": "type Animal = { name: string };\ntype Dog = { name: string; bark(): void };\n\ninterface Handler {\n  handle(a: Animal): void;\n}\n\nconst dogHandler = {\n  handle(d: Dog) {\n    d.bark();\n  },\n};\n\nconst h: Handler = dogHandler;",
-      "prompt": "Is assigning dogHandler to h on the last line accepted by the compiler?",
-      "query": {
-        "explanation": "Under strictFunctionTypes, function-typed properties compare parameters contravariantly. Members declared with method syntax, such as `handle(a: Animal): void`, are exempt and compare parameters bivariantly. Here Dog is assignable to Animal, so a handler that expects a Dog is accepted where one expecting an Animal is required. This is accepted even though it is unsound at runtime. Writing `handle: (a: Animal) => void` instead would make the assignment an error.",
-        "syntax": "interface I { m(x: T): void }  // bivariant params\ninterface J { m: (x: T) => void }  // contravariant params",
-        "tags": [
-          "variance",
-          "assignability",
-          "strictFunctionTypes",
-          "methods"
-        ],
-        "title": "Method parameter bivariance"
-      },
-      "rationale": "It would be rejected only if parameters were checked contravariantly. Handler declares handle with method syntax, and method parameters stay bivariant even under strictFunctionTypes.",
-      "type": "bool",
-      "topic": "variance-and-assignability",
       "provenance": {
         "isHumanReviewed": false,
         "model": "claude-opus-5-5",
