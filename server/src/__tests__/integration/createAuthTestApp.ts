@@ -8,10 +8,10 @@ import { randomBytes } from 'node:crypto';
 
 import type { Router } from 'express';
 import type pg from 'pg';
-import { pino } from 'pino';
 import type { Logger } from 'pino';
 
-import { createApp } from '../../app.js';
+import { createTestApp } from './createTestApp.js';
+import type { TestClock } from './createTestApp.js';
 import type { Database } from '../../clients/database.js';
 import { createFakePasswordBreachClient } from '../../testing/fakePasswordBreachClient.js';
 import type { PasswordBreachClient } from '../../clients/passwordBreachClient.js';
@@ -20,8 +20,6 @@ import type { DeriveKey } from '../../services/passwordHash.js';
 import { createPasswordHashSlots } from '../../services/passwordHashSlots.js';
 import type { AnswerKey } from '../../types/AnswerKey.js';
 
-const SECRET_BYTES = 32;
-const ALLOWED_ORIGIN = 'https://syntactical.dev';
 const DEFAULT_HASH_CONCURRENCY = 2;
 
 // A current-parameter stored string whose salt and key are random bytes, so no password is known
@@ -37,11 +35,6 @@ function buildRandomDummyPasswordHash(): string {
 interface SentCode {
   code: string;
   email: string;
-}
-
-interface TestClock {
-  advance(milliseconds: number): void;
-  now(): Date;
 }
 
 interface PasswordHashSlots {
@@ -76,7 +69,7 @@ export function createAuthTestApp(options: AuthTestAppOptions) {
     dummyPasswordHash = buildRandomDummyPasswordHash(),
     extraRoutes,
     isCookieSecure = true,
-    logger = pino({ level: 'silent' }),
+    logger,
     passwordBreachClient = createFakePasswordBreachClient({}),
     passwordHashSlots = createPasswordHashSlots({
       concurrency: DEFAULT_HASH_CONCURRENCY,
@@ -86,17 +79,7 @@ export function createAuthTestApp(options: AuthTestAppOptions) {
     randomInt,
     sendSignInCode,
   } = options;
-  let currentTime = Date.now();
-  const clock: TestClock = {
-    advance(milliseconds: number): void {
-      currentTime += milliseconds;
-    },
-    now(): Date {
-      return new Date(currentTime);
-    },
-  };
   const sentCodes: SentCode[] = [];
-  const rateLimitKeySecret = randomBytes(SECRET_BYTES).toString('hex');
   const emailClient = {
     async sendSignInCode(email: string, code: string): Promise<void> {
       if (sendSignInCode) {
@@ -105,24 +88,21 @@ export function createAuthTestApp(options: AuthTestAppOptions) {
       sentCodes.push({ code, email });
     },
   };
-  const app = createApp({
-    allowedOrigins: [ALLOWED_ORIGIN],
+  const { app, clock, rateLimitKeySecret } = createTestApp({
     auth: {
-      database: database ?? pool,
+      database,
       ...(deriveKey ? { deriveKey } : {}),
       dummyPasswordHash,
       emailClient,
       isCookieSecure,
-      now: clock.now,
       passwordBreachClient,
       passwordHashSlots,
       randomInt,
-      rateLimitKeySecret,
     },
-    db: pool,
-    extraRoutes: extraRoutes ? (router: Router) => extraRoutes(router, clock) : undefined,
+    extraRoutes,
     logger,
-    ...(answerKey ? { sync: { answerKey, database: pool, now: clock.now, rateLimitKeySecret } } : {}),
+    pool,
+    ...(answerKey ? { sync: { answerKey } } : {}),
   });
   return { app, clock, dummyPasswordHash, passwordBreachClient, rateLimitKeySecret, sentCodes };
 }

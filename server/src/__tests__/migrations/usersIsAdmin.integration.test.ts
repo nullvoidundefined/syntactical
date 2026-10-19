@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, inject, it } from 'vitest';
 
 import { createScratchDatabase } from '../integration/createScratchDatabase.js';
 import { runMigrations } from '../integration/runMigrations.js';
+import { SKIP_DATABASE_TESTS } from '../integration/skipDatabaseTests.js';
 
 const MIGRATION_TIMEOUT_MS = 60_000;
 const NOT_NULL_VIOLATION = '23502';
@@ -19,8 +20,6 @@ const SUCCESS = 0;
 const LAST_MIGRATION_BEFORE_ADMIN = 1790985600014;
 const ADMIN_MIGRATION_NAME = /^\d+_users-is-admin\.js$/;
 const MIGRATIONS_DIRECTORY = fileURLToPath(new URL('../../../migrations/', import.meta.url));
-
-const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.env.TEST_DATABASE_URL;
 
 interface ColumnShape {
   column_default: string | null;

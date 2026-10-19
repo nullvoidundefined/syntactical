@@ -10,8 +10,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, inject, it } from 'v
 import { hashPassword } from '../../services/passwordHash.js';
 import { createAuthTestApp } from '../integration/createAuthTestApp.js';
 import { createMigratedDatabase } from '../integration/createMigratedDatabase.js';
-
-const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.env.TEST_DATABASE_URL;
+import { SKIP_DATABASE_TESTS } from '../integration/skipDatabaseTests.js';
 
 const SIGNUPS_ROUTE = '/v1/auth/signups';
 const HTTP_ACCEPTED = 202;
