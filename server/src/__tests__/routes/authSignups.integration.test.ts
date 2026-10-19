@@ -19,8 +19,7 @@ import type { DeriveKey } from '../../services/passwordHash.js';
 import { hashPassword, verifyPassword } from '../../services/passwordHash.js';
 import { createAuthTestApp } from '../integration/createAuthTestApp.js';
 import { createMigratedDatabase } from '../integration/createMigratedDatabase.js';
-
-const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.env.TEST_DATABASE_URL;
+import { SKIP_DATABASE_TESTS } from '../integration/skipDatabaseTests.js';
 
 const CODES_ROUTE = '/v1/auth/codes';
 const SESSIONS_ROUTE = '/v1/auth/sessions';

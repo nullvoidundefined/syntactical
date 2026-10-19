@@ -49,6 +49,9 @@ export const KEY_BINDINGS = {
   query: ['Q'],
 } as const;
 
+// Choice keys come in two rows, digits and letters, binding the same choices.
+export const CHOICE_KEYS_PER_ROW = KEY_BINDINGS.choice.length / 2;
+
 // The fixed round lengths offered besides the whole pool; one is offered only when the pool is larger.
 export const ROUND_LENGTHS = [20, 50] as const;
 

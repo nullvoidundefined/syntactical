@@ -4,8 +4,8 @@ import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 
 import { createDatabasePool, IDLE_IN_TRANSACTION_TIMEOUT_MS } from '../../clients/createDatabasePool.js';
 import { createScratchDatabase } from '../integration/createScratchDatabase.js';
+import { SKIP_DATABASE_TESTS } from '../integration/skipDatabaseTests.js';
 
-const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.env.TEST_DATABASE_URL;
 const SETUP_TIMEOUT_MS = 120_000;
 const MS_PER_SECOND = 1000;
 

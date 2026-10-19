@@ -26,8 +26,7 @@ function buildChildSource(code) {
     return `
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const module = { exports: {} };
-const exports = module.exports;
+const oracleModule = { exports: {} };
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 const fail = (marker) => { process.stderr.write('\\n' + marker + '\\n', () => process.exit(${FAILURE_EXIT_CODE})); };
 let compiled;
@@ -39,7 +38,7 @@ try {
 }
 if (compiled) {
     try {
-        await compiled(require, module, exports);
+        await compiled(require, oracleModule, oracleModule.exports);
     } catch (error) {
         const name = error && typeof error === 'object' && error.name ? String(error.name) : 'Error';
         fail(${JSON.stringify(EXCEPTION_MARKER)} + name);

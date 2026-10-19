@@ -1179,52 +1179,6 @@
       }
     },
     {
-      "id": "gen-nodejs-easy-9231adc0",
-      "prompt": "What does this program print?",
-      "topic": "process-and-env",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "9"
-        },
-        {
-          "text": "0",
-          "rationale": "Assigning undefined does not store an empty string; it stores the text 'undefined', which is nine characters long."
-        },
-        {
-          "text": "undefined",
-          "rationale": "The stored value is a real string with a length property, so the lookup yields a number rather than undefined."
-        },
-        {
-          "text": "TypeError",
-          "rationale": "No error occurs, because the property holds a string after coercion rather than the undefined value itself."
-        }
-      ],
-      "code": "process.env.X = undefined;\nconsole.log(process.env.X.length);",
-      "query": {
-        "explanation": "process.env stringifies whatever you assign, so the value undefined becomes the nine-character string 'undefined'. That is a classic configuration bug: the variable looks set and is truthy, so always delete the key or guard the assignment instead of writing undefined into it.",
-        "syntax": "delete process.env.X",
-        "tags": [
-          "process",
-          "env",
-          "coercion"
-        ],
-        "title": "Assigning undefined to process.env"
-      },
-      "type": "mc",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Node v24.21.0"
-      }
-    },
-    {
       "id": "gen-nodejs-easy-898e7f82",
       "prompt": "What does this program print?",
       "topic": "process-and-env",
@@ -1500,36 +1454,6 @@
         "title": "try/catch around await"
       },
       "rationale": "await converts the rejection back into a synchronous-style throw inside main, so the catch block runs instead of the rejection escaping as unhandled.",
-      "type": "bool",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Node v24.21.0"
-      }
-    },
-    {
-      "id": "gen-nodejs-easy-4f574b8a",
-      "prompt": "Does the console.log here output 8?",
-      "topic": "async-patterns",
-      "answer": false,
-      "code": "async function val() {\n  return 7;\n}\n\nconsole.log(val() + 1);",
-      "query": {
-        "explanation": "val() returns a Promise that fulfills with 7, not the number 7. Adding 1 converts the promise to the string '[object Promise]' and concatenates, so the output is '[object Promise]1'. An await (or .then) is needed to reach 7.",
-        "syntax": "const n = await val();",
-        "tags": [
-          "async-await",
-          "promises",
-          "async-patterns"
-        ],
-        "title": "Async functions always return a promise"
-      },
-      "rationale": "Without await, val() evaluates to a Promise object, so the addition stringifies it and prints [object Promise]1 instead of 8.",
       "type": "bool",
       "provenance": {
         "isHumanReviewed": false,
@@ -2444,98 +2368,6 @@
       },
       "type": "mc",
       "topic": "streams",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Node v24.21.0"
-      }
-    },
-    {
-      "id": "gen-nodejs-easy-b155377e",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "6"
-        },
-        {
-          "text": "5",
-          "rationale": "5 is the string's character count ('héllo'.length); the two-byte é makes the UTF-8 byte length larger."
-        },
-        {
-          "text": "10",
-          "rationale": "10 would be the byte length under a fixed 2-bytes-per-character encoding like utf16le, not utf8."
-        },
-        {
-          "text": "7",
-          "rationale": "No character here costs 3 bytes; only é is multi-byte, and it uses 2 bytes in UTF-8."
-        }
-      ],
-      "code": "const buf = Buffer.from('héllo', 'utf8');\nconsole.log(buf.length);",
-      "prompt": "What does this program print?",
-      "query": {
-        "explanation": "A Buffer's length is its size in bytes, not its number of characters. In UTF-8 the characters h, l, l, o each take 1 byte, but é takes 2 bytes, so the total is 6 bytes even though the string has 5 characters.",
-        "syntax": "Buffer.from(string[, encoding])",
-        "tags": [
-          "buffer",
-          "encoding",
-          "utf8"
-        ],
-        "title": "Buffer length is measured in bytes"
-      },
-      "type": "mc",
-      "topic": "buffers-and-encodings",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Node v24.21.0"
-      }
-    },
-    {
-      "id": "gen-nodejs-easy-4624e96b",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "Tm9kZQ=="
-        },
-        {
-          "text": "Tm9kZQ",
-          "rationale": "Node's base64 output includes '=' padding so the length is a multiple of 4; the unpadded form is base64url-style, not the default."
-        },
-        {
-          "text": "Tk9ERQ==",
-          "rationale": "That is the base64 of 'NODE'; base64 encodes the exact bytes, so letter case of the input is preserved, not upper-cased."
-        },
-        {
-          "text": "bm9kZQ==",
-          "rationale": "That is the base64 of 'node' with a lowercase n; the input's capital N encodes to byte 0x4e, which starts 'Tm'."
-        }
-      ],
-      "code": "console.log(Buffer.from('Node').toString('base64'));",
-      "prompt": "What does this program print?",
-      "query": {
-        "explanation": "Buffer.from('Node') stores the bytes 4e 6f 64 65 using the default utf8 encoding. toString('base64') re-encodes those 4 bytes as base64, which groups 3 bytes into 4 characters and pads the final incomplete group with '=', giving 'Tm9kZQ=='.",
-        "syntax": "buf.toString([encoding])",
-        "tags": [
-          "buffer",
-          "base64",
-          "encoding"
-        ],
-        "title": "Encoding a buffer as base64"
-      },
-      "type": "mc",
-      "topic": "buffers-and-encodings",
       "provenance": {
         "isHumanReviewed": false,
         "model": "claude-opus-5[1m]",
@@ -3884,52 +3716,6 @@
       }
     },
     {
-      "id": "gen-nodejs-easy-102394cd",
-      "answerIndex": 0,
-      "choices": [
-        {
-          "text": "\"undefined\""
-        },
-        {
-          "text": "undefined",
-          "rationale": "This is what you would see if the property held the real undefined value, but process.env stringifies assignments, so a string is stored and stringify quotes it."
-        },
-        {
-          "text": "null",
-          "rationale": "Node never converts an environment assignment to null; the value is passed through String(), which yields \"undefined\", not a null placeholder."
-        },
-        {
-          "text": "\"\"",
-          "rationale": "An empty string is what reading a variable set to \"\" gives; assigning undefined stores the text \"undefined\" rather than clearing the value."
-        }
-      ],
-      "code": "process.env.MODE = undefined;\nconsole.log(JSON.stringify(process.env.MODE));",
-      "prompt": "What does this program print?",
-      "query": {
-        "explanation": "Every property of process.env is backed by the OS environment, which only holds strings. Assigning the value undefined coerces it with String(), so process.env.MODE becomes the five-character string \"undefined\". JSON.stringify then wraps that string in quotes, printing \"undefined\" with the quote marks. To actually remove a variable you must use `delete process.env.MODE`, which makes a later read return the real undefined.",
-        "syntax": "process.env.NAME = value",
-        "tags": [
-          "process",
-          "env",
-          "coercion"
-        ],
-        "title": "process.env coerces assigned values to strings"
-      },
-      "type": "mc",
-      "topic": "process-and-env",
-      "provenance": {
-        "isHumanReviewed": false,
-        "model": "claude-opus-5[1m]",
-        "promptVersion": "generate-batch-v2",
-        "source": "generated",
-        "validation": {
-          "method": "executed",
-          "status": "passed"
-        },
-        "runtimeVersion": "Node v24.21.0"
-      }
-    },
-    {
       "id": "gen-nodejs-easy-1c68f25f",
       "answerIndex": 0,
       "choices": [
@@ -3996,6 +3782,80 @@
       "provenance": {
         "isHumanReviewed": false,
         "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-easy-594d6ac4",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "a",
+          "rationale": "Case-insensitive lookup is Windows-only behavior. On Linux, card_x and CARD_X are different variables."
+        },
+        {
+          "text": "(an empty line)",
+          "rationale": "Reading a missing key does not return an empty string. Missing env keys read as undefined, like any absent object property."
+        },
+        {
+          "text": "TypeError",
+          "rationale": "Reading a missing property from process.env never throws. It simply evaluates to undefined."
+        }
+      ],
+      "code": "process.env.card_x = 'a';\nconsole.log(process.env.CARD_X);",
+      "prompt": "What does this program print on Linux?",
+      "query": {
+        "explanation": "On POSIX systems such as Linux and macOS, environment variable names are case-sensitive. Setting card_x does not create CARD_X, so reading process.env.CARD_X gives undefined. Only on Windows does Node treat process.env keys case-insensitively.",
+        "syntax": "process.env.NAME",
+        "tags": [
+          "process",
+          "env"
+        ],
+        "title": "process.env key case sensitivity"
+      },
+      "type": "mc",
+      "topic": "process-and-env",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5-5",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-easy-b022169f",
+      "answer": false,
+      "code": "process.nextTick((a) => console.log(a), 'x', 'y');",
+      "prompt": "Does this callback log the array ['x', 'y']?",
+      "query": {
+        "explanation": "Extra arguments to process.nextTick are passed to the callback as separate positional parameters, not bundled into an array. Here a receives 'x' and 'y' goes to an unused second parameter, so the program logs x.",
+        "syntax": "process.nextTick(callback[, ...args])",
+        "tags": [
+          "process",
+          "nextTick"
+        ],
+        "title": "process.nextTick extra arguments"
+      },
+      "rationale": "nextTick spreads extra arguments into separate parameters, so a is just 'x' and the program logs x, not an array.",
+      "type": "bool",
+      "topic": "process-and-env",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5-5",
         "promptVersion": "generate-batch-v2",
         "source": "generated",
         "validation": {
