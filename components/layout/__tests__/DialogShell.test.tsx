@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { render, screen, within } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
 import { DialogShell } from '../DialogShell';
@@ -19,7 +19,7 @@ describe('DialogShell on native', () => {
       const modals = screen.container.queryAll((node) => typeof node.props.onRequestClose === 'function');
       expect(modals.length).toBeGreaterThan(0);
       const [modal] = modals;
-      expect(screen.getByText('Dialog content')).toBeTruthy();
+      expect(within(modal).getByText('Dialog content')).toBeTruthy();
       expect(modal.props.transparent).toBe(true);
       expect(modal.props.visible).toBe(true);
       expect(modal.props.animationType).toBe(animationType ?? 'none');
