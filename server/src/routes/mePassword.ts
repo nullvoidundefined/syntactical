@@ -4,15 +4,15 @@
 // length policy and breach check (newPassword only), and authorization. With currentPassword the
 // user must have a hash and it must verify, inside a slot; without it the session must be a
 // fresh code session (isFreshCodeSession), else 403. Then the new hash is derived inside a slot.
-// Both waits hold no pooled client. Only then one transaction locks the user row, requires the
-// stored hash to still be the one read before verifying, locks and re-checks that this session
-// is still live (so two fresh code sessions cannot each change the password and revoke the
-// other), stores the hash and password_updated_at, and revokes the user's other sessions.
+// Both waits hold no pooled client. Only then one transaction (changePassword) locks the user
+// row, requires the stored hash to still be the one read before verifying, locks and re-checks
+// that this session is still live (so two fresh code sessions cannot each change the password
+// and revoke the other), stores the hash and password_updated_at, and revokes the user's other
+// sessions.
 // Nothing here logs or returns a password, its SHA-1 or prefix, or a hash.
 import { Router } from 'express';
 import type { Logger } from 'pino';
 
-import { withTransaction } from '../clients/withTransaction.js';
 import { AUTH } from '../constants/auth.js';
 import { HTTP } from '../constants/http.js';
 import { ERROR_CODES, sendError } from '../errors.js';
@@ -21,6 +21,7 @@ import { keyOfUser } from '../middleware/rateLimitKeys.js';
 import { requestLog } from '../middleware/requestLogger.js';
 import { createRequireSession } from '../middleware/requireSession.js';
 import { authSchemas } from '../schemas/authSchemas.js';
+import { changePassword } from '../services/changePassword.js';
 import { checkPasswordBreach } from '../services/checkPasswordBreach.js';
 import { normalizePassword } from '../services/checkPasswordPolicy.js';
 import { isFreshCodeSession } from '../services/isFreshCodeSession.js';
@@ -121,31 +122,12 @@ function createMePasswordRouter(deps: SignUpAuthDeps, logger: Logger): Router {
         return;
       }
       const newHash = await passwordHashSlots.run(() => hashPassword(normalizedNew, hashDeps));
-      const outcome = await withTransaction(database, async (client) => {
-        const { rows } = await client.query<{ password_hash: string | null }>(
-          'SELECT password_hash FROM users WHERE id = $1 FOR UPDATE',
-          [session.userId],
-        );
-        if (rows[0]?.password_hash !== stored.hash) {
-          return 'changed' as const;
-        }
-        const live = await client.query(
-          'SELECT 1 FROM sessions WHERE id = $1 AND revoked_at IS NULL AND expires_at > $2 FOR UPDATE',
-          [session.id, at],
-        );
-        if (live.rowCount !== 1) {
-          return 'session-gone' as const;
-        }
-        await client.query('UPDATE users SET password_hash = $2, password_updated_at = $3 WHERE id = $1', [
-          session.userId,
-          newHash,
-          at,
-        ]);
-        await client.query(
-          'UPDATE sessions SET revoked_at = $3 WHERE user_id = $1 AND id <> $2 AND revoked_at IS NULL',
-          [session.userId, session.id, at],
-        );
-        return 'saved' as const;
+      const outcome = await changePassword(database, {
+        newHash,
+        now: at,
+        sessionId: session.id,
+        storedHash: stored.hash,
+        userId: session.userId,
       });
       if (outcome === 'changed') {
         sendError(res, BAD_REQUEST, ERROR_CODES.AUTH.INVALID_CREDENTIALS, 'Invalid current password');
