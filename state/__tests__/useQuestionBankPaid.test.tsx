@@ -5,7 +5,7 @@
 import type { Manifest } from '@syntactical/content-schema';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
-import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { renderHook, waitFor } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
 import { createQueryClient } from '../../config/queryClient';
@@ -23,6 +23,7 @@ import { ContentProvider } from '../ContentProvider';
 import { PaidBankPrefetch } from '../PaidBankPrefetch';
 import { useQuestionBank } from '../useQuestionBank';
 import { setExpoExtra } from '../../config/expoConstantsMock';
+import { settle } from '../../config/settle';
 
 const mockOwner: { current: string | null } = { current: null };
 
@@ -93,12 +94,6 @@ function Wrapper({ children }: { children: ReactNode }) {
 
 function readIds(state: unknown): string[] | undefined {
   return (state as { bank?: { questions: { id: string }[] } }).bank?.questions.map(({ id }) => id);
-}
-
-async function settle(): Promise<void> {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  });
 }
 
 async function renderMedium() {

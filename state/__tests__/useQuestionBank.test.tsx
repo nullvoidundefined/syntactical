@@ -25,6 +25,7 @@ import {
 import { ContentProvider } from '../ContentProvider';
 import { useLanguageManifest } from '../useLanguageManifest';
 import { useQuestionBank } from '../useQuestionBank';
+import { settle } from '../../config/settle';
 
 jest.mock('../../clients/hashClient', () => ({
   hashTextSha256: async (text: string) =>
@@ -88,12 +89,6 @@ function createDeferredBody() {
   return { bodyPromise, resolveBody };
 }
 
-async function settleBackgroundWork(): Promise<void> {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  });
-}
-
 function readBankIds(bankState: unknown): string[] | undefined {
   const readyState = bankState as { status: string; bank?: { questions: { id: string }[] } } | undefined;
   return readyState?.bank?.questions.map((question) => question.id);
@@ -109,7 +104,7 @@ describe('useQuestionBank inside ContentProvider', () => {
 
   afterEach(async () => {
     heldBodyRejections.splice(0).forEach((rejectHeldBody) => rejectHeldBody());
-    await settleBackgroundWork();
+    await settle();
     queryClient.clear();
     jest.restoreAllMocks();
   });
@@ -188,7 +183,7 @@ describe('useQuestionBank inside ContentProvider', () => {
       const { result } = await renderHook(() => useLanguageManifest(), { wrapper: ContentWrapper });
       // A loaded CI runner can settle background work before the first
       // check; the cached manifest must still be what the hook serves.
-      await settleBackgroundWork();
+      await settle();
 
       await waitFor(() => expect(result.current).toEqual(buildManifestWithAddedLanguage()));
     });
@@ -216,7 +211,7 @@ describe('useQuestionBank inside ContentProvider', () => {
       const { result } = await renderHook(() => useLanguageManifest(), { wrapper: ContentWrapper });
 
       await waitFor(() => expect(console.warn).toHaveBeenCalled());
-      await settleBackgroundWork();
+      await settle();
       expect(result.current).toEqual(buildManifestWithAddedLanguage());
     });
   });
@@ -235,7 +230,7 @@ describe('useQuestionBank inside ContentProvider', () => {
         expect((await readCachedBank('python', 'easy', EMPTY_BANK_CONTEXT))?.hash).toBe(changedHash),
       );
       await waitFor(() => expect(readBankIds(result.current)).toEqual(['py-new-1']));
-      await settleBackgroundWork();
+      await settle();
       expect(countFetchesFor(PYTHON_EASY_URL)).toBe(1);
       expect(new Set(listFetchedUrls())).toEqual(new Set([MANIFEST_URL, PYTHON_EASY_URL]));
     });
@@ -253,7 +248,7 @@ describe('useQuestionBank inside ContentProvider', () => {
       expect(
         (await readCachedBank('fixture-lang', 'easy', EMPTY_BANK_CONTEXT))?.questions.map((question) => question.id),
       ).toEqual(['fixture-q-1', 'fixture-q-2']);
-      await settleBackgroundWork();
+      await settle();
       expect(new Set(listFetchedUrls())).toEqual(new Set([MANIFEST_URL, ADDED_EASY_URL]));
     });
 
@@ -289,7 +284,7 @@ describe('useQuestionBank inside ContentProvider', () => {
       );
 
       await act(async () => staleBody.resolveBody(staleText));
-      await settleBackgroundWork();
+      await settle();
 
       const cachedBank = await readCachedBank('python', 'easy', EMPTY_BANK_CONTEXT);
       expect(cachedBank?.hash).toBe(currentHash);
@@ -324,7 +319,7 @@ describe('useQuestionBank inside ContentProvider', () => {
       const { result } = await renderHook(() => useQuestionBank('python', 'easy'), { wrapper: ContentWrapper });
 
       await waitFor(() => expect(countFetchesFor(PYTHON_EASY_URL)).toBeGreaterThan(0));
-      await settleBackgroundWork();
+      await settle();
       expect(result.current.status).toBe('ready');
       expect(readBankIds(result.current)).toEqual(BUNDLED_PYTHON_EASY_IDS);
       expect(await readCachedBank('python', 'easy', EMPTY_BANK_CONTEXT)).toBeNull();
@@ -349,7 +344,7 @@ describe('useQuestionBank inside ContentProvider', () => {
       const { result } = await renderHook(() => useQuestionBank('python', 'easy'), { wrapper: ContentWrapper });
 
       await waitFor(() => expect(countFetchesFor(PYTHON_EASY_URL)).toBeGreaterThan(0));
-      await settleBackgroundWork();
+      await settle();
       expect(result.current.status).toBe('ready');
       expect(readBankIds(result.current)).toEqual(BUNDLED_PYTHON_EASY_IDS);
       expect(await readCachedBank('python', 'easy', EMPTY_BANK_CONTEXT)).toBeNull();

@@ -67,6 +67,7 @@ import {
   sessionReply,
 } from './adminAccessTestSupport';
 import { setExpoExtra } from '../../config/expoConstantsMock';
+import { settle } from '../../config/settle';
 
 setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
@@ -146,12 +147,6 @@ async function renderAdmin(): Promise<void> {
       </ContentProvider>
     </QueryClientProvider>,
   );
-}
-
-async function settle(): Promise<void> {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  });
 }
 
 function getSwitch(name: RegExp): Element {

@@ -43,6 +43,7 @@ import {
   mixedProducts,
 } from './adminAccessTestSupport';
 import { setExpoExtra } from '../../config/expoConstantsMock';
+import { settle } from '../../config/settle';
 
 setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
@@ -140,12 +141,6 @@ async function pressKey(element: HTMLElement, key: KeyName): Promise<void> {
 
 function listAccessUpdates(requests: RoutedRequest[]): RoutedRequest[] {
   return requests.filter(({ method, path }) => method === 'PUT' && path === ACCESS_PATH);
-}
-
-async function settle(): Promise<void> {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  });
 }
 
 // Space first; Enter only when Space sent nothing, so a switch that answers either key sends one PUT.

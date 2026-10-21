@@ -28,6 +28,7 @@ import { createQueryClient } from '../../config/queryClient';
 import { ContentProvider } from '../../state/ContentProvider';
 import DifficultyScreen from '../[language]/index';
 import { setExpoExtra } from '../../config/expoConstantsMock';
+import { settle } from '../../config/settle';
 
 expect.extend(toHaveNoViolations);
 
@@ -64,12 +65,6 @@ const HARD_LOCKED = `Hard, locked, ${WEB_PRICES[HARD_PRODUCT]}`;
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 let queryClient: QueryClient;
-
-async function settle(): Promise<void> {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  });
-}
 
 async function renderDifficultyRoute() {
   const rendered = render(
