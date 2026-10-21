@@ -1,0 +1,162 @@
+[
+  {
+    "description": "int() on a negative float rounds down (toward negative infinity) rather than truncating toward zero, so int(-3.9) is believed to be -4.",
+    "id": "python.int-rounds-to-floor"
+  },
+  {
+    "description": "Believing float('nan') == float('nan') is True; NaN is never equal to anything, including itself.",
+    "id": "python.nan-equals-itself"
+  },
+  {
+    "description": "Believing / performs integer division when both operands are ints, so 7 / 2 gives 3 instead of the float 3.5.",
+    "id": "python.true-division-returns-int"
+  },
+  {
+    "description": "Believing the % operator takes the sign of the dividend as in C, so -7 % 3 is -1 rather than 2 (Python's result takes the divisor's sign).",
+    "id": "python.modulo-sign-matches-dividend"
+  },
+  {
+    "description": "Believing -2 ** 2 equals 4 because unary minus is applied before **; actually ** binds tighter, giving -4.",
+    "id": "python.unary-minus-binds-tighter-than-power"
+  },
+  {
+    "description": "Believing 1 < 2 < 3 is evaluated as (1 < 2) < 3 rather than as (1 < 2) and (2 < 3).",
+    "id": "python.chained-comparison-left-fold"
+  },
+  {
+    "description": "Believing and/or always return True or False, rather than returning one of their operands, so 3 or 5 is thought to be True.",
+    "id": "python.or-returns-bool"
+  },
+  {
+    "description": "Believing bool is unrelated to int, so True == 1 is False or errors; in fact bool subclasses int.",
+    "id": "python.bool-unrelated-to-int"
+  },
+  {
+    "description": "Believing == None and is None are always equivalent, ignoring that a custom __eq__ can change the result of == None.",
+    "id": "python.eq-none-same-as-is-none"
+  },
+  {
+    "description": "Believing isinstance takes several types as separate arguments or a list, rather than a single tuple of types.",
+    "id": "python.isinstance-multiple-type-args"
+  },
+  {
+    "description": "Believing tuples and strings support item assignment like lists, so t[0] = 5 or s[0] = 'H' succeeds.",
+    "id": "python.tuples-and-strings-mutable"
+  },
+  {
+    "description": "Believing a slice with an out-of-range bound raises IndexError, when slices silently clamp to the sequence's ends.",
+    "id": "python.slice-out-of-range-raises"
+  },
+  {
+    "description": "Believing the stop index of a slice is inclusive, so [1:3] includes the element at index 3.",
+    "id": "python.slice-end-inclusive"
+  },
+  {
+    "description": "Believing [[]] * 3 creates three independent inner lists, when it repeats references to the same list.",
+    "id": "python.sequence-repeat-copies-inner-lists"
+  },
+  {
+    "description": "Believing a = b = c = [] gives three separate lists rather than three names bound to one list.",
+    "id": "python.chained-assignment-separate-objects"
+  },
+  {
+    "description": "Believing list2 = list1 copies the list, so mutating list2 won't affect list1.",
+    "id": "python.assignment-copies-list"
+  },
+  {
+    "description": "Believing lst[:] returns a reference to the same list rather than a new shallow copy.",
+    "id": "python.slice-returns-reference"
+  },
+  {
+    "description": "Believing append and extend behave identically, or that append with a list spreads its elements into the target list.",
+    "id": "python.append-extend-same"
+  },
+  {
+    "description": "Believing list.sort() returns the sorted list, when it sorts in place and returns None.",
+    "id": "python.sort-returns-sorted-list"
+  },
+  {
+    "description": "Believing lst.pop() with no argument removes the first element rather than the last.",
+    "id": "python.pop-removes-first"
+  },
+  {
+    "description": "Confusing list.remove(value), which removes by value, with pop(index), which removes by position and returns the item.",
+    "id": "python.remove-pop-confusion"
+  },
+  {
+    "description": "Believing zip pads shorter inputs with None, when it stops at the shortest iterable.",
+    "id": "python.zip-pads-with-none"
+  },
+  {
+    "description": "Believing reversed() returns a list that can be indexed, when it returns an iterator.",
+    "id": "python.reversed-returns-list"
+  },
+  {
+    "description": "Believing map() and filter() return lists directly rather than lazy iterators needing list() to materialize.",
+    "id": "python.map-filter-return-lists"
+  },
+  {
+    "description": "Believing len() does not work on sets, when it works on all built-in sized containers.",
+    "id": "python.len-unsupported-on-sets"
+  },
+  {
+    "description": "Believing range(n) includes n, so list(range(5)) has 6 elements ending in 5.",
+    "id": "python.range-includes-stop"
+  },
+  {
+    "description": "Believing a list can be a dict key if its contents don't change; lists are unhashable regardless.",
+    "id": "python.list-as-dict-key"
+  },
+  {
+    "description": "Believing 'x' in d checks a dict's values rather than its keys.",
+    "id": "python.in-dict-checks-values"
+  },
+  {
+    "description": "Believing membership tests on a list are O(1) like on sets and dicts, rather than O(n).",
+    "id": "python.in-list-constant-time"
+  },
+  {
+    "description": "Believing dict iteration order is arbitrary in modern Python, when it follows insertion order since 3.7.",
+    "id": "python.dict-order-unreliable"
+  },
+  {
+    "description": "Believing split() and split(' ') behave the same, missing that split(' ') yields empty strings for adjacent spaces.",
+    "id": "python.split-no-arg-same-as-split-space"
+  },
+  {
+    "description": "Believing string methods like replace, strip, or lower modify the string in place rather than returning a new one.",
+    "id": "python.string-methods-mutate"
+  },
+  {
+    "description": "Believing int('42.5') returns 42 by truncating, when it raises ValueError.",
+    "id": "python.int-parses-float-strings"
+  },
+  {
+    "description": "Believing the string '0' or 'False' is falsy because of its content; any non-empty string is truthy.",
+    "id": "python.nonempty-string-truthiness-by-content"
+  },
+  {
+    "description": "Believing round() always rounds halves up as taught in school, when Python rounds half to even, so round(2.5) is 2.",
+    "id": "python.round-half-up"
+  },
+  {
+    "description": "Believing (1) is a one-element tuple, when the trailing comma in (1,) is what makes it a tuple.",
+    "id": "python.parenthesized-single-value-is-tuple"
+  },
+  {
+    "description": "Believing a function can assign to a module-level variable without the global keyword, or that assignment later in a function leaves earlier reads using the global.",
+    "id": "python.assigning-makes-global-writable"
+  },
+  {
+    "description": "Believing a loop's else clause runs when the loop exits via break, rather than only when it completes without break.",
+    "id": "python.for-else-runs-on-break"
+  },
+  {
+    "description": "Believing that after an exception is caught, execution resumes inside the try block or the exception is automatically re-raised.",
+    "id": "python.except-continues-try-block"
+  },
+  {
+    "description": "Believing multiple exceptions are caught with 'except A or B' or 'except A, B' rather than a tuple.",
+    "id": "python.except-multiple-types-syntax"
+  }
+]

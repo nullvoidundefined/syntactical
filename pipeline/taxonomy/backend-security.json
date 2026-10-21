@@ -1,0 +1,154 @@
+[
+  {
+    "description": "Believes a parameterized query still returns all rows for an injection payload, not realizing bound values are treated as data and never parsed as SQL.",
+    "id": "backend-security.parameterized-query-still-injectable"
+  },
+  {
+    "description": "Believes SQL injection payloads usually just break the query with a syntax error, rather than being crafted to keep the statement valid (balanced quotes, comments).",
+    "id": "backend-security.injection-payload-causes-syntax-error"
+  },
+  {
+    "description": "Believes text after a SQL -- comment still takes effect, so injected comments cannot remove password or status filters.",
+    "id": "backend-security.sql-comment-not-truncating"
+  },
+  {
+    "description": "Believes placeholders can bind table or column identifiers, when parameters only bind values and identifiers need allow-listing.",
+    "id": "backend-security.table-names-can-be-parameters"
+  },
+  {
+    "description": "Believes all database drivers use the same placeholder syntax (?, %s, $1, :1) rather than driver-specific paramstyles.",
+    "id": "backend-security.placeholder-style-universal"
+  },
+  {
+    "description": "Believes a character-class allow-list regex or an integer check on a transformed value is enough, ignoring that checks like Number() coercion or unanchored patterns may admit payloads.",
+    "id": "backend-security.character-allowlist-too-strict-or-loose"
+  },
+  {
+    "description": "Believes blocking a few bad strings (';', '&&', '127.0.0.1', 'localhost') is enough, overlooking alternatives like '|', '$()', or decimal IP encodings.",
+    "id": "backend-security.deny-list-sufficient"
+  },
+  {
+    "description": "Believes string-built commands with shell=True or os.system are safe for user input, instead of passing an argv list with shell=False.",
+    "id": "backend-security.shell-true-with-quoting-safe"
+  },
+  {
+    "description": "Believes shlex.quote does not neutralize shell metacharacters, or that shlex.split stops at operators like semicolons.",
+    "id": "backend-security.shlex-quote-not-sufficient"
+  },
+  {
+    "description": "Believes ';' is the only command-chaining metacharacter, forgetting &&, ||, |, backticks, and $() substitution.",
+    "id": "backend-security.semicolon-only-chaining-operator"
+  },
+  {
+    "description": "Believes metacharacters in an argument still start a second command when run with an argv list and shell=False.",
+    "id": "backend-security.shell-false-still-splits-commands"
+  },
+  {
+    "description": "Believes os.path.normpath or abspath leave '..' segments in place or are no use for resolving traversal, rather than collapsing them lexically.",
+    "id": "backend-security.normpath-leaves-dotdot"
+  },
+  {
+    "description": "Believes os.path.join(base, user_path) always stays under base, ignoring that an absolute second argument discards the base.",
+    "id": "backend-security.join-keeps-base-with-absolute"
+  },
+  {
+    "description": "Believes path.startswith(base) proves containment, ignoring sibling directories like /var/www-secret and unresolved '..' or symlinks.",
+    "id": "backend-security.startswith-prefix-check-safe"
+  },
+  {
+    "description": "Believes encoded sequences like %2e%2e%2f or %5c are harmless, forgetting they decode into '../' or '..\\' traversal.",
+    "id": "backend-security.url-decoding-ignored-in-traversal"
+  },
+  {
+    "description": "Believes os.path.basename keeps directory parts or is not an effective way to strip traversal components from a filename.",
+    "id": "backend-security.basename-returns-whole-path"
+  },
+  {
+    "description": "Believes the text before '@' in a URL is the host, when it is userinfo and the real host is after the '@'.",
+    "id": "backend-security.ssrf-userinfo-host-confusion"
+  },
+  {
+    "description": "Believes startswith, substring or suffix-like checks on a URL host are safe, ignoring lookalikes such as api.example.com.evil.net.",
+    "id": "backend-security.hostname-substring-match-safe"
+  },
+  {
+    "description": "Believes blocking 127.0.0.1 and localhost covers internal addresses, ignoring link-local metadata IPs, 0.0.0.0, IPv6 ::1 and decimal/octal encodings.",
+    "id": "backend-security.private-ip-check-incomplete"
+  },
+  {
+    "description": "Believes URL scheme validation is unnecessary because only http(s) is ever fetched, overlooking file:// and other schemes.",
+    "id": "backend-security.only-http-schemes-risk"
+  },
+  {
+    "description": "Believes hashing the same password with different salts yields the same digest, missing the point of per-user salts.",
+    "id": "backend-security.salted-hashes-equal"
+  },
+  {
+    "description": "Believes == is the right way to compare tokens, MACs or hashes, rather than constant-time comparison like hmac.compare_digest.",
+    "id": "backend-security.plain-equality-for-secrets"
+  },
+  {
+    "description": "Believes base64 (e.g. in Basic auth headers or JWT segments) hides or protects data, when it is a keyless reversible encoding.",
+    "id": "backend-security.base64-is-encryption"
+  },
+  {
+    "description": "Believes the JWT payload is secret because it looks opaque, when anyone can base64url-decode its claims without the key.",
+    "id": "backend-security.jwt-payload-confidential"
+  },
+  {
+    "description": "Believes a minimum length plus one digit rule makes passwords strong, rather than storing them with a slow salted hash and checking breached lists.",
+    "id": "backend-security.password-length-digit-policy-strong"
+  },
+  {
+    "description": "Believes fast general hashes like MD5 or SHA-256 are suitable for password storage, instead of a slow adaptive hash such as bcrypt or argon2.",
+    "id": "backend-security.md5-or-fast-hash-fine-for-passwords"
+  },
+  {
+    "description": "Believes a token is valid when exp is less than now, or misreads the direction of expiry comparisons.",
+    "id": "backend-security.expired-claim-comparison-inverted"
+  },
+  {
+    "description": "Believes keeping the same session ID across login is fine, not seeing that it enables session fixation and that the ID must be regenerated.",
+    "id": "backend-security.session-id-kept-after-login"
+  },
+  {
+    "description": "Believes HttpOnly, Secure and SameSite are interchangeable cookie flags, or that SameSite=None works without Secure.",
+    "id": "backend-security.httponly-and-secure-equivalent"
+  },
+  {
+    "description": "Believes secrets.token_hex(n) returns n characters, rather than 2n hex characters for n random bytes.",
+    "id": "backend-security.token-hex-length-equals-bytes"
+  },
+  {
+    "description": "Believes it is fine to take roles or admin flags from request query or body parameters instead of the server-side authenticated identity.",
+    "id": "backend-security.client-controlled-role-trusted"
+  },
+  {
+    "description": "Believes being authenticated is enough to access a resource by ID, skipping per-object ownership checks that prevent IDOR.",
+    "id": "backend-security.missing-ownership-check-ok"
+  },
+  {
+    "description": "Believes unknown roles or actions are allowed by default, rather than designing authorization as deny-by-default with explicit grants.",
+    "id": "backend-security.deny-by-default-unneeded"
+  },
+  {
+    "description": "Believes pickle.loads is a safe deserializer like json.loads, when it can invoke arbitrary callables via __reduce__ on untrusted data.",
+    "id": "backend-security.pickle-loads-safe-on-untrusted"
+  },
+  {
+    "description": "Believes JSON parsers accept trailing commas or single quotes, and that duplicate keys are resolved the same way by every parser.",
+    "id": "backend-security.json-parsing-lenient-and-unambiguous"
+  },
+  {
+    "description": "Believes recursively merging user JSON into objects is safe, missing that a __proto__ key can pollute Object.prototype and affect all objects.",
+    "id": "backend-security.recursive-merge-safe-with-proto"
+  },
+  {
+    "description": "Believes type or truthiness checks on input are reliable, forgetting that bool is an int in Python, \"0\" and \"false\" are truthy strings in JS, and whitespace-padded values slip through.",
+    "id": "backend-security.client-validation-types-trusted"
+  },
+  {
+    "description": "Believes a simple email regex or LIKE pattern proves an address is valid and deliverable, accepting things like user@localhost or ignoring length and byte-size limits.",
+    "id": "backend-security.email-regex-validates-address"
+  }
+]

@@ -1,0 +1,158 @@
+[
+  {
+    "description": "Believes || is logical OR (as in MySQL) rather than string concatenation in Postgres.",
+    "id": "postgres.pipe-is-logical-or"
+  },
+  {
+    "description": "Believes 'a' || NULL yields 'a'; in fact concatenating with NULL yields NULL.",
+    "id": "postgres.concat-null-keeps-text"
+  },
+  {
+    "description": "Confuses ILIKE with LIKE: thinks ILIKE uses regex, spans lines, or is index-friendly with a plain B-tree, rather than just being case-insensitive.",
+    "id": "postgres.like-ilike-confusion"
+  },
+  {
+    "description": "Mixes up psql meta-commands for listing objects (\\dt, \\dn, \\l, \\du, \\dv, \\df, \\dx), e.g. thinking \\dn lists tables.",
+    "id": "postgres.psql-list-commands-mixup"
+  },
+  {
+    "description": "Believes \\c mydb creates the database or sets it as a persistent default, rather than reconnecting the session.",
+    "id": "postgres.psql-c-creates-or-sets-default"
+  },
+  {
+    "description": "Believes \\q commits an open transaction before exiting, rather than the transaction being rolled back.",
+    "id": "postgres.psql-quit-commits"
+  },
+  {
+    "description": "Misreads psql toggles: thinks \\x widens output or shows EXPLAIN/timing, or that \\timing is something other than a per-query duration toggle.",
+    "id": "postgres.psql-x-and-timing-misread"
+  },
+  {
+    "description": "Believes SERIAL creates a trigger, hidden counter column or identity constraint rather than a sequence with a default nextval().",
+    "id": "postgres.serial-is-a-trigger-or-column"
+  },
+  {
+    "description": "Believes BIGSERIAL and SERIAL share the same integer range, when BIGSERIAL is 64-bit.",
+    "id": "postgres.bigserial-same-range"
+  },
+  {
+    "description": "Believes inserting an explicit value into a GENERATED ALWAYS identity column succeeds or is silently overridden, rather than erroring without OVERRIDING SYSTEM VALUE.",
+    "id": "postgres.identity-always-accepts-explicit"
+  },
+  {
+    "description": "Believes unquoted identifiers keep their case, rather than being folded to lowercase, and that double quotes behave like string quotes.",
+    "id": "postgres.unquoted-identifiers-case-preserved"
+  },
+  {
+    "description": "Believes VARCHAR(n) is measurably faster than TEXT in Postgres, when they perform essentially the same.",
+    "id": "postgres.varchar-faster-than-text"
+  },
+  {
+    "description": "Believes CHAR(n) stores the value as-is or errors on shorter values, rather than padding with trailing spaces.",
+    "id": "postgres.char-n-no-padding"
+  },
+  {
+    "description": "Believes tables created without a schema land in pg_catalog, information_schema or a 'default' schema rather than public (first on search_path).",
+    "id": "postgres.default-schema-not-public"
+  },
+  {
+    "description": "Believes search_path controls file lookup, read permissions or databases, rather than the ordered schemas for resolving unqualified names.",
+    "id": "postgres.search-path-misunderstood"
+  },
+  {
+    "description": "Believes RETURNING on DELETE/UPDATE gives the old row for UPDATE, or misjudges what it returns (UPDATE returns new values, DELETE the deleted row); also thinks RETURNING * returns only keys or counts.",
+    "id": "postgres.returning-shows-wrong-row-version"
+  },
+  {
+    "description": "Believes ON CONFLICT DO NOTHING raises an error, upserts, or rolls back other rows, rather than silently skipping the conflicting row.",
+    "id": "postgres.on-conflict-do-nothing-errors-or-upserts"
+  },
+  {
+    "description": "Believes the column list in ON CONFLICT (id) names columns to overwrite or index, rather than identifying the unique constraint/index to arbitrate on.",
+    "id": "postgres.on-conflict-target-meaning"
+  },
+  {
+    "description": "Believes Postgres arrays are 0-indexed, when they are 1-indexed by default, and misjudges slices and array_length.",
+    "id": "postgres.arrays-zero-indexed"
+  },
+  {
+    "description": "Believes arrays are built with '[1,2,3]', ARRAY(1,2,3) or LIST(), rather than ARRAY[...] or the '{...}' text form.",
+    "id": "postgres.array-literal-syntax"
+  },
+  {
+    "description": "Confuses jsonb -> (returns jsonb) with ->> (returns text), or believes they differ in nesting depth or error behavior.",
+    "id": "postgres.json-arrow-operators-confused"
+  },
+  {
+    "description": "Believes @> tests byte equality, key presence only, or ordering, rather than structural containment of the right value in the left.",
+    "id": "postgres.jsonb-containment-misread"
+  },
+  {
+    "description": "Believes NOW() advances between calls in one transaction, when it returns the transaction start time; only clock_timestamp() changes.",
+    "id": "postgres.now-changes-within-transaction"
+  },
+  {
+    "description": "Confuses return types of CURRENT_DATE (date) and NOW() (timestamptz), or related date/time functions like to_char, to_date, date_trunc and EXTRACT.",
+    "id": "postgres.current-date-type-confusion"
+  },
+  {
+    "description": "Misunderstands COALESCE (first non-NULL argument) and NULLIF (returns NULL when arguments are equal), e.g. expecting errors or zero.",
+    "id": "postgres.coalesce-nullif-misread"
+  },
+  {
+    "description": "Believes DISTINCT ON picks a deterministic row without a matching ORDER BY, or that it behaves like plain DISTINCT or returns only the key column.",
+    "id": "postgres.distinct-on-ordering"
+  },
+  {
+    "description": "Believes boolean columns accept bare integers or arbitrary strings like 'yes'/'maybe' without casting, or that TRUE/FALSE are case-sensitive.",
+    "id": "postgres.boolean-accepts-integers-or-any-text"
+  },
+  {
+    "description": "Believes CHECK constraints only apply on insert, only warn, or hide failing rows, rather than being enforced on every insert and update.",
+    "id": "postgres.check-constraint-scope"
+  },
+  {
+    "description": "Believes plain EXPLAIN runs the query and reports real runtime, when only EXPLAIN ANALYZE executes it.",
+    "id": "postgres.explain-executes-query"
+  },
+  {
+    "description": "Confuses pg_catalog (Postgres-specific, richer) with information_schema (SQL-standard, portable) views and their advantages.",
+    "id": "postgres.catalog-vs-information-schema"
+  },
+  {
+    "description": "Misreads session info functions: current_user as OS user or original login role, version() as an integer or client version, current_database() as an OID or default.",
+    "id": "postgres.current-user-and-version-misread"
+  },
+  {
+    "description": "Believes :: is schema qualification, an alias or an assertion, or that CAST and :: always behave identically, rather than :: being cast shorthand.",
+    "id": "postgres.cast-operator-misread"
+  },
+  {
+    "description": "Misunderstands INTERVAL as integer seconds or text, or thinks NOW() + INTERVAL is an error, drops time, or AGE returns an integer.",
+    "id": "postgres.interval-arithmetic-misread"
+  },
+  {
+    "description": "Believes generate_series or unnest return one row holding an array or a count, rather than a set of rows.",
+    "id": "postgres.set-returning-functions-single-row"
+  },
+  {
+    "description": "Misunderstands aggregates like string_agg and array_agg, e.g. thinking string_agg sorts, splits, or array_agg deduplicates.",
+    "id": "postgres.aggregate-functions-misread"
+  },
+  {
+    "description": "Believes <> handles NULL like any value, or that IS DISTINCT FROM treats NULL as empty string or errors, rather than being NULL-safe comparison.",
+    "id": "postgres.nulls-and-distinct-from"
+  },
+  {
+    "description": "Believes nextval() values are returned on rollback or that nextval only previews, when sequence advances are non-transactional and leave gaps.",
+    "id": "postgres.sequences-rollback"
+  },
+  {
+    "description": "Confuses CREATE TYPE ENUM, composite types and CREATE DOMAIN with CHECK constraints, lookup tables, arrays or documentation-only aliases.",
+    "id": "postgres.enum-domain-composite-confusion"
+  },
+  {
+    "description": "Believes wrapping an indexed column in a function or cast (lower(email), id::text, left(sku,8)) still uses its plain B-tree index, and that count(*)>0 is as cheap as EXISTS.",
+    "id": "postgres.expression-defeats-index"
+  }
+]

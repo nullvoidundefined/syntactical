@@ -1,0 +1,158 @@
+[
+  {
+    "description": "Believes textContent or createTextNode parses injected markup into live HTML elements, rather than storing it as inert text.",
+    "id": "frontend-security.createtextnode-renders-markup"
+  },
+  {
+    "description": "Believes a script tag inserted via innerHTML executes, when HTML-parsed script elements inserted this way do not run (though event-handler attributes still do).",
+    "id": "frontend-security.innerhtml-runs-script-tags"
+  },
+  {
+    "description": "Believes insertAdjacentHTML is a safe sink that does not create live elements from untrusted strings.",
+    "id": "frontend-security.insertadjacenthtml-safe"
+  },
+  {
+    "description": "Believes assigning untrusted input to el.className can inject HTML elements, confusing attribute-value assignment with markup parsing.",
+    "id": "frontend-security.classname-inserts-html"
+  },
+  {
+    "description": "Believes stripping script tags with a regex sanitizes HTML, ignoring nested-fragment bypasses and inline handlers like onerror on other elements.",
+    "id": "frontend-security.script-tag-regex-sanitizer"
+  },
+  {
+    "description": "Believes the order of HTML escape replacements does not matter, missing that escaping & after < double-encodes entities or leaves gaps.",
+    "id": "frontend-security.escape-order-double-encoding"
+  },
+  {
+    "description": "Believes escaping only some characters (e.g. < and &, not > or quotes) is enough to make output safe in every HTML context.",
+    "id": "frontend-security.partial-escaping-sufficient"
+  },
+  {
+    "description": "Believes window.name, document.referrer, or location.hash are trustworthy inputs rather than attacker-controllable DOM XSS sources.",
+    "id": "frontend-security.window-name-trusted"
+  },
+  {
+    "description": "Believes decoding a URL fragment strips or neutralizes tags, when it only converts percent escapes back into dangerous characters.",
+    "id": "frontend-security.decodeuricomponent-sanitizes"
+  },
+  {
+    "description": "Believes javascript: is not a valid URL scheme, so URL parsing or anchor href assignment rejects it or reports a different protocol.",
+    "id": "frontend-security.javascript-scheme-not-url"
+  },
+  {
+    "description": "Believes a scheme allowlist check on the parsed protocol would let javascript: URLs through, or that missing validation is harmless.",
+    "id": "frontend-security.protocol-allowlist-accepts-javascript"
+  },
+  {
+    "description": "Believes url.startsWith(allowedOrigin) validates the host, missing that https://example.com.evil.net shares the prefix.",
+    "id": "frontend-security.startswith-origin-check"
+  },
+  {
+    "description": "Believes url.endsWith('.example.com') proves the host belongs to example.com, ignoring paths or queries that end with the suffix.",
+    "id": "frontend-security.endswith-host-check"
+  },
+  {
+    "description": "Believes href.includes('https://example.com') shows a URL points at example.com, even when it appears in a query parameter.",
+    "id": "frontend-security.includes-substring-url-check"
+  },
+  {
+    "description": "Believes https://example.com@evil.com has hostname example.com, missing that the part before @ is credentials and the host is evil.com.",
+    "id": "frontend-security.userinfo-hostname-confusion"
+  },
+  {
+    "description": "Believes any target starting with '/' is a same-site path, missing that '//evil.com' is protocol-relative and switches the host.",
+    "id": "frontend-security.leading-slash-is-local"
+  },
+  {
+    "description": "Believes a backslash in a URL path is an ordinary character, missing that parsers normalize /\\evil.com into //evil.com and change the authority.",
+    "id": "frontend-security.backslash-not-slash-in-urls"
+  },
+  {
+    "description": "Confuses URL host, hostname, origin, and default ports: believes hostname includes the port, origin includes the path, or :443 appears in https origins.",
+    "id": "frontend-security.host-includes-port-confusion"
+  },
+  {
+    "description": "Believes event.origin or an origin includes the path or query, or that an explicit default port makes origin strings differ from the canonical form.",
+    "id": "frontend-security.origin-includes-path-or-port"
+  },
+  {
+    "description": "Believes postMessage with targetOrigin '*' delivers only to the intended page, or that a host pattern like *.example.com is a valid targetOrigin.",
+    "id": "frontend-security.postmessage-wildcard-target"
+  },
+  {
+    "description": "Believes functions can be sent via postMessage or structuredClone, when the structured clone algorithm throws DataCloneError for them.",
+    "id": "frontend-security.postmessage-function-clone"
+  },
+  {
+    "description": "Believes subdomains or other schemes and ports are the same origin as the parent domain, ignoring that scheme, host, and port must all match.",
+    "id": "frontend-security.subdomain-same-origin"
+  },
+  {
+    "description": "Believes a recursive merge of parsed JSON cannot affect other objects, missing that a __proto__ key can write onto Object.prototype.",
+    "id": "frontend-security.prototype-pollution-merge-safe"
+  },
+  {
+    "description": "Believes JSON.parse treats a '__proto__' key as setting the prototype, when it creates a plain own property with that name.",
+    "id": "frontend-security.json-parse-proto-not-own"
+  },
+  {
+    "description": "Believes prototype pollution also affects Object.create(null) objects, Map lookups, or getAttribute, which do not consult Object.prototype.",
+    "id": "frontend-security.pollution-affects-null-proto-and-map"
+  },
+  {
+    "description": "Believes the 'in' operator or truthiness checks only see own properties, missing that inherited polluted keys are visible and hasOwn is needed.",
+    "id": "frontend-security.in-operator-own-only"
+  },
+  {
+    "description": "Believes writing to a frozen Object.prototype always throws, when sloppy-mode scripts fail silently and only strict mode raises TypeError.",
+    "id": "frontend-security.freeze-prototype-throws"
+  },
+  {
+    "description": "Believes CSP directives without an explicit entry are unrestricted, missing that fetch directives fall back to default-src (but frame-ancestors does not).",
+    "id": "frontend-security.csp-default-src-no-fallback"
+  },
+  {
+    "description": "Believes frame-ancestors falls back to default-src or that frame-src or child-src controls who may embed the page.",
+    "id": "frontend-security.frame-ancestors-falls-back"
+  },
+  {
+    "description": "Believes unsafe-inline still allows nonce-less inline scripts when a nonce is present, or that unsafe-inline also governs eval, which needs unsafe-eval.",
+    "id": "frontend-security.csp-unsafe-inline-with-nonce"
+  },
+  {
+    "description": "Believes CSP host sources match loosely, e.g. *.example.com matching the bare domain or lookalike hosts, or an https source matching http.",
+    "id": "frontend-security.csp-host-source-matching"
+  },
+  {
+    "description": "Believes 'self' in a CSP also covers other origins such as a CDN host or sibling subdomain.",
+    "id": "frontend-security.csp-self-includes-cdn"
+  },
+  {
+    "description": "Believes the Secure or SameSite attribute hides a cookie from document.cookie, when only HttpOnly does so.",
+    "id": "frontend-security.secure-flag-hides-cookie"
+  },
+  {
+    "description": "Believes document.cookie returns the cookie attributes such as Path and Max-Age, when it exposes only name=value pairs.",
+    "id": "frontend-security.document-cookie-returns-attributes"
+  },
+  {
+    "description": "Believes SameSite=None cookies are accepted without the Secure attribute, or that Lax or Strict permit cross-site subresource requests.",
+    "id": "frontend-security.samesite-none-without-secure"
+  },
+  {
+    "description": "Believes cookie Path matching is a plain string prefix, so /app also matches /apple, or that Path acts as a security boundary.",
+    "id": "frontend-security.cookie-path-prefix-match"
+  },
+  {
+    "description": "Believes Access-Control-Allow-Origin: * permits credentialed cross-origin requests, or that simple GETs and text/plain POSTs trigger preflights.",
+    "id": "frontend-security.cors-wildcard-credentials"
+  },
+  {
+    "description": "Believes X-Frame-Options works when set in a meta tag or that ALLOW-FROM is honored by modern browsers, when both are ignored.",
+    "id": "frontend-security.xfo-meta-and-allow-from"
+  },
+  {
+    "description": "Believes iframe sandbox grants capabilities by default or that allow-scripts implies allow-same-origin, forms, or popups, when each needs its own token.",
+    "id": "frontend-security.iframe-sandbox-defaults"
+  }
+]
