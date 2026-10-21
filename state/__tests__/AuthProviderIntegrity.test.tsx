@@ -22,10 +22,9 @@ import {
   type FakeReply,
   type SignInIdentity,
 } from './authTestSupport';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
 jest.mock('expo-secure-store', () => {
   const values = new Map<string, string>();
@@ -215,8 +214,16 @@ describe('AuthProvider session integrity on native', () => {
     });
 
     it.each([
-      ['a 429 response', { status: 429, body: { error: { code: 'RATE_LIMITED', message: 'slow down', requestId: 'r1' } } }, 'rate-limited'],
-      ['a 500 response', { status: 500, body: { error: { code: 'INTERNAL', message: 'boom', requestId: 'r1' } } }, 'unavailable'],
+      [
+        'a 429 response',
+        { status: 429, body: { error: { code: 'RATE_LIMITED', message: 'slow down', requestId: 'r1' } } },
+        'rate-limited',
+      ],
+      [
+        'a 500 response',
+        { status: 500, body: { error: { code: 'INTERNAL', message: 'boom', requestId: 'r1' } } },
+        'unavailable',
+      ],
       ['a 503 response', { status: 503 }, 'unavailable'],
       ['a network rejection', 'reject', 'unavailable'],
     ] as const)('maps %s to %s and stays signed out', async (_label, reply, reason) => {
@@ -422,7 +429,6 @@ describe('AuthProvider session integrity on native', () => {
       expect(remounted.result.current.isSignedIn).toBe(false);
     });
 
-
     it('a 401 fired before hydration finishes keeps the stored known ids and leaves the device signed out', async () => {
       const identity = buildIdentity();
       await AsyncStorage.setItem(
@@ -530,9 +536,7 @@ describe('AuthProvider session integrity on native', () => {
       try {
         const first = await mountAuth();
         await signIn(first.result, identity);
-        secureStore.deleteItemAsync.mockImplementation(() =>
-          Promise.reject(new Error('keychain delete failed')),
-        );
+        secureStore.deleteItemAsync.mockImplementation(() => Promise.reject(new Error('keychain delete failed')));
 
         let rejection: unknown = null;
         await act(async () => {

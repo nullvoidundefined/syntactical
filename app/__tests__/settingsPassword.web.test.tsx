@@ -31,10 +31,9 @@ import {
 import { AuthProvider } from '../../state/AuthProvider';
 import { OwnedStatsProvider } from '../../state/OwnedStatsProvider';
 import SettingsScreen from '../settings';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),
@@ -67,22 +66,9 @@ jest.mock('@react-native-community/netinfo', () => {
 });
 
 const mockParams: { current: Record<string, string | string[] | undefined> } = { current: {} };
-jest.mock('expo-router', () => {
-  const router = {
-    back: () => undefined,
-    dismissTo: () => undefined,
-    navigate: () => undefined,
-    push: () => undefined,
-    replace: () => undefined,
-  };
-  return {
-    ...jest.requireActual('expo-router'),
-    router,
-    useGlobalSearchParams: () => mockParams.current,
-    useLocalSearchParams: () => mockParams.current,
-    useRouter: () => router,
-  };
-});
+jest.mock('expo-router', () =>
+  require('../../config/buildExpoRouterMock').buildExpoRouterMock({ readParams: () => mockParams.current }),
+);
 
 async function renderSignedInSettings(identity: SignInIdentity) {
   await AsyncStorage.setItem(

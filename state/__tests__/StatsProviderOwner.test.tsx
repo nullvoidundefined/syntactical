@@ -34,7 +34,8 @@ const bank: CachedBank = {
   hash: 'a'.repeat(64),
   questions: [buildQuestion('py-easy-01', GUEST_MISCONCEPTION), buildQuestion('py-easy-02', USER_MISCONCEPTION)],
 };
-const mockReadLocalBank = (language: string, difficulty: string) => (language === 'python' && difficulty === 'easy' ? bank : null);
+const mockReadLocalBank = (language: string, difficulty: string) =>
+  language === 'python' && difficulty === 'easy' ? bank : null;
 const mockManifest = {
   languages: [
     {
@@ -46,7 +47,7 @@ const mockManifest = {
   ],
 };
 
-jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
+jest.mock('expo-router', () => require('../../config/buildExpoRouterMock').buildExpoRouterMock({ push: jest.fn() }));
 jest.mock('../ContentProvider', () => ({
   useContentContext: () => ({ baselineManifest: mockManifest, contentBaseUrl: null, readLocalBank: mockReadLocalBank }),
 }));
@@ -84,7 +85,14 @@ function OwnerProbe() {
       <Pressable
         testID="answer"
         onPress={() =>
-          recordAnswer({ choiceIndex: 0, difficulty: 'easy', language: 'python', questionId: 'py-easy-01', roundKind: 'bank', wasCorrect: true })
+          recordAnswer({
+            choiceIndex: 0,
+            difficulty: 'easy',
+            language: 'python',
+            questionId: 'py-easy-01',
+            roundKind: 'bank',
+            wasCorrect: true,
+          })
         }
       />
       <WeaknessReport />
@@ -97,7 +105,11 @@ async function readStoredLog(): Promise<LoggedAnswerEvent[]> {
 }
 
 async function renderHydrated(ownerUserId: string | null) {
-  const view = await render(<StatsProvider ownerUserId={ownerUserId}><OwnerProbe /></StatsProvider>);
+  const view = await render(
+    <StatsProvider ownerUserId={ownerUserId}>
+      <OwnerProbe />
+    </StatsProvider>,
+  );
   await waitFor(() => expect(screen.getByTestId('hydrated')).toHaveTextContent('true'));
   return view;
 }
@@ -129,7 +141,7 @@ describe('StatsProvider owner-scoped event log', () => {
     expect(screen.queryAllByRole('link')).toHaveLength(1);
   });
 
-  it('shows a signed-in user only that user\'s events in the event log, the review queue, and the weakness report', async () => {
+  it("shows a signed-in user only that user's events in the event log, the review queue, and the weakness report", async () => {
     await renderHydrated(otherUserId);
     expect(screen.getByTestId('events')).toHaveTextContent(String(SEEDED_PER_OWNER));
     expect(screen.getByTestId('owners')).toHaveTextContent(otherUserId);
@@ -141,7 +153,7 @@ describe('StatsProvider owner-scoped event log', () => {
     expect(screen.queryAllByRole('link')).toHaveLength(1);
   });
 
-  it('keeps every owner\'s entries in the stored log when a guest records an answer', async () => {
+  it("keeps every owner's entries in the stored log when a guest records an answer", async () => {
     await renderHydrated(null);
     await fireEvent.press(screen.getByTestId('answer'));
     await waitFor(async () => expect(await readStoredLog()).toHaveLength(2 * SEEDED_PER_OWNER + 1));
@@ -160,7 +172,11 @@ describe('StatsProvider owner-scoped event log', () => {
     expect(stored[2 * SEEDED_PER_OWNER].ownerUserId).toBe(otherUserId);
     expect(stored.slice(0, 2 * SEEDED_PER_OWNER)).toEqual([...otherUserEvents, ...guestEvents]);
     expect(screen.getByTestId('events')).toHaveTextContent(String(SEEDED_PER_OWNER + 1));
-    await view.rerender(<StatsProvider ownerUserId={null}><OwnerProbe /></StatsProvider>);
+    await view.rerender(
+      <StatsProvider ownerUserId={null}>
+        <OwnerProbe />
+      </StatsProvider>,
+    );
     await waitFor(() => expect(screen.getByTestId('owners')).toHaveTextContent('guest'));
     expect(screen.getByTestId('events')).toHaveTextContent(String(SEEDED_PER_OWNER));
   });

@@ -20,10 +20,9 @@ import {
   readStoredAuth,
   type SignInIdentity,
 } from './authTestSupport';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
 jest.mock('expo-secure-store', () => {
   const values = new Map<string, string>();
@@ -83,7 +82,9 @@ describe('AuthProvider on native', () => {
   describe('requestCode', () => {
     it('posts the email to auth/codes and reports success on 202', async () => {
       const identity = buildIdentity();
-      const { requests } = installRoutedFetch({ 'POST auth/codes': { status: 202, body: { data: { status: 'code-sent' } } } });
+      const { requests } = installRoutedFetch({
+        'POST auth/codes': { status: 202, body: { data: { status: 'code-sent' } } },
+      });
       const { result } = await mountAuth();
 
       let outcome: unknown;
@@ -211,7 +212,9 @@ describe('AuthProvider on native', () => {
       await act(async () => {
         first.result.current.completeGuestClaim(identity.userId);
       });
-      await waitFor(async () => expect(await readStoredAuth()).toEqual({ userId: identity.userId, knownUserIds: [identity.userId] }));
+      await waitFor(async () =>
+        expect(await readStoredAuth()).toEqual({ userId: identity.userId, knownUserIds: [identity.userId] }),
+      );
       await first.unmount();
 
       const second = await mountAuth();
@@ -342,7 +345,9 @@ describe('AuthProvider on native', () => {
         await first.result.current.signOut().catch(() => undefined);
       });
 
-      expect(requests.some((request) => request.method === 'DELETE' && request.path === 'auth/sessions/current')).toBe(true);
+      expect(requests.some((request) => request.method === 'DELETE' && request.path === 'auth/sessions/current')).toBe(
+        true,
+      );
       expect(first.result.current.isSignedIn).toBe(false);
       expect(first.result.current.user).toBeNull();
       expect(secureStore.mockValues.has(SESSION_TOKEN_KEY)).toBe(false);

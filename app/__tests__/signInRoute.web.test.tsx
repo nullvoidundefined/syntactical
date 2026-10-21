@@ -11,17 +11,19 @@ import SignInScreen from '../sign-in';
 
 // Every route the screen replaces to, in order.
 const mockReplacedRoutes: unknown[] = [];
-jest.mock('expo-router', () => ({
-  ...jest.requireActual('expo-router'),
-  router: { replace: (route: unknown) => mockReplacedRoutes.push(route) },
-  useRouter: () => ({ replace: (route: unknown) => mockReplacedRoutes.push(route) }),
-}));
+jest.mock('expo-router', () =>
+  require('../../config/buildExpoRouterMock').buildExpoRouterMock({
+    replace: (route: unknown) => mockReplacedRoutes.push(route),
+  }),
+);
 jest.mock('react-native-reanimated', () => ({
   ...jest.requireActual('react-native-reanimated'),
   useReducedMotion: () => true,
 }));
 
-type AuthResult = { isOk: true } | { isOk: false; reason: 'invalid-code' | 'invalid-email' | 'rate-limited' | 'unavailable' };
+type AuthResult =
+  | { isOk: true }
+  | { isOk: false; reason: 'invalid-code' | 'invalid-email' | 'rate-limited' | 'unavailable' };
 
 const mockRequestCode = jest.fn<Promise<AuthResult>, [string]>();
 const mockVerifyCode = jest.fn<Promise<AuthResult>, [string, string]>();

@@ -11,10 +11,9 @@ import { buildEntitlementsKey } from '../useEntitlements';
 import { usePurchases } from '../usePurchases';
 
 import { holdReply, installRoutedFetch, type FakeReply } from './authTestSupport';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),

@@ -66,10 +66,9 @@ import {
   rawAccessReply,
   sessionReply,
 } from './adminAccessTestSupport';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
 jest.mock('expo-secure-store', () => {
   const values = new Map<string, string>();
@@ -98,22 +97,12 @@ jest.mock('../../state/SyncProvider', () => ({
 
 const mockReplace = jest.fn();
 
-jest.mock('expo-router', () => {
-  const router = {
-    back: () => undefined,
-    dismissTo: () => undefined,
-    navigate: () => undefined,
-    push: () => undefined,
+jest.mock('expo-router', () =>
+  require('../../config/buildExpoRouterMock').buildExpoRouterMock({
     replace: (...args: unknown[]) => mockReplace(...args),
-  };
-  return {
-    ...jest.requireActual('expo-router'),
-    router,
-    useGlobalSearchParams: () => ({}),
-    useLocalSearchParams: () => ({}),
-    useRouter: () => router,
-  };
-});
+    readParams: () => ({}),
+  }),
+);
 
 type SecureStoreMock = { mockValues: Map<string, string> };
 const secureStore = jest.requireMock('expo-secure-store') as SecureStoreMock;

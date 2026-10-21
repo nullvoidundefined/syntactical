@@ -1,14 +1,7 @@
-jest.mock('expo-constants', () => ({
-  expoConfig: {
-    extra: {
-      apiBaseUrl: 'https://api.example.test/v1/',
-      emptyKey: '',
-      numberKey: 7,
-    },
-  },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.example.test/v1/', emptyKey: '', numberKey: 7 });
 
 import { readExtraString } from '../readExtraString';
+import { setExpoExtra } from '../expoConstantsMock';
 
 describe('readExtraString', () => {
   it('returns a non-empty string value', () => {

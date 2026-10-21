@@ -12,10 +12,9 @@ import { OwnedStatsProvider } from '../OwnedStatsProvider';
 import { useProfile } from '../useProfile';
 
 import { AUTH_STORAGE_KEY, buildIdentity, installRoutedFetch, type SignInIdentity } from './authTestSupport';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 jest.mock('expo-secure-store', () => ({
   deleteItemAsync: jest.fn(() => Promise.resolve()),
   getItemAsync: jest.fn(() => Promise.resolve(null)),
