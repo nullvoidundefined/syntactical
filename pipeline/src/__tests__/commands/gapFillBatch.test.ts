@@ -1,9 +1,9 @@
 // `pipeline gap-fill` batch generation: one model call per short topic (at most 2 per run),
 // cards proven in the sandbox, staging complete enough that publish needs no enrich. Fake
 // provider, fake runner, fake judge; no Docker, no network.
-import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { validateBankForPublish, type Question } from '@syntactical/content-schema';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -14,6 +14,7 @@ import { ProviderTransientError } from '../../types/ProviderTransientError.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 import type { Oracle } from '../../types/Oracle.js';
 import type { OracleRun } from '../../types/OracleRun.js';
+import { readJson, writeJson } from '../fixtures/jsonFiles.js';
 
 const HASH = '0123456789abcdef'.repeat(4);
 const PAID_MARKER = 'PAID-BATCH-MARKER';
@@ -61,15 +62,6 @@ function mcCard(tag: string, language?: string, setupSql?: string): RawCard {
         query: { explanation: 'e', title: 't' },
         type: 'mc',
     };
-}
-
-async function writeJson(path: string, body: unknown): Promise<void> {
-    await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, JSON.stringify(body));
-}
-
-async function readJson<T = Record<string, unknown>>(path: string): Promise<T> {
-    return JSON.parse(await readFile(path, 'utf8')) as T;
 }
 
 async function listFiles(dir: string): Promise<string[]> {

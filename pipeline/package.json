@@ -6,6 +6,7 @@
   "scripts": {
     "cli": "npm run build -w @syntactical/content-schema --silent && tsx src/cli.ts",
     "test": "vitest run",
+    "test:unit": "SKIP_DOCKER_TESTS=1 vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

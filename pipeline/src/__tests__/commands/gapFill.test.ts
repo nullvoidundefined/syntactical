@@ -1,15 +1,16 @@
 // `pipeline gap-fill` with a fake provider and a fake runOracle: how many questions each topic
 // requests, where the staging files land (free under pipeline/, paid under the content root),
 // and that content bank files are never written. No Docker, no real model.
-import { chmod, mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { gapFill } from '../../commands/gapFill.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 import type { Oracle } from '../../types/Oracle.js';
+import { readJson, writeJson } from '../fixtures/jsonFiles.js';
 
 const HASH = '0123456789abcdef'.repeat(4);
 const TOPICS = [
@@ -44,15 +45,6 @@ function buildManifest(banks: Record<string, unknown>): Record<string, unknown> 
 
 function buildBankQuestion(id: string, prompt = `Existing ${id}`): Record<string, unknown> {
     return { answer: true, id, prompt, type: 'bool' };
-}
-
-async function writeJson(path: string, body: unknown): Promise<void> {
-    await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, JSON.stringify(body));
-}
-
-async function readJson(path: string): Promise<Record<string, unknown>> {
-    return JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
 }
 
 async function listFiles(dir: string): Promise<string[]> {

@@ -14,9 +14,8 @@ import { runOracle } from '../../clients/dockerRunner.js';
 import { ensureRunnerImage } from '../../clients/ensureRunnerImage.js';
 import { runnerImageTag } from '../../clients/runnerImageTag.js';
 import type { OracleLanguage } from '../../types/OracleLanguage.js';
+import { describeDocker } from '../fixtures/dockerSuite.js';
 import { acquireDockerTestLock, DOCKER_LOCK_WAIT_MS, releaseDockerTestLock } from '../fixtures/dockerTestLock.js';
-
-const SKIP_DOCKER = process.env.SKIP_DOCKER_TESTS === '1';
 
 const RUN_TIMEOUT_MS = 60_000;
 
@@ -38,7 +37,7 @@ function runningContainers(language: OracleLanguage): string {
     }).trim();
 }
 
-describe.skipIf(SKIP_DOCKER)('runOracle ruby and rails (docker)', () => {
+describeDocker('runOracle ruby and rails (docker)', () => {
     beforeAll(async () => {
         await acquireDockerTestLock();
         await ensureRunnerImage('ruby');
@@ -131,7 +130,10 @@ describe.skipIf(SKIP_DOCKER)('runOracle ruby and rails (docker)', () => {
         it(
             'runs the oracle without the wrapper locals in scope',
             async () => {
-                const run = await runOracle({ language, code: 'puts defined?(code).inspect\nputs defined?(iseq).inspect' });
+                const run = await runOracle({
+                    language,
+                    code: 'puts defined?(code).inspect\nputs defined?(iseq).inspect',
+                });
 
                 expect(run).toMatchObject({ outcome: 'value', value: 'nil\nnil' });
             },

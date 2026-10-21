@@ -6,12 +6,13 @@
 import { execFile } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
 
 import { buildDockerArgs } from '../../clients/buildDockerArgs.js';
 import { runOracle } from '../../clients/dockerRunner.js';
 import { ensureRunnerImage } from '../../clients/ensureRunnerImage.js';
 import { runnerImageTag } from '../../clients/runnerImageTag.js';
+import { describeDocker } from '../fixtures/dockerSuite.js';
 import {
     acquireDockerTestLock,
     DOCKER_LOCK_WAIT_MS,
@@ -19,7 +20,6 @@ import {
     releaseDockerTestLock,
 } from '../fixtures/dockerTestLock.js';
 
-const SKIP_DOCKER = process.env.SKIP_DOCKER_TESTS === '1';
 const RUN_TIMEOUT_MS = 60_000;
 const docker = promisify(execFile);
 
@@ -127,7 +127,7 @@ async function probePostgresStdout(): Promise<string> {
     throw new Error('Postgres runner container did not appear within 20 seconds');
 }
 
-describe.skipIf(SKIP_DOCKER)('runOracle PID 1 isolation (docker)', () => {
+describeDocker('runOracle PID 1 isolation (docker)', () => {
     beforeAll(async () => {
         await acquireDockerTestLock();
         for (const language of ['python', 'node', 'ruby', 'rails', 'go', 'postgres'] as const) {
@@ -215,7 +215,7 @@ console.log(word);
 // The Node and Postgres images make PID 1 non-dumpable only by running it from an execute-only
 // interpreter. Started from the image's ordinary, readable interpreter, PID 1 stays dumpable,
 // and the harness must refuse to run the oracle rather than run it unprotected.
-describe.skipIf(SKIP_DOCKER)('PID 1 startup probe fails closed (docker)', () => {
+describeDocker('PID 1 startup probe fails closed (docker)', () => {
     beforeAll(async () => {
         await acquireDockerTestLock();
         await ensureRunnerImage('node');

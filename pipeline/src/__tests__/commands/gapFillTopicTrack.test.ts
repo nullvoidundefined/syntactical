@@ -1,14 +1,15 @@
 // gap-fill sends an entry with kind 'topic' to topic generation with its TRACK_RUNNERS, and
 // never sends a language id through it; an entry without kind stays a language. Fake provider
 // and fake runner, no Docker.
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { gapFill } from '../../commands/gapFill.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
+import { writeJson } from '../fixtures/jsonFiles.js';
 
 const HASH = '0123456789abcdef'.repeat(4);
 
@@ -38,11 +39,6 @@ function buildEntry(id: string, extra: Record<string, unknown>): Record<string, 
         topics: [{ id: 'sql-injection', label: 'SQL injection' }],
         ...extra,
     };
-}
-
-async function writeJson(path: string, body: unknown): Promise<void> {
-    await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, JSON.stringify(body));
 }
 
 describe('gapFill topic tracks', () => {
