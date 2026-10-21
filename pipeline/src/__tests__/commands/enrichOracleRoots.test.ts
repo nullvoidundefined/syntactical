@@ -11,8 +11,8 @@ import { enrich } from '../../commands/enrich.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 import type { Oracle } from '../../types/Oracle.js';
 import { readJson, writeJson } from '../fixtures/jsonFiles.js';
+import { buildBankEntry, buildLanguage, buildManifest } from '../fixtures/manifest.js';
 
-const HASH = '0123456789abcdef'.repeat(4);
 const TAG = 'python.mutable-default-args';
 const PAID_TEXT = 'PAID-ENRICH-MARKER';
 
@@ -88,28 +88,10 @@ describe('enrich oracle roots and staged questions', () => {
 
     async function seed(access: Access, bankIds: string[], generatedIds: string[] = []): Promise<string> {
         const outRoot = access === 'free' ? pipelineDir : contentRoot;
-        const productId = access === 'paid' ? { productId: 'syntactical.python.easy' } : {};
-        const language = {
-            banks: {
-                easy: {
-                    access,
-                    contentVersion: 1,
-                    hash: HASH,
-                    path: 'python/easy.json',
-                    topicCounts: {},
-                    ...productId,
-                },
-            },
-            glyph: 'G',
-            grammar: 'plain',
-            id: 'python',
-            label: 'L',
-            misconceptions: [],
-            tagline: 'T',
-            topics: [],
-        };
+        const productId = access === 'paid' ? 'syntactical.python.easy' : undefined;
+        const language = buildLanguage({ banks: { easy: buildBankEntry('python/easy.json', access, productId) } });
         const text = access === 'paid' ? PAID_TEXT : 'free';
-        await writeJson(join(contentDir, 'manifest.json'), { languages: [language], schemaVersion: 2 });
+        await writeJson(join(contentDir, 'manifest.json'), buildManifest(language));
         await writeJson(join(access === 'free' ? contentDir : contentRoot, 'python/easy.json'), {
             questions: bankIds.map((id) => buildMc(id, `${text} ${id}`)),
         });

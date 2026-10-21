@@ -10,8 +10,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { publish } from '../../commands/publish.js';
 import { readJson, writeJson } from '../fixtures/jsonFiles.js';
+import { buildLanguage, buildManifest, HASH } from '../fixtures/manifest.js';
 
-const HASH = '0123456789abcdef'.repeat(4);
 const TOPICS = ['numbers-and-math', 'strings'];
 const TAG = 'python.truthy-strings';
 const BUILD_SCRIPT = new URL('../../../../scripts/buildContentManifest.mjs', import.meta.url).href;
@@ -91,25 +91,12 @@ async function writeDecisions(outRoot: string, name: string, decisions: Record<s
     });
 }
 
-function buildManifest(): Json {
-    return {
-        languages: [
-            {
-                banks: {
-                    easy: buildEntry('python/easy.json', 'free', 'easy'),
-                    medium: buildEntry('python/medium.json', 'paid', 'medium'),
-                },
-                glyph: 'PY',
-                grammar: 'python',
-                id: 'python',
-                label: 'Python',
-                misconceptions: [],
-                tagline: 'T',
-                topics: [],
-            },
-        ],
-        schemaVersion: 2,
+function seedManifest(): Json {
+    const banks = {
+        easy: buildEntry('python/easy.json', 'free', 'easy'),
+        medium: buildEntry('python/medium.json', 'paid', 'medium'),
     };
+    return buildManifest(buildLanguage({ banks, glyph: 'PY', grammar: 'python', label: 'Python' }));
 }
 
 async function build(contentRoot: string): Promise<void> {
@@ -157,7 +144,7 @@ beforeEach(async () => {
         root,
     };
     await mkdir(dirs.contentRoot, { recursive: true });
-    await writeJson(join(dirs.contentDir, 'manifest.json'), buildManifest());
+    await writeJson(join(dirs.contentDir, 'manifest.json'), seedManifest());
     await writeJson(join(dirs.pipelineDir, 'topics.json'), { python: TOPICS });
     await writeJson(join(dirs.pipelineDir, 'taxonomy', 'python.json'), [
         { description: 'Thinks "0" is falsy', id: TAG },

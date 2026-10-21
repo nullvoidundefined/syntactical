@@ -10,8 +10,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { gapFill } from '../../commands/gapFill.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 import { writeJson } from '../fixtures/jsonFiles.js';
-
-const HASH = '0123456789abcdef'.repeat(4);
+import { buildBankEntry, buildLanguage } from '../fixtures/manifest.js';
 
 // Each call drafts a distinct prompt, so no draft is dropped as a duplicate.
 function topicDraft(call: number, language = 'python'): Record<string, unknown> {
@@ -28,17 +27,13 @@ function topicDraft(call: number, language = 'python'): Record<string, unknown> 
 }
 
 function buildEntry(id: string, extra: Record<string, unknown>): Record<string, unknown> {
-    return {
-        banks: { easy: { access: 'free', contentVersion: 1, hash: HASH, path: `${id}/easy.json`, topicCounts: {} } },
-        glyph: 'G',
-        grammar: 'plain',
+    return buildLanguage({
+        banks: { easy: buildBankEntry(`${id}/easy.json`) },
         id,
         label: id,
-        misconceptions: [],
-        tagline: 'T',
         topics: [{ id: 'sql-injection', label: 'SQL injection' }],
         ...extra,
-    };
+    });
 }
 
 describe('gapFill topic tracks', () => {

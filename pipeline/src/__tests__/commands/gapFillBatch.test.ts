@@ -15,8 +15,8 @@ import type { ModelProvider } from '../../types/ModelProvider.js';
 import type { Oracle } from '../../types/Oracle.js';
 import type { OracleRun } from '../../types/OracleRun.js';
 import { readJson, writeJson } from '../fixtures/jsonFiles.js';
+import { buildBankEntry, buildLanguage, buildManifest, HASH } from '../fixtures/manifest.js';
 
-const HASH = '0123456789abcdef'.repeat(4);
 const PAID_MARKER = 'PAID-BATCH-MARKER';
 const TARGET = 10;
 
@@ -147,23 +147,17 @@ describe('gapFill batch generation', () => {
     async function seed(options: Seed = {}): Promise<void> {
         const { access = 'free', bank = [], kind = 'language', staged = [], topics = ['strings'] } = options;
         id = kind === 'topic' ? 'backend-security' : 'python';
-        const productId = access === 'paid' ? { productId: `syntactical.${id}.easy` } : {};
-        const entry = {
-            banks: {
-                easy: { access, contentVersion: 1, hash: HASH, path: `${id}/easy.json`, topicCounts: {}, ...productId },
-            },
-            glyph: 'G',
-            grammar: 'plain',
+        const productId = access === 'paid' ? `syntactical.${id}.easy` : undefined;
+        const entry = buildLanguage({
+            banks: { easy: buildBankEntry(`${id}/easy.json`, access, productId) },
             id,
             label: id,
-            misconceptions: [],
-            tagline: 'T',
             topics: topics.map((topic) => ({ id: topic, label: topic })),
             ...(kind === 'topic' ? { kind: 'topic' } : {}),
-        };
+        });
         outRoot = access === 'free' ? pipelineDir : contentRoot;
         const questions = bank.map(([prompt], index) => ({ answer: true, id: `bank-${index}`, prompt, type: 'bool' }));
-        await writeJson(join(contentDir, 'manifest.json'), { languages: [entry], schemaVersion: 2 });
+        await writeJson(join(contentDir, 'manifest.json'), buildManifest(entry));
         await writeJson(join(access === 'free' ? contentDir : contentRoot, `${id}/easy.json`), {
             questions,
             schemaVersion: 2,

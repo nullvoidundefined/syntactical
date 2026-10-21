@@ -19,6 +19,7 @@ import type { ModelProvider } from '../../types/ModelProvider.js';
 import type { Oracle } from '../../types/Oracle.js';
 import type { OracleRun } from '../../types/OracleRun.js';
 import type { RunLimits } from '../../types/RunLimits.js';
+import { buildBankEntry, buildLanguage, buildManifest } from '../fixtures/manifest.js';
 
 const defaultRunner = vi.hoisted(() => ({ calls: [] as unknown[] }));
 
@@ -47,7 +48,6 @@ const HOSTILE: [string, Hostile][] = [
 ];
 
 const RUNNER_FAILURE: OracleRun = { exceptionType: 'RunnerFailure', outcome: 'exception' };
-const HASH = '0123456789abcdef'.repeat(4);
 const PROVENANCE: Provenance = {
     isHumanReviewed: false,
     source: 'original',
@@ -104,29 +104,9 @@ function generateArgs(
 async function writeBank(contentDir: string, languageId: string): Promise<void> {
     const files: Record<string, unknown> = {
         [`${languageId}/easy.json`]: { questions: [{ answer: true, id: 'q-1', prompt: 'p', type: 'bool' }] },
-        'manifest.json': {
-            languages: [
-                {
-                    banks: {
-                        easy: {
-                            access: 'free',
-                            contentVersion: 1,
-                            hash: HASH,
-                            path: `${languageId}/easy.json`,
-                            topicCounts: {},
-                        },
-                    },
-                    glyph: 'G',
-                    grammar: 'plain',
-                    id: languageId,
-                    label: 'L',
-                    misconceptions: [],
-                    tagline: 'T',
-                    topics: [],
-                },
-            ],
-            schemaVersion: 2,
-        },
+        'manifest.json': buildManifest(
+            buildLanguage({ banks: { easy: buildBankEntry(`${languageId}/easy.json`) }, id: languageId }),
+        ),
     };
     for (const [name, body] of Object.entries(files)) {
         await mkdir(dirname(join(contentDir, name)), { recursive: true });

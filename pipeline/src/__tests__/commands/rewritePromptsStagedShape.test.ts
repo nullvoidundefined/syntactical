@@ -9,8 +9,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { rewritePrompts } from '../../commands/rewritePrompts.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 import { writeJson } from '../fixtures/jsonFiles.js';
-
-const HASH = '0123456789abcdef'.repeat(4);
+import { buildBankEntry, buildLanguage } from '../fixtures/manifest.js';
 
 const STAGED_CARD = {
     answerIndex: 0,
@@ -30,16 +29,14 @@ const STAGED_CARD = {
 };
 
 function language(id: string) {
-    return {
-        banks: { easy: { access: 'free', contentVersion: 1, hash: HASH, path: `${id}/easy.json`, topicCounts: {} } },
+    return buildLanguage({
+        banks: { easy: buildBankEntry(`${id}/easy.json`) },
         glyph: 'XX',
         grammar: 'python',
         id,
         label: id,
-        misconceptions: [],
-        tagline: 'T',
         topics: [{ id: 'strings', label: 'Strings' }],
-    };
+    });
 }
 
 describe('rewritePrompts staged file shape', () => {
