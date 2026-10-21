@@ -5,7 +5,7 @@
 // nothing. The SDK's own restore result never unlocks: the server is the only
 // source of entitlements.
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import '../../components/auth/__tests__/preloadNativeModal';
 import {
@@ -24,6 +24,7 @@ import DifficultyScreen from '../[language]/index';
 import SettingsScreen from '../settings';
 import { randomBytes } from 'node:crypto';
 import { setExpoExtra } from '../../config/expoConstantsMock';
+import { settle } from '../../config/settle';
 
 const mockParams: { current: Record<string, string | string[] | undefined> } = {
   current: { language: 'python' },
@@ -69,12 +70,6 @@ jest.mock('../../components/auth/DeleteAccountDialog', () => ({ DeleteAccountDia
 jest.mock('../../clients/analyticsClient', () => ({ trackEvent: () => undefined }));
 
 let queryClient: QueryClient;
-
-async function settle(): Promise<void> {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  });
-}
 
 async function renderSettingsWithDifficulty(): Promise<void> {
   await render(

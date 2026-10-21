@@ -3,7 +3,7 @@
 // says "Restore failed. Check your connection and try again." Neither message
 // shows before the button is pressed.
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import '../../components/auth/__tests__/preloadNativeModal';
 import {
@@ -17,6 +17,7 @@ import { createQueryClient } from '../../config/queryClient';
 import SettingsScreen from '../settings';
 import { randomBytes } from 'node:crypto';
 import { setExpoExtra } from '../../config/expoConstantsMock';
+import { settle } from '../../config/settle';
 
 const mockParams: { current: Record<string, string | string[] | undefined> } = { current: {} };
 
@@ -59,12 +60,6 @@ const RESTORED = 'Purchases restored.';
 const RESTORE_FAILED = 'Restore failed. Check your connection and try again.';
 
 let queryClient: QueryClient;
-
-async function settle(): Promise<void> {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  });
-}
 
 async function renderSettings(): Promise<void> {
   await render(

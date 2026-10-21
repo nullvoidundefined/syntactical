@@ -3,7 +3,7 @@
 // completes while GET me does not yet list the entitlement shows "Your purchase
 // is still processing. Check back shortly." A cancelled purchase shows neither.
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, within } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
 
 import '../../components/auth/__tests__/preloadNativeModal';
 import {
@@ -21,6 +21,7 @@ import { ContentProvider } from '../../state/ContentProvider';
 import DifficultyScreen from '../[language]/index';
 import { randomBytes } from 'node:crypto';
 import { setExpoExtra } from '../../config/expoConstantsMock';
+import { settle } from '../../config/settle';
 
 const mockParams: { current: Record<string, string | string[] | undefined> } = {
   current: { language: 'python' },
@@ -59,12 +60,6 @@ const PURCHASE_FAILED = 'The purchase did not go through. Try again.';
 const PURCHASE_PENDING = 'Your purchase is still processing. Check back shortly.';
 
 let queryClient: QueryClient;
-
-async function settle(): Promise<void> {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  });
-}
 
 async function renderDifficultyRoute(): Promise<void> {
   await render(

@@ -26,6 +26,7 @@ import { ContentProvider } from '../../state/ContentProvider';
 import DifficultyScreen from '../[language]/index';
 import { randomBytes } from 'node:crypto';
 import { setExpoExtra } from '../../config/expoConstantsMock';
+import { settle } from '../../config/settle';
 
 const mockParams: { current: Record<string, string | string[] | undefined> } = {
   current: { language: 'python' },
@@ -69,13 +70,6 @@ const HIDDEN = { includeHiddenElements: true };
 let queryClient: QueryClient;
 // True while a test runs on jest's fake clock; settle then advances it.
 let isFakeClock = false;
-
-async function settle(): Promise<void> {
-  await act(async () => {
-    if (isFakeClock) await jest.advanceTimersByTimeAsync(50);
-    else await new Promise((resolve) => setTimeout(resolve, 50));
-  });
-}
 
 function buildTree() {
   return (

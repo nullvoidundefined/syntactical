@@ -45,6 +45,7 @@ import {
   rawAccessReply,
 } from './adminAccessTestSupport';
 import { setExpoExtra } from '../../config/expoConstantsMock';
+import { settle } from '../../config/settle';
 
 setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
@@ -110,12 +111,6 @@ function Tree({ isShowingAdmin = true }: { isShowingAdmin?: boolean }) {
       </ContentProvider>
     </QueryClientProvider>
   );
-}
-
-async function settle(): Promise<void> {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  });
 }
 
 function listAccessReads(requests: { method: string; path: string }[]) {

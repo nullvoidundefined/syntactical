@@ -10,7 +10,7 @@
 // usePurchases, and PaywallSheet; the SDK, the server (a routed fetch), auth,
 // the router, and analytics are fakes.
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 
 import '../../components/auth/__tests__/preloadNativeModal';
 import {
@@ -33,6 +33,7 @@ import { ContentProvider } from '../../state/ContentProvider';
 import DifficultyScreen from '../[language]/index';
 import { randomBytes } from 'node:crypto';
 import { setExpoExtra } from '../../config/expoConstantsMock';
+import { settle } from '../../config/settle';
 
 const mockParams: { current: Record<string, string | string[] | undefined> } = {
   current: { language: 'python' },
@@ -73,12 +74,6 @@ const HARD_LOCKED = `Hard, locked, ${NATIVE_PRICES[HARD_PRODUCT]}`;
 const HIDDEN = { includeHiddenElements: true };
 
 let queryClient: QueryClient;
-
-async function settle(): Promise<void> {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  });
-}
 
 async function renderDifficultyRoute(): Promise<void> {
   await render(
