@@ -6,8 +6,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, inject, it } from 'v
 import { changePassword } from '../../services/changePassword.js';
 import { lockUserPasswordHash } from '../../services/lockUserPasswordHash.js';
 import { createMigratedDatabase } from '../integration/createMigratedDatabase.js';
+import { SKIP_DATABASE_TESTS } from '../integration/skipDatabaseTests.js';
 
-const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.env.TEST_DATABASE_URL;
 const SETUP_TIMEOUT_MS = 120_000;
 const TEST_TIMEOUT_MS = 30_000;
 const LOCK_WAIT_MS = 200;
