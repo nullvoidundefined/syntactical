@@ -35,12 +35,24 @@ describe('settle', () => {
     expect(finished).toBe(true);
   });
 
-  it('resolves in less than 40 ms of wall-clock time under real timers', async () => {
-    const startedAt = Date.now();
+  it('does not wait for a long timer under real timers', async () => {
+    let immediateFinished = false;
+    let delayedFinished = false;
+    setTimeout(() => {
+      immediateFinished = true;
+    }, 0);
+    const delayedTimer = setTimeout(() => {
+      delayedFinished = true;
+    }, 100);
 
-    await settle();
+    try {
+      await settle();
 
-    expect(Date.now() - startedAt).toBeLessThan(40);
+      expect(immediateFinished).toBe(true);
+      expect(delayedFinished).toBe(false);
+    } finally {
+      clearTimeout(delayedTimer);
+    }
   });
 
   it('flushes an effect timer state update without an act warning', async () => {

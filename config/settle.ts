@@ -6,7 +6,7 @@
 // `await new Promise((resolve) => setTimeout(resolve, 50))` helpers.
 import { act } from 'react';
 
-const DEFAULT_ROUNDS = 20;
+const DEFAULT_ROUNDS = 10;
 
 function isFakeClock(): boolean {
   const timer = setTimeout as unknown as { clock?: unknown; _isMockFunction?: boolean };
