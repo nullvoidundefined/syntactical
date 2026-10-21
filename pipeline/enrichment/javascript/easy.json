@@ -1,0 +1,43 @@
+{
+  "js-easy-01": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.typeof-null-is-null",
+      "rationale": "You likely expected typeof to return a type name matching the value, so null would give \"null\". But typeof has no \"null\" result. It returns \"object\" for null, a long-standing bug in the original typeof table that was never fixed."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.null-equals-undefined-strict",
+      "rationale": "You may be mixing up null with undefined, thinking an empty value reports \"undefined\". Only undefined itself gives that. null is a separate value, and typeof null returns \"object\" because of a historical quirk in the typeof table."
+    }
+  ],
+  "js-easy-02": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.typeof-null-is-null",
+      "rationale": "You may be mixing up undefined with null, which typeof reports as \"object\" because of a long-standing quirk. The undefined value has its own tag, so typeof undefined gives \"undefined\", not \"object\"."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.typeof-undeclared-throws",
+      "rationale": "You may think typeof fails on something that looks missing. But undefined is a real value, and typeof never throws here. It just returns the string \"undefined\" without any ReferenceError."
+    }
+  ],
+  "js-easy-03": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.typeof-array-is-array",
+      "rationale": "You probably reasoned that since functions are objects, typeof should say \"object\". But typeof gives callable values their own result, \"function\". \"object\" is what it reports for ordinary objects and arrays, not for functions."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.typeof-undeclared-throws",
+      "rationale": "You may have thought a function expression with no name or return value yields \"undefined\". But typeof checks the type of the value itself, and that value is a function, so it reports \"function\". \"undefined\" is for undefined values."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.typeof-null-is-null",
+      "rationale": "\"callable\" sounds like a natural name for the type, but typeof has no such result. Any callable value is reported with the string \"function\", which is the name to use when checking whether something can be called."
+    }
+  ]
+}

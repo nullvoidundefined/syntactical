@@ -1,0 +1,36 @@
+{
+  "py-easy-01": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.int-rounds-to-floor",
+      "rationale": "You likely thought int() rounds a negative float down, toward negative infinity, like floor. But int() truncates toward zero, dropping the fraction, so -3.9 becomes -3. Only the // operator floors toward negative infinity."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.int-rounds-to-floor",
+      "rationale": "You may have thought int() leaves the value unchanged or doesn't act on a float. But int() always returns an integer, discarding the fractional part, so -3.9 becomes -3, not the float -3.9."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.int-rounds-to-floor",
+      "rationale": "You may have believed int() only accepts ints or strings and rejects floats. In fact int() accepts a float and truncates it toward zero, so int(-3.9) quietly gives -3 and no TypeError is raised."
+    }
+  ],
+  "py-easy-02": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.nan-equals-itself",
+      "rationale": "You likely assumed any value equals itself, so two identical-looking NaN expressions must match. Under IEEE 754, which Python follows, NaN compares unequal to everything, even another NaN. Use math.isnan(x) to test for it."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.nan-equals-itself",
+      "rationale": "You may have thought comparing 'not a number' values is invalid and raises an error. float('nan') is a legitimate float, and == simply returns a bool. IEEE 754 makes that result False, with no exception raised."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.nan-equals-itself",
+      "rationale": "You may have thought comparing undefined values yields None, like 'no result'. The == operator on floats always returns a bool. For NaN, IEEE 754 rules make the comparison return False, not None."
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "pg-easy-01": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.pipe-is-logical-or",
+      "rationale": "You likely carried over MySQL habits, where || can mean OR by default. In Postgres, || is the standard-SQL concatenation operator on text, so 'foo' || 'bar' gives 'foobar'. Logical OR is written with the OR keyword."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.pipe-is-logical-or",
+      "rationale": "You may have taken || to be a bit-level operator like | in other languages. Between text values Postgres uses it to join strings, so the result is 'foobar', not a combination of the bytes."
+    }
+  ],
+  "pg-easy-02": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.concat-null-keeps-text",
+      "rationale": "You probably expected NULL to act like an empty string, so 'a' || NULL would just give 'a'. In Postgres, || propagates NULL: if either operand is NULL, the whole result is NULL. Use COALESCE(col, '') or CONCAT() to skip NULLs."
+    }
+  ],
+  "pg-easy-03": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.like-ilike-confusion",
+      "rationale": "ILIKE is not a regex operator. It uses the same % and _ wildcards as LIKE; the only change is that it ignores case. Regex matching in Postgres uses separate operators such as ~, not ILIKE."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.like-ilike-confusion",
+      "rationale": "ILIKE is not the index-friendly one. Its difference is case folding, not indexing. Because it must fold case before comparing, a plain B-tree index doesn't become usable for it, and LIKE isn't barred from indexes because of ILIKE."
+    }
+  ]
+}
