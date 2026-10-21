@@ -1,0 +1,162 @@
+[
+  {
+    "description": "Believing T extends U ? X : Y evaluates once on a union T, rather than distributing over each member when T is a naked type parameter.",
+    "id": "typescript-types.conditional-distributes-over-naked-param"
+  },
+  {
+    "description": "Believing [T] extends [U] still distributes over a union, rather than checking the union as a whole.",
+    "id": "typescript-types.tuple-wrap-prevents-distribution"
+  },
+  {
+    "description": "Believing a distributive conditional given never returns a branch type, rather than distributing over zero members and yielding never.",
+    "id": "typescript-types.never-in-distributive-yields-never"
+  },
+  {
+    "description": "Believing a conditional on a concrete, non-generic type is deferred, rather than resolved immediately to one branch.",
+    "id": "typescript-types.conditional-non-generic-eager"
+  },
+  {
+    "description": "Believing extends in a conditional tests identical types, rather than assignability (so a subtype or literal passes).",
+    "id": "typescript-types.conditional-extends-is-assignability"
+  },
+  {
+    "description": "Believing any extends U ? X : Y picks one branch, rather than producing the union of both branches.",
+    "id": "typescript-types.any-in-conditional-unions-branches"
+  },
+  {
+    "description": "Believing infer can be declared anywhere in a type, rather than only inside the extends clause of a conditional type.",
+    "id": "typescript-types.infer-only-in-extends-clause"
+  },
+  {
+    "description": "Believing repeated infer positions always give a union, rather than a union for covariant positions and an intersection for contravariant ones.",
+    "id": "typescript-types.infer-multiple-candidates-contravariant"
+  },
+  {
+    "description": "Believing a failed infer match is a compile error, rather than selecting the false branch.",
+    "id": "typescript-types.infer-failed-match-takes-false-branch"
+  },
+  {
+    "description": "Believing infer on an overloaded function sees every overload, rather than only the last signature.",
+    "id": "typescript-types.infer-overloads-uses-last-signature"
+  },
+  {
+    "description": "Believing a homomorphic mapped type drops optional and readonly, rather than preserving them unless changed.",
+    "id": "typescript-types.mapped-preserves-modifiers"
+  },
+  {
+    "description": "Believing -? and -readonly leave modifiers untouched, rather than removing optionality and readonly from every property.",
+    "id": "typescript-types.minus-modifier-removes-optional-readonly"
+  },
+  {
+    "description": "Believing -? always strips undefined from the value, rather than only removing the optional flag (under exactOptionalPropertyTypes an explicit undefined stays).",
+    "id": "typescript-types.remove-optional-keeps-undefined-explicit"
+  },
+  {
+    "description": "Believing remapping a key to never in a mapped type is an error, rather than dropping that property.",
+    "id": "typescript-types.as-remap-never-filters-key"
+  },
+  {
+    "description": "Believing a mapped type over a string-literal union yields a union, rather than an object with one property per member.",
+    "id": "typescript-types.mapped-over-union-key-builds-object"
+  },
+  {
+    "description": "Believing a homomorphic mapped type over an array or tuple produces an object, rather than an array or tuple of mapped elements.",
+    "id": "typescript-types.mapped-over-array-maps-elements"
+  },
+  {
+    "description": "Believing a template literal with union placeholders is one string type, rather than the cross product of all combinations.",
+    "id": "typescript-types.template-literal-distributes-over-unions"
+  },
+  {
+    "description": "Believing a template literal with a string placeholder accepts any string, rather than only strings matching the pattern.",
+    "id": "typescript-types.template-literal-string-is-pattern"
+  },
+  {
+    "description": "Believing infer in a template literal captures greedily, rather than matching the shortest prefix before the next literal text.",
+    "id": "typescript-types.template-literal-infer-matches-shortest"
+  },
+  {
+    "description": "Believing template literal unions have no size limit, rather than erroring when the cross product exceeds the compiler cap.",
+    "id": "typescript-types.template-literal-union-explosion"
+  },
+  {
+    "description": "Believing distribution happens for any union passed through an alias, rather than only when the checked type is a naked type parameter.",
+    "id": "typescript-types.distribution-lost-by-alias-instantiation"
+  },
+  {
+    "description": "Believing Exclude and Extract test a union as a whole, rather than each member separately via a distributive conditional.",
+    "id": "typescript-types.exclude-extract-are-distributive"
+  },
+  {
+    "description": "Believing method parameters are always checked contravariantly, rather than bivariantly for method-syntax declarations.",
+    "id": "typescript-types.method-params-bivariant"
+  },
+  {
+    "description": "Believing strictFunctionTypes applies to all function types, rather than only function-type properties and not method-syntax declarations.",
+    "id": "typescript-types.strict-function-types-property-syntax"
+  },
+  {
+    "description": "Believing a type must declare or extend another to be assignable to it, rather than only needing a compatible structure.",
+    "id": "typescript-types.assignability-is-structural"
+  },
+  {
+    "description": "Believing excess property errors apply to every assignment, rather than only to fresh object literals.",
+    "id": "typescript-types.excess-property-check-fresh-literals-only"
+  },
+  {
+    "description": "Believing a Dog[] cannot be assigned to an Animal[], rather than arrays being covariant (an unsound but allowed assignment).",
+    "id": "typescript-types.array-covariance-unsound"
+  },
+  {
+    "description": "Believing the implementation signature of an overloaded function is callable, rather than only the overload signatures.",
+    "id": "typescript-types.overload-implementation-not-callable"
+  },
+  {
+    "description": "Believing overload order does not matter, rather than the first matching overload being chosen.",
+    "id": "typescript-types.overload-order-first-match-wins"
+  },
+  {
+    "description": "Believing satisfies widens the expression to the checked type, rather than keeping its narrower inferred type.",
+    "id": "typescript-types.satisfies-keeps-narrower-type"
+  },
+  {
+    "description": "Believing satisfies, a type annotation, and an as assertion behave alike, rather than validating without changing, widening, or overriding the type.",
+    "id": "typescript-types.satisfies-vs-annotation-vs-as"
+  },
+  {
+    "description": "Believing as const only affects strings, rather than making object properties readonly and arrays readonly tuples of literal types.",
+    "id": "typescript-types.as-const-readonly-literals"
+  },
+  {
+    "description": "Believing narrowing works on any shared property, rather than needing a literal-typed discriminant in each member.",
+    "id": "typescript-types.discriminant-needs-literal-type"
+  },
+  {
+    "description": "Believing a switch over a union is checked for completeness by default, rather than needing a default that assigns the value to never.",
+    "id": "typescript-types.exhaustive-never-check"
+  },
+  {
+    "description": "Believing narrowing of a mutable variable persists inside a later callback, rather than being reset because the variable may change.",
+    "id": "typescript-types.narrowing-lost-in-callbacks"
+  },
+  {
+    "description": "Believing keyof (A | B) lists every key of both, rather than only the keys common to both.",
+    "id": "typescript-types.keyof-union-is-intersection-of-keys"
+  },
+  {
+    "description": "Believing T[K1 | K2] is an error, rather than the union of the property types.",
+    "id": "typescript-types.indexed-access-union-key-yields-union"
+  },
+  {
+    "description": "Believing T extends X gives T a default of X, rather than a constraint with no default (an uninferred T becomes its constraint, a default needs = X).",
+    "id": "typescript-types.constraint-is-not-default"
+  },
+  {
+    "description": "Believing a primitive constraint widens the inferred type, rather than keeping the literal (T extends string infers \"a\").",
+    "id": "typescript-types.constraint-keeps-literal-inference"
+  },
+  {
+    "description": "Believing recursive conditional types have no depth limit, rather than hitting an instantiation depth error without tail-recursive form.",
+    "id": "typescript-types.recursive-alias-depth-limit"
+  }
+]

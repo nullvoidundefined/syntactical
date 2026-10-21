@@ -7,10 +7,7 @@ import { type ReactNode } from 'react';
 import { PasswordSignInStep } from '../PasswordSignInStep';
 import { SignUpStep } from '../SignUpStep';
 
-jest.mock('expo-router', () => ({
-  ...jest.requireActual('expo-router'),
-  router: { push: () => undefined, replace: () => undefined },
-}));
+jest.mock('expo-router', () => require('../../../config/buildExpoRouterMock').buildExpoRouterMock());
 
 jest.mock('../AuthForm', () => ({
   AuthForm: ({ children }: { children: ReactNode; onSubmit: () => void }) => (

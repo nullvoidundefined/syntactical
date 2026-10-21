@@ -10,6 +10,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { AUTH_STORAGE_KEY } from '../../constants/appConfig';
 import { AuthProvider, useAuth } from '../AuthProvider';
 import { buildIdentity, installRoutedFetch } from './authTestSupport';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
 const mockIdentify = jest.fn();
 const mockReset = jest.fn();
@@ -18,9 +19,7 @@ jest.mock('../../clients/analyticsClient', () => ({
   resetAnalyticsUser: () => mockReset(),
   trackEvent: jest.fn(),
 }));
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),
   setItemAsync: jest.fn(() => Promise.resolve()),
@@ -64,10 +63,7 @@ describe('AuthProvider analytics identity', () => {
 
   it('identifies a stored signed-in user on hydrate', async () => {
     const userId = randomUUID();
-    await AsyncStorage.setItem(
-      AUTH_STORAGE_KEY,
-      JSON.stringify({ knownUserIds: [userId], userId }),
-    );
+    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ knownUserIds: [userId], userId }));
     await mountAuth();
     expect(mockIdentify).toHaveBeenCalledWith(userId);
   });

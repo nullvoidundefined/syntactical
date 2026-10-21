@@ -15,8 +15,7 @@ import type { PaidBank } from '../../types/PaidBank.js';
 import { createBanksTestApp } from '../integration/createBanksTestApp.js';
 import { createMigratedDatabase } from '../integration/createMigratedDatabase.js';
 import { insertSession } from '../integration/insertSession.js';
-
-const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.env.TEST_DATABASE_URL;
+import { SKIP_DATABASE_TESTS } from '../integration/skipDatabaseTests.js';
 
 const HTTP_OK = 200;
 const HTTP_UNAUTHORIZED = 401;

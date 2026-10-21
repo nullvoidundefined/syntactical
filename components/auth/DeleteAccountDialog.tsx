@@ -6,17 +6,17 @@
 // one generic message and changes nothing; offline the confirm stays disabled.
 // While the request runs the dialog cannot be closed. On the web focus moves
 // into the dialog on open, Escape closes it, and focus returns to the trigger.
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState, type RefObject } from 'react';
 
-import { Modal, Platform, Pressable, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, Text, TextInput, View } from 'react-native';
 
 import { apiFetch } from '../../clients/apiClient';
 import { useAuth } from '../../state/AuthProvider';
 import { useSync } from '../../state/SyncProvider';
-import { markModalOpen } from '../../state/modalOpenSignal';
 import { useIsOnline } from '../../state/useIsOnline';
 
-import { ModalOverlay } from '../layout/ModalOverlay';
+import { DialogShell } from '../layout/DialogShell';
+import { useModalPanel } from '../layout/useModalPanel';
 
 import { AuthButton } from './AuthButton';
 
@@ -36,6 +36,7 @@ type DialogPanelProps = {
   onCancel: () => void;
   onChangeConfirmation: (value: string) => void;
   onConfirm: () => void;
+  returnFocusTo: RefObject<View | null>;
 };
 
 function DialogPanel({
@@ -46,42 +47,11 @@ function DialogPanel({
   onCancel,
   onChangeConfirmation,
   onConfirm,
+  returnFocusTo,
 }: DialogPanelProps) {
   const panelRef = useRef<View>(null);
   const isWeb = Platform.OS === 'web';
-
-  useEffect(() => markModalOpen(), []);
-
-  useEffect(() => {
-    if (!isWeb) return undefined;
-    (panelRef.current as unknown as HTMLElement | null)?.focus();
-    // Tab wraps inside the dialog: from the last control to the first, and back with Shift.
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Tab') {
-        const panel = panelRef.current as unknown as HTMLElement | null;
-        const controls = Array.from(
-          panel?.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled])') ?? [],
-        );
-        const [first] = controls;
-        const last = controls[controls.length - 1];
-        const edge = event.shiftKey ? first : last;
-        if (
-          first === undefined ||
-          (document.activeElement !== edge && !(event.shiftKey && document.activeElement === panel))
-        )
-          return;
-        event.preventDefault();
-        (event.shiftKey ? last : first).focus();
-        return;
-      }
-      if (event.key !== 'Escape') return;
-      event.stopPropagation();
-      onCancel();
-    }
-    // Capture phase, so a focused text input cannot swallow the key first.
-    document.addEventListener('keydown', handleKeyDown, true);
-    return () => document.removeEventListener('keydown', handleKeyDown, true);
-  }, [isWeb, onCancel]);
+  useModalPanel(panelRef, { onClose: onCancel, returnFocusTo });
 
   const shownMessage = isOnline ? message : OFFLINE_MESSAGE;
   const canConfirm = isOnline && !isBusy && confirmation === CONFIRMATION;
@@ -138,7 +108,6 @@ export function DeleteAccountDialog() {
   const [message, setMessage] = useState<string | null>(null);
   const triggerRef = useRef<View>(null);
   const isBusyRef = useRef(false);
-  const wasOpenRef = useRef(false);
 
   // Back, Escape, and Cancel do nothing while the request runs.
   const close = useCallback(() => {
@@ -147,13 +116,6 @@ export function DeleteAccountDialog() {
     setConfirmation('');
     setMessage(null);
   }, []);
-
-  useEffect(() => {
-    if (wasOpenRef.current && !isOpen && Platform.OS === 'web') {
-      (triggerRef.current as unknown as HTMLElement | null)?.focus();
-    }
-    wasOpenRef.current = isOpen;
-  }, [isOpen]);
 
   function setBusy(value: boolean) {
     isBusyRef.current = value;
@@ -192,17 +154,10 @@ export function DeleteAccountDialog() {
       onCancel={close}
       onChangeConfirmation={setConfirmation}
       onConfirm={() => void handleConfirm()}
+      returnFocusTo={triggerRef}
     />
   );
-
-  const overlay =
-    Platform.OS === 'web' ? (
-      <ModalOverlay>{panel}</ModalOverlay>
-    ) : (
-      <Modal transparent animationType="none" visible onRequestClose={close}>
-        {panel}
-      </Modal>
-    );
+  const overlay = <DialogShell onRequestClose={close}>{panel}</DialogShell>;
 
   return (
     <>

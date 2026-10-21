@@ -10,10 +10,9 @@ import { act, renderRouter, screen } from 'expo-router/testing-library';
 import { createQueryClient } from '../../config/queryClient';
 import { installRoutedFetch, type RouteReply } from '../../state/__tests__/authTestSupport';
 import PurchaseCompleteScreen from '../purchase-complete';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),

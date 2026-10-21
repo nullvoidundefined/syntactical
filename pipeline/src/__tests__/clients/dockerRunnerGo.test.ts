@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { runOracle } from '../../clients/dockerRunner.js';
 import { ensureRunnerImage } from '../../clients/ensureRunnerImage.js';
+import { describeDocker } from '../fixtures/dockerSuite.js';
 import {
     acquireDockerTestLock,
     DOCKER_LOCK_WAIT_MS,
@@ -14,12 +15,10 @@ import {
     runningRunnerContainers,
 } from '../fixtures/dockerTestLock.js';
 
-const SKIP_DOCKER = process.env.SKIP_DOCKER_TESTS === '1';
-
 const RUN_TIMEOUT_MS = 60_000;
 const GO_VERSION = /^Go 1\.\d+(\.\d+)?$/;
 
-describe.skipIf(SKIP_DOCKER)('runOracle go (docker)', () => {
+describeDocker('runOracle go (docker)', () => {
     beforeAll(async () => {
         await acquireDockerTestLock();
         await ensureRunnerImage('go');

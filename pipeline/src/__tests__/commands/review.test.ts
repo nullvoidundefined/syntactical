@@ -3,14 +3,15 @@
 import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { review } from '../../commands/review.js';
 import { pickSample } from '../../services/review/pickSample.js';
+import { writeJson } from '../fixtures/jsonFiles.js';
+import { buildLanguage, buildManifest, HASH } from '../fixtures/manifest.js';
 
-const HASH = '0123456789abcdef'.repeat(4);
 const PAID_TEXT = 'PAID-SECRET-PROMPT';
 const SAMPLE_KIND = 'sample of executed questions';
 
@@ -33,11 +34,6 @@ function buildQuestion(id: string, prompt = `prompt of ${id}`): Record<string, u
         query: { prompt: 'q' },
         type: 'mc',
     };
-}
-
-async function writeJson(file: string, value: unknown): Promise<void> {
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, JSON.stringify(value));
 }
 
 async function listFiles(dir: string): Promise<string[]> {
@@ -119,20 +115,14 @@ describe('review', () => {
         contentRoot = join(root, 'syntactical-content');
         pipelineDir = join(root, 'repo/pipeline/');
         await mkdir(contentRoot, { recursive: true });
-        const language = {
+        const language = buildLanguage({
             banks: {
                 easy: buildEntry('python/easy.json', 'free'),
                 medium: buildEntry('python/medium.json', 'paid'),
             },
-            glyph: 'G',
-            grammar: 'plain',
-            id: 'python',
-            label: 'L',
-            misconceptions: [],
-            tagline: 'T',
             topics: [{ id: 'strings', label: 'Strings' }],
-        };
-        await writeJson(join(contentDir, 'manifest.json'), { languages: [language], schemaVersion: 2 });
+        });
+        await writeJson(join(contentDir, 'manifest.json'), buildManifest(language));
         await writeJson(join(contentDir, 'python/easy.json'), {
             questions: [...FREE_IDS, 'q-bad'].map((id) => buildQuestion(id)),
         });

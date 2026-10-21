@@ -7,6 +7,7 @@ import { withTransaction } from '../clients/withTransaction.js';
 
 import { insertSession } from './insertSession.js';
 import { isValidTimeZone } from './isValidTimeZone.js';
+import { lockUserPasswordHash } from './lockUserPasswordHash.js';
 
 interface CreatePasswordSessionInput {
   now: Date;
@@ -22,11 +23,7 @@ async function createPasswordSession(
 ): Promise<{ sessionToken: string } | null> {
   const { now, rehash, timezone, userId, verifiedHash } = input;
   return withTransaction(database, async (client) => {
-    const { rows } = await client.query<{ password_hash: string | null }>(
-      'SELECT password_hash FROM users WHERE id = $1 FOR UPDATE',
-      [userId],
-    );
-    if (rows[0]?.password_hash !== verifiedHash) {
+    if ((await lockUserPasswordHash(client, userId)) !== verifiedHash) {
       return null;
     }
     if (rehash !== undefined) {

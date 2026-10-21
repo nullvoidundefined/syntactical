@@ -13,6 +13,7 @@ import { buildManifestQuery } from '../services/content/buildManifestQuery';
 import { BUNDLED_BANKS } from '../services/content/bundledBanks.generated';
 import { BUNDLED_MANIFEST } from '../services/content/bundledManifest.generated';
 import { findBankEntry } from '../services/content/findBankEntry';
+import { findLanguageEntry } from '../services/content/findLanguageEntry';
 import { prefetchChangedBanks } from '../services/content/prefetchChangedBanks';
 import { readCachedBank } from '../services/content/readCachedBank';
 import { readCachedManifest } from '../services/content/readCachedManifest';
@@ -29,9 +30,12 @@ function buildBankId(language: string, difficulty: string): string {
 
 function readBundledBank(language: string, difficulty: string): CachedBank | null {
   const entry = findBankEntry(BUNDLED, language, difficulty);
-  const languageEntry = BUNDLED.languages.find(({ id }) => id === language);
+  const languageEntry = findLanguageEntry(BUNDLED.languages, language);
   if (!entry || !languageEntry) return null;
-  const result = validateQuestionBank(BUNDLED_BANKS[buildBankId(language, difficulty)], buildBankContext(languageEntry));
+  const result = validateQuestionBank(
+    BUNDLED_BANKS[buildBankId(language, difficulty)],
+    buildBankContext(languageEntry),
+  );
   if (!result.isValid) return null;
   const { questions } = result;
   return { hash: entry.hash, questions };
@@ -72,13 +76,7 @@ function buildContentAccess(hydrated: HydratedContent, contentBaseUrl: string | 
   };
 }
 
-export function ContentProvider({
-  contentBaseUrl,
-  children,
-}: {
-  contentBaseUrl: string | null;
-  children: ReactNode;
-}) {
+export function ContentProvider({ contentBaseUrl, children }: { contentBaseUrl: string | null; children: ReactNode }) {
   const queryClient = useQueryClient();
   const [hydrated, setHydrated] = useState<HydratedContent | null>(null);
 

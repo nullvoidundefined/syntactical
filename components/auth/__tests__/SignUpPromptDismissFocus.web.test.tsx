@@ -6,7 +6,7 @@ import { act, render, screen } from '@testing-library/react';
 
 import { ResultsScreen } from '../../quiz/ResultsScreen';
 
-jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
+jest.mock('expo-router', () => require('../../../config/buildExpoRouterMock').buildExpoRouterMock({ push: jest.fn() }));
 jest.mock('../../../state/AuthProvider', () => ({ useAuth: () => ({ isHydrated: true, isSignedIn: false }) }));
 jest.mock('../../../state/StatsProvider', () => {
   const { useState } = jest.requireActual<typeof import('react')>('react');
@@ -20,7 +20,17 @@ jest.mock('../../../state/StatsProvider', () => {
 
 describe('SignUpPrompt dismissal on the web', () => {
   it('moves focus to Retry when "Not now" removes the prompt', () => {
-    render(<ResultsScreen accuracy={50} correctCount={1} totalQuestions={2} languageLabel="Python" difficultyLabel="Easy" onMenu={jest.fn()} onRetry={jest.fn()} />);
+    render(
+      <ResultsScreen
+        accuracy={50}
+        correctCount={1}
+        totalQuestions={2}
+        languageLabel="Python"
+        difficultyLabel="Easy"
+        onMenu={jest.fn()}
+        onRetry={jest.fn()}
+      />,
+    );
     const notNow = screen.getByRole('button', { name: 'Not now' });
     act(() => notNow.focus());
     act(() => notNow.click());

@@ -34,11 +34,18 @@ jest.mock('../../clients/apiClient', () => ({
   },
 }));
 jest.mock('../../state/SyncProvider', () => ({
-  useSync: () => ({ cancelPass: () => undefined, isSyncing: false, isUploadCapReached: false, syncNow: () => Promise.resolve(true) }),
+  useSync: () => ({
+    cancelPass: () => undefined,
+    isSyncing: false,
+    isUploadCapReached: false,
+    syncNow: () => Promise.resolve(true),
+  }),
 }));
 jest.mock('../../components/layout/ReviewDueLink', () => ({ ReviewDueLink: () => null }));
 jest.mock('../../components/layout/DownloadIndicator', () => ({ DownloadIndicator: () => null }));
-jest.mock('expo-router', () => ({ router: { push: jest.fn() }, useLocalSearchParams: () => ({}) }));
+jest.mock('expo-router', () =>
+  require('../../config/buildExpoRouterMock').buildExpoRouterMock({ push: jest.fn(), readParams: () => ({}) }),
+);
 
 function OwnedStats({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -47,7 +54,12 @@ function OwnedStats({ children }: { children: ReactNode }) {
 
 async function renderSettings() {
   await render(
-    <SafeAreaProvider initialMetrics={{ frame: { height: 800, width: 400, x: 0, y: 0 }, insets: { bottom: 0, left: 0, right: 0, top: 0 } }}>
+    <SafeAreaProvider
+      initialMetrics={{
+        frame: { height: 800, width: 400, x: 0, y: 0 },
+        insets: { bottom: 0, left: 0, right: 0, top: 0 },
+      }}
+    >
       <QueryClientProvider client={createQueryClient()}>
         <AuthProvider>
           <OwnedStats>
@@ -97,7 +109,9 @@ describe('SettingsScreen', () => {
     expect(screen.getByRole('radio', { name: '50 XP a day' })).toBeChecked();
     expect(mockServer.calls).toEqual([]);
     await waitFor(async () => {
-      const stored = JSON.parse((await AsyncStorage.getItem(STORAGE_KEY)) ?? 'null') as { goalHistory: { from: string; goal: number }[] };
+      const stored = JSON.parse((await AsyncStorage.getItem(STORAGE_KEY)) ?? 'null') as {
+        goalHistory: { from: string; goal: number }[];
+      };
       expect(stored.goalHistory).toContainEqual({ from: readLocalToday(), goal: 50 });
     });
   });

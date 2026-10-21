@@ -10,6 +10,7 @@ import { AUTH_STORAGE_KEY } from '../../constants/appConfig';
 import { AuthProvider } from '../../state/AuthProvider';
 import { installRoutedFetch, type RouteReply } from '../../state/__tests__/authTestSupport';
 import PurchaseCompleteScreen from '../purchase-complete';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
 // /purchase-complete after a full page load (B-38c): checkout returns to a
 // fresh app, so the real AuthProvider has not yet read the stored identity
@@ -20,9 +21,7 @@ import PurchaseCompleteScreen from '../purchase-complete';
 // once a stored guest is hydrated it shows "Still processing, check back
 // shortly" and makes no request.
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),

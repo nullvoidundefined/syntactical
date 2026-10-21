@@ -10,17 +10,15 @@ import SignInScreen from '../sign-in';
 // motion no element on either step runs a CSS animation, by computed style
 // and by class name.
 
-jest.mock('expo-router', () => ({
-  ...jest.requireActual('expo-router'),
-  router: { replace: () => undefined },
-  useRouter: () => ({ replace: () => undefined }),
-}));
+jest.mock('expo-router', () => require('../../config/buildExpoRouterMock').buildExpoRouterMock());
 jest.mock('react-native-reanimated', () => ({
   ...jest.requireActual('react-native-reanimated'),
   useReducedMotion: () => true,
 }));
 
-type AuthResult = { isOk: true } | { isOk: false; reason: 'invalid-code' | 'invalid-email' | 'rate-limited' | 'unavailable' };
+type AuthResult =
+  | { isOk: true }
+  | { isOk: false; reason: 'invalid-code' | 'invalid-email' | 'rate-limited' | 'unavailable' };
 
 const mockRequestCode = jest.fn<Promise<AuthResult>, [string]>();
 const mockVerifyCode = jest.fn<Promise<AuthResult>, [string, string]>();

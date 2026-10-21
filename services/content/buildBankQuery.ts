@@ -7,6 +7,7 @@ import type { BankEntry, Manifest } from '@syntactical/content-schema';
 import type { QueryClient } from '@tanstack/react-query';
 
 import { findBankEntry } from './findBankEntry';
+import { findLanguageEntry } from './findLanguageEntry';
 import { loadQuestionBank } from './loadQuestionBank';
 import type { ContentAccess } from './types/ContentAccess';
 
@@ -25,7 +26,7 @@ function readCurrentHash(
 
 // The ids a bank may reference come from its language's entry in the current manifest.
 function readBankContext(queryClient: QueryClient, access: ContentAccess, language: string) {
-  const languageEntry = readCurrentManifest(queryClient, access).languages.find(({ id }) => id === language);
+  const languageEntry = findLanguageEntry(readCurrentManifest(queryClient, access).languages, language);
   return languageEntry ? buildBankContext(languageEntry) : null;
 }
 
@@ -51,12 +52,13 @@ export function buildBankQuery(
         context,
         difficulty,
         entry,
-        isHashCurrent: (hash: string) =>
-          readCurrentHash(queryClient, access, language, difficulty) === hash,
+        isHashCurrent: (hash: string) => readCurrentHash(queryClient, access, language, difficulty) === hash,
         language,
         ownerUserId: isPaid ? ownerUserId : null,
       });
     },
-    queryKey: isPaid ? ['bank', language, difficulty, entryHash, ownerUserId] : ['bank', language, difficulty, entryHash],
+    queryKey: isPaid
+      ? ['bank', language, difficulty, entryHash, ownerUserId]
+      : ['bank', language, difficulty, entryHash],
   };
 }

@@ -16,20 +16,15 @@ import {
   installRoutedFetch,
   type SignInIdentity,
 } from './authTestSupport';
+import { randomBytes } from 'node:crypto';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
-jest.mock('expo-constants', () => {
-  // Built at run time so no credential-shaped literal sits in source.
-  const { randomBytes } = require('node:crypto');
-  return {
-    expoConfig: {
-      extra: {
-        apiBaseUrl: 'https://api.syntactical.dev/v1/',
-        revenueCatAppleKey: `appl_${randomBytes(12).toString('hex')}`,
-        revenueCatGoogleKey: `goog_${randomBytes(12).toString('hex')}`,
-        revenueCatWebBillingKey: `rcb_${randomBytes(12).toString('hex')}`,
-      },
-    },
-  };
+// Built at run time so no credential-shaped literal sits in source.
+setExpoExtra({
+  apiBaseUrl: 'https://api.syntactical.dev/v1/',
+  revenueCatAppleKey: `appl_${randomBytes(12).toString('hex')}`,
+  revenueCatGoogleKey: `goog_${randomBytes(12).toString('hex')}`,
+  revenueCatWebBillingKey: `rcb_${randomBytes(12).toString('hex')}`,
 });
 
 jest.mock('expo-secure-store', () => {
@@ -150,7 +145,10 @@ describe('AuthProvider on native: RevenueCat purchaser identity', () => {
     const identity = buildIdentity();
     const start = purchases.mockEvents.length;
     const { setRoute } = installRoutedFetch({
-      'POST auth/sessions': { status: 400, body: { error: { code: 'AUTH_INVALID_CODE', message: 'invalid', requestId: 'r1' } } },
+      'POST auth/sessions': {
+        status: 400,
+        body: { error: { code: 'AUTH_INVALID_CODE', message: 'invalid', requestId: 'r1' } },
+      },
     });
     const { result } = await mountAuth();
     await settle();

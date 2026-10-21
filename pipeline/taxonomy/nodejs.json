@@ -1,0 +1,162 @@
+[
+  {
+    "description": "Believing an async function's rejection, once thrown, can be caught by a try/catch around the call that did not await it, rather than becoming an unhandled rejection.",
+    "id": "nodejs.async-try-catch-without-await"
+  },
+  {
+    "description": "Believing starting several awaited calls in a for loop runs them concurrently, rather than one after another, unless the promises are created first and awaited together.",
+    "id": "nodejs.await-in-loop-is-concurrent"
+  },
+  {
+    "description": "Believing decoding a Buffer chunk by chunk with toString is always safe, when a multi-byte character split across chunks decodes to replacement characters unless a StringDecoder is used.",
+    "id": "nodejs.buffer-chunk-decode-is-safe"
+  },
+  {
+    "description": "Believing Buffer.from(number) or the Buffer constructor creates a buffer holding that number, rather than allocating that many bytes; Buffer.from(string) and Buffer.alloc are the intended forms.",
+    "id": "nodejs.buffer-from-number-stores-number"
+  },
+  {
+    "description": "Believing a Buffer's length counts characters, rather than bytes, so a multi-byte UTF-8 string has a larger Buffer.byteLength than string length.",
+    "id": "nodejs.buffer-length-is-characters"
+  },
+  {
+    "description": "Believing Buffer.slice or subarray copies the bytes, so writes through the slice cannot be seen in the original buffer.",
+    "id": "nodejs.buffer-slice-copies"
+  },
+  {
+    "description": "Believing a throw inside an asynchronous callback is caught by a try/catch surrounding the call that scheduled it, rather than being uncaught once the stack has unwound.",
+    "id": "nodejs.callback-throw-caught-by-outer-try"
+  },
+  {
+    "description": "Believing a circular require gives each side the other's complete exports, rather than the module that started the cycle seeing a partially filled exports object.",
+    "id": "nodejs.circular-require-sees-complete-exports"
+  },
+  {
+    "description": "Believing a data event delivers one line, record, or whole message, rather than an arbitrary chunk whose boundaries do not match the content.",
+    "id": "nodejs.data-chunk-is-whole-message"
+  },
+  {
+    "description": "Believing emit schedules its listeners to run later, rather than calling them synchronously, in registration order, before emit returns.",
+    "id": "nodejs.emit-is-asynchronous"
+  },
+  {
+    "description": "Believing emit returns the listeners' results or the emitter, rather than a boolean saying whether any listener was registered for the event.",
+    "id": "nodejs.emit-returns-listener-result"
+  },
+  {
+    "description": "Believing an EventEmitter 'error' event with no listener is ignored, rather than being thrown and crashing the process.",
+    "id": "nodejs.emitter-error-without-listener-ignored"
+  },
+  {
+    "description": "Believing a base64 or hex round trip of a string needs no matching encoding, when decoding with a different encoding than was used to encode changes the result.",
+    "id": "nodejs.encoding-round-trip-any-encoding"
+  },
+  {
+    "description": "Believing an error-first callback is called with undefined as its first argument only on failure, when the convention is null or undefined on success and an Error on failure.",
+    "id": "nodejs.error-first-callback-order"
+  },
+  {
+    "description": "Believing fs.existsSync or an access check before opening makes the following open safe, rather than leaving a race where the file can change between the check and the use.",
+    "id": "nodejs.exists-then-open-is-safe"
+  },
+  {
+    "description": "Believing reassigning exports exports a new value, rather than only module.exports being what require returns.",
+    "id": "nodejs.exports-reassignment-exports-value"
+  },
+  {
+    "description": "Believing 'finish' on a writable and 'end' on a readable mean the same thing, rather than finish meaning all writes were flushed and end meaning no more data will be read.",
+    "id": "nodejs.finish-vs-end-event"
+  },
+  {
+    "description": "Believing an event emitted before a listener is attached is queued and delivered later, rather than being lost.",
+    "id": "nodejs.late-listener-gets-past-events"
+  },
+  {
+    "description": "Believing fs.mkdir creates missing parent directories by default, rather than failing with ENOENT unless recursive is set.",
+    "id": "nodejs.mkdir-creates-parents"
+  },
+  {
+    "description": "Believing the order of process.nextTick, promise callbacks, setImmediate, and setTimeout(0) is the order they were written, rather than nextTick first, then promise microtasks, with timers and setImmediate running in later phases.",
+    "id": "nodejs.nexttick-setimmediate-settimeout-order"
+  },
+  {
+    "description": "Believing once removes its listener only after the callback finishes successfully, or that on and once fire a different number of times per emit, rather than once removing itself before the first call.",
+    "id": "nodejs.once-listener-semantics"
+  },
+  {
+    "description": "Believing path.join with an absolute later segment discards the earlier segments, rather than path.join simply concatenating and normalizing them.",
+    "id": "nodejs.path-join-absolute-segment-resets"
+  },
+  {
+    "description": "Believing path.join and path.resolve return the same result, rather than resolve building an absolute path from the current working directory and treating a later absolute segment as a reset.",
+    "id": "nodejs.path-join-vs-resolve"
+  },
+  {
+    "description": "Believing a pending timer or open handle does not keep the process alive, rather than the process staying running until it is cleared or unref'd.",
+    "id": "nodejs.pending-timer-does-not-keep-alive"
+  },
+  {
+    "description": "Believing pipe forwards errors from the source to the destination or cleans up on failure, rather than needing pipeline to propagate errors and destroy the streams.",
+    "id": "nodejs.pipe-propagates-errors"
+  },
+  {
+    "description": "Believing process.env values keep their type, rather than every value being coerced to a string, so assigning a number or undefined produces the strings '5' or 'undefined'.",
+    "id": "nodejs.process-env-keeps-type"
+  },
+  {
+    "description": "Believing process.exit lets pending asynchronous work and output finish first, rather than terminating promptly, while process.exitCode lets the loop drain naturally.",
+    "id": "nodejs.process-exit-waits-for-pending-work"
+  },
+  {
+    "description": "Believing Promise.all waits for every promise and collects the failures, rather than rejecting as soon as the first one rejects; allSettled is the one that waits for all.",
+    "id": "nodejs.promise-all-waits-for-all"
+  },
+  {
+    "description": "Believing util.promisify works on any function, when it assumes the error-first callback is the last argument and breaks on callbacks with other shapes.",
+    "id": "nodejs.promisify-any-callback"
+  },
+  {
+    "description": "Believing a readable stream starts flowing as soon as it is created, rather than starting paused until a data listener, pipe, or resume switches it to flowing mode.",
+    "id": "nodejs.readable-stream-flows-immediately"
+  },
+  {
+    "description": "Believing fs.readFile and fs.readFileSync complete in the same order relative to following code, rather than the async callback always running after the rest of the current synchronous code.",
+    "id": "nodejs.readfile-callback-runs-before-next-line"
+  },
+  {
+    "description": "Believing fs.readFile without an encoding returns a string, rather than a Buffer.",
+    "id": "nodejs.readfile-returns-string-by-default"
+  },
+  {
+    "description": "Believing require returns a fresh copy of a module on each call, rather than the same cached module.exports object, so state and mutations are shared between requirers.",
+    "id": "nodejs.require-returns-fresh-module"
+  },
+  {
+    "description": "Believing setImmediate and setTimeout(0) from the main module always run in a fixed order, when from the main module the order depends on process timing, though inside an I/O callback setImmediate is always first.",
+    "id": "nodejs.setimmediate-vs-timeout-from-main"
+  },
+  {
+    "description": "Believing setTimeout(fn, 0) runs fn immediately, or exactly after the given delay, rather than no sooner than the delay once the event loop is free.",
+    "id": "nodejs.settimeout-zero-runs-immediately"
+  },
+  {
+    "description": "Believing a busy synchronous loop lets timers fire on time, rather than blocking the single thread so every timer and callback waits until it ends.",
+    "id": "nodejs.sync-loop-does-not-block-timers"
+  },
+  {
+    "description": "Believing a caught error always has a stack and message of its own, when a thrown non-Error value such as a string has neither and loses the stack trace.",
+    "id": "nodejs.thrown-value-is-error"
+  },
+  {
+    "description": "Believing an unhandled promise rejection only logs a warning, rather than terminating the process with a non-zero exit in modern Node.",
+    "id": "nodejs.unhandled-rejection-only-warns"
+  },
+  {
+    "description": "Believing write returning false means the data was dropped, rather than meaning the internal buffer is above the high-water mark and the writer should wait for 'drain'.",
+    "id": "nodejs.write-false-means-dropped"
+  },
+  {
+    "description": "Believing fs.writeFile appends to an existing file, rather than replacing its contents; appendFile or the 'a' flag appends.",
+    "id": "nodejs.writefile-appends"
+  }
+]

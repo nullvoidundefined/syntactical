@@ -7,6 +7,7 @@ import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-librar
 import { createQueryClient } from '../../config/queryClient';
 import { installRoutedFetch, type RouteReply } from '../../state/__tests__/authTestSupport';
 import PurchaseCompleteScreen from '../purchase-complete';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
 // The purchase-complete route (B-38, Task 3.16): after Web Billing checkout,
 // /purchase-complete?product=<productId> polls GET me immediately and then
@@ -15,9 +16,7 @@ import PurchaseCompleteScreen from '../purchase-complete';
 // stops), and "Still processing, check back shortly" after the deadline. A
 // missing or invalid product, or a guest, makes no request at all.
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),

@@ -2,25 +2,21 @@
 // generated questions are all enriched publishes with `rationale` on every wrong choice (mc) or
 // on the question (bool). The chain test runs gap-fill and publish (no enrich) end to end with fakes
 // for a free and a paid bank: batch-generated cards arrive already explained.
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { gapFill } from '../../commands/gapFill.js';
 import { publish } from '../../commands/publish.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
+import { writeJson } from '../fixtures/jsonFiles.js';
+import { buildBankEntry, buildLanguage, buildManifest } from '../fixtures/manifest.js';
 
-const HASH = '0123456789abcdef'.repeat(4);
 const TAG = 'python.truthy-strings';
 
 type Json = Record<string, unknown>;
-
-async function writeJson(file: string, value: unknown): Promise<void> {
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, `${JSON.stringify(value, null, 2)}\n`);
-}
 
 async function readBank(file: string): Promise<{ questions: Json[] }> {
     return JSON.parse(await readFile(file, 'utf8')) as { questions: Json[] };
@@ -41,32 +37,11 @@ function generated(id: string, over: Json): Json {
     };
 }
 
-function buildManifest(access: 'free' | 'paid'): Json {
-    const productId = access === 'paid' ? { productId: 'syntactical.python.easy' } : {};
-    return {
-        languages: [
-            {
-                banks: {
-                    easy: {
-                        access,
-                        contentVersion: 1,
-                        hash: HASH,
-                        path: 'python/easy.json',
-                        topicCounts: {},
-                        ...productId,
-                    },
-                },
-                glyph: 'PY',
-                grammar: 'python',
-                id: 'python',
-                label: 'Python',
-                misconceptions: [],
-                tagline: 'T',
-                topics: [{ id: 'strings', label: 'Strings' }],
-            },
-        ],
-        schemaVersion: 2,
-    };
+function manifestWithAccess(access: 'free' | 'paid'): Json {
+    const productId = access === 'paid' ? 'syntactical.python.easy' : undefined;
+    const banks = { easy: buildBankEntry('python/easy.json', access, productId) };
+    const topics = [{ id: 'strings', label: 'Strings' }];
+    return buildManifest(buildLanguage({ banks, glyph: 'PY', grammar: 'python', label: 'Python', topics }));
 }
 
 describe('publish with generated questions', () => {
@@ -76,7 +51,7 @@ describe('publish with generated questions', () => {
     let pipelineDir: string;
 
     async function seed(access: 'free' | 'paid'): Promise<string> {
-        await writeJson(join(contentDir, 'manifest.json'), buildManifest(access));
+        await writeJson(join(contentDir, 'manifest.json'), manifestWithAccess(access));
         await writeJson(join(pipelineDir, 'topics.json'), { python: ['strings'] });
         await writeJson(join(pipelineDir, 'taxonomy/python.json'), [{ description: 'Thinks "0" is falsy', id: TAG }]);
         const outRoot = access === 'free' ? pipelineDir : contentRoot;

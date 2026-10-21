@@ -20,6 +20,7 @@ import {
 import { ContentProvider } from '../ContentProvider';
 import { PaidBankPrefetch } from '../PaidBankPrefetch';
 import { useQuestionBank } from '../useQuestionBank';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
 const mockOwner: { current: string | null } = { current: null };
 
@@ -33,11 +34,7 @@ jest.mock('expo-secure-store', () => ({
   setItemAsync: jest.fn(() => Promise.resolve()),
 }));
 
-jest.mock('expo-constants', () => ({
-  expoConfig: {
-    extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/', contentBaseUrl: 'https://example.test/content/' },
-  },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/', contentBaseUrl: 'https://example.test/content/' });
 
 jest.mock('../../clients/hashClient', () => ({
   hashTextSha256: async (text: string) =>

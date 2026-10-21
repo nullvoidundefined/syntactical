@@ -1,9 +1,9 @@
 // `pipeline gap-fill` batch generation: one model call per short topic (at most 2 per run),
 // cards proven in the sandbox, staging complete enough that publish needs no enrich. Fake
 // provider, fake runner, fake judge; no Docker, no network.
-import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { validateBankForPublish, type Question } from '@syntactical/content-schema';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -14,8 +14,9 @@ import { ProviderTransientError } from '../../types/ProviderTransientError.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 import type { Oracle } from '../../types/Oracle.js';
 import type { OracleRun } from '../../types/OracleRun.js';
+import { readJson, writeJson } from '../fixtures/jsonFiles.js';
+import { buildBankEntry, buildLanguage, buildManifest, HASH } from '../fixtures/manifest.js';
 
-const HASH = '0123456789abcdef'.repeat(4);
 const PAID_MARKER = 'PAID-BATCH-MARKER';
 const TARGET = 10;
 
@@ -61,15 +62,6 @@ function mcCard(tag: string, language?: string, setupSql?: string): RawCard {
         query: { explanation: 'e', title: 't' },
         type: 'mc',
     };
-}
-
-async function writeJson(path: string, body: unknown): Promise<void> {
-    await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, JSON.stringify(body));
-}
-
-async function readJson<T = Record<string, unknown>>(path: string): Promise<T> {
-    return JSON.parse(await readFile(path, 'utf8')) as T;
 }
 
 async function listFiles(dir: string): Promise<string[]> {
@@ -155,23 +147,17 @@ describe('gapFill batch generation', () => {
     async function seed(options: Seed = {}): Promise<void> {
         const { access = 'free', bank = [], kind = 'language', staged = [], topics = ['strings'] } = options;
         id = kind === 'topic' ? 'backend-security' : 'python';
-        const productId = access === 'paid' ? { productId: `syntactical.${id}.easy` } : {};
-        const entry = {
-            banks: {
-                easy: { access, contentVersion: 1, hash: HASH, path: `${id}/easy.json`, topicCounts: {}, ...productId },
-            },
-            glyph: 'G',
-            grammar: 'plain',
+        const productId = access === 'paid' ? `syntactical.${id}.easy` : undefined;
+        const entry = buildLanguage({
+            banks: { easy: buildBankEntry(`${id}/easy.json`, access, productId) },
             id,
             label: id,
-            misconceptions: [],
-            tagline: 'T',
             topics: topics.map((topic) => ({ id: topic, label: topic })),
             ...(kind === 'topic' ? { kind: 'topic' } : {}),
-        };
+        });
         outRoot = access === 'free' ? pipelineDir : contentRoot;
         const questions = bank.map(([prompt], index) => ({ answer: true, id: `bank-${index}`, prompt, type: 'bool' }));
-        await writeJson(join(contentDir, 'manifest.json'), { languages: [entry], schemaVersion: 2 });
+        await writeJson(join(contentDir, 'manifest.json'), buildManifest(entry));
         await writeJson(join(access === 'free' ? contentDir : contentRoot, `${id}/easy.json`), {
             questions,
             schemaVersion: 2,

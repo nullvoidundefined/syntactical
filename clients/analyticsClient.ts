@@ -6,9 +6,9 @@
 // outside the registry or a property named email, code, or token throws; in
 // production the event is dropped with a warning, so analytics never breaks a
 // round.
-import Constants from 'expo-constants';
 import PostHog from 'posthog-react-native';
 
+import { readExtraString } from '../config/readExtraString';
 import {
   ANALYTICS_EVENTS,
   FORBIDDEN_ANALYTICS_PROPERTIES,
@@ -23,9 +23,9 @@ let client: PostHog | null | undefined;
 
 function readClient(): PostHog | null {
   if (client !== undefined) return client;
-  const extra = Constants.expoConfig?.extra as Record<string, unknown> | undefined;
-  const { posthogHost, posthogKey } = extra ?? {};
-  if (typeof posthogKey !== 'string' || posthogKey === '') {
+  const posthogKey = readExtraString('posthogKey');
+  const posthogHost = readExtraString('posthogHost');
+  if (posthogKey === null) {
     client = null;
     return client;
   }
@@ -33,7 +33,7 @@ function readClient(): PostHog | null {
     client = new PostHog(posthogKey, {
       captureAppLifecycleEvents: false,
       disableGeoip: true,
-      ...(typeof posthogHost === 'string' && posthogHost !== '' ? { host: posthogHost } : {}),
+      ...(posthogHost !== null ? { host: posthogHost } : {}),
       persistence: 'memory',
     });
   } catch (err) {
@@ -45,8 +45,7 @@ function readClient(): PostHog | null {
 }
 
 function findProblem(name: string, properties: AnalyticsProperties): string | null {
-  if (!(ANALYTICS_EVENTS as readonly string[]).includes(name))
-    return 'analytics event is not in the registry';
+  if (!(ANALYTICS_EVENTS as readonly string[]).includes(name)) return 'analytics event is not in the registry';
   const isForbidden = Object.keys(properties).some((key) =>
     FORBIDDEN_ANALYTICS_PROPERTIES.some((forbidden) => key.toLowerCase().includes(forbidden)),
   );

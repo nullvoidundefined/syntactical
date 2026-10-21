@@ -8,10 +8,14 @@ import { ResultsScreen } from '../../quiz/ResultsScreen';
 
 const mockDismiss = jest.fn();
 
-jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
+jest.mock('expo-router', () => require('../../../config/buildExpoRouterMock').buildExpoRouterMock({ push: jest.fn() }));
 jest.mock('../../../state/AuthProvider', () => ({ useAuth: () => ({ isHydrated: true, isSignedIn: false }) }));
 jest.mock('../../../state/StatsProvider', () => ({
-  useQuizStats: () => ({ dismissSignUpPrompt: mockDismiss, isHydrated: true, stats: { isSignUpPromptDismissed: false } }),
+  useQuizStats: () => ({
+    dismissSignUpPrompt: mockDismiss,
+    isHydrated: true,
+    stats: { isSignUpPromptDismissed: false },
+  }),
 }));
 
 function pressKeyOn(target: EventTarget, key: string) {
@@ -21,7 +25,17 @@ function pressKeyOn(target: EventTarget, key: string) {
 }
 
 function renderResults(onRetry: () => void) {
-  render(<ResultsScreen accuracy={50} correctCount={1} totalQuestions={2} languageLabel="Python" difficultyLabel="Easy" onMenu={jest.fn()} onRetry={onRetry} />);
+  render(
+    <ResultsScreen
+      accuracy={50}
+      correctCount={1}
+      totalQuestions={2}
+      languageLabel="Python"
+      difficultyLabel="Easy"
+      onMenu={jest.fn()}
+      onRetry={onRetry}
+    />,
+  );
 }
 
 describe('SignUpPrompt on the web', () => {

@@ -2,17 +2,17 @@
 // free banks from `<pipelineDir>/oracles`, paid banks from `<contentRoot>/oracles`, never a paid
 // bank's from the pipeline dir. The oracle source and the oracle observer are not injected; the
 // commands read the oracle files themselves and hand each oracle to the injected validator.
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { review } from '../../commands/review.js';
 import { validateContent } from '../../commands/validate.js';
 import type { Oracle } from '../../types/Oracle.js';
-
-const HASH = '0123456789abcdef'.repeat(4);
+import { writeJson } from '../fixtures/jsonFiles.js';
+import { buildBankEntry, buildLanguage, buildManifest } from '../fixtures/manifest.js';
 
 function oracleOf(code: string): Oracle {
     return { code, language: 'python' };
@@ -34,11 +34,6 @@ function buildQuestion(id: string): Record<string, unknown> {
     };
 }
 
-async function writeJson(file: string, value: unknown): Promise<void> {
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, JSON.stringify(value));
-}
-
 const PAID_IDS = ['paid-1', 'paid-2', 'paid-3', 'paid-4'];
 
 describe('validate and review oracle roots', () => {
@@ -55,25 +50,17 @@ describe('validate and review oracle roots', () => {
         contentRoot = join(root, 'syntactical-content');
         pipelineDir = join(root, 'repo/pipeline/');
         await mkdir(contentRoot, { recursive: true });
-        const entry = (access: 'free' | 'paid', difficulty: string) => ({
-            access,
-            contentVersion: 1,
-            hash: HASH,
-            path: `python/${difficulty}.json`,
-            topicCounts: {},
-            ...(access === 'paid' ? { productId: `syntactical.python.${difficulty}` } : {}),
-        });
-        const language = {
+        const entry = (access: 'free' | 'paid', difficulty: string) =>
+            buildBankEntry(
+                `python/${difficulty}.json`,
+                access,
+                access === 'paid' ? `syntactical.python.${difficulty}` : undefined,
+            );
+        const language = buildLanguage({
             banks: { easy: entry('free', 'easy'), medium: entry('paid', 'medium') },
-            glyph: 'G',
-            grammar: 'plain',
-            id: 'python',
-            label: 'L',
-            misconceptions: [],
-            tagline: 'T',
             topics: [{ id: 'strings', label: 'Strings' }],
-        };
-        await writeJson(join(contentDir, 'manifest.json'), { languages: [language], schemaVersion: 2 });
+        });
+        await writeJson(join(contentDir, 'manifest.json'), buildManifest(language));
         await writeJson(join(contentDir, 'python/easy.json'), { questions: [buildQuestion('free-1')] });
         await writeJson(join(contentRoot, 'python/medium.json'), { questions: PAID_IDS.map(buildQuestion) });
         await writeJson(

@@ -6,6 +6,8 @@ import { ScrollView, View } from 'react-native';
 
 import NotFoundScreen from '../../+not-found';
 import { TopicStep } from '../../../components/menu/TopicStep';
+import { findBankInLanguage } from '../../../services/content/findBankInLanguage';
+import { findLanguageEntry } from '../../../services/content/findLanguageEntry';
 import { buildPlayHref } from '../../../services/quiz/buildPlayHref';
 import { isLengthChoiceOffered, readPoolSize, reconcilePoolSize } from '../../../services/quiz/roundLength';
 import { useLanguageManifest } from '../../../state/useLanguageManifest';
@@ -16,8 +18,9 @@ export default function TopicScreen() {
   const { languages } = useLanguageManifest();
   const bankState = useQuestionBank(language, difficulty);
   const questions = bankState.status === 'ready' ? bankState.bank.questions : undefined;
-  const languageEntry = languages.find(({ id }) => id === language);
-  if (!languageEntry || !Object.hasOwn(languageEntry.banks, difficulty)) return <NotFoundScreen />;
+  const languageEntry = findLanguageEntry(languages, language);
+  const bank = languageEntry && findBankInLanguage(languageEntry, difficulty);
+  if (!bank) return <NotFoundScreen />;
   return (
     <ScrollView contentContainerClassName="flex-grow items-center justify-center px-4 py-8">
       <View className="w-full max-w-xl">
@@ -28,8 +31,7 @@ export default function TopicScreen() {
           onBack={() => router.replace(`/${language}`)}
           onSelectLength={(count) => router.push(buildPlayHref({ count, difficulty, language }))}
           onSelectTopic={(topic) => {
-            const bank = (languageEntry.banks as Record<string, { topicCounts?: Record<string, number> }>)[difficulty];
-            const poolSize = reconcilePoolSize(readPoolSize(bank.topicCounts ?? {}, topic), questions, topic);
+            const poolSize = reconcilePoolSize(readPoolSize(bank.topicCounts, topic), questions, topic);
             const screen = isLengthChoiceOffered(poolSize) ? 'length' : 'play';
             router.push(buildPlayHref({ difficulty, language, screen, topic }));
           }}
