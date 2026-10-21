@@ -13,6 +13,7 @@ import { createEmptyStats } from '../../../services/stats/createEmptyStats';
 import { AuthProvider } from '../../../state/AuthProvider';
 import { StatsProvider } from '../../../state/StatsProvider';
 import { SignUpPrompt } from '../SignUpPrompt';
+import { settle } from '../../../config/settle';
 
 const mockTrackEvent = jest.fn();
 jest.mock('../../../clients/analyticsClient', () => ({
@@ -70,7 +71,7 @@ describe('SignUpPrompt analytics', () => {
   it('fires nothing for a signed-in user', async () => {
     await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ knownUserIds: [], userId: randomUUID() }));
     await renderPrompt();
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await settle();
     expect(screen.queryByText('Save your progress')).toBeNull();
     expect(mockTrackEvent).not.toHaveBeenCalled();
   });
@@ -84,7 +85,7 @@ describe('SignUpPrompt analytics', () => {
       }),
     );
     await renderPrompt();
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await settle();
     expect(mockTrackEvent).not.toHaveBeenCalled();
   });
 });
