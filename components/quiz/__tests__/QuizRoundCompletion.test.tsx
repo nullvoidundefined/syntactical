@@ -7,6 +7,7 @@ import { Text } from 'react-native';
 import { StatsProvider, useQuizStats } from '../../../state/StatsProvider';
 import { QuizRound } from '../QuizRound';
 import { TEST_PROVENANCE } from '../../../services/content/__tests__/fixtures/contentFixtures';
+import { settle } from '../../../config/settle';
 
 const questions: Question[] = [
   {
@@ -76,7 +77,7 @@ describe('QuizRound with the real stats provider', () => {
     await fireEvent.press(screen.getByText('True'));
     await fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
     await waitFor(() => expect(screen.getByTestId('completions').props.children).toBe('1'));
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await settle();
     expect(screen.getByTestId('completions').props.children).toBe('1');
   });
 
@@ -100,7 +101,7 @@ describe('QuizRound with the real stats provider', () => {
       </StatsProvider>,
     );
     await waitFor(() => expect(screen.getByTestId('completions').props.children).toBe('0'));
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await settle();
     expect(screen.getByTestId('completions').props.children).toBe('0');
   });
 
@@ -126,7 +127,7 @@ describe('QuizRound with the real stats provider', () => {
     await waitFor(() => expect(screen.getByTestId('completions').props.children).toBe('0'));
     await answerAll(2);
     await screen.findByText(/2 of 2|of 2 correct/);
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await settle();
     expect(screen.getByTestId('completions').props.children).toBe('0');
   });
 
@@ -152,7 +153,7 @@ describe('QuizRound with the real stats provider', () => {
     await waitFor(() => expect(screen.getByTestId('completions').props.children).toBe('0'));
     await answerAll(1);
     await screen.findByText(/1 of 1|of 1 correct/);
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await settle();
     expect(screen.getByTestId('completions').props.children).toBe('0');
   });
 

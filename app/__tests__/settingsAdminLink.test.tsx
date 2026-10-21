@@ -7,7 +7,7 @@
 // Identities are built at run time.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { createQueryClient } from '../../config/queryClient';
 import {
@@ -23,6 +23,7 @@ import SettingsScreen from '../settings';
 
 import { PROFILE_ROUTE, meReply } from './adminAccessTestSupport';
 import { setExpoExtra } from '../../config/expoConstantsMock';
+import { settle } from '../../config/settle';
 
 setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
@@ -89,12 +90,6 @@ async function renderSettings(): Promise<void> {
       </AuthProvider>
     </QueryClientProvider>,
   );
-}
-
-async function settle(): Promise<void> {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  });
 }
 
 beforeEach(async () => {

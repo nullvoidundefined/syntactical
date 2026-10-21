@@ -19,6 +19,7 @@ import { createQueryClient } from '../../config/queryClient';
 import { ContentProvider } from '../../state/ContentProvider';
 import DifficultyScreen from '../[language]/index';
 import { setExpoExtra } from '../../config/expoConstantsMock';
+import { settle } from '../../config/settle';
 
 const mockParams: { current: Record<string, string | string[] | undefined> } = {
   current: { language: 'python' },
@@ -45,12 +46,6 @@ jest.mock('../../clients/analyticsClient', () => ({ trackEvent: () => undefined 
 const MEDIUM_LOCKED = `Medium, locked, ${WEB_PRICES[MEDIUM_PRODUCT]}`;
 
 let queryClient: QueryClient;
-
-async function settle(): Promise<void> {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  });
-}
 
 beforeEach(() => {
   resetFakes();
