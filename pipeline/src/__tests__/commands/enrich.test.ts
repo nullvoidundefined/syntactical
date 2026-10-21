@@ -11,6 +11,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { enrich } from '../../commands/enrich.js';
 import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
+import { readJson } from '../fixtures/jsonFiles.js';
 
 const HASH = '0123456789abcdef'.repeat(4);
 const OBSERVED = 'OBSERVED-OUTPUT-7731';
@@ -95,10 +96,6 @@ async function writeTree(root: string, files: Record<string, unknown>): Promise<
         await mkdir(dirname(join(root, name)), { recursive: true });
         await writeFile(join(root, name), JSON.stringify(body));
     }
-}
-
-async function readJson(path: string): Promise<Record<string, unknown>> {
-    return JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
 }
 
 async function listFiles(dir: string): Promise<string[]> {

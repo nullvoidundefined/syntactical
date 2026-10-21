@@ -3,12 +3,13 @@
 import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { review } from '../../commands/review.js';
 import { pickSample } from '../../services/review/pickSample.js';
+import { writeJson } from '../fixtures/jsonFiles.js';
 
 const HASH = '0123456789abcdef'.repeat(4);
 const PAID_TEXT = 'PAID-SECRET-PROMPT';
@@ -33,11 +34,6 @@ function buildQuestion(id: string, prompt = `prompt of ${id}`): Record<string, u
         query: { prompt: 'q' },
         type: 'mc',
     };
-}
-
-async function writeJson(file: string, value: unknown): Promise<void> {
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, JSON.stringify(value));
 }
 
 async function listFiles(dir: string): Promise<string[]> {

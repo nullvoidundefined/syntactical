@@ -2,25 +2,21 @@
 // generated questions are all enriched publishes with `rationale` on every wrong choice (mc) or
 // on the question (bool). The chain test runs gap-fill and publish (no enrich) end to end with fakes
 // for a free and a paid bank: batch-generated cards arrive already explained.
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { gapFill } from '../../commands/gapFill.js';
 import { publish } from '../../commands/publish.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
+import { writeJson } from '../fixtures/jsonFiles.js';
 
 const HASH = '0123456789abcdef'.repeat(4);
 const TAG = 'python.truthy-strings';
 
 type Json = Record<string, unknown>;
-
-async function writeJson(file: string, value: unknown): Promise<void> {
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, `${JSON.stringify(value, null, 2)}\n`);
-}
 
 async function readBank(file: string): Promise<{ questions: Json[] }> {
     return JSON.parse(await readFile(file, 'utf8')) as { questions: Json[] };

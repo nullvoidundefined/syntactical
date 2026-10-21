@@ -2,13 +2,14 @@
 // or human-reviewed questions are written, a failed one never is, a bank that fails the publish
 // validator is refused whole, paid banks stay out of the public content dir, and the rebuilt
 // manifest carries topic counts and bumps a content version only for a bank that changed.
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { publish } from '../../commands/publish.js';
+import { readJson, writeJson } from '../fixtures/jsonFiles.js';
 
 const HASH = '0123456789abcdef'.repeat(4);
 const TOPICS = ['numbers-and-math', 'strings'];
@@ -25,15 +26,6 @@ interface Dirs {
 }
 
 let dirs: Dirs;
-
-async function writeJson(file: string, value: unknown): Promise<void> {
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, `${JSON.stringify(value, null, 2)}\n`);
-}
-
-async function readJson(file: string): Promise<Json> {
-    return JSON.parse(await readFile(file, 'utf8')) as Json;
-}
 
 function buildQuestion(id: string, over: Json = {}): Json {
     return {

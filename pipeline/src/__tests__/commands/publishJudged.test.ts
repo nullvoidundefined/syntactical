@@ -1,13 +1,14 @@
 // publish keeps method 'judged' and the evidence of a generated judged card, publishes an
 // owner-approved disputed card as judged and pending with isHumanReviewed true, and refuses an
 // undecided or rejected disputed card. Real temp files; the manifest rebuild is stubbed.
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { publish } from '../../commands/publish.js';
+import { writeJson } from '../fixtures/jsonFiles.js';
 
 const HASH = '0123456789abcdef'.repeat(4);
 const SOURCE = {
@@ -56,11 +57,6 @@ function disputedCard(): Json {
             'SameSite=Strict withholds the cookie on top-level GET.',
         ),
     };
-}
-
-async function writeJson(file: string, value: unknown): Promise<void> {
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, `${JSON.stringify(value, null, 2)}\n`);
 }
 
 describe('publish judged cards', () => {

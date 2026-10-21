@@ -20,9 +20,8 @@ import type { Oracle } from '../../types/Oracle.js';
 import { ORACLE_LANGUAGE_IDS, type OracleLanguage } from '../../types/OracleLanguage.js';
 import type { OracleRun } from '../../types/OracleRun.js';
 import type { ValidationResult } from '../../types/ValidationResult.js';
+import { describeDocker } from '../fixtures/dockerSuite.js';
 import { acquireDockerTestLock, DOCKER_LOCK_WAIT_MS, releaseDockerTestLock } from '../fixtures/dockerTestLock.js';
-
-const SKIP_DOCKER = process.env.SKIP_DOCKER_TESTS === '1';
 
 const MIN_ENTRIES = 10;
 
@@ -89,7 +88,7 @@ describe('golden set', () => {
     });
 });
 
-describe.skipIf(SKIP_DOCKER)('golden set (docker)', () => {
+describeDocker('golden set (docker)', () => {
     beforeAll(async () => {
         await acquireDockerTestLock();
         for (const language of ORACLE_LANGUAGE_IDS) {

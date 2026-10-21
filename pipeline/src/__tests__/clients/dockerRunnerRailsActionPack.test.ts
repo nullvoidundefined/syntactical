@@ -1,16 +1,16 @@
 // The rails runner also ships Action Pack, so controllers-and-params oracles can build
 // ActionController::Parameters (strong parameters) after `require 'action_controller'`. There is
 // still no server, router app, or network: the oracle only uses the library in-process.
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, expect, it } from 'vitest';
 
 import { runOracle } from '../../clients/dockerRunner.js';
 import { ensureRunnerImage } from '../../clients/ensureRunnerImage.js';
+import { describeDocker } from '../fixtures/dockerSuite.js';
 import { acquireDockerTestLock, DOCKER_LOCK_WAIT_MS, releaseDockerTestLock } from '../fixtures/dockerTestLock.js';
 
-const SKIP_DOCKER = process.env.SKIP_DOCKER_TESTS === '1';
 const RUN_TIMEOUT_MS = 60_000;
 
-describe.skipIf(SKIP_DOCKER)('runOracle rails Action Pack (docker)', () => {
+describeDocker('runOracle rails Action Pack (docker)', () => {
     beforeAll(async () => {
         await acquireDockerTestLock();
         await ensureRunnerImage('rails');

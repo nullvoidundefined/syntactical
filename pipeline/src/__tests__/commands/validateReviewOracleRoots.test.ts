@@ -2,15 +2,16 @@
 // free banks from `<pipelineDir>/oracles`, paid banks from `<contentRoot>/oracles`, never a paid
 // bank's from the pipeline dir. The oracle source and the oracle observer are not injected; the
 // commands read the oracle files themselves and hand each oracle to the injected validator.
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { review } from '../../commands/review.js';
 import { validateContent } from '../../commands/validate.js';
 import type { Oracle } from '../../types/Oracle.js';
+import { writeJson } from '../fixtures/jsonFiles.js';
 
 const HASH = '0123456789abcdef'.repeat(4);
 
@@ -32,11 +33,6 @@ function buildQuestion(id: string): Record<string, unknown> {
         query: { prompt: 'q' },
         type: 'mc',
     };
-}
-
-async function writeJson(file: string, value: unknown): Promise<void> {
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, JSON.stringify(value));
 }
 
 const PAID_IDS = ['paid-1', 'paid-2', 'paid-3', 'paid-4'];
