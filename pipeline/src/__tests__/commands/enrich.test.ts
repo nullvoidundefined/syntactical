@@ -107,11 +107,17 @@ describe('enrich', () => {
     const logs: string[] = [];
     let runNumber = 0;
 
-    function run(provider: ModelProvider, unobservedIds: string[] = [], overrides: { contentRoot?: string } = {}) {
+    function run(
+        provider: ModelProvider,
+        unobservedIds: string[] = [],
+        overrides: { contentRoot?: string; isFreeOnly?: boolean; languages?: string[] } = {},
+    ) {
         runNumber += 1;
+        const { contentRoot: rootOverride, ...filters } = overrides;
         return enrich({
+            ...filters,
             contentDir,
-            contentRoot: overrides.contentRoot ?? contentRoot,
+            contentRoot: rootOverride ?? contentRoot,
             log: (line) => logs.push(line),
             newRunId: () => `run-${runNumber}`,
             now: () => '2026-10-03T00:00:00.000Z',
@@ -282,5 +288,21 @@ describe('enrich', () => {
         await expect(
             run(scripted({ tag: () => FIRST_TAG }), [], { contentRoot: join(pipelineDir, 'private') }),
         ).rejects.toThrow('content root');
+    });
+
+    it('with isFreeOnly skips paid banks and needs no usable content root', async () => {
+        await seed({ 'easy:free': [buildBool('free-1', 'Is it?')], 'medium:paid': [buildBool('paid-1', PAID_TEXT)] });
+        const provider = scripted({ tag: () => FIRST_TAG });
+        await run(provider, [], { contentRoot: join(pipelineDir, 'private'), isFreeOnly: true });
+        expect(Object.keys(await readJson(join(pipelineDir, 'enrichment/python/easy.json')))).toEqual(['free-1']);
+        expect(provider.prompts.join('')).not.toContain(PAID_TEXT);
+    });
+
+    it('with languages skips every language not listed', async () => {
+        await seed({ 'easy:free': [buildBool('free-1', 'Is it?')] });
+        const provider = scripted({ tag: () => FIRST_TAG });
+        await run(provider, [], { isFreeOnly: true, languages: ['javascript'] });
+        expect(provider.prompts).toEqual([]);
+        expect(await listFiles(join(pipelineDir, 'enrichment'))).toEqual([]);
     });
 });

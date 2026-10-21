@@ -55,9 +55,19 @@ function buildDeps(env: Record<string, string | undefined> = {}): CliDeps & {
             return '/x';
         },
         languages: [] as string[],
-        enrich: async (options: { contentRoot: string; secondProvider?: ModelProvider }) => {
+        enrich: async (options: {
+            contentRoot: string;
+            isFreeOnly?: boolean;
+            languages?: readonly string[];
+            secondProvider?: ModelProvider;
+        }) => {
             deps.roots.push(options.contentRoot);
-            deps.calls.push({ command: 'enrich', hasSecondProvider: options.secondProvider !== undefined });
+            deps.calls.push({
+                command: 'enrich',
+                hasSecondProvider: options.secondProvider !== undefined,
+                ...(options.isFreeOnly === undefined ? {} : { isFreeOnly: options.isFreeOnly }),
+                ...(options.languages === undefined ? {} : { languages: options.languages }),
+            });
             return {} as never;
         },
         env,
@@ -265,5 +275,18 @@ describe('runCli', () => {
         expect(deps.calls).toEqual([{ command: 'apply-staging' }]);
         expect(deps.roots).toEqual(['(none)']);
         expect(deps.kinds).toEqual([]);
+    });
+
+    it('enrich passes --free-only and the --language list, and refuses an empty list', async () => {
+        const deps = buildDeps();
+        expect(await runCli(['node', 'cli.ts', 'enrich', '--free-only', '--language', 'python,postgres'], deps)).toBe(
+            0,
+        );
+        expect(deps.calls).toEqual([
+            { command: 'enrich', hasSecondProvider: false, isFreeOnly: true, languages: ['python', 'postgres'] },
+        ]);
+        const empty = buildDeps();
+        expect(await runCli(['node', 'cli.ts', 'enrich', '--language'], empty)).toBe(1);
+        expect(empty.calls).toEqual([]);
     });
 });
