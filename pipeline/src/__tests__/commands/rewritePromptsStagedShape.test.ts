@@ -1,20 +1,15 @@
 // rewrite-prompts checks every staged file's shape before its first model call, so a malformed
 // file stops the run before any bank is rewritten, and the error names the file.
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { rewritePrompts } from '../../commands/rewritePrompts.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
-
-const HASH = '0123456789abcdef'.repeat(4);
-
-async function writeJson(file: string, value: unknown): Promise<void> {
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, `${JSON.stringify(value, null, 2)}\n`);
-}
+import { writeJson } from '../fixtures/jsonFiles.js';
+import { buildBankEntry, buildLanguage } from '../fixtures/manifest.js';
 
 const STAGED_CARD = {
     answerIndex: 0,
@@ -34,16 +29,14 @@ const STAGED_CARD = {
 };
 
 function language(id: string) {
-    return {
-        banks: { easy: { access: 'free', contentVersion: 1, hash: HASH, path: `${id}/easy.json`, topicCounts: {} } },
+    return buildLanguage({
+        banks: { easy: buildBankEntry(`${id}/easy.json`) },
         glyph: 'XX',
         grammar: 'python',
         id,
         label: id,
-        misconceptions: [],
-        tagline: 'T',
         topics: [{ id: 'strings', label: 'Strings' }],
-    };
+    });
 }
 
 describe('rewritePrompts staged file shape', () => {

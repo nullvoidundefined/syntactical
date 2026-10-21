@@ -15,8 +15,7 @@ import type { AnswerKey } from '../../types/AnswerKey.js';
 import { createMigratedDatabase } from '../integration/createMigratedDatabase.js';
 import { createSyncTestApp } from '../integration/createSyncTestApp.js';
 import { createWebhookTestApp } from '../integration/createWebhookTestApp.js';
-
-const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.env.TEST_DATABASE_URL;
+import { SKIP_DATABASE_TESTS } from '../integration/skipDatabaseTests.js';
 
 const ROUTE = '/v1/webhooks/revenuecat';
 const HTTP_OK = 200;

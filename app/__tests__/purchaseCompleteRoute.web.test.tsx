@@ -6,6 +6,7 @@ import { act, render, screen } from '@testing-library/react';
 import { createQueryClient } from '../../config/queryClient';
 import { installRoutedFetch, type RouteReply } from '../../state/__tests__/authTestSupport';
 import PurchaseCompleteScreen from '../purchase-complete';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
 // The purchase-complete route on the web (B-38, Task 3.16), where Web Billing
 // checkout returns: GET me is polled with the session cookie immediately and
@@ -13,9 +14,7 @@ import PurchaseCompleteScreen from '../purchase-complete';
 // status sits in a role="status" polite live region, and a keyboard-focusable
 // link leads back to the menu. A bad product or a guest makes no request.
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
 // The query string the route was opened with.
 let mockParams: Record<string, string | string[] | undefined> = {};

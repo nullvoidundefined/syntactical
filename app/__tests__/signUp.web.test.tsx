@@ -32,10 +32,9 @@ import { AuthProvider, useAuth } from '../../state/AuthProvider';
 import { useKeyboardNav } from '../../state/useKeyboardNav';
 import SignInScreen from '../sign-in';
 import SignUpScreen from '../sign-up';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),
@@ -45,19 +44,14 @@ jest.mock('expo-secure-store', () => ({
 
 const mockParams: { current: Record<string, string | string[] | undefined> } = { current: {} };
 const mockNavigations: unknown[] = [];
-jest.mock('expo-router', () => {
-  function record(href: unknown) {
-    mockNavigations.push(href);
-  }
-  const router = { back: () => undefined, dismissTo: record, navigate: record, push: record, replace: record };
-  return {
-    ...jest.requireActual('expo-router'),
-    router,
-    useGlobalSearchParams: () => mockParams.current,
-    useLocalSearchParams: () => mockParams.current,
-    useRouter: () => router,
-  };
-});
+jest.mock('expo-router', () =>
+  require('../../config/buildExpoRouterMock').buildExpoRouterMock({
+    record: (href: unknown) => {
+      mockNavigations.push(href);
+    },
+    readParams: () => mockParams.current,
+  }),
+);
 jest.mock('react-native-reanimated', () => ({
   ...jest.requireActual('react-native-reanimated'),
   useReducedMotion: () => true,

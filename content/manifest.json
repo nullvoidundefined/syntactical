@@ -920,6 +920,224 @@
         }
       },
       "category": "frontend"
+    },
+    {
+      "id": "typescript-types",
+      "label": "TypeScript Types",
+      "glyph": "TYPES",
+      "tagline": "Type-level TypeScript: conditional, mapped, and template types.",
+      "grammar": "typescript",
+      "topics": [
+        {
+          "id": "conditional-types",
+          "label": "Conditional types"
+        },
+        {
+          "id": "infer",
+          "label": "Infer"
+        },
+        {
+          "id": "mapped-types",
+          "label": "Mapped types"
+        },
+        {
+          "id": "template-literal-types",
+          "label": "Template literal types"
+        },
+        {
+          "id": "distributive-conditionals",
+          "label": "Distributive conditionals"
+        },
+        {
+          "id": "variance-and-assignability",
+          "label": "Variance and assignability"
+        },
+        {
+          "id": "overloads-and-satisfies",
+          "label": "Overloads and satisfies"
+        },
+        {
+          "id": "discriminated-unions",
+          "label": "Discriminated unions"
+        },
+        {
+          "id": "generic-constraints",
+          "label": "Generic constraints"
+        },
+        {
+          "id": "recursive-and-indexed-types",
+          "label": "Recursive and indexed types"
+        }
+      ],
+      "misconceptions": [],
+      "banks": {
+        "easy": {
+          "path": "typescript-types/easy.json",
+          "hash": "54cdd2e803fda0d21f00197e7e161cdc2ba91d41fdd676b0fefc84267f97fe71",
+          "access": "free",
+          "contentVersion": 6,
+          "topicCounts": {
+            "conditional-types": 10,
+            "mapped-types": 10,
+            "template-literal-types": 10,
+            "distributive-conditionals": 8,
+            "variance-and-assignability": 9,
+            "overloads-and-satisfies": 10,
+            "discriminated-unions": 10,
+            "generic-constraints": 10,
+            "recursive-and-indexed-types": 10,
+            "infer": 10
+          }
+        },
+        "medium": {
+          "path": "typescript-types/medium.json",
+          "hash": "26acec77110e8083b41e8f990b4c0fc99cea7dab581b6111f9f4401250fd117a",
+          "access": "paid",
+          "contentVersion": 3,
+          "topicCounts": {
+            "infer": 10,
+            "mapped-types": 10,
+            "template-literal-types": 10,
+            "distributive-conditionals": 10,
+            "variance-and-assignability": 10,
+            "overloads-and-satisfies": 10,
+            "discriminated-unions": 10,
+            "generic-constraints": 10,
+            "recursive-and-indexed-types": 10,
+            "conditional-types": 9
+          },
+          "productId": "syntactical.typescript-types.medium"
+        },
+        "hard": {
+          "path": "typescript-types/hard.json",
+          "hash": "4f78162c0bfcff627b2c877399983add018bb0cba00f98ea7ee7a0cc14e8cdfc",
+          "access": "paid",
+          "contentVersion": 3,
+          "topicCounts": {
+            "conditional-types": 10,
+            "infer": 10,
+            "mapped-types": 10,
+            "template-literal-types": 10,
+            "distributive-conditionals": 10,
+            "variance-and-assignability": 10,
+            "overloads-and-satisfies": 10,
+            "discriminated-unions": 10,
+            "generic-constraints": 10,
+            "recursive-and-indexed-types": 10
+          },
+          "productId": "syntactical.typescript-types.hard"
+        }
+      },
+      "category": "frontend"
+    },
+    {
+      "id": "nodejs",
+      "label": "Node.js",
+      "glyph": "NODE",
+      "tagline": "The runtime: event loop, streams, buffers, fs, and modules.",
+      "grammar": "javascript",
+      "topics": [
+        {
+          "id": "event-loop-and-timers",
+          "label": "Event loop and timers"
+        },
+        {
+          "id": "event-emitter",
+          "label": "Event emitter"
+        },
+        {
+          "id": "streams",
+          "label": "Streams"
+        },
+        {
+          "id": "buffers-and-encodings",
+          "label": "Buffers and encodings"
+        },
+        {
+          "id": "fs",
+          "label": "Fs"
+        },
+        {
+          "id": "path-and-url",
+          "label": "Path and url"
+        },
+        {
+          "id": "modules",
+          "label": "Modules"
+        },
+        {
+          "id": "error-handling",
+          "label": "Error handling"
+        },
+        {
+          "id": "process-and-env",
+          "label": "Process and env"
+        },
+        {
+          "id": "async-patterns",
+          "label": "Async patterns"
+        }
+      ],
+      "misconceptions": [],
+      "banks": {
+        "easy": {
+          "path": "nodejs/easy.json",
+          "hash": "c58dbc9c3c78cad20acb2d43d45d38b135654c52068e8115f1ee52059e23e3b9",
+          "access": "free",
+          "contentVersion": 6,
+          "topicCounts": {
+            "event-loop-and-timers": 10,
+            "buffers-and-encodings": 8,
+            "path-and-url": 10,
+            "error-handling": 10,
+            "process-and-env": 10,
+            "async-patterns": 9,
+            "event-emitter": 10,
+            "streams": 10,
+            "fs": 10,
+            "modules": 10
+          }
+        },
+        "medium": {
+          "path": "nodejs/medium.json",
+          "hash": "e8c157c2e884b9ae622714d229569413952792ea2ca5f410a251f37c51cc67d8",
+          "access": "paid",
+          "contentVersion": 4,
+          "topicCounts": {
+            "event-loop-and-timers": 10,
+            "buffers-and-encodings": 10,
+            "path-and-url": 10,
+            "error-handling": 10,
+            "process-and-env": 10,
+            "async-patterns": 9,
+            "event-emitter": 10,
+            "streams": 10,
+            "fs": 10,
+            "modules": 10
+          },
+          "productId": "syntactical.nodejs.medium"
+        },
+        "hard": {
+          "path": "nodejs/hard.json",
+          "hash": "c2e63c45c58ac7b2784e7791cfaee1529309d4ce5c0861119e26140269e474fc",
+          "access": "paid",
+          "contentVersion": 5,
+          "topicCounts": {
+            "event-loop-and-timers": 10,
+            "buffers-and-encodings": 10,
+            "event-emitter": 10,
+            "streams": 10,
+            "fs": 10,
+            "path-and-url": 10,
+            "modules": 10,
+            "error-handling": 10,
+            "process-and-env": 10,
+            "async-patterns": 10
+          },
+          "productId": "syntactical.nodejs.hard"
+        }
+      },
+      "category": "backend"
     }
   ]
 }

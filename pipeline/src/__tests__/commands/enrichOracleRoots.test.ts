@@ -1,17 +1,18 @@
 // `pipeline enrich` reads each bank's oracles from that bank's own root (free: pipeline/oracles,
 // paid: content root oracles), covers the staged generated questions as well as the bank's own,
 // and writes nothing of a paid bank under the pipeline dir. Fake provider and fake validator.
-import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { enrich } from '../../commands/enrich.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 import type { Oracle } from '../../types/Oracle.js';
+import { readJson, writeJson } from '../fixtures/jsonFiles.js';
+import { buildBankEntry, buildLanguage, buildManifest } from '../fixtures/manifest.js';
 
-const HASH = '0123456789abcdef'.repeat(4);
 const TAG = 'python.mutable-default-args';
 const PAID_TEXT = 'PAID-ENRICH-MARKER';
 
@@ -45,15 +46,6 @@ function scriptedProvider(): ModelProvider {
             return { model: 'fake', value: request.schema.parse(value) };
         },
     } as unknown as ModelProvider;
-}
-
-async function writeJson(path: string, body: unknown): Promise<void> {
-    await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, JSON.stringify(body));
-}
-
-async function readJson(path: string): Promise<Record<string, unknown>> {
-    return JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
 }
 
 async function listFiles(dir: string): Promise<string[]> {
@@ -96,28 +88,10 @@ describe('enrich oracle roots and staged questions', () => {
 
     async function seed(access: Access, bankIds: string[], generatedIds: string[] = []): Promise<string> {
         const outRoot = access === 'free' ? pipelineDir : contentRoot;
-        const productId = access === 'paid' ? { productId: 'syntactical.python.easy' } : {};
-        const language = {
-            banks: {
-                easy: {
-                    access,
-                    contentVersion: 1,
-                    hash: HASH,
-                    path: 'python/easy.json',
-                    topicCounts: {},
-                    ...productId,
-                },
-            },
-            glyph: 'G',
-            grammar: 'plain',
-            id: 'python',
-            label: 'L',
-            misconceptions: [],
-            tagline: 'T',
-            topics: [],
-        };
+        const productId = access === 'paid' ? 'syntactical.python.easy' : undefined;
+        const language = buildLanguage({ banks: { easy: buildBankEntry('python/easy.json', access, productId) } });
         const text = access === 'paid' ? PAID_TEXT : 'free';
-        await writeJson(join(contentDir, 'manifest.json'), { languages: [language], schemaVersion: 2 });
+        await writeJson(join(contentDir, 'manifest.json'), buildManifest(language));
         await writeJson(join(access === 'free' ? contentDir : contentRoot, 'python/easy.json'), {
             questions: bankIds.map((id) => buildMc(id, `${text} ${id}`)),
         });

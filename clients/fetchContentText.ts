@@ -4,12 +4,10 @@
 
 import { CONTENT_LIMITS } from '@syntactical/content-schema';
 import { ContentFetchError } from './ContentFetchError';
+import { countUtf8Bytes } from './countUtf8Bytes';
+import { createTimeoutRace } from './createTimeoutRace';
 
 type ContentFetchOptions = { timeoutMs?: number };
-
-function countUtf8Bytes(text: string): number {
-  return new TextEncoder().encode(text).length;
-}
 
 function assertDirectOkResponse(response: Response): void {
   const { ok, redirected, status } = response;
@@ -28,11 +26,7 @@ function assertDeclaredLengthWithinLimit(response: Response, maxBytes: number): 
   }
 }
 
-async function requestAndReadText(
-  url: string,
-  maxBytes: number,
-  signal: AbortSignal,
-): Promise<string> {
+async function requestAndReadText(url: string, maxBytes: number, signal: AbortSignal): Promise<string> {
   const response = await fetch(url, { cache: 'no-cache', redirect: 'error', signal });
   assertDirectOkResponse(response);
   assertDeclaredLengthWithinLimit(response, maxBytes);
@@ -41,20 +35,6 @@ async function requestAndReadText(
     throw new ContentFetchError('too-large', 'Content body exceeds the size limit');
   }
   return text;
-}
-
-function createTimeoutRace(
-  controller: AbortController,
-  timeoutMs: number,
-): { promise: Promise<never>; clear: () => void } {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const promise = new Promise<never>((_resolve, reject) => {
-    timer = setTimeout(() => {
-      controller.abort();
-      reject(new ContentFetchError('timeout', 'Content request timed out'));
-    }, timeoutMs);
-  });
-  return { clear: () => clearTimeout(timer), promise };
 }
 
 function toContentFetchError(err: unknown): ContentFetchError {
@@ -69,12 +49,13 @@ export async function fetchContentText(
 ): Promise<string> {
   const { timeoutMs = CONTENT_LIMITS.fetchTimeoutMs } = options;
   const controller = new AbortController();
-  const timeout = createTimeoutRace(controller, timeoutMs);
+  const timeout = createTimeoutRace(
+    timeoutMs,
+    () => new ContentFetchError('timeout', 'Content request timed out'),
+    controller,
+  );
   try {
-    return await Promise.race([
-      requestAndReadText(url, maxBytes, controller.signal),
-      timeout.promise,
-    ]);
+    return await Promise.race([requestAndReadText(url, maxBytes, controller.signal), timeout.promise]);
   } catch (err) {
     throw toContentFetchError(err);
   } finally {

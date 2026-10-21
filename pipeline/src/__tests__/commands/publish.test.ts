@@ -2,15 +2,16 @@
 // or human-reviewed questions are written, a failed one never is, a bank that fails the publish
 // validator is refused whole, paid banks stay out of the public content dir, and the rebuilt
 // manifest carries topic counts and bumps a content version only for a bank that changed.
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { publish } from '../../commands/publish.js';
+import { readJson, writeJson } from '../fixtures/jsonFiles.js';
+import { buildLanguage, buildManifest, HASH } from '../fixtures/manifest.js';
 
-const HASH = '0123456789abcdef'.repeat(4);
 const TOPICS = ['numbers-and-math', 'strings'];
 const TAG = 'python.truthy-strings';
 const BUILD_SCRIPT = new URL('../../../../scripts/buildContentManifest.mjs', import.meta.url).href;
@@ -25,15 +26,6 @@ interface Dirs {
 }
 
 let dirs: Dirs;
-
-async function writeJson(file: string, value: unknown): Promise<void> {
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, `${JSON.stringify(value, null, 2)}\n`);
-}
-
-async function readJson(file: string): Promise<Json> {
-    return JSON.parse(await readFile(file, 'utf8')) as Json;
-}
 
 function buildQuestion(id: string, over: Json = {}): Json {
     return {
@@ -99,25 +91,12 @@ async function writeDecisions(outRoot: string, name: string, decisions: Record<s
     });
 }
 
-function buildManifest(): Json {
-    return {
-        languages: [
-            {
-                banks: {
-                    easy: buildEntry('python/easy.json', 'free', 'easy'),
-                    medium: buildEntry('python/medium.json', 'paid', 'medium'),
-                },
-                glyph: 'PY',
-                grammar: 'python',
-                id: 'python',
-                label: 'Python',
-                misconceptions: [],
-                tagline: 'T',
-                topics: [],
-            },
-        ],
-        schemaVersion: 2,
+function seedManifest(): Json {
+    const banks = {
+        easy: buildEntry('python/easy.json', 'free', 'easy'),
+        medium: buildEntry('python/medium.json', 'paid', 'medium'),
     };
+    return buildManifest(buildLanguage({ banks, glyph: 'PY', grammar: 'python', label: 'Python' }));
 }
 
 async function build(contentRoot: string): Promise<void> {
@@ -165,7 +144,7 @@ beforeEach(async () => {
         root,
     };
     await mkdir(dirs.contentRoot, { recursive: true });
-    await writeJson(join(dirs.contentDir, 'manifest.json'), buildManifest());
+    await writeJson(join(dirs.contentDir, 'manifest.json'), seedManifest());
     await writeJson(join(dirs.pipelineDir, 'topics.json'), { python: TOPICS });
     await writeJson(join(dirs.pipelineDir, 'taxonomy', 'python.json'), [
         { description: 'Thinks "0" is falsy', id: TAG },

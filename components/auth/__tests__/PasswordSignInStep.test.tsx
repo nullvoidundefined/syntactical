@@ -10,10 +10,11 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { PasswordSignInStep } from '../PasswordSignInStep';
 
 const mockPush = jest.fn();
-jest.mock('expo-router', () => ({
-  ...jest.requireActual('expo-router'),
-  router: { push: (...args: unknown[]) => mockPush(...args), replace: () => undefined },
-}));
+jest.mock('expo-router', () =>
+  require('../../../config/buildExpoRouterMock').buildExpoRouterMock({
+    push: (...args: unknown[]) => mockPush(...args),
+  }),
+);
 
 const EMAIL_LABEL = 'Email address';
 const PASSWORD_LABEL = 'Password';

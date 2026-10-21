@@ -14,20 +14,14 @@ import SignInScreen from '../sign-in';
 
 const mockReplacedRoutes: unknown[] = [];
 const mockPushedRoutes: unknown[] = [];
-jest.mock('expo-router', () => {
-  const router = {
-    back: () => undefined,
+jest.mock('expo-router', () =>
+  require('../../config/buildExpoRouterMock').buildExpoRouterMock({
     navigate: (route: unknown) => mockPushedRoutes.push(route),
     push: (route: unknown) => mockPushedRoutes.push(route),
     replace: (route: unknown) => mockReplacedRoutes.push(route),
-  };
-  return {
-    ...jest.requireActual('expo-router'),
-    router,
-    useLocalSearchParams: () => ({}),
-    useRouter: () => router,
-  };
-});
+    readParams: () => ({}),
+  }),
+);
 jest.mock('react-native-reanimated', () => ({
   ...jest.requireActual('react-native-reanimated'),
   useReducedMotion: () => true,

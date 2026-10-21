@@ -1,6 +1,6 @@
 // The pipeline CLI's command dispatch, with every side effect injected so the real
 // entry path can be tested: `validate [--content-root <path>]`, `draft-oracles [--api]`, or
-// `classify`, `gap-fill`, or `enrich [--api] [--content-root <path>]`, `rewrite-prompts [--api] [--content-root <path>]`,
+// `classify`, `gap-fill`, or `enrich [--api] [--free-only] [--language <ids>] [--content-root <path>]`, `rewrite-prompts [--api] [--content-root <path>]`,
 // `review [--content-root <path>]`, or `publish [--content-root <path>]`. `enrich --judge-without-oracle`
 // also enriches questions with no oracle from their answer key, judged by a second model;
 // `write-references [--api] [--language <id>[,<id>...]]` writes before-answer references (two
@@ -175,9 +175,16 @@ async function runEnrich(argv: string[], deps: CliDeps): Promise<number> {
         return 1;
     }
     const isJudgedWithoutOracle = argv.includes('--judge-without-oracle');
+    const languages = readLanguagesFlag(argv);
+    if (languages !== undefined && languages.length === 0) {
+        deps.stderr('--language needs one or more language ids, separated by commas\n');
+        return 1;
+    }
     await run({
         contentDir,
         contentRoot,
+        ...(argv.includes('--free-only') ? { isFreeOnly: true } : {}),
+        ...(languages === undefined ? {} : { languages }),
         log: (line) => stdout(`${line}\n`),
         newRunId: randomUUID,
         now: () => new Date().toISOString(),
@@ -281,7 +288,7 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
     }
     if (command !== 'validate') {
         stderr(
-            'Usage: pipeline validate [--content-root <path>] | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | gap-fill [--api] [--content-root <path>] | enrich [--api] [--judge-without-oracle] [--content-root <path>] | write-references [--api] [--language <ids>] | verify-doc-links [--recheck] | apply-staging | rewrite-prompts [--api] [--content-root <path>] | review [--content-root <path>] | publish [--content-root <path>]\n',
+            'Usage: pipeline validate [--content-root <path>] | draft-oracles [--api] | draft-taxonomy <language> [--api] | classify [--api] [--content-root <path>] | gap-fill [--api] [--content-root <path>] | enrich [--api] [--judge-without-oracle] [--free-only] [--language <ids>] [--content-root <path>] | write-references [--api] [--language <ids>] | verify-doc-links [--recheck] | apply-staging | rewrite-prompts [--api] [--content-root <path>] | review [--content-root <path>] | publish [--content-root <path>]\n',
         );
         return 1;
     }

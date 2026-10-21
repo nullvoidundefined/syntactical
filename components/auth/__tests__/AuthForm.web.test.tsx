@@ -11,10 +11,7 @@ import { TextInput } from 'react-native';
 
 import { AuthForm } from '../AuthForm';
 
-jest.mock('expo-router', () => ({
-  ...jest.requireActual('expo-router'),
-  router: { push: () => undefined, replace: () => undefined },
-}));
+jest.mock('expo-router', () => require('../../../config/buildExpoRouterMock').buildExpoRouterMock());
 
 function getOnlyForm(): HTMLFormElement {
   const forms = document.querySelectorAll('form');

@@ -6,10 +6,12 @@ export const BUNDLED_BANKS: Record<string, unknown> = {
   'frontend-security/easy': require('../../content/frontend-security/easy.json'),
   'go/easy': require('../../content/go/easy.json'),
   'javascript/easy': require('../../content/javascript/easy.json'),
+  'nodejs/easy': require('../../content/nodejs/easy.json'),
   'postgres/easy': require('../../content/postgres/easy.json'),
   'python/easy': require('../../content/python/easy.json'),
   'rails/easy': require('../../content/rails/easy.json'),
   'ruby/easy': require('../../content/ruby/easy.json'),
   'sql/easy': require('../../content/sql/easy.json'),
+  'typescript-types/easy': require('../../content/typescript-types/easy.json'),
   'typescript/easy': require('../../content/typescript/easy.json'),
 };

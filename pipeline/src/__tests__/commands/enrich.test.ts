@@ -11,8 +11,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { enrich } from '../../commands/enrich.js';
 import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
+import { readJson } from '../fixtures/jsonFiles.js';
+import { buildLanguage, buildManifest, HASH } from '../fixtures/manifest.js';
 
-const HASH = '0123456789abcdef'.repeat(4);
 const OBSERVED = 'OBSERVED-OUTPUT-7731';
 const PAID_TEXT = 'PAID-SECRET-PROMPT';
 const TAGS = ['python.mutable-default-args', 'python.mutable-strings'];
@@ -24,18 +25,8 @@ function buildEntry(path: string, access: 'free' | 'paid'): Record<string, unkno
     return { access, contentVersion: 1, hash: HASH, path, topicCounts: {}, ...productId };
 }
 
-function buildManifest(banks: Record<string, unknown>): Record<string, unknown> {
-    const language = {
-        banks,
-        glyph: 'G',
-        grammar: 'plain',
-        id: 'python',
-        label: 'L',
-        misconceptions: [],
-        tagline: 'T',
-        topics: [],
-    };
-    return { languages: [language], schemaVersion: 2 };
+function manifestWithBanks(banks: Record<string, unknown>): Record<string, unknown> {
+    return buildManifest(buildLanguage({ banks }));
 }
 
 function buildMc(id: string, prompt: string): Record<string, unknown> {
@@ -97,10 +88,6 @@ async function writeTree(root: string, files: Record<string, unknown>): Promise<
     }
 }
 
-async function readJson(path: string): Promise<Record<string, unknown>> {
-    return JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
-}
-
 async function listFiles(dir: string): Promise<string[]> {
     const names = await readdir(dir, { recursive: true }).catch(() => [] as string[]);
     const files: string[] = [];
@@ -120,11 +107,17 @@ describe('enrich', () => {
     const logs: string[] = [];
     let runNumber = 0;
 
-    function run(provider: ModelProvider, unobservedIds: string[] = [], overrides: { contentRoot?: string } = {}) {
+    function run(
+        provider: ModelProvider,
+        unobservedIds: string[] = [],
+        overrides: { contentRoot?: string; isFreeOnly?: boolean; languages?: string[] } = {},
+    ) {
         runNumber += 1;
+        const { contentRoot: rootOverride, ...filters } = overrides;
         return enrich({
+            ...filters,
             contentDir,
-            contentRoot: overrides.contentRoot ?? contentRoot,
+            contentRoot: rootOverride ?? contentRoot,
             log: (line) => logs.push(line),
             newRunId: () => `run-${runNumber}`,
             now: () => '2026-10-03T00:00:00.000Z',
@@ -146,7 +139,7 @@ describe('enrich', () => {
             // Paid banks live in the private content root, never under content/ (B-60).
             (access === 'free' ? files : paidFiles)[`python/${difficulty}.json`] = { questions };
         }
-        await writeTree(contentDir, { ...files, 'manifest.json': buildManifest(entries) });
+        await writeTree(contentDir, { ...files, 'manifest.json': manifestWithBanks(entries) });
         await writeTree(contentRoot, paidFiles);
     }
 
@@ -295,5 +288,21 @@ describe('enrich', () => {
         await expect(
             run(scripted({ tag: () => FIRST_TAG }), [], { contentRoot: join(pipelineDir, 'private') }),
         ).rejects.toThrow('content root');
+    });
+
+    it('with isFreeOnly skips paid banks and needs no usable content root', async () => {
+        await seed({ 'easy:free': [buildBool('free-1', 'Is it?')], 'medium:paid': [buildBool('paid-1', PAID_TEXT)] });
+        const provider = scripted({ tag: () => FIRST_TAG });
+        await run(provider, [], { contentRoot: join(pipelineDir, 'private'), isFreeOnly: true });
+        expect(Object.keys(await readJson(join(pipelineDir, 'enrichment/python/easy.json')))).toEqual(['free-1']);
+        expect(provider.prompts.join('')).not.toContain(PAID_TEXT);
+    });
+
+    it('with languages skips every language not listed', async () => {
+        await seed({ 'easy:free': [buildBool('free-1', 'Is it?')] });
+        const provider = scripted({ tag: () => FIRST_TAG });
+        await run(provider, [], { isFreeOnly: true, languages: ['javascript'] });
+        expect(provider.prompts).toEqual([]);
+        expect(await listFiles(join(pipelineDir, 'enrichment'))).toEqual([]);
     });
 });

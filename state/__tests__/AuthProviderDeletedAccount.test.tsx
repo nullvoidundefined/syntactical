@@ -6,10 +6,9 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { AuthProvider, useAuth } from '../AuthProvider';
 import { AUTH_STORAGE_KEY, buildIdentity, installRoutedFetch, readStoredAuth } from './authTestSupport';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
 jest.mock('expo-secure-store', () => {
   const values = new Map<string, string>();

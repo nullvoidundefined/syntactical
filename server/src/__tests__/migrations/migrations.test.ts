@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, inject, it } from 'vitest';
 
 import { createScratchDatabase } from '../integration/createScratchDatabase.js';
 import { runMigrations } from '../integration/runMigrations.js';
+import { SKIP_DATABASE_TESTS } from '../integration/skipDatabaseTests.js';
 
 const MIGRATION_TIMEOUT_MS = 60_000;
 const UNIQUE_VIOLATION = '23505';
@@ -31,7 +32,6 @@ const APPLICATION_TABLES = [
 
 // Matches the pipeline's Docker tests: SKIP_DOCKER_TESTS=1 skips them unless
 // TEST_DATABASE_URL names a database (CI's server-integration job).
-const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.env.TEST_DATABASE_URL;
 
 let scratch: Awaited<ReturnType<typeof createScratchDatabase>>;
 

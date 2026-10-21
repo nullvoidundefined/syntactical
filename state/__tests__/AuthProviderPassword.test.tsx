@@ -27,10 +27,9 @@ import {
   type FakeReply,
   type SignInIdentity,
 } from './authTestSupport';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
 jest.mock('expo-secure-store', () => {
   const values = new Map<string, string>();
@@ -79,15 +78,13 @@ jest.mock('../../clients/logClient', () => {
 
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
-jest.mock('expo-router', () => ({
-  ...jest.requireActual('expo-router'),
-  router: { push: (...args: unknown[]) => mockPush(...args), replace: (...args: unknown[]) => mockReplace(...args) },
-  useLocalSearchParams: () => ({}),
-  useRouter: () => ({
+jest.mock('expo-router', () =>
+  require('../../config/buildExpoRouterMock').buildExpoRouterMock({
     push: (...args: unknown[]) => mockPush(...args),
     replace: (...args: unknown[]) => mockReplace(...args),
+    readParams: () => ({}),
   }),
-}));
+);
 
 type SecureStoreMock = {
   mockValues: Map<string, string>;

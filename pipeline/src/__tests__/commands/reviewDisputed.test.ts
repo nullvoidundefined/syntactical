@@ -3,13 +3,14 @@
 // question has an oracle, so the default observer never runs code.
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { review } from '../../commands/review.js';
+import { writeJson } from '../fixtures/jsonFiles.js';
+import { buildLanguage, HASH } from '../fixtures/manifest.js';
 
-const HASH = '0123456789abcdef'.repeat(4);
 const SOURCE = {
     quote: 'Lax cookies are not sent on cross-site POST requests',
     title: 'Using HTTP cookies',
@@ -71,22 +72,7 @@ function buildBank(path: string, access: 'free' | 'paid', difficulty: string, id
 }
 
 function buildEntry(id: string, banks: Record<string, unknown>, extra: Record<string, unknown>) {
-    return {
-        banks,
-        glyph: 'G',
-        grammar: 'plain',
-        id,
-        label: id,
-        misconceptions: [],
-        tagline: 'T',
-        topics: [{ id: 'sessions', label: 'Sessions' }],
-        ...extra,
-    };
-}
-
-async function writeJson(file: string, value: unknown): Promise<void> {
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, JSON.stringify(value));
+    return buildLanguage({ banks, id, label: id, topics: [{ id: 'sessions', label: 'Sessions' }], ...extra });
 }
 
 async function listFiles(dir: string): Promise<string[]> {

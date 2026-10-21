@@ -8,22 +8,15 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 
 import { apiFetch } from '../../clients/apiClient';
 import { AuthProvider, useAuth } from '../AuthProvider';
-import {
-  AUTH_STORAGE_KEY,
-  buildIdentity,
-  installRoutedFetch,
-  type SignInIdentity,
-} from './authTestSupport';
+import { AUTH_STORAGE_KEY, buildIdentity, installRoutedFetch, type SignInIdentity } from './authTestSupport';
+import { randomBytes } from 'node:crypto';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
-jest.mock('expo-constants', () => ({
-  expoConfig: {
-    extra: {
-      apiBaseUrl: 'https://api.syntactical.dev/v1/',
-      // Built at run time so no credential-shaped literal sits in source.
-      revenueCatWebBillingKey: `rcb_${require('node:crypto').randomBytes(12).toString('hex')}`,
-    },
-  },
-}));
+// Built at run time so no credential-shaped literal sits in source.
+setExpoExtra({
+  apiBaseUrl: 'https://api.syntactical.dev/v1/',
+  revenueCatWebBillingKey: `rcb_${randomBytes(12).toString('hex')}`,
+});
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),
@@ -119,7 +112,10 @@ describe('AuthProvider on web: RevenueCat Web Billing identity', () => {
   it('never configures Web Billing for a guest or a failed sign-in, then configures it with the public key and the server user id after a successful sign-in', async () => {
     const identity = buildIdentity();
     const { setRoute } = installRoutedFetch({
-      'POST auth/sessions': { status: 400, body: { error: { code: 'AUTH_INVALID_CODE', message: 'invalid', requestId: 'r1' } } },
+      'POST auth/sessions': {
+        status: 400,
+        body: { error: { code: 'AUTH_INVALID_CODE', message: 'invalid', requestId: 'r1' } },
+      },
     });
     const { result } = await mountAuth();
     await act(async () => {
