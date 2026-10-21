@@ -11,8 +11,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { rewritePrompts } from '../../commands/rewritePrompts.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 import { readJson, writeJson } from '../fixtures/jsonFiles.js';
-
-const HASH = '0123456789abcdef'.repeat(4);
+import { buildLanguage, buildManifest, HASH } from '../fixtures/manifest.js';
 
 type Json = Record<string, unknown>;
 
@@ -62,9 +61,10 @@ describe('rewritePrompts command', () => {
         contentRoot = join(root, 'syntactical-content');
         pipelineDir = join(root, 'repo/pipeline');
         await mkdir(contentRoot, { recursive: true });
-        await writeJson(join(contentDir, 'manifest.json'), {
-            languages: [
-                {
+        await writeJson(
+            join(contentDir, 'manifest.json'),
+            buildManifest(
+                buildLanguage({
                     banks: {
                         easy: bank('python/easy.json', 'free'),
                         hard: bank('python/hard.json', 'paid'),
@@ -72,15 +72,11 @@ describe('rewritePrompts command', () => {
                     },
                     glyph: 'PY',
                     grammar: 'python',
-                    id: 'python',
                     label: 'Python',
-                    misconceptions: [],
-                    tagline: 'T',
                     topics: [{ id: 'strings', label: 'Strings' }],
-                },
-            ],
-            schemaVersion: 2,
-        });
+                }),
+            ),
+        );
     });
 
     afterEach(async () => {

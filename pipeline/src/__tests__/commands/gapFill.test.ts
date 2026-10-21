@@ -11,8 +11,8 @@ import { gapFill } from '../../commands/gapFill.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 import type { Oracle } from '../../types/Oracle.js';
 import { readJson, writeJson } from '../fixtures/jsonFiles.js';
+import { buildLanguage, buildManifest, HASH } from '../fixtures/manifest.js';
 
-const HASH = '0123456789abcdef'.repeat(4);
 const TOPICS = [
     { id: 'strings', label: 'Strings' },
     { id: 'lists', label: 'Lists' },
@@ -25,22 +25,8 @@ function buildEntry(path: string, access: 'free' | 'paid'): Record<string, unkno
     return { access, contentVersion: 1, hash: HASH, path, topicCounts: {}, ...productId };
 }
 
-function buildManifest(banks: Record<string, unknown>): Record<string, unknown> {
-    return {
-        languages: [
-            {
-                banks,
-                glyph: 'G',
-                grammar: 'plain',
-                id: 'python',
-                label: 'L',
-                misconceptions: [],
-                tagline: 'T',
-                topics: TOPICS,
-            },
-        ],
-        schemaVersion: 2,
-    };
+function manifestWithBanks(banks: Record<string, unknown>): Record<string, unknown> {
+    return buildManifest(buildLanguage({ banks, topics: TOPICS }));
 }
 
 function buildBankQuestion(id: string, prompt = `Existing ${id}`): Record<string, unknown> {
@@ -142,7 +128,7 @@ describe('gapFill', () => {
             const outRoot = access === 'free' ? pipelineDir : contentRoot;
             await writeJson(join(outRoot, `classifications/python/${difficulty}.json`), accepted);
         }
-        await writeJson(join(contentDir, 'manifest.json'), buildManifest(entries));
+        await writeJson(join(contentDir, 'manifest.json'), manifestWithBanks(entries));
     }
 
     beforeEach(async () => {

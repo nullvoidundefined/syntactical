@@ -9,32 +9,23 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { draftOracles } from '../../commands/draftOracles.js';
 import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
+import { buildBankEntry, buildLanguage, buildManifest } from '../fixtures/manifest.js';
 
-const HASH = '0123456789abcdef'.repeat(4);
-
-function buildEntry(path: string, access: 'free' | 'paid', productId?: string): Record<string, unknown> {
-    return { access, contentVersion: 1, hash: HASH, path, topicCounts: {}, ...(productId ? { productId } : {}) };
-}
-
-function buildLanguage(id: string, banks: Record<string, unknown>): Record<string, unknown> {
-    return { banks, glyph: 'G', grammar: 'plain', id, label: 'L', misconceptions: [], tagline: 'T', topics: [] };
+function languageWithBanks(id: string, banks: Record<string, unknown>): Record<string, unknown> {
+    return buildLanguage({ banks, id });
 }
 
 function buildQuestion(id: string): Record<string, unknown> {
     return { answer: true, id, prompt: `prompt ${id}`, type: 'bool' };
 }
 
-function buildManifest(languages: Record<string, unknown>[]): Record<string, unknown> {
-    return { languages, schemaVersion: 2 };
-}
-
-const MANIFEST = buildManifest([
-    buildLanguage('python', {
-        easy: buildEntry('python/easy.json', 'free'),
-        medium: buildEntry('python/medium.json', 'paid', 'syntactical.python.medium'),
+const MANIFEST = buildManifest(
+    languageWithBanks('python', {
+        easy: buildBankEntry('python/easy.json', 'free'),
+        medium: buildBankEntry('python/medium.json', 'paid', 'syntactical.python.medium'),
     }),
-    buildLanguage('javascript', { easy: buildEntry('javascript/easy.json', 'free') }),
-]);
+    languageWithBanks('javascript', { easy: buildBankEntry('javascript/easy.json', 'free') }),
+);
 
 const FILES: Record<string, unknown> = {
     'javascript/easy.json': { questions: [buildQuestion('j-1')] },
@@ -130,17 +121,27 @@ describe('draftOracles', () => {
         const HOSTILE: [string, Record<string, unknown>][] = [
             [
                 'a difficulty key that climbs out of the oracles dir',
-                buildManifest([buildLanguage('python', { '../../.vscode/settings': buildEntry('python/easy.json', 'free') })]),
+                buildManifest(
+                    languageWithBanks('python', {
+                        '../../.vscode/settings': buildBankEntry('python/easy.json', 'free'),
+                    }),
+                ),
             ],
-            ['a language id of ../..', buildManifest([buildLanguage('../..', { easy: buildEntry('python/easy.json', 'free') })])],
-            ['a language id of __proto__', buildManifest([buildLanguage('__proto__', { easy: buildEntry('python/easy.json', 'free') })])],
+            [
+                'a language id of ../..',
+                buildManifest(languageWithBanks('../..', { easy: buildBankEntry('python/easy.json', 'free') })),
+            ],
+            [
+                'a language id of __proto__',
+                buildManifest(languageWithBanks('__proto__', { easy: buildBankEntry('python/easy.json', 'free') })),
+            ],
             [
                 'a bank path that climbs out of the content dir',
-                buildManifest([buildLanguage('python', { easy: buildEntry('../../../outside.json', 'free') })]),
+                buildManifest(languageWithBanks('python', { easy: buildBankEntry('../../../outside.json', 'free') })),
             ],
             [
                 'a bank path that reads a sibling of the content dir',
-                buildManifest([buildLanguage('python', { easy: buildEntry('../outside.json', 'free') })]),
+                buildManifest(languageWithBanks('python', { easy: buildBankEntry('../outside.json', 'free') })),
             ],
         ];
 
@@ -154,7 +155,9 @@ describe('draftOracles', () => {
         it('keeps the rejection message on one line when a manifest key carries a newline', async () => {
             const forged = 'FORGED: all banks validated';
             const { run } = await runWith(
-                buildManifest([buildLanguage('python', { [`easy\n${forged}‮`]: buildEntry('python/easy.json', 'free') })]),
+                buildManifest(
+                    languageWithBanks('python', { [`easy\n${forged}‮`]: buildBankEntry('python/easy.json', 'free') }),
+                ),
             );
             const error = await run.then(
                 () => new Error('expected a rejection'),
@@ -167,7 +170,7 @@ describe('draftOracles', () => {
 
         it('skips a language id that merely names an Object.prototype member', async () => {
             const { provider, run } = await runWith(
-                buildManifest([buildLanguage('constructor', { easy: buildEntry('python/easy.json', 'free') })]),
+                buildManifest(languageWithBanks('constructor', { easy: buildBankEntry('python/easy.json', 'free') })),
             );
             await run;
             expect(provider.prompts).toEqual([]);
@@ -273,7 +276,9 @@ describe('draftOracles', () => {
             });
             const provider = blockingSaves(scripted(), 'p-1');
             await expect(draftOracles({ contentDir, log, oraclesDir, provider })).rejects.toThrow('network down');
-            expect(logs.some((line) => line.includes('python/easy') && line.includes('could not save partial results'))).toBe(true);
+            expect(
+                logs.some((line) => line.includes('python/easy') && line.includes('could not save partial results')),
+            ).toBe(true);
         });
 
         it('propagates the save error when drafting itself succeeded', async () => {
@@ -299,7 +304,9 @@ describe('draftOracles', () => {
     });
 
     it('keeps a question id like __proto__ as a plain own key without touching the prototype', async () => {
-        await writeContent(contentDir, { 'python/easy.json': { questions: [buildQuestion('__proto__'), buildQuestion('p-1')] } });
+        await writeContent(contentDir, {
+            'python/easy.json': { questions: [buildQuestion('__proto__'), buildQuestion('p-1')] },
+        });
         await draftOracles({ contentDir, log, oraclesDir, provider: scripted() });
         const text = await readFile(join(oraclesDir, 'python', 'easy.json'), 'utf8');
         const parsed = JSON.parse(text) as Record<string, unknown>;
@@ -320,6 +327,8 @@ describe('draftOracles', () => {
         await draftOracles({ contentDir, log, oraclesDir, provider });
         expect(logs.some((line) => /[\n\r\u2028]/.test(line))).toBe(false);
         expect(logs).not.toContain(forged);
-        expect(logs.some((line) => line.startsWith('python/easy p-1: not executable (ok ') && line.includes(forged))).toBe(true);
+        expect(
+            logs.some((line) => line.startsWith('python/easy p-1: not executable (ok ') && line.includes(forged)),
+        ).toBe(true);
     });
 });

@@ -12,8 +12,7 @@ import { review } from '../../commands/review.js';
 import { validateContent } from '../../commands/validate.js';
 import type { Oracle } from '../../types/Oracle.js';
 import { writeJson } from '../fixtures/jsonFiles.js';
-
-const HASH = '0123456789abcdef'.repeat(4);
+import { buildBankEntry, buildLanguage, buildManifest } from '../fixtures/manifest.js';
 
 function oracleOf(code: string): Oracle {
     return { code, language: 'python' };
@@ -51,25 +50,17 @@ describe('validate and review oracle roots', () => {
         contentRoot = join(root, 'syntactical-content');
         pipelineDir = join(root, 'repo/pipeline/');
         await mkdir(contentRoot, { recursive: true });
-        const entry = (access: 'free' | 'paid', difficulty: string) => ({
-            access,
-            contentVersion: 1,
-            hash: HASH,
-            path: `python/${difficulty}.json`,
-            topicCounts: {},
-            ...(access === 'paid' ? { productId: `syntactical.python.${difficulty}` } : {}),
-        });
-        const language = {
+        const entry = (access: 'free' | 'paid', difficulty: string) =>
+            buildBankEntry(
+                `python/${difficulty}.json`,
+                access,
+                access === 'paid' ? `syntactical.python.${difficulty}` : undefined,
+            );
+        const language = buildLanguage({
             banks: { easy: entry('free', 'easy'), medium: entry('paid', 'medium') },
-            glyph: 'G',
-            grammar: 'plain',
-            id: 'python',
-            label: 'L',
-            misconceptions: [],
-            tagline: 'T',
             topics: [{ id: 'strings', label: 'Strings' }],
-        };
-        await writeJson(join(contentDir, 'manifest.json'), { languages: [language], schemaVersion: 2 });
+        });
+        await writeJson(join(contentDir, 'manifest.json'), buildManifest(language));
         await writeJson(join(contentDir, 'python/easy.json'), { questions: [buildQuestion('free-1')] });
         await writeJson(join(contentRoot, 'python/medium.json'), { questions: PAID_IDS.map(buildQuestion) });
         await writeJson(
