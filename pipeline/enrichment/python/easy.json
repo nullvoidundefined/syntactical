@@ -32,5 +32,1108 @@
       "misconceptionId": "python.nan-equals-itself",
       "rationale": "You may have thought comparing undefined values yields None, like 'no result'. The == operator on floats always returns a bool. For NaN, IEEE 754 rules make the comparison return False, not None."
     }
+  ],
+  "py-easy-03": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.true-division-returns-int",
+      "rationale": "You likely thought / does integer division when both operands are ints, as in C or Python 2. In Python 3, / always does true division and returns a float, so 7 / 2 is 3.5. Use // if you want a floored integer result."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.true-division-returns-int",
+      "rationale": "You correctly saw that / returns a float, but the value is wrong. True division keeps the fractional part, so 7 / 2 is 3.5, not 3.0. A value of 3.0 would be floor-style rounding, which is what // does (and 7 // 2 gives the int 3)."
+    }
+  ],
+  "py-easy-04": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.modulo-sign-matches-dividend",
+      "rationale": "You likely expected % to take the dividend's sign as in C, giving -1. Python's % takes the divisor's sign: -7 - (3 * floor(-7/3)) = -7 - (3 * -3) = 2, so the result is non-negative here because 3 is positive."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.modulo-sign-matches-dividend",
+      "rationale": "You may have taken 7 % 3 = 1 and ignored the negative sign, or botched the floor step. Floor of -7/3 is -3, not -2, so the result is -7 - (3 * -3) = 2, not 1."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.modulo-sign-matches-dividend",
+      "rationale": "You probably thought the result keeps the negative sign of -7 and has some other magnitude. Python's % follows the divisor's sign, and 3 is positive, so the result can't be negative. It is -7 - (3 * -3) = 2."
+    }
+  ],
+  "py-easy-05": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.unary-minus-binds-tighter-than-power",
+      "rationale": "You likely read this as (-2) ** 2, applying the minus sign to 2 first, so squaring gives 4. But ** has higher precedence than unary minus, so Python computes 2 ** 2 = 4 first and then negates it, giving -4."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.unary-minus-binds-tighter-than-power",
+      "rationale": "You may have thought the exponent just multiplies or doubles the base (-2 stays -2, or -2 * 1). But ** raises 2 to the power 2 to get 4, and the unary minus is applied afterward, so the result is -4, not -2."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.unary-minus-binds-tighter-than-power",
+      "rationale": "You might have thought a unary minus directly before ** is ambiguous or illegal. It's valid: ** binds tighter than unary minus, so the expression parses as -(2 ** 2) and evaluates to -4 with no error."
+    }
+  ],
+  "py-easy-06": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.chained-comparison-left-fold",
+      "rationale": "You likely read 1 < 2 < 3 left to right as (1 < 2) < 3, i.e. True < 3. Python instead treats a chain as (1 < 2) and (2 < 3). Both pairs hold, so the whole expression is True, not False."
+    }
+  ],
+  "py-easy-07": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.or-returns-bool",
+      "rationale": "You likely thought `or` always produces a boolean, as in many languages. In Python, `or` returns the operand that decided the result, not True/False. Since 3 is truthy, it short-circuits and returns 3 itself."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.or-returns-bool",
+      "rationale": "You may have thought `or` returns the last operand it looks at, or the second one. But `or` stops at the first truthy operand. 3 is truthy, so 5 is never evaluated and the result is 3."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.or-returns-bool",
+      "rationale": "You may have thought 3 or 5 is falsy or turns into a boolean that fails. Both 3 and 5 are truthy, and `or` returns its first truthy operand, 3. It never converts the result to False or any boolean."
+    }
+  ],
+  "py-easy-08": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.or-returns-bool",
+      "rationale": "You may have expected `not` to hand back one of its operands, as `and`/`or` do. But `not` always returns a real bool: it checks 0's falsiness and returns the opposite, True, never the original 0."
+    }
+  ],
+  "py-easy-09": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.bool-unrelated-to-int",
+      "rationale": "You probably thought bool and int are separate types, so comparing True to 1 would be False or fail. But bool is a subclass of int, with True behaving as 1, so True == 1 is True (and True + True == 2)."
+    }
+  ],
+  "py-easy-10": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.eq-none-same-as-is-none",
+      "rationale": "You likely thought `== None` and `is None` always give the same answer. But `is None` checks identity with the None singleton, while `== None` calls `__eq__`, which a class can override to return anything, so the result can be surprising."
+    }
+  ],
+  "py-easy-11": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.isinstance-multiple-type-args",
+      "rationale": "You likely thought isinstance accepts any number of types as extra arguments. It takes exactly two: the object and one class or a tuple of classes. Multiple types must be grouped in a single tuple, like (int, float)."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.isinstance-multiple-type-args",
+      "rationale": "You probably assumed a list of types works like a tuple of types. isinstance expects a single class or a tuple of classes as its second argument, so a list is not accepted; use (int, float) instead."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.isinstance-multiple-type-args",
+      "rationale": "You likely read isinstance as a function that returns an object's type, so you could test membership. It needs both the object and the type(s) to check, and returns a bool. Pass the tuple (int, float) as the second argument."
+    }
+  ],
+  "py-easy-12": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.tuples-and-strings-mutable",
+      "rationale": "You likely assumed tuples work like lists, so t[0] = 5 would succeed. Only lists allow in-place item assignment. Tuples are immutable, and t[0] = 5 raises TypeError: 'tuple' object does not support item assignment."
+    }
+  ],
+  "py-easy-13": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.tuples-and-strings-mutable",
+      "rationale": "You probably treated a string like a list, where s[0] = 'H' replaces the first item. Strings are immutable in Python, so item assignment raises TypeError. To get 'Hello' you build a new string, such as 'H' + s[1:] or s.capitalize()."
+    }
+  ],
+  "py-easy-14": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.slice-end-inclusive",
+      "rationale": "You likely treated the stop index 3 as included, so you took indices 1, 2 and 3. But the stop index is excluded: [1:3] stops before index 3, so it gives only indices 1 and 2, which is [20, 30]."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.slice-end-inclusive",
+      "rationale": "You may have thought the slice starts at the first element, or that the start index counts from 1. Indexing is zero-based and the start is included, so [1:3] begins at index 1 (20) and gives [20, 30], not [10, 20]."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.slice-end-inclusive",
+      "rationale": "You may have read 1 and 3 as the values to pick, or counted from the stop end. They are indices: start 1 is included and stop 3 is excluded, so you get indices 1 and 2, which is [20, 30], not [30, 40]."
+    }
+  ],
+  "py-easy-15": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.slice-end-inclusive",
+      "rationale": "You probably counted one step too far from the end. 'h' sits at -3. Negative indexes start at -1 for the last character, so -2 is the second-to-last character, 'o'."
+    }
+  ],
+  "py-easy-16": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.slice-out-of-range-raises",
+      "rationale": "You likely assumed that a slice bound past the end behaves like lst[100] and raises IndexError. Slicing is more forgiving: an out-of-range bound is clamped to the list's length, so lst[1:100] just returns [2, 3]."
+    }
+  ],
+  "py-easy-17": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.slice-end-inclusive",
+      "rationale": "You probably read 3 as a count or a stop, giving the first three elements. In [::3] the 3 is the step size, so it takes every third element across the whole list: indices 0, 3, 6, 9, not just 0, 1, 2."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.range-includes-stop",
+      "rationale": "You probably thought 10 was in the list, as if range(10) included its stop. It stops at 9, so the list is 0 through 9. Stepping by 3 gives 0, 3, 6, 9 and never reaches 10."
+    }
+  ],
+  "py-easy-18": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.sequence-repeat-copies-inner-lists",
+      "rationale": "You likely thought `[[]] * 3` builds three separate empty lists, so appending to one leaves the others alone. It actually repeats a reference to one list three times, so all three entries share it and an append shows up in every row."
+    }
+  ],
+  "py-easy-19": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.sequence-repeat-copies-inner-lists",
+      "rationale": "You probably expected the copies to be separated by spaces, like printing several values. String repetition just joins the copies end to end with no separator, so the result is 'ababab'. A space would have to be added explicitly."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.sequence-repeat-copies-inner-lists",
+      "rationale": "You probably thought * collects the repeated pieces into a list. With a string and an int, * repeats the string and concatenates the copies into one new string, 'ababab'. Lists only come in when the left operand is itself a list."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.sequence-repeat-copies-inner-lists",
+      "rationale": "You probably believed * works only on numbers, so mixing a str and an int must fail. Python defines * for a string and an int as repetition, and lists and tuples behave the same way. No error is raised; the result is 'ababab'."
+    }
+  ],
+  "py-easy-20": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.append-extend-same",
+      "rationale": "You likely expected + to nest the two lists as items of a new list, like append would. But + joins the elements of both lists into one flat list, giving [1, 2, 3, 4], not a list holding two sublists."
+    }
+  ],
+  "py-easy-21": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.append-extend-same",
+      "rationale": "You may think both methods just put the new values into the list the same way. They differ: append adds its argument as a single element, even a list, while extend iterates over it and adds each item. So the resulting lists differ."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.append-extend-same",
+      "rationale": "You may think a list argument is invalid for append. But append accepts any object and adds it as one new element, so lst.append([3, 4]) works and gives [1, 2, [3, 4]]. No TypeError occurs; the two methods just add differently."
+    }
+  ],
+  "py-easy-22": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.remove-pop-confusion",
+      "rationale": "You probably thought insert works like assignment, lst[1] = 'x'. But insert never overwrites: it shifts 'b' and 'c' one place right and puts 'x' at index 1, so the list grows to four items and 'b' is kept."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.append-extend-same",
+      "rationale": "You may have mixed up insert with append. append always adds to the end, but insert places the value at the given index and shifts later elements right, so 'x' lands at index 1, not at the end."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.slice-out-of-range-raises",
+      "rationale": "You likely assumed an occupied index is an error. insert doesn't need the slot to be free: it shifts elements at or after that index right and puts the new value there, with no exception raised."
+    }
+  ],
+  "py-easy-23": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.remove-pop-confusion",
+      "rationale": "You may think remove hands back the deleted value and pop does not. It's the reverse: remove returns None, while pop deletes the item at an index (default last) and returns it, so pop is the one that gives the value back."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.remove-pop-confusion",
+      "rationale": "remove only deletes the first element equal to the value, not every match. pop does default to the last item with no argument, but it can also take an index, so it isn't limited to the end."
+    }
+  ],
+  "py-easy-24": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.pop-removes-first",
+      "rationale": "You may have thought pop() with no argument takes from the front, like a queue. Without an index it defaults to -1, the last element. Removing the first needs pop(0), which is O(n) because the remaining elements shift left."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.remove-pop-confusion",
+      "rationale": "You may have thought pop() removes the smallest value, as with a priority queue. A list pop works by position, not value. With no argument the index defaults to -1, so it removes the last element whatever its value."
+    }
+  ],
+  "py-easy-25": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.remove-pop-confusion",
+      "rationale": "You likely thought del just blanks out the slot, leaving a placeholder. But del removes the element itself, and later items shift left, so the list becomes ['a', 'c'] with length 2. Nothing is replaced by None."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.remove-pop-confusion",
+      "rationale": "You probably read del as deleting the whole list. With an index, del lst[1] removes only that one item. The name lst stays bound to the list; only del lst would unbind the name."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.slice-end-inclusive",
+      "rationale": "You may have treated del lst[1] like a slice that removes everything up to and including index 1. But an index targets a single element: only 'b' is removed, and 'a' stays at index 0."
+    }
+  ],
+  "py-easy-26": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.sort-returns-sorted-list",
+      "rationale": "This swaps the two. It's sort() that is the list method reordering lst's own contents, while sorted() builds and returns a brand-new list and leaves the original untouched. sort() does not return a sorted list."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.sort-returns-sorted-list",
+      "rationale": "Only sort() works in place. sorted() never modifies lst; it always returns a new list. Also, sort() returns None, so it doesn't hand back the sorted list the way this choice implies for sorted()."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.sort-returns-sorted-list",
+      "rationale": "The in-place part is right, but sort() returns None, not the list. Thinking it returns lst leads to the bug x = lst.sort() leaving x as None. Use sorted(lst) if you want the sorted list as a value."
+    }
+  ],
+  "py-easy-27": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.slice-returns-reference",
+      "rationale": "Slicing the ascending result with [::-1] does give a descending list, but it isn't the only way. sorted() accepts reverse=True, which handles the order directly, is idiomatic, and avoids a separate reversal step."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.reversed-returns-list",
+      "rationale": "You probably assumed a standalone reverse() builtin exists that you can wrap around sorted(). Python has no such function; there is reversed(), which returns an iterator, and sorted() already offers reverse=True."
+    }
+  ],
+  "py-easy-28": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.sort-returns-sorted-list",
+      "rationale": "This order doesn't follow lengths: 'banana' (6) can't come before 'kiwi' (4) when sorting ascending by len. It looks like a guess that ignored key=len. Sorting by length gives 'fig', 'kiwi', 'banana'."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.sort-returns-sorted-list",
+      "rationale": "You may have thought key expects a string or that len can't be used there. But key takes any one-argument function, and len is one. It's called on each element to get its sort value, so there is no TypeError."
+    }
+  ],
+  "py-easy-30": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.append-extend-same",
+      "rationale": "You probably thought the second argument is ignored or isn't part of the total, so only 1+2+3 is summed. In fact it is the starting value, so 10 is added to the elements too: 10 + 1 + 2 + 3 gives 16, not 6."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.append-extend-same",
+      "rationale": "You may have read the 10 as the result, or as a cap or default that replaces the sum. It is only the start value of the running total, and each element is still added to it, so the result is 10 + 1 + 2 + 3 = 16."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.append-extend-same",
+      "rationale": "You likely thought a second argument can't be combined with a list, or that a number and a list can't be added. But sum accepts an optional start value. The 10 is added to each integer element, never to the list itself, so there's no error and the result is 16."
+    }
+  ],
+  "py-easy-31": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.len-unsupported-on-sets",
+      "rationale": "You probably thought sets were left out because they're unordered or have no indexing. But len() only needs __len__, and sets define it, so len({1, 2, 3}) returns 3. It fails only on objects without __len__, like an int or a generator."
+    }
+  ],
+  "py-easy-32": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.range-includes-stop",
+      "rationale": "You may have thought the stop value is left out and also dropped 0, counting only 1 through 4. But range(5) starts at 0 by default, so it yields 0, 1, 2, 3, 4. That is five values, not four."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.range-includes-stop",
+      "rationale": "You probably believed range(5) includes 5 itself, giving 0 through 5. The stop argument is exclusive, like the end of a slice, so the sequence stops at 4 and list(range(5)) has 5 elements, not 6."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.range-includes-stop",
+      "rationale": "This treats the length as platform-specific, but range semantics are fixed by the language. range(5) always gives 0 through 4 with an exclusive stop, so list(range(5)) always has exactly 5 elements."
+    }
+  ],
+  "py-easy-33": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.range-includes-stop",
+      "rationale": "You likely thought the stop value is included when counting down, so 0 would appear at the end. The stop bound is exclusive in either direction, so counting down from 10 stops before reaching 0, giving [10, 8, 6, 4, 2]."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.range-includes-stop",
+      "rationale": "You likely expected the result to be sorted ascending, or thought the negative step is ignored. A negative step makes range count downward from the start, so the values come out as 10, 8, 6, 4, 2, not increasing and not including 0."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.range-includes-stop",
+      "rationale": "You likely believed range needs start less than stop, so 10 to 0 would produce nothing. That is only true with a positive step. With step -2, range counts downward from 10 toward 0, yielding 10, 8, 6, 4, 2."
+    }
+  ],
+  "py-easy-34": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.range-includes-stop",
+      "rationale": "This assumes the counter always begins at 0, so start=1 is ignored. But start sets the first counter value, so the pairs begin at 1 and the result is [(1, 'a'), (2, 'b')], not [(0, 'a'), (1, 'b')]."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.zip-pads-with-none",
+      "rationale": "This swaps the pair order, putting the item first and the counter second. enumerate yields (counter, item), so each tuple is (1, 'a') and (2, 'b'), not ('a', 1) and ('b', 2)."
+    }
+  ],
+  "py-easy-35": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.zip-pads-with-none",
+      "rationale": "You likely expected zip to fill the gap with None so no data is lost. But zip stops once the shortest input is exhausted, so the result is only [(1, 'a'), (2, 'b')] and 3 is dropped. itertools.zip_longest is the one that pads."
+    }
+  ],
+  "py-easy-36": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.reversed-returns-list",
+      "rationale": "You likely thought reversed() hands back a reversed list, like slicing with [::-1] does. It actually returns a lazy list_reverseiterator, which works with next() and for loops but not indexing. Wrap it in list(...) first to index it."
+    }
+  ],
+  "py-easy-37": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.nonempty-string-truthiness-by-content",
+      "rationale": "You may have thought most elements being truthy is enough, or that all() ignores the 0. But all() needs every element to be truthy, and 0 is falsy, so a single 0 makes the whole result False."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.or-returns-bool",
+      "rationale": "You may have thought all() returns the offending falsy element, as and/or return an operand. But all() is a function that always returns a bool. The 0 makes it return False, not 0."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.bool-unrelated-to-int",
+      "rationale": "You may have expected mixing values like 0 with other numbers to be a type problem. But all() only tests each element's truthiness, and every int is valid. It returns False because of the 0, with no error."
+    }
+  ],
+  "py-easy-38": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.sequence-repeat-copies-inner-lists",
+      "rationale": "This treats the lambda like a repeat operation, as if the list were multiplied by 2. But the lambda gets each element x, not the list, so each number is doubled to give [2, 4, 6]; the list is never repeated."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.map-filter-return-lists",
+      "rationale": "This assumes the result is a map object that shows its contents when printed. But list() forces the lazy map to evaluate and gathers the results into a plain list of doubled numbers, [2, 4, 6], not tuples."
+    }
+  ],
+  "py-easy-29": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.sort-returns-sorted-list",
+      "rationale": "You probably thought max still compares the strings alphabetically, so 'cc' wins as the largest. But key=len tells max to rank each item by its length. 'bbb' has length 3, longer than 'cc' at 2, so 'bbb' is the result."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.map-filter-return-lists",
+      "rationale": "You probably treated key=len like map, replacing each item with its length and returning the biggest, 3. But key only decides the ranking. max returns the original element, 'bbb', not the value the key function computed."
+    }
+  ],
+  "py-easy-39": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.modulo-sign-matches-dividend",
+      "rationale": "You may have flipped the condition and kept the odd numbers. filter keeps elements where the function returns a truthy value. x % 2 == 0 is true for 2 and 4, so those survive and 1 and 3 are discarded."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.map-filter-return-lists",
+      "rationale": "You may have thought filter returns the lambda's results, like map does. filter uses the truthy result only to decide which original elements to keep, and it returns those elements, not the True/False values."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.map-filter-return-lists",
+      "rationale": "You may have thought filter passes every element through unchanged. It drops elements where the function returns something falsy. Odd numbers give False for x % 2 == 0, so 1 and 3 are removed, leaving [2, 4]."
+    }
+  ],
+  "py-easy-40": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.parenthesized-single-value-is-tuple",
+      "rationale": "You probably thought lambda parameters go in parentheses like a def. A lambda takes its parameters bare, before the colon: lambda x, y: x + y. Wrapping them in parentheses is a syntax error."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.except-multiple-types-syntax",
+      "rationale": "You may have borrowed the arrow from other languages' lambdas. Python separates the parameters from the returned expression with a colon, not ->. The arrow form is a syntax error."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.except-multiple-types-syntax",
+      "rationale": "You likely mixed in syntax from other languages. Python has no function keyword, and lambda is written as lambda params: expression. An = after a parameter list isn't valid, so this form is a syntax error."
+    }
+  ],
+  "py-easy-42": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.modulo-sign-matches-dividend",
+      "rationale": "You probably thought 0 gets excluded, perhaps treating 0 as not a multiple of 3. But 0 % 3 == 0 is True, so the filter keeps 0 and the result starts with 0: [0, 3, 6, 9]."
+    }
+  ],
+  "py-easy-43": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.map-filter-return-lists",
+      "rationale": "You likely assumed a comprehension always gives a list, as if the result were a materialized list. The curly braces and the key: value pair make this a dict comprehension, so it builds a dict mapping each x to x * x, not a list."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.in-dict-checks-values",
+      "rationale": "You probably read the braces as a set and overlooked the colon. With x: x * x, each item is a key-value pair, so the result is a dict mapping each number to its square. A set comprehension would have a single expression."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.list-as-dict-key",
+      "rationale": "You likely thought only lists can be built with comprehensions. Dicts support the same for/if structure, and the key: value pair builds a dict directly. The syntax is valid and produces {0: 0, 1: 1, 2: 4}."
+    }
+  ],
+  "py-easy-44": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.sequence-repeat-copies-inner-lists",
+      "rationale": "You correctly saw the braces make a set, but you thought the repeating values 0, 1, 2, 0, 1, 2 would all be kept. Sets discard duplicates automatically, so only {0, 1, 2} remains."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.parenthesized-single-value-is-tuple",
+      "rationale": "You probably thought a comprehension's result is a tuple, as if parentheses were involved. The curly braces with no colon make a set comprehension, and the result is the set {0, 1, 2}, not a tuple."
+    }
+  ],
+  "py-easy-45": [
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.list-as-dict-key",
+      "rationale": "This has the same ordering mistake as users['name'][1], and the key is also unquoted. name without quotes is a variable, not the string 'name'. users is a list, so it needs an integer index first: users[1]['name']."
+    }
+  ],
+  "py-easy-46": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.for-else-runs-on-break",
+      "rationale": "Picking false suggests you think the else clause runs even after a break, or that it behaves oddly. In fact else runs only when the iterable is exhausted without interruption; a break skips it entirely, which is what makes it useful for not-found searches."
+    }
+  ],
+  "py-easy-47": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.for-else-runs-on-break",
+      "rationale": "You likely swapped the two keywords. break is the one that terminates the nearest enclosing loop immediately. continue only skips the rest of the current iteration and moves on to the next one, without leaving the loop."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.for-else-runs-on-break",
+      "rationale": "They differ in what happens next. break ends the loop immediately. continue skips the rest of the current iteration's body and jumps to the next condition check or next item, so the loop keeps running."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.for-else-runs-on-break",
+      "rationale": "continue works in for loops too, where it jumps to the next item. It is not limited to while loops. It is also not interchangeable with break, which exits the loop instead of moving to the next iteration."
+    }
+  ],
+  "py-easy-48": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.for-else-runs-on-break",
+      "rationale": "You probably think pass is a loop-control keyword like continue or break. It doesn't touch control flow. It does nothing, and the next statement simply runs. It only fills a block where Python needs at least one statement."
+    }
+  ],
+  "py-easy-50": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.append-extend-same",
+      "rationale": "You probably read b as an ordinary name taking one value, the next element after a. A starred name collects all leftover elements into a list. Here that list is [2, 3, 4], not a single number."
+    }
+  ],
+  "py-easy-51": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.assignment-copies-list",
+      "rationale": "This assumes a keeps its old value after a = b. Assignment just rebinds the name, so after the first statement both names refer to b's value, and b = a changes nothing. The original a is lost. Unpacking avoids this."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.assignment-copies-list",
+      "rationale": "The temp variable is the right idea, but the last step is wrong. After a = b, a no longer holds the original value, so b = a leaves both names equal to b. It would need b = temp. Tuple unpacking needs no temp."
+    }
+  ],
+  "py-easy-52": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.parenthesized-single-value-is-tuple",
+      "rationale": "You likely thought the parentheses are what build a tuple, so without them `t = 1, 2, 3` would fail or give something else. The commas make the tuple. `1, 2, 3` is already a tuple literal, and parentheses only add optional grouping."
+    }
+  ],
+  "py-easy-53": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.parenthesized-single-value-is-tuple",
+      "rationale": "You likely thought parentheses are what make a tuple, so (1) looks like a one-element tuple. But parentheses only group, as in arithmetic, so (1) is just the int 1. The trailing comma in (1,) is what makes a tuple."
+    }
+  ],
+  "py-easy-54": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.chained-assignment-separate-objects",
+      "rationale": "You likely read `a = b = c = []` as creating a fresh empty list for each name. But the right side is evaluated once, and all three names are bound to that one list. Mutating through any name shows up in the others."
+    }
+  ],
+  "py-easy-55": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.map-filter-return-lists",
+      "rationale": "You likely expected items() to hand back a ready-made list, as older code or habit suggests. It returns a view object instead. The view reflects later changes to the dict, and you must call list(d.items()) to get a real list."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.reversed-returns-list",
+      "rationale": "You probably thought items() produces pairs lazily, like a generator. It actually returns a dict view object that is iterable and reflects later changes to the dict. It isn't a separate stream of pairs detached from the dict."
+    }
+  ],
+  "py-easy-56": [
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.in-dict-checks-values",
+      "rationale": "You may have thought .get returns the key you asked for, or echoes the argument. It returns the stored value if the key exists, otherwise the default, and the default here is 0, not the key 'b'."
+    }
+  ],
+  "py-easy-57": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.in-dict-checks-values",
+      "rationale": "You likely thought setdefault works like d['x'], which fails on a missing key. But setdefault checks for the key and inserts the default when it is absent, so no KeyError occurs. It then returns the stored list, and the append works."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.assignment-copies-list",
+      "rationale": "You likely thought setdefault returns a detached copy of the default, so the append touches a throwaway list. It inserts [] into d and returns that same stored object, so append(1) changes the list inside d. d ends up {'x': [1]}."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.assignment-copies-list",
+      "rationale": "You likely thought the append is lost after the default is inserted. But setdefault returns the actual list now stored under 'x', not a copy, so append(1) mutates that list in place and d becomes {'x': [1]}, not {'x': []}."
+    }
+  ],
+  "py-easy-58": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.in-dict-checks-values",
+      "rationale": "Picking false suggests you thought `'x' in d` looks through a dict's values, or both keys and values. But membership on a dict walks its keys by default. To search values you must write `'x' in d.values()` explicitly."
+    }
+  ],
+  "py-easy-59": [
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.in-dict-checks-values",
+      "rationale": "You may have mixed `in` up with a search like str.find(), which gives the position (3). The `in` operator only answers whether the substring is present, so it returns True or False, never an index."
+    }
+  ],
+  "py-easy-60": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.in-list-constant-time",
+      "rationale": "You likely assumed `in` is a constant-time lookup, as it is for sets and dicts. Those use hashing to jump to an item. A list has no such structure, so `in` must scan element by element, which is O(n) in the worst case."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.in-list-constant-time",
+      "rationale": "O(log n) would require the list to be ordered and searched by halving, like binary search. A plain list has no ordering to exploit, so `in` checks elements one at a time until it finds a match or reaches the end: O(n)."
+    }
+  ],
+  "py-easy-61": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.map-filter-return-lists",
+      "rationale": "You probably thought set() hands back a list with the repeats removed. It builds a set, which prints with curly braces, not square brackets. It is also unordered and keeps only one copy of each distinct value."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.list-as-dict-key",
+      "rationale": "You may have read the curly braces as a dict that maps each value to itself. set() makes a collection of distinct hashable elements, not key-value pairs. The result is just {1, 2, 3}, with no colons or mappings."
+    }
+  ],
+  "py-easy-62": [
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.or-returns-bool",
+      "rationale": "You likely thought & returns the left operand's elements, or treated it like a logical and. On sets it is intersection, so 1, which is missing from the right set, is dropped. The result is {2, 3}."
+    }
+  ],
+  "py-easy-63": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.list-as-dict-key",
+      "rationale": "You likely thought a list is fine as a key if you never change it. But Python decides by type, not your intentions: lists are mutable, so they're unhashable and always rejected as keys. A tuple works instead, if its contents are hashable."
+    }
+  ],
+  "py-easy-64": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.dict-order-unreliable",
+      "rationale": "You probably thought dict key order is arbitrary, as in old Python or like sets. Since 3.7, insertion order is an official language guarantee (only an implementation detail in 3.6), so iterating keys yields them in insertion order."
+    }
+  ],
+  "py-easy-65": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.string-methods-mutate",
+      "rationale": "You may have thought strip() removes only one space from each end, leaving one on each side. It actually removes all leading and trailing whitespace, however many characters there are, so no spaces remain."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.string-methods-mutate",
+      "rationale": "This keeps the trailing spaces, as if strip() only trimmed the left side. strip() trims both ends; only rstrip() would leave the leading side alone, and lstrip() would leave the trailing spaces like this."
+    }
+  ],
+  "py-easy-66": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.split-no-arg-same-as-split-space",
+      "rationale": "You likely thought split() behaves like split(' '), cutting at every single space and leaving empty strings between neighbors. With no argument, a whole run of whitespace counts as one delimiter, so 'a  b   c' gives ['a', 'b', 'c'] with no empties."
+    }
+  ],
+  "py-easy-67": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.split-no-arg-same-as-split-space",
+      "rationale": "You likely expected the doubled comma to be treated as one separator, dropping the gap. With an explicit separator, each comma is its own boundary, so two adjacent commas leave an empty string between 'b' and 'c'."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.split-no-arg-same-as-split-space",
+      "rationale": "You probably thought split(',') leaves the string intact, or that it splits on the whole text. It splits at every comma, returning a list of separate pieces, not a one-element list holding the original string."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.split-no-arg-same-as-split-space",
+      "rationale": "You correctly saw that an empty string is kept, but put it in the wrong place. The empty string appears where the adjacent commas are, between 'b' and 'c', not at the end. There is no trailing comma, so nothing follows 'c'."
+    }
+  ],
+  "py-easy-68": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.string-methods-mutate",
+      "rationale": "You likely read the count of 2 as 'replace all but...' or assumed every 'a' changes, giving 'bonono'. The count caps replacements at two, scanning left to right, so the last 'a' stays and the result ends in 'a'."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.string-methods-mutate",
+      "rationale": "This changes only the first 'a', as if the count of 2 meant something else, like a position. The count is the maximum number of replacements, so the first two 'a's both become 'o', giving 'bonona'."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.string-methods-mutate",
+      "rationale": "You probably thought replace leaves the original string in place, so the result is still 'banana'. Strings are immutable, but replace returns a new string with the first two 'a's swapped for 'o', so the value is 'bonona'."
+    }
+  ],
+  "py-easy-69": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.string-methods-mutate",
+      "rationale": "You probably mixed up lower() with upper(). lower() converts every cased character to lowercase, so 'Hello World' becomes 'hello world'. Producing all capitals is what upper() does, the mirror-image conversion."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.string-methods-mutate",
+      "rationale": "You may have thought lower() only touches some letters or leaves the first one alone, or that the original string gets changed. It lowercases every cased character, including 'W', and returns a new string, so the result is 'hello world'."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.string-methods-mutate",
+      "rationale": "You probably thought lower() only affects the first letter, leaving 'World' capitalized. It converts every cased character in the string, so the 'W' becomes 'w' as well, giving 'hello world'."
+    }
+  ],
+  "py-easy-70": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.bool-unrelated-to-int",
+      "rationale": "You may think find() returns True when the prefix is found. It returns an index (-1 if missing), not a bool. A prefix match gives 0, and 0 == True is False, so this check fails even when the string does start with the prefix."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.slice-end-inclusive",
+      "rationale": "You may think indexing [0] gives the start region to search. 'text'[0] is only the first character, so in tests membership in a single character, not a prefix. Longer prefixes can never match, and it isn't a start check."
+    }
+  ],
+  "py-easy-71": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.int-parses-float-strings",
+      "rationale": "You may have expected a string with digits to be an invalid input that raises an error. isalpha() works on any string and just reports whether every character is a letter. It answers with a bool, here False, and never raises for digits."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.string-methods-mutate",
+      "rationale": "You probably took isalpha() to extract or return the alphabetic part, as if it changed the string. It is a yes/no test that returns a bool and leaves the string untouched. Here the digits make the result False, not 'abc'."
+    }
+  ],
+  "py-easy-72": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.nonempty-string-truthiness-by-content",
+      "rationale": "You likely thought the braces and the word inside them stay as plain text. The `f` prefix changes that: anything inside `{...}` is evaluated as a live expression and replaced by its value, so `{name}` becomes `Ada`."
+    }
+  ],
+  "py-easy-73": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.int-parses-float-strings",
+      "rationale": "You probably thought the f-string would return the computed number itself. An f-string always produces a str, so the value 5 is converted to text and the result is the string '5', not the integer 5."
+    }
+  ],
+  "py-easy-74": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.eq-none-same-as-is-none",
+      "rationale": "You probably assumed the two always give the same text. They are separate hooks with different goals: str() targets readability and repr() targets unambiguity. Built-in types like datetime also show the difference. The two only coincide when a class defines just __repr__."
+    }
+  ],
+  "py-easy-76": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.nonempty-string-truthiness-by-content",
+      "rationale": "You may have linked r with regex because raw strings are common in patterns. But r only stops Python from processing backslash escapes. The result is an ordinary str, and regex use is just one place the literal backslashes help."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.string-methods-mutate",
+      "rationale": "r does not rewrite any characters, and it knows nothing about operating systems. It keeps backslashes exactly as typed, so r'C:\\new\\folder' still contains backslashes, which is why it suits Windows paths."
+    }
+  ],
+  "py-easy-77": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.string-methods-mutate",
+      "rationale": "You likely saw triple quotes as the one tool built for multi-line text and assumed nothing else could do it. But a regular quoted string can span lines too, using an escaped \\n or a trailing backslash continuation. Triple quotes are just convenient."
+    }
+  ],
+  "py-easy-78": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.string-methods-mutate",
+      "rationale": "You probably thought only + can join strings, so two bare literals would be a syntax error. Python joins adjacent literals separated only by whitespace at compile time, so 'ab' 'cd' becomes 'abcd'. It is a source-level feature, not runtime +."
+    }
+  ],
+  "py-easy-79": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.int-parses-float-strings",
+      "rationale": "You probably assumed int() truncates any numeric-looking string, as it does for the float 42.5. But on a string, int() only parses whole-number digits. The '.' makes it raise ValueError. Use int(float('42.5')) to get 42."
+    }
+  ],
+  "py-easy-80": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.string-methods-mutate",
+      "rationale": "You may have expected the input string to come back unchanged, spaces trimmed or not. But float() always returns a number, not a string. It strips the surrounding whitespace, parses the text, and gives the float 3.14, with no quotes."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.int-parses-float-strings",
+      "rationale": "You probably thought the result gets cut down to an integer, perhaps as int() would. But float() keeps the fractional part: after stripping the surrounding spaces it parses the whole text and returns 3.14, not 3."
+    }
+  ],
+  "py-easy-81": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.nonempty-string-truthiness-by-content",
+      "rationale": "You likely thought '0' is falsy because its character looks like zero, mirroring the integer 0. But string truthiness only depends on emptiness. '0' has length 1, so it is truthy; only '' is falsy."
+    }
+  ],
+  "py-easy-82": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.nonempty-string-truthiness-by-content",
+      "rationale": "You may have read 'False' as falsy because of the word it spells. Python ignores string content: any non-empty string is truthy, so bool('False') is True. Only the empty string '' is falsy."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.nonempty-string-truthiness-by-content",
+      "rationale": "You may have thought a list holding a falsy 0 is itself falsy. Truthiness of a container depends on whether it is empty, not on its elements. [0] has one item, so bool([0]) is True."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.nonempty-string-truthiness-by-content",
+      "rationale": "You may have treated a string of only whitespace as empty or blank. A single space is still a character, so the string is non-empty and bool(' ') is True. Only '' with no characters is falsy."
+    }
+  ],
+  "py-easy-83": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.except-continues-try-block",
+      "rationale": "You may think a caught exception keeps propagating after the handler runs. Catching it with a matching except clause handles it. Once handle() finishes, execution simply continues after the try/except; nothing is re-raised unless you write raise."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.except-continues-try-block",
+      "rationale": "You may think Python finishes the try block before running the handler. The exception transfers control to the except block immediately, so any remaining try-block code after the failing line is skipped and never runs."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.except-continues-try-block",
+      "rationale": "You may think the handler lets the try block start over, like a retry. It doesn't. After except finishes, execution moves on past the whole try/except statement. Retrying would need an explicit loop."
+    }
+  ],
+  "py-easy-84": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.except-multiple-types-syntax",
+      "rationale": "You likely remember the comma form from older Python or think a comma lists several exceptions. In Python 3 that unparenthesized form is a SyntaxError. The exception classes must be grouped in a tuple with parentheses."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.except-multiple-types-syntax",
+      "rationale": "You probably thought a list of exception classes works like a collection of choices. except expects a single class or a tuple of classes, not a list. Square brackets don't match either exception; use parentheses to make a tuple."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.except-multiple-types-syntax",
+      "rationale": "You likely read 'ValueError or TypeError' as English, meaning either one. But 'or' is evaluated as an expression and yields just one operand, ValueError, so only that is caught. A tuple of classes is needed to match both."
+    }
+  ],
+  "py-easy-85": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.except-continues-try-block",
+      "rationale": "You may have mixed up else with except, thinking else handles the error case. But except handles raised exceptions. else runs only when the try block finishes without raising any exception, so it is the success path."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.except-continues-try-block",
+      "rationale": "You may be thinking of finally, which runs unconditionally whether or not an exception occurred. else is not unconditional: it runs only when the try block completes without raising an exception."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.except-continues-try-block",
+      "rationale": "You may believe else is a fallback for when no except clause exists. Its condition doesn't depend on except clauses. It runs when the try block raises no exception, and it is normally paired with except."
+    }
+  ],
+  "py-easy-86": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.int-parses-float-strings",
+      "rationale": "You may have seen ValueError as the catch-all for an unacceptable value, and zero is a bad divisor. Python has a dedicated exception for this case: dividing by zero raises ZeroDivisionError, not ValueError."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.true-division-returns-int",
+      "rationale": "ArithmeticError sounds like the right family for a math failure, but Python raises the specific ZeroDivisionError for a zero divisor in /, // and %. The exception you actually get is named for the problem."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.nan-equals-itself",
+      "rationale": "This is how floating-point division behaves in some languages, where a zero denominator gives inf or nan. Python does not: 1 / 0 raises ZeroDivisionError, and so do // and %, for int and float operands alike."
+    }
+  ],
+  "py-easy-87": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.slice-out-of-range-raises",
+      "rationale": "IndexError isn't limited to negative indexes. Any position outside a sequence's valid range raises it, including one too large. KeyError is specific to missing dict keys, not every lookup, since sequences raise IndexError."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.except-multiple-types-syntax",
+      "rationale": "KeyError does not inherit from IndexError. They are raised by different containers (dicts versus sequences) and are not interchangeable, so except IndexError won't catch a KeyError from a dict lookup."
+    }
+  ],
+  "py-easy-88": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.int-parses-float-strings",
+      "rationale": "You may think int() rejects any string that isn't all digits by raising TypeError. But TypeError is for a wrong argument type, like a list. A string is an acceptable type for int(); only its content, 'abc', is invalid, so it raises ValueError."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.int-parses-float-strings",
+      "rationale": "You may think 'abc' is bad code, so SyntaxError applies. But SyntaxError arises when Python parses source, and int('abc') is perfectly valid syntax. The bad content is only found at runtime, as a string of acceptable type with unusable value: ValueError."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.int-parses-float-strings",
+      "rationale": "You may think int() falls back to 0 when no digits are found. Python doesn't silently guess: a string is an acceptable type, but 'abc' is not a sensible value for int(), so it raises ValueError instead of returning anything."
+    }
+  ],
+  "py-easy-89": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.except-continues-try-block",
+      "rationale": "You may think raise only reports a problem, like a warning, and lets the program carry on. It actually interrupts normal flow at once and propagates up the call stack. If nothing catches it, the program crashes with a traceback."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.except-continues-try-block",
+      "rationale": "You may think raise just builds the exception object and a later step throws it. The raise statement does both together: it triggers the exception right where it's called, and control flow is interrupted immediately."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.except-continues-try-block",
+      "rationale": "You may think raise needs a surrounding try or except to work. It works anywhere. Only a bare raise with no arguments is limited to an except block, where it re-raises the current exception. Uncaught, it ends the program with a traceback."
+    }
+  ],
+  "py-easy-90": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.assigning-makes-global-writable",
+      "rationale": "Python has no required entry point, and the guard doesn't designate one. It is an ordinary `if` that checks `__name__`. If main() weren't called there, nothing would call it automatically. The guard just limits when the call happens."
+    }
+  ],
+  "py-easy-91": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.assigning-makes-global-writable",
+      "rationale": "You likely think the difference is how much of math gets loaded. The difference is which names get bound. import math binds only the name math, used as math.sqrt. from math import sqrt binds just sqrt, so you can call it directly."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.assigning-makes-global-writable",
+      "rationale": "You probably think from math import sqrt also binds math. It binds only sqrt, so math.sqrt(4) would fail unless you also ran import math. That is why it's less obvious at the call site which module sqrt came from."
+    }
+  ],
+  "py-easy-92": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.assigning-makes-global-writable",
+      "rationale": "You likely think the assignment writes to the module-level count without `global`. But assigning anywhere in the body makes count local to the function, so the global is never updated; the read of count fails first."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.assigning-makes-global-writable",
+      "rationale": "You likely think the read on the right uses the global and only then a new local is created. Python decides at compile time that count is local for the whole function, so the read hits an unassigned local and fails."
+    }
+  ],
+  "py-easy-93": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.assigning-makes-global-writable",
+      "rationale": "You likely thought any use of a module-level name inside a function needs a global declaration. In Python, global is needed only to assign to it. If the function just reads the name and never assigns it, the lookup finds the module-level value."
+    }
+  ],
+  "py-easy-94": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.assigning-makes-global-writable",
+      "rationale": "You likely thought c=9 fills the next open slot after a, so it lands in b. Keyword arguments match by name, not position. c=9 sets c directly, and b, never supplied, keeps its default of 1. So the result is (5, 1, 9)."
+    }
+  ],
+  "py-easy-95": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.assigning-makes-global-writable",
+      "rationale": "You probably thought the call just repeats the same values, so it must match. But without keywords, arguments bind by position: 'Hi' goes to name and 'Al' to greeting. That is the reverse of greet('Al', 'Hi'), so it isn't equivalent."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "python.assigning-makes-global-writable",
+      "rationale": "You may have seen keywords and assumed any keyword call is equivalent. Keywords bind by name, so this sets name='Hi' and greeting='Al'. The values land on the wrong parameters, which is the reverse of greet('Al', 'Hi')."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.assigning-makes-global-writable",
+      "rationale": "You probably read Hi and Al as text values. Without quotes, Python treats them as variable names, and they aren't defined here. Even if they were, positional binding would put the first one in name, not greeting."
+    }
+  ],
+  "py-easy-96": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.sort-returns-sorted-list",
+      "rationale": "You probably thought a function with no return, or a bare return, hands back nothing at all, as a void function does in other languages. Python has no void. Reaching the end of the body or a bare return gives back None."
+    }
+  ],
+  "py-easy-97": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.parenthesized-single-value-is-tuple",
+      "rationale": "You may think a function can't hand back two values. It really returns one object: `return a, b` packs both into a single tuple. That tuple is what makes it look like two values, and the caller can unpack it."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "python.parenthesized-single-value-is-tuple",
+      "rationale": "minmax doesn't return a list; `return min(nums), max(nums)` builds a tuple. Unpacking isn't limited to tuples anyway, but here the tuple is unpacked into lo and hi by ordinary assignment."
+    }
+  ],
+  "py-easy-98": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.assignment-copies-list",
+      "rationale": "You likely thought `list2 = list1` makes a separate copy, so appending to `list2` leaves `list1` alone. But assignment only binds a second name to the same list object, so the append shows through both. Use `list1.copy()` for a real copy."
+    }
+  ],
+  "py-easy-99": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.slice-returns-reference",
+      "rationale": "You probably thought lst[:] just hands back the same list, since it looks like it takes the whole thing. But any slice, even a full one, builds a brand-new list object. Only plain assignment like b = lst shares the original object."
+    }
+  ],
+  "py-easy-100": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.round-half-up",
+      "rationale": "You likely applied the school rule that .5 always rounds up. Python's round() sends exact halfway values to the nearest even integer, so round(2.5) is 2, not 3, while round(3.5) is 4. The statement is false."
+    }
+  ],
+  "py-easy-101": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.slice-out-of-range-raises",
+      "rationale": "You probably expected items[-1] to quietly give None when the list is empty. A single index doesn't do that. An empty list has no last element, so Python raises IndexError. You need to check that the list is non-empty first."
+    }
+  ],
+  "py-easy-102": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.split-no-arg-same-as-split-space",
+      "rationale": "You likely thought split(' ') and split() act the same on spaces. But an explicit separator splits at every single space, so 'a  b' gives an empty string between the spaces (3 items), and ''.split(' ') is [''], counting 1 word."
+    }
+  ],
+  "py-easy-103": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "python.in-list-constant-time",
+      "rationale": "You may have thought `in` on a list is as quick as on a set. A list is scanned item by item, so each lookup can cost up to 3,000 comparisons. A set hashes the value and checks one bucket, so it's much faster over 2,000 lookups."
+    }
+  ],
+  "py-easy-104": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "python.in-list-constant-time",
+      "rationale": "You may have thought comparing pairs directly was as cheap as building a set. But nested loops make n*(n-1)/2 comparisons, growing with the square of the length, while a set drops duplicates as it is built, in one pass."
+    }
   ]
 }

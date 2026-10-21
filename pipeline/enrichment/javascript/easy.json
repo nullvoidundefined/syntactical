@@ -39,5 +39,1163 @@
       "misconceptionId": "javascript.typeof-null-is-null",
       "rationale": "\"callable\" sounds like a natural name for the type, but typeof has no such result. Any callable value is reported with the string \"function\", which is the name to use when checking whether something can be called."
     }
+  ],
+  "js-easy-04": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.typeof-array-is-array",
+      "rationale": "You likely expected typeof to name arrays separately, since arrays feel like their own kind of value. But typeof has no \"array\" result; arrays are objects, so it gives \"object\". Use Array.isArray to detect arrays."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.typeof-array-is-array",
+      "rationale": "This borrows \"list\" from other languages such as Python. JavaScript's typeof never returns \"list\"; it has no such tag. An array is an object, so typeof [] gives \"object\"."
+    }
+  ],
+  "js-easy-05": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.typeof-nan-is-not-number",
+      "rationale": "You may have thought NaN, being \"not a number\", gets its own type name. But typeof only returns a fixed set of type strings, and \"nan\" isn't one. NaN is a numeric value (a special IEEE-754 bit pattern), so typeof NaN is \"number\"."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.typeof-nan-is-not-number",
+      "rationale": "You may have taken NaN to mean the value is missing or has no meaningful type, like undefined. But NaN is a real numeric value, the IEEE-754 not-a-number pattern, so typeof reports \"number\". \"undefined\" is the result for the undefined value only."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.typeof-nan-is-not-number",
+      "rationale": "You may have guessed that a non-number value must be some kind of object, perhaps by analogy with other typeof quirks. But NaN is a primitive numeric value, the IEEE-754 not-a-number pattern, so typeof NaN is \"number\", not \"object\"."
+    }
+  ],
+  "js-easy-07": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.loose-equality-no-coercion",
+      "rationale": "You probably thought == checks type as well as value, so a number and a string can never match. But == converts the string \"1\" to the number 1 before comparing, so the result is true. Only === would give false here."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.loose-equality-no-coercion",
+      "rationale": "You likely expected comparing a number with a string to be an error. Comparison with == never throws for this: it quietly converts \"1\" with ToNumber, then compares 1 == 1, which is true. No TypeError occurs."
+    }
+  ],
+  "js-easy-08": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.loose-equality-no-coercion",
+      "rationale": "You likely thought === converts the string \"1\" to a number before comparing, as == would. Strict equality does no conversion: a number and a string are different types, so the result is false even though both look like the digit 1."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.loose-equality-no-coercion",
+      "rationale": "You may have expected comparing a number to a string to be a type error. Comparison operators never throw for this; === just sees the types differ and returns false. No exception is raised, and no conversion is attempted."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.logical-operators-return-booleans",
+      "rationale": "You probably treated the expression as returning one of the operands. Comparison operators like === always produce a boolean, never one of the values compared. Here the types differ, so the result is the boolean false, not the string \"1\"."
+    }
+  ],
+  "js-easy-09": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.null-equals-undefined-strict",
+      "rationale": "You probably treated null and undefined as different values that can't be equal. That's true for ===, but == has a special rule: null == undefined is true. Only strict equality tells them apart."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.loose-equality-no-coercion",
+      "rationale": "You may have expected comparing two 'empty' values with == to be an invalid operation. Loose equality never throws here; it follows a defined rule that makes null == undefined simply evaluate to true."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.null-equals-undefined-strict",
+      "rationale": "You likely confused the values being compared with the result. The == operator always produces a boolean, never undefined. Here the special null/undefined rule makes the result true."
+    }
+  ],
+  "js-easy-10": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.null-equals-undefined-strict",
+      "rationale": "You likely thought null and undefined are interchangeable, both meaning 'no value'. That holds for loose ==, but === also requires the same type. They are different types, so === gives false."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.null-equals-undefined-strict",
+      "rationale": "You may have thought the comparison yields undefined because undefined is one operand. But === is an operator that always produces a boolean, here false because null and undefined are different types."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.null-equals-undefined-strict",
+      "rationale": "You may have expected comparing two 'empty' values to be an error. Comparison operators don't throw here: === just checks type and value, finds different types, and returns false without any TypeError."
+    }
+  ],
+  "js-easy-11": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.loose-equality-no-coercion",
+      "rationale": "You likely thought == refuses to compare a boolean with a number because their types differ. But == coerces: true becomes 1 via ToNumber, so the comparison is 1 == 1, which is true. Only === would give false here."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.logical-operators-return-booleans",
+      "rationale": "You may have seen that true converts to 1 and stopped there, treating 1 as the result. But == is a comparison and always returns a boolean. After coercion it checks 1 == 1, and the result of that check is true, not 1."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.loose-equality-no-coercion",
+      "rationale": "You may have expected a string result, but == never produces strings. It returns the boolean value true (no quotes) after converting true to 1 and checking 1 == 1. The quoted \"true\" is a string, a different value."
+    }
+  ],
+  "js-easy-12": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.loose-equality-no-coercion",
+      "rationale": "You likely thought == compares a boolean and a number without converting them, so different types can't be equal. But == converts false with ToNumber to 0, making 0 == 0 true. Only === skips that conversion and gives false."
+    }
+  ],
+  "js-easy-13": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.loose-equality-no-coercion",
+      "rationale": "You likely expected == to compare a boolean and a string without converting them, so they look different. But == coerces both sides to numbers here: false becomes 0 and \"\" becomes 0, so they match. Only === would give false."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.logical-operators-return-booleans",
+      "rationale": "Comparison operators like == always produce a boolean, never one of the operand values. Returning \"\" is how || or && can behave, but == yields true or false. Here both sides convert to 0, so the result is true."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.loose-equality-no-coercion",
+      "rationale": "You may think comparing a boolean to a string is a type error. But == is designed to coerce mismatched types rather than throw. false and \"\" both convert to the number 0, so the comparison quietly returns true."
+    }
+  ],
+  "js-easy-14": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.loose-equality-no-coercion",
+      "rationale": "You likely thought an array is truthy, so it can't equal false, or that == does no conversion. But == converts: [] becomes \"\", then 0, and false becomes 0, so 0 == 0 is true. Truthiness via Boolean([]) isn't what == uses."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.loose-equality-no-coercion",
+      "rationale": "A comparison operator always produces a boolean, never undefined. Here == converts [] to \"\" and then 0, and false to 0, so the result is the boolean true. Nothing in the expression is missing or unset."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.loose-equality-no-coercion",
+      "rationale": "You may have expected comparing an array to a boolean to be a type error. But == is designed to coerce mismatched types without throwing: [] goes through ToPrimitive to \"\" then 0, false becomes 0, and the result is true."
+    }
+  ],
+  "js-easy-15": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.nan-equals-nan",
+      "rationale": "You probably assumed any value equals itself, so a value compared with itself must give true. NaN is the exception: IEEE-754 makes it unequal to everything, itself included, and === follows that rule, so the result is false."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.nan-equals-nan",
+      "rationale": "You may have thought comparing two 'not a number' values has no meaningful result, so it yields undefined. But === is an operator that always returns a boolean. Here the comparison simply gives false, because NaN is never equal to itself."
+    }
+  ],
+  "js-easy-17": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.object-is-same-as-strict-equals",
+      "rationale": "You likely assumed Object.is behaves like === here, where NaN against NaN is false. But Object.is uses SameValue, which deliberately treats NaN as the same value as NaN, so it returns true. That is exactly where the two differ."
+    }
+  ],
+  "js-easy-18": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.object-is-same-as-strict-equals",
+      "rationale": "You likely assumed Object.is and === always agree, so since +0 === -0 is true, Object.is must be too. But Object.is uses SameValue, which keeps the sign of zero, so Object.is(+0, -0) is false even though === is true."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.object-is-same-as-strict-equals",
+      "rationale": "You probably thought +0 and -0 are different values everywhere, so both comparisons fail. But === uses ordinary equality, which treats positive and negative zero as the same number, so +0 === -0 is true. Only Object.is is false."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.object-is-same-as-strict-equals",
+      "rationale": "You may have the two operators reversed. It's === that treats +0 and -0 as the same number, giving true, while Object.is uses SameValue and keeps the sign, giving false. The sign only shows up in things like 1 / -0 being -Infinity."
+    }
+  ],
+  "js-easy-19": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.float-arithmetic-exact",
+      "rationale": "You probably assumed decimal arithmetic is exact, so 0.1 + 0.2 is exactly 0.3. JavaScript uses binary floats, and neither 0.1 nor 0.2 is exactly representable. Their sum is slightly above 0.3, so === gives false."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.float-arithmetic-exact",
+      "rationale": "A comparison with === always produces a boolean, never undefined. Both sides are ordinary numbers, so the result is a definite true or false. Here the float sum is slightly off from 0.3, so it is false."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.float-arithmetic-exact",
+      "rationale": "Floating-point addition and === never throw RangeError here. Imprecise results are just slightly different numbers, not errors. The sum is a little above 0.3, so the comparison quietly evaluates to false."
+    }
+  ],
+  "js-easy-20": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.number-empty-string-is-nan",
+      "rationale": "You likely assumed an empty string isn't a valid number, so conversion fails with NaN. But ToNumber treats an empty or whitespace-only string as 0. NaN is what you get for non-numeric text like \"10px\"."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.number-empty-string-is-nan",
+      "rationale": "You may have thought Number returns the input unchanged when there is nothing to parse. Number always returns a number primitive, never a string. An empty string converts to the number 0."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.number-empty-string-is-nan",
+      "rationale": "You may have thought an empty string has no numeric value, so the result is undefined. Number never returns undefined for a string argument; ToNumber always yields a number, and an empty string becomes 0."
+    }
+  ],
+  "js-easy-21": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.parseint-vs-number-strictness",
+      "rationale": "You likely thought Number reads the leading digits and ignores the rest, like parseInt does. Number requires the entire trimmed string to be a valid numeric literal, so the trailing \"px\" makes it invalid and the result is NaN, not 10."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.parseint-vs-number-strictness",
+      "rationale": "You may have expected a failed conversion to fall back to 0. Number doesn't default to 0 for bad input; the trailing \"px\" makes the whole string an invalid numeric literal, so the result is NaN. Only strings like an empty one convert to 0."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.parseint-vs-number-strictness",
+      "rationale": "You probably thought the string would pass through unchanged. Number always returns a number type, never a string. Since \"10px\" isn't a valid numeric literal because of the trailing \"px\", the number it produces is NaN."
+    }
+  ],
+  "js-easy-22": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.parseint-vs-number-strictness",
+      "rationale": "You probably think parseInt rejects the whole string when trailing junk like \"px\" appears, as Number(\"10px\") does. parseInt reads the numeric prefix \"10\" and stops at the first invalid character, so it returns 10."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.parseint-vs-number-strictness",
+      "rationale": "You may think parseInt just hands back the string unchanged. It always produces a number: it parses the prefix \"10\" and ignores \"px\", so the result is the number 10, not the string \"10px\"."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.parseint-vs-number-strictness",
+      "rationale": "You may expect a malformed numeric string to cause an error. Bad input doesn't throw here: parseInt reads the valid prefix \"10\" and ignores \"px\". The call is also valid syntax, so nothing is raised."
+    }
+  ],
+  "js-easy-23": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.parseint-leading-zero-octal",
+      "rationale": "You may have thought the leading 0 makes the parse stop or fail at the start, giving 0. With radix 10 the string is read as decimal digits, so \"08\" is parsed fully and the leading zero is just a digit. The result is 8."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.parseint-leading-zero-octal",
+      "rationale": "You probably believed \"08\" is read as octal, where 8 is not a valid digit, so the parse fails with NaN. An explicit radix of 10 forces a decimal parse, so that octal reading never applies and 8 is a valid digit."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.parseint-leading-zero-octal",
+      "rationale": "You may have guessed the leading zero combines with the radix 10 in some way, as if the result were ten. The radix only picks the number base. \"08\" is read as the decimal digits 0 and 8, so the value is 8, not 10."
+    }
+  ],
+  "js-easy-24": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.parseint-vs-number-strictness",
+      "rationale": "You likely thought parseFloat rejects any string with trailing junk, like Number does. But parseFloat reads the valid decimal prefix \"3.14\" and stops at \"a\". Only Number(\"3.14abc\") gives NaN."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.plus-always-numeric",
+      "rationale": "You may have expected the input to come back unchanged. parseFloat always returns a number, never a string. It converts the prefix \"3.14\" to the number 3.14 and drops the \"abc\" suffix."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.parseint-vs-number-strictness",
+      "rationale": "You may have assumed parseFloat returns an integer, or stops at the decimal point. It accepts a full decimal prefix including the fractional part, so it reads \"3.14\" and stops only at \"a\", giving 3.14."
+    }
+  ],
+  "js-easy-25": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.number-empty-string-is-nan",
+      "rationale": "You probably thought converting an empty array to a number must fail, so the result is NaN. But the array becomes its string join, which is \"\" for an empty array, and an empty string converts to 0, not NaN."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.plus-always-numeric",
+      "rationale": "You may have expected the empty array to become its empty string form and stop there. But unary + always applies ToNumber to that primitive, so the \"\" is converted again and the result is the number 0, not a string."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.plus-always-numeric",
+      "rationale": "You may have thought unary + leaves an array unchanged. But + forces a numeric conversion: the array becomes \"\" via its toString join, then ToNumber gives 0. The result is a number, never an array."
+    }
+  ],
+  "js-easy-26": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.empty-array-object-falsy",
+      "rationale": "You likely generalized from +[] being 0 and assumed an empty-looking object converts the same way. But {} stringifies to \"[object Object]\", not an empty string, and that text isn't numeric, so the conversion fails and gives NaN."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.plus-always-numeric",
+      "rationale": "You probably saw the string conversion step and stopped there. Unary + always produces a number, so the string \"[object Object]\" is then converted numerically. It isn't numeric, so the final result is NaN, not a string."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.plus-always-numeric",
+      "rationale": "You likely expected + to leave the object unchanged, as if it were a no-op. Unary + always yields a number: it converts the object to a primitive, then to a number. The result is never an object, and here it is NaN."
+    }
+  ],
+  "js-easy-27": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.null-equals-undefined-strict",
+      "rationale": "You may have treated null and undefined as the same, so String(null) gives \"undefined\". They are distinct values: String(null) is \"null\", and only String(undefined) gives \"undefined\"."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.optional-chaining-throws-on-null",
+      "rationale": "You may have expected converting null to fail, like reading a property of null (null.missing) does. String() handles null explicitly and safely returns the string \"null\" without throwing."
+    }
+  ],
+  "js-easy-28": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.null-equals-undefined-strict",
+      "rationale": "You may have thought undefined and null are interchangeable, so converting undefined would give \"null\". They are distinct values. String(undefined) produces the text \"undefined\", and only String(null) gives \"null\"."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.plus-always-numeric",
+      "rationale": "You may have expected a missing value to turn into an empty string. String does not treat undefined as blank. It converts it to the literal text \"undefined\", and \"\" + undefined gives that same text."
+    }
+  ],
+  "js-easy-29": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.string-false-is-falsy",
+      "rationale": "You probably thought any string, even an empty one, counts as a real value and so converts to true. But the empty string is on the falsy list, so Boolean(\"\") is false. Only non-empty strings convert to true."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.logical-operators-return-booleans",
+      "rationale": "You likely thought Boolean returns the argument it was given, like || can. Boolean always converts its input to a true or false primitive. It never echoes the string back, so an empty string gives false, not \"\"."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.null-equals-undefined-strict",
+      "rationale": "You may have thought an empty string has no value, so the conversion gives undefined. Boolean always returns either true or false, never undefined. Since \"\" is falsy, the result is false."
+    }
+  ],
+  "js-easy-30": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.string-false-is-falsy",
+      "rationale": "You likely thought Boolean reads the text inside the string and sees the word \"false\". It doesn't parse content. It only checks whether the string is empty, and any non-empty string, including \"false\", is truthy, so the result is true."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.string-false-is-falsy",
+      "rationale": "Boolean(\"false\") is perfectly valid syntax. Boolean is an ordinary function that accepts any value and converts it to true or false. Nothing is parsed as code, so no SyntaxError occurs. A non-empty string converts to true."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.string-false-is-falsy",
+      "rationale": "Boolean always returns a true or false value, never undefined. It converts any argument by truthiness, and a non-empty string like \"false\" is truthy, so it returns true. Undefined is not a possible result."
+    }
+  ],
+  "js-easy-31": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.empty-array-object-falsy",
+      "rationale": "You likely assumed an empty array counts as empty-so-falsy, or that it behaves like [] == false. Boolean doesn't convert the array first. All objects, arrays included, are truthy, even empty ones, so the result is true."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.empty-array-object-falsy",
+      "rationale": "Boolean returns true or false, never a number like 0. You may have thought the empty array converts to a number first, but Boolean skips that step. Arrays are objects, and objects are truthy, so the result is true."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.empty-array-object-falsy",
+      "rationale": "Boolean returns only true or false, not a string. You may have pictured [] turning into \"\" and then being falsy, but Boolean does no such conversion. Any array, even an empty one, is an object and therefore truthy."
+    }
+  ],
+  "js-easy-32": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.logical-operators-return-booleans",
+      "rationale": "You may have expected Boolean(0) to hand back the number unchanged. Boolean() always converts its argument to a true or false value, so the result is the boolean false, not the number 0."
+    }
+  ],
+  "js-easy-33": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.empty-array-object-falsy",
+      "rationale": "You probably thought an empty object counts as empty and so is falsy. But every object is truthy, even one with no own properties. Boolean doesn't inspect contents, so Boolean({}) is true."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.empty-array-object-falsy",
+      "rationale": "You likely mixed this up with +{}, which goes through ToNumber and gives NaN. Boolean doesn't use that path, and it only ever returns true or false, never NaN. Since {} is an object, the result is true."
+    }
+  ],
+  "js-easy-06": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.typeof-undeclared-throws",
+      "rationale": "You likely assumed that touching an undeclared name always throws, as a plain read does. typeof is a special case: for an unresolvable reference it safely returns the string \"undefined\" instead of throwing a ReferenceError."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.typeof-null-is-null",
+      "rationale": "You may be recalling the quirk that typeof null is \"object\" and applying it here. An undeclared identifier isn't null or any object; it can't be resolved at all, so typeof reports \"undefined\"."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.typeof-null-is-null",
+      "rationale": "You probably thought a missing name would be reported as \"null\". typeof never returns \"null\" for any value. For an identifier that was never declared, it returns the string \"undefined\" and does not throw."
+    }
+  ],
+  "js-easy-16": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.isnan-same-as-number-isnan",
+      "rationale": "You likely assumed isNaN also returns false because \"foo\" is a string, not the number NaN. But global isNaN first converts its argument with ToNumber, and ToNumber(\"foo\") is NaN, so isNaN(\"foo\") is true. Only Number.isNaN is false here."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.isnan-same-as-number-isnan",
+      "rationale": "You probably thought both functions coerce \"foo\" to NaN and so agree. Number.isNaN does no conversion and is true only for the actual number NaN, so for the string \"foo\" it returns false. Only global isNaN coerces and returns true."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.isnan-same-as-number-isnan",
+      "rationale": "You likely reversed the two: Number.isNaN is the one that coerces. It's the opposite. Number.isNaN skips conversion, so \"foo\" gives false, while global isNaN runs ToNumber(\"foo\") to get NaN and returns true."
+    }
+  ],
+  "js-easy-34": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.null-equals-undefined-strict",
+      "rationale": "You may think `??` just hands back the left side when it is null, or that null and the fallback blur together. But `??` exists to replace a nullish left operand: since null is nullish, the right operand \"x\" is returned instead."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.null-equals-undefined-strict",
+      "rationale": "You may think `??` turns a null into undefined, as if null were being discarded without a replacement. In fact, when the left side is null or undefined, `??` returns the right operand, so you get \"x\", not undefined."
+    }
+  ],
+  "js-easy-35": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.nullish-coalescing-same-as-or",
+      "rationale": "You likely thought ?? falls back whenever the left side is falsy, like ||. But ?? only falls back for null or undefined. 0 is a real value, so it is kept and \"x\" is never used. Only || would return \"x\" here."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.nullish-coalescing-same-as-or",
+      "rationale": "You may have thought 0 counts as missing and gets replaced by an empty-like value. But ?? never turns a value into null. It only replaces null or undefined with the fallback, and 0 is neither, so the result is just 0."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.logical-operators-return-booleans",
+      "rationale": "You probably thought the operator converts 0 to a boolean, since 0 is falsy. But ?? is not a boolean operator and does not coerce its operands. It returns the left operand 0 itself because it is not null or undefined."
+    }
+  ],
+  "js-easy-36": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.nullish-coalescing-same-as-or",
+      "rationale": "You likely treated ?? like ||, expecting the empty string to count as a reason to fall back. But ?? only falls back for null or undefined. \"\" is falsy yet not nullish, so the left side is kept and \"x\" is never used."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.nullish-coalescing-same-as-or",
+      "rationale": "You may have expected an empty, falsy left side to produce undefined. ?? returns one of its operands, not undefined. Since \"\" is not null or undefined, the left operand \"\" is returned unchanged."
+    }
+  ],
+  "js-easy-37": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.null-equals-undefined-strict",
+      "rationale": "You may think undefined and null are interchangeable, so ?? would just hand back null. But ?? returns its right operand when the left is nullish, and here that operand is the string \"x\". It never produces null."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.nullish-coalescing-same-as-or",
+      "rationale": "You may think ?? only replaces some falsy values and leaves undefined alone. In fact undefined is exactly what triggers the fallback, along with null. The left side is nullish, so the right operand \"x\" is returned."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.optional-chaining-throws-on-null",
+      "rationale": "You may expect using undefined as an operand to cause a TypeError. But ?? is designed to handle undefined and null safely. It checks the left side, sees it is nullish, and returns the right operand \"x\" without throwing."
+    }
+  ],
+  "js-easy-38": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.null-equals-undefined-strict",
+      "rationale": "You may think the short-circuit hands back the null you started with, as if the base is passed through. Optional chaining doesn't return the base value; when the base is null or undefined, the whole expression yields undefined."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.optional-chaining-throws-on-null",
+      "rationale": "You're likely picturing plain null.prop, which does throw a TypeError. The ?. operator exists to avoid that: when the base is null or undefined it stops and yields undefined instead of trying to read the property."
+    }
+  ],
+  "js-easy-39": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.optional-chaining-throws-on-null",
+      "rationale": "You likely thought calling null must fail, as a plain fn() would. But the ?. in fn?.() checks whether fn is null or undefined first. If it is, the call is skipped and the expression just evaluates to undefined, so no error is thrown."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.null-equals-undefined-strict",
+      "rationale": "You may have assumed the expression passes the callee's value through when the call is skipped. Short-circuiting doesn't return fn itself. When fn is null or undefined, the whole fn?.() expression evaluates to undefined, not null."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.logical-operators-return-booleans",
+      "rationale": "You may have reasoned that null is falsy, so the expression yields false. Optional calling doesn't convert anything to a boolean. It only checks for null or undefined, skips the call, and the result is undefined rather than false."
+    }
+  ],
+  "js-easy-40": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.nullish-coalescing-same-as-or",
+      "rationale": "You may have thought || keeps the left value whenever it exists. But || only keeps the left operand if it is truthy. 0 is falsy, so || moves on and returns the right operand. Only ?? would keep 0, since 0 isn't nullish."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.logical-operators-return-booleans",
+      "rationale": "You may have thought || always yields a boolean, so a falsy 0 gives false. But || returns one of its operands, not a true/false result. Since 0 is falsy, it returns the second operand, the string \"fallback\"."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.logical-operators-return-booleans",
+      "rationale": "You may have thought that when the left side is falsy and nothing is truthy, the result is undefined. But || never produces undefined here: it returns the second operand when the first is falsy. That operand is the string \"fallback\"."
+    }
+  ],
+  "js-easy-41": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.logical-operators-return-booleans",
+      "rationale": "You may have thought && always gives the second operand, as if both sides were checked and the last one returned. But && stops at a falsy first operand. Since 0 is falsy, it returns 0 and never evaluates \"value\"."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.logical-operators-return-booleans",
+      "rationale": "You likely expected && to produce a boolean, so a falsy 0 would turn into false. But && and || return one of their operands, not a converted boolean. Here it returns the operand 0 itself, a number."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.logical-operators-return-booleans",
+      "rationale": "You may have thought a failed && yields null as an 'empty' result. JavaScript has no such rule: && returns the first operand when it is falsy. That operand is the number 0, so the result is 0, not null."
+    }
+  ],
+  "js-easy-42": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.nullish-coalescing-same-as-or",
+      "rationale": "You likely thought || keeps the first operand it sees, or that \"\" counts as a usable value. But the empty string is falsy, so || skips it and returns the right operand. Only ?? would keep \"\", since it is neither null nor undefined."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.logical-operators-return-booleans",
+      "rationale": "You probably expected || to turn its test into a boolean, so a falsy left side gives false. But || returns one of its operands, not true or false. Here the left side is falsy, so the result is the right operand, \"fallback\"."
+    }
+  ],
+  "js-easy-43": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.const-reassign-silent",
+      "rationale": "You probably thought const only sets an initial value that later assignments can replace, like let. But a const binding can't be assigned again after its initializer runs. The assignment n = 2 throws, so n never becomes 2."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.const-reassign-silent",
+      "rationale": "You may have assumed that breaking a const rule is caught when the code is parsed. But n = 2 is grammatically valid, so it parses fine. The failure comes at runtime, when the assignment executes, and it is a TypeError, not a SyntaxError."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.const-reassign-silent",
+      "rationale": "You likely expected the engine to quietly skip the illegal assignment and leave n as 1. A const reassignment isn't a silent no-op: it throws a TypeError at runtime, so the error is visible rather than ignored."
+    }
+  ],
+  "js-easy-44": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.const-makes-value-immutable",
+      "rationale": "You likely thought const locks the object so writing obj.a must fail with an error. const only protects the binding from being reassigned. Writing obj.a changes the existing object and the binding stays put, so no TypeError is thrown."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.const-makes-value-immutable",
+      "rationale": "You probably thought const makes the object read-only, so the write is ignored and a stays 1. const guards only the binding, not the object's contents. The assignment succeeds and a becomes 2. Rejecting the write would take Object.freeze."
+    }
+  ],
+  "js-easy-45": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.let-hoisted-undefined",
+      "rationale": "You likely expected let to behave like var, which reads as undefined before its line runs. A let binding is uninitialized until its declaration executes, so reading it in the temporal dead zone throws a ReferenceError instead."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.let-hoisted-undefined",
+      "rationale": "You may have thought the assigned value is visible everywhere in the block. The assignment of 1 hasn't run when console.log executes, and the binding is still uninitialized, so reading it throws a ReferenceError rather than giving 1."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.let-hoisted-undefined",
+      "rationale": "You may have thought using a let before its declaration is a syntax mistake caught at parse time. The code is valid syntax. The problem only shows up at runtime, when reading the uninitialized binding throws a ReferenceError."
+    }
+  ],
+  "js-easy-46": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.let-hoisted-undefined",
+      "rationale": "You likely expected the read to fail because the variable isn't declared yet, as with let's temporal dead zone. But var is hoisted and initialized to undefined at the top of its scope, so the read succeeds and no ReferenceError is thrown."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.let-hoisted-undefined",
+      "rationale": "You may have thought reading a not-yet-assigned variable is an invalid operation that throws. But var is hoisted and set to undefined right away, so the read is legal and simply yields undefined. No error of any type is raised."
+    }
+  ],
+  "js-easy-47": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.var-block-scoped",
+      "rationale": "You likely assumed var respects block boundaries the way let does, so both vanish after the if. But var ignores blocks and is scoped to the enclosing function, so a is still visible after the if block ends. Only let is confined to the block."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.var-block-scoped",
+      "rationale": "You may have thought both declarations leak out into the whole function. That's true only for var, which is function-scoped. let is block-scoped, so b cannot be read outside the if block where it was declared."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.var-block-scoped",
+      "rationale": "This swaps the two scopes. var is scoped to the enclosing function, so a stays visible after the if block, while let is block-scoped, so b cannot be read outside the block. Remember: let is the one that respects blocks."
+    }
+  ],
+  "js-easy-48": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.plus-always-numeric",
+      "rationale": "You likely treated the backtick string like an ordinary quoted string, where ${\"Ada\"} stays as literal characters. In a template literal, ${...} is evaluated and its result is inserted, so the output is Hello, Ada."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.plus-always-numeric",
+      "rationale": "You may have believed that nesting a quoted string inside ${...} inside backticks is invalid syntax. It is valid: any expression, including a string literal, can go in the braces, and it is evaluated and inserted."
+    }
+  ],
+  "js-easy-49": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.plus-always-numeric",
+      "rationale": "You likely thought backticks inside a ${...} stay as literal text. But the contents of ${...} are an ordinary expression, so the inner template is evaluated first, becoming \"b 2\", and then inserted. Nothing is left uninterpolated."
+    }
+  ],
+  "js-easy-51": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.map-mutates-array",
+      "rationale": "You likely thought map works like an in-place loop that writes results back into items and hands the array back. But map allocates a separate new array for the callback results, so items keeps its original length and values."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.map-mutates-array",
+      "rationale": "You probably pictured map as a forEach-style loop that overwrites each slot of items and returns nothing. In fact map never writes callback results into the original array; it builds and returns a new array, so items stays [1, 2]."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You may have mixed map up with iterator-producing methods like entries() or values(). Array.prototype.map returns an ordinary new array filled with the callback's return values, not an iterator, and it leaves items untouched."
+    }
+  ],
+  "js-easy-52": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "This keeps exactly the elements that should be removed, as if filter kept falsy results. It's the reverse: filter keeps an element when the callback result is truthy. Boolean gives false for 0 and \"\", so those two are dropped and 1 and 2 stay."
+    }
+  ],
+  "js-easy-53": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You likely mixed up find with findIndex. findIndex returns a position, or -1 when nothing matches. find returns the matching element itself, and when nothing passes the test it returns undefined, not -1."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.find-returns-array-or-null",
+      "rationale": "You probably confused find with filter. filter collects every match into a new array, giving [] if none. find stops at the first passing element and returns that element, or undefined if no element passes."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.find-returns-array-or-null",
+      "rationale": "You likely expected a null \"not found\" result, but find returns undefined when no element passes the callback. Here no number in [1, 2, 3] is greater than 9, so the result is undefined."
+    }
+  ],
+  "js-easy-54": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.find-returns-array-or-null",
+      "rationale": "You probably mixed up findIndex with find. find returns undefined when nothing matches because it returns the element itself. findIndex returns an index, so its \"not found\" value is the number -1, as with indexOf."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.find-returns-array-or-null",
+      "rationale": "You likely thought a failed search gives null, as some other APIs do. findIndex always returns a number, so with no match it gives the sentinel -1, the same one indexOf uses, not null."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You may have thought that a callback matching nothing makes the method answer with a boolean, like some or includes. findIndex returns a numeric index, so when nothing is truthy it returns -1, not false."
+    }
+  ],
+  "js-easy-55": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You probably thought includes reports the position of the match, like a 1-based or index result. \"b\" is at index 1, but includes only answers whether the value is present and returns a boolean, never an index. indexOf gives positions."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You likely expected includes to hand back the matching element, similar to find. It only checks presence and returns a boolean, so the result is true rather than the element \"b\" itself."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You may have expected an index-style result, taking 0 as the first position or as a 'not found' value. includes never returns a number. It returns true when the value is present, and here \"b\" is present."
+    }
+  ],
+  "js-easy-56": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.find-returns-array-or-null",
+      "rationale": "You may expect a miss to give undefined, as with property lookups or find. But indexOf returns a number, not a missing-value marker. When nothing matches it returns -1, so the result is never undefined."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You may think a failed search yields a boolean false. But indexOf returns an index, and a miss is reported as the number -1. The boolean check is includes, which is a different method."
+    }
+  ],
+  "js-easy-57": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You probably thought push returns the array it modified, as in a fluent chain. It does mutate items, but it returns the new length, the number 2. That is why .push(2).push(3) fails: a number has no push method."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You likely assumed push hands back the element it just added. It only appends and returns the array's new length. Here that happens to be 2, the same as the pushed value, which makes the two easy to confuse."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You may have thought push is a pure mutator with no return value, like a statement that just changes the array. It does change items, but it also returns the array's length after appending, so the result is 2, not undefined."
+    }
+  ],
+  "js-easy-58": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You likely thought pop hands back the array left after removal. It doesn't: pop mutates the array in place, which becomes [1], but its return value is the removed last element, 2, not the shortened array."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You may have thought pop removes and returns the first element, or the one that remains. pop works on the end of the array, so it removes and returns the last element, 2. The 1 stays in the array."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You may have assumed pop is like a statement that only mutates and returns nothing. It does return the removed element, 2. It only gives undefined when the array is empty, which isn't the case here."
+    }
+  ],
+  "js-easy-59": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You likely expected shift to hand back the remaining array, [2]. But shift returns the single element it removed from index 0, which is 1. The remaining items stay in the original array, which is mutated in place."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You may have thought shift removes the last element, like pop, or returns what is left at the front afterward. Shift removes index 0, so the removed element, 1, is returned. The 2 only moves down to index 0."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You may have thought shift returns nothing because it mutates the array. It returns the removed element. Undefined only comes back when the array is empty, and here the array has two elements, so you get 1."
+    }
+  ],
+  "js-easy-60": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You probably thought unshift hands back the updated array, since items does become [0, 1]. But unshift mutates in place and returns the new length, 2. Returning the array, as a chaining method would, isn't what it does."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You may have assumed unshift returns the element it inserted, 0. It inserts at the front but returns the array's length afterward, 2, just as push does. Neither method returns the added value."
+    }
+  ],
+  "js-easy-61": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.slice-splice-mutation-confusion",
+      "rationale": "You probably took the result of slice(1) as the new value of items. But slice copies a range into a new array and leaves items alone. [2, 3] is what part holds, while items stays [1, 2, 3]. Only splice edits the original array."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.slice-splice-mutation-confusion",
+      "rationale": "This looks like thinking slice(1) removes the elements from index 1 onward, as splice would, leaving only the first. slice never changes items. It copies [2, 3] into a new array (part), so items is still [1, 2, 3]."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "Perhaps you thought items was never given a usable value, or that the slice call consumed it. items is a const that holds [1, 2, 3], and slice only returns a new array into part. The receiver is never changed or cleared."
+    }
+  ],
+  "js-easy-62": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.slice-splice-mutation-confusion",
+      "rationale": "You probably thought splice hands back the single element it removed, like pop does. But splice always returns an array of the deleted elements, so removing one element gives [2], not the bare number 2. You were right that items becomes [1, 3]."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.slice-splice-mutation-confusion",
+      "rationale": "You correctly expected the return value to be the array [2], but splice changes the original array in place. It is not a non-mutating copy like slice, so items becomes [1, 3] rather than staying [1, 2, 3]."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.slice-splice-mutation-confusion",
+      "rationale": "This assumes splice returns the lone removed value and leaves items alone. In fact splice modifies the original array, so items becomes [1, 3], and it returns an array of removed elements, so removed is [2], not 2."
+    }
+  ],
+  "js-easy-63": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You likely thought concat appends into the array it is called on, like push. It doesn't: concat leaves items alone and returns a new array. So next is [1, 2] but items remains [1]."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You probably expected concat to add just the element 2 and return it. But concat returns a whole new array, and it spreads the array argument one level, so next is [1, 2], not the number 2."
+    }
+  ],
+  "js-easy-64": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.spread-deep-copies",
+      "rationale": "You likely thought spread clones everything, so copy[0] is an independent object and the write to n leaves inner alone. Spread only copies the reference to inner, so copy[0] and inner are the same object and inner.n becomes 9."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.spread-deep-copies",
+      "rationale": "You may have expected the write through copy[0] to detach or lose the property on inner. Nothing removes n: copy[0] points to the very same object as inner, so inner.n is simply the assigned value 9, not undefined."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.spread-deep-copies",
+      "rationale": "You may have expected writing through the copied array to be an invalid operation on inner. The spread array holds an ordinary reference to inner, and assigning n on it is allowed. No TypeError occurs; inner.n just becomes 9."
+    }
+  ],
+  "js-easy-65": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.spread-deep-copies",
+      "rationale": "You may have assumed a key already copied is kept, so the first value wins. Spread copies left to right and a repeated key is overwritten. Here 3 replaces 2, so merged.b is not 1; the 1 belongs to key a."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.spread-deep-copies",
+      "rationale": "This reads the first object's b as the one that sticks, so first key wins. It is backwards: spread processes left to right, and the later b: 3 overwrites the earlier b: 2, so merged.b is 3."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.spread-deep-copies",
+      "rationale": "You may think two spread objects with the same key conflict and drop the property. Spread has no conflict handling. It assigns each key in order, so the later value overwrites the earlier one and b ends up as 3."
+    }
+  ],
+  "js-easy-66": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.null-equals-undefined-strict",
+      "rationale": "This assumes the default never fires and that undefined turns into null. A default does fire for an undefined element, so a becomes 1. And null is a present value that stays null, so only b is null."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.default-param-applies-to-null",
+      "rationale": "This treats the default as covering null as well as undefined. A destructuring default fires only for undefined or a missing element. null is a real value, so b stays null instead of becoming 1."
+    }
+  ],
+  "js-easy-68": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You probably read `...tail` as taking just the next value after `head`. A rest element gathers every remaining value into a new array, so `tail` is `[2, 3]`, not the single number 2."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.array-method-return-values",
+      "rationale": "You probably thought the rest element picks up only the last item. It collects all remaining values after the earlier bindings. `head` takes 1, so `tail` gets both 2 and 3, giving `[2, 3]`."
+    }
+  ],
+  "js-easy-69": [
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.const-reassign-silent",
+      "rationale": "You may have taken the colon for something invalid, like a type annotation or a stray label. In a destructuring pattern, `a: b` is valid syntax that renames: it reads property `a` and binds it to the local name `b`. No error occurs."
+    }
+  ],
+  "js-easy-70": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.default-param-applies-to-null",
+      "rationale": "You likely thought the default 1 replaces null too. A destructuring default only applies when the value is undefined. An explicit null is a real value and is kept, so a stays null; only b, which is missing, becomes 1."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "javascript.null-equals-undefined-strict",
+      "rationale": "You got a right but thought a missing property ignores its default. A property that is absent reads as undefined, and that is exactly when the default kicks in, so b becomes 1 rather than staying undefined."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "javascript.default-param-applies-to-null",
+      "rationale": "This reverses the rule. The default fires only for undefined, so a keeps its explicit null instead of becoming 1, while b, being missing and so undefined, gets the default 1 rather than staying undefined."
+    }
+  ],
+  "js-easy-71": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.default-param-applies-to-null",
+      "rationale": "You likely thought destructuring a key that isn't there is an error, like reading something that doesn't exist. It isn't: `a` is simply bound to undefined. Only destructuring null or undefined as the whole source throws, and a default would replace the undefined."
+    }
+  ],
+  "js-easy-72": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.optional-chaining-throws-on-null",
+      "rationale": "You may have thought destructuring null just gives undefined for `a`, like a missing property on a real object. But null can't be coerced to an object, so the TypeError is thrown before any property is read. Only real objects bind undefined."
+    }
+  ],
+  "js-easy-75": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.for-in-yields-values",
+      "rationale": "You probably thought for...of hands you keys or indexes like \"0\" and \"1\". It doesn't: it pulls values from the iterable, so value is \"a\" and then \"b\". Yielding keys is what for...in does."
+    }
+  ],
+  "js-easy-76": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.for-in-yields-values",
+      "rationale": "You likely thought for...in only visits an object's own properties. It actually keeps walking up the prototype chain, so the enumerable inherited key \"inherited\" shows up along with \"own\". Only Object.keys limits the list to own keys."
+    }
+  ],
+  "js-easy-77": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.for-in-yields-values",
+      "rationale": "Picking false suggests you expected for...in on an array to give the elements \"a\" and \"b\", or numeric indexes. It actually visits property keys, which are always strings: \"0\" and \"1\". Use for...of to get the elements."
+    }
+  ],
+  "js-easy-78": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.json-stringify-keeps-undefined-functions",
+      "rationale": "You probably thought JSON.stringify keeps every key, writing undefined as \"b\":undefined or \"b\":null. JSON has no undefined value, so the key is dropped and the result is '{\"a\":1}'. Only undefined inside an array becomes null."
+    }
+  ],
+  "js-easy-79": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.json-stringify-keeps-undefined-functions",
+      "rationale": "You likely thought JSON.stringify keeps undefined or drops it, as it does for object properties. In arrays it can't skip the slot, and undefined isn't valid JSON, so [1, undefined, 3] becomes \"[1,null,3]\" and the length stays the same."
+    }
+  ],
+  "js-easy-80": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.json-stringify-keeps-undefined-functions",
+      "rationale": "You likely thought JSON.stringify keeps methods, maybe writing out their source. Functions aren't JSON values, so a function-valued property is dropped. Here b is omitted and the result is '{\"a\":1}'. Only array slots holding functions become null."
+    }
+  ],
+  "js-easy-81": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.json-stringify-keeps-undefined-functions",
+      "rationale": "You may have thought JSON.parse leaves you with text or some wrapper rather than real data. It reads the JSON and returns the value it describes, so '{\"a\":1}' gives an object whose .a is the number 1, not a string. Invalid JSON throws a SyntaxError."
+    }
+  ],
+  "js-easy-82": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.arrow-function-own-arguments",
+      "rationale": "You likely thought arrow functions work like regular functions and can be used as constructors. They can't: arrows have no [[Construct]] method and no prototype, so new on one throws a TypeError, even though calling it normally works fine."
+    }
+  ],
+  "js-easy-83": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.arrow-function-own-arguments",
+      "rationale": "You likely thought an arrow function gets its own `arguments` object like a regular function. It doesn't: arrows create no `arguments` binding, so the name resolves lexically to an outer function's `arguments`, or throws a ReferenceError at module top level."
+    }
+  ],
+  "js-easy-84": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.function-expression-hoisted",
+      "rationale": "You likely thought a function must run its definition line before it can be called, so calling it earlier would fail. Declarations are initialized for their whole scope before any code runs, so the early call works. Only a const function expression throws early."
+    }
+  ],
+  "js-easy-85": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.function-expression-hoisted",
+      "rationale": "You likely thought a function expression assigned to const is hoisted like a function declaration, so the call works. Only the uninitialized const binding is hoisted; calling it before its line throws a ReferenceError (temporal dead zone)."
+    }
+  ],
+  "js-easy-86": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.default-param-applies-to-null",
+      "rationale": "Choosing false suggests you think null also triggers the default, so f(null) would return 1. A default only runs when the argument is undefined or omitted. null is a real passed value, so f(null) returns null and the default is skipped."
+    }
+  ],
+  "js-easy-87": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.let-hoisted-undefined",
+      "rationale": "You probably thought each parameter can't see the others, so b = a would fail. But defaults run left to right with earlier parameters already initialized, so f(4) lets b's default read a and returns 4. Only later parameters are off limits."
+    }
+  ],
+  "js-easy-88": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.switch-uses-loose-equality",
+      "rationale": "Picking false suggests you thought switch matches cases loosely, or by truthiness, so 1 and \"1\" would be treated as the same. In fact each case is tested with ===, so the number 1 never matches the string \"1\" and no type coercion happens."
+    }
+  ],
+  "js-easy-89": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.switch-uses-loose-equality",
+      "rationale": "You probably thought each case is its own isolated block that stops by itself. In JavaScript, once a case matches, execution runs on into the following cases until a break, a return, or the end of the switch. Omitting break is what causes fall-through."
+    }
+  ],
+  "js-easy-92": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.delete-shrinks-array",
+      "rationale": "Choosing false suggests you thought delete on an array element would shift the rest down and shrink length to 2. It doesn't: it only removes the property, leaving a hole at index 1 while length stays 3. splice(1, 1) is what closes the gap."
+    }
+  ],
+  "js-easy-93": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.in-operator-own-only",
+      "rationale": "You probably thought `in` only sees a object's own properties, and `{}` has none. But `in` also searches the prototype chain, and `toString` lives on `Object.prototype`, so it is found and the result is true. Only `Object.hasOwn` checks own properties."
+    }
+  ],
+  "js-easy-94": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.in-operator-own-only",
+      "rationale": "Picking false suggests you thought hasOwn would find inherited toString, like the in operator does. It doesn't: hasOwn only checks own properties and skips the prototype chain, so Object.hasOwn({}, \"toString\") is false, which makes the statement true."
+    }
+  ],
+  "js-easy-95": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.object-keys-includes-all",
+      "rationale": "Choosing false suggests you think Object.keys lists every own property, including \"hidden\" and the symbol key. It only returns own enumerable string keys, so here the result is [\"visible\"]. Other methods cover the rest, like getOwnPropertyNames and getOwnPropertySymbols."
+    }
+  ],
+  "js-easy-96": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.math-max-accepts-array",
+      "rationale": "You probably expected an empty call to give 0, NaN, or an error, as if there were nothing to compare. But Math.max() returns -Infinity, the identity for maximum: any real number compared against it is larger, so it never raises the result."
+    }
+  ],
+  "js-easy-97": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.math-max-accepts-array",
+      "rationale": "You likely thought Math.max reads the numbers inside an array, so both calls give 3. It doesn't unpack arrays: the array is converted to \"1,2,3\", which becomes NaN. Only spreading passes three separate numbers, so only that call returns 3."
+    }
+  ],
+  "js-easy-98": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.plus-always-numeric",
+      "rationale": "You likely thought + always adds numbers, so '5' + 1 gives the number 6. But when either operand of + is a string, the other is converted to a string too and they are concatenated, so the result is the string '51'."
+    }
+  ],
+  "js-easy-99": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.plus-always-numeric",
+      "rationale": "You likely treated '5' - 1 like '5' + 1, where a string operand changes the result's type, or assumed a string can't be subtracted. But - converts both operands with ToNumber, so '5' becomes 5 and the result is the number 4."
+    }
+  ],
+  "js-easy-101": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.default-sort-numeric",
+      "rationale": "You likely assumed sort() orders numbers by value by default. Without a comparator it converts elements to strings and compares them as text, so [10, 9, 1] becomes [1, 10, 9]. Pass (a, b) => a - b to sort numerically."
+    }
+  ],
+  "js-easy-102": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.loose-equality-no-coercion",
+      "rationale": "You likely thought == compares values without changing types, so only the number 0 matches. But == converts both sides to a common type first, so '', '0', and [] all coerce to 0 and make this return true for them too."
+    }
+  ],
+  "js-easy-103": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "javascript.includes-and-set-lookup-equal-cost",
+      "rationale": "You may think includes() and Set.has() cost about the same per lookup. But includes() is a linear scan that walks the array each call, while Set.has() is a hash lookup that takes roughly constant time, so 2,000 repeated lookups favor the Set."
+    }
+  ],
+  "js-easy-104": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "javascript.includes-and-set-lookup-equal-cost",
+      "rationale": "You may have thought reduce with a spread accumulator costs about the same as map. But [...result, x] allocates a new array and copies everything built so far on every step, about n*n/2 copies in total. map() writes each result once."
+    }
   ]
 }
