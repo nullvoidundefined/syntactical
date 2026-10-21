@@ -11,13 +11,15 @@ import SignInScreen from '../sign-in';
 // is in flight never reaches requestCode or verifyCode.
 
 const mockReplace = jest.fn();
-jest.mock('expo-router', () => ({
-  ...jest.requireActual('expo-router'),
-  router: { replace: (...args: unknown[]) => mockReplace(...args) },
-  useRouter: () => ({ replace: (...args: unknown[]) => mockReplace(...args) }),
-}));
+jest.mock('expo-router', () =>
+  require('../../config/buildExpoRouterMock').buildExpoRouterMock({
+    replace: (...args: unknown[]) => mockReplace(...args),
+  }),
+);
 
-type AuthResult = { isOk: true } | { isOk: false; reason: 'invalid-code' | 'invalid-email' | 'rate-limited' | 'unavailable' };
+type AuthResult =
+  | { isOk: true }
+  | { isOk: false; reason: 'invalid-code' | 'invalid-email' | 'rate-limited' | 'unavailable' };
 
 const mockRequestCode = jest.fn<Promise<AuthResult>, [string]>();
 const mockVerifyCode = jest.fn<Promise<AuthResult>, [string, string]>();
@@ -82,7 +84,7 @@ function expectOneInvalidCodeAlert(code: string): void {
   expect(screen.getByRole('button', { name: VERIFY_BUTTON })).toBeEnabled();
 }
 
-type Deferred ={ promise: Promise<AuthResult>; resolve: (result: AuthResult) => void };
+type Deferred = { promise: Promise<AuthResult>; resolve: (result: AuthResult) => void };
 
 function buildDeferred(): Deferred {
   let resolve: (result: AuthResult) => void = () => undefined;

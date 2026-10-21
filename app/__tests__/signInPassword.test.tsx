@@ -14,21 +14,14 @@ import SignInScreen from '../sign-in';
 const mockParams: { current: Record<string, string | string[] | undefined> } = { current: {} };
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
-jest.mock('expo-router', () => {
-  const router = {
-    back: () => undefined,
+jest.mock('expo-router', () =>
+  require('../../config/buildExpoRouterMock').buildExpoRouterMock({
     navigate: (...args: unknown[]) => mockPush(...args),
     push: (...args: unknown[]) => mockPush(...args),
     replace: (...args: unknown[]) => mockReplace(...args),
-  };
-  return {
-    ...jest.requireActual('expo-router'),
-    router,
-    useGlobalSearchParams: () => mockParams.current,
-    useLocalSearchParams: () => mockParams.current,
-    useRouter: () => router,
-  };
-});
+    readParams: () => mockParams.current,
+  }),
+);
 
 type AuthResult =
   | { isOk: true }

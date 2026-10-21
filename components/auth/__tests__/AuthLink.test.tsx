@@ -6,10 +6,11 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { AuthLink } from '../AuthLink';
 
 const mockPush = jest.fn();
-jest.mock('expo-router', () => ({
-  ...jest.requireActual('expo-router'),
-  router: { push: (...args: unknown[]) => mockPush(...args), replace: () => undefined },
-}));
+jest.mock('expo-router', () =>
+  require('../../../config/buildExpoRouterMock').buildExpoRouterMock({
+    push: (...args: unknown[]) => mockPush(...args),
+  }),
+);
 
 const HREF = '/sign-in?returnTo=%2Fpython%3Fpaywall%3Dmedium';
 const LABEL = 'Sign in';

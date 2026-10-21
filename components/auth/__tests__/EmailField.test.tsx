@@ -10,10 +10,7 @@ import { EmailStep } from '../EmailStep';
 import { PasswordSignInStep } from '../PasswordSignInStep';
 import { SignUpStep } from '../SignUpStep';
 
-jest.mock('expo-router', () => ({
-  ...jest.requireActual('expo-router'),
-  router: { push: () => undefined, replace: () => undefined },
-}));
+jest.mock('expo-router', () => require('../../../config/buildExpoRouterMock').buildExpoRouterMock());
 
 const noop = () => undefined;
 

@@ -5,7 +5,11 @@ import type { LoggedAnswerEvent } from '../../../services/stats/types/LoggedAnsw
 import { WeaknessReport } from '../WeaknessReport';
 
 const mockPush = jest.fn();
-jest.mock('expo-router', () => ({ router: { push: (...args: unknown[]) => mockPush(...args) } }));
+jest.mock('expo-router', () =>
+  require('../../../config/buildExpoRouterMock').buildExpoRouterMock({
+    push: (...args: unknown[]) => mockPush(...args),
+  }),
+);
 
 let mockEventLog: LoggedAnswerEvent[] = [];
 jest.mock('../../../state/StatsProvider', () => ({ useQuizStats: () => ({ eventLog: mockEventLog }) }));

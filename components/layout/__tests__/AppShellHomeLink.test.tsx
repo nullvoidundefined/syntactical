@@ -7,10 +7,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppShell } from '../AppShell';
 
 const mockPush = jest.fn();
-jest.mock('expo-router', () => ({
-  ...jest.requireActual('expo-router'),
-  router: { push: (...args: unknown[]) => mockPush(...args) },
-}));
+jest.mock('expo-router', () =>
+  require('../../../config/buildExpoRouterMock').buildExpoRouterMock({
+    push: (...args: unknown[]) => mockPush(...args),
+  }),
+);
 jest.mock('../../../state/useProgressSummary', () => ({
   useProgressSummary: () => ({ dailyGoal: 20, dayStreak: 0, xpToday: 0 }),
 }));

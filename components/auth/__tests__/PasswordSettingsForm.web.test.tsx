@@ -47,10 +47,9 @@ import {
   errorReply,
   savedReply,
 } from './passwordSettingsTestSupport';
+import { setExpoExtra } from '../../../config/expoConstantsMock';
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),
@@ -58,16 +57,9 @@ jest.mock('expo-secure-store', () => ({
   deleteItemAsync: jest.fn(() => Promise.resolve()),
 }));
 
-jest.mock('expo-router', () => {
-  const router = { back: () => undefined, navigate: () => undefined, push: () => undefined, replace: () => undefined };
-  return {
-    ...jest.requireActual('expo-router'),
-    router,
-    useGlobalSearchParams: () => ({}),
-    useLocalSearchParams: () => ({}),
-    useRouter: () => router,
-  };
-});
+jest.mock('expo-router', () =>
+  require('../../../config/buildExpoRouterMock').buildExpoRouterMock({ readParams: () => ({}) }),
+);
 jest.mock('react-native-reanimated', () => ({
   ...jest.requireActual('react-native-reanimated'),
   useReducedMotion: () => true,
