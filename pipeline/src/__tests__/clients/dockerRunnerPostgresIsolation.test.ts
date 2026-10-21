@@ -6,6 +6,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import { runOracle } from '../../clients/dockerRunner.js';
 import { ensureRunnerImage } from '../../clients/ensureRunnerImage.js';
+import { describeDocker } from '../fixtures/dockerSuite.js';
 import {
     acquireDockerTestLock,
     DOCKER_LOCK_WAIT_MS,
@@ -14,14 +15,12 @@ import {
     runningRunnerContainers,
 } from '../fixtures/dockerTestLock.js';
 
-const SKIP_DOCKER = process.env.SKIP_DOCKER_TESTS === '1';
-
 const RUN_TIMEOUT_MS = 60_000;
 
 // SQLSTATE insufficient_privilege.
 const INSUFFICIENT_PRIVILEGE = '42501';
 
-describe.skipIf(SKIP_DOCKER)('runOracle Postgres privilege isolation (B-8c)', () => {
+describeDocker('runOracle Postgres privilege isolation (B-8c)', () => {
     beforeAll(async () => {
         await acquireDockerTestLock();
         await ensureRunnerImage('postgres');

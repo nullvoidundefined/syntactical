@@ -1,15 +1,16 @@
 // `pipeline enrich` reads each bank's oracles from that bank's own root (free: pipeline/oracles,
 // paid: content root oracles), covers the staged generated questions as well as the bank's own,
 // and writes nothing of a paid bank under the pipeline dir. Fake provider and fake validator.
-import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { enrich } from '../../commands/enrich.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 import type { Oracle } from '../../types/Oracle.js';
+import { readJson, writeJson } from '../fixtures/jsonFiles.js';
 
 const HASH = '0123456789abcdef'.repeat(4);
 const TAG = 'python.mutable-default-args';
@@ -45,15 +46,6 @@ function scriptedProvider(): ModelProvider {
             return { model: 'fake', value: request.schema.parse(value) };
         },
     } as unknown as ModelProvider;
-}
-
-async function writeJson(path: string, body: unknown): Promise<void> {
-    await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, JSON.stringify(body));
-}
-
-async function readJson(path: string): Promise<Record<string, unknown>> {
-    return JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
 }
 
 async function listFiles(dir: string): Promise<string[]> {
