@@ -9,6 +9,7 @@ import { Text, View } from 'react-native';
 
 import { RATE_LIMITED_MESSAGE } from '../../services/auth/passwordFailureMessages';
 import { useAuth, type AuthResult } from '../../state/AuthProvider';
+import { useExclusiveAction } from '../../state/useExclusiveAction';
 
 import { AuthButton } from './AuthButton';
 import { CodeStep } from './CodeStep';
@@ -36,24 +37,19 @@ type InlineCodeSignInProps = {
 export function InlineCodeSignIn({ email, onBack, onSignedIn }: InlineCodeSignInProps) {
   const { requestCode, verifyCode } = useAuth();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isBusy, setIsBusy] = useState(false);
   const [cooldownRestartKey, setCooldownRestartKey] = useState(0);
   const isSentOnOpenRef = useRef(false);
-  const isInFlightRef = useRef(false);
+  const { isBusy, run } = useExclusiveAction();
 
+  // True when the work ran and succeeded; false when it was refused or another run was in flight.
   async function runExclusive(work: () => Promise<AuthResult>): Promise<boolean> {
-    if (isInFlightRef.current) return false;
-    isInFlightRef.current = true;
-    setIsBusy(true);
-    setErrorMessage(null);
-    try {
+    const isOk = await run(async () => {
+      setErrorMessage(null);
       const result = await work();
       if (!result.isOk) setErrorMessage(ERROR_MESSAGES[result.reason]);
       return result.isOk;
-    } finally {
-      isInFlightRef.current = false;
-      setIsBusy(false);
-    }
+    });
+    return isOk === true;
   }
 
   async function sendCode(isResend: boolean) {

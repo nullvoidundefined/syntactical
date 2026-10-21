@@ -10,6 +10,7 @@ import { buildDockerArgs } from '../../clients/buildDockerArgs.js';
 import { runOracle } from '../../clients/dockerRunner.js';
 import { ensureRunnerImage } from '../../clients/ensureRunnerImage.js';
 import type { OracleLanguage } from '../../types/OracleLanguage.js';
+import { describeDocker } from '../fixtures/dockerSuite.js';
 import {
     acquireDockerTestLock,
     DOCKER_LOCK_WAIT_MS,
@@ -18,7 +19,6 @@ import {
     runningRunnerContainers,
 } from '../fixtures/dockerTestLock.js';
 
-const SKIP_DOCKER = process.env.SKIP_DOCKER_TESTS === '1';
 const RUN_TIMEOUT_MS = 60_000;
 const JSDOM = 'jsdom' as OracleLanguage;
 const EXACT_VERSION = /^\d+\.\d+\.\d+$/;
@@ -78,7 +78,7 @@ await new Promise((resolve) => setTimeout(resolve, 500));
 console.log(word);
 `;
 
-describe.skipIf(SKIP_DOCKER)('runOracle jsdom (docker)', () => {
+describeDocker('runOracle jsdom (docker)', () => {
     beforeAll(async () => {
         await acquireDockerTestLock();
         await ensureRunnerImage(JSDOM);
@@ -292,8 +292,8 @@ describe.skipIf(SKIP_DOCKER)('runOracle jsdom (docker)', () => {
         it(
             'stops an oracle that builds a DOM past the heap cap',
             async () => {
-                // Each node holds a unique 64 MB string, so the heap cap trips on the third
-                // node. With 1 KB nodes V8 spent seconds in garbage collection before it hit
+                // Each node holds a unique 64 MB string, so the heap cap trips within a few
+                // nodes. With 1 KB nodes V8 spent seconds in garbage collection before it hit
                 // the cap, and on a slow runner the 6 s wall-clock timeout won the race
                 // (IAN-645). The runner clamps timeoutMs to 6 s whatever the test passes.
                 const code = [

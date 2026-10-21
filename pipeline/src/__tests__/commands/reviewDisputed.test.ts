@@ -1,15 +1,16 @@
-// `pipeline review` for a topic track lists only disputed cards, with both blind answers, the
-// claimed answer, and the quote; a language track is unchanged. Real temp files, no Docker: no
+// `pipeline review` for a topic track lists generated and pending items alongside disputed
+// cards with their blind answers, claim, and quote. Real temp files, no Docker: no
 // question has an oracle, so the default observer never runs code.
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { review } from '../../commands/review.js';
+import { writeJson } from '../fixtures/jsonFiles.js';
+import { buildLanguage, HASH } from '../fixtures/manifest.js';
 
-const HASH = '0123456789abcdef'.repeat(4);
 const SOURCE = {
     quote: 'Lax cookies are not sent on cross-site POST requests',
     title: 'Using HTTP cookies',
@@ -71,22 +72,7 @@ function buildBank(path: string, access: 'free' | 'paid', difficulty: string, id
 }
 
 function buildEntry(id: string, banks: Record<string, unknown>, extra: Record<string, unknown>) {
-    return {
-        banks,
-        glyph: 'G',
-        grammar: 'plain',
-        id,
-        label: id,
-        misconceptions: [],
-        tagline: 'T',
-        topics: [{ id: 'sessions', label: 'Sessions' }],
-        ...extra,
-    };
-}
-
-async function writeJson(file: string, value: unknown): Promise<void> {
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, JSON.stringify(value));
+    return buildLanguage({ banks, id, label: id, topics: [{ id: 'sessions', label: 'Sessions' }], ...extra });
 }
 
 async function listFiles(dir: string): Promise<string[]> {
@@ -152,7 +138,7 @@ describe('review disputed cards', () => {
         await rm(root, { force: true, recursive: true });
     });
 
-    it('lists only disputed cards for a topic track, with both blind answers, the claim, and the quote', async () => {
+    it('lists disputed cards alongside generated cards for a topic track, with both blind answers, the claim, and the quote', async () => {
         await writeJson(join(pipelineDir, 'generated/backend-security/easy.json'), {
             questions: [executedQuestion('gen-backend-security-easy-aaaaaaaa')],
             schemaVersion: 2,
@@ -168,7 +154,66 @@ describe('review disputed cards', () => {
             'Source: Using HTTP cookies (https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies)',
         );
         expect(markdown).toContain(SOURCE.quote);
-        expect(markdown).not.toContain('gen-backend-security-easy-aaaaaaaa');
+        expect(markdown).toContain('## gen-backend-security-easy-aaaaaaaa');
+        expect(markdown).toContain('Why it is here: generated');
+    });
+
+    it('lists every generated topic-track card when the disputed directory does not exist', async () => {
+        const ids = ['gen-backend-security-easy-aaaaaaaa', 'gen-backend-security-easy-bbbbbbbb'];
+        await writeJson(join(pipelineDir, 'generated/backend-security/easy.json'), {
+            questions: ids.map((id) => executedQuestion(id)),
+            schemaVersion: 2,
+        });
+        await expect(readdir(join(pipelineDir, 'disputed'))).rejects.toMatchObject({ code: 'ENOENT' });
+        await run();
+        const markdown = await readFile(topicReview(), 'utf8');
+        for (const id of ids) {
+            expect.soft(markdown).toContain(`## ${id}`);
+            const section = markdown.split(/^## /m).find((text) => text.startsWith(`${id} `)) ?? '';
+            expect.soft(section).toContain('Why it is here: generated');
+        }
+    });
+
+    it('lists topic-track review-queue entries and bank questions with failed validation', async () => {
+        const queuedId = 'queued-topic-card';
+        const failedId = 'failed-topic-card';
+        await writeJson(join(pipelineDir, 'review-queue/backend-security/easy', `${queuedId}.json`), {
+            id: queuedId,
+            reason: 'low-confidence',
+            suggestedTopic: 'sessions',
+        });
+        await writeJson(join(contentDir, 'backend-security/easy.json'), {
+            questions: [executedQuestion(failedId)],
+            schemaVersion: 2,
+        });
+        await writeJson(join(pipelineDir, 'reports/latest.json'), {
+            counts: {},
+            finishedAt: 't',
+            questions: [{ bankKey: 'backend-security/easy', id: failedId, status: 'failed' }],
+            runId: 'r',
+            stage: 'validate',
+            startedAt: 't',
+        });
+        await run();
+        const markdown = await readFile(topicReview(), 'utf8');
+        const sections = markdown.split(/^## /m);
+        const byId = (id: string): string => sections.find((text) => text.startsWith(`${id} `)) ?? '';
+        expect.soft(markdown).toContain(`## ${queuedId}`);
+        expect.soft(byId(queuedId)).toContain('Why it is here: review-queue (low-confidence)');
+        expect.soft(byId(queuedId)).toContain('Proposed topic: sessions');
+        expect.soft(markdown).toContain(`## ${failedId}`);
+        expect.soft(byId(failedId)).toContain('Why it is here: validation failed');
+    });
+
+    it('includes generated topic-track cards in the items and pending result counts', async () => {
+        await writeJson(join(pipelineDir, 'generated/backend-security/easy.json'), {
+            questions: [
+                executedQuestion('gen-backend-security-easy-aaaaaaaa'),
+                executedQuestion('gen-backend-security-easy-bbbbbbbb'),
+            ],
+            schemaVersion: 2,
+        });
+        expect(await run()).toMatchObject({ items: 2, pending: 2 });
     });
 
     it('renders an invalid blind answer as invalid', async () => {

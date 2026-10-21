@@ -11,8 +11,8 @@ export function buildUserStatsKey(userId: string): string {
 export const STORAGE_SCHEMA_VERSION = 2;
 // The stored stats shape before the answer event log, migrated on hydrate.
 export const STATS_V1_SCHEMA_VERSION = 1;
-// The daily goal a learner starts with until they pick another.
-export const DEFAULT_DAILY_GOAL = 20;
+// The daily goal a learner starts with until they pick another, shared with the server.
+export { DEFAULT_DAILY_GOAL } from '@syntactical/progress';
 
 // The append-only answer event log, stored apart from stats so a large log
 // never slows the stats write. It never exceeds the cap: the oldest synced
@@ -48,6 +48,9 @@ export const KEY_BINDINGS = {
   next: ['Enter'],
   query: ['Q'],
 } as const;
+
+// Choice keys come in two rows, digits and letters, binding the same choices.
+export const CHOICE_KEYS_PER_ROW = KEY_BINDINGS.choice.length / 2;
 
 // The fixed round lengths offered besides the whole pool; one is offered only when the pool is larger.
 export const ROUND_LENGTHS = [20, 50] as const;

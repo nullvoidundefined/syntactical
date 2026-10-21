@@ -20,7 +20,7 @@ jest.mock('../../../clients/analyticsClient', () => ({
   resetAnalyticsUser: jest.fn(),
   trackEvent: (...args: unknown[]) => mockTrackEvent(...args),
 }));
-jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
+jest.mock('expo-router', () => require('../../../config/buildExpoRouterMock').buildExpoRouterMock({ push: jest.fn() }));
 jest.mock('../../../clients/apiClient', () => ({
   apiFetch: () => Promise.reject(new Error('no network call expected')),
 }));
@@ -68,10 +68,7 @@ describe('SignUpPrompt analytics', () => {
   });
 
   it('fires nothing for a signed-in user', async () => {
-    await AsyncStorage.setItem(
-      AUTH_STORAGE_KEY,
-      JSON.stringify({ knownUserIds: [], userId: randomUUID() }),
-    );
+    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ knownUserIds: [], userId: randomUUID() }));
     await renderPrompt();
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(screen.queryByText('Save your progress')).toBeNull();

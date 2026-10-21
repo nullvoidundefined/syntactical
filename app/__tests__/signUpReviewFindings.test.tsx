@@ -27,10 +27,9 @@ import {
 } from '../../state/__tests__/authTestSupport';
 import { AuthProvider, useAuth } from '../../state/AuthProvider';
 import SignUpScreen from '../sign-up';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
 jest.mock('expo-secure-store', () => {
   const values = new Map<string, string>();
@@ -62,19 +61,14 @@ jest.mock('../../clients/analyticsClient', () => ({
 // Every navigation (push, navigate, or replace) lands in one list.
 const mockParams: { current: Record<string, string | string[] | undefined> } = { current: {} };
 const mockNavigations: unknown[] = [];
-jest.mock('expo-router', () => {
-  function record(href: unknown) {
-    mockNavigations.push(href);
-  }
-  const router = { back: () => undefined, dismissTo: record, navigate: record, push: record, replace: record };
-  return {
-    ...jest.requireActual('expo-router'),
-    router,
-    useGlobalSearchParams: () => mockParams.current,
-    useLocalSearchParams: () => mockParams.current,
-    useRouter: () => router,
-  };
-});
+jest.mock('expo-router', () =>
+  require('../../config/buildExpoRouterMock').buildExpoRouterMock({
+    record: (href: unknown) => {
+      mockNavigations.push(href);
+    },
+    readParams: () => mockParams.current,
+  }),
+);
 
 const secureStore = jest.requireMock('expo-secure-store') as { mockValues: Map<string, string> };
 

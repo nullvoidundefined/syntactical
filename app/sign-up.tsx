@@ -2,11 +2,9 @@
 // in one role="alert" region by reason only; the email, the password, and the code are never
 // echoed or logged. The password lives in this component's memory only: it is sent in the sign-up
 // requests, cleared on success, and gone when the route is left.
-import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { router, useLocalSearchParams, type Href } from 'expo-router';
-// useFocusEffect from expo-router throws outside a navigator, and the screen is rendered bare in many tests; the path is internal to expo-router ~57 and the CI web bundle (e2e job) verifies it resolves.
-import { NavigationContext } from 'expo-router/build/react-navigation/core';
 import { Platform, ScrollView, Text, View } from 'react-native';
 
 import { AuthButton } from '../components/auth/AuthButton';
@@ -24,6 +22,8 @@ import {
 } from '../services/auth/passwordFailureMessages';
 import { buildAuthHref, readReturnTo } from '../services/auth/readReturnTo';
 import { useAuth, type StartSignUpResult } from '../state/AuthProvider';
+import { useClearOnBlur } from '../state/useClearOnBlur';
+import { useExclusiveAction } from '../state/useExclusiveAction';
 
 type FailureReason = Extract<StartSignUpResult, { isOk: false }>['reason'];
 
@@ -46,13 +46,6 @@ function isPasswordFailure(reason: FailureReason): boolean {
   return reason.startsWith('password-');
 }
 
-// Runs onBlur when the screen loses focus, e.g. when another route is pushed over it in a
-// stack. Outside a navigator there is no focus to lose, so nothing is subscribed.
-function useClearOnBlur(onBlur: () => void) {
-  const navigation = useContext(NavigationContext);
-  useEffect(() => navigation?.addListener('blur', onBlur), [navigation, onBlur]);
-}
-
 export default function SignUpScreen() {
   const { completeSignUp, startSignUp } = useAuth();
   const { returnTo } = useLocalSearchParams<{ returnTo?: string | string[] }>();
@@ -61,21 +54,14 @@ export default function SignUpScreen() {
   const [isCodeStep, setIsCodeStep] = useState(false);
   const [isAccountExisting, setIsAccountExisting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isBusy, setIsBusy] = useState(false);
   const [cooldownRestartKey, setCooldownRestartKey] = useState(0);
-  const isInFlightRef = useRef(false);
+  const { isBusy, run } = useExclusiveAction();
 
   async function runExclusive(work: () => Promise<void>) {
-    if (isInFlightRef.current) return;
-    isInFlightRef.current = true;
-    setIsBusy(true);
-    setErrorMessage(null);
-    try {
+    await run(async () => {
+      setErrorMessage(null);
       await work();
-    } finally {
-      isInFlightRef.current = false;
-      setIsBusy(false);
-    }
+    });
   }
 
   function readLengthFailure(): FailureReason | null {

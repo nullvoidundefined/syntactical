@@ -1,16 +1,16 @@
 // gap-fill sends an entry with kind 'topic' to topic generation with its TRACK_RUNNERS, and
 // never sends a language id through it; an entry without kind stays a language. Fake provider
 // and fake runner, no Docker.
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { gapFill } from '../../commands/gapFill.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
-
-const HASH = '0123456789abcdef'.repeat(4);
+import { writeJson } from '../fixtures/jsonFiles.js';
+import { buildBankEntry, buildLanguage } from '../fixtures/manifest.js';
 
 // Each call drafts a distinct prompt, so no draft is dropped as a duplicate.
 function topicDraft(call: number, language = 'python'): Record<string, unknown> {
@@ -27,22 +27,13 @@ function topicDraft(call: number, language = 'python'): Record<string, unknown> 
 }
 
 function buildEntry(id: string, extra: Record<string, unknown>): Record<string, unknown> {
-    return {
-        banks: { easy: { access: 'free', contentVersion: 1, hash: HASH, path: `${id}/easy.json`, topicCounts: {} } },
-        glyph: 'G',
-        grammar: 'plain',
+    return buildLanguage({
+        banks: { easy: buildBankEntry(`${id}/easy.json`) },
         id,
         label: id,
-        misconceptions: [],
-        tagline: 'T',
         topics: [{ id: 'sql-injection', label: 'SQL injection' }],
         ...extra,
-    };
-}
-
-async function writeJson(path: string, body: unknown): Promise<void> {
-    await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, JSON.stringify(body));
+    });
 }
 
 describe('gapFill topic tracks', () => {

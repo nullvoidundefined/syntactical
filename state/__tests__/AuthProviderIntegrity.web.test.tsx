@@ -5,17 +5,10 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 
 import { apiFetch } from '../../clients/apiClient';
 import { AuthProvider, useAuth } from '../AuthProvider';
-import {
-  buildIdentity,
-  holdReply,
-  installRoutedFetch,
-  readStoredAuth,
-  type FakeReply,
-} from './authTestSupport';
+import { buildIdentity, holdReply, installRoutedFetch, readStoredAuth, type FakeReply } from './authTestSupport';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),

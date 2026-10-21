@@ -1,15 +1,16 @@
 // publish keeps method 'judged' and the evidence of a generated judged card, publishes an
 // owner-approved disputed card as judged and pending with isHumanReviewed true, and refuses an
 // undecided or rejected disputed card. Real temp files; the manifest rebuild is stubbed.
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { publish } from '../../commands/publish.js';
+import { writeJson } from '../fixtures/jsonFiles.js';
+import { buildBankEntry, buildLanguage, buildManifest } from '../fixtures/manifest.js';
 
-const HASH = '0123456789abcdef'.repeat(4);
 const SOURCE = {
     quote: 'Lax cookies are not sent on cross-site POST requests',
     title: 'Using HTTP cookies',
@@ -56,11 +57,6 @@ function disputedCard(): Json {
             'SameSite=Strict withholds the cookie on top-level GET.',
         ),
     };
-}
-
-async function writeJson(file: string, value: unknown): Promise<void> {
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, `${JSON.stringify(value, null, 2)}\n`);
 }
 
 describe('publish judged cards', () => {
@@ -112,30 +108,19 @@ describe('publish judged cards', () => {
         contentRoot = join(root, 'syntactical-content');
         pipelineDir = join(root, 'repo/pipeline');
         await mkdir(contentRoot, { recursive: true });
-        await writeJson(join(contentDir, 'manifest.json'), {
-            languages: [
-                {
-                    banks: {
-                        easy: {
-                            access: 'free',
-                            contentVersion: 1,
-                            hash: HASH,
-                            path: 'backend-security/easy.json',
-                            topicCounts: {},
-                        },
-                    },
+        await writeJson(
+            join(contentDir, 'manifest.json'),
+            buildManifest(
+                buildLanguage({
+                    banks: { easy: buildBankEntry('backend-security/easy.json') },
                     glyph: 'BS',
-                    grammar: 'plain',
                     id: 'backend-security',
                     kind: 'topic',
                     label: 'Backend security',
-                    misconceptions: [],
-                    tagline: 'T',
                     topics: [{ id: 'sessions', label: 'Sessions and cookies' }],
-                },
-            ],
-            schemaVersion: 2,
-        });
+                }),
+            ),
+        );
         await writeJson(join(pipelineDir, 'topics.json'), {});
         await writeJson(join(contentDir, 'backend-security/easy.json'), { questions: [], schemaVersion: 2 });
         await writeJson(join(pipelineDir, 'classifications/backend-security/easy.json'), {});

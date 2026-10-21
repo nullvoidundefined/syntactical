@@ -30,13 +30,20 @@ jest.mock('../../clients/apiClient', () => ({
   },
 }));
 jest.mock('../../state/SyncProvider', () => ({
-  useSync: () => ({ cancelPass: () => undefined, isSyncing: false, isUploadCapReached: false, syncNow: () => Promise.resolve(true) }),
+  useSync: () => ({
+    cancelPass: () => undefined,
+    isSyncing: false,
+    isUploadCapReached: false,
+    syncNow: () => Promise.resolve(true),
+  }),
 }));
 jest.mock('../../clients/onUnauthorized', () => ({ onUnauthorized: () => () => undefined }));
 jest.mock('../../components/layout/ReviewDueLink', () => ({ ReviewDueLink: () => null }));
 jest.mock('../../components/layout/DownloadIndicator', () => ({ DownloadIndicator: () => null }));
 jest.mock('react-native-reanimated', () => ({ useReducedMotion: () => true }));
-jest.mock('expo-router', () => ({ router: { push: jest.fn() }, useLocalSearchParams: () => ({}) }));
+jest.mock('expo-router', () =>
+  require('../../config/buildExpoRouterMock').buildExpoRouterMock({ push: jest.fn(), readParams: () => ({}) }),
+);
 jest.mock('@react-native-community/netinfo', () => {
   const api = {
     addEventListener: (listener: (value: { isConnected: boolean }) => void) => {
@@ -70,7 +77,12 @@ describe('settings screen accessibility on the web', () => {
 
   it('has no axe violations signed in, and none with the delete account dialog open', async () => {
     const { container } = render(
-      <SafeAreaProvider initialMetrics={{ frame: { height: 800, width: 400, x: 0, y: 0 }, insets: { bottom: 0, left: 0, right: 0, top: 0 } }}>
+      <SafeAreaProvider
+        initialMetrics={{
+          frame: { height: 800, width: 400, x: 0, y: 0 },
+          insets: { bottom: 0, left: 0, right: 0, top: 0 },
+        }}
+      >
         <QueryClientProvider client={createQueryClient()}>
           <AuthProvider>
             <OwnedStatsProvider>

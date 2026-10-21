@@ -9,17 +9,16 @@
 // to "Sign out" on close. While Sync now or Discard runs the dialog cannot be
 // closed, and a failure is announced inside it. Quiz key bindings are inert
 // while it is open.
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState, type RefObject } from 'react';
 
-import { Modal, Platform, Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 
 import { useAuth } from '../../state/AuthProvider';
 import { useQuizStats } from '../../state/StatsProvider';
 import { useSync } from '../../state/SyncProvider';
-import { markModalOpen } from '../../state/modalOpenSignal';
 
-import { ModalOverlay } from '../layout/ModalOverlay';
-import { wrapTab } from '../layout/wrapTab';
+import { DialogShell } from '../layout/DialogShell';
+import { useModalPanel } from '../layout/useModalPanel';
 
 import { AuthButton } from './AuthButton';
 
@@ -34,31 +33,13 @@ type DialogPanelProps = {
   onCancel: () => void;
   onDiscard: () => void;
   onSyncNow: () => void;
+  returnFocusTo: RefObject<View | null>;
 };
 
-function DialogPanel({ failureMessage, isBusy, onCancel, onDiscard, onSyncNow }: DialogPanelProps) {
+function DialogPanel({ failureMessage, isBusy, onCancel, onDiscard, onSyncNow, returnFocusTo }: DialogPanelProps) {
   const panelRef = useRef<View>(null);
   const isWeb = Platform.OS === 'web';
-
-  useEffect(() => markModalOpen(), []);
-
-  useEffect(() => {
-    if (!isWeb) return undefined;
-    const panel = panelRef.current as unknown as HTMLElement | null;
-    panel?.focus();
-    // Escape closes; Tab and Shift+Tab wrap inside the dialog.
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Tab' && panel) {
-        wrapTab(event, panel);
-        return;
-      }
-      if (event.key !== 'Escape') return;
-      event.stopPropagation();
-      onCancel();
-    }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isWeb, onCancel]);
+  useModalPanel(panelRef, { onClose: onCancel, returnFocusTo });
 
   return (
     <View
@@ -105,7 +86,6 @@ export function SignOutDialog() {
   const [failureMessage, setFailureMessage] = useState<string | null>(null);
   const triggerRef = useRef<View>(null);
   const isBusyRef = useRef(false);
-  const wasOpenRef = useRef(false);
 
   const hasUnsynced = eventLog.some((entry) => !entry.isSynced);
 
@@ -115,13 +95,6 @@ export function SignOutDialog() {
     setIsOpen(false);
     setFailureMessage(null);
   }, []);
-
-  useEffect(() => {
-    if (wasOpenRef.current && !isOpen && Platform.OS === 'web') {
-      (triggerRef.current as unknown as HTMLElement | null)?.focus();
-    }
-    wasOpenRef.current = isOpen;
-  }, [isOpen]);
 
   function setBusy(value: boolean) {
     isBusyRef.current = value;
@@ -187,17 +160,10 @@ export function SignOutDialog() {
       onCancel={close}
       onDiscard={() => void handleDiscard()}
       onSyncNow={() => void handleSyncNow()}
+      returnFocusTo={triggerRef}
     />
   );
-
-  const isModalHost = Platform.OS !== 'web';
-  const overlay = isModalHost ? (
-    <Modal transparent animationType="none" visible onRequestClose={close}>
-      {panel}
-    </Modal>
-  ) : (
-    <ModalOverlay>{panel}</ModalOverlay>
-  );
+  const overlay = <DialogShell onRequestClose={close}>{panel}</DialogShell>;
 
   return (
     <>

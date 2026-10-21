@@ -103,6 +103,7 @@ describe('ModelProvider', () => {
     });
 
     it('runs the CLI with no tools, no MCP servers, no settings files, and the system prompt bound to its flag', async () => {
+        vi.stubEnv('PIPELINE_MODEL', '');
         const exec = vi.fn().mockResolvedValue(cliAnswer('{"topic":"a"}'));
         const system = 'sys; rm -rf / "quoted" $(whoami)';
         await createModelProvider('cli', { exec }).generate({ ...REQUEST, system });
@@ -117,8 +118,19 @@ describe('ModelProvider', () => {
             '--setting-sources',
             '',
             '--no-session-persistence',
+            '--model',
+            'claude-opus-5-5',
             `--system-prompt=${system}`,
         ]);
+    });
+
+    it('passes PIPELINE_MODEL as the CLI --model argument', async () => {
+        vi.stubEnv('PIPELINE_MODEL', 'claude-test-model');
+        const exec = vi.fn().mockResolvedValue(cliAnswer('{"topic":"a"}'));
+        await createModelProvider('cli', { exec }).generate(REQUEST);
+        const [, args] = exec.mock.calls[0] as [string, string[]];
+        const modelIndex = args.indexOf('--model');
+        expect(args.slice(modelIndex, modelIndex + 2)).toEqual(['--model', 'claude-test-model']);
     });
 
     it('sends the prompt on stdin, never in argv, so it cannot read as a flag or subcommand', async () => {

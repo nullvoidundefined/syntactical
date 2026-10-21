@@ -6,16 +6,12 @@
   "scripts": {
     "cli": "npm run build -w @syntactical/content-schema --silent && tsx src/cli.ts",
     "test": "vitest run",
+    "test:unit": "SKIP_DOCKER_TESTS=1 vitest run",
     "typecheck": "tsc --noEmit"
-  },
-  "devDependencies": {
-    "@types/node": "^22.20.5",
-    "vitest": "^3.2.7"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
     "@syntactical/content-schema": "*",
-    "parse5": "^7.3.0",
     "zod": "^4.6.5"
   }
 }

@@ -1,9 +1,9 @@
 // `pipeline gap-fill` batch generation: one model call per short topic (at most 2 per run),
 // cards proven in the sandbox, staging complete enough that publish needs no enrich. Fake
 // provider, fake runner, fake judge; no Docker, no network.
-import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { validateBankForPublish, type Question } from '@syntactical/content-schema';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -14,8 +14,9 @@ import { ProviderTransientError } from '../../types/ProviderTransientError.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 import type { Oracle } from '../../types/Oracle.js';
 import type { OracleRun } from '../../types/OracleRun.js';
+import { readJson, writeJson } from '../fixtures/jsonFiles.js';
+import { buildBankEntry, buildLanguage, buildManifest, HASH } from '../fixtures/manifest.js';
 
-const HASH = '0123456789abcdef'.repeat(4);
 const PAID_MARKER = 'PAID-BATCH-MARKER';
 const TARGET = 10;
 
@@ -61,15 +62,6 @@ function mcCard(tag: string, language?: string, setupSql?: string): RawCard {
         query: { explanation: 'e', title: 't' },
         type: 'mc',
     };
-}
-
-async function writeJson(path: string, body: unknown): Promise<void> {
-    await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, JSON.stringify(body));
-}
-
-async function readJson<T = Record<string, unknown>>(path: string): Promise<T> {
-    return JSON.parse(await readFile(path, 'utf8')) as T;
 }
 
 async function listFiles(dir: string): Promise<string[]> {
@@ -155,23 +147,17 @@ describe('gapFill batch generation', () => {
     async function seed(options: Seed = {}): Promise<void> {
         const { access = 'free', bank = [], kind = 'language', staged = [], topics = ['strings'] } = options;
         id = kind === 'topic' ? 'backend-security' : 'python';
-        const productId = access === 'paid' ? { productId: `syntactical.${id}.easy` } : {};
-        const entry = {
-            banks: {
-                easy: { access, contentVersion: 1, hash: HASH, path: `${id}/easy.json`, topicCounts: {}, ...productId },
-            },
-            glyph: 'G',
-            grammar: 'plain',
+        const productId = access === 'paid' ? `syntactical.${id}.easy` : undefined;
+        const entry = buildLanguage({
+            banks: { easy: buildBankEntry(`${id}/easy.json`, access, productId) },
             id,
             label: id,
-            misconceptions: [],
-            tagline: 'T',
             topics: topics.map((topic) => ({ id: topic, label: topic })),
             ...(kind === 'topic' ? { kind: 'topic' } : {}),
-        };
+        });
         outRoot = access === 'free' ? pipelineDir : contentRoot;
         const questions = bank.map(([prompt], index) => ({ answer: true, id: `bank-${index}`, prompt, type: 'bool' }));
-        await writeJson(join(contentDir, 'manifest.json'), { languages: [entry], schemaVersion: 2 });
+        await writeJson(join(contentDir, 'manifest.json'), buildManifest(entry));
         await writeJson(join(access === 'free' ? contentDir : contentRoot, `${id}/easy.json`), {
             questions,
             schemaVersion: 2,
@@ -320,6 +306,80 @@ describe('gapFill batch generation', () => {
     });
 
     describe('provider failures', () => {
+        it('stops after five consecutive dropped batches across topics and banks and writes a partial report', async () => {
+            await seed({ topics: ['strings', 'lists', 'loops', 'functions'] });
+            const manifestPath = join(contentDir, 'manifest.json');
+            const manifest = await readJson<{
+                languages: { banks: Record<string, unknown> }[];
+                schemaVersion: number;
+            }>(manifestPath);
+            const [language] = manifest.languages;
+            if (language === undefined) throw new Error('seed must create a language');
+            language.banks.medium = {
+                access: 'free',
+                contentVersion: 1,
+                hash: HASH,
+                path: `${id}/medium.json`,
+                topicCounts: {},
+            };
+            await writeJson(manifestPath, manifest);
+            await writeJson(join(contentDir, `${id}/medium.json`), { questions: [], schemaVersion: 2 });
+            await writeJson(join(outRoot, `classifications/${id}/medium.json`), {});
+            const provider = buildProvider(() => {
+                throw new ProviderTransientError('model-timeout', 'timed out');
+            });
+
+            const completion = run(provider);
+            await completion.catch(() => undefined);
+            expect.soft(provider.calls).toHaveLength(5);
+            expect(await readJson(join(pipelineDir, 'reports/latest.json'))).toMatchObject({ stage: 'gap-fill' });
+            await expect(completion).rejects.toThrow(/consecutive/);
+        });
+
+        it('includes the terminating bank generated and failed counts in the partial report after five consecutive dropped batches', async () => {
+            await seed({ topics: ['strings', 'lists', 'loops', 'functions', 'classes', 'dicts', 'sets'] });
+            const provider = buildProvider((call) => {
+                if (call.n === 1) return validCards(call.count, 'x');
+                throw new ProviderTransientError('model-timeout', 'timed out');
+            });
+
+            await expect(run(provider)).rejects.toThrow(/consecutive/);
+            expect(provider.calls).toHaveLength(6);
+            const staged = await readJson<{ questions: { topic: string }[] }>(
+                join(outRoot, `generated/${id}/easy.json`),
+            );
+            expect(staged.questions).toHaveLength(TARGET);
+            expect(staged.questions.every(({ topic }) => topic === 'strings')).toBe(true);
+            expect(await readJson(join(pipelineDir, 'reports/latest.json'))).toMatchObject({
+                counts: {
+                    'gap-fill-failed': 5 * Math.min(10, TARGET),
+                    'gap-fill-generated': TARGET,
+                },
+                stage: 'gap-fill',
+            });
+        });
+
+        it('resets consecutive failures after a successful batch between two streaks of four failures', async () => {
+            await seed({
+                topics: ['strings', 'lists', 'loops', 'functions', 'classes', 'dicts', 'sets', 'tuples', 'files'],
+            });
+            const provider = buildProvider((call) => {
+                if (call.n !== 5) throw new ProviderTransientError('model-timeout', 'timed out');
+                return validCards(call.count, 'x');
+            });
+
+            await expect(run(provider)).resolves.toMatchObject({
+                counts: { 'gap-fill-generated': TARGET },
+                stage: 'gap-fill',
+            });
+            expect(provider.calls).toHaveLength(9);
+            const staged = await readJson<{ questions: { topic: string }[] }>(
+                join(outRoot, `generated/${id}/easy.json`),
+            );
+            expect(staged.questions).toHaveLength(TARGET);
+            expect(staged.questions.every(({ topic }) => topic === 'classes')).toBe(true);
+        });
+
         it.each([
             ['ModelOutputInvalid', () => new ModelOutputInvalid('generate-batch-v1', 'not json')],
             ['ProviderTransientError', () => new ProviderTransientError('model-timeout', 'timed out')],

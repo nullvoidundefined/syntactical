@@ -14,7 +14,7 @@ import { AuthProvider, useAuth } from '../../../state/AuthProvider';
 import { StatsProvider, useQuizStats } from '../../../state/StatsProvider';
 import { ResultsScreen } from '../../quiz/ResultsScreen';
 
-jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
+jest.mock('expo-router', () => require('../../../config/buildExpoRouterMock').buildExpoRouterMock({ push: jest.fn() }));
 jest.mock('../../../clients/apiClient', () => ({
   apiFetch: () => Promise.reject(new Error('no network call expected')),
 }));
@@ -39,7 +39,15 @@ async function renderResults(onRetry = jest.fn()) {
     <AuthProvider>
       <OwnedStats>
         <HydrationProbe />
-        <ResultsScreen accuracy={50} correctCount={1} totalQuestions={2} languageLabel="Python" difficultyLabel="Easy" onMenu={jest.fn()} onRetry={onRetry} />
+        <ResultsScreen
+          accuracy={50}
+          correctCount={1}
+          totalQuestions={2}
+          languageLabel="Python"
+          difficultyLabel="Easy"
+          onMenu={jest.fn()}
+          onRetry={onRetry}
+        />
       </OwnedStats>
     </AuthProvider>,
   );
@@ -65,7 +73,9 @@ describe('SignUpPrompt', () => {
     fireEvent.press(await screen.findByRole('button', { name: 'Not now' }));
     await waitFor(() => expect(screen.queryByText('Save your progress')).toBeNull());
     await waitFor(async () => {
-      const stored = JSON.parse((await AsyncStorage.getItem(STORAGE_KEY)) ?? 'null') as { isSignUpPromptDismissed?: boolean } | null;
+      const stored = JSON.parse((await AsyncStorage.getItem(STORAGE_KEY)) ?? 'null') as {
+        isSignUpPromptDismissed?: boolean;
+      } | null;
       expect(stored?.isSignUpPromptDismissed).toBe(true);
     });
     await view.unmount();

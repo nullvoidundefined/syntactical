@@ -14,8 +14,8 @@ import { startServer } from '../startServer.js';
 import type { RunningServer } from '../startServer.js';
 
 import { createMigratedDatabase } from './integration/createMigratedDatabase.js';
+import { SKIP_DATABASE_TESTS } from './integration/skipDatabaseTests.js';
 
-const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.env.TEST_DATABASE_URL;
 const SETUP_TIMEOUT_MS = 120_000;
 const SECRET_BYTES = 24;
 const HTTP_OK = 200;
@@ -105,7 +105,6 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
       NODE_ENV: 'test',
       PAID_CONTENT_DIR: paidDir,
       PORT: '0',
-      PUBLIC_BASE_URL: 'https://api.syntactical.dev',
       RATE_LIMIT_KEY_SECRET: randomSecret(),
       RESEND_API_KEY: randomSecret(),
       REVENUECAT_WEBHOOK_AUTH: randomSecret(),
@@ -270,7 +269,6 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
     const STUBBED = [
       'ALLOWED_ORIGINS',
       'EMAIL_FROM',
-      'PUBLIC_BASE_URL',
       'RATE_LIMIT_KEY_SECRET',
       'RESEND_API_KEY',
       'REVENUECAT_WEBHOOK_AUTH',

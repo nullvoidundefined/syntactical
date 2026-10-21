@@ -15,10 +15,9 @@ import { buildIdentity, installRoutedFetch } from '../../state/__tests__/authTes
 import { AuthProvider } from '../../state/AuthProvider';
 import SignInScreen from '../sign-in';
 import SignUpScreen from '../sign-up';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),

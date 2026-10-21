@@ -6,12 +6,12 @@
 // memory only: they are sent in the request, cleared on a save, and gone when Settings is left.
 // Refusals are announced in one role="alert" region by reason only, tied to the field they
 // concern; no password or email is echoed.
-import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { NavigationContext } from 'expo-router/build/react-navigation/core';
 import { Platform, Text, View } from 'react-native';
 
 import { apiPut } from '../../clients/apiClient';
+import { readErrorCode } from '../../clients/readErrorCode';
 import {
   HTTP_STATUS_BAD_REQUEST,
   HTTP_STATUS_FORBIDDEN,
@@ -28,6 +28,8 @@ import {
   RATE_LIMITED_MESSAGE,
   SERVER_BUSY_MESSAGE,
 } from '../../services/auth/passwordFailureMessages';
+import { useExclusiveAction } from '../../state/useExclusiveAction';
+import { useClearOnBlur } from '../../state/useClearOnBlur';
 
 import { AuthButton } from './AuthButton';
 import { AuthForm } from './AuthForm';
@@ -57,11 +59,6 @@ const POLICY_REFUSALS: Record<string, string> = {
   AUTH_PASSWORD_TOO_SHORT: PASSWORD_TOO_SHORT_MESSAGE,
 };
 
-function readErrorCode(body: unknown): string | null {
-  const code = (body as { error?: { code?: unknown } } | null)?.error?.code;
-  return typeof code === 'string' ? code : null;
-}
-
 // The field a body the server called invalid belongs to: the current password when it is
 // malformed or over the length limit, otherwise the new one.
 function readInvalidBodyField(currentPassword: string): 'current' | 'new' {
@@ -87,13 +84,6 @@ function readRefusal(status: number, body: unknown, currentPassword: string): Re
   return { field: null, message: UNAVAILABLE_MESSAGE };
 }
 
-// Runs onBlur when the screen loses focus, e.g. when another route is pushed over it in a
-// stack. Outside a navigator there is no focus to lose, so nothing is subscribed.
-function useClearOnBlur(onBlur: () => void) {
-  const navigation = useContext(NavigationContext);
-  useEffect(() => navigation?.addListener('blur', onBlur), [navigation, onBlur]);
-}
-
 export function PasswordSettingsForm({
   email,
   hasPassword,
@@ -105,8 +95,7 @@ export function PasswordSettingsForm({
   const [isCodeStep, setIsCodeStep] = useState(false);
   const [refusal, setRefusal] = useState<Refusal | null>(null);
   const [isSaved, setIsSaved] = useState(false);
-  const [isBusy, setIsBusy] = useState(false);
-  const isInFlightRef = useRef(false);
+  const { isBusy, run } = useExclusiveAction();
   const rootRef = useRef<View>(null);
 
   // Leaving clears both passwords and the code steps. The setters are stable, so the blur
@@ -127,34 +116,30 @@ export function PasswordSettingsForm({
   }, [shouldFocusFirstField]);
 
   async function save() {
-    if (isInFlightRef.current) return;
-    isInFlightRef.current = true;
-    setIsBusy(true);
-    setRefusal(null);
-    setIsSaved(false);
-    try {
+    await run(async () => {
+      setRefusal(null);
+      setIsSaved(false);
       if (countPasswordLength(newPassword) > PASSWORD_MAX_LENGTH) {
         setRefusal({ field: 'new', message: PASSWORD_TOO_LONG_MESSAGE });
         return;
       }
-      const body = currentPassword === '' ? { newPassword } : { currentPassword, newPassword };
-      const { body: replyBody, status } = await apiPut('me/password', body);
-      if (status === HTTP_STATUS_OK) {
-        setCurrentPassword('');
-        setNewPassword('');
-        setIsSaved(true);
-        onPasswordSaved?.(true);
-      } else if (status === HTTP_STATUS_FORBIDDEN && readErrorCode(replyBody) === 'AUTH_REAUTH_REQUIRED') {
-        setIsCodeStep(true);
-      } else {
-        setRefusal(readRefusal(status, replyBody, currentPassword));
+      try {
+        const body = currentPassword === '' ? { newPassword } : { currentPassword, newPassword };
+        const { body: replyBody, status } = await apiPut('me/password', body);
+        if (status === HTTP_STATUS_OK) {
+          setCurrentPassword('');
+          setNewPassword('');
+          setIsSaved(true);
+          onPasswordSaved?.(true);
+        } else if (status === HTTP_STATUS_FORBIDDEN && readErrorCode(replyBody) === 'AUTH_REAUTH_REQUIRED') {
+          setIsCodeStep(true);
+        } else {
+          setRefusal(readRefusal(status, replyBody, currentPassword));
+        }
+      } catch {
+        setRefusal({ field: null, message: UNAVAILABLE_MESSAGE });
       }
-    } catch {
-      setRefusal({ field: null, message: UNAVAILABLE_MESSAGE });
-    } finally {
-      isInFlightRef.current = false;
-      setIsBusy(false);
-    }
+    });
   }
 
   // A refusal belongs to the password fields, so it goes when the code steps open.

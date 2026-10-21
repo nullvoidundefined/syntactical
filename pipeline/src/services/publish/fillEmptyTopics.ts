@@ -2,7 +2,7 @@
 // `pipeline/topics.json`. Only `topics` is touched: the manifest build rewrites everything else.
 import { readFile } from 'node:fs/promises';
 
-import { writeJsonAtomic } from '../classify/writeJsonAtomic.js';
+import { writeJsonAtomic } from '../json/writeJsonAtomic.js';
 
 import { labelTopic } from './labelTopic.js';
 

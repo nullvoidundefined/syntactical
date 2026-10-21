@@ -2,27 +2,18 @@
 // call rewrites the mc prompts in `generated/<language>/<difficulty>.json` in place. Free staged
 // files live under the pipeline dir, paid ones under the private content root. Banks with nothing
 // staged cost no call. Bank files are never written; publish moves the staged cards in.
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { rewritePrompts } from '../../commands/rewritePrompts.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
-
-const HASH = '0123456789abcdef'.repeat(4);
+import { readJson, writeJson } from '../fixtures/jsonFiles.js';
+import { buildLanguage, buildManifest, HASH } from '../fixtures/manifest.js';
 
 type Json = Record<string, unknown>;
-
-async function writeJson(file: string, value: unknown): Promise<void> {
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, `${JSON.stringify(value, null, 2)}\n`);
-}
-
-async function readJson(file: string): Promise<{ questions: Json[] }> {
-    return JSON.parse(await readFile(file, 'utf8')) as { questions: Json[] };
-}
 
 function staged(id: string): Json {
     return {
@@ -70,9 +61,10 @@ describe('rewritePrompts command', () => {
         contentRoot = join(root, 'syntactical-content');
         pipelineDir = join(root, 'repo/pipeline');
         await mkdir(contentRoot, { recursive: true });
-        await writeJson(join(contentDir, 'manifest.json'), {
-            languages: [
-                {
+        await writeJson(
+            join(contentDir, 'manifest.json'),
+            buildManifest(
+                buildLanguage({
                     banks: {
                         easy: bank('python/easy.json', 'free'),
                         hard: bank('python/hard.json', 'paid'),
@@ -80,15 +72,11 @@ describe('rewritePrompts command', () => {
                     },
                     glyph: 'PY',
                     grammar: 'python',
-                    id: 'python',
                     label: 'Python',
-                    misconceptions: [],
-                    tagline: 'T',
                     topics: [{ id: 'strings', label: 'Strings' }],
-                },
-            ],
-            schemaVersion: 2,
-        });
+                }),
+            ),
+        );
     });
 
     afterEach(async () => {
@@ -119,13 +107,13 @@ describe('rewritePrompts command', () => {
         await rewritePrompts({ contentDir, contentRoot, log: () => undefined, pipelineDir, provider });
 
         expect(prompts).toHaveLength(2);
-        const easy = await readJson(join(pipelineDir, 'generated/python/easy.json'));
+        const easy = await readJson<{ questions: Json[] }>(join(pipelineDir, 'generated/python/easy.json'));
         expect(easy.questions.map((question) => question.prompt)).toEqual([
             'What does e1 print?',
             'What does e2 print?',
         ]);
         expect(easy.questions[0]).toEqual({ ...staged('e1'), prompt: 'What does e1 print?' });
-        const medium = await readJson(join(contentRoot, 'generated/python/medium.json'));
+        const medium = await readJson<{ questions: Json[] }>(join(contentRoot, 'generated/python/medium.json'));
         expect(medium.questions.map((question) => question.prompt)).toEqual(['What does m1 print?']);
         await expect(stat(join(contentRoot, 'generated/python/hard.json'))).rejects.toThrow();
         await expect(stat(join(pipelineDir, 'generated/python/medium.json'))).rejects.toThrow();

@@ -2,29 +2,17 @@
 // clock the test reads (so it can insert live or expired sessions), the paid banks the test
 // builds in memory, a silent logger, and the one allowed origin.
 import type pg from 'pg';
-import { pino } from 'pino';
 
-import { createApp } from '../../app.js';
+import { createTestApp } from './createTestApp.js';
 import type { PaidBanks } from '../../types/PaidBanks.js';
 
-const ALLOWED_ORIGIN = 'https://syntactical.dev';
-
 interface BanksTestAppOptions {
-    paidBanks: PaidBanks;
-    pool: pg.Pool;
+  paidBanks: PaidBanks;
+  pool: pg.Pool;
 }
 
 export function createBanksTestApp(options: BanksTestAppOptions) {
-    const { paidBanks, pool } = options;
-    const fixedTime = Date.now();
-    function now(): Date {
-        return new Date(fixedTime);
-    }
-    const app = createApp({
-        allowedOrigins: [ALLOWED_ORIGIN],
-        banks: { database: pool, now, paidBanks },
-        db: pool,
-        logger: pino({ level: 'silent' }),
-    });
-    return { app, now };
+  const { paidBanks, pool } = options;
+  const { app, clock } = createTestApp({ banks: { paidBanks }, pool });
+  return { app, now: clock.now };
 }

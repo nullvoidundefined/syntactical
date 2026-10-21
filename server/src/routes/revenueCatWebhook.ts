@@ -15,8 +15,9 @@ import type { Logger } from 'pino';
 import { HTTP } from '../constants/http.js';
 import { REVENUECAT_EVENTS } from '../constants/revenueCatEvents.js';
 import { WEBHOOKS } from '../constants/webhooks.js';
-import { createErrorResponse, ERROR_CODES } from '../errors.js';
+import { ERROR_CODES, sendError } from '../errors.js';
 import { isJsonMediaType } from '../middleware/isJsonMediaType.js';
+import { requestLog } from '../middleware/requestLogger.js';
 import { revenueCatSchemas } from '../schemas/revenueCatSchemas.js';
 import { recordPurchaseEvent } from '../services/recordPurchaseEvent.js';
 import { sha256 } from '../services/sha256.js';
@@ -47,8 +48,7 @@ function createRevenueCatWebhookRouter(deps: WebhookDeps, logger: Logger): Route
       next();
       return;
     }
-    const { requestId } = res.locals as { requestId: string };
-    res.status(UNAUTHORIZED).json(createErrorResponse(ERROR_CODES.WEBHOOK.UNAUTHORIZED, 'Unauthorized', requestId));
+    sendError(res, UNAUTHORIZED, ERROR_CODES.WEBHOOK.UNAUTHORIZED, 'Unauthorized');
   }
 
   function requireJsonBody(req: Request, res: Response, next: NextFunction): void {
@@ -56,16 +56,12 @@ function createRevenueCatWebhookRouter(deps: WebhookDeps, logger: Logger): Route
       next();
       return;
     }
-    const { requestId } = res.locals as { requestId: string };
-    res
-      .status(UNSUPPORTED_MEDIA_TYPE)
-      .json(
-        createErrorResponse(
-          ERROR_CODES.INPUT.UNSUPPORTED_MEDIA_TYPE,
-          'Content-Type must be application/json',
-          requestId,
-        ),
-      );
+    sendError(
+      res,
+      UNSUPPORTED_MEDIA_TYPE,
+      ERROR_CODES.INPUT.UNSUPPORTED_MEDIA_TYPE,
+      'Content-Type must be application/json',
+    );
   }
 
   router.post(
@@ -74,15 +70,9 @@ function createRevenueCatWebhookRouter(deps: WebhookDeps, logger: Logger): Route
     requireJsonBody,
     express.json({ limit: BODY_LIMIT }),
     async (req: Request, res: Response) => {
-      const { logger: requestLogger, requestId } = res.locals as {
-        logger?: Logger;
-        requestId: string;
-      };
       const { data, success } = revenueCatSchemas.webhook.safeParse(req.body);
       if (!success) {
-        res
-          .status(BAD_REQUEST)
-          .json(createErrorResponse(ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body', requestId));
+        sendError(res, BAD_REQUEST, ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body');
         return;
       }
       const { event } = data;
@@ -93,7 +83,7 @@ function createRevenueCatWebhookRouter(deps: WebhookDeps, logger: Logger): Route
       const status = await recordPurchaseEvent({
         database,
         event,
-        logger: requestLogger ?? logger,
+        logger: requestLog(res, logger),
         paidProductIds,
       });
       res.status(OK).json({ data: { status } });

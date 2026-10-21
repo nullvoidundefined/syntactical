@@ -9,8 +9,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { classify } from '../../commands/classify.js';
 import { ModelOutputInvalid } from '../../types/ModelOutputInvalid.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
+import { readJson } from '../fixtures/jsonFiles.js';
+import { buildLanguage, buildManifest, HASH } from '../fixtures/manifest.js';
 
-const HASH = '0123456789abcdef'.repeat(4);
 const TOPIC_LIST = [
     { id: 'strings', label: 'Strings' },
     { id: 'wtf', label: 'WTF' },
@@ -31,18 +32,8 @@ function buildEntry(path: string, access: 'free' | 'paid'): Record<string, unkno
     };
 }
 
-function buildManifest(banks: Record<string, unknown>, topics: unknown[] = TOPIC_LIST): Record<string, unknown> {
-    const language = {
-        banks,
-        glyph: 'G',
-        grammar: 'plain',
-        id: 'python',
-        label: 'L',
-        misconceptions: [],
-        tagline: 'T',
-        topics,
-    };
-    return { languages: [language], schemaVersion: 2 };
+function manifestWithBanks(banks: Record<string, unknown>, topics: unknown[] = TOPIC_LIST): Record<string, unknown> {
+    return buildManifest(buildLanguage({ banks, topics }));
 }
 
 function buildQuestion(id: string, prompt: string): Record<string, unknown> {
@@ -72,10 +63,6 @@ async function writeTree(root: string, files: Record<string, unknown>): Promise<
         await mkdir(dirname(join(root, name)), { recursive: true });
         await writeFile(join(root, name), JSON.stringify(body));
     }
-}
-
-async function readJson(path: string): Promise<Record<string, unknown>> {
-    return JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
 }
 
 async function listFiles(dir: string): Promise<string[]> {
@@ -125,7 +112,7 @@ describe('classify', () => {
         }
         await writeTree(contentDir, {
             ...files,
-            'manifest.json': buildManifest(entries, topics),
+            'manifest.json': manifestWithBanks(entries, topics),
         });
         await writeTree(contentRoot, paidFiles);
     }
@@ -318,7 +305,7 @@ describe('classify', () => {
 
     it('refuses a manifest with a traversal path before any model call or write', async () => {
         await writeTree(contentDir, {
-            'manifest.json': buildManifest({
+            'manifest.json': manifestWithBanks({
                 easy: buildEntry('../../evil.json', 'free'),
             }),
         });

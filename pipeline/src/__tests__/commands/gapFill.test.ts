@@ -1,17 +1,18 @@
 // `pipeline gap-fill` with a fake provider and a fake runOracle: how many questions each topic
 // requests, where the staging files land (free under pipeline/, paid under the content root),
 // and that content bank files are never written. No Docker, no real model.
-import { chmod, mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { gapFill } from '../../commands/gapFill.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
 import type { Oracle } from '../../types/Oracle.js';
+import { readJson, writeJson } from '../fixtures/jsonFiles.js';
+import { buildLanguage, buildManifest, HASH } from '../fixtures/manifest.js';
 
-const HASH = '0123456789abcdef'.repeat(4);
 const TOPICS = [
     { id: 'strings', label: 'Strings' },
     { id: 'lists', label: 'Lists' },
@@ -24,35 +25,12 @@ function buildEntry(path: string, access: 'free' | 'paid'): Record<string, unkno
     return { access, contentVersion: 1, hash: HASH, path, topicCounts: {}, ...productId };
 }
 
-function buildManifest(banks: Record<string, unknown>): Record<string, unknown> {
-    return {
-        languages: [
-            {
-                banks,
-                glyph: 'G',
-                grammar: 'plain',
-                id: 'python',
-                label: 'L',
-                misconceptions: [],
-                tagline: 'T',
-                topics: TOPICS,
-            },
-        ],
-        schemaVersion: 2,
-    };
+function manifestWithBanks(banks: Record<string, unknown>): Record<string, unknown> {
+    return buildManifest(buildLanguage({ banks, topics: TOPICS }));
 }
 
 function buildBankQuestion(id: string, prompt = `Existing ${id}`): Record<string, unknown> {
     return { answer: true, id, prompt, type: 'bool' };
-}
-
-async function writeJson(path: string, body: unknown): Promise<void> {
-    await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, JSON.stringify(body));
-}
-
-async function readJson(path: string): Promise<Record<string, unknown>> {
-    return JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
 }
 
 async function listFiles(dir: string): Promise<string[]> {
@@ -150,7 +128,7 @@ describe('gapFill', () => {
             const outRoot = access === 'free' ? pipelineDir : contentRoot;
             await writeJson(join(outRoot, `classifications/python/${difficulty}.json`), accepted);
         }
-        await writeJson(join(contentDir, 'manifest.json'), buildManifest(entries));
+        await writeJson(join(contentDir, 'manifest.json'), manifestWithBanks(entries));
     }
 
     beforeEach(async () => {

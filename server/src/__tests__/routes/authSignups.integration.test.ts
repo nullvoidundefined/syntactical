@@ -10,7 +10,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, inject, it } from 'vitest';
 
 import type { Database } from '../../clients/database.js';
-import { createFakePasswordBreachClient } from '../../clients/fakePasswordBreachClient.js';
+import { createFakePasswordBreachClient } from '../../testing/fakePasswordBreachClient.js';
 import { createLogger } from '../../clients/logger.js';
 import { withTransaction } from '../../clients/withTransaction.js';
 import { AUTH } from '../../constants/auth.js';
@@ -19,8 +19,7 @@ import type { DeriveKey } from '../../services/passwordHash.js';
 import { hashPassword, verifyPassword } from '../../services/passwordHash.js';
 import { createAuthTestApp } from '../integration/createAuthTestApp.js';
 import { createMigratedDatabase } from '../integration/createMigratedDatabase.js';
-
-const SKIP_DATABASE_TESTS = process.env.SKIP_DOCKER_TESTS === '1' && !process.env.TEST_DATABASE_URL;
+import { SKIP_DATABASE_TESTS } from '../integration/skipDatabaseTests.js';
 
 const CODES_ROUTE = '/v1/auth/codes';
 const SESSIONS_ROUTE = '/v1/auth/sessions';

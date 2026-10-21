@@ -6,14 +6,13 @@
 // On native it is a Modal. Quiz key bindings are inert while it is open.
 import { useEffect, useRef } from 'react';
 
-import { Modal, Platform, Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 
 import { trackEvent } from '../../clients/analyticsClient';
-import { markModalOpen } from '../../state/modalOpenSignal';
 import { useIsReducedMotion } from '../../state/useIsReducedMotion';
 import { AuthButton } from '../auth/AuthButton';
-import { ModalOverlay } from '../layout/ModalOverlay';
-import { wrapTab } from '../layout/wrapTab';
+import { DialogShell } from '../layout/DialogShell';
+import { useModalPanel } from '../layout/useModalPanel';
 
 const HEADING_ID = 'paywall-sheet-heading';
 
@@ -26,34 +25,6 @@ type PaywallSheetProps = {
   price: string | undefined;
 };
 
-function usePanelKeyboard(panelRef: React.RefObject<View | null>, onClose: () => void) {
-  const isWeb = Platform.OS === 'web';
-  // Read through a ref so a new onClose identity does not re-run the focus effect.
-  const onCloseRef = useRef(onClose);
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-  useEffect(() => {
-    if (!isWeb) return undefined;
-    const panel = panelRef.current as unknown as HTMLElement | null;
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    panel?.focus();
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        event.stopPropagation();
-        onCloseRef.current();
-      } else if (event.key === 'Tab' && panel) {
-        wrapTab(event, panel);
-      }
-    }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      previouslyFocused?.focus?.();
-    };
-  }, [isWeb, panelRef]);
-}
-
 export function PaywallSheet({ difficultyLabel, isBuying, message, onBuy, onClose, price }: PaywallSheetProps) {
   const panelRef = useRef<View>(null);
   const isReducedMotion = useIsReducedMotion();
@@ -62,8 +33,7 @@ export function PaywallSheet({ difficultyLabel, isBuying, message, onBuy, onClos
   useEffect(() => {
     trackEvent('paywall_viewed');
   }, []);
-  useEffect(() => markModalOpen(), []);
-  usePanelKeyboard(panelRef, onClose);
+  useModalPanel(panelRef, { onClose });
 
   const slide = { animation: isReducedMotion ? 'none' : 'paywall-slide-up 200ms ease-out' };
   const panel = (
@@ -105,10 +75,9 @@ export function PaywallSheet({ difficultyLabel, isBuying, message, onBuy, onClos
     </View>
   );
 
-  if (isWeb) return <ModalOverlay>{panel}</ModalOverlay>;
   return (
-    <Modal transparent animationType={isReducedMotion ? 'none' : 'slide'} visible onRequestClose={onClose}>
+    <DialogShell animationType={isReducedMotion ? 'none' : 'slide'} onRequestClose={onClose}>
       {panel}
-    </Modal>
+    </DialogShell>
   );
 }

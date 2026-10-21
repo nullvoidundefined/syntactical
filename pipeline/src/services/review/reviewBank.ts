@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path';
 import type { Question } from '@syntactical/content-schema';
 
 import type { ReviewResult } from '../../types/review/ReviewResult.js';
-import { writeJsonAtomic } from '../classify/writeJsonAtomic.js';
+import { writeJsonAtomic } from '../json/writeJsonAtomic.js';
 import { writeFileAtomic } from '../writeFileAtomic.js';
 
 import { buildReviewItems } from './buildReviewItems.js';
@@ -21,7 +21,6 @@ import { renderDecisionLines } from './renderDecisionLines.js';
 import { renderReviewItem } from './renderReviewItem.js';
 
 interface ReviewBankArgs {
-    scope?: 'all' | 'disputed';
     bank: Question[];
     difficulty: string;
     languageId: string;
@@ -63,7 +62,6 @@ export async function reviewBank(args: ReviewBankArgs): Promise<ReviewResult> {
         log,
         observe,
         statuses,
-        scope: args.scope ?? 'all',
     });
     const { kept, problems } = mergeDecisions(
         new Map(items.map((item) => [item.id, fingerprintItem(item)])),

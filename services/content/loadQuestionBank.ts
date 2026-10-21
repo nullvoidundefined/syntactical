@@ -10,6 +10,7 @@ import type { BankContext, BankEntry, CachedBank } from '@syntactical/content-sc
 
 import { ContentFetchError } from '../../clients/ContentFetchError';
 import { apiFetch } from '../../clients/apiClient';
+import { countUtf8Bytes } from '../../clients/countUtf8Bytes';
 import { fetchContentText } from '../../clients/fetchContentText';
 import { logWarning } from '../../clients/logClient';
 import { HTTP_STATUS_OK } from '../../constants/appConfig';
@@ -33,10 +34,6 @@ type LoadQuestionBankArgs = {
 // Language and difficulty ids as the manifest allows them, so a paid bank path
 // is always exactly two plain segments under the API base.
 const BANK_ID_SEGMENT = /^[a-z0-9-]+$/;
-
-function countUtf8Bytes(text: string): number {
-  return new TextEncoder().encode(text).length;
-}
 
 function readFetchedText(url: string, document: string): Promise<string> {
   return fetchContentText(url, CONTENT_LIMITS.bankBytes).catch((err: unknown) => {

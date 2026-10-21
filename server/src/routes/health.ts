@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { Logger } from 'pino';
 
 import { HTTP } from '../constants/http.js';
+import { requestLog } from '../middleware/requestLogger.js';
 
 const {
   STATUS: { OK, SERVICE_UNAVAILABLE },
@@ -21,7 +22,7 @@ function createHealthRouter(db: HealthDb, logger: Logger, stubbed: readonly stri
   });
 
   router.get('/ready', async (_req, res) => {
-    const requestLog = (res.locals.logger as Logger | undefined) ?? logger;
+    const log = requestLog(res, logger);
     try {
       await db.query('SELECT 1');
       res.status(OK).json({ database: 'ok', status: 'ok', ...stubbedField });
@@ -29,7 +30,7 @@ function createHealthRouter(db: HealthDb, logger: Logger, stubbed: readonly stri
       // Log the failure by class and pg code only: a driver message or detail can
       // carry connection strings, role names, or emails, so neither is logged.
       const { code } = (err ?? {}) as { code?: unknown };
-      requestLog.error(
+      log.error(
         { errorName: err instanceof Error ? err.name : 'unknown', pgCode: typeof code === 'string' ? code : undefined },
         'readiness check failed',
       );

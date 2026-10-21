@@ -4,13 +4,14 @@
 // options in order, Escape goes back to the topic step.
 import { Pressable, Text, View } from 'react-native';
 
-import { DIFFICULTIES } from '@syntactical/content-schema';
-
+import { findDifficulty } from '../../services/content/findDifficulty';
+import { findLanguageEntry } from '../../services/content/findLanguageEntry';
 import { listRoundLengths } from '../../services/quiz/roundLength';
 import { useKeyboardNav } from '../../state/useKeyboardNav';
 import { useLanguageManifest } from '../../state/useLanguageManifest';
 
 import { SelectionCard } from './SelectionCard';
+import { pickKeyHint } from './pickKeyHint';
 
 type LengthStepProps = {
   difficulty: string;
@@ -24,8 +25,8 @@ type LengthStepProps = {
 
 export function LengthStep({ difficulty, language, onBack, onSelectLength, poolSize }: LengthStepProps) {
   const { languages } = useLanguageManifest();
-  const label = languages.find(({ id }) => id === language)?.label ?? language;
-  const difficultyLabel = DIFFICULTIES.find(({ id }) => id === difficulty)?.label ?? difficulty;
+  const label = findLanguageEntry(languages, language)?.label ?? language;
+  const difficultyLabel = findDifficulty(difficulty)?.label ?? difficulty;
   const lengths = listRoundLengths(poolSize);
   useKeyboardNav({
     onEscape: onBack,
@@ -51,14 +52,14 @@ export function LengthStep({ difficulty, language, onBack, onSelectLength, poolS
         {lengths.map((length, index) => (
           <SelectionCard
             key={length}
-            keyHint={index + 1}
+            keyHint={pickKeyHint(index + 1)}
             title={`${length} questions`}
             subtitle={poolSize === undefined ? `A random ${length}` : `A random ${length} of ${poolSize}`}
             onSelect={() => onSelectLength(length)}
           />
         ))}
         <SelectionCard
-          keyHint={lengths.length + 1}
+          keyHint={pickKeyHint(lengths.length + 1)}
           title={poolSize === undefined ? 'All questions' : `All ${poolSize} questions`}
           subtitle="Every question in this pool"
           onSelect={() => onSelectLength(undefined)}

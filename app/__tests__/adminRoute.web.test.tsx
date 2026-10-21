@@ -42,10 +42,9 @@ import {
   meReply,
   mixedProducts,
 } from './adminAccessTestSupport';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 
-jest.mock('expo-constants', () => ({
-  expoConfig: { extra: { apiBaseUrl: 'https://api.syntactical.dev/v1/' } },
-}));
+setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),
@@ -76,22 +75,9 @@ jest.mock('@react-native-community/netinfo', () => {
   };
   return { __esModule: true, default: api, ...api };
 });
-jest.mock('expo-router', () => {
-  const router = {
-    back: () => undefined,
-    dismissTo: () => undefined,
-    navigate: () => undefined,
-    push: () => undefined,
-    replace: () => undefined,
-  };
-  return {
-    ...jest.requireActual('expo-router'),
-    router,
-    useGlobalSearchParams: () => ({}),
-    useLocalSearchParams: () => ({}),
-    useRouter: () => router,
-  };
-});
+jest.mock('expo-router', () =>
+  require('../../config/buildExpoRouterMock').buildExpoRouterMock({ readParams: () => ({}) }),
+);
 
 let queryClient: QueryClient;
 

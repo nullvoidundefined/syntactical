@@ -11,6 +11,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { buildBankQuery } from '../services/content/buildBankQuery';
 import { findBankEntry } from '../services/content/findBankEntry';
+import { findLanguageEntry } from '../services/content/findLanguageEntry';
 import { readCachedBank } from '../services/content/readCachedBank';
 
 import { useSignedInUserId } from './AuthProvider';
@@ -34,7 +35,7 @@ const PLACEHOLDER_ENTRY: BankEntry = {
 };
 
 function readOwnedBank(manifest: Manifest, language: string, difficulty: string, ownerUserId: string) {
-  const languageEntry = manifest.languages.find(({ id }) => id === language);
+  const languageEntry = findLanguageEntry(manifest.languages, language);
   if (!languageEntry) return Promise.resolve(null);
   return readCachedBank(language, difficulty, buildBankContext(languageEntry), ownerUserId);
 }
@@ -84,7 +85,14 @@ export function useQuestionBank(language: string, difficulty: string): QuestionB
   const needsDownload = entry !== undefined && localBank?.hash !== hash;
   const canDownload = isPaid ? isPaidEntitled : access.contentBaseUrl !== null;
   const query = useQuery({
-    ...buildBankQuery(queryClient, access, language, difficulty, entry ?? PLACEHOLDER_ENTRY, isPaid ? ownerUserId : null),
+    ...buildBankQuery(
+      queryClient,
+      access,
+      language,
+      difficulty,
+      entry ?? PLACEHOLDER_ENTRY,
+      isPaid ? ownerUserId : null,
+    ),
     enabled: needsDownload && canDownload && !isOwnedPending,
   });
   const { data, isError } = query;
