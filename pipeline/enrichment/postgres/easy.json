@@ -1,0 +1,1294 @@
+{
+  "pg-easy-01": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.pipe-is-logical-or",
+      "rationale": "You likely carried over MySQL habits, where || can mean OR by default. In Postgres, || is the standard-SQL concatenation operator on text, so 'foo' || 'bar' gives 'foobar'. Logical OR is written with the OR keyword."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.pipe-is-logical-or",
+      "rationale": "You may have taken || to be a bit-level operator like | in other languages. Between text values Postgres uses it to join strings, so the result is 'foobar', not a combination of the bytes."
+    }
+  ],
+  "pg-easy-02": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.concat-null-keeps-text",
+      "rationale": "You probably expected NULL to act like an empty string, so 'a' || NULL would just give 'a'. In Postgres, || propagates NULL: if either operand is NULL, the whole result is NULL. Use COALESCE(col, '') or CONCAT() to skip NULLs."
+    }
+  ],
+  "pg-easy-03": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.like-ilike-confusion",
+      "rationale": "ILIKE is not a regex operator. It uses the same % and _ wildcards as LIKE; the only change is that it ignores case. Regex matching in Postgres uses separate operators such as ~, not ILIKE."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.like-ilike-confusion",
+      "rationale": "ILIKE is not the index-friendly one. Its difference is case folding, not indexing. Because it must fold case before comparing, a plain B-tree index doesn't become usable for it, and LIKE isn't barred from indexes because of ILIKE."
+    }
+  ],
+  "pg-easy-04": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You may have thought \\dn was short for 'names' of tables, but \\dn lists schemas. Tables are listed by \\dt, which shows relations of kind table in the schemas on your search_path."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You may have read the 's' as 'show tables' or assumed it covers tables. In psql the 'd' commands are split by object type, and tables are listed by \\dt, not \\ds, which lists sequences."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You may have guessed \\dv because it also prints a list of relations. But it lists views, not tables. The command that lists relations of kind table is \\dt."
+    }
+  ],
+  "pg-easy-05": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You likely remember \\dt as a general listing command, but it lists tables in the current database's visible schemas, not databases. Listing every database on the server is done with \\l, which reads the cluster-wide catalog."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You may have taken \\dn to mean 'database names', but it lists schemas inside the database you're connected to. It can't show other databases on the server; \\l queries the cluster-wide catalog for that."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You may have read \\du as 'databases' or 'database users', but it lists roles, not databases. Roles are a separate object type; \\l is the command that shows each database with its owner, encoding, and privileges."
+    }
+  ],
+  "pg-easy-06": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.psql-c-creates-or-sets-default",
+      "rationale": "You may think \\c saves mydb as a persistent default. It only closes the current connection and opens a new one to mydb for this session. The next psql session starts from its usual connection settings."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.psql-c-creates-or-sets-default",
+      "rationale": "You may think \\c works like CREATE DATABASE IF NOT EXISTS. It only connects to an existing database. If mydb doesn't exist, the connection attempt fails and you stay connected to your current database."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.search-path-misunderstood",
+      "rationale": "You may be treating a database like a schema. search_path orders schemas within one database, but a connection is tied to a single database. \\c opens a new connection to mydb instead of changing search_path."
+    }
+  ],
+  "pg-easy-07": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.psql-quit-commits",
+      "rationale": "You likely assumed \\q tidies up by committing your open work before exiting, like a graceful save. But \\q just closes the connection. Postgres then rolls back the uncommitted transaction, as with any dropped connection. \\q never issues COMMIT for you."
+    }
+  ],
+  "pg-easy-08": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "postgres.psql-x-and-timing-misread",
+      "rationale": "You may think \\x relates to query plans because EXPLAIN output is often long and wide. But \\x only changes layout: it toggles expanded display, showing each row as vertical column/value pairs. Plans come only from running EXPLAIN."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.psql-x-and-timing-misread",
+      "rationale": "It's tempting to read \\x as 'extended width', but it doesn't widen anything. It switches to expanded display, putting each row on its own vertical list of column | value lines, so wide rows fit without relying on a wider terminal."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.psql-x-and-timing-misread",
+      "rationale": "Query duration is reported by a different psql toggle, \\timing. \\x has nothing to do with timing; it toggles expanded display, printing each row as a vertical list of column | value pairs instead of the default grid."
+    }
+  ],
+  "pg-easy-09": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.serial-is-a-trigger-or-column",
+      "rationale": "You may think auto-numbering needs a trigger assigning the id before each insert. SERIAL uses no trigger: it creates a sequence and sets the column's default to nextval() on that sequence, so the default expression supplies the value."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.serial-is-a-trigger-or-column",
+      "rationale": "You may picture the counter living inside the table as a hidden column. The counter is a separate sequence object, named like <table>_<column>_seq, and the id column just defaults to nextval() on it. You can query or reset it directly."
+    }
+  ],
+  "pg-easy-11": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.identity-always-accepts-explicit",
+      "rationale": "You likely assumed an explicit value is always accepted, as with SERIAL or BY DEFAULT identity. But GENERATED ALWAYS refuses an explicit value by default, so this INSERT fails with an error instead of storing 5."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.identity-always-accepts-explicit",
+      "rationale": "You may think Postgres quietly discards your value and uses the generator. It doesn't: GENERATED ALWAYS rejects an explicit value with an error by default, rather than silently replacing it with the next identity value."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.identity-always-accepts-explicit",
+      "rationale": "You may think supplying a value strips the identity property. An INSERT never changes the column definition. With GENERATED ALWAYS the statement is simply refused, and the column stays an identity column."
+    }
+  ],
+  "pg-easy-12": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.unquoted-identifiers-case-preserved",
+      "rationale": "You probably thought Postgres keeps the case you type, so Name would only match a column created as Name. In fact unquoted identifiers are folded to lowercase at creation and at reference, so Name, name and NAME all resolve to the same column."
+    }
+  ],
+  "pg-easy-13": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.unquoted-identifiers-case-preserved",
+      "rationale": "You likely thought double quotes are just another way to write a string, as in MySQL. In Postgres, double quotes mark identifiers and only single quotes make string literals, so \"hello\" is treated as a column reference, not text."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.unquoted-identifiers-case-preserved",
+      "rationale": "You may have expected a missing column to quietly evaluate to NULL. Postgres doesn't do that: a reference to a column that isn't in scope is a parse-time error (\"column does not exist\"), so no value is returned at all."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.unquoted-identifiers-case-preserved",
+      "rationale": "You may have thought an unmatched name just filters everything out, like a WHERE that matches nothing. But \"hello\" is resolved as a column in the select list, and if none exists the query fails with an error before returning any rows."
+    }
+  ],
+  "pg-easy-14": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.varchar-faster-than-text",
+      "rationale": "You likely assumed a bounded VARCHAR(n) is stored like a fixed-width column and so is quicker than open-ended TEXT. Postgres stores both identically, as length-prefixed, possibly TOASTed data. VARCHAR(n) only adds a length check on insert."
+    }
+  ],
+  "pg-easy-15": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.char-n-no-padding",
+      "rationale": "You likely read CHAR(10) as a cap like VARCHAR(10), where 'hi' stays 'hi'. CHAR(n) is fixed-length, so Postgres right-pads shorter values with spaces up to exactly n characters instead of storing them as-is."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.char-n-no-padding",
+      "rationale": "You probably thought a value shorter than the declared length is rejected. Only values that are too long cause trouble; a shorter value is accepted and Postgres right-pads it with spaces to fill all 10 characters."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.char-n-no-padding",
+      "rationale": "You correctly saw that padding happens, but put it on the wrong side. CHAR(n) right-pads, so the spaces come after 'hi' (trailing), not before it, giving 'hi' followed by 8 spaces."
+    }
+  ],
+  "pg-easy-16": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.default-schema-not-public",
+      "rationale": "You may have thought information_schema, the standard metadata schema, is where new objects go. It only holds read-only views describing existing objects. Unqualified tables go to the first schema on the search_path, which is public."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "postgres.default-schema-not-public",
+      "rationale": "You may have assumed tables go into pg_catalog because it's the core schema. It holds Postgres's system tables and built-in objects. User tables created without a schema land in public, the first schema on the default search_path."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.default-schema-not-public",
+      "rationale": "You may have expected a schema literally called 'default', as the word suggests. No such schema exists by default. A new database ships with one named public, first on the search_path, so unqualified CREATE TABLE puts tables there."
+    }
+  ],
+  "pg-easy-17": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.search-path-misunderstood",
+      "rationale": "You may have read \"path\" as a filesystem path, like a PATH for finding files. But search_path isn't about files on disk. It lists schemas, which are namespaces inside a database, that Postgres checks in order to resolve unqualified object names."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.search-path-misunderstood",
+      "rationale": "search_path works inside the connected database and has nothing to do with reaching other databases. It orders schemas, such as app and public, for resolving unqualified names, so app.orders can shadow public.orders."
+    }
+  ],
+  "pg-easy-18": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.returning-shows-wrong-row-version",
+      "rationale": "You may have thought that once DELETE runs, the row is gone and RETURNING has nothing to show, or only gives keys or counts. In Postgres, RETURNING * on DELETE returns the deleted row's last values, as they were just before removal."
+    }
+  ],
+  "pg-easy-19": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.returning-shows-wrong-row-version",
+      "rationale": "You may think RETURNING hands back just the generated key, since that's often what people want after an insert. But RETURNING takes a SELECT-style target list, and `*` means every column, not only the primary key."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.returning-shows-wrong-row-version",
+      "rationale": "You may be mixing this up with the command tag psql prints, like INSERT 0 1. RETURNING produces actual row data using a SELECT-style target list; with `*` you get the inserted row's columns, not a count."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.returning-shows-wrong-row-version",
+      "rationale": "You may assume the result mirrors the INSERT's column list (only email here). But `*` works as in SELECT and returns every column of the new row, including ones you didn't name, such as generated ids or defaults."
+    }
+  ],
+  "pg-easy-20": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.on-conflict-do-nothing-errors-or-upserts",
+      "rationale": "You probably think a duplicate key always errors, even with ON CONFLICT. But DO NOTHING swallows that specific unique conflict, so no error is raised and the statement carries on as if the row had never been proposed."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.on-conflict-do-nothing-errors-or-upserts",
+      "rationale": "You may be mixing DO NOTHING up with DO UPDATE. DO NOTHING leaves the existing row untouched and drops the proposed one; nothing is replaced or overwritten, so it is not an upsert."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.on-conflict-do-nothing-errors-or-upserts",
+      "rationale": "You likely assume a conflict undoes the statement's other work. With DO NOTHING the conflict is swallowed rather than raised, so nothing is aborted and earlier inserts are not rolled back; only the conflicting row is skipped."
+    }
+  ],
+  "pg-easy-21": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.on-conflict-target-meaning",
+      "rationale": "You likely read (id) as the columns to update, since upserts often overwrite on conflict. But the target only names which unique constraint to watch for. With DO NOTHING nothing is overwritten; updates would need DO UPDATE SET."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.on-conflict-target-meaning",
+      "rationale": "You may think (id) picks a value to hand back for skipped rows. The target names the unique constraint whose violation is intercepted. Returning values is a separate job for RETURNING, and it isn't tied to this clause."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.on-conflict-target-meaning",
+      "rationale": "You probably thought (id) tells Postgres to build an index on those columns. It doesn't create anything. It refers to an existing unique or exclusion constraint whose violation you want to catch, and the constraint must already exist."
+    }
+  ],
+  "pg-easy-22": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.array-literal-syntax",
+      "rationale": "You likely thought square brackets inside a quoted string make an array, as in JSON or Python. In Postgres that is just a text string, and '[1, 2, 3]' is not valid array syntax. Arrays are built with ARRAY[1, 2, 3] (or the '{1,2,3}' text form)."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.array-literal-syntax",
+      "rationale": "You probably treated ARRAY like a function called with parentheses. Postgres' constructor uses square brackets, ARRAY[1, 2, 3]. ARRAY(...) with parentheses is not the element-list constructor, so this does not build the array from those values."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.array-literal-syntax",
+      "rationale": "You likely assumed a generic LIST(...) constructor exists, as in other languages. Postgres has no such function for this. Its native array constructor is ARRAY[1, 2, 3], which builds a typed array and infers the element type."
+    }
+  ],
+  "pg-easy-23": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.array-literal-syntax",
+      "rationale": "A learner picking false likely thinks only ARRAY[1,2,3] builds a real array and that '{1,2,3}' is just a string. But cast with ::int[], the curly-brace text literal becomes an int array, the same value ARRAY[1,2,3] produces."
+    }
+  ],
+  "pg-easy-24": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "postgres.arrays-zero-indexed",
+      "rationale": "You likely assumed the first element sits at index 0, so [1] must be the second element, 20. Postgres arrays are 1-based by default, so [1] is the first element, 10. Index 2 would give 20."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.arrays-zero-indexed",
+      "rationale": "You probably believed arrays are 0-indexed and that index 1 is therefore invalid. Postgres arrays start at 1, so [1] is valid and returns 10. Even an out-of-range index would not raise an error; it returns NULL."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.arrays-zero-indexed",
+      "rationale": "You may have thought index 1 is out of range, since NULL is what Postgres returns for a missing element. But arrays are 1-based by default, so [1] is the first element, 10, which exists. NULL would only come from a truly out-of-range index."
+    }
+  ],
+  "pg-easy-25": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.arrays-zero-indexed",
+      "rationale": "You may have read the second argument as a zero-based position or thought 0 signals an empty result. The call returns the length of dimension 1, which is the element count, 3. Postgres uses 0 for neither; out-of-range gives NULL."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "postgres.arrays-zero-indexed",
+      "rationale": "You probably took the 1 as the return value, or thought the function reports the dimension or first index. The 1 only selects which dimension to measure. The function returns that dimension's length, and ARRAY[10, 20, 30] has 3 elements."
+    }
+  ],
+  "pg-easy-26": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.json-arrow-operators-confused",
+      "rationale": "You probably thought -> pulls out the value as plain text. But -> keeps the result as jsonb, so you get the object {\"name\": \"Ana\"}, not text. Only the double-arrow variant ->> converts the extracted value to text."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.json-arrow-operators-confused",
+      "rationale": "You may think -> is limited to top-level scalar values. In fact it extracts a field or array element at any level, and returns jsonb, which is why you can chain it: data -> 'user' -> 'name'. No error occurs here."
+    }
+  ],
+  "pg-easy-28": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "postgres.jsonb-containment-misread",
+      "rationale": "You likely read @> as an equality check. But the left value here has an extra key, \"b\", and the result is still true. @> tests whether the left contains the right's pairs or elements, so the rest of the left can differ."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.jsonb-containment-misread",
+      "rationale": "You probably thought only key names matter. @> compares key/value pairs, not just keys. '{\"a\": 2}' would not be contained in '{\"a\": 1, \"b\": 2}' even though the key a exists, because the value must match too."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.jsonb-containment-misread",
+      "rationale": "You likely took @> for an ordering comparison like > on text. It does no ordering or alphabetical comparison. It checks whether the left document structurally contains the right one's key/value pairs or array elements."
+    }
+  ],
+  "pg-easy-29": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.cast-operator-misread",
+      "rationale": "You probably thought every value is turned into a string inside JSON. The function keeps scalar types, so 1 stays a JSON number and true stays a JSON boolean. Only the keys are text, giving {\"id\": 1, \"active\": true}."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.enum-domain-composite-confusion",
+      "rationale": "You likely assumed the arguments must all share one type, as with an array. jsonb_build_object accepts a mix of scalar types in its alternating key/value list, so text keys alongside a number and a boolean are fine and no error occurs."
+    }
+  ],
+  "pg-easy-30": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.now-changes-within-transaction",
+      "rationale": "You likely assumed NOW() reads the wall clock on every call, so a long gap would give different values. In Postgres NOW() is fixed at the transaction's start time, so every call in that transaction returns the same value. Use clock_timestamp() for advancing time."
+    }
+  ],
+  "pg-easy-31": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "postgres.current-date-type-confusion",
+      "rationale": "This assumes CURRENT_DATE is just a timestamptz with the time set to midnight. It is a true date type with no clock time at all, so it isn't a timestamptz. Only NOW() carries date, time and time zone."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.current-date-type-confusion",
+      "rationale": "CURRENT_DATE is correctly a date, but NOW() is not a plain timestamp. It returns timestamptz, which includes a time zone along with the date and microsecond-precision time."
+    }
+  ],
+  "pg-easy-32": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.now-changes-within-transaction",
+      "rationale": "Choosing false suggests you think every timestamp function is frozen at transaction start. That's true of NOW(), but clock_timestamp() is volatile and reads the real clock each call, so later calls in one transaction can return later values."
+    }
+  ],
+  "pg-easy-33": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.coalesce-nullif-misread",
+      "rationale": "You may think COALESCE just passes the column through, so a NULL stays NULL. But COALESCE returns the first non-NULL argument, and since discount is NULL, it moves on and returns the literal 0 instead."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.coalesce-nullif-misread",
+      "rationale": "You may expect NULL to cause a failure, or that supplying a fallback value is misuse. COALESCE is built for this: it skips NULL arguments and returns the first non-NULL one, here 0, with no error raised."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.coalesce-nullif-misread",
+      "rationale": "You may think the default turns into text or blank output. COALESCE returns its first non-NULL argument unchanged, and that argument is the numeric literal 0, not an empty string."
+    }
+  ],
+  "pg-easy-10": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.bigserial-same-range",
+      "rationale": "You likely assumed the \"BIG\" only changes naming or display, so both share one range. In fact SERIAL makes a 4-byte integer column with an integer-capped sequence, while BIGSERIAL makes an 8-byte bigint column with a far larger range."
+    }
+  ],
+  "pg-easy-27": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.json-arrow-operators-confused",
+      "rationale": "You may be thinking of the path operators #> and #>>, which follow nested paths. Both -> and ->> extract a single field at one level. They differ in result type: -> gives jsonb, ->> gives text."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.json-arrow-operators-confused",
+      "rationale": "Error behavior isn't what separates them. Both operators handle a missing key the same way. The real difference is the return type: -> keeps the result as jsonb, while ->> converts it to plain text."
+    }
+  ],
+  "pg-easy-34": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.coalesce-nullif-misread",
+      "rationale": "You likely thought a NULL first argument makes the whole result NULL, like NULL in arithmetic. COALESCE skips NULLs and returns the first non-NULL argument, so a and b are passed over and it reaches c."
+    },
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "postgres.coalesce-nullif-misread",
+      "rationale": "You may have assumed COALESCE just returns its first argument or only checks a. It evaluates arguments in order and returns the first non-NULL one. Since a is NULL, it moves on, so the value of a is never returned."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.coalesce-nullif-misread",
+      "rationale": "You may have thought COALESCE returns the last argument or keeps going through all of them. It stops at the first non-NULL value, which is c, and never evaluates d. Later arguments only matter if every earlier one is NULL."
+    }
+  ],
+  "pg-easy-35": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.distinct-on-ordering",
+      "rationale": "You likely thought duplicates are removed entirely, like a filter for unique-only values. DISTINCT ON keeps the first row for each customer_id, so every customer still appears once. Which row survives is decided by the ORDER BY."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.distinct-on-ordering",
+      "rationale": "You likely thought DISTINCT ON picks an arbitrary row and the ORDER BY only sorts output. Here ORDER BY defines \"first\" per customer_id, so created_at DESC decides which row is kept. Without a matching ORDER BY, the choice isn't reliable."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.distinct-on-ordering",
+      "rationale": "You likely assumed that the ON column is the only one returned, like a plain DISTINCT on one column. With SELECT *, DISTINCT ON returns the entire chosen row for each customer_id, not just the key column."
+    }
+  ],
+  "pg-easy-36": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.distinct-on-ordering",
+      "rationale": "You likely assumed DISTINCT ON (col) alone picks a stable row per group. It keeps whichever row arrives first, and without an ORDER BY leading with col that arrival order is planner-dependent and can change between runs."
+    }
+  ],
+  "pg-easy-37": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.boolean-accepts-integers-or-any-text",
+      "rationale": "You likely thought 1 works because it means true in many languages. In Postgres a bare, unquoted integer is an integer type, not a boolean, and it isn't implicitly cast, so the insert errors. Only the string '1' is accepted as text."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.boolean-accepts-integers-or-any-text",
+      "rationale": "You may have assumed any word-like string is accepted and read as true or false. Postgres's boolean parser only accepts specific spellings such as 'true', 'yes', 'y', 't', '1' and their negatives. 'maybe' isn't one, so it is rejected."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.boolean-accepts-integers-or-any-text",
+      "rationale": "You might have expected an empty string to be treated as false, as in some languages. Postgres's boolean input parser doesn't accept '' as a valid spelling, so it is rejected rather than becoming false. It is also not the same as NULL."
+    }
+  ],
+  "pg-easy-38": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.boolean-accepts-integers-or-any-text",
+      "rationale": "You likely thought TRUE and FALSE must be written in exact case, like string values or quoted identifiers. But unquoted SQL keywords are case-insensitive in Postgres, so true, True, and TRUE all parse as the same boolean literal."
+    }
+  ],
+  "pg-easy-39": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.check-constraint-scope",
+      "rationale": "You may think CHECK is a one-time gate at insert. It is enforced on every INSERT and UPDATE, so an UPDATE that sets price to 0 or a negative number produces a failing row and is rejected just like a bad insert."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.check-constraint-scope",
+      "rationale": "You may think a violated CHECK is only a soft warning. When the expression evaluates to false, the INSERT or UPDATE is rejected with an error and the row is not stored, so the rule is actually enforced."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.check-constraint-scope",
+      "rationale": "You may think CHECK works like a view filter that hides bad rows. It acts at write time: a row where the expression is false is rejected on INSERT or UPDATE, so it never gets stored and SELECT has nothing to hide."
+    }
+  ],
+  "pg-easy-40": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.explain-executes-query",
+      "rationale": "You likely thought EXPLAIN runs the query to time it. Plain EXPLAIN only has the planner print its chosen plan with estimated costs and row counts; nothing executes, so even EXPLAIN DELETE leaves the data untouched."
+    }
+  ],
+  "pg-easy-41": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.catalog-vs-information-schema",
+      "rationale": "You may have thought pg_attribute, which also describes columns, is the standard way to list them. It lives in Postgres's native pg_catalog, exposes Postgres-specific detail, and isn't portable to MySQL or SQL Server. The standard columns view is in information_schema."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.catalog-vs-information-schema",
+      "rationale": "You may have assumed any view that is easy to query is standard. pg_stat_activity is native to Postgres's pg_catalog and shows Postgres-specific session activity. Other engines don't offer it, so it isn't part of the portable information_schema."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.catalog-vs-information-schema",
+      "rationale": "The name pg_indexes may look like a generic listing of indexes, but it belongs to Postgres's own pg_catalog. It is not defined by the SQL standard and won't behave the same on other engines, unlike views inside information_schema."
+    }
+  ],
+  "pg-easy-42": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.catalog-vs-information-schema",
+      "rationale": "You may think the catalog view reaches across every database. Both views only describe the database you are connected to. The real advantage is that pg_tables exposes Postgres-specific fields such as tablespace and rowsecurity."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.catalog-vs-information-schema",
+      "rationale": "You may think pg_tables is a statistics view with row counts and sizes. It lists table metadata, not data volume. Its edge is Postgres-only columns like tablespace and rowsecurity, which the standard information_schema view can't show."
+    }
+  ],
+  "pg-easy-43": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You likely picked \\dt because it's the most familiar listing command. But \\dt lists tables, not schemas. Schemas are listed with \\dn, the namespace-level counterpart to \\dt."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You may have remembered \\df as a general listing command, but it lists functions, not schemas. To list the schemas in the current database you use \\dn."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "\\dv looks like it could mean 'database' or 'view of schemas', but it lists views. Schemas are listed by \\dn, which follows the same \\d<letter> pattern as \\dt, \\df and \\dv."
+    }
+  ],
+  "pg-easy-44": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You may have thought \\dn was the function listing, since all these commands start with \\d. But \\dn lists schemas. Functions are listed with \\df, which shows argument and return types for functions on your search_path."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You may have picked \\dv because it looks like a general 'list objects' command. It lists views, not functions. Functions are shown by \\df, which can also take a pattern such as \\df app.* to filter."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You may have guessed \\du meant 'user-defined' things, matching the 'user-defined functions' wording. It actually lists roles (users). Functions are listed by \\df, not \\du."
+    }
+  ],
+  "pg-easy-45": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.psql-x-and-timing-misread",
+      "rationale": "You may think \\timing does nothing like this, or that timing needs EXPLAIN ANALYZE. In fact \\timing is a toggle: once on, psql prints a \"Time: N ms\" line after every statement's result, measured client-side around the round trip."
+    }
+  ],
+  "pg-easy-46": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "postgres.current-user-and-version-misread",
+      "rationale": "You likely thought the function reports a server-wide default database from configuration. It doesn't: a connection is scoped to exactly one database, and current_database() returns the name of the one this session is actually connected to."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.search-path-misunderstood",
+      "rationale": "You probably mixed up databases with schemas. The search_path lists schemas for resolving unqualified names, but current_database() reports the database the session is connected to, which sits above schemas."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.current-user-and-version-misread",
+      "rationale": "You likely assumed the function returns the internal numeric identifier. It returns the database's name as text, which is why it is handy in monitoring queries and multi-tenant setups where names differ."
+    }
+  ],
+  "pg-easy-47": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.current-user-and-version-misread",
+      "rationale": "You likely read current_user as the OS account running the server, like a shell whoami. It is a database role, the one in effect for privilege checks, and it has no connection to the operating-system user that started Postgres."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.current-user-and-version-misread",
+      "rationale": "You likely think current_user always shows the role that logged in. That is session_user. current_user follows the role in effect, so after SET ROLE or SET SESSION AUTHORIZATION it changes while session_user stays the same."
+    }
+  ],
+  "pg-easy-48": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.current-user-and-version-misread",
+      "rationale": "You likely thought version() reports the psql program you launched. It is a SQL function run on the server, so it describes the server's Postgres release, platform, and compiler, which confirms what you are actually connected to."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.current-user-and-version-misread",
+      "rationale": "You may have assumed version() reports your application's schema or migration state. It knows nothing about migrations. It returns a descriptive string about the Postgres server: its release, platform, and compiler."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.current-user-and-version-misread",
+      "rationale": "The integer form like 170002 exists, but version() doesn't return it. It returns a descriptive text string with release, platform, and compiler. The number comes from current_setting('server_version_num')."
+    }
+  ],
+  "pg-easy-50": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.cast-operator-misread",
+      "rationale": "You may have read :: as a namespace separator, as in some other languages' schema::table. In Postgres, schemas are qualified with a dot (schema.table). Here :: sits between a value and a type, converting '123' to int."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.cast-operator-misread",
+      "rationale": "You may have taken the text after :: as a label for the result column. Naming a column needs AS or an alias. The :: operator converts the value on its left to the type on its right, so '123' becomes an integer."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.cast-operator-misread",
+      "rationale": "You may have thought :: only checks the type and fails on a mismatch. It actually converts the value, as CAST does. The text '123' is not an int, yet it works because it is converted to the integer 123."
+    }
+  ],
+  "pg-easy-51": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.cast-operator-misread",
+      "rationale": "You likely thought `::` is a distinct Postgres-specific mechanism with its own conversion behavior. It isn't: `::` is just an alternate spelling of the same CAST expression, invoking the same cast function, so the two forms are interchangeable wherever a cast is legal."
+    }
+  ],
+  "pg-easy-52": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.interval-arithmetic-misread",
+      "rationale": "You likely thought a day is just a count of seconds, 86400. But interval is its own type holding separate months, days, and microseconds parts, not a single seconds total, so '1 day' stays a day-based duration."
+    }
+  ],
+  "pg-easy-53": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.interval-arithmetic-misread",
+      "rationale": "You probably thought timestamps and intervals can't be mixed with +. Postgres overloads + and - for a timestamp or date plus an interval, so this is valid and shifts the value forward by 7 days."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.now-changes-within-transaction",
+      "rationale": "You likely thought NOW() changes per row, so the sum is recomputed each time. NOW() returns the transaction start time, so it is fixed within a transaction, and the result is the same value everywhere."
+    }
+  ],
+  "pg-easy-54": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.interval-arithmetic-misread",
+      "rationale": "You likely expected AGE to behave like a plain subtraction that yields a raw day count. AGE returns an interval in calendar-aware units such as years and months, not a bare integer of days."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.interval-arithmetic-misread",
+      "rationale": "You probably thought AGE reports the span as total days. It uses calendar-aware units like years and months, so the result reads as 1 year rather than 365 days. Plain subtraction is what gives raw days."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.interval-arithmetic-misread",
+      "rationale": "You may have reversed the argument order. AGE subtracts the second timestamp from the first, so a later first argument gives a positive interval of 1 year. A negative result would need the earlier date first."
+    }
+  ],
+  "pg-easy-55": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.set-returning-functions-single-row",
+      "rationale": "You likely thought generate_series packs its values into one array value. It is a set-returning function: in FROM it yields one row per value, so 1 through 5 come back as five separate rows, not a single array."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.set-returning-functions-single-row",
+      "rationale": "You may have only seen generate_series used for building date calendars and assumed it is date-only. It also works on integers, so (1, 5) is valid and returns the rows 1 to 5 instead of raising an error."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.set-returning-functions-single-row",
+      "rationale": "You probably read it as collapsing the range to one value, like a count or the last number. generate_series is not an aggregate; it returns a set with one row for each value from 1 to 5, not a single row."
+    }
+  ],
+  "pg-easy-56": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.aggregate-functions-misread",
+      "rationale": "You likely mixed STRING_AGG up with array_agg, which does return an array. STRING_AGG takes a delimiter and returns a single text value with the names joined by ', ', not an array of names."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.aggregate-functions-misread",
+      "rationale": "You probably thought STRING_AGG sorts as it joins. It doesn't sort on its own. Values appear in no guaranteed order unless you add an ORDER BY inside the aggregate call, such as STRING_AGG(name, ', ' ORDER BY name)."
+    }
+  ],
+  "pg-easy-57": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.coalesce-nullif-misread",
+      "rationale": "This is the original string, as if nothing matched or the call changed nothing. But '-' does match the dashes in the text, and regexp_replace substitutes them with '/'. With 'g' all of them are replaced."
+    }
+  ],
+  "pg-easy-58": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.like-ilike-confusion",
+      "rationale": "You likely read ~* as the plain case-sensitive match. The star is what makes it fold case, so 'Jan' and 'JAN' also match. The case-sensitive version is ~ without the star, which would be the behavior you described."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.like-ilike-confusion",
+      "rationale": "You may have ignored the ^ anchor. In a POSIX regex, ^ pins the match to the start of the string, so 'jan' appearing later in name doesn't match. Without the anchor, ~* '.jan' style patterns would match anywhere."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.like-ilike-confusion",
+      "rationale": "You may have read the ~ as negation, as in some languages. In Postgres ~* is a positive case-insensitive regex match. Negation is written with a leading ! as in !~*, so this tests for a match, not a non-match."
+    }
+  ],
+  "pg-easy-59": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.catalog-vs-information-schema",
+      "rationale": "You likely thought LIMIT was the only form Postgres accepts, and that the SQL-standard FETCH FIRST n ROWS ONLY belongs to other databases. Postgres supports both and they behave the same. The standard form helps if the query must also run on Oracle or DB2."
+    }
+  ],
+  "pg-easy-60": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.nulls-and-distinct-from",
+      "rationale": "You may think IS DISTINCT FROM quietly converts NULL to an empty string. It doesn't. NULL is not '' and no conversion happens; the operator just treats NULL as a comparable value, so NULL vs NULL is 'not distinct' and NULL vs '' is distinct."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.nulls-and-distinct-from",
+      "rationale": "You may expect NULL input to cause an error with one of these operators. Neither one raises an error. The difference is that <> returns NULL when either side is NULL, while IS DISTINCT FROM always returns a definite true or false."
+    }
+  ],
+  "pg-easy-61": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.enum-domain-composite-confusion",
+      "rationale": "You likely think ENUM is just shorthand for a CHECK (col IN (...)) on each column. But CREATE TYPE defines one reusable type shared by any columns or tables, with its own ordering. A CHECK only guards a single column and has no shared type identity."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.enum-domain-composite-confusion",
+      "rationale": "You may picture the three labels stored as rows in a reference table. CREATE TYPE ... AS ENUM instead creates a genuine type, not a table of rows. Columns are declared with that type directly, and values are compared by the declared label order."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.enum-domain-composite-confusion",
+      "rationale": "You may see the labels as text that sorts alphabetically, like a text domain. An enum is its own type, and values compare and sort by declared list order: 'sad' < 'ok' < 'happy', not alphabetical order, which would put 'happy' first."
+    }
+  ],
+  "pg-easy-62": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.enum-domain-composite-confusion",
+      "rationale": "You may have read point_2d as a renamed version of Postgres's built-in point type. CREATE TYPE ... AS (...) defines a brand-new composite type from the fields you list. It is not an alias and does not reference the geometric type."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.enum-domain-composite-confusion",
+      "rationale": "The column list looks like a table definition, so it's tempting to think a table was created. CREATE TYPE only defines a reusable composite type. It stores no rows. A table would need CREATE TABLE, though every table does get a matching row type."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.enum-domain-composite-confusion",
+      "rationale": "Two int values may suggest an int[2] array. A composite type is different: its fields are named (x and y) and each has its own type, and they are accessed by name rather than by array subscript. It is not an array type."
+    }
+  ],
+  "pg-easy-63": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.enum-domain-composite-confusion",
+      "rationale": "You likely thought the CHECK was just a label on an integer alias. In Postgres the CHECK is a real constraint: any column or variable using the domain has it enforced, so a value like 0 or -5 is rejected."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.check-constraint-scope",
+      "rationale": "You may have read this as a global rule applied to existing integer columns. CREATE DOMAIN only defines a new named type; the CHECK applies only where you declare columns using positive_int, not to ordinary integer columns."
+    }
+  ],
+  "pg-easy-64": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You likely think \\copy is just a shorthand for COPY, so both run on the server. But COPY reads or writes files on the server's filesystem, while \\copy is a psql wrapper that streams data through your client connection, so it can use a file on your own machine."
+    }
+  ],
+  "pg-easy-65": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.check-constraint-scope",
+      "rationale": "You may think COPY is fast because it cuts corners on validation. It doesn't: COPY still enforces CHECK and foreign key constraints and fires row-level triggers. The speed comes from skipping per-statement overhead, not from skipping checks."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.expression-defeats-index",
+      "rationale": "You may believe COPY turns indexes off and rebuilds them afterward. COPY has no such behavior; its gain is a bulk-loading path that avoids per-row parsing, planning, and round trips. Dropping and rebuilding indexes would be a separate manual step."
+    }
+  ],
+  "pg-easy-66": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.cast-operator-misread",
+      "rationale": "You likely assumed a decimal literal like 3.14 becomes a 4-byte float. Postgres doesn't pick a floating-point type for it; an unqualified decimal literal resolves to numeric unless you explicitly cast it, e.g. 3.14::float4."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.cast-operator-misread",
+      "rationale": "You probably expected 3.14 to default to a floating-point type, as in many languages. In Postgres an unqualified decimal literal is numeric, not double precision, unless you cast it, such as 3.14::float8."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.cast-operator-misread",
+      "rationale": "You may have thought pg_typeof reports a simplified or truncated type. It reports the actual resolved type of the expression, and 3.14 has a fractional part, so it resolves to numeric, not an integer type."
+    }
+  ],
+  "pg-easy-67": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.sequences-rollback",
+      "rationale": "You likely read \"next\" as a peek at what comes up. But nextval() has a side effect: it permanently advances the counter and returns the new value. Peeking without changing anything is not something this function does."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.sequences-rollback",
+      "rationale": "You likely assumed the sequence follows transaction rules, so a rollback would undo the advance. Sequences are independent of transactions: the advance is permanent even after a rollback, so concurrent transactions never get the same value."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.sequences-rollback",
+      "rationale": "That describes currval(), which re-reads the value your session last obtained without advancing anything. nextval() does the opposite: it advances the counter and returns the new value."
+    }
+  ],
+  "pg-easy-68": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.sequences-rollback",
+      "rationale": "You likely treated nextval() like an ordinary table change that a rollback undoes. Sequence advances are exempt from rollback. If they were returned, concurrent transactions could receive the same value. Gaps after aborted inserts are normal."
+    }
+  ],
+  "pg-easy-69": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.enum-domain-composite-confusion",
+      "rationale": "You likely read INHERITS as a relationship like a foreign key. But INHERITS adds no referencing column or constraint; the child automatically gets the parent's columns and is included in parent queries, which is different from a foreign key link."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.enum-domain-composite-confusion",
+      "rationale": "You likely thought INHERITS works like CREATE TABLE ... AS or LIKE, a one-time copy of columns. With INHERITS the link persists: the child stays tied to the parent and its rows are included in queries against the parent by default."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.enum-domain-composite-confusion",
+      "rationale": "You may have assumed inheritance means shared storage, like a view over one set of rows. The child is a separate table with its own rows; those rows simply show up when you query the parent, which includes children by default."
+    }
+  ],
+  "pg-easy-70": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.now-changes-within-transaction",
+      "rationale": "You may think the default is computed once, at CREATE TABLE, and frozen. A DEFAULT can be any expression, including a function call, and it is evaluated fresh for each row that omits the column, so every insert gets its own time."
+    }
+  ],
+  "pg-easy-71": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.current-user-and-version-misread",
+      "rationale": "This treats the UUID as a session identifier. gen_random_uuid() doesn't look up session state; each call just generates a fresh random version-4 UUID, usually used as a primary key value."
+    }
+  ],
+  "pg-easy-72": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.catalog-vs-information-schema",
+      "rationale": "You may have read 'pgcrypto' as a switch for encrypting stored data. It only registers a set of cryptographic functions and types in the current database. It doesn't encrypt tables or change how data is stored on disk."
+    }
+  ],
+  "pg-easy-73": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You may have remembered \\df as an extension-related listing because extensions often provide functions. But \\df lists functions, not the extensions that registered them. Extensions are listed by \\dx."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You may have thought \\dn covers extensions, perhaps because they add objects to schemas. But \\dn lists schemas (namespaces) in the database. Installed extensions and their versions are shown by \\dx."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You may have picked \\dt as the general \"list things\" command. But \\dt lists tables only, not extensions. To see extensions installed in the current database with their versions, use \\dx."
+    }
+  ],
+  "pg-easy-74": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.like-ilike-confusion",
+      "rationale": "You may be mixing this up with ILIKE, which is the case-insensitive matching tool. Dollar quoting only changes how the literal is delimited. The text inside is stored exactly as written, and comparisons stay case-sensitive."
+    }
+  ],
+  "pg-easy-75": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.aggregate-functions-misread",
+      "rationale": "You may have thought each later row group overwrites the earlier ones, like repeated assignments. In fact every comma-separated group in VALUES becomes its own row, so (1, 2), (3, 4) and (5, 6) are all inserted."
+    }
+  ],
+  "pg-easy-76": [
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You likely mixed up the SQL keyword TABLE with psql meta-commands like \\d, which describe table structure. TABLE is an ordinary SQL statement that returns the table's rows, not its column definitions."
+    }
+  ],
+  "pg-easy-77": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.enum-domain-composite-confusion",
+      "rationale": "You likely thought VALUES only works as part of INSERT, since that's where it's usually seen. But VALUES is a full query on its own: it can stand alone and returns literal rows, or serve as a subquery or CTE source."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.set-returning-functions-single-row",
+      "rationale": "You probably assumed rows need a stored table, so Postgres must create one called values. A standalone VALUES just returns literal rows on the fly as a result set. Nothing is created or persisted, no CREATE TABLE involved."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.array-literal-syntax",
+      "rationale": "You likely read the tuples as array-like literals bundled into one value. Each parenthesized tuple is its own row, so this yields two rows with two columns each, not a single row holding an array."
+    }
+  ],
+  "pg-easy-78": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.set-returning-functions-single-row",
+      "rationale": "You likely thought unnest just returns the array unchanged as a single value. It is a set-returning function that expands the array sideways into one row per element, so you get three rows rather than one row holding an array."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.set-returning-functions-single-row",
+      "rationale": "You may have confused unnest with a function that measures the array, like array_length or cardinality. unnest doesn't count anything; it expands the array into one row per element, giving rows 1, 2 and 3."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.set-returning-functions-single-row",
+      "rationale": "You probably believed unnest is limited to jsonb values. It works on ordinary Postgres arrays like ARRAY[1,2,3], expanding them into one row per element, so the query runs fine and returns three rows."
+    }
+  ],
+  "pg-easy-79": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.aggregate-functions-misread",
+      "rationale": "You likely thought array_agg removes duplicates like DISTINCT. It doesn't: it packs every value in the group into the array, repeats included. Deduplication would need DISTINCT inside the call, as in array_agg(DISTINCT product)."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.aggregate-functions-misread",
+      "rationale": "An aggregate collapses each group into one row, so it can't produce one array per product. array_agg packs all the group's values into a single array, giving one array per customer_id, not many one-element arrays."
+    }
+  ],
+  "pg-easy-80": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You likely read `\\!` as shell-style history repetition, like `!!`. In psql the `!` after the backslash means \"shell escape\": it passes its argument to the operating system shell. It doesn't re-run any earlier query."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.psql-quit-commits",
+      "rationale": "You probably mixed up `\\!` with the quit meta-command `\\q`, reading the `!` as forceful. `\\!` doesn't exit or discard anything. It runs an OS shell command, or opens a subshell, and you stay connected to Postgres."
+    }
+  ],
+  "pg-easy-81": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You likely mixed up \\i with \\copy because both read a local file. \\copy loads data rows into a table. \\i reads a script and feeds its lines to psql as if you had typed them, so the commands in it run."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You may be thinking of a viewing command, like a pager or file display. \\i doesn't just print the file. It reads the file and sends its contents to psql line by line, so the SQL and any meta-commands in it execute."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You may believe \\i launches the script separately. It doesn't. psql reads the file and feeds it into your current session line by line, exactly as if you had pasted it in, so it runs right there, not in the background."
+    }
+  ],
+  "pg-easy-83": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.current-date-type-confusion",
+      "rationale": "You likely mixed this up with pg_size_pretty(), which formats a size as text like \"8 MB\". pg_database_size itself returns a plain byte count; the pretty-printing is a separate function usually wrapped around it."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.catalog-vs-information-schema",
+      "rationale": "You probably think the function reports a quota or cap. It measures actual usage: the on-disk footprint of everything in the database, in bytes. It does not read any configured limit, so it grows as data is added."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.catalog-vs-information-schema",
+      "rationale": "You likely assumed it counts only table data. It sums the on-disk size of every table, index, and other object in the database, so indexes are included in the byte total rather than excluded."
+    }
+  ],
+  "pg-easy-84": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.coalesce-nullif-misread",
+      "rationale": "You likely thought NULLIF just hands back the first value, so 0 comes out. But NULLIF(a, b) returns NULL when a equals b. Since quantity is 0 and the second argument is 0, the result is NULL, not 0."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.coalesce-nullif-misread",
+      "rationale": "You may have assumed a zero argument triggers an error, as dividing by zero would. NULLIF itself never errors here; it returns NULL when the arguments match. That NULL is what lets total / NULLIF(quantity, 0) avoid the error."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.coalesce-nullif-misread",
+      "rationale": "You might have read NULLIF as a sentinel-style 'not found' function returning -1. NULLIF has no such value: when both arguments are equal it returns NULL, and otherwise it returns the first argument unchanged."
+    }
+  ],
+  "pg-easy-85": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.aggregate-functions-misread",
+      "rationale": "Picking 3 suggests you thought GREATEST returns the first argument, or something else positional. It compares all arguments and returns the largest, which here is 7, not whichever value is listed first."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.aggregate-functions-misread",
+      "rationale": "Picking 2 suggests you mixed up GREATEST with LEAST, or thought it returned the last argument. GREATEST returns the largest value, 7. LEAST is the function that would return 2, the smallest."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.set-returning-functions-single-row",
+      "rationale": "An array result suggests you thought GREATEST collects its arguments, like array_agg or unnest-style functions. It compares its arguments and returns one scalar value, the largest, which is 7."
+    }
+  ],
+  "pg-easy-86": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.current-date-type-confusion",
+      "rationale": "You probably thought the pattern trims the timestamp down to a date, like a cast to date. to_char never returns a date or timestamp type; it returns text built from the template, so 'YYYY-MM-DD' gives a string like '2024-05-17'."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.current-date-type-confusion",
+      "rationale": "You may think to_char is only for numbers. It also formats date/time values into text using tokens like YYYY, MM, DD, HH24, and it has a separate numeric pattern language too, so passing NOW() is valid."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.current-date-type-confusion",
+      "rationale": "You probably believed DateStyle controls the output here. When you give to_char a template, the template decides the layout. DateStyle only affects the default text output of date values, not an explicit pattern."
+    }
+  ],
+  "pg-easy-87": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.current-date-type-confusion",
+      "rationale": "You likely read the format pattern as an output template, which is what to_char does. to_date goes the other way: it takes text and uses the pattern to parse it into a real date value, not to produce a formatted string."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.current-date-type-confusion",
+      "rationale": "You may have assumed a function taking a string and a pattern validates it and returns true or false. to_date doesn't return a boolean; it parses the text per the pattern and returns a date value (or errors if it can't parse)."
+    }
+  ],
+  "pg-easy-88": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.current-date-type-confusion",
+      "rationale": "You likely expected EXTRACT to give a readable label like \"May\". It pulls out a numeric component, so a May date gives 5. Month names need a formatting function such as to_char, not EXTRACT."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.current-date-type-confusion",
+      "rationale": "You may be thinking of date_trunc, which rounds a date down to the start of a month. EXTRACT doesn't return a date at all; it returns one numeric component, here the month number 5."
+    }
+  ],
+  "pg-easy-89": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.current-date-type-confusion",
+      "rationale": "You likely mixed up date_trunc with EXTRACT. EXTRACT pulls out one numeric field like the month number. date_trunc zeroes out everything smaller than the precision and returns a full timestamp, not a bare integer."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.current-date-type-confusion",
+      "rationale": "You probably thought it rounds to the nearest month start, so late-month dates go forward. date_trunc never rounds up; it truncates, zeroing out everything smaller than the month and returning the first moment of the same month."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.current-date-type-confusion",
+      "rationale": "You likely thought it formats a label like '2024-05', which is what to_char does. date_trunc returns a real timestamp, so you can still compare, sort, and display it as a date, not text."
+    }
+  ],
+  "pg-easy-90": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.returning-shows-wrong-row-version",
+      "rationale": "You likely assumed RETURNING shows what the row held before the change, like a snapshot of the old data. In Postgres, RETURNING on an UPDATE reports the new row, so this query returns 'shipped'. To see the old value, SELECT it first."
+    }
+  ],
+  "pg-easy-91": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You likely chose \\dt because tables are the usual thing to list and it feels like the general listing command. But \\dt lists only ordinary tables. Views have their own letter, so \\dv is the command that lists them."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You probably saw \\dm as a view-related command and took it for the one that lists views. It lists materialized views only, which are a distinct object type. Ordinary views are listed by \\dv."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You may have thought \\di was a general listing of relations that includes views. It lists indexes, which are a different kind of object. Views are listed by \\dv, using the view-specific letter."
+    }
+  ],
+  "pg-easy-92": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "You may have thought \\dn relates to names or users, but \\dn lists schemas (namespaces). Roles, both users and groups, are listed by \\du, which also shows attributes like login, createdb and superuser."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "\\dt lists tables in the current search path, not roles. Users and groups are both roles in Postgres, and \\du is the command that lists them with their attributes such as superuser or login."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.psql-list-commands-mixup",
+      "rationale": "\\dv lists views, not roles. It's easy to read 'v' as 'visitor' or 'user', but the command that lists roles (users and groups together) is \\du, for 'describe users'."
+    }
+  ],
+  "pg-easy-93": [
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.search-path-misunderstood",
+      "rationale": "You may think SHOW reads only the file value. It returns the value in effect for your session, whether it came from postgresql.conf, a per-role override, or a SET in this session. A SET is not ignored."
+    }
+  ],
+  "pg-easy-94": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.search-path-misunderstood",
+      "rationale": "You likely thought SET works like a server-wide config change. A plain SET only affects your current session; other connections and the server default are untouched. Changing it for everyone would need a config-level change, not a session SET."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.search-path-misunderstood",
+      "rationale": "You probably thought the setting applies only to the next query, like a one-shot hint. A plain SET persists for the rest of the session, so every later statement on that connection uses the 5s timeout until you RESET it or disconnect."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.search-path-misunderstood",
+      "rationale": "You likely mixed up SET with SET LOCAL. Only SET LOCAL is limited to the current transaction. A plain SET lasts for the whole session, even after the transaction ends, and can leak into later queries on that connection."
+    }
+  ],
+  "pg-easy-95": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "postgres.arrays-zero-indexed",
+      "rationale": "You may have read the slice as running from the start up to position 3, or as including everything before the lower bound. A slice returns only positions 2 through 3 inclusive, so 10 is excluded and the result is [20, 30]."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.arrays-zero-indexed",
+      "rationale": "You may have treated arr[2:3] as a single-element lookup. The colon makes it a slice, which returns a sub-array, not a scalar. Plain arr[2] would give 20, but arr[2:3] returns the array [20, 30]."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.arrays-zero-indexed",
+      "rationale": "This is what you'd get by counting from 0, so index 2 and 3 land on 30 and 40. Postgres arrays are 1-based, so positions 2 and 3 are 20 and 30, inclusive on both ends, giving [20, 30]."
+    }
+  ],
+  "pg-easy-96": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.set-returning-functions-single-row",
+      "rationale": "You may think the subquery is computed once and cached. That is how an ordinary FROM subquery is planned. LATERAL does the opposite: it conceptually re-runs the subquery for each row of the earlier FROM items, which is how each customer gets their own latest order."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.nulls-and-distinct-from",
+      "rationale": "You may be mixing LATERAL up with outer-join behavior. LATERAL only lets the subquery see earlier FROM columns. With the comma form, a customer whose subquery returns no rows is dropped, not kept with NULLs. Keeping them takes LEFT JOIN LATERAL."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.explain-executes-query",
+      "rationale": "You may think LATERAL is about concurrency. It is about scope, not scheduling. It lets the subquery reference columns of FROM items listed before it, evaluated conceptually per row. It doesn't make the subquery run alongside the outer query."
+    }
+  ],
+  "pg-easy-97": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.unquoted-identifiers-case-preserved",
+      "rationale": "You likely thought the table name alone is enough. But ORDER is a reserved keyword that begins ORDER BY, so unquoted it can't be parsed as a table name and the statement fails with a syntax error."
+    },
+    {
+      "choiceIndex": 2,
+      "misconceptionId": "postgres.unquoted-identifiers-case-preserved",
+      "rationale": "You probably treated single quotes as a general way to quote a name. In SQL, single quotes make string literals, not identifiers, so 'order' isn't a table reference. Double quotes are what mark an identifier."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.unquoted-identifiers-case-preserved",
+      "rationale": "You may have assumed any word can be a table name if the table exists. Reserved keywords like ORDER are the exception: unquoted, the parser reads it as the start of ORDER BY and raises an error, so quoting is required."
+    }
+  ],
+  "pg-easy-98": [
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.check-constraint-scope",
+      "rationale": "You may assume sleeping gives up locks so others can proceed, but pg_sleep just pauses the calling backend and returns. It releases nothing, so locks held stay held, which is why it's used to demonstrate blocking."
+    }
+  ],
+  "pg-easy-100": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.pipe-is-logical-or",
+      "rationale": "You may think 'don' and 't' are two literals that get merged. But '' with no gap is not adjacent-literal concatenation; inside a quoted string the doubled quote is an escape that stands for one apostrophe in a single literal."
+    },
+    {
+      "choiceIndex": 3,
+      "misconceptionId": "postgres.boolean-accepts-integers-or-any-text",
+      "rationale": "You may think doubled quotes only work when standard_conforming_strings is off. That setting affects backslash escapes in plain strings, not quote doubling. Doubling is the standard escape and works by default; backslashes need E'...'."
+    }
+  ],
+  "pg-easy-101": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "postgres.expression-defeats-index",
+      "rationale": "You likely thought wrapping email in lower() still lets the B-tree index on email be used. That index stores raw email values, not lower(email) results, so the condition can't use it. The column is already lower case, so lower() adds cost without benefit."
+    }
+  ],
+  "pg-easy-102": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.expression-defeats-index",
+      "rationale": "You likely think count(*) > 0 is just as cheap as EXISTS. But count(*) must find every matching row before comparing with zero, while EXISTS can stop at the first match. The rest of the table needn't be read."
+    }
+  ],
+  "pg-easy-103": [
+    {
+      "choiceIndex": 1,
+      "misconceptionId": "postgres.expression-defeats-index",
+      "rationale": "You likely thought casting id to text still lets the primary key index find the row, or that it's harmless. The cast applies to every row, so the B-tree on id can't be used. Cast the literal instead and compare id directly."
+    }
+  ],
+  "pg-easy-104": [
+    {
+      "choiceIndex": 0,
+      "misconceptionId": "postgres.expression-defeats-index",
+      "rationale": "You likely thought left(sku, 8) still benefits from the B-tree index on sku. Wrapping the column in a function hides it from the index, so Postgres scans every row. LIKE 'SKU-0042%' becomes an indexable range condition."
+    }
+  ]
+}

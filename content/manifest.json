@@ -8,13 +8,174 @@
       "tagline": "Runtime semantics, stdlib, and the sharp edges.",
       "grammar": "python",
       "topics": [],
-      "misconceptions": [],
+      "misconceptions": [
+        {
+          "description": "int() on a negative float rounds down (toward negative infinity) rather than truncating toward zero, so int(-3.9) is believed to be -4.",
+          "id": "python.int-rounds-to-floor"
+        },
+        {
+          "description": "Believing float('nan') == float('nan') is True; NaN is never equal to anything, including itself.",
+          "id": "python.nan-equals-itself"
+        },
+        {
+          "description": "Believing / performs integer division when both operands are ints, so 7 / 2 gives 3 instead of the float 3.5.",
+          "id": "python.true-division-returns-int"
+        },
+        {
+          "description": "Believing the % operator takes the sign of the dividend as in C, so -7 % 3 is -1 rather than 2 (Python's result takes the divisor's sign).",
+          "id": "python.modulo-sign-matches-dividend"
+        },
+        {
+          "description": "Believing -2 ** 2 equals 4 because unary minus is applied before **; actually ** binds tighter, giving -4.",
+          "id": "python.unary-minus-binds-tighter-than-power"
+        },
+        {
+          "description": "Believing 1 < 2 < 3 is evaluated as (1 < 2) < 3 rather than as (1 < 2) and (2 < 3).",
+          "id": "python.chained-comparison-left-fold"
+        },
+        {
+          "description": "Believing and/or always return True or False, rather than returning one of their operands, so 3 or 5 is thought to be True.",
+          "id": "python.or-returns-bool"
+        },
+        {
+          "description": "Believing bool is unrelated to int, so True == 1 is False or errors; in fact bool subclasses int.",
+          "id": "python.bool-unrelated-to-int"
+        },
+        {
+          "description": "Believing == None and is None are always equivalent, ignoring that a custom __eq__ can change the result of == None.",
+          "id": "python.eq-none-same-as-is-none"
+        },
+        {
+          "description": "Believing isinstance takes several types as separate arguments or a list, rather than a single tuple of types.",
+          "id": "python.isinstance-multiple-type-args"
+        },
+        {
+          "description": "Believing tuples and strings support item assignment like lists, so t[0] = 5 or s[0] = 'H' succeeds.",
+          "id": "python.tuples-and-strings-mutable"
+        },
+        {
+          "description": "Believing a slice with an out-of-range bound raises IndexError, when slices silently clamp to the sequence's ends.",
+          "id": "python.slice-out-of-range-raises"
+        },
+        {
+          "description": "Believing the stop index of a slice is inclusive, so [1:3] includes the element at index 3.",
+          "id": "python.slice-end-inclusive"
+        },
+        {
+          "description": "Believing [[]] * 3 creates three independent inner lists, when it repeats references to the same list.",
+          "id": "python.sequence-repeat-copies-inner-lists"
+        },
+        {
+          "description": "Believing a = b = c = [] gives three separate lists rather than three names bound to one list.",
+          "id": "python.chained-assignment-separate-objects"
+        },
+        {
+          "description": "Believing list2 = list1 copies the list, so mutating list2 won't affect list1.",
+          "id": "python.assignment-copies-list"
+        },
+        {
+          "description": "Believing lst[:] returns a reference to the same list rather than a new shallow copy.",
+          "id": "python.slice-returns-reference"
+        },
+        {
+          "description": "Believing append and extend behave identically, or that append with a list spreads its elements into the target list.",
+          "id": "python.append-extend-same"
+        },
+        {
+          "description": "Believing list.sort() returns the sorted list, when it sorts in place and returns None.",
+          "id": "python.sort-returns-sorted-list"
+        },
+        {
+          "description": "Believing lst.pop() with no argument removes the first element rather than the last.",
+          "id": "python.pop-removes-first"
+        },
+        {
+          "description": "Confusing list.remove(value), which removes by value, with pop(index), which removes by position and returns the item.",
+          "id": "python.remove-pop-confusion"
+        },
+        {
+          "description": "Believing zip pads shorter inputs with None, when it stops at the shortest iterable.",
+          "id": "python.zip-pads-with-none"
+        },
+        {
+          "description": "Believing reversed() returns a list that can be indexed, when it returns an iterator.",
+          "id": "python.reversed-returns-list"
+        },
+        {
+          "description": "Believing map() and filter() return lists directly rather than lazy iterators needing list() to materialize.",
+          "id": "python.map-filter-return-lists"
+        },
+        {
+          "description": "Believing len() does not work on sets, when it works on all built-in sized containers.",
+          "id": "python.len-unsupported-on-sets"
+        },
+        {
+          "description": "Believing range(n) includes n, so list(range(5)) has 6 elements ending in 5.",
+          "id": "python.range-includes-stop"
+        },
+        {
+          "description": "Believing a list can be a dict key if its contents don't change; lists are unhashable regardless.",
+          "id": "python.list-as-dict-key"
+        },
+        {
+          "description": "Believing 'x' in d checks a dict's values rather than its keys.",
+          "id": "python.in-dict-checks-values"
+        },
+        {
+          "description": "Believing membership tests on a list are O(1) like on sets and dicts, rather than O(n).",
+          "id": "python.in-list-constant-time"
+        },
+        {
+          "description": "Believing dict iteration order is arbitrary in modern Python, when it follows insertion order since 3.7.",
+          "id": "python.dict-order-unreliable"
+        },
+        {
+          "description": "Believing split() and split(' ') behave the same, missing that split(' ') yields empty strings for adjacent spaces.",
+          "id": "python.split-no-arg-same-as-split-space"
+        },
+        {
+          "description": "Believing string methods like replace, strip, or lower modify the string in place rather than returning a new one.",
+          "id": "python.string-methods-mutate"
+        },
+        {
+          "description": "Believing int('42.5') returns 42 by truncating, when it raises ValueError.",
+          "id": "python.int-parses-float-strings"
+        },
+        {
+          "description": "Believing the string '0' or 'False' is falsy because of its content; any non-empty string is truthy.",
+          "id": "python.nonempty-string-truthiness-by-content"
+        },
+        {
+          "description": "Believing round() always rounds halves up as taught in school, when Python rounds half to even, so round(2.5) is 2.",
+          "id": "python.round-half-up"
+        },
+        {
+          "description": "Believing (1) is a one-element tuple, when the trailing comma in (1,) is what makes it a tuple.",
+          "id": "python.parenthesized-single-value-is-tuple"
+        },
+        {
+          "description": "Believing a function can assign to a module-level variable without the global keyword, or that assignment later in a function leaves earlier reads using the global.",
+          "id": "python.assigning-makes-global-writable"
+        },
+        {
+          "description": "Believing a loop's else clause runs when the loop exits via break, rather than only when it completes without break.",
+          "id": "python.for-else-runs-on-break"
+        },
+        {
+          "description": "Believing that after an exception is caught, execution resumes inside the try block or the exception is automatically re-raised.",
+          "id": "python.except-continues-try-block"
+        },
+        {
+          "description": "Believing multiple exceptions are caught with 'except A or B' or 'except A, B' rather than a tuple.",
+          "id": "python.except-multiple-types-syntax"
+        }
+      ],
       "banks": {
         "easy": {
           "path": "python/easy.json",
-          "hash": "057b1e64b23beaff7272c83341558f1ffbf83e752f37286e6f68fe80b21011da",
+          "hash": "1ac24fdba8eff40b0880b0f28d943d29a0a9b8fc60fb0ac7f185cd0a692bbba9",
           "access": "free",
-          "contentVersion": 3,
+          "contentVersion": 6,
           "topicCounts": {}
         },
         "medium": {
@@ -43,13 +204,170 @@
       "tagline": "Query planning, concurrency, and storage internals.",
       "grammar": "sql",
       "topics": [],
-      "misconceptions": [],
+      "misconceptions": [
+        {
+          "description": "Believes || is logical OR (as in MySQL) rather than string concatenation in Postgres.",
+          "id": "postgres.pipe-is-logical-or"
+        },
+        {
+          "description": "Believes 'a' || NULL yields 'a'; in fact concatenating with NULL yields NULL.",
+          "id": "postgres.concat-null-keeps-text"
+        },
+        {
+          "description": "Confuses ILIKE with LIKE: thinks ILIKE uses regex, spans lines, or is index-friendly with a plain B-tree, rather than just being case-insensitive.",
+          "id": "postgres.like-ilike-confusion"
+        },
+        {
+          "description": "Mixes up psql meta-commands for listing objects (\\dt, \\dn, \\l, \\du, \\dv, \\df, \\dx), e.g. thinking \\dn lists tables.",
+          "id": "postgres.psql-list-commands-mixup"
+        },
+        {
+          "description": "Believes \\c mydb creates the database or sets it as a persistent default, rather than reconnecting the session.",
+          "id": "postgres.psql-c-creates-or-sets-default"
+        },
+        {
+          "description": "Believes \\q commits an open transaction before exiting, rather than the transaction being rolled back.",
+          "id": "postgres.psql-quit-commits"
+        },
+        {
+          "description": "Misreads psql toggles: thinks \\x widens output or shows EXPLAIN/timing, or that \\timing is something other than a per-query duration toggle.",
+          "id": "postgres.psql-x-and-timing-misread"
+        },
+        {
+          "description": "Believes SERIAL creates a trigger, hidden counter column or identity constraint rather than a sequence with a default nextval().",
+          "id": "postgres.serial-is-a-trigger-or-column"
+        },
+        {
+          "description": "Believes BIGSERIAL and SERIAL share the same integer range, when BIGSERIAL is 64-bit.",
+          "id": "postgres.bigserial-same-range"
+        },
+        {
+          "description": "Believes inserting an explicit value into a GENERATED ALWAYS identity column succeeds or is silently overridden, rather than erroring without OVERRIDING SYSTEM VALUE.",
+          "id": "postgres.identity-always-accepts-explicit"
+        },
+        {
+          "description": "Believes unquoted identifiers keep their case, rather than being folded to lowercase, and that double quotes behave like string quotes.",
+          "id": "postgres.unquoted-identifiers-case-preserved"
+        },
+        {
+          "description": "Believes VARCHAR(n) is measurably faster than TEXT in Postgres, when they perform essentially the same.",
+          "id": "postgres.varchar-faster-than-text"
+        },
+        {
+          "description": "Believes CHAR(n) stores the value as-is or errors on shorter values, rather than padding with trailing spaces.",
+          "id": "postgres.char-n-no-padding"
+        },
+        {
+          "description": "Believes tables created without a schema land in pg_catalog, information_schema or a 'default' schema rather than public (first on search_path).",
+          "id": "postgres.default-schema-not-public"
+        },
+        {
+          "description": "Believes search_path controls file lookup, read permissions or databases, rather than the ordered schemas for resolving unqualified names.",
+          "id": "postgres.search-path-misunderstood"
+        },
+        {
+          "description": "Believes RETURNING on DELETE/UPDATE gives the old row for UPDATE, or misjudges what it returns (UPDATE returns new values, DELETE the deleted row); also thinks RETURNING * returns only keys or counts.",
+          "id": "postgres.returning-shows-wrong-row-version"
+        },
+        {
+          "description": "Believes ON CONFLICT DO NOTHING raises an error, upserts, or rolls back other rows, rather than silently skipping the conflicting row.",
+          "id": "postgres.on-conflict-do-nothing-errors-or-upserts"
+        },
+        {
+          "description": "Believes the column list in ON CONFLICT (id) names columns to overwrite or index, rather than identifying the unique constraint/index to arbitrate on.",
+          "id": "postgres.on-conflict-target-meaning"
+        },
+        {
+          "description": "Believes Postgres arrays are 0-indexed, when they are 1-indexed by default, and misjudges slices and array_length.",
+          "id": "postgres.arrays-zero-indexed"
+        },
+        {
+          "description": "Believes arrays are built with '[1,2,3]', ARRAY(1,2,3) or LIST(), rather than ARRAY[...] or the '{...}' text form.",
+          "id": "postgres.array-literal-syntax"
+        },
+        {
+          "description": "Confuses jsonb -> (returns jsonb) with ->> (returns text), or believes they differ in nesting depth or error behavior.",
+          "id": "postgres.json-arrow-operators-confused"
+        },
+        {
+          "description": "Believes @> tests byte equality, key presence only, or ordering, rather than structural containment of the right value in the left.",
+          "id": "postgres.jsonb-containment-misread"
+        },
+        {
+          "description": "Believes NOW() advances between calls in one transaction, when it returns the transaction start time; only clock_timestamp() changes.",
+          "id": "postgres.now-changes-within-transaction"
+        },
+        {
+          "description": "Confuses return types of CURRENT_DATE (date) and NOW() (timestamptz), or related date/time functions like to_char, to_date, date_trunc and EXTRACT.",
+          "id": "postgres.current-date-type-confusion"
+        },
+        {
+          "description": "Misunderstands COALESCE (first non-NULL argument) and NULLIF (returns NULL when arguments are equal), e.g. expecting errors or zero.",
+          "id": "postgres.coalesce-nullif-misread"
+        },
+        {
+          "description": "Believes DISTINCT ON picks a deterministic row without a matching ORDER BY, or that it behaves like plain DISTINCT or returns only the key column.",
+          "id": "postgres.distinct-on-ordering"
+        },
+        {
+          "description": "Believes boolean columns accept bare integers or arbitrary strings like 'yes'/'maybe' without casting, or that TRUE/FALSE are case-sensitive.",
+          "id": "postgres.boolean-accepts-integers-or-any-text"
+        },
+        {
+          "description": "Believes CHECK constraints only apply on insert, only warn, or hide failing rows, rather than being enforced on every insert and update.",
+          "id": "postgres.check-constraint-scope"
+        },
+        {
+          "description": "Believes plain EXPLAIN runs the query and reports real runtime, when only EXPLAIN ANALYZE executes it.",
+          "id": "postgres.explain-executes-query"
+        },
+        {
+          "description": "Confuses pg_catalog (Postgres-specific, richer) with information_schema (SQL-standard, portable) views and their advantages.",
+          "id": "postgres.catalog-vs-information-schema"
+        },
+        {
+          "description": "Misreads session info functions: current_user as OS user or original login role, version() as an integer or client version, current_database() as an OID or default.",
+          "id": "postgres.current-user-and-version-misread"
+        },
+        {
+          "description": "Believes :: is schema qualification, an alias or an assertion, or that CAST and :: always behave identically, rather than :: being cast shorthand.",
+          "id": "postgres.cast-operator-misread"
+        },
+        {
+          "description": "Misunderstands INTERVAL as integer seconds or text, or thinks NOW() + INTERVAL is an error, drops time, or AGE returns an integer.",
+          "id": "postgres.interval-arithmetic-misread"
+        },
+        {
+          "description": "Believes generate_series or unnest return one row holding an array or a count, rather than a set of rows.",
+          "id": "postgres.set-returning-functions-single-row"
+        },
+        {
+          "description": "Misunderstands aggregates like string_agg and array_agg, e.g. thinking string_agg sorts, splits, or array_agg deduplicates.",
+          "id": "postgres.aggregate-functions-misread"
+        },
+        {
+          "description": "Believes <> handles NULL like any value, or that IS DISTINCT FROM treats NULL as empty string or errors, rather than being NULL-safe comparison.",
+          "id": "postgres.nulls-and-distinct-from"
+        },
+        {
+          "description": "Believes nextval() values are returned on rollback or that nextval only previews, when sequence advances are non-transactional and leave gaps.",
+          "id": "postgres.sequences-rollback"
+        },
+        {
+          "description": "Confuses CREATE TYPE ENUM, composite types and CREATE DOMAIN with CHECK constraints, lookup tables, arrays or documentation-only aliases.",
+          "id": "postgres.enum-domain-composite-confusion"
+        },
+        {
+          "description": "Believes wrapping an indexed column in a function or cast (lower(email), id::text, left(sku,8)) still uses its plain B-tree index, and that count(*)>0 is as cheap as EXISTS.",
+          "id": "postgres.expression-defeats-index"
+        }
+      ],
       "banks": {
         "easy": {
           "path": "postgres/easy.json",
-          "hash": "279a8b3bb8c127b91da0a44d5716afa4103e8f6eadeeb0753aff61c9d0307928",
+          "hash": "0a59b7856981e882a7b21cfd07b8cbdb272b7a527b45fa51b57a0d72163b9e29",
           "access": "free",
-          "contentVersion": 3,
+          "contentVersion": 6,
           "topicCounts": {}
         },
         "medium": {
@@ -78,13 +396,174 @@
       "tagline": "Coercion, scope, and the runtime behavior that surprises.",
       "grammar": "javascript",
       "topics": [],
-      "misconceptions": [],
+      "misconceptions": [
+        {
+          "description": "Believes typeof null returns \"null\" rather than \"object\", which is a long-standing quirk of the language.",
+          "id": "javascript.typeof-null-is-null"
+        },
+        {
+          "description": "Believes typeof [] returns \"array\" when arrays are reported as \"object\".",
+          "id": "javascript.typeof-array-is-array"
+        },
+        {
+          "description": "Believes NaN is not of type number, when typeof NaN is \"number\".",
+          "id": "javascript.typeof-nan-is-not-number"
+        },
+        {
+          "description": "Believes typeof on an undeclared identifier throws a ReferenceError, when it safely returns \"undefined\".",
+          "id": "javascript.typeof-undeclared-throws"
+        },
+        {
+          "description": "Believes == compares without type conversion, so 1 == \"1\" is false, or that [] == false is false.",
+          "id": "javascript.loose-equality-no-coercion"
+        },
+        {
+          "description": "Believes null and undefined are indistinguishable, or that null == undefined is false while null === undefined is true.",
+          "id": "javascript.null-equals-undefined-strict"
+        },
+        {
+          "description": "Believes NaN === NaN is true, rather than NaN being the only value not equal to itself.",
+          "id": "javascript.nan-equals-nan"
+        },
+        {
+          "description": "Believes global isNaN and Number.isNaN behave the same; isNaN coerces its argument first, so isNaN(\"foo\") is true.",
+          "id": "javascript.isnan-same-as-number-isnan"
+        },
+        {
+          "description": "Believes Object.is and === always agree, missing that they differ for NaN and for +0 versus -0.",
+          "id": "javascript.object-is-same-as-strict-equals"
+        },
+        {
+          "description": "Believes decimal floating-point arithmetic is exact, so 0.1 + 0.2 === 0.3 is true.",
+          "id": "javascript.float-arithmetic-exact"
+        },
+        {
+          "description": "Believes Number(\"\") is NaN, when an empty string converts to 0.",
+          "id": "javascript.number-empty-string-is-nan"
+        },
+        {
+          "description": "Believes parseInt and Number treat trailing junk the same, so Number(\"10px\") is 10 or parseInt(\"10px\") is NaN.",
+          "id": "javascript.parseint-vs-number-strictness"
+        },
+        {
+          "description": "Believes a leading zero makes parseInt(\"08\", 10) parse as octal or give NaN or 0, rather than 8.",
+          "id": "javascript.parseint-leading-zero-octal"
+        },
+        {
+          "description": "Believes empty arrays and empty objects are falsy, when Boolean([]) and Boolean({}) are true.",
+          "id": "javascript.empty-array-object-falsy"
+        },
+        {
+          "description": "Believes the non-empty string \"false\" is falsy, when Boolean(\"false\") is true.",
+          "id": "javascript.string-false-is-falsy"
+        },
+        {
+          "description": "Believes ?? falls back for any falsy value like ||, rather than only for null and undefined.",
+          "id": "javascript.nullish-coalescing-same-as-or"
+        },
+        {
+          "description": "Believes || and && always return true or false instead of one of their operand values.",
+          "id": "javascript.logical-operators-return-booleans"
+        },
+        {
+          "description": "Believes optional chaining on null throws a TypeError rather than short-circuiting to undefined.",
+          "id": "javascript.optional-chaining-throws-on-null"
+        },
+        {
+          "description": "Believes const makes the referenced object immutable, so changing obj.a on a const object throws.",
+          "id": "javascript.const-makes-value-immutable"
+        },
+        {
+          "description": "Believes reassigning a const binding silently fails or succeeds, rather than throwing a TypeError.",
+          "id": "javascript.const-reassign-silent"
+        },
+        {
+          "description": "Believes let variables read before declaration give undefined like var, rather than a ReferenceError from the temporal dead zone.",
+          "id": "javascript.let-hoisted-undefined"
+        },
+        {
+          "description": "Believes var is block scoped like let, rather than function scoped.",
+          "id": "javascript.var-block-scoped"
+        },
+        {
+          "description": "Believes function expressions assigned to variables are hoisted and callable before their line like function declarations.",
+          "id": "javascript.function-expression-hoisted"
+        },
+        {
+          "description": "Believes default parameters and destructuring defaults apply for null as well as undefined.",
+          "id": "javascript.default-param-applies-to-null"
+        },
+        {
+          "description": "Believes arrow functions have their own arguments object or can be used with new.",
+          "id": "javascript.arrow-function-own-arguments"
+        },
+        {
+          "description": "Believes map mutates the original array in place instead of returning a new one.",
+          "id": "javascript.map-mutates-array"
+        },
+        {
+          "description": "Confuses what array methods return, such as push returning the array or element rather than the new length, or unshift returning the array.",
+          "id": "javascript.array-method-return-values"
+        },
+        {
+          "description": "Believes find returns an array of matches or null on failure, rather than the first match or undefined; also that findIndex returns undefined.",
+          "id": "javascript.find-returns-array-or-null"
+        },
+        {
+          "description": "Believes slice mutates the original array, or that splice returns a single removed element and leaves the array unchanged.",
+          "id": "javascript.slice-splice-mutation-confusion"
+        },
+        {
+          "description": "Believes spreading an array or object makes a deep copy, so nested objects are independent of the original.",
+          "id": "javascript.spread-deep-copies"
+        },
+        {
+          "description": "Believes sort() without a comparator sorts numbers numerically, when it compares their string forms.",
+          "id": "javascript.default-sort-numeric"
+        },
+        {
+          "description": "Believes for...in yields array values rather than string keys, or that it excludes inherited enumerable properties.",
+          "id": "javascript.for-in-yields-values"
+        },
+        {
+          "description": "Believes JSON.stringify keeps undefined and function-valued properties, and doesn't convert undefined array elements to null.",
+          "id": "javascript.json-stringify-keeps-undefined-functions"
+        },
+        {
+          "description": "Believes delete on an array element removes it and shifts the others, rather than leaving a hole with the same length.",
+          "id": "javascript.delete-shrinks-array"
+        },
+        {
+          "description": "Believes the in operator checks only own properties, ignoring inherited ones such as toString.",
+          "id": "javascript.in-operator-own-only"
+        },
+        {
+          "description": "Believes Object.keys lists all properties, including non-enumerable ones and symbol keys.",
+          "id": "javascript.object-keys-includes-all"
+        },
+        {
+          "description": "Believes Math.max accepts an array directly, or that Math.max() with no arguments returns 0 or NaN.",
+          "id": "javascript.math-max-accepts-array"
+        },
+        {
+          "description": "Believes + always does numeric addition, so '5' + 1 is 6, and that - behaves the same way as + with strings.",
+          "id": "javascript.plus-always-numeric"
+        },
+        {
+          "description": "Believes array includes and Set has have the same lookup cost, or that reduce with spread is as efficient as map.",
+          "id": "javascript.includes-and-set-lookup-equal-cost"
+        },
+        {
+          "description": "Believes switch compares cases with == so \"1\" matches 1, or that cases never fall through without break.",
+          "id": "javascript.switch-uses-loose-equality"
+        }
+      ],
       "banks": {
         "easy": {
           "path": "javascript/easy.json",
-          "hash": "fdb5bd0a2e014446cc49d1e1d363eddfb636fcef98eae55b79b24dfc3af3055d",
+          "hash": "0d77a9a02faefd6e024ee50d1a121ee990ff93a1735e96d2fb11ddd7835e34cc",
           "access": "free",
-          "contentVersion": 3,
+          "contentVersion": 6,
           "topicCounts": {}
         },
         "medium": {
