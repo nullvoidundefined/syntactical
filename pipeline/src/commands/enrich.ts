@@ -5,6 +5,10 @@
 // results land in `enrichment/<language>/<difficulty>.json` (question id to rationales)
 // and merging them into banks is publish's job.
 //
+// A question with no passing oracle observation is skipped, unless `secondProvider` is set: then
+// its rationales are grounded in the answer key and explanation and must pass judges on both
+// providers (see enrichQuestion).
+//
 // Free-bank output goes under the public `pipelineDir`. Paid-bank output carries paid
 // question ids and rationale text, so it goes under `contentRoot` (the private content
 // repo), and nothing paid is ever written under `pipelineDir` or the content dir.
@@ -17,6 +21,7 @@ import type { ModelProvider } from '../types/ModelProvider.js';
 import type { OracleSource } from '../types/OracleSource.js';
 import type { PipelineReport } from '../types/PipelineReport.js';
 import { loadCommandManifest } from '../services/content/loadCommandManifest.js';
+import { loadValidatedManifest } from '../services/content/loadValidatedManifest.js';
 import { readBankQuestions } from '../services/content/readBankQuestions.js';
 import { buildEnrichReport } from '../services/enrich/buildEnrichReport.js';
 import { createOracleSource } from '../services/createOracleSource.js';
@@ -35,32 +40,41 @@ import type { QuestionValidator } from './validate.js';
 export interface EnrichOptions {
     contentDir: string;
     contentRoot: string;
+    // Only free banks: paid banks are skipped and no content root is needed.
+    isFreeOnly?: boolean;
+    // Only these language ids, when given; every language otherwise.
+    languages?: readonly string[];
     log: (line: string) => void;
     newRunId: () => string;
     now: () => string;
     oracleSource?: OracleSource;
     pipelineDir: string;
     provider: ModelProvider;
+    secondProvider?: ModelProvider;
     validate?: QuestionValidator;
 }
 
 export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
-    const { contentDir, contentRoot, newRunId, pipelineDir, provider } = options;
+    const { contentDir, contentRoot, newRunId, pipelineDir, provider, secondProvider } = options;
     const validate = options.validate ?? validateQuestion;
     const log = (line: string): void => options.log(sanitizeLogText(line));
     const startedAt = options.now();
-    const { languages } = await loadCommandManifest({ contentDir, contentRoot, pipelineDir });
+    const { languages } = options.isFreeOnly
+        ? await loadValidatedManifest(contentDir)
+        : await loadCommandManifest({ contentDir, contentRoot, pipelineDir });
     // Reports hold ids and verdicts only; every command shares one report chain in the pipeline dir.
     const reportsDir = join(pipelineDir, 'reports');
     const previous = await readLatestReport(reportsDir);
     const totals: EnrichBankResult = { accepted: 0, agreed: 0, compared: 0, contradicted: 0, dropped: 0 };
     for (const { banks, id: languageId } of languages) {
+        if (options.languages !== undefined && !options.languages.includes(languageId)) continue;
         const taxonomy = await readTaxonomy(pipelineDir, languageId);
         if (taxonomy === null) {
             log(`skipping language ${languageId}: no approved taxonomy`);
             continue;
         }
         for (const [difficulty, { access, path }] of Object.entries(banks)) {
+            if (options.isFreeOnly === true && access !== 'free') continue;
             const bankKey = `${languageId}/${difficulty}`;
             const questions = await readBankQuestions(resolveBankFile(contentDir, contentRoot, { access, path }));
             const outRoot = resolveBankOutputRoot(pipelineDir, contentRoot, { access });
@@ -85,6 +99,7 @@ export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
                     ...questions,
                     ...(staged?.questions ?? []).filter(({ id }) => !questions.some((question) => question.id === id)),
                 ],
+                secondProvider,
                 taxonomy,
             });
             const { accepted, agreed, compared, contradicted, dropped } = result;
