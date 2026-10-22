@@ -1,6 +1,7 @@
 // Validates a fetched question bank. A malformed question is dropped and
 // the rest kept; a malformed root, an unsupported schema, too many
 // questions, or no valid questions rejects the bank as a whole.
+import { areValidDocLinks } from './areValidDocLinks.js';
 import { collectMisconceptionIds } from './collectMisconceptionIds.js';
 import { CONTENT_LIMITS } from './contentLimits.js';
 import { GRAMMARS } from './grammars.js';
@@ -45,13 +46,14 @@ function areValidTags(tags: unknown): boolean {
 
 function isValidQuery(query: unknown): boolean {
   if (!isRecord(query)) return false;
-  const { explanation, syntax, tags, title } = query;
+  const { docs, explanation, syntax, tags, title } = query;
   const { longTextLength, queryTitleLength } = CONTENT_LIMITS;
   return (
     isText(title, queryTitleLength) &&
     isText(explanation, longTextLength) &&
     isOptionalText(syntax, longTextLength) &&
-    areValidTags(tags)
+    areValidTags(tags) &&
+    areValidDocLinks(docs)
   );
 }
 

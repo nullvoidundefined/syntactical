@@ -35,18 +35,50 @@ function DrawerHarness() {
       <Pressable role="button" aria-label="Open query" onPress={() => setIsOpen(true)}>
         <Text>Open query</Text>
       </Pressable>
-      <QueryDrawer isOpen={isOpen} query={query} grammar="python" onClose={() => setIsOpen(false)} />
+      <QueryDrawer isAnswered isOpen={isOpen} query={query} grammar="python" onClose={() => setIsOpen(false)} />
     </>
   );
 }
 
 describe('QueryDrawer', () => {
   it('shows the title, syntax, explanation as literal text, and tags', async () => {
-    await render(<QueryDrawer isOpen query={query} grammar="python" onClose={jest.fn()} />);
+    await render(<QueryDrawer isAnswered isOpen query={query} grammar="python" onClose={jest.fn()} />);
     expect(screen.getByText('NaN is never equal')).toBeTruthy();
     expect(screen.getByText('<b>IEEE</b> 754')).toBeTruthy();
     expect(screen.getByText('numbers')).toBeTruthy();
     expect(screen.getByText('float')).toBeTruthy();
+  });
+
+  it('before an answer shows the title and doc links, but not the syntax, explanation, tags, or rationale', async () => {
+    const docs = [{ title: 'Floating-point arithmetic', url: 'https://docs.python.org/3/tutorial/floatingpoint.html' }];
+    await render(
+      <QueryDrawer
+        isAnswered={false}
+        isOpen
+        query={{ ...query, docs }}
+        grammar="python"
+        chosenRationale="You treated NaN as a normal number."
+        onClose={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('Query')).toBeTruthy();
+    expect(screen.getByText('NaN is never equal')).toBeTruthy();
+    expect(screen.getByText('Floating-point arithmetic')).toBeTruthy();
+    expect(screen.getByText('Answer to see the full explanation.')).toBeTruthy();
+    expect(screen.queryByTestId('code-block')).toBeNull();
+    expect(screen.queryByText('<b>IEEE</b> 754')).toBeNull();
+    expect(screen.queryByText('numbers')).toBeNull();
+    expect(screen.queryByText('You treated NaN as a normal number.')).toBeNull();
+  });
+
+  it('after an answer shows the syntax, explanation, and doc links under an Explanation header', async () => {
+    const docs = [{ title: 'Floating-point arithmetic', url: 'https://docs.python.org/3/tutorial/floatingpoint.html' }];
+    await render(<QueryDrawer isAnswered isOpen query={{ ...query, docs }} grammar="python" onClose={jest.fn()} />);
+    expect(screen.getByText('Explanation')).toBeTruthy();
+    expect(screen.queryByTestId('code-block')).not.toBeNull();
+    expect(screen.getByText('<b>IEEE</b> 754')).toBeTruthy();
+    expect(screen.getByText('Floating-point arithmetic')).toBeTruthy();
+    expect(screen.queryByText('Answer to see the full explanation.')).toBeNull();
   });
 
   it('closes from the close control, the backdrop, and the platform back action', async () => {
@@ -62,13 +94,14 @@ describe('QueryDrawer', () => {
   });
 
   it('renders nothing visible when closed', async () => {
-    await render(<QueryDrawer isOpen={false} query={query} grammar="python" onClose={jest.fn()} />);
+    await render(<QueryDrawer isAnswered isOpen={false} query={query} grammar="python" onClose={jest.fn()} />);
     expect(screen.queryByText('NaN is never equal')).toBeNull();
   });
 
   it('shows the chosen rationale under its own heading above the query title', async () => {
     await render(
       <QueryDrawer
+        isAnswered
         isOpen
         query={query}
         grammar="python"
@@ -85,13 +118,15 @@ describe('QueryDrawer', () => {
   });
 
   it('keeps heading levels from skipping when the rationale is shown', async () => {
-    await render(<QueryDrawer isOpen query={query} grammar="python" chosenRationale="Because." onClose={jest.fn()} />);
+    await render(
+      <QueryDrawer isAnswered isOpen query={query} grammar="python" chosenRationale="Because." onClose={jest.fn()} />,
+    );
     const levels = screen.getAllByRole('heading').map((heading) => heading.props['aria-level']);
     expect(levels).toEqual([2, 2]);
   });
 
   it('shows only the query when there is no rationale', async () => {
-    await render(<QueryDrawer isOpen query={query} grammar="python" onClose={jest.fn()} />);
+    await render(<QueryDrawer isAnswered isOpen query={query} grammar="python" onClose={jest.fn()} />);
     expect(screen.queryByText('Why that answer is tempting')).toBeNull();
     expect(screen.getAllByRole('heading')).toHaveLength(1);
   });
@@ -99,10 +134,10 @@ describe('QueryDrawer', () => {
   it('keeps its header below the status bar and its content above the home indicator', async () => {
     await render(
       <SafeAreaProvider initialMetrics={{ frame: { height: 800, width: 400, x: 0, y: 0 }, insets: NOTCH_INSETS }}>
-        <QueryDrawer isOpen query={query} grammar="python" onClose={jest.fn()} />
+        <QueryDrawer isAnswered isOpen query={query} grammar="python" onClose={jest.fn()} />
       </SafeAreaProvider>,
     );
-    expect(sumAncestorPadding(screen.getByText('Query'), 'paddingTop')).toBeGreaterThanOrEqual(NOTCH_INSETS.top);
+    expect(sumAncestorPadding(screen.getByText('Explanation'), 'paddingTop')).toBeGreaterThanOrEqual(NOTCH_INSETS.top);
     expect(sumAncestorPadding(screen.getByText('float'), 'paddingBottom')).toBeGreaterThanOrEqual(NOTCH_INSETS.bottom);
   });
 });

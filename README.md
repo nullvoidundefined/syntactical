@@ -53,7 +53,7 @@ Questions are not compiled into the app logic. `content/manifest.json` lists eve
 
 Paid banks are not in this repository. They live in the private repository `nullvoidundefined/syntactical-content` at `<track>/<difficulty>.json`, reach the API image as `PAID_CONTENT_DIR`, and reach entitled users only through `GET /v1/banks/:language/:difficulty` (`server/src/routes/banks.ts`). They are never bundled and never on the static host: `npm run content:build` fails on a paid bank file under `content/`, and `npm run build` fails when the web export holds one (`scripts/assertNoPaidBanks.mjs`). The tests that guard this are `scripts/__tests__/publicContentTree.test.ts`, `paidContentRef.test.ts`, and `noPaidQuestionIds.test.ts`.
 
-Each question is multiple choice (`mc`), true/false (`bool`), or A/B (`ab`), and carries a `query` (`title`, `explanation`, optional `syntax` and `tags`) that backs the query drawer, plus `provenance` saying where it came from and how it was validated. The full shape is `packages/content-schema/src/validateQuestionBank.ts`.
+Each question is multiple choice (`mc`), true/false (`bool`), or A/B (`ab`), and carries a `query` (`title`, `explanation`, optional `syntax`, `tags`, and `docs`: up to three https `{ title, url }` links to official documentation) that backs the query drawer. Before an answer the drawer shows only the title and `docs`, so those must not give the answer away; the syntax, explanation, and tags appear after. Each question also carries `provenance` saying where it came from and how it was validated. The full shape is `packages/content-schema/src/validateQuestionBank.ts`.
 
 ### Editing a question
 
