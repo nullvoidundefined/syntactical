@@ -4,7 +4,7 @@
 // a workspace-scoped key needs none.
 import type { ClientOptions } from '@anthropic-ai/sdk';
 
-import { ASK } from '../constants/ask.js';
+import { MODEL } from '../constants/model.js';
 
 const WORKSPACE_HEADER = 'anthropic-workspace-id';
 
@@ -13,9 +13,7 @@ interface AnthropicCredentials {
   workspaceId?: string;
 }
 
-const {
-  MODEL: { MAX_RETRIES, TIMEOUT_MS },
-} = ASK;
+const { MAX_RETRIES, TIMEOUT_MS } = MODEL;
 
 function buildAnthropicOptions({ apiKey, workspaceId }: AnthropicCredentials): ClientOptions {
   return {

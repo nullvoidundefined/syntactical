@@ -18,6 +18,7 @@ Last updated: 2026-10-13 (checked against `main` at the engineering audit; see `
 | Web keyboard navigation         | Complete | `KEY_BINDINGS` in `constants/appConfig.ts`, the hint bar in `components/quiz/KeyboardHintBar.tsx`; `e2e/specs/keyboardNavigation.spec.ts`.                                                                           |
 | Review rounds                   | Complete | `app/review.tsx` builds a round from due questions (`services/review/buildReviewQueue.ts`, `@syntactical/progress` with `ts-fsrs`); only missed questions are scheduled.                                             |
 | Weakness report                 | Complete | `components/stats/WeaknessReport.tsx`, `services/progress/buildWeaknessReport.ts`: the most-missed misconceptions.                                                                                                   |
+| Weekly study note               | Complete | `components/stats/StudyNote.tsx` on the home screen for a signed-in user; `GET /v1/study-note` (`server/src/routes/studyNote.ts`) writes one note per local week with Claude Haiku once 20 answers sync.             |
 
 ## Progress
 

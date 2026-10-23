@@ -13,6 +13,7 @@ import type { Logger } from 'pino';
 import { createApp } from '../../app.js';
 import type { Database } from '../../clients/database.js';
 import type { AskDeps } from '../../routes/askDeps.js';
+import type { StudyNoteDeps } from '../../routes/studyNoteDeps.js';
 import type { AuthDeps } from '../../routes/authDeps.js';
 import type { AnswerKey } from '../../types/AnswerKey.js';
 import type { PaidBanks } from '../../types/PaidBanks.js';
@@ -39,6 +40,8 @@ interface TestAppOptions {
   extraRoutes?: (router: Router, clock: TestClock) => void;
   logger?: Logger;
   pool: pg.Pool;
+  // The /v1/study-note route, on `pool`, the clock, and the generated rate-limit key secret.
+  studyNote?: Omit<StudyNoteDeps, 'database' | 'now' | 'rateLimitKeySecret'>;
   // The /v1 sync routes, on `pool`, the clock, and the generated rate-limit key secret.
   sync?: { answerKey: AnswerKey };
   // The RevenueCat webhook, on `pool`, the clock, and the generated authorization value.
@@ -58,7 +61,18 @@ function createTestClock(): TestClock {
 }
 
 export function createTestApp(options: TestAppOptions) {
-  const { admin, ask, auth, banks, extraRoutes, logger = pino({ level: 'silent' }), pool, sync, webhooks } = options;
+  const {
+    admin,
+    ask,
+    auth,
+    banks,
+    extraRoutes,
+    logger = pino({ level: 'silent' }),
+    pool,
+    studyNote,
+    sync,
+    webhooks,
+  } = options;
   const clock = createTestClock();
   const rateLimitKeySecret = randomBytes(SECRET_BYTES).toString('hex');
   const revenueCatAuth = randomBytes(SECRET_BYTES).toString('hex');
@@ -71,6 +85,7 @@ export function createTestApp(options: TestAppOptions) {
     db: pool,
     extraRoutes: extraRoutes ? (router: Router) => extraRoutes(router, clock) : undefined,
     logger,
+    ...(studyNote ? { studyNote: { ...studyNote, database: pool, now: clock.now, rateLimitKeySecret } } : {}),
     ...(sync ? { sync: { ...sync, database: pool, now: clock.now, rateLimitKeySecret } } : {}),
     ...(webhooks ? { webhooks: { ...webhooks, database: pool, now: clock.now, revenueCatAuth } } : {}),
   });

@@ -1,22 +1,23 @@
-// The Claude Messages API behind an interface, so POST /v1/ask can be tested without the network.
-// One single-turn request per answer, on Haiku at low effort. Resolves the answer text, or null
-// when the model declined (a refusal) or ran out of room (max_tokens), so a partial answer is
-// never shown. Rejects on any API or network failure after the SDK's one retry. The API key and
-// workspace id come from the caller; this module never reads the environment.
+// The Claude Messages API behind an interface, so POST /v1/ask and GET /v1/study-note can be
+// tested without the network. One single-turn request per answer, on Haiku at low effort.
+// Resolves the answer text, or null when the model declined (a refusal) or ran out of room
+// (max_tokens), so a partial answer is never shown. Rejects on any API or network failure after
+// the SDK's one retry. The API key and workspace id come from the caller; this module never reads
+// the environment.
 import Anthropic from '@anthropic-ai/sdk';
 
-import { ASK } from '../constants/ask.js';
+import { MODEL } from '../constants/model.js';
 
 import { buildAnthropicOptions } from './buildAnthropicOptions.js';
 import type { AnthropicCredentials } from './buildAnthropicOptions.js';
 
-interface AskPrompt {
+interface ModelPrompt {
   system: string;
   user: string;
 }
 
 interface ModelProvider {
-  answer(prompt: AskPrompt): Promise<string | null>;
+  answer(prompt: ModelPrompt): Promise<string | null>;
 }
 
 type MessagesClient = Pick<Anthropic['messages'], 'create'>;
@@ -26,9 +27,7 @@ interface ModelProviderDeps extends AnthropicCredentials {
   messages?: MessagesClient;
 }
 
-const {
-  MODEL: { EFFORT, ID, MAX_TOKENS },
-} = ASK;
+const { EFFORT, ID, MAX_TOKENS } = MODEL;
 
 function createAnthropicModelProvider({ messages, ...credentials }: ModelProviderDeps): ModelProvider {
   const client = messages ?? new Anthropic(buildAnthropicOptions(credentials)).messages;
@@ -52,4 +51,4 @@ function createAnthropicModelProvider({ messages, ...credentials }: ModelProvide
 }
 
 export { createAnthropicModelProvider };
-export type { AskPrompt, MessagesClient, ModelProvider };
+export type { ModelPrompt, MessagesClient, ModelProvider };

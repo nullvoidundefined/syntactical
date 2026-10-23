@@ -37,6 +37,8 @@ import { createMePasswordRouter } from './routes/mePassword.js';
 import { createDisabledWebhookRouter } from './routes/disabledWebhook.js';
 import { createRevenueCatWebhookRouter } from './routes/revenueCatWebhook.js';
 import { createSignOutRouter } from './routes/signOut.js';
+import { createStudyNoteRouter } from './routes/studyNote.js';
+import type { StudyNoteDeps } from './routes/studyNoteDeps.js';
 import type { SyncDeps } from './routes/syncDeps.js';
 import type { WebhookDeps } from './routes/webhookDeps.js';
 
@@ -53,6 +55,8 @@ interface AppDeps {
   db: HealthDb;
   extraRoutes?: (router: Router) => void;
   logger?: Logger;
+  // The /v1/study-note route; omitted, it is not mounted.
+  studyNote?: StudyNoteDeps;
   // Integrations running on a stub, by name; reported on /health/ready.
   stubbed?: readonly string[];
   // The /v1 answer event and profile routes; omitted, they are not mounted.
@@ -76,6 +80,7 @@ function createApp(deps: AppDeps) {
     extraRoutes,
     logger = createLogger({ destination: process.stdout }),
     stubbed = [],
+    studyNote,
     sync,
     webhooks,
     webhooksDisabled = false,
@@ -150,6 +155,11 @@ function createApp(deps: AppDeps) {
   if (ask) {
     const { now = () => new Date() } = ask;
     app.use('/v1', createAskRouter({ ...ask, now }, logger));
+  }
+
+  if (studyNote) {
+    const { now = () => new Date() } = studyNote;
+    app.use('/v1', createStudyNoteRouter({ ...studyNote, now }, logger));
   }
 
   if (admin) {
