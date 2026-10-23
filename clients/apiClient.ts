@@ -16,10 +16,12 @@ type ApiResponse = { status: number; body: unknown };
 
 // responseType 'text' hands back the body exactly as received (a string), for a
 // caller that verifies the bytes, such as a paid bank checked against its hash.
+// timeoutMs replaces API_FETCH_TIMEOUT_MS for a request the server answers slowly by design.
 type ApiRequestInit = {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   body?: unknown;
   responseType?: 'json' | 'text';
+  timeoutMs?: number;
 };
 
 function resolveRequestUrl(path: string): string {
@@ -121,15 +123,11 @@ export async function apiPut(path: string, body: unknown): Promise<ApiResponse> 
 
 async function sendRequest(path: string, init: SentRequestInit): Promise<ApiResponse> {
   const url = resolveRequestUrl(path);
-  const { body, method, responseType = 'json' } = init;
+  const { body, method, responseType = 'json', timeoutMs = API_FETCH_TIMEOUT_MS } = init;
   const hasBody = body !== undefined;
   const { headers, sentSession } = await buildRequest(hasBody);
   const controller = new AbortController();
-  const timeout = createTimeoutRace(
-    API_FETCH_TIMEOUT_MS,
-    () => new ApiUnavailable('API request timed out'),
-    controller,
-  );
+  const timeout = createTimeoutRace(timeoutMs, () => new ApiUnavailable('API request timed out'), controller);
   let result: ApiResponse;
   try {
     result = await Promise.race([

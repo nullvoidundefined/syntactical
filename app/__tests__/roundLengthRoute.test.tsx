@@ -5,6 +5,7 @@ import TopicScreen from '../[language]/[difficulty]/index';
 import RoundScreen from '../[language]/[difficulty]/play';
 
 // Pools: strings 30, numbers 15, other 55, so the whole bank holds 100.
+jest.mock('../../state/useCanAsk', () => ({ useCanAsk: () => false }));
 jest.mock('../../state/StatsProvider', () => ({
   useQuizStats: () => ({ eventLog: [], isHydrated: true, recordAnswer: jest.fn(), recordCompletion: jest.fn() }),
 }));

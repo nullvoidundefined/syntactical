@@ -15,6 +15,7 @@ import { findDifficulty } from '../../../services/content/findDifficulty';
 import { findLanguageEntry } from '../../../services/content/findLanguageEntry';
 import { readRoundCount } from '../../../services/quiz/roundLength';
 import { useQuizStats } from '../../../state/StatsProvider';
+import { useCanAsk } from '../../../state/useCanAsk';
 import { useLanguageManifest } from '../../../state/useLanguageManifest';
 import { useQuestionBank } from '../../../state/useQuestionBank';
 
@@ -38,6 +39,7 @@ export default function RoundScreen() {
   }>();
   const [roundKey, setRoundKey] = useState(0);
   const { isHydrated } = useQuizStats();
+  const canAsk = useCanAsk();
   const { languages } = useLanguageManifest();
   const bankState = useQuestionBank(language, difficulty);
   const languageEntry = findLanguageEntry(languages, language);
@@ -60,6 +62,7 @@ export default function RoundScreen() {
   return (
     <QuizRound
       key={roundKey}
+      canAsk={canAsk}
       difficulty={difficulty}
       difficultyLabel={difficultyEntry.label}
       grammar={grammar}

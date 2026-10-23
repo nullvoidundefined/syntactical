@@ -20,6 +20,8 @@ import { requireJson } from './middleware/requireJson.js';
 import { createAdminAccessRouter } from './routes/adminAccess.js';
 import type { AdminDeps } from './routes/adminDeps.js';
 import { createAnswerEventsRouter } from './routes/answerEvents.js';
+import { createAskRouter } from './routes/ask.js';
+import type { AskDeps } from './routes/askDeps.js';
 import { createAuthCodesRouter } from './routes/authCodes.js';
 import type { AuthDeps, ResolvedAuthDeps } from './routes/authDeps.js';
 import { createAuthSessionsRouter } from './routes/authSessions.js';
@@ -42,6 +44,8 @@ interface AppDeps {
   // The /v1/admin routes; omitted, they are not mounted.
   admin?: AdminDeps;
   allowedOrigins?: string[];
+  // The /v1/ask route; omitted, it is not mounted.
+  ask?: AskDeps;
   // The /v1/auth routes; omitted, they are not mounted.
   auth?: AuthDeps;
   // The /v1 paid bank route; omitted, it is not mounted.
@@ -65,6 +69,7 @@ function createApp(deps: AppDeps) {
   const {
     admin,
     allowedOrigins = [],
+    ask,
     auth,
     banks,
     db,
@@ -140,6 +145,11 @@ function createApp(deps: AppDeps) {
   if (banks) {
     const { now = () => new Date() } = banks;
     app.use('/v1', createBanksRouter({ ...banks, now }));
+  }
+
+  if (ask) {
+    const { now = () => new Date() } = ask;
+    app.use('/v1', createAskRouter({ ...ask, now }, logger));
   }
 
   if (admin) {

@@ -180,6 +180,24 @@ describe('apiFetch hardening on native', () => {
       expect(signal?.aborted).toBe(true);
     });
 
+    it('waits for a per-request timeoutMs in place of the default', async () => {
+      jest.useFakeTimers();
+      const longerTimeoutMs = EXPECTED_TIMEOUT_MS * 3;
+      const { fetchMock } = installDeferredFetch();
+      const { apiFetch, ApiUnavailable } = loadClient();
+
+      const tracked = trackSettled(apiFetch('ask', { body: {}, method: 'POST', timeoutMs: longerTimeoutMs }));
+      await jest.advanceTimersByTimeAsync(longerTimeoutMs - 1);
+
+      expect(tracked.isSettled()).toBe(false);
+
+      await jest.advanceTimersByTimeAsync(1);
+      const outcome = await tracked.outcome;
+
+      expect(outcome.error).toBeInstanceOf(ApiUnavailable);
+      expect(signalOf(fetchMock)?.aborted).toBe(true);
+    });
+
     it('rejects with ApiUnavailable and aborts the request when the body read never finishes within the timeout', async () => {
       jest.useFakeTimers();
       const fetchMock = installFetch({ status: 200, isTextPending: true });

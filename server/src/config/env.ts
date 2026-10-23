@@ -22,6 +22,9 @@ const hashConcurrency = z
 
 const envSchema = z.object({
   ALLOWED_ORIGINS: z.string().min(1),
+  // The Claude API key behind POST /v1/ask. Optional: without it the route answers 503, so a
+  // deploy that has not set it still boots.
+  ANTHROPIC_API_KEY: z.string().trim().min(1).optional(),
   DATABASE_URL: z.string().min(1),
   // The sign-in email's sender, for example `Syntactical <sign-in@syntactical.dev>`.
   EMAIL_FROM: z.string().trim().min(1),

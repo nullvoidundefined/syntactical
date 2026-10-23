@@ -5,6 +5,8 @@
 // each question's bank, labels, and grammar come from describeQuestion. Only a
 // round that plays every question in the bank records a bank completion: a
 // sampled 20 or 50 question round, a topic round, and a review round do not.
+// When the screen says the learner may ask, the drawer offers "Ask about this
+// card" after an answer, naming the question by its bank and bank-order choice.
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import type { Grammar, Question } from '@syntactical/content-schema';
@@ -12,7 +14,7 @@ import type { Grammar, Question } from '@syntactical/content-schema';
 import { readEvidenceSource } from '../../services/quiz/readEvidenceSource';
 import { resolveQuestionGrammar } from '../../services/quiz/resolveQuestionGrammar';
 import { readChosenRationale } from '../../services/quiz/readChosenRationale';
-import { toChoiceIndex } from '../../services/quiz/toChoiceIndex';
+import { toBankChoiceIndex } from '../../services/quiz/toBankChoiceIndex';
 import type { RecordedAnswer } from '../../services/stats/types/RecordedAnswer';
 import { useQuizStats } from '../../state/StatsProvider';
 import { useQueryDrawer } from '../../state/useQueryDrawer';
@@ -39,6 +41,8 @@ export type QuestionSource = {
 };
 
 type QuizRoundProps = QuestionSource & {
+  // Whether the learner may ask about a question after answering it (see useCanAsk).
+  canAsk?: boolean;
   describeQuestion?: (question: Question) => QuestionSource;
   onExit: () => void;
   onRetry: () => void;
@@ -138,6 +142,7 @@ function RoundHeader({
 
 export function QuizRound(props: QuizRoundProps) {
   const {
+    canAsk = false,
     describeQuestion,
     difficulty,
     difficultyLabel,
@@ -183,10 +188,8 @@ export function QuizRound(props: QuizRoundProps) {
     if (isCorrect === null || !currentQuestion) return;
     const { id: questionId } = currentQuestion;
     const { difficulty: questionDifficulty, language: questionLanguage } = source;
-    const displayedChoiceIndex = toChoiceIndex(value);
     const answer = {
-      choiceIndex:
-        currentQuestion.type === 'mc' ? currentQuestion.bankChoiceIndexes[displayedChoiceIndex] : displayedChoiceIndex,
+      choiceIndex: toBankChoiceIndex(currentQuestion, value),
       difficulty: questionDifficulty,
       language: questionLanguage,
       questionId,
@@ -225,7 +228,15 @@ export function QuizRound(props: QuizRoundProps) {
   const questionGrammar = resolveQuestionGrammar(currentQuestion, entryGrammar);
   const answerState = { grammar: questionGrammar, isAnswered, submittedAnswer };
   const { currentIndex, totalQuestions } = engine;
-  const { query, type } = currentQuestion;
+  const { id: questionId, query, type } = currentQuestion;
+  const askTarget =
+    canAsk && submittedAnswer !== null
+      ? {
+          bankKey: `${source.language}/${source.difficulty}`,
+          choiceIndex: toBankChoiceIndex(currentQuestion, submittedAnswer),
+          questionId,
+        }
+      : undefined;
   return (
     <View className="flex-1">
       <RoundHeader currentIndex={currentIndex} onExit={onExit} totalQuestions={totalQuestions} />
@@ -246,6 +257,7 @@ export function QuizRound(props: QuizRoundProps) {
       </ScrollView>
       <KeyboardHintBar questionType={type} isAnswered={isAnswered} />
       <QueryDrawer
+        askTarget={askTarget}
         evidenceSource={readEvidenceSource(currentQuestion)}
         chosenRationale={explainRationale}
         isAnswered={isAnswered}

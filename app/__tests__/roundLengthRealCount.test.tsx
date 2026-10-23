@@ -6,6 +6,7 @@ import RoundScreen from '../[language]/[difficulty]/play';
 
 // The manifest counts drift from the loaded bank: "strings" is listed as 100 but the bank holds 15,
 // and "numbers" is listed as 15 but the bank holds 30. The screens must follow the bank.
+jest.mock('../../state/useCanAsk', () => ({ useCanAsk: () => false }));
 jest.mock('../../state/StatsProvider', () => ({
   useQuizStats: () => ({ eventLog: [], isHydrated: true, recordAnswer: jest.fn(), recordCompletion: jest.fn() }),
 }));

@@ -37,6 +37,7 @@ One line per domain noun used in this codebase's names (files, functions, variab
 - review round: a round built from the review queue instead of a bank (`app/review.tsx`, `services/review/buildReviewQueue.ts`). Chosen over `review session`, `practice`.
 - review state: the per-question `ts-fsrs` card (`due`, `stability`, `difficulty`, `reps`, `lapses`, `state`), rebuilt by replaying answer events (`packages/progress/src/buildReviewState.ts`, `services/review/types/ReviewQueue.ts`). Only a missed question gets a card. Chosen over `srs card`, `schedule`.
 - weakness report: the on-device summary of the most-missed misconceptions (`services/progress/buildWeaknessReport.ts`, `components/stats/WeaknessReport.tsx`). Chosen over `insights`, and `analytics`, which names PostHog events.
+- ask: a learner's follow-up question about one question after answering it, typed in the query drawer and answered by the server with Claude (`POST /v1/ask`, `server/src/routes/ask.ts`, `components/query/AskPanel.tsx`). Open to any user with a granted entitlement, `ASK.DAILY_LIMIT` answers per UTC day counted in `ask_usage`. Chosen over `chat`, `tutor`, which suggest a conversation; each ask stands alone.
 - verified badge: the card label "Output verified on <runtime>", shown only when `provenance.validation` is `executed` and `passed` (`components/quiz/VerifiedBadge.tsx`). Chosen over `checkmark`, `trusted`.
 
 ### Progress
@@ -70,9 +71,9 @@ One line per domain noun used in this codebase's names (files, functions, variab
 
 ### Content pipeline
 
-- pipeline: the `pipeline/` workspace CLI that audits and enriches content at build time (`pipeline/src/commands/`: `validate`, `classify`, `gapFill`, `enrich`, `review`, `publish`, `draftOracles`, `draftTaxonomy`, `rewritePrompts`); no app or server code calls a model. Chosen over `generator`.
+- pipeline: the `pipeline/` workspace CLI that audits and enriches content at build time (`pipeline/src/commands/`: `validate`, `classify`, `gapFill`, `enrich`, `review`, `publish`, `draftOracles`, `draftTaxonomy`, `rewritePrompts`); no app code calls a model, and the server calls one only to answer an ask. Chosen over `generator`.
 - oracle: the code (and optional setup SQL) whose execution output decides a question's answer (`pipeline/src/types/Oracle.ts`). Chosen over `check`, `test`, `probe`.
 - runner: the per-language Docker image plus harness that executes an oracle with no network and fixed limits (`pipeline/runners/<id>/`, ids in `pipeline/src/types/OracleLanguage.ts`). Chosen over `sandbox` as an identifier.
-- model provider: the pipeline interface (`ModelProvider`) over the Anthropic API (`pipeline/src/clients/`). Chosen over `llm client`, `ai service`.
+- model provider: the interface (`ModelProvider`) over the Anthropic API, one in the pipeline (`pipeline/src/clients/`) and one on the server for asks (`server/src/clients/modelProvider.ts`). Chosen over `llm client`, `ai service`.
 - golden set: the fixed set of known-correct and deliberately wrong questions per runner that the validator must classify perfectly (`pipeline/golden/<id>.json`, `pipeline/src/__tests__/services/goldenSet.test.ts`). Chosen over `fixtures`.
 - pipeline report: the JSON a pipeline run writes under `pipeline/reports/` (`pipeline/src/types/PipelineReport.ts`). Chosen over `stats file`, because `stats` names learner stats.

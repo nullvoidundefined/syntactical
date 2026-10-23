@@ -2,21 +2,27 @@
 // action. Before the learner answers it shows only the title and documentation links, which must
 // not give the answer away: on an easy card the syntax teaches the very rule being tested. After
 // they answer it is the full explanation: a wrong choice's rationale first, then the title, the
-// syntax, the explanation, the tags, and, for judged cards, the first evidence source. Slides in unless reduced motion is requested. The panel pads by
-// the device's safe-area insets, since an Android modal draws under the status bar and gesture bar.
+// syntax, the explanation, the tags, and, for judged cards, the first evidence source; then, when
+// the round passes an ask target, the "Ask about this card" box. Slides in unless reduced motion
+// is requested. The panel pads by the device's safe-area insets, since an Android modal draws
+// under the status bar and gesture bar.
 import { useContext } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import type { EvidenceSource, Grammar, Query } from '@syntactical/content-schema';
 
+import type { AskTarget } from '../../services/ask/types/AskTarget';
 import { useIsReducedMotion } from '../../state/useIsReducedMotion';
 import { CodeBlock } from '../quiz/CodeBlock';
 
+import { AskPanel } from './AskPanel';
 import { DocLinks } from './DocLinks';
 import { SourceLink } from './SourceLink';
 
 type QueryDrawerProps = {
+  // Set only after an answer, for a learner who may ask; the box shows when it is set.
+  askTarget?: AskTarget;
   chosenRationale?: string;
   evidenceSource?: EvidenceSource;
   grammar: Grammar;
@@ -27,7 +33,7 @@ type QueryDrawerProps = {
 };
 
 export function QueryDrawer(props: QueryDrawerProps) {
-  const { chosenRationale, evidenceSource, grammar, isAnswered, isOpen, onClose, query } = props;
+  const { askTarget, chosenRationale, evidenceSource, grammar, isAnswered, isOpen, onClose, query } = props;
   const isReducedMotion = useIsReducedMotion();
   const insets = useContext(SafeAreaInsetsContext);
   const { docs, explanation, syntax, tags, title } = query;
@@ -98,6 +104,9 @@ export function QueryDrawer(props: QueryDrawerProps) {
             )}
             {docs?.length ? <DocLinks docs={docs} /> : null}
             {isAnswered && evidenceSource ? <SourceLink source={evidenceSource} /> : null}
+            {isAnswered && askTarget ? (
+              <AskPanel key={`${askTarget.bankKey}/${askTarget.questionId}`} target={askTarget} />
+            ) : null}
           </ScrollView>
         </View>
       </View>
