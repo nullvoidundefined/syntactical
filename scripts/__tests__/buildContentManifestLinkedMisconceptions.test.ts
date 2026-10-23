@@ -6,6 +6,8 @@ import { join } from 'node:path';
 
 import { buildContentManifest } from '../buildContentManifest.mjs';
 
+import { stripMisconceptionLinks } from './stripMisconceptionLinks';
+
 const REPOSITORY_CONTENT_DIR = join(__dirname, '..', '..', 'content');
 const ENTRY_A = { description: 'Believes default arguments are rebuilt on each call.', id: 'python.entry-a' };
 const ENTRY_B = { description: 'Believes a list copy is always deep.', id: 'python.entry-b' };
@@ -31,6 +33,8 @@ describe('buildContentManifest linked misconceptions', () => {
     taxonomyDir = join(workDir, 'taxonomy');
     outputs = { banksPath: join(workDir, 'banks.ts'), manifestPath: join(workDir, 'manifest.ts') };
     await cp(REPOSITORY_CONTENT_DIR, contentDir, { recursive: true });
+    // The real banks link the real taxonomy; each test here supplies its own.
+    await stripMisconceptionLinks(contentDir);
     await mkdir(taxonomyDir);
     await writeFile(join(taxonomyDir, 'python.json'), JSON.stringify(TAXONOMY));
     // Paid banks live in the private repo; each stand-in here is the language's free easy bank.
