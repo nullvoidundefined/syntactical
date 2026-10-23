@@ -1,7 +1,7 @@
 // Deletes a user and everything derived from them (B-59), on the caller's transaction client.
 // The email's advisory lock (the key issueOneTimeCode takes) keeps an in-flight code issue from
 // leaving a fresh code behind. The email's one-time codes and email-keyed rate-limit counters
-// go, then the user row: sessions, answer events, progress, and goal changes cascade, and
+// go, then the user row: sessions, answer events, progress, goal changes, and ask usage cascade, and
 // entitlements and purchase_events keep their rows with user_id null by foreign key. Purchase
 // payloads hold no email or name (the webhook stores an allowlisted projection, B-39), so
 // nothing else holds the identity. Resolves false when the user is already gone, as for a

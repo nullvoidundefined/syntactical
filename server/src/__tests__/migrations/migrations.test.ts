@@ -20,6 +20,7 @@ const ALL_MIGRATIONS = '0';
 
 const APPLICATION_TABLES = [
     'answer_events',
+    'ask_usage',
     'daily_goal_changes',
     'daily_progress',
     'entitlements',
@@ -256,7 +257,7 @@ describe.skipIf(SKIP_DATABASE_TESTS)('migrations', () => {
     );
 
     it(
-        'delete a user with their sessions, events, progress, and goal changes, keeping entitlements and purchase events',
+        'delete a user with their sessions, events, progress, goal changes, and ask usage, keeping entitlements and purchase events',
         async () => {
             migrateUp();
             const { pool } = scratch;
@@ -275,6 +276,9 @@ describe.skipIf(SKIP_DATABASE_TESTS)('migrations', () => {
                 `INSERT INTO daily_goal_changes (user_id, from_date, goal) VALUES ($1, '2026-10-03', 20)`,
                 [learner],
             );
+            await pool.query(`INSERT INTO ask_usage (user_id, usage_date, count) VALUES ($1, '2026-10-03', 3)`, [
+                learner,
+            ]);
             const { rows: entitlementRows } = await pool.query<{ id: string }>(
                 `INSERT INTO entitlements (user_id, product_id, status, source)
                  VALUES ($1, 'syntactical.python.medium', 'granted', 'app_store') RETURNING id`,
@@ -286,7 +290,7 @@ describe.skipIf(SKIP_DATABASE_TESTS)('migrations', () => {
 
             await pool.query('DELETE FROM users WHERE id = $1', [learner]);
 
-            for (const table of ['sessions', 'answer_events', 'daily_progress', 'daily_goal_changes']) {
+            for (const table of ['sessions', 'answer_events', 'daily_progress', 'daily_goal_changes', 'ask_usage']) {
                 expect(await countRows(pool, table, learner), table).toBe(0);
             }
             const { rows: keptEntitlements } = await pool.query('SELECT user_id FROM entitlements WHERE id = $1', [

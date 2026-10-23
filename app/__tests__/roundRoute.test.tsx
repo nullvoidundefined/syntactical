@@ -2,6 +2,7 @@ import { fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-li
 
 import RoundScreen from '../[language]/[difficulty]/play';
 
+jest.mock('../../state/useCanAsk', () => ({ useCanAsk: () => false }));
 jest.mock('../../state/StatsProvider', () => ({
   useQuizStats: () => ({ eventLog: [], isHydrated: true, recordAnswer: jest.fn(), recordCompletion: jest.fn() }),
 }));

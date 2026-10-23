@@ -5,6 +5,7 @@ import LengthScreen from '../[language]/[difficulty]/length';
 import RoundScreen from '../[language]/[difficulty]/play';
 
 // The manifest on main lists no topic counts; the bank itself holds 30 questions.
+jest.mock('../../state/useCanAsk', () => ({ useCanAsk: () => false }));
 jest.mock('../../state/StatsProvider', () => ({
   useQuizStats: () => ({ eventLog: [], isHydrated: true, recordAnswer: jest.fn(), recordCompletion: jest.fn() }),
 }));

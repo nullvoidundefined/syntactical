@@ -113,3 +113,20 @@ This document holds the user stories for choosing a language and difficulty, pla
 
 **E2E test:** `e2e/specs/keyboardNavigation.spec.ts`; also covered by `components/quiz/__tests__/keyboard.web.test.tsx`, `components/quiz/__tests__/KeyboardHintBar.web.test.tsx`, `components/quiz/__tests__/KeyboardHintBar.test.tsx`, `components/menu/__tests__/menuKeyboard.web.test.tsx`
 **Ticket:** IAN-564
+
+## US-QUIZ-008: Ask about a question after answering it
+
+**As** a developer who has bought a bank
+**I want to** ask a follow-up question about the question I just answered
+**So that** I can clear up what the explanation did not
+
+**Acceptance criteria:**
+
+- [ ] After an answer, the query drawer shows "Ask about this card" to a signed-in user with any granted entitlement, and to no one else; it never shows before an answer.
+- [ ] Asking sends the question's bank, id, and the chosen choice by its bank index; the answer appears with the questions left today.
+- [ ] A question from a paid bank can be asked about only by a user entitled to that bank.
+- [ ] Each user gets 20 answers per UTC day; an ask that fails or is declined does not use one up, and the limit, a missing purchase, and an unavailable model each show their own message.
+- [ ] The learner's message is never logged by the server.
+
+**E2E test:** none; covered by `server/src/__tests__/routes/ask.integration.test.ts`, `components/query/__tests__/AskPanel.test.tsx`, `components/quiz/__tests__/quizRoundAsk.test.tsx`
+**Ticket:** none

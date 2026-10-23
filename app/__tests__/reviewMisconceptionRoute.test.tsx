@@ -4,6 +4,7 @@ import { fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-li
 import ReviewScreen from '../review';
 
 const mockRecordAnswer = jest.fn();
+jest.mock('../../state/useCanAsk', () => ({ useCanAsk: () => false }));
 jest.mock('../../state/StatsProvider', () => ({
   useQuizStats: () => ({ eventLog: [], isHydrated: true, recordAnswer: mockRecordAnswer, recordCompletion: jest.fn() }),
 }));

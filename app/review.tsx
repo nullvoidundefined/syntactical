@@ -18,6 +18,7 @@ import { findLanguageEntry } from '../services/content/findLanguageEntry';
 import { listMisconceptionQuestions } from '../services/review/listMisconceptionQuestions';
 import type { ReviewQuestion } from '../services/review/types/ReviewQuestion';
 import { useQuizStats } from '../state/StatsProvider';
+import { useCanAsk } from '../state/useCanAsk';
 import { useLanguageManifest } from '../state/useLanguageManifest';
 import { useReviewQueue } from '../state/useReviewQueue';
 
@@ -39,6 +40,7 @@ function describeSource(reviewQuestion: ReviewQuestion, manifest: Manifest): Que
 
 function ReviewRound({ misconceptionId }: { misconceptionId: string | undefined }) {
   const { dueQuestions, nextDueAt, questionIndex } = useReviewQueue();
+  const canAsk = useCanAsk();
   const manifest = useLanguageManifest();
   const [roundKey, setRoundKey] = useState(0);
   const [snapshot] = useState(() =>
@@ -52,6 +54,7 @@ function ReviewRound({ misconceptionId }: { misconceptionId: string | undefined 
   return (
     <QuizRound
       key={roundKey}
+      canAsk={canAsk}
       {...ROUND_SOURCE}
       difficultyLabel={misconceptionId ? 'Weak spot' : ROUND_SOURCE.difficultyLabel}
       describeQuestion={({ id }) => sources.get(id) ?? ROUND_SOURCE}

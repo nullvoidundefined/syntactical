@@ -5,6 +5,7 @@ import NotFoundScreen from '../+not-found';
 import TopicScreen from '../[language]/[difficulty]/index';
 import RoundScreen from '../[language]/[difficulty]/play';
 
+jest.mock('../../state/useCanAsk', () => ({ useCanAsk: () => false }));
 jest.mock('../../state/StatsProvider', () => ({
   ...jest.requireActual('../../state/StatsProvider'),
   useQuizStats: () => ({

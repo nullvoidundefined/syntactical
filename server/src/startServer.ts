@@ -11,6 +11,8 @@ import { createApp } from './app.js';
 import { createDatabasePool } from './clients/createDatabasePool.js';
 import { createEmailClient } from './clients/emailClient.js';
 import { createLogger } from './clients/logger.js';
+import { createAnthropicModelProvider } from './clients/modelProvider.js';
+import type { ModelProvider } from './clients/modelProvider.js';
 import type { EmailClient } from './clients/emailTypes.js';
 import { createHttpPasswordBreachClient } from './clients/passwordBreachClient.js';
 import type { PasswordBreachClient } from './clients/passwordBreachClient.js';
@@ -21,7 +23,8 @@ import { AUTH } from './constants/auth.js';
 import { createDummyPasswordHash } from './services/passwordHash.js';
 import { createPasswordHashSlots } from './services/passwordHashSlots.js';
 import { readPaidBanks } from './services/readServerBank.js';
-import { readServerManifest } from './services/readServerManifest.js';
+import { readServerQuestions } from './services/readServerQuestions.js';
+import { toAnswerKey } from './services/toAnswerKey.js';
 
 const DEFAULT_PORT = 3001;
 const MAX_PORT = 65_535;
@@ -39,6 +42,8 @@ interface StartOptions {
   // when NODE_ENV is exactly `test`; the production entrypoint never passes it.
   emailClient?: EmailClient;
   logger?: Logger;
+  // Test-only seam: replaces the Claude client behind POST /v1/ask. Refused outside NODE_ENV test.
+  modelProvider?: ModelProvider;
   // Test-only seam: replaces the HIBP client. Refused outside NODE_ENV test, so a deployed
   // server cannot skip the real breach check.
   passwordBreachClient?: PasswordBreachClient;
@@ -80,20 +85,31 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
   if (options.passwordBreachClient !== undefined && source.NODE_ENV !== 'test') {
     throw new Error('An injected fake password breach client is allowed only when NODE_ENV is test');
   }
+  if (options.modelProvider !== undefined && source.NODE_ENV !== 'test') {
+    throw new Error('An injected model provider is allowed only when NODE_ENV is test');
+  }
   const env = loadEnv(source);
   const port = readPort(source);
   const contentDir = source.CONTENT_DIR?.trim() || DEFAULT_CONTENT_DIR;
   const { ALLOWED_ORIGINS, DATABASE_URL, EMAIL_FROM, NODE_ENV, PAID_CONTENT_DIR } = env;
 
-  const answerKey = await readServerManifest(contentDir, PAID_CONTENT_DIR);
+  const questions = await readServerQuestions(contentDir, PAID_CONTENT_DIR);
+  const answerKey = toAnswerKey(questions);
   const paidBanks = await readPaidBanks(contentDir, PAID_CONTENT_DIR);
   const paidProductIds = new Set([...paidBanks.values()].map(({ productId }) => productId));
 
-  const { RESEND_API_KEY, REVENUECAT_WEBHOOK_AUTH, stubbed } = env;
+  const { ANTHROPIC_API_KEY, RESEND_API_KEY, REVENUECAT_WEBHOOK_AUTH, stubbed } = env;
   if (stubbed.length > 0) {
     // Names only, never values. Rate limit counters reset on each restart while their key is a stub.
     logger.warn({ stubbed }, 'running with stubbed integrations');
   }
+
+  if (ANTHROPIC_API_KEY === undefined && options.modelProvider === undefined) {
+    logger.warn('ANTHROPIC_API_KEY is not set; POST /v1/ask answers 503');
+  }
+  const modelProvider =
+    options.modelProvider ??
+    (ANTHROPIC_API_KEY === undefined ? undefined : createAnthropicModelProvider({ apiKey: ANTHROPIC_API_KEY }));
 
   const dummyPasswordHash = await createDummyPasswordHash();
   const pool = createDatabasePool(DATABASE_URL, NODE_ENV, logger);
@@ -102,6 +118,13 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
     allowedOrigins: ALLOWED_ORIGINS.split(',')
       .map((origin) => origin.trim())
       .filter(Boolean),
+    ask: {
+      database: pool,
+      ...(modelProvider ? { modelProvider } : {}),
+      paidBanks,
+      questions,
+      rateLimitKeySecret: env.RATE_LIMIT_KEY_SECRET,
+    },
     auth: {
       database: pool,
       dummyPasswordHash,

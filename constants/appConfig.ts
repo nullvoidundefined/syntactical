@@ -31,6 +31,12 @@ export const PURCHASER_CALL_TIMEOUT_MS = 10000;
 // The longest an API request may take, response and body read together.
 export const API_FETCH_TIMEOUT_MS = 10000;
 
+// POST ask waits on a model answer, which the server bounds at about 25 seconds with its retry.
+export const ASK_FETCH_TIMEOUT_MS = 30000;
+
+// The longest message the ask box sends; the server refuses longer ones.
+export const ASK_MESSAGE_MAX_LENGTH = 500;
+
 // After Web Billing checkout, the purchase-complete route polls the profile
 // this often, for at most this long, for the product's entitlement.
 export const PURCHASE_POLL_INTERVAL_MS = 2000;

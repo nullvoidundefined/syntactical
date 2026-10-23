@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { buildContentManifest } from '../buildContentManifest.mjs';
 
+import { stripMisconceptionLinks } from './stripMisconceptionLinks';
+
 const REPOSITORY_CONTENT_DIR = join(__dirname, '..', '..', 'content');
 const APPROVED = [{ description: 'Believes default arguments are rebuilt on each call.', id: 'python.mutable-default-args' }];
 const DRAFT = [{ description: 'Only a draft, never bundled.', id: 'python.draft-only' }];
@@ -19,6 +21,8 @@ describe('buildContentManifest taxonomy', () => {
         taxonomyDir = join(workDir, 'taxonomy');
         generatedPath = join(workDir, 'bundledContent.ts');
         await cp(REPOSITORY_CONTENT_DIR, contentDir, { recursive: true });
+        // The real banks link the real taxonomy; each test here supplies its own.
+        await stripMisconceptionLinks(contentDir);
         await mkdir(taxonomyDir);
     });
 
