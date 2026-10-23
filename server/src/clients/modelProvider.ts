@@ -1,11 +1,14 @@
 // The Claude Messages API behind an interface, so POST /v1/ask can be tested without the network.
 // One single-turn request per answer, on Haiku at low effort. Resolves the answer text, or null
 // when the model declined (a refusal) or ran out of room (max_tokens), so a partial answer is
-// never shown. Rejects on any API or network failure after the SDK's one retry. The API key comes
-// from the caller; this module never reads the environment.
+// never shown. Rejects on any API or network failure after the SDK's one retry. The API key and
+// workspace id come from the caller; this module never reads the environment.
 import Anthropic from '@anthropic-ai/sdk';
 
 import { ASK } from '../constants/ask.js';
+
+import { buildAnthropicOptions } from './buildAnthropicOptions.js';
+import type { AnthropicCredentials } from './buildAnthropicOptions.js';
 
 interface AskPrompt {
   system: string;
@@ -18,18 +21,17 @@ interface ModelProvider {
 
 type MessagesClient = Pick<Anthropic['messages'], 'create'>;
 
-interface ModelProviderDeps {
-  apiKey: string;
+interface ModelProviderDeps extends AnthropicCredentials {
   // Test seam: replaces the SDK's messages resource.
   messages?: MessagesClient;
 }
 
 const {
-  MODEL: { EFFORT, ID, MAX_RETRIES, MAX_TOKENS, TIMEOUT_MS },
+  MODEL: { EFFORT, ID, MAX_TOKENS },
 } = ASK;
 
-function createAnthropicModelProvider({ apiKey, messages }: ModelProviderDeps): ModelProvider {
-  const client = messages ?? new Anthropic({ apiKey, maxRetries: MAX_RETRIES, timeout: TIMEOUT_MS }).messages;
+function createAnthropicModelProvider({ messages, ...credentials }: ModelProviderDeps): ModelProvider {
+  const client = messages ?? new Anthropic(buildAnthropicOptions(credentials)).messages;
   return {
     async answer({ system, user }) {
       const response = await client.create({

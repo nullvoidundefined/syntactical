@@ -73,7 +73,7 @@ Clone `nullvoidundefined/syntactical-content` beside this repository (`../syntac
 
 ### Rationales and before-answer references for free banks
 
-Each step saves as it goes and skips what is already done, so a rerun only pays for what is missing. Commands run through `claude -p` unless you pass `--api`, which uses `ANTHROPIC_API_KEY`. The second model, which double-checks each result, is `PIPELINE_SECOND_MODEL` (default `claude-haiku-5-5`).
+Each step saves as it goes and skips what is already done, so a rerun only pays for what is missing. Commands run through `claude -p` unless you pass `--api`, which uses `ANTHROPIC_API_KEY` (plus `ANTHROPIC_WORKSPACE_ID` when the key is organization-level). The second model, which double-checks each result, is `PIPELINE_SECOND_MODEL` (default `claude-haiku-5-5`).
 
 1. `npm run pipeline -- enrich --judge-without-oracle [--free-only] [--language python,postgres]` writes a rationale and misconception tag for each wrong choice into `pipeline/enrichment/`. A language needs an approved `pipeline/taxonomy/<language>.json` (draft one with `draft-taxonomy <language>`). A question without a recorded oracle run is grounded in its answer key and explanation, and both models' judges must accept each rationale.
 2. `npm run pipeline -- write-references [--language python,postgres]` writes each question's reference into `pipeline/references/`: a broad topic title and links on the track's documentation hosts, shown before an answer, and a syntax reference with examples, shown after (`pipeline/src/services/references/DOC_HOSTS.ts`). Both models must agree the title and link titles do not give the answer away; a reference that does is rewritten once, then left out.
