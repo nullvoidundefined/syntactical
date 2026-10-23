@@ -1,5 +1,6 @@
-// ANTHROPIC_API_KEY is optional: without it the server boots and POST /v1/ask answers 503. A key
-// that is present but blank still fails, and the error never echoes a value.
+// ANTHROPIC_API_KEY is optional: without it the server boots and POST /v1/ask answers 503. So is
+// ANTHROPIC_WORKSPACE_ID, which only an organization-level key needs. A value that is present but
+// blank still fails, and the error never echoes a value.
 import { randomBytes } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
@@ -35,6 +36,19 @@ describe('loadEnv ANTHROPIC_API_KEY', () => {
   it('refuses a blank key, naming the variable only', () => {
     expect(() => loadEnv({ ...buildValidSource(), ANTHROPIC_API_KEY: '   ' })).toThrow(
       'Invalid environment: ANTHROPIC_API_KEY',
+    );
+  });
+
+  it('leaves the workspace id undefined when it is not set, and passes a set one through trimmed', () => {
+    expect(loadEnv(buildValidSource()).ANTHROPIC_WORKSPACE_ID).toBeUndefined();
+    expect(loadEnv({ ...buildValidSource(), ANTHROPIC_WORKSPACE_ID: ' wrkspc_test ' }).ANTHROPIC_WORKSPACE_ID).toBe(
+      'wrkspc_test',
+    );
+  });
+
+  it('refuses a blank workspace id, naming the variable only', () => {
+    expect(() => loadEnv({ ...buildValidSource(), ANTHROPIC_WORKSPACE_ID: '  ' })).toThrow(
+      'Invalid environment: ANTHROPIC_WORKSPACE_ID',
     );
   });
 });
