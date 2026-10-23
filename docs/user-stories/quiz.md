@@ -130,3 +130,20 @@ This document holds the user stories for choosing a language and difficulty, pla
 
 **E2E test:** none; covered by `server/src/__tests__/routes/ask.integration.test.ts`, `components/query/__tests__/AskPanel.test.tsx`, `components/quiz/__tests__/quizRoundAsk.test.tsx`
 **Ticket:** none
+
+## US-QUIZ-009: Read a weekly study note
+
+**As** a signed-in developer
+**I want to** read a short note on how my week of practice went
+**So that** I know what to work on next
+
+**Acceptance criteria:**
+
+- [ ] The home screen shows "This week's study note" to a signed-in user, and nothing to a guest.
+- [ ] Until 20 answers from the last 7 days have synced, it says how many more are needed; no model is called.
+- [ ] Once there are 20, a note is written from a summary of those answers (counts per bank, review answers, the most missed misconceptions) that holds no question text.
+- [ ] One note is written per local week (Monday to Sunday in the user's timezone) and shown for the rest of that week.
+- [ ] When no note can be written, the home screen shows nothing, and nothing is stored.
+
+**E2E test:** none; covered by `server/src/__tests__/routes/studyNote.integration.test.ts`, `components/stats/__tests__/StudyNote.test.tsx`, `state/__tests__/useStudyNote.test.tsx`
+**Ticket:** none

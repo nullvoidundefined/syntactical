@@ -4,7 +4,7 @@
 // The answer key is included because the learner has already answered when they can ask.
 import type { Question } from '@syntactical/content-schema';
 
-import type { AskPrompt } from '../clients/modelProvider.js';
+import type { ModelPrompt } from '../clients/modelProvider.js';
 
 const SYSTEM = [
   'You are the tutor in Syntactical, a quiz app for learning programming languages.',
@@ -52,7 +52,7 @@ function describeChoices(question: Question, choiceIndex?: number) {
   };
 }
 
-function buildAskPrompt({ choiceIndex, message, question }: AskInput): AskPrompt {
+function buildAskPrompt({ choiceIndex, message, question }: AskInput): ModelPrompt {
   const {
     code,
     prompt,

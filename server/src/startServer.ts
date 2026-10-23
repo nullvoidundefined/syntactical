@@ -23,7 +23,9 @@ import { AUTH } from './constants/auth.js';
 import { createDummyPasswordHash } from './services/passwordHash.js';
 import { createPasswordHashSlots } from './services/passwordHashSlots.js';
 import { readPaidBanks } from './services/readServerBank.js';
+import { readManifest } from './services/readManifest.js';
 import { readServerQuestions } from './services/readServerQuestions.js';
+import { toContentLabels } from './services/toContentLabels.js';
 import { toAnswerKey } from './services/toAnswerKey.js';
 
 const DEFAULT_PORT = 3001;
@@ -42,7 +44,7 @@ interface StartOptions {
   // when NODE_ENV is exactly `test`; the production entrypoint never passes it.
   emailClient?: EmailClient;
   logger?: Logger;
-  // Test-only seam: replaces the Claude client behind POST /v1/ask. Refused outside NODE_ENV test.
+  // Test-only seam: replaces the Claude client behind POST /v1/ask and GET /v1/study-note. Refused outside NODE_ENV test.
   modelProvider?: ModelProvider;
   // Test-only seam: replaces the HIBP client. Refused outside NODE_ENV test, so a deployed
   // server cannot skip the real breach check.
@@ -95,6 +97,7 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
 
   const questions = await readServerQuestions(contentDir, PAID_CONTENT_DIR);
   const answerKey = toAnswerKey(questions);
+  const labels = toContentLabels(await readManifest(contentDir));
   const paidBanks = await readPaidBanks(contentDir, PAID_CONTENT_DIR);
   const paidProductIds = new Set([...paidBanks.values()].map(({ productId }) => productId));
 
@@ -105,7 +108,7 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
   }
 
   if (ANTHROPIC_API_KEY === undefined && options.modelProvider === undefined) {
-    logger.warn('ANTHROPIC_API_KEY is not set; POST /v1/ask answers 503');
+    logger.warn('ANTHROPIC_API_KEY is not set; POST /v1/ask and GET /v1/study-note answer 503');
   }
   const modelProvider =
     options.modelProvider ??
@@ -145,6 +148,13 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
     db: pool,
     logger,
     stubbed,
+    studyNote: {
+      database: pool,
+      labels,
+      ...(modelProvider ? { modelProvider } : {}),
+      questions,
+      rateLimitKeySecret: env.RATE_LIMIT_KEY_SECRET,
+    },
     sync: { answerKey, database: pool, rateLimitKeySecret: env.RATE_LIMIT_KEY_SECRET },
     ...(REVENUECAT_WEBHOOK_AUTH === undefined
       ? { webhooksDisabled: true }

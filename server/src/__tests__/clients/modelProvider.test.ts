@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createAnthropicModelProvider } from '../../clients/modelProvider.js';
 import type { MessagesClient } from '../../clients/modelProvider.js';
-import { ASK } from '../../constants/ask.js';
+import { MODEL } from '../../constants/model.js';
 
 const PROMPT = { system: 'You are the tutor.', user: '<learner_message>"Why?"</learner_message>' };
 
@@ -26,7 +26,7 @@ describe('createAnthropicModelProvider', () => {
     await createAnthropicModelProvider({ apiKey: 'unused', messages }).answer(PROMPT);
 
     expect(create).toHaveBeenCalledWith({
-      max_tokens: ASK.MODEL.MAX_TOKENS,
+      max_tokens: MODEL.MAX_TOKENS,
       messages: [{ content: PROMPT.user, role: 'user' }],
       model: 'claude-haiku-5-5',
       output_config: { effort: 'low' },
