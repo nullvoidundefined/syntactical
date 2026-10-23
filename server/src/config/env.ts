@@ -25,6 +25,9 @@ const envSchema = z.object({
   // The Claude API key behind POST /v1/ask. Optional: without it the route answers 503, so a
   // deploy that has not set it still boots.
   ANTHROPIC_API_KEY: z.string().trim().min(1).optional(),
+  // The workspace an organization-level ANTHROPIC_API_KEY bills to, sent as the
+  // anthropic-workspace-id header. Optional: a workspace-scoped key needs none.
+  ANTHROPIC_WORKSPACE_ID: z.string().trim().min(1).optional(),
   DATABASE_URL: z.string().min(1),
   // The sign-in email's sender, for example `Syntactical <sign-in@syntactical.dev>`.
   EMAIL_FROM: z.string().trim().min(1),

@@ -98,7 +98,7 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
   const paidBanks = await readPaidBanks(contentDir, PAID_CONTENT_DIR);
   const paidProductIds = new Set([...paidBanks.values()].map(({ productId }) => productId));
 
-  const { ANTHROPIC_API_KEY, RESEND_API_KEY, REVENUECAT_WEBHOOK_AUTH, stubbed } = env;
+  const { ANTHROPIC_API_KEY, ANTHROPIC_WORKSPACE_ID, RESEND_API_KEY, REVENUECAT_WEBHOOK_AUTH, stubbed } = env;
   if (stubbed.length > 0) {
     // Names only, never values. Rate limit counters reset on each restart while their key is a stub.
     logger.warn({ stubbed }, 'running with stubbed integrations');
@@ -109,7 +109,9 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
   }
   const modelProvider =
     options.modelProvider ??
-    (ANTHROPIC_API_KEY === undefined ? undefined : createAnthropicModelProvider({ apiKey: ANTHROPIC_API_KEY }));
+    (ANTHROPIC_API_KEY === undefined
+      ? undefined
+      : createAnthropicModelProvider({ apiKey: ANTHROPIC_API_KEY, workspaceId: ANTHROPIC_WORKSPACE_ID }));
 
   const dummyPasswordHash = await createDummyPasswordHash();
   const pool = createDatabasePool(DATABASE_URL, NODE_ENV, logger);

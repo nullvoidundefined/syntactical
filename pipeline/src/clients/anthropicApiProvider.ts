@@ -1,9 +1,11 @@
 // ModelProvider over the Anthropic Messages API. The default client reads
-// ANTHROPIC_API_KEY from the environment itself; this module never touches it.
+// ANTHROPIC_API_KEY from the environment itself; this module never touches it. An
+// organization-level key also needs ANTHROPIC_WORKSPACE_ID (readWorkspaceHeaders).
 import Anthropic from '@anthropic-ai/sdk';
 
 import type { ModelProvider } from '../types/ModelProvider.js';
 import { generateWithRetries } from './generateWithRetries.js';
+import { readWorkspaceHeaders } from './readWorkspaceHeaders.js';
 import { resolveModelId } from './resolveModelId.js';
 
 const MAX_OUTPUT_TOKENS = 8192;
@@ -22,7 +24,9 @@ export function createAnthropicApiProvider(messages?: MessagesClient, model?: st
     return {
         generate(request) {
             const { prompt, system } = request;
-            const client = messages ?? (new Anthropic().messages as unknown as MessagesClient);
+            const client =
+                messages ??
+                (new Anthropic({ defaultHeaders: readWorkspaceHeaders() }).messages as unknown as MessagesClient);
             return generateWithRetries(request, async () => {
                 const response = await client.create({
                     max_tokens: MAX_OUTPUT_TOKENS,
