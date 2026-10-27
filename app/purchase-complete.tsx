@@ -1,5 +1,5 @@
 // Purchase-complete route: where Web Billing checkout returns. It polls the
-// profile through usePurchases().confirm until the product's entitlement appears
+// profile through usePurchases().confirm until GET /me says Pro is active
 // or the deadline passes, and announces the outcome in a polite live region. A
 // missing or invalid product, or a guest, makes no request, and nothing is
 // decided until AuthProvider hydrates.

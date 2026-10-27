@@ -21,6 +21,7 @@ import { usePurchases } from '../state/usePurchases';
 const GOAL_SAVE_FAILED = 'Your daily goal was not saved. Check your connection and try again.';
 
 const RESTORE_DONE = 'Purchases restored.';
+const RESTORE_NOTHING = 'No purchases to restore on this account.';
 const RESTORE_FAILED = 'Restore failed. Check your connection and try again.';
 
 // Native only: Web Billing purchases follow the signed-in account, so the web has nothing to restore.
@@ -33,7 +34,9 @@ function RestorePurchases() {
     setIsBusy(true);
     setMessage(null);
     try {
-      setMessage((await restore()) ? RESTORE_DONE : RESTORE_FAILED);
+      setMessage((await restore()) ? RESTORE_DONE : RESTORE_NOTHING);
+    } catch {
+      setMessage(RESTORE_FAILED);
     } finally {
       setIsBusy(false);
     }
