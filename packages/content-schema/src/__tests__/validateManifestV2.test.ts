@@ -1,7 +1,6 @@
-// B-5: the schema 2 manifest. A bank entry carries access ('free' | 'paid'), a
-// productId exactly when paid (equal to `syntactical.<language>.<difficulty>`),
-// a positive integer contentVersion, and topicCounts keyed by that language's
-// topic ids. A language entry carries its topics and misconception taxonomy.
+// B-5: the schema 2 manifest. A bank entry carries a path, a hash, a positive integer contentVersion,
+// and topicCounts keyed by that language's topic ids. A language entry carries its topics and misconception
+// taxonomy.
 // Every rejection asserts the rule names the element at fault, so a fixture is
 // never rejected for an unrelated reason.
 import { describe, expect, it } from 'vitest';
@@ -12,23 +11,10 @@ const VALID_HASH = 'a'.repeat(32) + '0123456789abcdef'.repeat(2);
 
 type Fixture = Record<string, unknown>;
 
-function buildFreeBank(language: string, difficulty: string, overrides: Fixture = {}): Fixture {
+function buildBank(language: string, difficulty: string, overrides: Fixture = {}): Fixture {
     return {
         path: `${language}/${difficulty}.json`,
         hash: VALID_HASH,
-        access: 'free',
-        contentVersion: 1,
-        topicCounts: {},
-        ...overrides,
-    };
-}
-
-function buildPaidBank(language: string, difficulty: string, overrides: Fixture = {}): Fixture {
-    return {
-        path: `${language}/${difficulty}.json`,
-        hash: VALID_HASH,
-        access: 'paid',
-        productId: `syntactical.${language}.${difficulty}`,
         contentVersion: 1,
         topicCounts: {},
         ...overrides,
@@ -58,12 +44,12 @@ function buildPython(overrides: Fixture = {}): Fixture {
             },
         ],
         banks: {
-            easy: buildFreeBank('python', 'easy', { topicCounts: { strings: 12, iterables: 0 } }),
-            medium: buildPaidBank('python', 'medium', {
+            easy: buildBank('python', 'easy', { topicCounts: { strings: 12, iterables: 0 } }),
+            medium: buildBank('python', 'medium', {
                 contentVersion: 4,
                 topicCounts: { iterables: 7 },
             }),
-            hard: buildPaidBank('python', 'hard', {
+            hard: buildBank('python', 'hard', {
                 topicCounts: { 'errors-and-control-flow': 3 },
             }),
         },
@@ -81,8 +67,8 @@ function buildSql(overrides: Fixture = {}): Fixture {
         topics: [{ id: 'security', label: 'Security' }],
         misconceptions: [{ id: 'sql.null-equals-null', description: 'NULL = NULL is not true.' }],
         banks: {
-            easy: buildFreeBank('sql', 'easy', { topicCounts: { security: 1 } }),
-            medium: buildPaidBank('sql', 'medium'),
+            easy: buildBank('sql', 'easy', { topicCounts: { security: 1 } }),
+            medium: buildBank('sql', 'medium'),
         },
         ...overrides,
     };
@@ -98,8 +84,8 @@ function buildManifestWithPythonLists(overrides: Fixture): Fixture {
     return buildManifest([
         buildPython({
             banks: {
-                easy: buildFreeBank('python', 'easy'),
-                medium: buildPaidBank('python', 'medium'),
+                easy: buildBank('python', 'easy'),
+                medium: buildBank('python', 'medium'),
             },
             ...overrides,
         }),
@@ -143,8 +129,8 @@ describe('validateManifest schema 2', () => {
                 buildManifest([
                     buildPython({
                         banks: {
-                            easy: buildFreeBank('python', 'easy', { topicCounts: {} }),
-                            hard: buildPaidBank('python', 'hard', { topicCounts: { strings: 0 } }),
+                            easy: buildBank('python', 'easy', { topicCounts: {} }),
+                            hard: buildBank('python', 'hard', { topicCounts: { strings: 0 } }),
                         },
                     }),
                 ]),
@@ -155,7 +141,7 @@ describe('validateManifest schema 2', () => {
             expectAccepted(
                 buildManifestWithPythonBank(
                     'medium',
-                    buildPaidBank('python', 'medium', { contentVersion: 9999 }),
+                    buildBank('python', 'medium', { contentVersion: 9999 }),
                 ),
             );
         });
@@ -180,8 +166,8 @@ describe('validateManifest schema 2', () => {
                     },
                 ],
                 banks: {
-                    easy: buildFreeBank('c-sharp', 'easy'),
-                    hard: buildPaidBank('c-sharp', 'hard'),
+                    easy: buildBank('c-sharp', 'easy'),
+                    hard: buildBank('c-sharp', 'hard'),
                 },
             });
             expectAccepted(buildManifest([language]));
@@ -191,80 +177,6 @@ describe('validateManifest schema 2', () => {
     describe('schemaVersion', () => {
         it('rejects a manifest declaring schemaVersion 1', () => {
             expect(validateManifest({ ...buildManifest(), schemaVersion: 1 }).isValid).toBe(false);
-        });
-    });
-
-    describe('bank access', () => {
-        it.each([
-            ['missing', undefined],
-            ['an unknown value', 'premium'],
-            ['capitalized', 'Free'],
-            ['empty', ''],
-            ['null', null],
-            ['a boolean', true],
-        ])('rejects an access that is %s', (_description, access) => {
-            expectRejectedAt(
-                buildManifestWithPythonBank('easy', buildFreeBank('python', 'easy', { access })),
-                'languages[0].banks.easy',
-            );
-        });
-
-        it('rejects a v1-shaped bank entry carrying only path and hash', () => {
-            expectRejectedAt(
-                buildManifestWithPythonBank('easy', { path: 'python/easy.json', hash: VALID_HASH }),
-                'languages[0].banks.easy',
-            );
-        });
-    });
-
-    describe('productId', () => {
-        it('rejects a paid bank without a productId', () => {
-            const bank = buildPaidBank('python', 'medium');
-            delete bank.productId;
-            expectRejectedAt(
-                buildManifestWithPythonBank('medium', bank),
-                'languages[0].banks.medium',
-            );
-        });
-
-        it('rejects a free bank that carries a productId, even the matching one', () => {
-            expectRejectedAt(
-                buildManifestWithPythonBank(
-                    'easy',
-                    buildFreeBank('python', 'easy', { productId: 'syntactical.python.easy' }),
-                ),
-                'languages[0].banks.easy',
-            );
-        });
-
-        it.each([
-            ['another difficulty', 'syntactical.python.hard'],
-            ['another language', 'syntactical.sql.medium'],
-            ['another prefix', 'com.syntactical.python.medium'],
-            ['uppercase', 'Syntactical.Python.Medium'],
-            ['a trailing suffix', 'syntactical.python.medium.v2'],
-            ['empty', ''],
-            ['null', null],
-            ['a number', 42],
-        ])('rejects a paid productId naming %s', (_description, productId) => {
-            expectRejectedAt(
-                buildManifestWithPythonBank(
-                    'medium',
-                    buildPaidBank('python', 'medium', { productId }),
-                ),
-                'languages[0].banks.medium',
-            );
-        });
-
-        it("checks the productId against its own language, not the first language's", () => {
-            const sql = buildSql({
-                banks: {
-                    medium: buildPaidBank('sql', 'medium', {
-                        productId: 'syntactical.python.medium',
-                    }),
-                },
-            });
-            expectRejectedAt(buildManifest([buildPython(), sql]), 'languages[1].banks.medium');
         });
     });
 
@@ -282,8 +194,15 @@ describe('validateManifest schema 2', () => {
             expectRejectedAt(
                 buildManifestWithPythonBank(
                     'easy',
-                    buildFreeBank('python', 'easy', { contentVersion }),
+                    buildBank('python', 'easy', { contentVersion }),
                 ),
+                'languages[0].banks.easy',
+            );
+        });
+
+        it('rejects a v1-shaped bank entry carrying only path and hash', () => {
+            expectRejectedAt(
+                buildManifestWithPythonBank('easy', { path: 'python/easy.json', hash: VALID_HASH }),
                 'languages[0].banks.easy',
             );
         });
@@ -299,7 +218,7 @@ describe('validateManifest schema 2', () => {
             expectRejectedAt(
                 buildManifestWithPythonBank(
                     'easy',
-                    buildFreeBank('python', 'easy', { topicCounts }),
+                    buildBank('python', 'easy', { topicCounts }),
                 ),
                 'languages[0].banks.easy',
             );
@@ -313,7 +232,7 @@ describe('validateManifest schema 2', () => {
             expectRejectedAt(
                 buildManifestWithPythonBank(
                     'easy',
-                    buildFreeBank('python', 'easy', { topicCounts: { [topicId]: 1 } }),
+                    buildBank('python', 'easy', { topicCounts: { [topicId]: 1 } }),
                 ),
                 'languages[0].banks.easy',
             );
@@ -330,7 +249,7 @@ describe('validateManifest schema 2', () => {
             expectRejectedAt(
                 buildManifestWithPythonBank(
                     'easy',
-                    buildFreeBank('python', 'easy', { topicCounts: { strings: count } }),
+                    buildBank('python', 'easy', { topicCounts: { strings: count } }),
                 ),
                 'languages[0].banks.easy',
             );

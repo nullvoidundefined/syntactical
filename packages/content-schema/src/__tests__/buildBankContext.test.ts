@@ -35,7 +35,6 @@ function buildLanguage(overrides: Partial<LanguageEntry> = {}): LanguageEntry {
             easy: {
                 path: 'python/easy.json',
                 hash: VALID_HASH,
-                access: 'free',
                 contentVersion: 1,
                 topicCounts: { strings: 1 },
             },

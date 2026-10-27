@@ -16,7 +16,7 @@ function buildEntry(id: string, overrides: Record<string, unknown> = {}): Record
     topics: [{ id: 'strings', label: 'Strings' }],
     misconceptions: [],
     banks: {
-      easy: { path: `${id}/easy.json`, hash: VALID_HASH, access: 'free', contentVersion: 1, topicCounts: {} },
+      easy: { path: `${id}/easy.json`, hash: VALID_HASH, contentVersion: 1, topicCounts: {} },
     },
     ...overrides,
   };

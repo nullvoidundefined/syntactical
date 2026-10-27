@@ -25,12 +25,11 @@ function isDisplayText(value: unknown): boolean {
   return isTextWithin(value, CONTENT_LIMITS.displayFieldLength);
 }
 
-function findBankProblem(banks: unknown, languageId: string, topicIds: readonly string[]): string | null {
+function findBankProblem(banks: unknown, topicIds: readonly string[]): string | null {
   if (!isRecord(banks) || Object.keys(banks).length === 0) return 'banks is empty';
   for (const [difficulty, bank] of Object.entries(banks)) {
     if (!DIFFICULTY_IDS.includes(difficulty)) return `banks.${difficulty} is not a known difficulty`;
-    const productId = `syntactical.${languageId}.${difficulty}`;
-    const problem = findBankEntryProblem(bank, productId, topicIds);
+    const problem = findBankEntryProblem(bank, topicIds);
     if (problem) return `banks.${difficulty}.${problem}`;
   }
   return null;
@@ -49,7 +48,7 @@ function findLanguageProblem(language: unknown): string | null {
   const misconceptionsProblem = findMisconceptionsProblem(misconceptions, id);
   if (misconceptionsProblem) return misconceptionsProblem;
   const topicIds = (topics as { id: string }[]).map((topic) => topic.id);
-  return findBankProblem(banks, id, topicIds);
+  return findBankProblem(banks, topicIds);
 }
 
 function findLanguagesProblem(languages: unknown[]): string | null {
