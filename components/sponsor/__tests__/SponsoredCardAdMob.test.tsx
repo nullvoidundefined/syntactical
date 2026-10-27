@@ -26,8 +26,19 @@ import {
 } from './mobileAdsMock';
 
 const mockTrackEvent = jest.fn();
+// Jest runs with __DEV__ true, and a dev build always requests the test unit; the card reads its unit as a
+// release build would unless a test sets this.
+const mockIsDevBuild = { current: false };
 const mockSponsor: { current: Record<string, unknown> } = { current: {} };
 
+jest.mock('../../../services/sponsor/readAdMobConfig', () => {
+  const actual = jest.requireActual('../../../services/sponsor/readAdMobConfig');
+  return {
+    ...actual,
+    readAdMobPlacement: (placement: 'results' | 'tracks') =>
+      actual.readAdMobPlacement(placement, mockIsDevBuild.current),
+  };
+});
 jest.mock('../../../state/SponsorProvider', () => ({ useSponsor: () => mockSponsor.current }));
 jest.mock('../../../state/AuthProvider', () => ({
   useAuth: () => ({ isHydrated: true }),
@@ -86,6 +97,7 @@ function readPlaceholder() {
 }
 
 beforeEach(() => {
+  mockIsDevBuild.current = false;
   resetMobileAds();
   queryClient.clear();
   setSponsor('ready');
@@ -225,6 +237,12 @@ describe('SponsoredCard with AdMob on native', () => {
 
   it("uses Google's test unit in a test build, even with a unit id configured", async () => {
     setAdMob({ ...BASE_ADMOB, isTestAds: true, resultsAdUnitId: { ios: UNIT_ID } });
+    await render(<Card />);
+    expect(mobileAdsControl.requests[0]?.adUnitId).toBe(TestIds.NATIVE);
+  });
+
+  it("uses Google's test unit in a dev build, even with a real unit id and test mode off", async () => {
+    mockIsDevBuild.current = true;
     await render(<Card />);
     expect(mobileAdsControl.requests[0]?.adUnitId).toBe(TestIds.NATIVE);
   });
