@@ -3,6 +3,10 @@
 // code and docs/store/privacy-labels.md; it promises nothing the code does not do.
 // The "no location" statements hold only once the owner turns on PostHog "Discard client IP data"
 // (PostHog still receives the request IP otherwise). Verify that before publishing.
+// OWNER TO CONFIRM before publishing: Anthropic's and OpenAI's current API data-retention terms,
+// stating any retention period here and on the account deletion page. The OpenAI SDK documents
+// that a Responses API request stores the response for at least 30 days unless it sets `store`
+// to false, and the fallback provider does not set it today.
 import { LegalList, LegalPage, LegalParagraph, LegalSection } from '../components/legal/LegalPage';
 
 export default function PrivacyScreen() {
@@ -57,6 +61,8 @@ export default function PrivacyScreen() {
           items={[
             'Neon: hosts the database that holds accounts, answers, progress, and purchase records.',
             'Railway: hosts the server.',
+            'Anthropic: answers a question you ask about a card, and writes your weekly study note. It receives the card, its answer and explanation, your choice, and your question, or a summary of your week (counts by bank and the mistakes you made), never your email or user ID.',
+            'OpenAI: does the same, receiving the same text, only when Anthropic is unavailable.',
             'GitHub Pages: hosts the website.',
             'Resend: delivers the one-time sign-in email.',
             'RevenueCat: manages purchases and entitlements, together with Apple and Google.',

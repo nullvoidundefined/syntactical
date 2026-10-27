@@ -1,5 +1,7 @@
 // Account deletion route (web and native), the page Google Play asks for. DRAFT: the owner must fill in
 // [CONTACT EMAIL] before the store listings point at it. The facts match docs/store/privacy-labels.md.
+// OWNER TO CONFIRM: Anthropic's and OpenAI's current API data-retention terms (see app/privacy.tsx);
+// if either keeps inputs for a stated period, add that period to the model line in "What is kept".
 import { LegalList, LegalPage, LegalParagraph, LegalSection } from '../components/legal/LegalPage';
 
 export default function DeleteAccountScreen() {
@@ -42,6 +44,7 @@ export default function DeleteAccountScreen() {
             'PostHog usage events tied to your random user ID, never your email, kept by PostHog.',
             'The RevenueCat customer record, kept by RevenueCat.',
             "Resend's record of the sign-in emails it sent, kept by Resend.",
+            'Questions you asked about a card and the weekly summaries behind your study notes, kept by Anthropic, and by OpenAI when it answered instead, under their API data-retention terms. They carry no email or user ID.',
             'Purchase transactions kept by Apple and Google.',
           ]}
         />

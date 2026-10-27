@@ -14,8 +14,13 @@ Set these on the Railway service. The example column holds placeholders or publi
 | `ALLOWED_ORIGINS`            | Comma-separated exact web origins for CORS and the CSRF origin check.                                                                                                                                                                                                                       | no     | `https://syntactical.dev`               |
 | `EMAIL_FROM`                 | Sender of the sign-in code email.                                                                                                                                                                                                                                                           | no     | `Syntactical <sign-in@syntactical.dev>` |
 | `RESEND_API_KEY`             | Resend API credential for sign-in email.                                                                                                                                                                                                                                                    | yes    | `${RESEND_API_KEY}`                     |
-| `ANTHROPIC_API_KEY`          | Claude API key for `POST /v1/ask` (Ask about this card) and `GET /v1/study-note`. Optional: without it the server starts, logs a warning, and both routes answer 503.                                                                                                                       | no     | `${ANTHROPIC_API_KEY}`                  |
+| `ANTHROPIC_API_KEY`          | Claude API key for `POST /v1/ask` (Ask about this card) and `GET /v1/study-note`. Optional: with neither this nor `OPENAI_API_KEY` the server starts, logs a warning, and both routes answer 503.                                                                                           | no     | `${ANTHROPIC_API_KEY}`                  |
 | `ANTHROPIC_WORKSPACE_ID`     | The Anthropic workspace an organization-level `ANTHROPIC_API_KEY` bills to (`wrkspc_…`, Console → Settings → Workspaces), sent as the `anthropic-workspace-id` header. Required with an organization-level key, which Anthropic refuses without it; leave unset for a workspace-scoped key. | no     | `${ANTHROPIC_WORKSPACE_ID}`             |
+| `ANTHROPIC_MODEL`            | The Claude model id behind Ask and the study note. Defaults to `claude-haiku-5-5`; must match `claude-` followed by lowercase letters, digits, and hyphens. See "Changing or losing a model".                                                                                               | no     | `claude-haiku-5-5`                      |
+| `MODEL_PRIMARY`              | `anthropic` (default) or `openai`: which provider answers first when both keys are set.                                                                                                                                                                                                     | no     | `anthropic`                             |
+| `OPENAI_API_KEY`             | OpenAI API key for the fallback provider. Optional: without it Ask and the study note use Anthropic alone, with one retry.                                                                                                                                                                  | yes    | `${OPENAI_API_KEY}`                     |
+| `OPENAI_MODEL`               | The OpenAI model id. Required with `OPENAI_API_KEY`; no default.                                                                                                                                                                                                                            | no     | `${OPENAI_MODEL}`                       |
+| `OPENAI_REASONING_EFFORT`    | Optional `low`, `medium`, or `high`, sent only when set; set it only for a reasoning model.                                                                                                                                                                                                 | no     | `low`                                   |
 | `RATE_LIMIT_KEY_SECRET`      | At least 32 characters; keys the rate limit counters.                                                                                                                                                                                                                                       | yes    | `${RATE_LIMIT_KEY_SECRET}`              |
 | `REVENUECAT_WEBHOOK_AUTH`    | At least 32 characters; the exact `Authorization` header value RevenueCat sends to the webhook. Without it (stub mode) the webhook answers 503 and no purchase grants Pro.                                                                                                                  | yes    | `${REVENUECAT_WEBHOOK_AUTH}`            |
 | `REVENUECAT_ACCEPT_SANDBOX`  | Exactly `true` or `false`; unset is `false`. Whether a RevenueCat `SANDBOX` event (TestFlight, Play license testers, Web Billing sandbox, all free) grants or revokes Pro. Set `true` on staging only; never on production.                                                                 | no     | `true` (staging)                        |
@@ -134,6 +139,29 @@ To check a deploy:
 
 - Production: send a RevenueCat test event from the dashboard and expect 200 `ignored`.
 - Staging (with `REVENUECAT_ACCEPT_SANDBOX=true`): a sandbox purchase of either product shows `"pro": { "isActive": true, ... }` on `GET /v1/me` for that account; a sandbox refund of the annual then shows `"isActive": false`.
+
+## Changing or losing a model
+
+Ask and the study note call `ANTHROPIC_MODEL` (default `claude-haiku-5-5`) first, or `OPENAI_MODEL` first when
+`MODEL_PRIMARY=openai`. When both keys are set, a failure on the first provider moves the call to the second; with
+one key, the server retries that provider once. A prompt the vendor refuses is final and is never sent to the other
+vendor.
+
+To switch a model (an upgrade, or a retirement notice from Anthropic or OpenAI):
+
+1. Run `npm run model:smoke -w server` locally with the new id in `ANTHROPIC_MODEL` or `OPENAI_MODEL`, or run the
+   "Model smoke" workflow with the id as its input. Every line must say `answered`.
+2. Set the variable on the staging Railway service, ask one question in a preview build, and check the
+   `model call` log lines show the new id with outcome `answered`.
+3. Set it on production, and set the repository variable of the same name (Settings, Secrets and variables,
+   Actions, Variables) so the daily check tests the model production uses.
+
+The "Model smoke" workflow also runs every day with `--models-only` and fails when a configured model is gone (404)
+or a key is refused (401, 403); GitHub emails you about the failed run. If a model is retired or a parameter is
+rejected before you switch, the server logs `model configuration failure` with the provider, model, and status,
+skips that provider for 15 minutes, and answers from the other one. After three failures in a row it logs
+`model provider skipped after repeated failures` and skips the provider for a minute. With only one key set, Ask
+and the study note answer 503 until the variable is fixed.
 
 ## Post-deploy checks
 
