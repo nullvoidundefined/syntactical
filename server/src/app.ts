@@ -38,6 +38,8 @@ import { createSignOutRouter } from './routes/signOut.js';
 import { createStudyNoteRouter } from './routes/studyNote.js';
 import type { StudyNoteDeps } from './routes/studyNoteDeps.js';
 import type { SyncDeps } from './routes/syncDeps.js';
+import { createTestWebhookRouter } from './routes/testWebhook.js';
+import type { TestWebhookDeps } from './routes/testWebhookDeps.js';
 import type { WebhookDeps } from './routes/webhookDeps.js';
 
 interface AppDeps {
@@ -57,6 +59,9 @@ interface AppDeps {
   stubbed?: readonly string[];
   // The /v1 answer event and profile routes; omitted, they are not mounted.
   sync?: SyncDeps;
+  // POST /v1/test/webhook, the webhook with no Authorization check; startServer passes it only for
+  // the testWebhook start option (NODE_ENV=test). Omitted, it is not mounted.
+  testWebhook?: TestWebhookDeps;
   // The /v1/webhooks routes; omitted, they are not mounted.
   webhooks?: WebhookDeps;
   // No webhook credential is configured: every request under /v1/webhooks answers 503 and
@@ -77,6 +82,7 @@ function createApp(deps: AppDeps) {
     stubbed = [],
     studyNote,
     sync,
+    testWebhook,
     webhooks,
     webhooksDisabled = false,
   } = deps;
@@ -95,6 +101,11 @@ function createApp(deps: AppDeps) {
     app.use('/v1/webhooks', createRevenueCatWebhookRouter(webhooks, logger));
   } else if (webhooksDisabled) {
     app.use('/v1/webhooks', createDisabledWebhookRouter());
+  }
+  // Test-only, and mounted beside the webhook for the same reason: it reads its own body and
+  // carries no cookie, so the JSON guard, the global parser, and the CSRF guard do not apply.
+  if (testWebhook) {
+    app.use('/v1/test', createTestWebhookRouter(testWebhook, logger));
   }
   app.use(requireJson);
   // The upload route reads its larger body in its own router, after authentication; only
