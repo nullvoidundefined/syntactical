@@ -174,7 +174,7 @@ describe('purchase-complete route', () => {
     expect(screen.queryByText(STILL_PROCESSING)).toBeNull();
   });
 
-  it('shows "Unlocked" once data.entitlements includes the product and makes no further request', async () => {
+  it('shows "You\'re Pro" once /me reports pro.isActive and makes no further request', async () => {
     const { requests } = installRoutedFetch({
       'GET me': [profileReply(false), profileReply(false), profileReply(true)],
     });
@@ -288,7 +288,7 @@ describe('purchase-complete route', () => {
     expect(findPoliteRegion(STILL_PROCESSING)).not.toBeNull();
   });
 
-  it('announces "Unlocked" in the polite live region', async () => {
+  it('announces "You\'re Pro" in the polite live region', async () => {
     installRoutedFetch({ 'GET me': profileReply(true) });
     await open(PRODUCT);
     expect(findPoliteRegion(UNLOCKED)).not.toBeNull();
