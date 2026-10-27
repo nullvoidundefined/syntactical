@@ -14,7 +14,6 @@ import type { AskTarget } from '../../services/ask/types/AskTarget';
 const FAILURE_MESSAGES: Record<AskFailure, string> = {
   busy: 'Too many questions at once. Try again in a minute.',
   limit: "You've used today's questions. They reset at midnight UTC.",
-  locked: 'Asking about a card comes with any purchase.',
   unavailable: 'No answer right now. Try again in a moment.',
 };
 
