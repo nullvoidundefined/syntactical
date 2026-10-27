@@ -1,19 +1,18 @@
-// Copies one access tier of bank files, and nothing else, out of a content checkout for the server
-// image. Used by server/Dockerfile.
+// Copies the manifest and every bank it lists, and nothing else, out of a content directory for the
+// server image. Used by server/scripts/stageBuildContent.sh and server/Dockerfile.
 //
-//   node copyContent.mjs <manifest.json> <fromDir> <toDir> <free|paid>
+//   node copyContent.mjs <manifest.json> <fromDir> <toDir>
 //
-// Every bank the manifest lists for that tier must exist under fromDir and match the manifest
-// hash, or the build fails here rather than the server failing at startup. The free tier also
-// copies the manifest itself. Files outside the manifest (a .git directory, deploy notes, other
-// banks) are never copied.
+// Every bank the manifest lists must exist under fromDir and match the manifest hash, or the build
+// fails here rather than the server skipping it at startup. Files outside the manifest (a .git
+// directory, notes, stray banks) are never copied.
 import { createHash } from 'node:crypto';
 import { copyFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join, posix } from 'node:path';
 
-const [manifestPath, fromDir, toDir, access] = process.argv.slice(2);
-if (!manifestPath || !fromDir || !toDir || (access !== 'free' && access !== 'paid')) {
-  console.error('usage: copyContent.mjs <manifest.json> <fromDir> <toDir> <free|paid>');
+const [manifestPath, fromDir, toDir] = process.argv.slice(2);
+if (!manifestPath || !fromDir || !toDir) {
+  console.error('usage: copyContent.mjs <manifest.json> <fromDir> <toDir>');
   process.exit(2);
 }
 
@@ -34,11 +33,9 @@ function isSafeRelativePath(path) {
 }
 
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-const entries = manifest.languages
-  .flatMap(({ banks }) => Object.values(banks))
-  .filter((entry) => entry.access === access);
+const entries = manifest.languages.flatMap(({ banks }) => Object.values(banks));
 if (entries.length === 0) {
-  fail(`the manifest lists no ${access} banks`);
+  fail('the manifest lists no banks');
 }
 
 for (const { hash, path } of entries) {
@@ -49,7 +46,7 @@ for (const { hash, path } of entries) {
   try {
     bytes = readFileSync(join(fromDir, path));
   } catch {
-    fail(`${access} bank missing: ${path}`);
+    fail(`bank missing: ${path}`);
   }
   if (createHash('sha256').update(bytes).digest('hex') !== hash) {
     fail(`bank hash mismatch: ${path}`);
@@ -59,8 +56,6 @@ for (const { hash, path } of entries) {
   copyFileSync(join(fromDir, path), target);
 }
 
-if (access === 'free') {
-  mkdirSync(toDir, { recursive: true });
-  copyFileSync(manifestPath, join(toDir, 'manifest.json'));
-}
-console.log(`copyContent: copied ${entries.length} ${access} bank(s)`);
+mkdirSync(toDir, { recursive: true });
+copyFileSync(manifestPath, join(toDir, 'manifest.json'));
+console.log(`copyContent: copied ${entries.length} bank(s) and the manifest`);
