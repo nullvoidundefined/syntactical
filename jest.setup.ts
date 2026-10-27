@@ -61,12 +61,14 @@ if (typeof globalThis.TextDecoder === 'undefined') {
 // Node's own MessageChannel would hold an open handle once react-dom/server listens on it, so a single-suite run
 // never exits. renderToString never posts to it; this stand-in delivers a posted message on a timer.
 if (typeof globalThis.MessageChannel === 'undefined') {
+  // Captured now, so a suite that installs fake timers does not stall React's scheduler on this port.
+  const realSetTimeout = globalThis.setTimeout;
   class TestMessagePort {
     onmessage: ((event: { data: unknown }) => void) | null = null;
     peer: TestMessagePort | null = null;
     close() {}
     postMessage(data: unknown) {
-      setTimeout(() => this.peer?.onmessage?.({ data }), 0);
+      realSetTimeout(() => this.peer?.onmessage?.({ data }), 0);
     }
     start() {}
   }
