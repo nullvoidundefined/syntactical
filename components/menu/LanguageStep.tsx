@@ -1,10 +1,15 @@
 // Step 1 of the launch flow: choose a language or topic track from the manifest. Entries are
 // grouped by category in display order, with uncategorized entries under "More" last;
-// number keys follow the displayed order across all groups.
+// number keys follow the displayed order across all groups. One sponsored card sits after
+// the first group, outside the number-key order, for users who may see cards.
+import { Fragment } from 'react';
+
 import { TRACK_CATEGORIES, type LanguageEntry, type TrackCategory } from '@syntactical/content-schema';
 import { Text, View } from 'react-native';
 
 import { useKeyboardNav } from '../../state/useKeyboardNav';
+
+import { SponsoredCard } from '../sponsor/SponsoredCard';
 
 import { SelectionCard } from './SelectionCard';
 import { pickKeyHint } from './pickKeyHint';
@@ -36,26 +41,29 @@ export function LanguageStep({ languages, onSelectLanguage }: LanguageStepProps)
   return (
     <View>
       <Text className="mb-4 font-mono text-xs uppercase tracking-widest text-muted">Step 1 / Select language</Text>
-      {groups.map(({ entries, heading }) => (
-        <View key={heading} className="mb-6">
-          <Text role="heading" aria-level={2} className="mb-3 font-mono text-xs uppercase tracking-widest text-muted">
-            {heading}
-          </Text>
-          <View className="gap-3">
-            {entries.map((entry) => {
-              const index = ordered.indexOf(entry);
-              return (
-                <SelectionCard
-                  key={entry.id}
-                  keyHint={pickKeyHint(index + 1)}
-                  title={entry.label}
-                  subtitle={entry.tagline}
-                  onSelect={() => onSelectLanguage(entry.id)}
-                />
-              );
-            })}
+      {groups.map(({ entries, heading }, groupIndex) => (
+        <Fragment key={heading}>
+          <View className="mb-6">
+            <Text role="heading" aria-level={2} className="mb-3 font-mono text-xs uppercase tracking-widest text-muted">
+              {heading}
+            </Text>
+            <View className="gap-3">
+              {entries.map((entry) => {
+                const index = ordered.indexOf(entry);
+                return (
+                  <SelectionCard
+                    key={entry.id}
+                    keyHint={pickKeyHint(index + 1)}
+                    title={entry.label}
+                    subtitle={entry.tagline}
+                    onSelect={() => onSelectLanguage(entry.id)}
+                  />
+                );
+              })}
+            </View>
           </View>
-        </View>
+          {groupIndex === 0 ? <SponsoredCard placement="tracks" /> : null}
+        </Fragment>
       ))}
     </View>
   );
