@@ -5,6 +5,8 @@ import TopicScreen from '../[language]/[difficulty]/index';
 import RoundScreen from '../[language]/[difficulty]/play';
 
 // Pools: strings 30, numbers 15, other 55, so the whole bank holds 100.
+// The routes wait for ContentProvider's cache read (Task 5.2); this suite renders them without the provider.
+jest.mock('../../state/ContentProvider', () => ({ useContentContext: () => ({ isHydrated: true }) }));
 jest.mock('../../state/useCanAsk', () => ({ useCanAsk: () => false }));
 jest.mock('../../state/StatsProvider', () => ({
   useQuizStats: () => ({ eventLog: [], isHydrated: true, recordAnswer: jest.fn(), recordCompletion: jest.fn() }),

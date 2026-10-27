@@ -2,19 +2,46 @@ import { fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-li
 
 import RoundScreen from '../[language]/[difficulty]/play';
 
+// The routes wait for ContentProvider's cache read (Task 5.2); this suite renders them without the provider.
+jest.mock('../../state/ContentProvider', () => ({ useContentContext: () => ({ isHydrated: true }) }));
 jest.mock('../../state/useCanAsk', () => ({ useCanAsk: () => false }));
 jest.mock('../../state/StatsProvider', () => ({
   useQuizStats: () => ({ eventLog: [], isHydrated: true, recordAnswer: jest.fn(), recordCompletion: jest.fn() }),
 }));
 jest.mock('../../state/useLanguageManifest', () => ({
   useLanguageManifest: () => ({
-    languages: [{ banks: { easy: { hash: 'a'.repeat(64), path: 'python/easy.json' } }, glyph: 'PY', grammar: 'python', id: 'python', label: 'Python', tagline: 't' }],
+    languages: [
+      {
+        banks: { easy: { hash: 'a'.repeat(64), path: 'python/easy.json' } },
+        glyph: 'PY',
+        grammar: 'python',
+        id: 'python',
+        label: 'Python',
+        tagline: 't',
+      },
+    ],
     schemaVersion: 2,
   }),
 }));
 jest.mock('../../state/useQuestionBank', () => ({
   useQuestionBank: () => ({
-    bank: { hash: 'a'.repeat(64), questions: [{ answer: true, id: 'q-1', prompt: 'Is it?', query: { explanation: 'e', title: 't' }, provenance: { isHumanReviewed: false, source: 'original', validation: { method: 'judged', status: 'pending' } }, type: 'bool' }] },
+    bank: {
+      hash: 'a'.repeat(64),
+      questions: [
+        {
+          answer: true,
+          id: 'q-1',
+          prompt: 'Is it?',
+          query: { explanation: 'e', title: 't' },
+          provenance: {
+            isHumanReviewed: false,
+            source: 'original',
+            validation: { method: 'judged', status: 'pending' },
+          },
+          type: 'bool',
+        },
+      ],
+    },
     status: 'ready',
   }),
 }));

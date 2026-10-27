@@ -1,7 +1,9 @@
-// Reads the cached manifest and every cached bank once at startup, then
-// renders the app. Rounds never wait on the network: whatever is cached,
-// or bundled, is available as soon as this read completes. It then
-// refreshes the manifest and refetches every local bank whose hash changed.
+// Serves the bundled manifest and banks from the first render, so the static web
+// export and the first client render carry real route content, then reads the
+// cached manifest and every cached bank once and switches to them. isHydrated on
+// the context says which: a route that resolves content from its query waits for
+// it. Rounds never wait on the network. Once the cache is read it refreshes the
+// manifest and refetches every local bank whose hash changed.
 import { buildBankContext, validateQuestionBank } from '@syntactical/content-schema';
 import type { CachedBank, Manifest } from '@syntactical/content-schema';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
@@ -26,6 +28,9 @@ type HydratedContent = { banks: Map<string, CachedBank>; manifest: Manifest };
 
 const ContentContext = createContext<ContentAccess | null>(null);
 const BUNDLED = BUNDLED_MANIFEST;
+// What every render uses until the cache read finishes, and what a failed read
+// falls back to: no cached banks, so readLocalBank serves the bundled ones.
+const BUNDLED_CONTENT: HydratedContent = { banks: new Map(), manifest: BUNDLED };
 
 function buildBankId(language: string, difficulty: string): string {
   return `${language}/${difficulty}`;
@@ -71,16 +76,19 @@ async function hydrateContent(): Promise<HydratedContent> {
 }
 
 // A bank downloaded this session wins over the startup snapshot, so reviews and the prefetch see it without a
-// restart; the snapshot wins over the bundle.
+// restart; the snapshot wins over the bundle. Before the cache read the snapshot is empty and nothing has
+// downloaded, so only bundled banks are local.
 function buildContentAccess(
-  hydrated: HydratedContent,
+  content: HydratedContent,
   contentBaseUrl: string | null,
   queryClient: QueryClient,
+  isHydrated: boolean,
 ): ContentAccess {
-  const { banks, manifest } = hydrated;
+  const { banks, manifest } = content;
   return {
     baselineManifest: manifest,
     contentBaseUrl,
+    isHydrated,
     readLocalBank: (language, difficulty) =>
       readDownloadedBank(queryClient, language, difficulty) ??
       banks.get(buildBankId(language, difficulty)) ??
@@ -91,28 +99,29 @@ function buildContentAccess(
 export function ContentProvider({ contentBaseUrl, children }: { contentBaseUrl: string | null; children: ReactNode }) {
   const queryClient = useQueryClient();
   const [hydrated, setHydrated] = useState<HydratedContent | null>(null);
+  const isHydrated = hydrated !== null;
 
   useEffect(() => {
     hydrateContent()
       .catch((err: unknown) => {
         logWarning({ err }, 'content hydration failed');
-        return { banks: new Map<string, CachedBank>(), manifest: BUNDLED };
+        return BUNDLED_CONTENT;
       })
       .then(setHydrated);
   }, []);
 
   const access = useMemo(
-    () => (hydrated ? buildContentAccess(hydrated, contentBaseUrl, queryClient) : null),
-    [hydrated, contentBaseUrl, queryClient],
+    () => buildContentAccess(hydrated ?? BUNDLED_CONTENT, contentBaseUrl, queryClient, isHydrated),
+    [hydrated, contentBaseUrl, isHydrated, queryClient],
   );
 
-  const { data: fetchedManifest } = useQuery(buildManifestQuery(contentBaseUrl, access !== null));
+  // The refresh waits for the cache read, so it compares against what the device holds.
+  const { data: fetchedManifest } = useQuery(buildManifestQuery(contentBaseUrl, isHydrated));
 
   useEffect(() => {
-    if (access && fetchedManifest) prefetchChangedBanks(queryClient, fetchedManifest, access);
-  }, [access, fetchedManifest, queryClient]);
+    if (isHydrated && fetchedManifest) prefetchChangedBanks(queryClient, fetchedManifest, access);
+  }, [access, fetchedManifest, isHydrated, queryClient]);
 
-  if (!access) return null;
   return <ContentContext.Provider value={access}>{children}</ContentContext.Provider>;
 }
 

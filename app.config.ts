@@ -1,6 +1,6 @@
-// Expo configuration. The web app is served from the root of https://syntactical.dev (B-55), which
-// is same-site with the API so the SameSite=Lax session cookie works. EXPO_BASE_URL may only be a
-// lowercase sub-path such as /preview, and the content URL follows it.
+// Expo configuration. The web app is a static export (one HTML page per route) served from the root of
+// https://syntactical.dev (B-55) by Cloudflare Pages, which is same-site with the API so the SameSite=Lax session
+// cookie works. EXPO_BASE_URL may only be a lowercase sub-path such as /preview, and the content URL follows it.
 import type { ExpoConfig } from 'expo/config';
 
 const CONTENT_ORIGIN = 'https://syntactical.dev';
@@ -90,7 +90,7 @@ const config: ExpoConfig = {
   slug: 'syntactical',
   userInterfaceStyle: 'dark',
   version: '1.0.0',
-  web: { bundler: 'metro', output: 'single' },
+  web: { bundler: 'metro', output: 'static' },
 };
 
 export default config;

@@ -6,7 +6,14 @@ import { ScrollView, View } from 'react-native';
 import NotFoundScreen from '../+not-found';
 import { DifficultyStep } from '../../components/menu/DifficultyStep';
 import { findLanguageEntry } from '../../services/content/findLanguageEntry';
+import { listLanguageParams, type LanguageParams } from '../../services/content/listStaticRouteParams';
 import { useLanguageManifest } from '../../state/useLanguageManifest';
+
+// One static page per track in the bundled manifest; a track added later is still served by the not-found page,
+// whose client router renders this route.
+export function generateStaticParams(): LanguageParams[] {
+  return listLanguageParams();
+}
 
 export default function DifficultyScreen() {
   const { language } = useLocalSearchParams<{ language: string }>();

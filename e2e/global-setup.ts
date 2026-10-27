@@ -1,7 +1,7 @@
 // Starts everything the specs run against, and returns the function that removes it: a throwaway
 // Postgres, the real migrations, the real API (through startServer, with sign-in codes captured to
-// a file), the web export built against that API, and a static host for it. The state directory
-// holds the run's private files and is deleted at the end.
+// a file), the static web export built against that API with its host files, and a host that serves it as Cloudflare
+// Pages does. The state directory holds the run's private files and is deleted at the end.
 import { spawn, spawnSync } from 'node:child_process';
 import type { ChildProcess } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
@@ -118,6 +118,7 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
       E2E_CONTENT_BASE_URL: `${webOrigin}${BASE_PATH}/content/`,
       EXPO_NO_TELEMETRY: '1',
     });
+    runStep('writing the host files', 'node', ['scripts/writeHostFiles.mjs', webDir]);
     const webHost = await startWebHost({ contentDir: publicDir, port: webPort, webDir });
     stops.push(
       () =>
