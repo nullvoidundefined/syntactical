@@ -43,10 +43,12 @@ function holdManifestRead(): () => void {
   const gate = new Promise<void>((resolve) => {
     release = resolve;
   });
-  const readItem = AsyncStorage.getItem.bind(AsyncStorage);
+  // The mock's getItem is already a jest.fn, so spyOn returns that same function: read through multiGet rather
+  // than a captured getItem, which would call itself.
   jest.spyOn(AsyncStorage, 'getItem').mockImplementation(async (key: string) => {
     if (key === CONTENT_CACHE_KEYS.manifest) await gate;
-    return readItem(key);
+    const [[, value]] = await AsyncStorage.multiGet([key]);
+    return value;
   });
   return release;
 }
