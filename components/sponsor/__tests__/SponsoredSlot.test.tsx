@@ -17,7 +17,7 @@ describe('SponsoredSlot', () => {
       </SponsoredSlot>,
     );
     expect(screen.getByTestId('sponsored-slot')).toHaveStyle({ height: SPONSOR_SLOT_HEIGHT });
-    view.rerender(
+    await view.rerender(
       <SponsoredSlot placement="results">
         <Text>a filled card</Text>
       </SponsoredSlot>,

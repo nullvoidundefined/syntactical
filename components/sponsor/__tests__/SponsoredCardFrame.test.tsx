@@ -3,7 +3,6 @@
 // (AdMob's attribution rule), the body is one line, the icon sits before the text, and the one button is a
 // link whose name starts with "Sponsored:".
 import { fireEvent, render, screen } from '@testing-library/react-native';
-import type { ReactTestInstance } from 'react-test-renderer';
 
 import { HOUSE_CARD } from '../../../constants/sponsor';
 import { SponsorContentCard } from '../SponsoredCardFrame';
@@ -22,7 +21,7 @@ describe('SponsorContentCard on native', () => {
     await render(<SponsorContentCard content={HOUSE_CARD} onPress={jest.fn()} />);
     const card = screen.getByTestId('sponsored-card');
     const label = screen.getByText('Sponsored');
-    const firstHost = card.findAll((node: ReactTestInstance) => node !== card && typeof node.type === 'string')[0];
+    const firstHost = card.queryAll((node) => node !== card && typeof node.type === 'string')[0];
     expect(firstHost).toBe(label);
     expect(label).toHaveStyle({ minHeight: 15 });
   });
@@ -51,8 +50,10 @@ describe('SponsorContentCard on native', () => {
 
   it('shows the icon only when the content has one', async () => {
     await render(<SponsorContentCard content={DIRECT} onPress={jest.fn()} />);
-    expect(screen.getByTestId('sponsored-card-icon').props.source).toEqual({ uri: DIRECT.iconUri });
+    expect(screen.getByTestId('sponsored-card-icon', { includeHiddenElements: true }).props.source).toEqual({
+      uri: DIRECT.iconUri,
+    });
     await render(<SponsorContentCard content={HOUSE_CARD} onPress={jest.fn()} />);
-    expect(screen.queryByTestId('sponsored-card-icon')).toBeNull();
+    expect(screen.queryByTestId('sponsored-card-icon', { includeHiddenElements: true })).toBeNull();
   });
 });
