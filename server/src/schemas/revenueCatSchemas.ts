@@ -1,9 +1,15 @@
-// The shape of a RevenueCat webhook body; fields beyond these are kept but not checked here.
+// The shapes of a RevenueCat webhook body: the event type alone, read first, and the full event a handled type must carry. Fields beyond these are kept but not checked here.
 import { z } from 'zod';
 
 import { WEBHOOKS } from '../constants/webhooks.js';
 
 const revenueCatSchemas = {
+  // Read first: only the event type, so an unhandled type is answered without the full shape.
+  eventType: z.object({
+    event: z.looseObject({
+      type: z.string().min(1),
+    }),
+  }),
   webhook: z.object({
     event: z.looseObject({
       app_user_id: z.string().max(WEBHOOKS.MAX_EVENT_ID_LENGTH),
