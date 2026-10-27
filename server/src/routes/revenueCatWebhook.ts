@@ -34,7 +34,7 @@ const { BODY_LIMIT, MIN_AUTH_LENGTH } = WEBHOOKS;
 const HANDLED_TYPES: ReadonlySet<string> = new Set([...GRANT_TYPES, ...REVOKE_TYPES]);
 
 function createRevenueCatWebhookRouter(deps: WebhookDeps, logger: Logger): Router {
-  const { database, paidProductIds, revenueCatAuth } = deps;
+  const { database, revenueCatAuth } = deps;
   if (revenueCatAuth.trim().length < MIN_AUTH_LENGTH) {
     throw new Error(`webhooks.revenueCatAuth must be at least ${MIN_AUTH_LENGTH} characters`);
   }
@@ -80,12 +80,7 @@ function createRevenueCatWebhookRouter(deps: WebhookDeps, logger: Logger): Route
         res.status(OK).json({ data: { status: 'ignored' } });
         return;
       }
-      const status = await recordPurchaseEvent({
-        database,
-        event,
-        logger: requestLog(res, logger),
-        paidProductIds,
-      });
+      const status = await recordPurchaseEvent({ database, event, logger: requestLog(res, logger) });
       res.status(OK).json({ data: { status } });
     },
   );

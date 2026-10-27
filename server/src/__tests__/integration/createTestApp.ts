@@ -42,7 +42,7 @@ interface TestAppOptions {
   // The /v1 sync routes, on `pool`, the clock, and the generated rate-limit key secret.
   sync?: { answerKey: AnswerKey };
   // The RevenueCat webhook, on `pool`, the clock, and the generated authorization value.
-  webhooks?: { paidProductIds: ReadonlySet<string> };
+  webhooks?: boolean;
 }
 
 function createTestClock(): TestClock {
@@ -82,7 +82,7 @@ export function createTestApp(options: TestAppOptions) {
     logger,
     ...(studyNote ? { studyNote: { ...studyNote, database: pool, now: clock.now, rateLimitKeySecret } } : {}),
     ...(sync ? { sync: { ...sync, database: pool, now: clock.now, rateLimitKeySecret } } : {}),
-    ...(webhooks ? { webhooks: { ...webhooks, database: pool, now: clock.now, revenueCatAuth } } : {}),
+    ...(webhooks ? { webhooks: { database: pool, now: clock.now, revenueCatAuth } } : {}),
   });
   return { app, clock, rateLimitKeySecret, revenueCatAuth };
 }

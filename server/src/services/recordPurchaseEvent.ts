@@ -5,10 +5,13 @@
 // 'duplicate'. The transaction has the statement and lock timeouts (withTransaction hasTimeouts),
 // so a held user row lock surfaces as a retryable 503 and stores nothing. Rows are never updated. Any thrown error rolls back and propagates, so
 // RevenueCat redelivers. The stored payload is an allowlist of scalar fields, never the body.
+// Only the two Pro products (constants/proProducts.ts) change an entitlement; any other product is recorded and warned about.
+// product_id is normalised first (a Play id's base-plan suffix stripped); the normalised id is matched, locked on, and stored, and the payload keeps the raw value.
 import type { Logger } from 'pino';
 
 import type { Database } from '../clients/database.js';
 import { withTransaction } from '../clients/withTransaction.js';
+import { normalizeProductId, PRO_PRODUCT_ID_LIST } from '../constants/proProducts.js';
 import { REVENUECAT_EVENTS } from '../constants/revenueCatEvents.js';
 
 import { recomputeEntitlement } from './recomputeEntitlement.js';
@@ -30,7 +33,6 @@ interface RecordPurchaseEventOptions {
   database: Database;
   event: RevenueCatEvent;
   logger: Logger;
-  paidProductIds: ReadonlySet<string>;
 }
 
 type RecordResult = 'duplicate' | 'recorded';
@@ -47,16 +49,17 @@ function buildPayload(event: RevenueCatEvent): Record<string, string | number | 
 }
 
 async function recordPurchaseEvent(options: RecordPurchaseEventOptions): Promise<RecordResult> {
-  const { database, event, logger, paidProductIds } = options;
+  const { database, event, logger } = options;
   const {
     app_user_id: appUserId,
     event_timestamp_ms: eventTimestampMs,
     id,
-    product_id: productId,
+    product_id: rawProductId,
     store,
     type,
   } = event;
-  const isPaidProduct = paidProductIds.has(productId);
+  const productId = normalizeProductId(rawProductId);
+  const isProProduct = (PRO_PRODUCT_ID_LIST as readonly string[]).includes(productId);
   const canChangeEntitlement = (REVENUECAT_EVENTS.STORES as readonly string[]).includes(store);
 
   return withTransaction<RecordResult>(
@@ -78,12 +81,20 @@ async function recordPurchaseEvent(options: RecordPurchaseEventOptions): Promise
         `INSERT INTO purchase_events (provider, provider_event_id, kind, product_id, user_id, occurred_at, payload)
          VALUES ($1, $2, $3, $4, $5, to_timestamp($6::double precision / 1000), $7::jsonb)
          ON CONFLICT (provider, provider_event_id) DO NOTHING`,
-        [REVENUECAT_EVENTS.PROVIDER, id, type, productId, userId, eventTimestampMs, JSON.stringify(buildPayload(event))],
+        [
+          REVENUECAT_EVENTS.PROVIDER,
+          id,
+          type,
+          productId,
+          userId,
+          eventTimestampMs,
+          JSON.stringify(buildPayload(event)),
+        ],
       );
       if (rowCount === 0) {
         return 'duplicate';
       }
-      if (!isPaidProduct) {
+      if (!isProProduct) {
         logger.warn({ eventType: type, reason: 'unmapped_product' }, 'revenuecat event for an unmapped product');
         return 'recorded';
       }

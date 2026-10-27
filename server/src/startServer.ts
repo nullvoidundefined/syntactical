@@ -20,6 +20,7 @@ import { createStubEmailClient } from './clients/stubEmailClient.js';
 import { loadEnv } from './config/env.js';
 import { isCookieSecure } from './config/isCookieSecure.js';
 import { AUTH } from './constants/auth.js';
+import { PRO_PRODUCT_IDS } from './constants/proProducts.js';
 import { createDummyPasswordHash } from './services/passwordHash.js';
 import { createPasswordHashSlots } from './services/passwordHashSlots.js';
 import { readManifest } from './services/readManifest.js';
@@ -32,36 +33,6 @@ const MAX_PORT = 65_535;
 // The compiled server sits at <root>/server/dist and the source at <root>/server/src, so both
 // resolve the public content directory to <root>/content.
 const DEFAULT_CONTENT_DIR = fileURLToPath(new URL('../../content', import.meta.url));
-
-// TEMPORARY: area 3 deletes this set and passes the two Pro product ids instead. With no paid banks left to
-// derive them from, the RevenueCat webhook and the admin routes keep accepting the per-bank product ids they
-// accepted before every bank became free: syntactical.<track>.<difficulty> for each Medium and Hard bank.
-const LEGACY_PAID_PRODUCT_IDS: ReadonlySet<string> = new Set([
-  'syntactical.python.medium',
-  'syntactical.python.hard',
-  'syntactical.postgres.medium',
-  'syntactical.postgres.hard',
-  'syntactical.javascript.medium',
-  'syntactical.javascript.hard',
-  'syntactical.go.medium',
-  'syntactical.go.hard',
-  'syntactical.ruby.medium',
-  'syntactical.ruby.hard',
-  'syntactical.backend-security.medium',
-  'syntactical.backend-security.hard',
-  'syntactical.rails.medium',
-  'syntactical.rails.hard',
-  'syntactical.frontend-security.medium',
-  'syntactical.frontend-security.hard',
-  'syntactical.sql.medium',
-  'syntactical.sql.hard',
-  'syntactical.typescript.medium',
-  'syntactical.typescript.hard',
-  'syntactical.typescript-types.medium',
-  'syntactical.typescript-types.hard',
-  'syntactical.nodejs.medium',
-  'syntactical.nodejs.hard',
-]);
 
 interface RunningServer {
   close(): Promise<void>;
@@ -146,7 +117,11 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
   const dummyPasswordHash = await createDummyPasswordHash();
   const pool = createDatabasePool(DATABASE_URL, NODE_ENV, logger);
   const app = createApp({
-    admin: { database: pool, paidProductIds: LEGACY_PAID_PRODUCT_IDS, rateLimitKeySecret: env.RATE_LIMIT_KEY_SECRET },
+    admin: {
+      database: pool,
+      paidProductIds: new Set<string>([PRO_PRODUCT_IDS.LIFETIME]),
+      rateLimitKeySecret: env.RATE_LIMIT_KEY_SECRET,
+    },
     allowedOrigins: ALLOWED_ORIGINS.split(',')
       .map((origin) => origin.trim())
       .filter(Boolean),
@@ -186,11 +161,7 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
     ...(REVENUECAT_WEBHOOK_AUTH === undefined
       ? { webhooksDisabled: true }
       : {
-          webhooks: {
-            database: pool,
-            paidProductIds: LEGACY_PAID_PRODUCT_IDS,
-            revenueCatAuth: REVENUECAT_WEBHOOK_AUTH,
-          },
+          webhooks: { database: pool, revenueCatAuth: REVENUECAT_WEBHOOK_AUTH },
         }),
   });
 
