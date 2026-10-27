@@ -70,13 +70,13 @@ beforeEach(() => {
 });
 
 describe('sign-in returnTo', () => {
-  it('returns to the paid bank paywall the guest came from', async () => {
-    mockParams.current = { returnTo: '/python?paywall=medium' };
+  it('returns to the page the guest came from, with its query', async () => {
+    mockParams.current = { returnTo: '/python/medium?count=20' };
     const href = await signIn();
     const url = new URL(href, 'https://app.test');
     expect(url.origin).toBe('https://app.test');
-    expect(url.pathname).toBe('/python');
-    expect(url.searchParams.get('paywall')).toBe('medium');
+    expect(url.pathname).toBe('/python/medium');
+    expect(url.searchParams.get('count')).toBe('20');
   });
 
   it('goes home when there is no returnTo', async () => {
@@ -84,13 +84,13 @@ describe('sign-in returnTo', () => {
   });
 
   it.each([
-    ['another origin', 'https://evil.example/python?paywall=medium'],
+    ['another origin', 'https://evil.example/python/medium?count=20'],
     ['a protocol-relative URL', '//evil.example/python'],
     ['a backslash path', '/\\evil.example/python'],
     ['a script URL', 'javascript:alert(1)'],
-    ['a relative path with no leading slash', 'python?paywall=medium'],
+    ['a relative path with no leading slash', 'python/medium?count=20'],
     ['an oversized value', `/${'a'.repeat(10_000)}`],
-    ['a repeated param', ['/python?paywall=medium', '//evil.example']],
+    ['a repeated param', ['/python/medium?count=20', '//evil.example']],
   ])('ignores returnTo naming %s and goes home', async (_label, returnTo) => {
     mockParams.current = { returnTo };
     expect(await signIn()).toBe('/');
