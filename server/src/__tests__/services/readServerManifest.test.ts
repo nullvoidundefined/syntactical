@@ -48,10 +48,8 @@ function sha256Hex(text: string): string {
   return createHash('sha256').update(text).digest('hex');
 }
 
-function buildBankEntry(path: string, hash: string, access: 'free' | 'paid', productId?: string) {
-  const entry: Record<string, unknown> = { access, contentVersion: 1, hash, path, topicCounts: {} };
-  if (productId) entry.productId = productId;
-  return entry;
+function buildBankEntry(path: string, hash: string) {
+  return { contentVersion: 1, hash, path, topicCounts: {} };
 }
 
 function buildLanguage(id: string, grammar: string, banks: Record<string, unknown>) {
@@ -86,12 +84,12 @@ async function writeValidContentDir(): Promise<void> {
   await writeContentFile('postgres/easy.json', POSTGRES_EASY);
   await writeManifest([
     buildLanguage('python', 'python', {
-      easy: buildBankEntry('python/easy.json', sha256Hex(PYTHON_EASY), 'free'),
-      // Listed but absent from this checkout, like a paid bank in a public clone.
-      medium: buildBankEntry('python/medium.json', sha256Hex('absent'), 'paid', 'syntactical.python.medium'),
+      easy: buildBankEntry('python/easy.json', sha256Hex(PYTHON_EASY)),
+      // Listed but absent from this checkout: skipped, not a start-up failure.
+      medium: buildBankEntry('python/medium.json', sha256Hex('absent')),
     }),
     buildLanguage('postgres', 'sql', {
-      easy: buildBankEntry('postgres/easy.json', sha256Hex(POSTGRES_EASY), 'free'),
+      easy: buildBankEntry('postgres/easy.json', sha256Hex(POSTGRES_EASY)),
     }),
   ]);
 }
@@ -149,7 +147,7 @@ describe('readServerManifest', () => {
     const tamperedHash = sha256Hex(`${PYTHON_EASY}\n`);
     await writeManifest([
       buildLanguage('python', 'python', {
-        easy: buildBankEntry('python/easy.json', tamperedHash, 'free'),
+        easy: buildBankEntry('python/easy.json', tamperedHash),
       }),
     ]);
 
@@ -163,7 +161,7 @@ describe('readServerManifest', () => {
       JSON.stringify({
         languages: [
           buildLanguage('python', 'python', {
-            easy: buildBankEntry('python/easy.json', sha256Hex(PYTHON_EASY), 'free'),
+            easy: buildBankEntry('python/easy.json', sha256Hex(PYTHON_EASY)),
           }),
         ],
         schemaVersion: 99,

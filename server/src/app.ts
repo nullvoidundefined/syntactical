@@ -27,8 +27,6 @@ import type { AuthDeps, ResolvedAuthDeps } from './routes/authDeps.js';
 import { createAuthSessionsRouter } from './routes/authSessions.js';
 import { createAuthPasswordSessionsRouter } from './routes/authPasswordSessions.js';
 import { createAuthSignupsRouter } from './routes/authSignups.js';
-import { createBanksRouter } from './routes/banks.js';
-import type { BanksDeps } from './routes/banksDeps.js';
 import { createDeleteMeRouter } from './routes/deleteMe.js';
 import { createHealthRouter } from './routes/health.js';
 import type { HealthDb } from './routes/health.js';
@@ -50,8 +48,6 @@ interface AppDeps {
   ask?: AskDeps;
   // The /v1/auth routes; omitted, they are not mounted.
   auth?: AuthDeps;
-  // The /v1 paid bank route; omitted, it is not mounted.
-  banks?: BanksDeps;
   db: HealthDb;
   extraRoutes?: (router: Router) => void;
   logger?: Logger;
@@ -75,7 +71,6 @@ function createApp(deps: AppDeps) {
     allowedOrigins = [],
     ask,
     auth,
-    banks,
     db,
     extraRoutes,
     logger = createLogger({ destination: process.stdout }),
@@ -145,11 +140,6 @@ function createApp(deps: AppDeps) {
     const { now = () => new Date() } = sync;
     const resolvedSync = { ...sync, now };
     app.use('/v1', createAnswerEventsRouter(resolvedSync), createMeRouter(resolvedSync));
-  }
-
-  if (banks) {
-    const { now = () => new Date() } = banks;
-    app.use('/v1', createBanksRouter({ ...banks, now }));
   }
 
   if (ask) {

@@ -3,14 +3,12 @@
 // the system clock in createApp.
 import type { Database } from '../clients/database.js';
 import type { ModelProvider } from '../clients/modelProvider.js';
-import type { PaidBanks } from '../types/PaidBanks.js';
 import type { QuestionIndex } from '../types/QuestionIndex.js';
 
 interface AskDeps {
   database: Database;
   modelProvider?: ModelProvider;
   now?: () => Date;
-  paidBanks: PaidBanks;
   questions: QuestionIndex;
   rateLimitKeySecret: string;
 }

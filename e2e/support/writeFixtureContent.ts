@@ -1,75 +1,25 @@
-// Builds the content the e2e run serves: a public directory (the repository's manifest with its
-// Easy banks copied unchanged, so the web bundle's own Easy banks still match) and a second
-// directory for the API's paid bank reader. Each Medium and Hard entry gets a small fixture bank
-// made from the Easy bank of the same language, with its hash written into the copied manifest, and
-// that bank is written to both directories: the app downloads it from the public one like any bank,
-// and the API reads it from the second one, where PAID_CONTENT_DIR points.
-import { createHash } from 'node:crypto';
-import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
+// Builds the content the e2e run serves: one public directory holding the repository's manifest and
+// every bank it lists, Easy, Medium, and Hard, copied unchanged, so the web bundle's bundled Easy
+// banks and the served manifest's hashes match. The API reads it and the web host serves it.
+import { cp, mkdir, readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-interface BankEntry {
-  access: 'free' | 'paid';
-  hash: string;
-  path: string;
-  topicCounts: Record<string, number>;
-}
-
 interface Manifest {
-  languages: Array<{ banks: Record<string, BankEntry>; id: string }>;
+  languages: Array<{ banks: Record<string, { path: string }> }>;
 }
 
-interface Question {
-  id: string;
-  topic?: string;
-  [key: string]: unknown;
+async function copyUnder(contentSource: string, publicDir: string, path: string): Promise<void> {
+  await mkdir(dirname(join(publicDir, path)), { recursive: true });
+  await cp(join(contentSource, path), join(publicDir, path));
 }
 
-const FIXTURE_QUESTION_COUNT = 5;
-
-function sha256Hex(bytes: Buffer): string {
-  return createHash('sha256').update(bytes).digest('hex');
-}
-
-async function writeUnder(root: string, path: string, bytes: Buffer): Promise<void> {
-  const file = join(root, path);
-  await mkdir(dirname(file), { recursive: true });
-  await writeFile(file, bytes);
-}
-
-async function writeFixtureContent(options: {
-  contentSource: string;
-  paidDir: string;
-  publicDir: string;
-}): Promise<void> {
-  const { contentSource, paidDir, publicDir } = options;
+async function writeFixtureContent(options: { contentSource: string; publicDir: string }): Promise<void> {
+  const { contentSource, publicDir } = options;
   const manifest = JSON.parse(await readFile(join(contentSource, 'manifest.json'), 'utf8')) as Manifest;
   for (const language of manifest.languages) {
-    const freeEntry = Object.values(language.banks).find(({ access }) => access === 'free');
-    if (freeEntry === undefined) throw new Error(`language ${language.id} has no free bank to derive fixtures from`);
-    const freeText = await readFile(join(contentSource, freeEntry.path), 'utf8');
-    for (const [difficulty, entry] of Object.entries(language.banks)) {
-      if (entry.access === 'free') {
-        await mkdir(dirname(join(publicDir, entry.path)), { recursive: true });
-        await cp(join(contentSource, entry.path), join(publicDir, entry.path));
-        continue;
-      }
-      const free = JSON.parse(freeText) as { questions: Question[]; schemaVersion: number };
-      const questions = free.questions.slice(0, FIXTURE_QUESTION_COUNT).map((question, index) => ({
-        ...question,
-        id: `e2e-${language.id}-${difficulty}-${String(index + 1).padStart(2, '0')}`,
-      }));
-      const bytes = Buffer.from(`${JSON.stringify({ ...free, questions }, null, 2)}\n`, 'utf8');
-      await writeUnder(paidDir, entry.path, bytes);
-      await writeUnder(publicDir, entry.path, bytes);
-      entry.hash = sha256Hex(bytes);
-      entry.topicCounts = {};
-      for (const { topic } of questions) {
-        if (topic !== undefined) entry.topicCounts[topic] = (entry.topicCounts[topic] ?? 0) + 1;
-      }
-    }
+    for (const { path } of Object.values(language.banks)) await copyUnder(contentSource, publicDir, path);
   }
-  await writeUnder(publicDir, 'manifest.json', Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`, 'utf8'));
+  await copyUnder(contentSource, publicDir, 'manifest.json');
 }
 
 export { writeFixtureContent };

@@ -14,7 +14,6 @@ interface E2eState {
   codesFile: string;
   contentDir: string;
   databaseUrl: string;
-  paidContentDir: string;
   webUrl: string;
 }
 
