@@ -21,7 +21,7 @@ Drafts for the App Store and Google Play listings. Every claim below matches wha
 | Field              | Limit | Draft                                                                                                                                     |
 | ------------------ | ----- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | Name               | 30    | Syntactical                                                                                                                               |
-| Subtitle           | 30    | Free code quizzes that stick                                                                                                              |
+| Subtitle           | 30    | Code quizzes that stick                                                                                                                   |
 | Keywords           | 100   | python,postgres,javascript,typescript,go,ruby,rails,sql,nodejs,security,quiz,coding,interview                                             |
 | Promotional text   | 170   | Every bank is free: 12 tracks from Python to Frontend Security, Easy to Hard. Pro removes sponsored cards and raises the daily Ask limit. |
 | Support URL        |       | PLACEHOLDER: owner supplies (see `docs/launch-placeholders.md`)                                                                           |

@@ -1,15 +1,16 @@
 # App Review notes
 
-Paste the text below into App Store Connect (App Review Information, Notes) and the Play Console (App access). Sign-in uses an emailed one-time code, so a reviewer needs an inbox the app can reach. Give them a reviewer account the owner controls.
+Paste the text below into App Store Connect (App Review Information, Notes) and the Play Console (App access, instructions). The reviewer signs in with an email and password the owner creates, so no inbox or emailed code is needed during review.
 
 ## Reviewer account (owner action)
 
-Sign-in needs no password (setting one is optional), so there is nothing to store. Two options, pick one:
+The app signs in with an email and password as its first step (`app/sign-in.tsx`, `components/auth/PasswordSignInStep.tsx`), and a signed-in user can add or change a password in Settings, Account ("Add a password", `components/auth/PasswordSettingsForm.tsx`).
 
-1. Create a reviewer mailbox (for example `review@<your domain>`), put its address in the notes below, and keep that inbox readable for the review. The reviewer requests a code in the app and reads it there.
-2. Tell the reviewer in the notes to use any email address they control. This works as is, because accounts are created at first sign-in.
+1. Create the reviewer account on the production API with an email the owner controls (for example `review@<your domain>`): Sign in, then "Create an account" (email and password, confirmed by an emailed code), or sign in with a code and set the password in Settings, Account, "Add a password".
+2. Sign in with that email and password once to confirm they work.
+3. Enter the email and password in App Store Connect, App Review Information, Sign-in information, and in the Play Console, App content, App access, as the login credentials.
 
-Option 2 needs no setup and is the recommended default. Do not put a password or a code in the notes.
+Never put the email or the password in the notes text below. Keep the account signed up and the password unchanged until review is finished.
 
 ## Notes text
 
@@ -21,9 +22,11 @@ Syntactical Pro is the only in-app purchase, in two products: syntactical.pro.an
 How to reach Pro:
 1. Open the app. The track list shows a card labelled Sponsored between the track groups. When no ad is available it is the house card, "Syntactical Pro", with a See Pro button.
 2. Tap See Pro. Or, once signed in, open Settings (reachable from the header on every screen) and tap Go Pro.
-3. If you are not signed in, the Syntactical Pro sheet opens without prices, and tapping "A year" or "Forever" sends you to Sign in first. Enter your email, receive a one-time code by email, and enter it. Any email address you control works, and an account is created the first time you sign in. The app returns you to the screen you came from; tap See Pro again.
+3. If you are not signed in, the Syntactical Pro sheet opens without prices, and tapping "A year" or "Forever" sends you to Sign in first. Sign in with the email and password from the sign-in information we provided. The app returns you to the screen you came from; tap See Pro again.
 4. The Syntactical Pro sheet shows two buttons with the store prices, "A year for <price>" and "Forever for <price>", and Not now. Buy either one with your sandbox account.
 5. The sponsored cards disappear. Settings shows "Pro until <date>" for the annual product or "Pro, lifetime". Settings, Manage subscription opens the store's subscription page. Settings, Restore purchases restores Pro on a new install.
+
+Buying needs a signed-in account because Pro belongs to the account, not to the device or the store account, so it carries across iOS, Android, and the web. Every question bank and the quiz itself work without signing in.
 
 Sponsored cards: a free user sees one card on the results screen after a round (from the third round, then every third round) and one in the track list. They never appear on a question, during a round, in the query drawer, or in review rounds. On iOS and Android the card is a Google AdMob native ad drawn in the app's own card style, with the "Sponsored" label at the top and the AdChoices icon in the top-right corner. When no ad loads, the card is a direct sponsor or the house Pro card. Development and preview builds show only Google test ads labelled "Test Ad"; the production build under review requests real ads.
 
@@ -56,3 +59,5 @@ The policy page is a draft in the app (`app/privacy.tsx`); the owner fills in it
 | The privacy policy names Google AdMob, EthicalAds, Anthropic (primary), and OpenAI (fallback)                                                 | `app/privacy.tsx`; `docs/store/privacy-labels.md`                                                                                                                 |
 | Ask allows 5 a day free and 20 with Pro                                                                                                       | `server/src/constants/ask.ts`                                                                                                                                     |
 | Delete account is in Settings, behind a type-DELETE confirmation                                                                              | `components/auth/DeleteAccountDialog.tsx`                                                                                                                         |
+| The reviewer signs in with an email and password; a password is added or changed in Settings, Account                                         | `app/sign-in.tsx` and `components/auth/PasswordSignInStep.tsx`; `app/sign-up.tsx`; `components/auth/PasswordSettingsForm.tsx` in `app/settings.tsx`               |
+| Pro belongs to the account: every platform reads it from `GET /v1/me` (`pro.isActive`), which the RevenueCat webhook sets for the user id     | `state/useProStatus.ts`; `server/src/services/readProfile.ts` (the `hasPro` rule)                                                                                 |
