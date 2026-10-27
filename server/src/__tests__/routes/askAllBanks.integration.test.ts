@@ -1,7 +1,7 @@
 // server/src/__tests__/routes/askAllBanks.integration.test.ts
 // Area 2: POST /v1/ask finds a Medium or Hard question in the index readServerQuestions builds from
 // the one public content directory, and answers it for a user with any granted entitlement. There
-// is no paidBanks dependency and no per-bank gate (area 3 replaces the remaining gate with Pro).
+// is no per-bank gate and, since area 3, no purchase gate: Pro only raises the daily limit.
 // The model is a fake that records each prompt.
 import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';

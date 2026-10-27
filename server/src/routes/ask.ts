@@ -1,35 +1,39 @@
 // POST /v1/ask: answers a learner's follow-up question about one quiz question, using Claude
-// with the question, its answer key, and its explanation as context. Only for a user with any
-// granted entitlement (area 3 replaces this gate with the Pro tier's limits); every bank is free,
-// so no bank needs its own entitlement. Each user gets ASK.DAILY_LIMIT answers per UTC day,
-// counting only answers given, under a per-minute burst limit.
+// with the question, its answer key, and its explanation as context. Any signed-in user may ask
+// about any bank's question. Each user gets ASK.DAILY_LIMIT.FREE answers per UTC day, or
+// ASK.DAILY_LIMIT.PRO with Pro (hasPro, read on every ask, so Pro applies the same day), counting
+// only answers given, under a per-minute burst limit.
 //
-// Order: session (401), burst limit (429), body (400), question lookup (404), entitlement (403),
-// model configured (503), daily limit (429 ASK_DAILY_LIMIT_REACHED), model call (503
-// ASK_UNAVAILABLE on failure or decline, with the answer handed back). Answers
-// { data: { answer, remaining } }. The learner's message is never logged.
+// Order: session (401), burst limit (429), body (400), question lookup (404), model configured
+// (503), daily limit for the user's tier (429 ASK_DAILY_LIMIT_REACHED, carrying tier, limit, and
+// proLimit), model call (503 ASK_UNAVAILABLE on failure or decline, with the answer handed back).
+// Answers { data: { answer, limit, proLimit, remaining, tier } }, so the app words its upsell from
+// the tier and the server's numbers. The learner's message is never logged.
 import { Router } from 'express';
 import type { Logger } from 'pino';
 
 import { ASK } from '../constants/ask.js';
 import { HTTP } from '../constants/http.js';
-import { ERROR_CODES, sendError } from '../errors.js';
+import { createErrorResponse, ERROR_CODES, sendError } from '../errors.js';
 import { createRateLimit } from '../middleware/rateLimit.js';
 import { keyOfUser } from '../middleware/rateLimitKeys.js';
 import { createRequireSession } from '../middleware/requireSession.js';
 import { askSchemas } from '../schemas/askSchemas.js';
 import { buildAskPrompt } from '../services/buildAskPrompt.js';
-import { hasAnyEntitlement } from '../services/hasAnyEntitlement.js';
+import { hasPro } from '../services/hasPro.js';
 import { releaseAskUsage } from '../services/releaseAskUsage.js';
 import { reserveAskUsage } from '../services/reserveAskUsage.js';
 
 import type { ResolvedAskDeps } from './askDeps.js';
 
 const {
-  STATUS: { BAD_REQUEST, FORBIDDEN, NOT_FOUND, OK, SERVICE_UNAVAILABLE, TOO_MANY_REQUESTS },
+  STATUS: { BAD_REQUEST, NOT_FOUND, OK, SERVICE_UNAVAILABLE, TOO_MANY_REQUESTS },
 } = HTTP;
 
 const BOOL_CHOICE_COUNT = 2;
+
+// The user's Ask tier, read on every ask; the app branches its copy on it.
+type AskTier = 'free' | 'pro';
 
 function toUsageDate(now: Date): string {
   return now.toISOString().slice(0, 10);
@@ -68,18 +72,25 @@ function createAskRouter(deps: ResolvedAskDeps, logger: Logger): Router {
       sendError(res, BAD_REQUEST, ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body');
       return;
     }
-    if (!(await hasAnyEntitlement(database, userId))) {
-      sendError(res, FORBIDDEN, ERROR_CODES.ENTITLEMENT.REQUIRED, 'Asking requires a purchase');
-      return;
-    }
     if (!modelProvider) {
       sendError(res, SERVICE_UNAVAILABLE, ERROR_CODES.ASK.UNAVAILABLE, 'Asking is unavailable');
       return;
     }
-    const usageDate = toUsageDate(now());
-    const used = await reserveAskUsage(database, userId, usageDate, ASK.DAILY_LIMIT);
+    const at = now();
+    const tier: AskTier = (await hasPro(database, userId, at)) ? 'pro' : 'free';
+    const limit = tier === 'pro' ? ASK.DAILY_LIMIT.PRO : ASK.DAILY_LIMIT.FREE;
+    const proLimit = ASK.DAILY_LIMIT.PRO;
+    const usageDate = toUsageDate(at);
+    const used = await reserveAskUsage(database, userId, usageDate, limit);
     if (used === null) {
-      sendError(res, TOO_MANY_REQUESTS, ERROR_CODES.ASK.DAILY_LIMIT_REACHED, 'Daily ask limit reached');
+      const { requestId } = res.locals as { requestId: string };
+      res.status(TOO_MANY_REQUESTS).json(
+        createErrorResponse(ERROR_CODES.ASK.DAILY_LIMIT_REACHED, 'Daily ask limit reached', requestId, {
+          limit,
+          proLimit,
+          tier,
+        }),
+      );
       return;
     }
     let answer: string | null = null;
@@ -94,7 +105,7 @@ function createAskRouter(deps: ResolvedAskDeps, logger: Logger): Router {
       sendError(res, SERVICE_UNAVAILABLE, ERROR_CODES.ASK.UNAVAILABLE, 'No answer is available right now');
       return;
     }
-    res.status(OK).json({ data: { answer, remaining: ASK.DAILY_LIMIT - used } });
+    res.status(OK).json({ data: { answer, limit, proLimit, remaining: limit - used, tier } });
   });
 
   return router;
