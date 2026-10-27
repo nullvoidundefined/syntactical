@@ -7,6 +7,7 @@
 // RevenueCat redelivers. The stored payload is an allowlist of scalar fields, never the body.
 // Only the two Pro products (constants/proProducts.ts) change an entitlement; any other product is recorded and warned about.
 // product_id is normalised first (a Play id's base-plan suffix stripped); the normalised id is matched, locked on, and stored, and the payload keeps the raw value.
+// A SANDBOX event is recorded but recomputes nothing unless acceptSandbox (REVENUECAT_ACCEPT_SANDBOX), and is warned about once.
 import type { Logger } from 'pino';
 
 import type { Database } from '../clients/database.js';
@@ -30,6 +31,7 @@ interface RevenueCatEvent {
 }
 
 interface RecordPurchaseEventOptions {
+  acceptSandbox: boolean;
   database: Database;
   event: RevenueCatEvent;
   logger: Logger;
@@ -49,7 +51,7 @@ function buildPayload(event: RevenueCatEvent): Record<string, string | number | 
 }
 
 async function recordPurchaseEvent(options: RecordPurchaseEventOptions): Promise<RecordResult> {
-  const { database, event, logger } = options;
+  const { acceptSandbox, database, event, logger } = options;
   const {
     app_user_id: appUserId,
     event_timestamp_ms: eventTimestampMs,
@@ -98,8 +100,12 @@ async function recordPurchaseEvent(options: RecordPurchaseEventOptions): Promise
         logger.warn({ eventType: type, reason: 'unmapped_product' }, 'revenuecat event for an unmapped product');
         return 'recorded';
       }
+      if (event.environment === REVENUECAT_EVENTS.SANDBOX_ENVIRONMENT && !acceptSandbox) {
+        logger.warn({ eventType: type, reason: 'sandbox' }, 'revenuecat sandbox event not applied');
+        return 'recorded';
+      }
       if (userId && canChangeEntitlement) {
-        await recomputeEntitlement(client, userId, productId);
+        await recomputeEntitlement(client, userId, productId, acceptSandbox);
       }
       return 'recorded';
     },

@@ -7,6 +7,7 @@
 // purchase event is 400, and a handled event is recorded once and its entitlement recomputed
 // (B-39b) in one transaction; a failure answers 500 so RevenueCat redelivers. The header, the
 // payload, and the app user id are never logged.
+// A SANDBOX event is recorded but changes nothing unless deps.acceptSandbox (staging).
 import { timingSafeEqual } from 'node:crypto';
 
 import express, { Router } from 'express';
@@ -28,7 +29,7 @@ const {
 const { BODY_LIMIT, MIN_AUTH_LENGTH } = WEBHOOKS;
 
 function createRevenueCatWebhookRouter(deps: WebhookDeps, logger: Logger): Router {
-  const { database, revenueCatAuth } = deps;
+  const { acceptSandbox = false, database, revenueCatAuth } = deps;
   if (revenueCatAuth.trim().length < MIN_AUTH_LENGTH) {
     throw new Error(`webhooks.revenueCatAuth must be at least ${MIN_AUTH_LENGTH} characters`);
   }
@@ -50,7 +51,7 @@ function createRevenueCatWebhookRouter(deps: WebhookDeps, logger: Logger): Route
     requireWebhookAuth,
     requireJsonBody,
     express.json({ limit: BODY_LIMIT }),
-    createRevenueCatEventHandler({ database, logger }),
+    createRevenueCatEventHandler({ acceptSandbox, database, logger }),
   );
 
   return router;

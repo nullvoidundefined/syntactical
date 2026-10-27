@@ -161,7 +161,11 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
     ...(REVENUECAT_WEBHOOK_AUTH === undefined
       ? { webhooksDisabled: true }
       : {
-          webhooks: { database: pool, revenueCatAuth: REVENUECAT_WEBHOOK_AUTH },
+          webhooks: {
+            acceptSandbox: env.REVENUECAT_ACCEPT_SANDBOX,
+            database: pool,
+            revenueCatAuth: REVENUECAT_WEBHOOK_AUTH,
+          },
         }),
   });
 

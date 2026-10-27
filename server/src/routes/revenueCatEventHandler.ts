@@ -26,6 +26,7 @@ const { GRANT_TYPES, REVOKE_TYPES } = REVENUECAT_EVENTS;
 const HANDLED_TYPES: ReadonlySet<string> = new Set([...GRANT_TYPES, ...REVOKE_TYPES]);
 
 interface EventHandlerOptions {
+  acceptSandbox: boolean;
   database: Database;
   logger: Logger;
 }
@@ -48,7 +49,7 @@ function sendInvalidBody(res: Response): void {
 }
 
 function createRevenueCatEventHandler(options: EventHandlerOptions): RequestHandler {
-  const { database, logger } = options;
+  const { acceptSandbox, database, logger } = options;
   return async (req: Request, res: Response) => {
     const typed = revenueCatSchemas.eventType.safeParse(req.body);
     if (!typed.success) {
@@ -64,7 +65,12 @@ function createRevenueCatEventHandler(options: EventHandlerOptions): RequestHand
       sendInvalidBody(res);
       return;
     }
-    const status = await recordPurchaseEvent({ database, event: data.event, logger: requestLog(res, logger) });
+    const status = await recordPurchaseEvent({
+      acceptSandbox,
+      database,
+      event: data.event,
+      logger: requestLog(res, logger),
+    });
     res.status(OK).json({ data: { status } });
   };
 }

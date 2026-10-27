@@ -2,22 +2,38 @@
 // among the stores that can change it; a revoke wins a tie. The row is written with source
 // 'revenuecat' only when the status differs, so a redelivery leaves updated_at untouched.
 // Callers hold the (user, product) advisory lock so the read sees every committed event.
+// Unless acceptSandbox, stored SANDBOX events are left out, so a free test purchase never grants.
 import type pg from 'pg';
 
 import { REVENUECAT_EVENTS } from '../constants/revenueCatEvents.js';
 
-const { ENTITLEMENT_SOURCE, GRANT_TYPES, PROVIDER, REVOKE_TYPES, STORES } = REVENUECAT_EVENTS;
+const { ENTITLEMENT_SOURCE, GRANT_TYPES, PROVIDER, REVOKE_TYPES, SANDBOX_ENVIRONMENT, STORES } = REVENUECAT_EVENTS;
 
-async function recomputeEntitlement(client: pg.PoolClient, userId: string, productId: string): Promise<void> {
+async function recomputeEntitlement(
+  client: pg.PoolClient,
+  userId: string,
+  productId: string,
+  acceptSandbox: boolean,
+): Promise<void> {
   const { rows } = await client.query<{ status: string }>(
     `SELECT CASE WHEN kind = ANY($3::text[]) THEN 'revoked' ELSE 'granted' END AS status
      FROM purchase_events
      WHERE provider = $4 AND user_id = $1 AND product_id = $2
        AND kind = ANY($5::text[])
        AND payload->>'store' = ANY($6::text[])
+       AND ($7::boolean OR payload->>'environment' IS DISTINCT FROM $8::text)
      ORDER BY occurred_at DESC, (kind = ANY($3::text[])) DESC
      LIMIT 1`,
-    [userId, productId, [...REVOKE_TYPES], PROVIDER, [...GRANT_TYPES, ...REVOKE_TYPES], [...STORES]],
+    [
+      userId,
+      productId,
+      [...REVOKE_TYPES],
+      PROVIDER,
+      [...GRANT_TYPES, ...REVOKE_TYPES],
+      [...STORES],
+      acceptSandbox,
+      SANDBOX_ENVIRONMENT,
+    ],
   );
   const [latest] = rows;
   if (!latest) {

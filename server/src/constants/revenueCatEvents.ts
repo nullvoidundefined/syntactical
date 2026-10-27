@@ -18,6 +18,8 @@ const REVENUECAT_EVENTS = {
     'period_type',
   ],
   PROVIDER: 'revenuecat',
+  // The environment RevenueCat stamps on a free test purchase.
+  SANDBOX_ENVIRONMENT: 'SANDBOX',
   REVOKE_TYPES: ['CANCELLATION', 'REFUND'],
   STORES: ['APP_STORE', 'PLAY_STORE', 'RC_BILLING'],
 } as const;
