@@ -4,8 +4,10 @@
 // its button opens the Pro sheet with source house_card. A
 // guest who buys from the sheet is sent to sign in and back; a signed-in user buys through area 4's
 // ProOffer (run for real against a stubbed usePurchases), so a failed purchase shows ProOffer's message.
+// Until the direct sponsor request settles the slot holds the empty placeholder and nothing is reported,
+// so a cold start never counts a house card the direct sponsor then replaces.
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, within } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, within } from '@testing-library/react-native';
 
 import { createQueryClient } from '../../../config/queryClient';
 import { settle } from '../../../config/settle';
@@ -166,5 +168,41 @@ describe('SponsoredCard with the house feed on native', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Buy annual' }));
     await settle();
     expect(screen.queryByText('pro-sheet house_card')).toBeNull();
+  });
+
+  it('holds the placeholder until sponsor.json answers, then reports the direct sponsor once', async () => {
+    let answerSponsor: (body: string) => void = () => undefined;
+    global.fetch = jest.fn((url: unknown) =>
+      new Promise<string>((resolve) => {
+        answerSponsor = resolve;
+      }).then((body) => ({
+        ok: true,
+        redirected: false,
+        status: 200,
+        text: () => Promise.resolve(body),
+        url: String(url),
+      })),
+    ) as unknown as typeof fetch;
+    const onShown = await renderCard();
+    expect(screen.getByTestId('sponsored-card-placeholder', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.queryByText('Syntactical Pro')).toBeNull();
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+    expect(onShown).not.toHaveBeenCalled();
+    await act(async () => {
+      answerSponsor(
+        JSON.stringify({
+          body: 'Branching Postgres.',
+          endsOn: '2999-12-31',
+          headline: 'Neon',
+          href: 'https://neon.tech',
+          startsOn: '2000-01-01',
+        }),
+      );
+    });
+    await settle();
+    expect(screen.queryByTestId('sponsored-card-placeholder', { includeHiddenElements: true })).toBeNull();
+    expect(screen.getByText('Neon')).toBeTruthy();
+    expect(mockTrackEvent.mock.calls).toEqual([['ad_shown', { placement: 'results', source: 'direct' }]]);
+    expect(onShown).toHaveBeenCalledTimes(1);
   });
 });

@@ -3,7 +3,7 @@
 // card's fixed-height slot, load() once on mount, and the client's own answer deciding the fill: ad_shown
 // with source ethicalads when it reports the placement filled, the house card when it reports none. The
 // 5 second ceiling decides only when the client has not answered, from the placement's content. The house
-// card shows at once when the client is absent or there is no publisher. window.ethicalads is a fake;
+// card shows as soon as sponsor.json answers (404 here) when the client is absent or there is no publisher. window.ethicalads is a fake;
 // whether the real load() returns a promise is checked on the deployed site (see Open questions).
 import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen } from '@testing-library/react';
@@ -11,6 +11,7 @@ import { axe, toHaveNoViolations } from 'jest-axe';
 
 import { setExpoExtra } from '../../../config/expoConstantsMock';
 import { createQueryClient } from '../../../config/queryClient';
+import { settle } from '../../../config/settle';
 import { SponsorProvider } from '../../../state/SponsorProvider';
 import { SponsoredCard } from '../SponsoredCard';
 
@@ -85,6 +86,17 @@ function advancePastCeiling() {
 beforeEach(() => {
   jest.useFakeTimers();
   setExpoExtra({ contentBaseUrl: CONTENT_BASE_URL, ethicalAdsPublisher: 'syntactical' });
+  // No direct sponsor: SponsorProvider's sponsor.json request answers 404, so a fallback is the house card.
+  global.fetch = jest.fn((url: unknown) =>
+    Promise.resolve({
+      headers: { get: () => null },
+      ok: false,
+      redirected: false,
+      status: 404,
+      text: () => Promise.resolve(''),
+      url: String(url),
+    }),
+  ) as unknown as typeof fetch;
 });
 
 afterEach(() => {
@@ -123,6 +135,7 @@ describe('SponsoredCard on the web with EthicalAds', () => {
     installClient(false, 'empty');
     const { container } = render(<Card />);
     await flushClientAnswer();
+    await settle();
     expect(screen.getByText('Syntactical Pro')).toBeTruthy();
     expect(document.querySelector('[data-ea-publisher]')).toBeNull();
     expect(screen.getByTestId('sponsored-slot').style.height).toBe(SLOT_HEIGHT);
@@ -142,24 +155,27 @@ describe('SponsoredCard on the web with EthicalAds', () => {
     expect(mockTrackEvent.mock.calls).toEqual([['ad_shown', { placement: 'results', source: 'ethicalads' }]]);
   });
 
-  it('falls back at the ceiling when load() gives no answer and nothing rendered', () => {
+  it('falls back at the ceiling when load() gives no answer and nothing rendered', async () => {
     installClient(false, 'none');
     render(<Card />);
+    await settle();
     expect(screen.queryByText('Syntactical Pro')).toBeNull();
     advancePastCeiling();
     expect(screen.getByText('Syntactical Pro')).toBeTruthy();
   });
 
-  it('shows the house card at once when the client script is absent', () => {
+  it('shows the house card once sponsor.json answers when the client script is absent', async () => {
     render(<Card />);
+    await settle();
     expect(screen.getByText('Syntactical Pro')).toBeTruthy();
     expect(document.querySelector('[data-ea-publisher]')).toBeNull();
   });
 
-  it('shows the house card at once and never loads without a publisher id', () => {
+  it('shows the house card once sponsor.json answers and never loads without a publisher id', async () => {
     setExpoExtra({ contentBaseUrl: CONTENT_BASE_URL });
     const client = installClient(true, 'filled');
     render(<Card />);
+    await settle();
     expect(screen.getByText('Syntactical Pro')).toBeTruthy();
     expect(client.load).not.toHaveBeenCalled();
   });
