@@ -37,6 +37,12 @@ jest.mock('../../clients/purchaseStoreClient', () => ({
   readStorePrices: jest.fn(() => Promise.resolve({})),
   restoreStorePurchases: jest.fn(),
 }));
+// The re-checks after a restore wait for nothing here; their count and wait are pinned in
+// usePurchasesRestoreRecheck.test.tsx.
+jest.mock('../waitForProRecheck', () => ({
+  ...jest.requireActual('../waitForProRecheck'),
+  waitForProRecheck: () => Promise.resolve(),
+}));
 
 const ANNUAL = 'syntactical.pro.annual';
 const LIFETIME = 'syntactical.pro.lifetime';

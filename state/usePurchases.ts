@@ -13,6 +13,7 @@ import { readProPlan } from '../constants/proProducts';
 
 import { useSignedInUserId } from './AuthProvider';
 import { buildProStatusKey, fetchProStatus, type ProStatus } from './useProStatus';
+import { PRO_RECHECK_COUNT, waitForProRecheck } from './waitForProRecheck';
 
 // unlocked: /me says Pro is active. redirect: web checkout finished, the
 // purchase-complete route confirms it. pending: the store finished but /me does
@@ -25,7 +26,8 @@ export type BuyOutcome = 'cancelled' | 'pending' | 'redirect' | 'unavailable' | 
 export type ConfirmOptions = { signal?: AbortSignal };
 
 // restore resolves true only when GET /me says Pro after the store's restore, false when GET /me
-// says this account is not Pro, and rejects when the store call or GET /me failed.
+// still says this account is not Pro after the re-checks (the TRANSFER webhook lands a few seconds
+// after the store's restore), and rejects when the store call or any GET /me failed.
 export type PurchasesState = {
   buy: (productId: string) => Promise<BuyOutcome>;
   confirm: (productId: string, options?: ConfirmOptions) => Promise<boolean>;
@@ -93,13 +95,17 @@ export function usePurchases({ shouldLoadPrices = false } = {}): PurchasesState 
   );
 
   // True only when GET /me says Pro after the store restored, so a restore that found nothing for
-  // this account never reads as restored. A failed store call or GET /me rejects instead of
+  // this account never reads as restored. While it says free, GET /me is read again after a wait,
+  // PRO_RECHECK_COUNT times, since the TRANSFER webhook reaches the server after the restore. A failed store call or GET /me rejects instead of
   // resolving false, so Settings can tell "nothing to restore" from "try again".
   const restore = useCallback(async (): Promise<boolean> => {
     if (!(await selectPurchaseStoreClient().client.restoreStorePurchases())) throw new Error('store restore failed');
-    const pro = await refetchProStatus();
-    if (pro === null) throw new Error('profile request failed');
-    return pro.isPro;
+    for (let attempt = 0; ; attempt += 1) {
+      const pro = await refetchProStatus();
+      if (pro === null) throw new Error('profile request failed');
+      if (pro.isPro || attempt === PRO_RECHECK_COUNT) return pro.isPro;
+      await waitForProRecheck();
+    }
   }, [refetchProStatus]);
 
   return { buy, confirm, prices: userId === null ? NO_PRICES : prices, restore };

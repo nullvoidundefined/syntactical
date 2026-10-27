@@ -12,13 +12,12 @@ import { router } from 'expo-router';
 
 import { useSignedInUserId } from '../../state/AuthProvider';
 import { usePurchases } from '../../state/usePurchases';
+import { PRO_RECHECK_COUNT, waitForProRecheck } from '../../state/waitForProRecheck';
 
 import { ProSheet, type ProSheetSource } from './ProSheet';
 
 const PURCHASE_FAILED = 'The purchase did not go through. Try again.';
 const PURCHASE_PENDING = 'Your purchase is still processing. Check back shortly.';
-const PENDING_RECHECK_COUNT = 2;
-const PENDING_RECHECK_DELAY_MS = 2000;
 
 export type ProOfferCloseReason = 'closed' | 'unlocked';
 
@@ -48,8 +47,8 @@ export function ProOffer({ onClose, source }: ProOfferProps) {
   }, [isBuying, onClose]);
 
   async function recheckPending(productId: string) {
-    for (let attempt = 0; attempt < PENDING_RECHECK_COUNT; attempt += 1) {
-      await new Promise((resolve) => setTimeout(resolve, PENDING_RECHECK_DELAY_MS));
+    for (let attempt = 0; attempt < PRO_RECHECK_COUNT; attempt += 1) {
+      await waitForProRecheck();
       if (!isMountedRef.current) return;
       if (await confirm(productId)) {
         if (isMountedRef.current) onClose('unlocked');

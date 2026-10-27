@@ -58,6 +58,12 @@ jest.mock('../../state/useProgressSummary', () => ({
 jest.mock('../../components/auth/SignOutDialog', () => ({ SignOutDialog: () => null }));
 jest.mock('../../components/auth/DeleteAccountDialog', () => ({ DeleteAccountDialog: () => null }));
 jest.mock('../../clients/analyticsClient', () => ({ trackEvent: () => undefined }));
+// The re-checks after a restore wait for nothing here; their count and wait are pinned in
+// usePurchasesRestoreRecheck.test.tsx.
+jest.mock('../../state/waitForProRecheck', () => ({
+  ...jest.requireActual('../../state/waitForProRecheck'),
+  waitForProRecheck: () => Promise.resolve(),
+}));
 
 const latest: { status: string } = { status: '' };
 
