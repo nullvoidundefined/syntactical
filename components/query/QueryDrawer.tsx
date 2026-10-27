@@ -3,7 +3,7 @@
 // not give the answer away: on an easy card the syntax teaches the very rule being tested. After
 // they answer it is the full explanation: a wrong choice's rationale first, then the title, the
 // syntax, the explanation, the tags, and, for judged cards, the first evidence source; then, when
-// the round passes an ask target, the "Ask about this card" box. Slides in unless reduced motion
+// the round passes an ask target (any signed-in learner), the "Ask about this card" box. Slides in unless reduced motion
 // is requested. The panel pads by the device's safe-area insets, since an Android modal draws
 // under the status bar and gesture bar.
 import { useContext } from 'react';

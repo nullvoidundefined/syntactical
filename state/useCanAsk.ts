@@ -1,9 +1,7 @@
-// Whether the signed-in user may ask about a question: the server allows it to anyone holding any
-// granted entitlement, so the ask box shows once the entitlements have loaded with at least one.
-// A guest, a user still loading, or a failed load sees no ask box.
-import { useEntitlements } from './useEntitlements';
+// Whether the learner may ask about a question: the server answers anyone signed in, up to the
+// day's limit for their tier, so the ask box shows for every signed-in user and never for a guest.
+import { useSignedInUserId } from './AuthProvider';
 
 export function useCanAsk(): boolean {
-  const entitlements = useEntitlements();
-  return entitlements.status === 'ready' && entitlements.productIds.size > 0;
+  return useSignedInUserId() !== null;
 }
