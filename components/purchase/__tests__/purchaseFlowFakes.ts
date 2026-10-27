@@ -75,12 +75,14 @@ export type NativePurchaseBehavior = 'webhook-grants' | 'no-grant' | 'cancel' | 
 export type NativeRestoreBehavior = 'webhook-grants' | 'no-grant' | 'fail';
 
 export const nativeSdk: {
+  managementUrl: string | null;
   offeringsError: Error | null;
   purchaseBehavior: NativePurchaseBehavior;
   purchasedProductIds: string[];
   restoreBehavior: NativeRestoreBehavior;
   restoreCount: number;
 } = {
+  managementUrl: null,
   offeringsError: null,
   purchaseBehavior: 'webhook-grants',
   purchasedProductIds: [],
@@ -92,10 +94,12 @@ export type WebPurchaseBehavior = 'purchased' | 'cancelled' | 'unavailable';
 
 // While purchaseGate is set, purchaseWebBillingProduct stays in flight until it resolves.
 export const webBilling: {
+  managementUrl: string | null;
   purchaseBehavior: WebPurchaseBehavior;
   purchaseGate: Promise<void> | null;
   purchasedProductIds: string[];
 } = {
+  managementUrl: null,
   purchaseBehavior: 'purchased',
   purchaseGate: null,
   purchasedProductIds: [],
@@ -107,11 +111,13 @@ export function resetFakes(): void {
   fakeServer.pro = FREE_PRO;
   fakeAuth.userId = null;
   fakeNavigation.calls = [];
+  nativeSdk.managementUrl = null;
   nativeSdk.offeringsError = null;
   nativeSdk.purchaseBehavior = 'webhook-grants';
   nativeSdk.purchasedProductIds = [];
   nativeSdk.restoreBehavior = 'webhook-grants';
   nativeSdk.restoreCount = 0;
+  webBilling.managementUrl = null;
   webBilling.purchaseBehavior = 'purchased';
   webBilling.purchaseGate = null;
   webBilling.purchasedProductIds = [];
@@ -177,6 +183,7 @@ function buildCustomerInfo() {
     activeSubscriptions: [ANNUAL_PRODUCT],
     allPurchasedProductIdentifiers: Object.keys(NATIVE_PRICES),
     entitlements: { active, all: active },
+    managementURL: nativeSdk.managementUrl,
     nonSubscriptionTransactions: [{ productIdentifier: LIFETIME_PRODUCT }],
     originalAppUserId: SIGNED_IN_USER,
   };
@@ -286,6 +293,7 @@ export function buildWebBillingModule() {
       return gate.then(() => webBilling.purchaseBehavior);
     }),
     readWebBillingPrices: jest.fn(() => Promise.resolve({ ...WEB_PRICES })),
+    readWebBillingManagementUrl: jest.fn(() => Promise.resolve(webBilling.managementUrl)),
     resetWebBilling: jest.fn(),
   };
 }
