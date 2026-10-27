@@ -4,8 +4,9 @@
 // cancel_reason is CUSTOMER_SUPPORT, a store refund, which revokes either product;
 // SUBSCRIPTION_EXTENDED never changes the status; any other type answers 200 ignored and records
 // nothing. Only the two Pro product ids change an entitlement.
-// expiration_at_ms, when sent, is a non-negative safe integer kept in the stored payload; any other
-// value is refused with 400 and records nothing. A Google Play id with its base plan
+// expiration_at_ms, when sent, is a non-negative safe integer kept in the stored payload, or null for
+// a product with no period (revenueCatWebhookNullExpiry); any other value is refused with 400 and
+// records nothing. A Google Play id with its base plan
 // (syntactical.pro.annual:yearly) is the annual product.
 import { randomBytes, randomUUID } from 'node:crypto';
 
@@ -331,7 +332,6 @@ describe.skipIf(SKIP_DATABASE_TESTS)('POST /v1/webhooks/revenuecat Pro event voc
       ['a negative number', -1],
       ['a fraction', 1.5],
       ['a numeric string', String(BASE_TIMESTAMP_MS)],
-      ['null', null],
       ['an integer past Number.MAX_SAFE_INTEGER', Number.MAX_SAFE_INTEGER + 2],
     ])('refuses %s with 400 INPUT_INVALID_BODY and records nothing', async (_label, value) => {
       const target = await setup();
