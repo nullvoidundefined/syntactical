@@ -12,7 +12,7 @@ import type { Logger } from 'pino';
 
 import type { Database } from '../clients/database.js';
 import { withTransaction } from '../clients/withTransaction.js';
-import { normalizeProductId, PRO_PRODUCT_ID_LIST } from '../constants/proProducts.js';
+import { isProProductId, normalizeProductId } from '../constants/proProducts.js';
 import { REVENUECAT_EVENTS } from '../constants/revenueCatEvents.js';
 
 import { recomputeEntitlement } from './recomputeEntitlement.js';
@@ -61,7 +61,6 @@ async function recordPurchaseEvent(options: RecordPurchaseEventOptions): Promise
     type,
   } = event;
   const productId = normalizeProductId(rawProductId);
-  const isProProduct = (PRO_PRODUCT_ID_LIST as readonly string[]).includes(productId);
   const canChangeEntitlement = (REVENUECAT_EVENTS.STORES as readonly string[]).includes(store);
 
   return withTransaction<RecordResult>(
@@ -96,7 +95,7 @@ async function recordPurchaseEvent(options: RecordPurchaseEventOptions): Promise
       if (rowCount === 0) {
         return 'duplicate';
       }
-      if (!isProProduct) {
+      if (!isProProductId(productId)) {
         logger.warn({ eventType: type, reason: 'unmapped_product' }, 'revenuecat event for an unmapped product');
         return 'recorded';
       }

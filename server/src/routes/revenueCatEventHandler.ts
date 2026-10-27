@@ -21,9 +21,9 @@ const {
   STATUS: { BAD_REQUEST, OK, UNSUPPORTED_MEDIA_TYPE },
 } = HTTP;
 
-const { GRANT_TYPES, REVOKE_TYPES } = REVENUECAT_EVENTS;
+const { EXPIRY_ONLY_TYPES, GRANT_TYPES, REVOKE_TYPES } = REVENUECAT_EVENTS;
 
-const HANDLED_TYPES: ReadonlySet<string> = new Set([...GRANT_TYPES, ...REVOKE_TYPES]);
+const HANDLED_TYPES: ReadonlySet<string> = new Set([...GRANT_TYPES, ...REVOKE_TYPES, ...EXPIRY_ONLY_TYPES]);
 
 interface EventHandlerOptions {
   acceptSandbox: boolean;
