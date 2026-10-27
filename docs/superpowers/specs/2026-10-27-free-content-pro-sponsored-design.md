@@ -65,7 +65,7 @@ Both ids match `PRODUCT_ID_PATTERN` (`constants/appConfig.ts:45`), so `app/purch
 
 - `state/useEntitlements.ts` becomes `useProStatus`, reading `data.pro` under the same React Query key root so `useAdminAccess` invalidation keeps working. `ready` carries `{ isPro, expiresAt, product }`.
 - `components/purchase/PaywallSheet.tsx` becomes `ProSheet`: the same dialog shell and focus trap, title "Syntactical Pro", two benefits (no sponsored cards, 20 asks a day), two buttons with the store's localized prices ("A year for {price}", "Forever for {price}"), and "Not now". It fires `paywall_viewed` with `source`.
-- Entry points: Settings ("Go Pro" row, or "Pro until {date}" / "Pro, lifetime" when active, with "Manage subscription" opening the store's subscription page on native), the house sponsored card, the Ask limit message, and the results screen footer for free users.
+- Entry points: Settings ("Go Pro" row, or "Pro until {date}" / "Pro, lifetime" when active, with "Manage subscription" opening the store's subscription page on native), the house sponsored card, and the Ask limit message. The results screen has no separate Pro footer: its sponsored card is the house Pro card whenever no ad fills it.
 - `state/usePurchases.ts`: `confirm` resolves when `pro.isActive` is true; `purchase_completed` is kept and `pro_purchased` fires beside it with `product`.
 - `app/purchase-complete.tsx` copy becomes "You're Pro". `app/settings.tsx` keeps "Restore purchases" on native.
 - `state/useCanAsk.ts` returns "signed in". `AskPanel.tsx` drops the `locked` copy; the `limit` copy for a free user says "5 a day on the free tier. Pro has 20." with a Go Pro action. `services/ask/requestAskAnswer.ts` drops the 403 mapping.
