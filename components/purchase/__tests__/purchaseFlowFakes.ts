@@ -1,18 +1,12 @@
-// Shared fakes for the Task 3.18 purchase flow suites (B-42, B-43, B-64,
-// Review Focus 3). The purchase SDKs are faked at their wrapper boundaries:
-// react-native-purchases on native, clients/webBillingClient on the web. The
-// server is a routed fetch stub whose GET me answers with fakeServer.entitlements,
-// so a bank unlocks only when the server says so. The native SDK's own
-// customer info always claims every product is active: a client that unlocks
-// from the SDK's result instead of /me shows it.
-import type { Manifest } from '@syntactical/content-schema';
-
+// Shared fakes for the Pro purchase suites. The purchase SDKs are faked at their wrapper
+// boundaries: react-native-purchases on native, clients/webBillingClient on the web. The server is
+// a routed fetch stub whose GET me answers with fakeServer.pro, so Pro shows only when the server
+// says so. The native SDK's own customer info always claims both products are active: a client
+// that trusts the SDK's result instead of /me shows it.
 import {
   CONTENT_BASE_URL,
   MANIFEST_URL,
-  buildBankText,
   cloneBundledManifest,
-  hashUtf8Hex,
   stubFetchRoutes,
   type FetchRoute,
 } from '../../../services/content/__tests__/fixtures/contentFixtures';
@@ -22,32 +16,40 @@ export { CONTENT_BASE_URL, MANIFEST_URL };
 
 export const API_BASE = 'https://api.syntactical.dev/v1/';
 export const ME_URL = `${API_BASE}me`;
-export const MEDIUM_PRODUCT = 'syntactical.python.medium';
-export const HARD_PRODUCT = 'syntactical.python.hard';
+export const ANNUAL_PRODUCT = 'syntactical.pro.annual';
+export const LIFETIME_PRODUCT = 'syntactical.pro.lifetime';
 export const SIGNED_IN_USER = 'a6f1d1c2-0000-4000-8000-00000000000a';
+// Noon UTC, so the date is the same in every time zone a CI runner uses.
+export const ANNUAL_EXPIRES_AT = '2027-10-27T12:00:00.000Z';
 
-// Localized store prices, deliberately not the $5 list price, so a hard-coded
+// Localized store prices, deliberately not the US list prices ($19.99, $39.99), so a hard-coded
 // price cannot pass.
 export const NATIVE_PRICES: Record<string, string> = {
-  [MEDIUM_PRODUCT]: '€5,49',
-  [HARD_PRODUCT]: '€6,99',
+  [ANNUAL_PRODUCT]: '€21,99',
+  [LIFETIME_PRODUCT]: '€43,99',
 };
 export const WEB_PRICES: Record<string, string> = {
-  [MEDIUM_PRODUCT]: '£4.79',
-  [HARD_PRODUCT]: '£5.29',
+  [ANNUAL_PRODUCT]: '£17.49',
+  [LIFETIME_PRODUCT]: '£34.99',
 };
 
-// The server's view: the entitlements GET me returns, and an ordered log of
-// SDK calls and GET me requests. While meGate is set, every GET me answer waits
-// for it (see holdMe).
-export const fakeServer: {
-  entitlements: string[];
-  events: string[];
-  meGate: Promise<void> | null;
-} = {
-  entitlements: [],
+export type FakePro = { expiresAt: string | null; isActive: boolean; product: 'annual' | 'lifetime' | null };
+
+export const FREE_PRO: FakePro = { expiresAt: null, isActive: false, product: null };
+
+// What GET me says once the webhook for this product reached the server.
+export function buildActivePro(productId: string): FakePro {
+  return productId === LIFETIME_PRODUCT
+    ? { expiresAt: null, isActive: true, product: 'lifetime' }
+    : { expiresAt: ANNUAL_EXPIRES_AT, isActive: true, product: 'annual' };
+}
+
+// The server's view: the Pro status GET me returns, and an ordered log of SDK calls and GET me
+// requests. While meGate is set, every GET me answer waits for it (see holdMe).
+export const fakeServer: { events: string[]; meGate: Promise<void> | null; pro: FakePro } = {
   events: [],
   meGate: null,
+  pro: FREE_PRO,
 };
 
 // Holds every GET me answer until the returned release function is called.
@@ -69,7 +71,7 @@ export const fakeAuth: { userId: string | null } = { userId: null };
 export const fakeNavigation: { calls: unknown[] } = { calls: [] };
 
 export type NativePurchaseBehavior = 'webhook-grants' | 'no-grant' | 'cancel' | 'fail';
-// no-grant: the store restores, but the server's GET me still lists nothing new.
+// no-grant: the store restores, but the server's GET me still says free.
 export type NativeRestoreBehavior = 'webhook-grants' | 'no-grant' | 'fail';
 
 export const nativeSdk: {
@@ -100,9 +102,9 @@ export const webBilling: {
 };
 
 export function resetFakes(): void {
-  fakeServer.entitlements = [];
   fakeServer.events = [];
   fakeServer.meGate = null;
+  fakeServer.pro = FREE_PRO;
   fakeAuth.userId = null;
   fakeNavigation.calls = [];
   nativeSdk.offeringsError = null;
@@ -164,7 +166,7 @@ export function listNavigatedUrls(): URL[] {
 }
 
 function buildCustomerInfo() {
-  // The SDK claims every product is active; the client must not believe it.
+  // The SDK claims both products are active; the client must not believe it.
   const active = Object.fromEntries(
     Object.keys(NATIVE_PRICES).map((productId) => [
       productId,
@@ -172,12 +174,10 @@ function buildCustomerInfo() {
     ]),
   );
   return {
-    activeSubscriptions: [],
+    activeSubscriptions: [ANNUAL_PRODUCT],
     allPurchasedProductIdentifiers: Object.keys(NATIVE_PRICES),
     entitlements: { active, all: active },
-    nonSubscriptionTransactions: Object.keys(NATIVE_PRICES).map((productIdentifier) => ({
-      productIdentifier,
-    })),
+    nonSubscriptionTransactions: [{ productIdentifier: LIFETIME_PRODUCT }],
     originalAppUserId: SIGNED_IN_USER,
   };
 }
@@ -202,24 +202,31 @@ type NativePackage = {
   };
 };
 
+// The RevenueCat offering: $rc_annual and $rc_lifetime, as docs/store/in-app-purchases.md sets it up.
 function buildNativePackages(): NativePackage[] {
-  return Object.entries(NATIVE_PRICES).map(([productId, priceString]) => ({
-    identifier: `$rc_custom_${productId}`,
-    offeringIdentifier: 'default',
-    packageType: 'CUSTOM',
-    product: {
-      currencyCode: 'EUR',
-      identifier: productId,
-      price: Number(priceString.replace(/[^0-9,]/g, '').replace(',', '.')),
-      priceString,
-      title: productId,
-    },
-  }));
+  return [
+    { identifier: '$rc_annual', packageType: 'ANNUAL', productId: ANNUAL_PRODUCT },
+    { identifier: '$rc_lifetime', packageType: 'LIFETIME', productId: LIFETIME_PRODUCT },
+  ].map(({ identifier, packageType, productId }) => {
+    const priceString = NATIVE_PRICES[productId];
+    return {
+      identifier,
+      offeringIdentifier: 'default',
+      packageType,
+      product: {
+        currencyCode: 'EUR',
+        identifier: productId,
+        price: Number(priceString.replace(/[^0-9,]/g, '').replace(',', '.')),
+        priceString,
+        title: productId,
+      },
+    };
+  });
 }
 
-// The react-native-purchases stand-in. purchasePackage and restorePurchases
-// model the store: 'webhook-grants' means RevenueCat's webhook reached the
-// server, so the next GET me lists the entitlement.
+// The react-native-purchases stand-in. purchasePackage and restorePurchases model the store:
+// 'webhook-grants' means RevenueCat's webhook reached the server, so the next GET me says Pro.
+// A restore that grants restores a lifetime purchase made on another install.
 export function buildNativePurchasesModule() {
   const offering = {
     availablePackages: buildNativePackages(),
@@ -245,17 +252,14 @@ export function buildNativePurchasesModule() {
       const behavior = nativeSdk.purchaseBehavior;
       if (behavior === 'cancel') return Promise.reject(buildStoreError('1', true));
       if (behavior === 'fail') return Promise.reject(buildStoreError('2', false));
-      if (behavior === 'webhook-grants') fakeServer.entitlements = [...fakeServer.entitlements, productId];
-      return Promise.resolve({
-        customerInfo: buildCustomerInfo(),
-        productIdentifier: productId,
-      });
+      if (behavior === 'webhook-grants') fakeServer.pro = buildActivePro(productId);
+      return Promise.resolve({ customerInfo: buildCustomerInfo(), productIdentifier: productId });
     }),
     restorePurchases: jest.fn(() => {
       fakeServer.events.push('restorePurchases');
       nativeSdk.restoreCount += 1;
       if (nativeSdk.restoreBehavior === 'fail') return Promise.reject(buildStoreError('2', false));
-      if (nativeSdk.restoreBehavior === 'webhook-grants') fakeServer.entitlements = Object.keys(NATIVE_PRICES);
+      if (nativeSdk.restoreBehavior === 'webhook-grants') fakeServer.pro = buildActivePro(LIFETIME_PRODUCT);
       return Promise.resolve(buildCustomerInfo());
     }),
   };
@@ -270,8 +274,8 @@ export function buildNativePurchasesModule() {
   };
 }
 
-// The clients/webBillingClient stand-in. readWebBillingPrices is the new
-// export the implementation adds: product id to the offering's localized price.
+// The clients/webBillingClient stand-in: product id to the offering's localized price, and a
+// purchase that never grants by itself (purchase-complete confirms checkout's return through /me).
 export function buildWebBillingModule() {
   return {
     configureWebBilling: jest.fn(),
@@ -290,37 +294,17 @@ function meRoute(): FetchRoute {
   return async () => {
     fakeServer.events.push('GET me');
     await fakeServer.meGate;
-    return Promise.resolve(
-      JSON.stringify({
-        data: {
-          dailyGoal: 20,
-          dayStreak: 0,
-          entitlements: fakeServer.entitlements,
-          timezone: null,
-          xpToday: 0,
-          xpTotal: 0,
-        },
-      }),
-    );
+    return JSON.stringify({
+      data: { dailyGoal: 20, dayStreak: 0, pro: fakeServer.pro, timezone: null, xpToday: 0, xpTotal: 0 },
+    });
   };
 }
 
-// The python medium bank's manifest hash no longer matches the bundled copy,
-// so no local copy exists (as after the private content split).
-function buildManifestWithoutLocalMedium(): Manifest {
-  const manifest = cloneBundledManifest();
-  const python = manifest.languages.find(({ id }) => id === 'python')!;
-  python.banks.medium = { ...python.banks.medium!, hash: hashUtf8Hex(buildBankText(['paid-1'])) };
-  return manifest;
-}
-
-// Serves the manifest and GET me; every other request fails like an offline
-// request. With hasLocalMedium false, python medium has no local copy.
-export function serveApp({ hasLocalMedium = true }: { hasLocalMedium?: boolean } = {}): jest.Mock {
-  const manifest = hasLocalMedium ? cloneBundledManifest() : buildManifestWithoutLocalMedium();
+// Serves the bundled manifest and GET me; every other request fails like an offline request.
+export function serveApp(): jest.Mock {
   return stubFetchRoutes(
     {
-      [MANIFEST_URL]: () => Promise.resolve(JSON.stringify(manifest)),
+      [MANIFEST_URL]: () => Promise.resolve(JSON.stringify(cloneBundledManifest())),
       [ME_URL]: meRoute(),
     },
     { shouldRejectUnrouted: true },

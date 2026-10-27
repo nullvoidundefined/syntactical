@@ -12,7 +12,7 @@ import { setExpoExtra } from '../../config/expoConstantsMock';
 // The purchase-complete route (B-38, Task 3.16): after Web Billing checkout,
 // /purchase-complete?product=<productId> polls GET me immediately and then
 // every 2 seconds for up to 30 seconds. It shows "Confirming your purchase"
-// while polling, "Unlocked" once data.entitlements holds the product (polling
+// while polling, "Unlocked" once data.pro.isActive is true (polling
 // stops), and "Still processing, check back shortly" after the deadline. A
 // missing or invalid product, or a guest, makes no request at all.
 
@@ -43,8 +43,7 @@ jest.mock('../../state/AuthProvider', () => ({
 const CONFIRMING = 'Confirming your purchase';
 const UNLOCKED = 'Unlocked';
 const STILL_PROCESSING = 'Still processing, check back shortly';
-const PRODUCT = 'syntactical.python.medium';
-const OTHER_PRODUCT = 'syntactical.python.hard';
+const PRODUCT = 'syntactical.pro.annual';
 const POLL_INTERVAL_MS = 2000;
 const DEADLINE_MS = 30_000;
 const MAX_REQUESTS = DEADLINE_MS / POLL_INTERVAL_MS + 1;
@@ -64,7 +63,10 @@ function QueryLayout() {
 
 const ROUTES = { _layout: QueryLayout, index: MenuStub, 'purchase-complete': PurchaseCompleteScreen };
 
-function profileReply(entitlements: string[]): RouteReply {
+function profileReply(isPro: boolean): RouteReply {
+  const pro = isPro
+    ? { expiresAt: '2027-10-27T12:00:00.000Z', isActive: true, product: 'annual' }
+    : { expiresAt: null, isActive: false, product: null };
   return {
     status: 200,
     body: {
@@ -72,7 +74,7 @@ function profileReply(entitlements: string[]): RouteReply {
         dailyGoal: 10,
         dayStreak: 0,
         email: 'reader@example.test',
-        entitlements,
+        pro,
         timezone: null,
         xpToday: 0,
         xpTotal: 0,
@@ -153,7 +155,7 @@ describe('purchase-complete route', () => {
   });
 
   it('requests GET me immediately, then every 2 seconds, showing "Confirming your purchase" while polling', async () => {
-    const { requests } = installRoutedFetch({ 'GET me': profileReply([]) });
+    const { requests } = installRoutedFetch({ 'GET me': profileReply(false) });
     await open(PRODUCT);
     expect(screen.getByText(CONFIRMING)).toBeTruthy();
     expect(meRequestCount(requests)).toBe(1);
@@ -174,7 +176,7 @@ describe('purchase-complete route', () => {
 
   it('shows "Unlocked" once data.entitlements includes the product and makes no further request', async () => {
     const { requests } = installRoutedFetch({
-      'GET me': [profileReply([]), profileReply([OTHER_PRODUCT]), profileReply([OTHER_PRODUCT, PRODUCT])],
+      'GET me': [profileReply(false), profileReply(false), profileReply(true)],
     });
     await open(PRODUCT);
     await advance(POLL_INTERVAL_MS * 2);
@@ -189,16 +191,8 @@ describe('purchase-complete route', () => {
     expect(screen.queryByText(STILL_PROCESSING)).toBeNull();
   });
 
-  it("does not unlock on a different product's entitlement", async () => {
-    installRoutedFetch({ 'GET me': profileReply([OTHER_PRODUCT, `${PRODUCT}-extra`]) });
-    await open(PRODUCT);
-    await advance(POLL_INTERVAL_MS * 3);
-    expect(screen.queryByText(UNLOCKED)).toBeNull();
-    expect(screen.getByText(CONFIRMING)).toBeTruthy();
-  });
-
   it('shows "Still processing, check back shortly" after 30 seconds without the entitlement and never requests after the deadline', async () => {
-    const { requests } = installRoutedFetch({ 'GET me': profileReply([OTHER_PRODUCT]) });
+    const { requests } = installRoutedFetch({ 'GET me': profileReply(false) });
     await open(PRODUCT);
     await advance(DEADLINE_MS - POLL_INTERVAL_MS);
     expect(screen.getByText(CONFIRMING)).toBeTruthy();
@@ -223,7 +217,7 @@ describe('purchase-complete route', () => {
         'reject',
         { status: 500, body: { error: { code: 'INTERNAL', message: 'x' } } },
         { status: 503 },
-        profileReply([PRODUCT]),
+        profileReply(true),
       ],
     });
     await open(PRODUCT);
@@ -254,7 +248,7 @@ describe('purchase-complete route', () => {
     ['upper case', 'syntactical.Python.medium'],
     ['a query suffix', 'syntactical.python.medium?x=1'],
   ])('makes no request for a %s product and shows "Still processing, check back shortly"', async (_label, product) => {
-    const { requests } = installRoutedFetch({ 'GET me': profileReply([PRODUCT]) });
+    const { requests } = installRoutedFetch({ 'GET me': profileReply(true) });
     await open(product);
     await advance(DEADLINE_MS + POLL_INTERVAL_MS);
     expect(requests).toHaveLength(0);
@@ -265,7 +259,7 @@ describe('purchase-complete route', () => {
 
   it('makes no request for a guest and shows "Still processing, check back shortly"', async () => {
     mockUserId = null;
-    const { requests } = installRoutedFetch({ 'GET me': profileReply([PRODUCT]) });
+    const { requests } = installRoutedFetch({ 'GET me': profileReply(true) });
     await open(PRODUCT);
     await advance(DEADLINE_MS + POLL_INTERVAL_MS);
     expect(requests).toHaveLength(0);
@@ -274,7 +268,7 @@ describe('purchase-complete route', () => {
   });
 
   it('stops polling on unmount', async () => {
-    const { requests } = installRoutedFetch({ 'GET me': profileReply([]) });
+    const { requests } = installRoutedFetch({ 'GET me': profileReply(false) });
     const rendered = await open(PRODUCT);
     await advance(POLL_INTERVAL_MS);
     expect(meRequestCount(requests)).toBe(2);
@@ -284,7 +278,7 @@ describe('purchase-complete route', () => {
   });
 
   it('has exactly one level-one header and announces the status in a polite live region', async () => {
-    installRoutedFetch({ 'GET me': profileReply([]) });
+    installRoutedFetch({ 'GET me': profileReply(false) });
     await open(PRODUCT);
     expect(listLevelOneHeadings()).toHaveLength(1);
     expect(findPoliteRegion(CONFIRMING)).not.toBeNull();
@@ -295,13 +289,13 @@ describe('purchase-complete route', () => {
   });
 
   it('announces "Unlocked" in the polite live region', async () => {
-    installRoutedFetch({ 'GET me': profileReply([PRODUCT]) });
+    installRoutedFetch({ 'GET me': profileReply(true) });
     await open(PRODUCT);
     expect(findPoliteRegion(UNLOCKED)).not.toBeNull();
   });
 
   it('offers a link back to the menu that navigates home', async () => {
-    installRoutedFetch({ 'GET me': profileReply([PRODUCT]) });
+    installRoutedFetch({ 'GET me': profileReply(true) });
     const rendered = await open(PRODUCT);
     const link = screen.getByRole('link', { name: /menu/i });
     await fireEvent.press(link);

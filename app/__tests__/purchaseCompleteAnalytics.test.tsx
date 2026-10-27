@@ -1,6 +1,6 @@
-// purchase-complete records purchase_completed (IAN-601): once GET me lists the
-// product's entitlement the route sends one purchase_completed event carrying
-// the product id, and while /me does not list it, it sends none.
+// purchase-complete records purchase_completed (IAN-601): once GET me says Pro is active the
+// route sends one purchase_completed event carrying the product id, and while /me does not say
+// so, it sends none, plus one pro_purchased with the plan.
 import { randomUUID } from 'node:crypto';
 
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -42,8 +42,7 @@ jest.mock('../../clients/analyticsClient', () => ({
 
 const UNLOCKED = 'Unlocked';
 const STILL_PROCESSING = 'Still processing, check back shortly';
-const PRODUCT = 'syntactical.python.medium';
-const OTHER_PRODUCT = 'syntactical.python.hard';
+const PRODUCT = 'syntactical.pro.annual';
 const POLL_INTERVAL_MS = 2000;
 const DEADLINE_MS = 30_000;
 
@@ -62,7 +61,10 @@ function QueryLayout() {
 
 const ROUTES = { _layout: QueryLayout, index: MenuStub, 'purchase-complete': PurchaseCompleteScreen };
 
-function profileReply(entitlements: string[]): RouteReply {
+function profileReply(isPro: boolean): RouteReply {
+  const pro = isPro
+    ? { expiresAt: '2027-10-27T12:00:00.000Z', isActive: true, product: 'annual' }
+    : { expiresAt: null, isActive: false, product: null };
   return {
     status: 200,
     body: {
@@ -70,7 +72,7 @@ function profileReply(entitlements: string[]): RouteReply {
         dailyGoal: 10,
         dayStreak: 0,
         email: 'reader@example.test',
-        entitlements,
+        pro,
         timezone: null,
         xpToday: 0,
         xpTotal: 0,
@@ -120,7 +122,7 @@ describe('purchase-complete route analytics', () => {
 
   it('records purchase_completed with the product id exactly once when GET me lists the entitlement', async () => {
     installRoutedFetch({
-      'GET me': [profileReply([]), profileReply([OTHER_PRODUCT, PRODUCT])],
+      'GET me': [profileReply(false), profileReply(true)],
     });
     await open(PRODUCT);
     expect(listPurchaseCompletedCalls()).toHaveLength(0);
@@ -128,13 +130,16 @@ describe('purchase-complete route analytics', () => {
     await advance(POLL_INTERVAL_MS);
     expect(screen.getByText(UNLOCKED)).toBeTruthy();
     expect(listPurchaseCompletedCalls()).toEqual([['purchase_completed', { productId: PRODUCT }]]);
+    expect(mockTrackEvent.mock.calls.filter(([name]) => name === 'pro_purchased')).toEqual([
+      ['pro_purchased', { product: 'annual' }],
+    ]);
 
     await advance(DEADLINE_MS + POLL_INTERVAL_MS);
     expect(listPurchaseCompletedCalls()).toHaveLength(1);
   });
 
   it('records no purchase_completed when GET me never lists the entitlement', async () => {
-    installRoutedFetch({ 'GET me': profileReply([OTHER_PRODUCT]) });
+    installRoutedFetch({ 'GET me': profileReply(false) });
     await open(PRODUCT);
     await advance(DEADLINE_MS + POLL_INTERVAL_MS);
     expect(screen.getByText(STILL_PROCESSING)).toBeTruthy();

@@ -1,7 +1,7 @@
-// Settings restore messages on native (IAN-601): a restore whose store call and
-// GET me both succeed says "Purchases restored."; a restore the store rejects
-// says "Restore failed. Check your connection and try again." Neither message
-// shows before the button is pressed.
+// Settings restore messages on native (IAN-601, then Pro): a restore after which GET me says Pro
+// says "Purchases restored."; one the store accepts while GET me still says free says "No purchases
+// to restore on this account."; one the store rejects says "Restore failed. Check your connection
+// and try again." No message shows before the button is pressed.
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
@@ -58,6 +58,7 @@ jest.mock('../../clients/analyticsClient', () => ({ trackEvent: () => undefined 
 
 const RESTORED = 'Purchases restored.';
 const RESTORE_FAILED = 'Restore failed. Check your connection and try again.';
+const NOTHING_TO_RESTORE = 'No purchases to restore on this account.';
 
 let queryClient: QueryClient;
 
@@ -94,6 +95,7 @@ describe('Restore purchases messages in Settings on native', () => {
     await renderSettings();
     expect(screen.queryByText(RESTORED)).toBeNull();
     expect(screen.queryByText(RESTORE_FAILED)).toBeNull();
+    expect(screen.queryByText(NOTHING_TO_RESTORE)).toBeNull();
 
     await pressRestore();
 
@@ -111,5 +113,17 @@ describe('Restore purchases messages in Settings on native', () => {
     expect(nativeSdk.restoreCount).toBe(1);
     expect(await screen.findByText(RESTORE_FAILED)).toBeTruthy();
     expect(screen.queryByText(RESTORED)).toBeNull();
+  });
+
+  it('says there is nothing to restore when the store restores but GET me still says free', async () => {
+    nativeSdk.restoreBehavior = 'no-grant';
+    await renderSettings();
+
+    await pressRestore();
+
+    expect(nativeSdk.restoreCount).toBe(1);
+    expect(await screen.findByText(NOTHING_TO_RESTORE)).toBeTruthy();
+    expect(screen.queryByText(RESTORED)).toBeNull();
+    expect(screen.queryByText(RESTORE_FAILED)).toBeNull();
   });
 });
