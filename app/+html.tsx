@@ -6,15 +6,13 @@ import type { ReactNode } from 'react';
 
 import { ScrollViewStyleReset } from 'expo-router/html';
 
-import { readExtraString } from '../config/readExtraString';
+import { EthicalAdsScript } from '../components/sponsor/EthicalAdsScript';
 
 // The obsidian token in tailwind.config.js; htmlShell.web.test.tsx fails if they drift apart.
 const THEME_COLOR = '#05060a';
 const BODY_BACKGROUND = `body { background-color: ${THEME_COLOR}; }`;
-const ETHICAL_ADS_SCRIPT = 'https://media.ethicalads.io/media/client/ethicalads.min.js';
 
 export default function Root({ children }: { children: ReactNode }) {
-  const ethicalAdsPublisher = readExtraString('ethicalAdsPublisher');
   return (
     <html lang="en">
       <head>
@@ -25,7 +23,7 @@ export default function Root({ children }: { children: ReactNode }) {
         <ScrollViewStyleReset />
         {/* Plain text children: CodeBlock.test.tsx keeps raw HTML injection out of the app trees. */}
         <style>{BODY_BACKGROUND}</style>
-        {ethicalAdsPublisher === null ? null : <script async src={ETHICAL_ADS_SCRIPT} />}
+        <EthicalAdsScript />
       </head>
       <body>{children}</body>
     </html>

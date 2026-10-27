@@ -37,6 +37,14 @@ function readPostHogHost(): string | undefined {
   return value;
 }
 
+// An EthicalAds publisher id is a lowercase slug; the error names the variable, never the value.
+function readEthicalAdsPublisher(): string | undefined {
+  const value = process.env.ETHICALADS_PUBLISHER;
+  if (value === undefined || value === '') return undefined;
+  if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(value)) throw new Error('ETHICALADS_PUBLISHER must be a lowercase slug');
+  return value;
+}
+
 // The e2e build (E2E_API_BASE_URL, E2E_CONTENT_BASE_URL) points the app at servers on this machine.
 // Only an http URL on a loopback host is accepted, so a real build cannot be redirected by these;
 // the error names the variable, never the value.
@@ -71,6 +79,7 @@ const config: ExpoConfig = {
     contentBaseUrl: CONTENT_BASE_URL,
     // Links EAS builds to the Expo project @nullvoidundefined/syntactical (created 2026-10-06).
     eas: { projectId: 'a6a0d002-f2b6-49ac-91d6-d83150e7fa2d' },
+    ethicalAdsPublisher: readEthicalAdsPublisher(),
     posthogHost: readPostHogHost(),
     posthogKey: readPublicKey('POSTHOG_KEY', 'phc', 'PostHog'),
     revenueCatAppleKey: readPublicKey('REVENUECAT_APPLE_KEY', 'appl'),

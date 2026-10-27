@@ -24,3 +24,8 @@ export const SPONSOR_SLOT_HEIGHT = 160;
 export const DIRECT_SPONSOR_PATH = 'sponsor.json';
 export const DIRECT_SPONSOR_CALL_TO_ACTION = 'Learn more';
 export const DIRECT_SPONSOR_STALE_MS = 60 * 60 * 1000;
+
+// The EthicalAds client script, and the longest the web card waits after load() for the client to say
+// whether the placement filled; past it, the card shows the direct sponsor or the house card.
+export const ETHICAL_ADS_SCRIPT_URL = 'https://media.ethicalads.io/media/client/ethicalads.min.js';
+export const ETHICAL_ADS_FILL_CEILING_MS = 5000;
