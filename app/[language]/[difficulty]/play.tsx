@@ -1,4 +1,5 @@
-// Round route: resolves the language and difficulty against the manifest
+// Round route: shows the loading state until ContentProvider has read the on-device cache (the static export renders
+// it at build time with no query and possibly no params), then resolves the language and difficulty against the manifest
 // and the difficulty registry, waits for stats hydration and a ready
 // bank, and remounts the round under a new key on Retry so every piece
 // of round state resets. `?topic=<id>` plays one topic of the bank; a topic
@@ -15,6 +16,7 @@ import { recordBankUse } from '../../../services/content/bankStore';
 import { findDifficulty } from '../../../services/content/findDifficulty';
 import { findLanguageEntry } from '../../../services/content/findLanguageEntry';
 import { readRoundCount } from '../../../services/quiz/roundLength';
+import { useContentContext } from '../../../state/ContentProvider';
 import { useQuizStats } from '../../../state/StatsProvider';
 import { useCanAsk } from '../../../state/useCanAsk';
 import { useLanguageManifest } from '../../../state/useLanguageManifest';
@@ -39,6 +41,7 @@ export default function RoundScreen() {
     topic?: string;
   }>();
   const [roundKey, setRoundKey] = useState(0);
+  const { isHydrated: isContentHydrated } = useContentContext();
   const { isHydrated } = useQuizStats();
   const canAsk = useCanAsk();
   const { languages } = useLanguageManifest();
@@ -51,6 +54,9 @@ export default function RoundScreen() {
   useEffect(() => {
     if (status === 'ready') void recordBankUse(language, difficulty);
   }, [difficulty, language, status]);
+  // Nothing resolves from params until the cache is read: the build-time render and the first client render match,
+  // and a deep-linked round never starts on a bundled bank the cache is about to replace.
+  if (!isContentHydrated) return <ActivityIndicator className="flex-1" />;
   if (!languageEntry || !difficultyEntry || status === 'unknown') return <NotFoundScreen />;
   if ('retry' in bankState) {
     const { retry } = bankState;
