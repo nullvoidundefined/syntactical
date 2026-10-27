@@ -1,12 +1,13 @@
 // Starts everything the specs run against, and returns the function that removes it: a throwaway
 // Postgres, the real migrations, the real API (through startServer, with sign-in codes captured to
 // a file), the static web export built against that API with its host files, and a host that serves it as Cloudflare
-// Pages does. The state directory holds the run's private files and is deleted at the end.
+// Pages does. The served content carries the fixture direct sponsor (e2e/fixtures/sponsor.json). The state
+// directory holds the run's private files and is deleted at the end.
 import { spawn, spawnSync } from 'node:child_process';
 import type { ChildProcess } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { createWriteStream } from 'node:fs';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -85,6 +86,8 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
       DATABASE_URL: databaseUrl,
     });
     await writeFixtureContent({ contentSource: join(REPOSITORY_ROOT, 'content'), publicDir });
+    // A direct sponsor with a far-future end date, so every run's cards show a named sponsor (the Seams table).
+    await copyFile(join(REPOSITORY_ROOT, 'e2e/fixtures/sponsor.json'), join(publicDir, 'sponsor.json'));
 
     const apiLog = createWriteStream(join(stateDir, 'api.log'));
     const api = spawn(process.execPath, ['--import', 'tsx', join(REPOSITORY_ROOT, 'e2e/support/runApi.mts')], {
