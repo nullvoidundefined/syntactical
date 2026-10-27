@@ -25,17 +25,16 @@ const buildScript = new URL('../../scripts/buildContentManifest.mjs', import.met
 process.exitCode = await runCli(argv, {
     applyStaging,
     // The build script is plain JS outside this package; load it by URL so tsc does not follow it.
-    buildManifest: async (contentRoot) => {
+    buildManifest: async () => {
         const { buildRepoContent } = (await import(buildScript)) as {
-            buildRepoContent: (repoDir: string, contentRoot?: string) => Promise<void>;
+            buildRepoContent: (repoDir: string) => Promise<void>;
         };
-        await buildRepoContent(repoDir, contentRoot);
+        await buildRepoContent(repoDir);
     },
     classify,
     contentDir: fileURLToPath(new URL('../../content', import.meta.url)),
     createProvider: (kind, model) => createModelProvider(kind, {}, model),
     createSourceFetcher: (allowedHosts) => createSourceFetcher({ allowedHosts }),
-    defaultContentRoot: fileURLToPath(new URL('../../../syntactical-content', import.meta.url)),
     draft: draftOracles,
     draftTaxonomy,
     enrich,

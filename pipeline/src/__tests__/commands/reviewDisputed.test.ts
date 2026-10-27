@@ -1,7 +1,7 @@
 // `pipeline review` for a topic track lists generated and pending items alongside disputed
 // cards with their blind answers, claim, and quote. Real temp files, no Docker: no
 // question has an oracle, so the default observer never runs code.
-import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -66,29 +66,22 @@ function executedQuestion(id: string): Record<string, unknown> {
     };
 }
 
-function buildBank(path: string, access: 'free' | 'paid', difficulty: string, id: string): Record<string, unknown> {
-    const productId = access === 'paid' ? { productId: `syntactical.${id}.${difficulty}` } : {};
-    return { access, contentVersion: 1, hash: HASH, path, topicCounts: {}, ...productId };
+function buildBank(path: string): Record<string, unknown> {
+    return { contentVersion: 1, hash: HASH, path, topicCounts: {} };
 }
 
 function buildEntry(id: string, banks: Record<string, unknown>, extra: Record<string, unknown>) {
     return buildLanguage({ banks, id, label: id, topics: [{ id: 'sessions', label: 'Sessions' }], ...extra });
 }
 
-async function listFiles(dir: string): Promise<string[]> {
-    const entries = await readdir(dir, { recursive: true, withFileTypes: true }).catch(() => []);
-    return entries.filter((entry) => entry.isFile()).map((entry) => join(entry.parentPath, entry.name));
-}
-
 describe('review disputed cards', () => {
     let root: string;
     let contentDir: string;
-    let contentRoot: string;
     let pipelineDir: string;
     let logs: string[];
 
     function run() {
-        return review({ contentDir, contentRoot, log: (line) => logs.push(line), pipelineDir });
+        return review({ contentDir, log: (line) => logs.push(line), pipelineDir });
     }
 
     async function stageDisputed(outRoot: string, difficulty: string, cards: unknown[]): Promise<void> {
@@ -104,25 +97,23 @@ describe('review disputed cards', () => {
         logs = [];
         root = await mkdtemp(join(tmpdir(), 'review-disputed-'));
         contentDir = join(root, 'repo/content');
-        contentRoot = join(root, 'syntactical-content');
         pipelineDir = join(root, 'repo/pipeline');
-        await mkdir(contentRoot, { recursive: true });
         await writeJson(join(contentDir, 'manifest.json'), {
             languages: [
                 buildEntry(
                     'backend-security',
                     {
-                        easy: buildBank('backend-security/easy.json', 'free', 'easy', 'backend-security'),
-                        medium: buildBank('backend-security/medium.json', 'paid', 'medium', 'backend-security'),
+                        easy: buildBank('backend-security/easy.json'),
+                        medium: buildBank('backend-security/medium.json'),
                     },
                     { kind: 'topic' },
                 ),
-                buildEntry('python', { easy: buildBank('python/easy.json', 'free', 'easy', 'python') }, {}),
+                buildEntry('python', { easy: buildBank('python/easy.json') }, {}),
             ],
             schemaVersion: 2,
         });
         await writeJson(join(contentDir, 'backend-security/easy.json'), { questions: [], schemaVersion: 2 });
-        await writeJson(join(contentRoot, 'backend-security/medium.json'), { questions: [], schemaVersion: 2 });
+        await writeJson(join(contentDir, 'backend-security/medium.json'), { questions: [], schemaVersion: 2 });
         await writeJson(join(contentDir, 'python/easy.json'), { questions: [], schemaVersion: 2 });
         await writeJson(join(pipelineDir, 'reports/latest.json'), {
             counts: {},
@@ -263,12 +254,11 @@ describe('review disputed cards', () => {
         expect(decisions[id]).toMatchObject({ decision: 'approve', provenance: { isHumanReviewed: true } });
     });
 
-    it("writes a paid topic bank's review under the content root", async () => {
-        await stageDisputed(contentRoot, 'medium', [disputedCard('gen-backend-security-medium-ffffffff')]);
+    it("writes a Medium topic bank's review under pipeline/", async () => {
+        await stageDisputed(pipelineDir, 'medium', [disputedCard('gen-backend-security-medium-ffffffff')]);
         await run();
-        const markdown = await readFile(join(contentRoot, 'review/backend-security-medium.md'), 'utf8');
+        const markdown = await readFile(join(pipelineDir, 'review/backend-security-medium.md'), 'utf8');
         expect(markdown).toContain('## gen-backend-security-medium-ffffffff');
-        expect((await listFiles(pipelineDir)).filter((file) => file.includes('backend-security-medium'))).toEqual([]);
     });
 
     it('skips a disputed card with an unsafe id', async () => {

@@ -1,9 +1,8 @@
-// `pipeline write-references`: writes a before-answer reference (a neutral title, a syntax reference
-// with examples, and documentation links) for every question in each FREE bank, and saves each
-// accepted one at once to `<pipelineDir>/references/<language>/<difficulty>.json` (question id to
-// reference), so a rerun skips questions already done. A reference that judges on both providers
-// do not clear as answer-free is not saved. Content files are only read; publish merges the
-// references, keeping only the links `verify-doc-links` confirmed. Paid banks are skipped.
+// `pipeline write-references`: writes a before-answer reference (a neutral title, a syntax reference with
+// examples, and documentation links) for every question in every bank, and saves each accepted one at once to
+// `<pipelineDir>/references/<language>/<difficulty>.json` (question id to reference), so a rerun skips questions
+// already done. A reference that judges on both providers do not clear as answer-free is not saved. Content files
+// are only read; apply-staging merges the references, keeping only the links `verify-doc-links` confirmed.
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -55,8 +54,7 @@ export async function writeReferences(options: WriteReferencesOptions): Promise<
             continue;
         }
         const track = { grammar, hosts, label };
-        for (const [difficulty, { access, path }] of Object.entries(banks)) {
-            if (access !== 'free') continue;
+        for (const [difficulty, { path }] of Object.entries(banks)) {
             const bankKey = `${languageId}/${difficulty}`;
             const file = join(pipelineDir, 'references', languageId, `${difficulty}.json`);
             const saved = await readReferences(file);

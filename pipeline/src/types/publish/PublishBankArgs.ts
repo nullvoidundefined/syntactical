@@ -10,7 +10,7 @@ export interface PublishBankArgs {
     difficulty: string;
     languageId: string;
     log: (line: string) => void;
-    // The free staging tree (public pipeline dir) or the private content root, per bank access.
+    // The staging tree: the pipeline dir, for every bank.
     outRoot: string;
     reported: Map<string, PublishVerdict>;
     source: Question[];

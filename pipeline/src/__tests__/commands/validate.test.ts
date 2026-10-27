@@ -16,7 +16,7 @@ import { buildLanguage, buildManifest, HASH } from '../fixtures/manifest.js';
 const SECRET_PROMPT = 'PROMPT-SECRET-zebra';
 const SECRET_CODE = 'CODE-SECRET-walrus';
 const SECRET_CHOICE = 'CHOICE-SECRET-otter';
-const PAID_PROMPT = 'PAID-PROMPT-heron';
+const MEDIUM_PROMPT = 'MEDIUM-PROMPT-heron';
 
 const ORACLE: Oracle = { code: 'print(1)', language: 'python' };
 
@@ -31,16 +31,15 @@ function buildQuestion(id: string, prompt: string): Record<string, unknown> {
     };
 }
 
-function buildEntry(path: string, access: 'free' | 'paid', difficulty: string): Record<string, unknown> {
-    const productId = access === 'paid' ? { productId: `syntactical.python.${difficulty}` } : {};
-    return { access, contentVersion: 1, hash: HASH, path, topicCounts: {}, ...productId };
+function buildEntry(path: string): Record<string, unknown> {
+    return { contentVersion: 1, hash: HASH, path, topicCounts: {} };
 }
 
 const MANIFEST = buildManifest(
     buildLanguage({
         banks: {
-            easy: buildEntry('python/easy.json', 'free', 'easy'),
-            medium: buildEntry('python/medium.json', 'paid', 'medium'),
+            easy: buildEntry('python/easy.json'),
+            medium: buildEntry('python/medium.json'),
         },
         label: 'Python',
     }),
@@ -55,18 +54,14 @@ const FILES: Record<string, unknown> = {
             buildQuestion('p-3', SECRET_PROMPT),
         ],
     },
-};
-
-// Paid banks live in the private content root, never in the public content dir (B-60).
-const PRIVATE_FILES: Record<string, unknown> = {
-    'python/medium.json': { questions: [buildQuestion('paid-1', PAID_PROMPT)] },
+    'python/medium.json': { questions: [buildQuestion('medium-1', MEDIUM_PROMPT)] },
 };
 
 const RESULTS: Record<string, ValidationResult> = {
     'p-1': { runtimeVersion: 'Python 3.13.16', status: 'passed' },
     'p-2': { reason: 'answer-mismatch', status: 'failed' },
     'p-3': { status: 'not-executable' },
-    'paid-1': { status: 'passed' },
+    'medium-1': { status: 'passed' },
 };
 
 async function snapshot(dir: string): Promise<Record<string, string>> {
@@ -83,21 +78,15 @@ async function snapshot(dir: string): Promise<Record<string, string>> {
 describe('validateContent', () => {
     let root: string;
     let contentDir: string;
-    let contentRoot: string;
     let reportsDir: string;
 
     beforeEach(async () => {
         root = await mkdtemp(join(tmpdir(), 'validate-'));
         contentDir = join(root, 'content');
-        contentRoot = join(root, 'private');
         reportsDir = join(root, 'reports');
         await mkdir(join(contentDir, 'python'), { recursive: true });
-        await mkdir(join(contentRoot, 'python'), { recursive: true });
         for (const [name, value] of Object.entries(FILES)) {
             await writeFile(join(contentDir, name), JSON.stringify(value));
-        }
-        for (const [name, value] of Object.entries(PRIVATE_FILES)) {
-            await writeFile(join(contentRoot, name), JSON.stringify(value));
         }
     });
 
@@ -112,7 +101,6 @@ describe('validateContent', () => {
         const times = ['2026-10-03T10:00:00.000Z', '2026-10-03T10:00:05.000Z'];
         return validateContent({
             contentDir,
-            contentRoot,
             newRunId: () => 'run-1',
             now: () => times.shift() ?? 'exhausted',
             oracleSource: async (_bankKey, id) => oracleFor(id),
@@ -150,7 +138,7 @@ describe('validateContent', () => {
             { bankKey: 'python/easy', id: 'p-1', runtimeVersion: 'Python 3.13.16', status: 'passed' },
             { bankKey: 'python/easy', id: 'p-2', reason: 'answer-mismatch', status: 'failed' },
             { bankKey: 'python/easy', id: 'p-3', status: 'not-executable' },
-            { bankKey: 'python/medium', id: 'paid-1', status: 'passed' },
+            { bankKey: 'python/medium', id: 'medium-1', status: 'passed' },
         ]);
     });
 
@@ -201,13 +189,13 @@ describe('validateContent', () => {
         expect(await readFile(join(reportsDir, 'latest.json'), 'utf8')).toBe(stage);
     });
 
-    it('never copies prompts, code, or choice text, paid bank included', async () => {
+    it('never copies prompts, code, or choice text, medium bank included', async () => {
         await run(() => ORACLE, recordingValidator(new Map()));
 
         const text = await readFile(join(reportsDir, 'latest.json'), 'utf8');
-        for (const secret of [SECRET_PROMPT, SECRET_CODE, SECRET_CHOICE, PAID_PROMPT]) {
+        for (const secret of [SECRET_PROMPT, SECRET_CODE, SECRET_CHOICE, MEDIUM_PROMPT]) {
             expect(text).not.toContain(secret);
         }
-        expect(text).toContain('paid-1');
+        expect(text).toContain('medium-1');
     });
 });

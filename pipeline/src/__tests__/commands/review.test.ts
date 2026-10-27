@@ -1,7 +1,7 @@
-// `pipeline review` against real temp files and a fake oracle observer: what is listed,
-// the sample, where free and paid output goes, decisions, reruns, and untouched banks.
+// `pipeline review` against real temp files and a fake oracle observer: what is listed, the sample, where output
+// goes, decisions, reruns, and untouched banks.
 import { createHash } from 'node:crypto';
-import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -12,12 +12,10 @@ import { pickSample } from '../../services/review/pickSample.js';
 import { writeJson } from '../fixtures/jsonFiles.js';
 import { buildLanguage, buildManifest, HASH } from '../fixtures/manifest.js';
 
-const PAID_TEXT = 'PAID-SECRET-PROMPT';
 const SAMPLE_KIND = 'sample of executed questions';
 
-function buildEntry(path: string, access: 'free' | 'paid'): Record<string, unknown> {
-    const productId = access === 'paid' ? { productId: 'syntactical.python.medium' } : {};
-    return { access, contentVersion: 1, hash: HASH, path, topicCounts: {}, ...productId };
+function buildEntry(path: string): Record<string, unknown> {
+    return { contentVersion: 1, hash: HASH, path, topicCounts: {} };
 }
 
 function buildQuestion(id: string, prompt = `prompt of ${id}`): Record<string, unknown> {
@@ -63,7 +61,6 @@ function headingsOf(markdown: string): string[] {
 
 describe('review', () => {
     let contentDir: string;
-    let contentRoot: string;
     let pipelineDir: string;
     let observed: (id: string) => string;
     const logs: string[] = [];
@@ -72,7 +69,6 @@ describe('review', () => {
     function run() {
         return review({
             contentDir,
-            contentRoot,
             log: (line) => logs.push(line),
             observe: async (_bankKey, question) => observed(question.id),
             pipelineDir,
@@ -112,13 +108,11 @@ describe('review', () => {
         observed = (id) => `out-${id}`;
         const root = await mkdtemp(join(tmpdir(), 'review-root-'));
         contentDir = join(root, 'repo/content');
-        contentRoot = join(root, 'syntactical-content');
         pipelineDir = join(root, 'repo/pipeline/');
-        await mkdir(contentRoot, { recursive: true });
         const language = buildLanguage({
             banks: {
-                easy: buildEntry('python/easy.json', 'free'),
-                medium: buildEntry('python/medium.json', 'paid'),
+                easy: buildEntry('python/easy.json'),
+                medium: buildEntry('python/medium.json'),
             },
             topics: [{ id: 'strings', label: 'Strings' }],
         });
@@ -126,9 +120,8 @@ describe('review', () => {
         await writeJson(join(contentDir, 'python/easy.json'), {
             questions: [...FREE_IDS, 'q-bad'].map((id) => buildQuestion(id)),
         });
-        // Paid banks live in the private content root, never under content/ (B-60).
-        await writeJson(join(contentRoot, 'python/medium.json'), {
-            questions: ['paid-1', 'paid-2', 'paid-3', 'paid-4'].map((id) => buildQuestion(id, PAID_TEXT)),
+        await writeJson(join(contentDir, 'python/medium.json'), {
+            questions: ['medium-1', 'medium-2', 'medium-3', 'medium-4'].map((id) => buildQuestion(id)),
         });
         await writeJson(join(pipelineDir, 'reports/latest.json'), {
             counts: {},
@@ -136,7 +129,7 @@ describe('review', () => {
             questions: [
                 ...FREE_IDS.map((id) => ({ bankKey: 'python/easy', id, status: 'passed' })),
                 { bankKey: 'python/easy', id: 'q-bad', reason: 'answer-mismatch', status: 'failed' },
-                ...['paid-1', 'paid-2', 'paid-3', 'paid-4'].map((id) => ({
+                ...['medium-1', 'medium-2', 'medium-3', 'medium-4'].map((id) => ({
                     bankKey: 'python/medium',
                     id,
                     status: 'passed',
@@ -219,25 +212,6 @@ describe('review', () => {
         const sampledCount = markdown.split(/^## /m).filter((part) => part.includes(SAMPLE_KIND)).length;
         expect(sampledCount).toBe(10);
         expect(markdown.split(/^## q-bad /m)[1]?.split(/^## /m)[0]).not.toContain(SAMPLE_KIND);
-    });
-
-    it('writes a paid bank review only under the content root', async () => {
-        await run();
-        const paid = await readFile(join(contentRoot, 'review/python-medium.md'), 'utf8');
-        expect(paid).toContain(PAID_TEXT);
-        const publicFiles = await listFiles(pipelineDir);
-        expect(publicFiles.some((file) => file.includes('medium'))).toBe(false);
-        for (const file of publicFiles) {
-            expect(await readFile(file, 'utf8')).not.toContain(PAID_TEXT);
-        }
-        expect(logs.join('\n')).not.toContain(PAID_TEXT);
-    });
-
-    it('refuses a content root inside the pipeline directory before writing any paid file', async () => {
-        contentRoot = join(pipelineDir, 'inside');
-        await mkdir(contentRoot, { recursive: true });
-        await expect(run()).rejects.toThrow('content root must be outside');
-        expect(await listFiles(join(contentRoot))).toEqual([]);
     });
 
     it('records an approval as provenance.isHumanReviewed and a reject with its reason', async () => {
@@ -364,7 +338,7 @@ describe('review', () => {
         const files = [
             join(contentDir, 'manifest.json'),
             join(contentDir, 'python/easy.json'),
-            join(contentRoot, 'python/medium.json'),
+            join(contentDir, 'python/medium.json'),
         ];
         const before = await Promise.all(files.map((file) => readFile(file)));
         await run();

@@ -5,15 +5,8 @@ export const HASH = '0123456789abcdef'.repeat(4);
 
 type Entry = Record<string, unknown>;
 
-export function buildBankEntry(path: string, access: 'free' | 'paid' = 'free', productId?: string): Entry {
-    return {
-        access,
-        contentVersion: 1,
-        hash: HASH,
-        path,
-        topicCounts: {},
-        ...(productId === undefined ? {} : { productId }),
-    };
+export function buildBankEntry(path: string): Entry {
+    return { contentVersion: 1, hash: HASH, path, topicCounts: {} };
 }
 
 export function buildLanguage(overrides: Entry = {}): Entry {

@@ -4,13 +4,10 @@ import { join, relative } from 'node:path';
 import type { Question } from '@syntactical/content-schema';
 import { z } from 'zod';
 
-import { assertContentRootUsable } from '../services/classify/assertContentRootUsable.js';
-import { hasPaidBanks } from '../services/content/hasPaidBanks.js';
 import { listBankEntries } from '../services/content/listBankEntries.js';
 import { loadValidatedManifest } from '../services/content/loadValidatedManifest.js';
 import { rewritePrompts as rewriteBankPrompts } from '../services/gapFill/rewritePrompts.js';
 import { writeJsonAtomic } from '../services/json/writeJsonAtomic.js';
-import { resolveBankOutputRoot } from '../services/resolveBankOutputRoot.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 
@@ -20,33 +17,24 @@ const stagedSchema = z.looseObject({
 
 export async function rewritePrompts({
     contentDir,
-    contentRoot,
     log,
     pipelineDir,
     provider,
 }: {
     contentDir: string;
-    contentRoot: string;
     log: (line: string) => void;
     pipelineDir: string;
     provider: ModelProvider;
 }): Promise<void> {
     const manifest = await loadValidatedManifest(contentDir);
-    if (hasPaidBanks(manifest)) {
-        try {
-            await assertContentRootUsable(contentRoot, pipelineDir, contentDir);
-        } catch (error) {
-            throw new Error(`content root check failed: ${sanitizeLogText(String(error))}`, { cause: error });
-        }
-    }
     const stagedBanks: {
         difficulty: string;
         file: string;
         languageId: string;
         staged: z.infer<typeof stagedSchema>;
     }[] = [];
-    for (const { bankKey, difficulty, entry, languageId } of listBankEntries(manifest)) {
-        const root = resolveBankOutputRoot(pipelineDir, contentRoot, entry);
+    for (const { bankKey, difficulty, languageId } of listBankEntries(manifest)) {
+        const root = pipelineDir;
         const file = join(root, 'generated', languageId, `${difficulty}.json`);
         let text: string;
         try {

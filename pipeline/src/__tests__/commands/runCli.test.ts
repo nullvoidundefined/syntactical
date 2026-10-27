@@ -12,10 +12,9 @@ function buildDeps(env: Record<string, string | undefined> = {}): CliDeps & {
     drafted: number;
     reviewProblems: number;
     err: string[];
-    gapRoots: string[];
+    builds: number;
     languages: string[];
     publishedBanks: Record<string, { isWritten: boolean }>;
-    roots: string[];
     models: (string | undefined)[];
     calls: Record<string, unknown>[];
 } {
@@ -25,12 +24,13 @@ function buildDeps(env: Record<string, string | undefined> = {}): CliDeps & {
             deps.calls.push({ command: 'apply-staging' });
             return { rationales: 0, references: 0 };
         },
-        buildManifest: async (contentRoot?: string) => {
-            deps.roots.push(contentRoot ?? '(none)');
+        buildManifest: async () => {
+            deps.builds += 1;
         },
+        builds: 0,
         calls: [] as Record<string, unknown>[],
-        classify: async (options: { contentRoot: string }) => {
-            deps.roots.push(options.contentRoot);
+        classify: async () => {
+            deps.calls.push({ command: 'classify' });
             return {} as never;
         },
         contentDir: '/content',
@@ -40,32 +40,23 @@ function buildDeps(env: Record<string, string | undefined> = {}): CliDeps & {
             return PROVIDER;
         },
         createSourceFetcher: () => async () => ({ ok: false as const, reason: 'network' as const }),
-        defaultContentRoot: '/default-root',
         draft: async () => {
             deps.drafted += 1;
         },
-        gapFill: async (options: { contentRoot: string }) => {
-            deps.gapRoots.push(options.contentRoot);
+        gapFill: async () => {
+            deps.calls.push({ command: 'gap-fill' });
             return {} as never;
         },
-        gapRoots: [] as string[],
         drafted: 0,
         draftTaxonomy: async (options: { language: string }) => {
             deps.languages.push(options.language);
             return '/x';
         },
         languages: [] as string[],
-        enrich: async (options: {
-            contentRoot: string;
-            isFreeOnly?: boolean;
-            languages?: readonly string[];
-            secondProvider?: ModelProvider;
-        }) => {
-            deps.roots.push(options.contentRoot);
+        enrich: async (options: { languages?: readonly string[]; secondProvider?: ModelProvider }) => {
             deps.calls.push({
                 command: 'enrich',
                 hasSecondProvider: options.secondProvider !== undefined,
-                ...(options.isFreeOnly === undefined ? {} : { isFreeOnly: options.isFreeOnly }),
                 ...(options.languages === undefined ? {} : { languages: options.languages }),
             });
             return {} as never;
@@ -75,18 +66,17 @@ function buildDeps(env: Record<string, string | undefined> = {}): CliDeps & {
         kinds: [] as string[],
         models: [] as (string | undefined)[],
         pipelineDir: '/pipeline/',
-        publish: async (options: { contentRoot: string }) => {
-            deps.roots.push(options.contentRoot);
+        publish: async () => {
+            deps.calls.push({ command: 'publish' });
             return { banks: deps.publishedBanks } as never;
         },
         publishedBanks: {} as Record<string, { isWritten: boolean }>,
-        review: async (options: { contentRoot: string }) => {
-            deps.roots.push(options.contentRoot);
+        review: async () => {
+            deps.calls.push({ command: 'review' });
             return { approved: 0, items: 0, pending: 0, problems: deps.reviewProblems, rejected: 0 };
         },
         reviewProblems: 0,
         rewritePrompts: async () => undefined,
-        roots: [] as string[],
         stderr: (text: string) => {
             deps.err.push(text);
         },
@@ -141,7 +131,7 @@ describe('runCli', () => {
         const deps = buildDeps();
         expect(await runCli(['node', 'cli.ts', 'nope'], deps)).toBe(1);
         expect(deps.err.join('')).toContain('Usage: pipeline');
-        expect(deps.err.join('')).toContain('rewrite-prompts [--api] [--content-root <path>]');
+        expect(deps.err.join('')).toContain('rewrite-prompts [--api] | review | publish');
         expect(deps.kinds).toEqual([]);
     });
 
@@ -154,87 +144,39 @@ describe('runCli', () => {
         expect(withApi.kinds).toEqual(['api']);
     });
 
-    it('classify takes the content root from the flag, then the env var, then the default', async () => {
-        const argv = ['node', 'cli.ts', 'classify'];
-        const withFlag = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
-        await runCli([...argv, '--content-root', '/flag-root'], withFlag);
-        const withEquals = buildDeps();
-        await runCli([...argv, '--content-root=/eq-root', '--api'], withEquals);
-        const withEnv = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
-        await runCli(argv, withEnv);
-        const withDefault = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '' });
-        await runCli(argv, withDefault);
-        expect([withFlag.roots, withEquals.roots, withEnv.roots, withDefault.roots]).toEqual([
-            ['/flag-root'],
-            ['/eq-root'],
-            ['/env-root'],
-            ['/default-root'],
-        ]);
-        expect(withEquals.kinds).toEqual(['api']);
-    });
-
-    it('classify with --content-root and no value exits 1 without classifying', async () => {
+    it('classify and gap-fill run with the provider the flag names', async () => {
         const deps = buildDeps();
-        expect(await runCli(['node', 'cli.ts', 'classify', '--content-root'], deps)).toBe(1);
-        expect(deps.err.join('')).toContain('--content-root needs a path');
-        expect(deps.roots).toEqual([]);
-        expect(deps.kinds).toEqual([]);
+        expect(await runCli(['node', 'cli.ts', 'classify', '--api'], deps)).toBe(0);
+        expect(await runCli(['node', 'cli.ts', 'gap-fill'], deps)).toBe(0);
+        expect(deps.calls).toEqual([{ command: 'classify' }, { command: 'gap-fill' }]);
+        expect(deps.kinds).toEqual(['api', 'cli']);
     });
 
-    it('enrich runs the enrich stage with the content root and the provider the flags name', async () => {
-        const withFlag = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
-        expect(await runCli(['node', 'cli.ts', 'enrich', '--api', '--content-root', '/flag-root'], withFlag)).toBe(0);
-        const withEnv = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
-        await runCli(['node', 'cli.ts', 'enrich'], withEnv);
-        expect([withFlag.roots, withEnv.roots]).toEqual([['/flag-root'], ['/env-root']]);
-        expect([withFlag.kinds, withEnv.kinds]).toEqual([['api'], ['cli']]);
+    it('enrich runs the enrich stage with the provider the flag names', async () => {
+        const withApi = buildDeps();
+        expect(await runCli(['node', 'cli.ts', 'enrich', '--api'], withApi)).toBe(0);
+        const plain = buildDeps();
+        expect(await runCli(['node', 'cli.ts', 'enrich'], plain)).toBe(0);
+        expect([withApi.kinds, plain.kinds]).toEqual([['api'], ['cli']]);
     });
 
-    it('enrich with --content-root and no value exits 1 without enriching', async () => {
-        const deps = buildDeps();
-        expect(await runCli(['node', 'cli.ts', 'enrich', '--content-root'], deps)).toBe(1);
-        expect(deps.roots).toEqual([]);
-        expect(deps.kinds).toEqual([]);
-    });
-
-    it('gap-fill uses the --api provider and the content root flag, then env, then default', async () => {
-        const argv = ['node', 'cli.ts', 'gap-fill'];
-        const withFlag = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
-        await runCli([...argv, '--api', '--content-root', '/flag-root'], withFlag);
-        const withEnv = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
-        await runCli(argv, withEnv);
-        const withDefault = buildDeps();
-        await runCli(argv, withDefault);
-        expect([withFlag.gapRoots, withEnv.gapRoots, withDefault.gapRoots]).toEqual([
-            ['/flag-root'],
-            ['/env-root'],
-            ['/default-root'],
-        ]);
-        expect(withFlag.kinds).toEqual(['api']);
-        expect(withFlag.roots).toEqual([]);
-    });
-
-    it('review resolves the content root like classify, builds no provider, and exits 1 on file problems', async () => {
+    it('review builds no provider and exits 1 on file problems', async () => {
         const argv = ['node', 'cli.ts', 'review'];
-        const clean = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
-        expect(await runCli([...argv, '--content-root', '/flag-root'], clean)).toBe(0);
-        const fromEnv = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
-        await runCli(argv, fromEnv);
+        const clean = buildDeps();
+        expect(await runCli(argv, clean)).toBe(0);
         const broken = buildDeps();
         broken.reviewProblems = 2;
         expect(await runCli(argv, broken)).toBe(1);
-        expect([clean.roots, fromEnv.roots, broken.roots]).toEqual([['/flag-root'], ['/env-root'], ['/default-root']]);
         expect(clean.kinds).toEqual([]);
     });
 
-    it('publish runs with the content root and exits 1 when any bank was refused', async () => {
+    it('publish exits 1 when any bank was refused', async () => {
         const clean = buildDeps();
         clean.publishedBanks = { 'python/easy': { isWritten: true } };
-        expect(await runCli(['node', 'cli.ts', 'publish', '--content-root', '/flag-root'], clean)).toBe(0);
+        expect(await runCli(['node', 'cli.ts', 'publish'], clean)).toBe(0);
         const refused = buildDeps();
         refused.publishedBanks = { 'python/easy': { isWritten: true }, 'python/hard': { isWritten: false } };
         expect(await runCli(['node', 'cli.ts', 'publish'], refused)).toBe(1);
-        expect([clean.roots, refused.roots]).toEqual([['/flag-root'], ['/default-root']]);
         expect(refused.err.join('')).toContain('bank refused: python/hard');
         expect(clean.kinds).toEqual([]);
     });
@@ -269,21 +211,19 @@ describe('runCli', () => {
         expect(deps.kinds).toEqual([]);
     });
 
-    it('apply-staging rebuilds the manifest without a content root, since it touches free banks only', async () => {
-        const deps = buildDeps({ SYNTACTICAL_CONTENT_ROOT: '/env-root' });
+    it('apply-staging rebuilds the manifest once and builds no provider', async () => {
+        const deps = buildDeps();
         expect(await runCli(['node', 'cli.ts', 'apply-staging'], deps)).toBe(0);
         expect(deps.calls).toEqual([{ command: 'apply-staging' }]);
-        expect(deps.roots).toEqual(['(none)']);
+        expect(deps.builds).toBe(1);
         expect(deps.kinds).toEqual([]);
     });
 
-    it('enrich passes --free-only and the --language list, and refuses an empty list', async () => {
+    it('enrich passes the --language list, and refuses an empty list', async () => {
         const deps = buildDeps();
-        expect(await runCli(['node', 'cli.ts', 'enrich', '--free-only', '--language', 'python,postgres'], deps)).toBe(
-            0,
-        );
+        expect(await runCli(['node', 'cli.ts', 'enrich', '--language', 'python,postgres'], deps)).toBe(0);
         expect(deps.calls).toEqual([
-            { command: 'enrich', hasSecondProvider: false, isFreeOnly: true, languages: ['python', 'postgres'] },
+            { command: 'enrich', hasSecondProvider: false, languages: ['python', 'postgres'] },
         ]);
         const empty = buildDeps();
         expect(await runCli(['node', 'cli.ts', 'enrich', '--language'], empty)).toBe(1);

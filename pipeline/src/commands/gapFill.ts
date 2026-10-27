@@ -4,9 +4,6 @@
 // Topic entries (`kind: 'topic'`) use TRACK_RUNNERS; language entries use ORACLE_LANGUAGES.
 // Content bank files are only read, never written: kept questions are staged in
 // `generated/<language>/<difficulty>.json` and publish moves them into banks.
-//
-// Free-bank output goes under the public `pipelineDir`. Paid-bank output goes under
-// `contentRoot` (the private content repo); nothing paid is ever written under `pipelineDir`.
 import { join } from 'node:path';
 
 import type { FillBankResult } from '../types/FillBankResult.js';
@@ -17,21 +14,18 @@ import { ProviderFailureStop } from '../types/ProviderFailureStop.js';
 import type { runOracle } from '../clients/dockerRunner.js';
 import { ORACLE_LANGUAGES } from '../services/ORACLE_LANGUAGES.js';
 import { TRACK_RUNNERS } from '../services/TRACK_RUNNERS.js';
-import { loadCommandManifest } from '../services/content/loadCommandManifest.js';
+import { loadValidatedManifest } from '../services/content/loadValidatedManifest.js';
 import { readBankQuestions } from '../services/content/readBankQuestions.js';
 import { createProviderFailureStreak } from '../services/gapFill/createProviderFailureStreak.js';
 import { fillBank } from '../services/gapFill/fillBank.js';
 import { pickTopics } from '../services/classify/pickTopics.js';
 import { readFallbackTopics } from '../services/classify/readFallbackTopics.js';
 import { readLatestReport } from '../services/classify/readLatestReport.js';
-import { resolveBankFile } from '../services/resolveBankFile.js';
-import { resolveBankOutputRoot } from '../services/resolveBankOutputRoot.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
 import { writePipelineReport } from '../services/writePipelineReport.js';
 
 export interface GapFillOptions {
     contentDir: string;
-    contentRoot: string;
     log: (line: string) => void;
     newRunId: () => string;
     now: () => string;
@@ -73,10 +67,10 @@ function buildReport(
 }
 
 export async function gapFill(options: GapFillOptions): Promise<PipelineReport> {
-    const { contentDir, contentRoot, newRunId, pipelineDir, provider, run } = options;
+    const { contentDir, newRunId, pipelineDir, provider, run } = options;
     const log = (line: string): void => options.log(sanitizeLogText(line));
     const startedAt = options.now();
-    const { languages } = await loadCommandManifest({ contentDir, contentRoot, pipelineDir });
+    const { languages } = await loadValidatedManifest(contentDir);
     const fallbackTopics = await readFallbackTopics(join(pipelineDir, 'topics.json'));
     // Reports hold ids and verdicts only; every command shares one report chain in the pipeline dir.
     const reportsDir = join(pipelineDir, 'reports');
@@ -97,13 +91,13 @@ export async function gapFill(options: GapFillOptions): Promise<PipelineReport> 
                 manifestTopics,
                 Object.hasOwn(fallbackTopics, languageId) ? fallbackTopics[languageId] : undefined,
             );
-            for (const [difficulty, { access, path }] of Object.entries(banks)) {
+            for (const [difficulty, { path }] of Object.entries(banks)) {
                 const bankKey = `${languageId}/${difficulty}`;
                 if ((!language && !runners) || topics.length === 0) {
                     log(`skipping bank ${bankKey}: no oracle runner or topic list for language ${languageId}`);
                     continue;
                 }
-                const questions = await readBankQuestions(resolveBankFile(contentDir, contentRoot, { access, path }));
+                const questions = await readBankQuestions(join(contentDir, path));
                 let result: FillBankResult;
                 try {
                     result = await fillBank({
@@ -113,8 +107,7 @@ export async function gapFill(options: GapFillOptions): Promise<PipelineReport> 
                         ...(runners ? { runners } : { language: language as OracleLanguage }),
                         languageId,
                         log,
-                        // Free output stays in the public tree; paid output goes to the private content root.
-                        outRoot: resolveBankOutputRoot(pipelineDir, contentRoot, { access }),
+                        outRoot: pipelineDir,
                         provider,
                         questions,
                         topics,

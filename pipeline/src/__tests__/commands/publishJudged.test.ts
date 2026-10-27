@@ -1,7 +1,7 @@
 // publish keeps method 'judged' and the evidence of a generated judged card, publishes an
 // owner-approved disputed card as judged and pending with isHumanReviewed true, and refuses an
 // undecided or rejected disputed card. Real temp files; the manifest rebuild is stubbed.
-import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -62,7 +62,6 @@ function disputedCard(): Json {
 describe('publish judged cards', () => {
     let root: string;
     let contentDir: string;
-    let contentRoot: string;
     let pipelineDir: string;
     let logs: string[];
 
@@ -70,7 +69,6 @@ describe('publish judged cards', () => {
         await publish({
             buildManifest: async () => undefined,
             contentDir,
-            contentRoot,
             log: (line) => logs.push(line),
             newRunId: () => 'run-publish',
             now: () => '2026-10-05T00:00:00.000Z',
@@ -105,9 +103,7 @@ describe('publish judged cards', () => {
         logs = [];
         root = await mkdtemp(join(tmpdir(), 'publish-judged-'));
         contentDir = join(root, 'repo/content');
-        contentRoot = join(root, 'syntactical-content');
         pipelineDir = join(root, 'repo/pipeline');
-        await mkdir(contentRoot, { recursive: true });
         await writeJson(
             join(contentDir, 'manifest.json'),
             buildManifest(

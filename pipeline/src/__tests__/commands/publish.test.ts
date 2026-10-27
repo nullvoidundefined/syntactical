@@ -1,8 +1,8 @@
 // `pipeline publish` against real temp directories and the real manifest build: only validated
 // or human-reviewed questions are written, a failed one never is, a bank that fails the publish
-// validator is refused whole, paid banks stay out of the public content dir, and the rebuilt
-// manifest carries topic counts and bumps a content version only for a bank that changed.
-import { cp, mkdir, mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+// validator is refused whole, and the rebuilt manifest carries topic counts and bumps a content version only for
+// a bank that changed.
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -20,7 +20,6 @@ type Json = Record<string, unknown>;
 
 interface Dirs {
     contentDir: string;
-    contentRoot: string;
     pipelineDir: string;
     root: string;
 }
@@ -40,9 +39,8 @@ function buildQuestion(id: string, over: Json = {}): Json {
     };
 }
 
-function buildEntry(path: string, access: 'free' | 'paid', difficulty: string): Json {
-    const productId = access === 'paid' ? { productId: `syntactical.python.${difficulty}` } : {};
-    return { access, contentVersion: 1, hash: HASH, path, topicCounts: {}, ...productId };
+function buildEntry(path: string): Json {
+    return { contentVersion: 1, hash: HASH, path, topicCounts: {} };
 }
 
 // Stages classify and enrich output for the given question ids under `outRoot`.
@@ -62,7 +60,7 @@ async function stage(outRoot: string, difficulty: string, ids: string[]): Promis
     );
 }
 
-// An id starting `m-` belongs to the paid python/medium bank, every other id to python/easy.
+// An id starting `m-` belongs to the python/medium bank, every other id to python/easy.
 async function writeReport(statuses: Record<string, string>): Promise<void> {
     await writeJson(join(dirs.pipelineDir, 'reports', 'latest.json'), {
         counts: {},
@@ -93,40 +91,26 @@ async function writeDecisions(outRoot: string, name: string, decisions: Record<s
 
 function seedManifest(): Json {
     const banks = {
-        easy: buildEntry('python/easy.json', 'free', 'easy'),
-        medium: buildEntry('python/medium.json', 'paid', 'medium'),
+        easy: buildEntry('python/easy.json'),
+        medium: buildEntry('python/medium.json'),
     };
     return buildManifest(buildLanguage({ banks, glyph: 'PY', grammar: 'python', label: 'Python' }));
 }
 
-// Transitional until publish stops writing paid banks under the content root: the content build now reads every
-// bank from contentDir, so each paid bank publish wrote is mirrored there for the build and removed afterwards.
-async function build(contentRoot: string): Promise<void> {
+async function build(): Promise<void> {
     const { contentDir, pipelineDir } = dirs;
     const { buildContentManifest } = (await import(BUILD_SCRIPT)) as {
         buildContentManifest: (...args: unknown[]) => Promise<void>;
     };
     const generated = join(dirs.root, 'generated');
-    const manifest = (await readJson(join(contentDir, 'manifest.json'))) as {
-        languages: { banks: Record<string, { access?: string; path: string }> }[];
-    };
-    const mirrored = manifest.languages
-        .flatMap(({ banks }) => Object.values(banks))
-        .filter(({ access }) => access === 'paid')
-        .map(({ path }) => path);
-    for (const path of mirrored) await cp(join(contentRoot, path), join(contentDir, path));
-    try {
-        await buildContentManifest(
-            contentDir,
-            { banksPath: join(generated, 'banks.ts'), manifestPath: join(generated, 'manifest.ts') },
-            join(pipelineDir, 'taxonomy'),
-        );
-    } finally {
-        for (const path of mirrored) await rm(join(contentDir, path), { force: true });
-    }
+    await buildContentManifest(
+        contentDir,
+        { banksPath: join(generated, 'banks.ts'), manifestPath: join(generated, 'manifest.ts') },
+        join(pipelineDir, 'taxonomy'),
+    );
 }
 
-function run(overrides: { buildManifest?: (root: string) => Promise<void> } = {}) {
+function run(overrides: { buildManifest?: () => Promise<void> } = {}) {
     const logs: string[] = [];
     const promise = publish({
         buildManifest: build,
@@ -152,11 +136,9 @@ beforeEach(async () => {
     const repo = join(root, 'repo');
     dirs = {
         contentDir: join(repo, 'content'),
-        contentRoot: join(root, 'private'),
         pipelineDir: join(repo, 'pipeline'),
         root,
     };
-    await mkdir(dirs.contentRoot, { recursive: true });
     await writeJson(join(dirs.contentDir, 'manifest.json'), seedManifest());
     await writeJson(join(dirs.pipelineDir, 'topics.json'), { python: TOPICS });
     await writeJson(join(dirs.pipelineDir, 'taxonomy', 'python.json'), [
@@ -166,12 +148,12 @@ beforeEach(async () => {
         questions: [buildQuestion('q-1'), buildQuestion('q-2')],
         schemaVersion: 2,
     });
-    await writeJson(join(dirs.contentRoot, 'python', 'medium.json'), {
+    await writeJson(join(dirs.contentDir, 'python', 'medium.json'), {
         questions: [buildQuestion('m-1')],
         schemaVersion: 2,
     });
     await stage(dirs.pipelineDir, 'easy', ['q-1', 'q-2']);
-    await stage(dirs.contentRoot, 'medium', ['m-1']);
+    await stage(dirs.pipelineDir, 'medium', ['m-1']);
 });
 
 afterEach(async () => {
@@ -332,48 +314,6 @@ describe('publish: bank-level refusal', () => {
         expect(banks['python/easy']?.isWritten).toBe(false);
         expect(banks['python/medium']?.isWritten).toBe(false);
         expect(builds).toBe(0);
-    });
-});
-
-describe('publish: paid banks', () => {
-    it('writes a paid bank only under the content root and reads its staging from there', async () => {
-        await writeReport({ 'm-1': 'passed' });
-        const publicPaid = join(dirs.contentDir, 'python', 'medium.json');
-        await run();
-
-        expect(
-            await stat(publicPaid).then(
-                () => true,
-                () => false,
-            ),
-        ).toBe(false);
-        const { questions } = await readBank(join(dirs.contentRoot, 'python', 'medium.json'));
-        expect(questions).toHaveLength(1);
-        expect(questions[0]).toMatchObject({ id: 'm-1', topic: 'strings' });
-    });
-
-    // B-60: paid banks live only in the private content repo, so a paid file under content/ is
-    // refused before anything is written, not read as a source.
-    it('refuses a paid bank file under the content dir and writes nothing', async () => {
-        await rm(join(dirs.contentRoot, 'python', 'medium.json'));
-        const publicPaid = join(dirs.contentDir, 'python', 'medium.json');
-        await writeJson(publicPaid, { questions: [buildQuestion('m-1')], schemaVersion: 2 });
-        const before = await readFile(publicPaid, 'utf8');
-        const easyFile = join(dirs.contentDir, 'python', 'easy.json');
-        const easyBefore = await readFile(easyFile, 'utf8');
-        await writeReport({ 'm-1': 'passed', 'q-1': 'passed', 'q-2': 'passed' });
-
-        await expect(run()).rejects.toThrow('paid bank in public content: python/medium');
-
-        const privatePaid = join(dirs.contentRoot, 'python', 'medium.json');
-        expect(
-            await stat(privatePaid).then(
-                () => true,
-                () => false,
-            ),
-        ).toBe(false);
-        expect(await readFile(publicPaid, 'utf8')).toBe(before);
-        expect(await readFile(easyFile, 'utf8')).toBe(easyBefore);
     });
 });
 

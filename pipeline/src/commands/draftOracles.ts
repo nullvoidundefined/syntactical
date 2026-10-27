@@ -1,6 +1,6 @@
-// `pipeline draft-oracles`: drafts an oracle for every question in each FREE bank and
-// writes `<oraclesDir>/<language>/<difficulty>.json` (question id to oracle). Paid
-// banks are skipped, and content files are only read, never written.
+// `pipeline draft-oracles`: drafts an oracle for every question in every bank and writes
+// `<oraclesDir>/<language>/<difficulty>.json` (question id to oracle). Content files are only read, never
+// written.
 import { join } from 'node:path';
 
 import { ORACLE_LANGUAGES } from '../services/ORACLE_LANGUAGES.js';
@@ -53,12 +53,8 @@ export async function draftOracles(options: DraftOraclesOptions): Promise<void> 
     const manifest = await loadValidatedManifest(contentDir);
     for (const { banks, id: languageId } of manifest.languages) {
         const language = Object.hasOwn(ORACLE_LANGUAGES, languageId) ? ORACLE_LANGUAGES[languageId] : undefined;
-        for (const [difficulty, { access, path }] of Object.entries(banks)) {
+        for (const [difficulty, { path }] of Object.entries(banks)) {
             const bankKey = `${languageId}/${difficulty}`;
-            if (access !== 'free') {
-                log(`skipping paid bank ${bankKey}`);
-                continue;
-            }
             if (!language) {
                 log(`skipping bank ${bankKey}: no oracle runner for language ${languageId}`);
                 continue;

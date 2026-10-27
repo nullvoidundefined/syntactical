@@ -1,7 +1,7 @@
 // Reviews one bank: builds its items, merges the owner's edited checkboxes with the stored
 // decisions, writes `review/decisions/<language>-<difficulty>.json`, then rewrites
 // `review/<language>-<difficulty>.md` with the kept decisions pre-checked. Both files go
-// under `outRoot` (the public pipeline dir for a free bank, the content root for a paid one).
+// under `outRoot` (the pipeline dir).
 import { readFile, mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 

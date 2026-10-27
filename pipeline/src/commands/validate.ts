@@ -13,8 +13,6 @@ import { listBankEntries } from '../services/content/listBankEntries.js';
 import { loadValidatedManifest } from '../services/content/loadValidatedManifest.js';
 import { readBankQuestions } from '../services/content/readBankQuestions.js';
 import { createOracleSource } from '../services/createOracleSource.js';
-import { resolveBankFile } from '../services/resolveBankFile.js';
-import { resolveBankOutputRoot } from '../services/resolveBankOutputRoot.js';
 import { validateQuestion } from '../services/validateQuestion.js';
 import { writePipelineReport } from '../services/writePipelineReport.js';
 
@@ -22,8 +20,6 @@ export type QuestionValidator = (question: Question, oracle: Oracle | null) => P
 
 export interface ValidateOptions {
     contentDir: string;
-    // The private content repo that holds paid banks (B-60).
-    contentRoot: string;
     reportsDir: string;
     oracleSource?: OracleSource;
     pipelineDir?: string;
@@ -48,7 +44,7 @@ function toReportQuestion(id: string, bankKey: string, result: ValidationResult)
 }
 
 export async function validateContent(options: ValidateOptions): Promise<PipelineReport> {
-    const { contentDir, contentRoot, newRunId, now, reportsDir } = options;
+    const { contentDir, newRunId, now, reportsDir } = options;
     const pipelineDir = options.pipelineDir ?? dirname(reportsDir);
     const validate = options.validate ?? validateQuestion;
     const startedAt = now();
@@ -57,10 +53,9 @@ export async function validateContent(options: ValidateOptions): Promise<Pipelin
     const manifest = await loadValidatedManifest(contentDir);
     const questions: PipelineReportQuestion[] = [];
     for (const { bankKey, entry } of listBankEntries(manifest)) {
-        const outRoot = resolveBankOutputRoot(pipelineDir, contentRoot, entry);
-        const oracleSource = options.oracleSource ?? createOracleSource(join(outRoot, 'oracles'));
-        // Paid banks are validated like free ones; only ids and verdicts leave this loop.
-        for (const question of await readBankQuestions(resolveBankFile(contentDir, contentRoot, entry))) {
+        const oracleSource = options.oracleSource ?? createOracleSource(join(pipelineDir, 'oracles'));
+        // Only ids and verdicts leave this loop.
+        for (const question of await readBankQuestions(join(contentDir, entry.path))) {
             const oracle = await oracleSource(bankKey, question.id);
             questions.push(toReportQuestion(question.id, bankKey, await validate(question, oracle)));
         }

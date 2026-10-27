@@ -1,8 +1,7 @@
-// `pipeline validate` and `pipeline review` read a bank's oracles from that bank's own root:
-// free banks from `<pipelineDir>/oracles`, paid banks from `<contentRoot>/oracles`, never a paid
-// bank's from the pipeline dir. The oracle source and the oracle observer are not injected; the
-// commands read the oracle files themselves and hand each oracle to the injected validator.
-import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+// `pipeline validate` and `pipeline review` read every bank's oracles from `<pipelineDir>/oracles`, Medium as well
+// as Easy. The oracle source and the oracle observer are not injected; the commands read the oracle files
+// themselves and hand each oracle to the injected validator.
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -34,12 +33,11 @@ function buildQuestion(id: string): Record<string, unknown> {
     };
 }
 
-const PAID_IDS = ['paid-1', 'paid-2', 'paid-3', 'paid-4'];
+const MEDIUM_IDS = ['medium-1', 'medium-2', 'medium-3', 'medium-4'];
 
 describe('validate and review oracle roots', () => {
     let root: string;
     let contentDir: string;
-    let contentRoot: string;
     let pipelineDir: string;
     let seen: Map<string, Oracle | null>;
 
@@ -47,42 +45,28 @@ describe('validate and review oracle roots', () => {
         seen = new Map();
         root = await mkdtemp(join(tmpdir(), 'oracle-roots-'));
         contentDir = join(root, 'repo/content');
-        contentRoot = join(root, 'syntactical-content');
         pipelineDir = join(root, 'repo/pipeline/');
-        await mkdir(contentRoot, { recursive: true });
-        const entry = (access: 'free' | 'paid', difficulty: string) =>
-            buildBankEntry(
-                `python/${difficulty}.json`,
-                access,
-                access === 'paid' ? `syntactical.python.${difficulty}` : undefined,
-            );
         const language = buildLanguage({
-            banks: { easy: entry('free', 'easy'), medium: entry('paid', 'medium') },
+            banks: { easy: buildBankEntry('python/easy.json'), medium: buildBankEntry('python/medium.json') },
             topics: [{ id: 'strings', label: 'Strings' }],
         });
         await writeJson(join(contentDir, 'manifest.json'), buildManifest(language));
         await writeJson(join(contentDir, 'python/easy.json'), { questions: [buildQuestion('free-1')] });
-        await writeJson(join(contentRoot, 'python/medium.json'), { questions: PAID_IDS.map(buildQuestion) });
-        await writeJson(
-            join(contentRoot, 'oracles/python/medium.json'),
-            Object.fromEntries(PAID_IDS.map((id) => [id, oracleOf('PAID-ORACLE')])),
-        );
-        await writeJson(join(pipelineDir, 'oracles/python/easy.json'), { 'free-1': oracleOf('FREE-ORACLE') });
-        // A decoy for the paid bank in the public tree: it must never be read.
+        await writeJson(join(contentDir, 'python/medium.json'), { questions: MEDIUM_IDS.map(buildQuestion) });
         await writeJson(
             join(pipelineDir, 'oracles/python/medium.json'),
-            Object.fromEntries(PAID_IDS.map((id) => [id, oracleOf('DECOY-ORACLE')])),
+            Object.fromEntries(MEDIUM_IDS.map((id) => [id, oracleOf('MEDIUM-ORACLE')])),
         );
+        await writeJson(join(pipelineDir, 'oracles/python/easy.json'), { 'free-1': oracleOf('FREE-ORACLE') });
     });
 
     afterEach(async () => {
         await rm(root, { force: true, recursive: true });
     });
 
-    it('validate gives each bank the oracle from its own root', async () => {
+    it('validate gives each bank its oracle from the pipeline dir', async () => {
         await validateContent({
             contentDir,
-            contentRoot,
             newRunId: () => 'run-1',
             now: () => '2026-10-05T00:00:00.000Z',
             pipelineDir,
@@ -93,35 +77,18 @@ describe('validate and review oracle roots', () => {
             },
         } as Parameters<typeof validateContent>[0]);
         expect(seen.get('free-1')).toEqual(oracleOf('FREE-ORACLE'));
-        for (const id of PAID_IDS) {
-            expect(seen.get(id)).toEqual(oracleOf('PAID-ORACLE'));
+        for (const id of MEDIUM_IDS) {
+            expect(seen.get(id)).toEqual(oracleOf('MEDIUM-ORACLE'));
         }
     });
 
-    it('validate treats a paid question with an oracle only in the pipeline dir as having none', async () => {
-        await rm(join(contentRoot, 'oracles'), { force: true, recursive: true });
-        await validateContent({
-            contentDir,
-            contentRoot,
-            newRunId: () => 'run-1',
-            now: () => '2026-10-05T00:00:00.000Z',
-            pipelineDir,
-            reportsDir: join(pipelineDir, 'reports'),
-            validate: async ({ id }, oracle) => {
-                seen.set(id, oracle);
-                return { status: 'passed' };
-            },
-        } as Parameters<typeof validateContent>[0]);
-        expect(seen.get('paid-1')).toBeNull();
-    });
-
-    it('review observes each bank question with the oracle from its own root', async () => {
+    it('review observes each bank question with its oracle from the pipeline dir', async () => {
         await writeJson(join(pipelineDir, 'reports/latest.json'), {
             counts: {},
             finishedAt: 't',
             questions: [
                 { bankKey: 'python/easy', id: 'free-1', status: 'passed' },
-                ...PAID_IDS.map((id) => ({ bankKey: 'python/medium', id, status: 'passed' })),
+                ...MEDIUM_IDS.map((id) => ({ bankKey: 'python/medium', id, status: 'passed' })),
             ],
             runId: 'r',
             stage: 'validate',
@@ -129,7 +96,6 @@ describe('validate and review oracle roots', () => {
         });
         await review({
             contentDir,
-            contentRoot,
             log: () => undefined,
             pipelineDir,
             validate: async ({ id }, oracle) => {
@@ -137,10 +103,10 @@ describe('validate and review oracle roots', () => {
                 return { observed: `out-${id}`, status: 'passed' };
             },
         } as Parameters<typeof review>[0]);
-        const paidSeen = PAID_IDS.filter((id) => seen.has(id));
-        expect(paidSeen.length).toBeGreaterThan(0);
-        for (const id of paidSeen) {
-            expect(seen.get(id)).toEqual(oracleOf('PAID-ORACLE'));
+        const mediumSeen = MEDIUM_IDS.filter((id) => seen.has(id));
+        expect(mediumSeen.length).toBeGreaterThan(0);
+        for (const id of mediumSeen) {
+            expect(seen.get(id)).toEqual(oracleOf('MEDIUM-ORACLE'));
         }
         expect(seen.get('free-1')).toEqual(oracleOf('FREE-ORACLE'));
     });

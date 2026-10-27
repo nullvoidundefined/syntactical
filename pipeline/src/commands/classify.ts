@@ -5,13 +5,9 @@
 // a topic. Content files are only read, never written: accepted topics land in
 // `classifications/<language>/<difficulty>.json` (question id to topic), and assigning them
 // into banks is publish's job.
-//
-// Free-bank output goes under the public `pipelineDir`. Paid-bank output goes under
-// `contentRoot` (the private content repo) and carries ids and topics only; no paid
-// question text is written anywhere, and nothing paid is ever written under `pipelineDir`.
 import { join } from 'node:path';
 
-import { loadCommandManifest } from '../services/content/loadCommandManifest.js';
+import { loadValidatedManifest } from '../services/content/loadValidatedManifest.js';
 import { readBankQuestions } from '../services/content/readBankQuestions.js';
 import { classifyBank } from '../services/classify/classifyBank.js';
 import { pickTopics } from '../services/classify/pickTopics.js';
@@ -19,14 +15,11 @@ import { readFallbackTopics } from '../services/classify/readFallbackTopics.js';
 import { readLatestReport } from '../services/classify/readLatestReport.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
 import { writePipelineReport } from '../services/writePipelineReport.js';
-import { resolveBankFile } from '../services/resolveBankFile.js';
-import { resolveBankOutputRoot } from '../services/resolveBankOutputRoot.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 import type { PipelineReport } from '../types/PipelineReport.js';
 
 export interface ClassifyOptions {
     contentDir: string;
-    contentRoot: string;
     log: (line: string) => void;
     newRunId: () => string;
     now: () => string;
@@ -77,10 +70,10 @@ function buildReport(
 }
 
 export async function classify(options: ClassifyOptions): Promise<PipelineReport> {
-    const { contentDir, contentRoot, newRunId, pipelineDir, provider } = options;
+    const { contentDir, newRunId, pipelineDir, provider } = options;
     const log = (line: string): void => options.log(sanitizeLogText(line));
     const startedAt = options.now();
-    const { languages } = await loadCommandManifest({ contentDir, contentRoot, pipelineDir });
+    const { languages } = await loadValidatedManifest(contentDir);
     const fallbackTopics = await readFallbackTopics(join(pipelineDir, 'topics.json'));
     const previous = await readLatestReport(join(pipelineDir, 'reports'));
     const totals: Totals = { accepted: 0, agreed: 0, compared: 0, queued: 0 };
@@ -90,20 +83,19 @@ export async function classify(options: ClassifyOptions): Promise<PipelineReport
             manifestTopics,
             Object.hasOwn(fallbackTopics, languageId) ? fallbackTopics[languageId] : undefined,
         );
-        for (const [difficulty, { access, path }] of Object.entries(banks)) {
+        for (const [difficulty, { path }] of Object.entries(banks)) {
             const bankKey = `${languageId}/${difficulty}`;
             if (topics.length === 0) {
                 log(`skipping bank ${bankKey}: no topic list for language ${languageId}`);
                 continue;
             }
-            const questions = await readBankQuestions(resolveBankFile(contentDir, contentRoot, { access, path }));
+            const questions = await readBankQuestions(join(contentDir, path));
             const result = await classifyBank({
                 bankKey,
                 difficulty,
                 languageId,
                 log,
-                // Free output stays in the public tree; paid output goes to the private content root.
-                outRoot: resolveBankOutputRoot(pipelineDir, contentRoot, { access }),
+                outRoot: pipelineDir,
                 provider,
                 questions,
                 topics,

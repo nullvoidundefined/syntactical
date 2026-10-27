@@ -76,7 +76,6 @@ describe('rewritePrompts staged file shape', () => {
         await expect(
             rewritePrompts({
                 contentDir,
-                contentRoot: join(root, 'unused'),
                 log: () => undefined,
                 pipelineDir,
                 provider,
