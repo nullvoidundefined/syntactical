@@ -1,0 +1,31 @@
+// Sponsored cards: the house card shown when no other sponsor fills a slot, the results card cadence,
+// the attribution label's minimum height, and the fixed height every card slot reserves.
+import type { SponsorContent } from '../services/sponsor/types/SponsorContent';
+
+export const HOUSE_CARD: SponsorContent = {
+  body: 'No sponsored cards. 20 asks a day.',
+  callToAction: 'See Pro',
+  headline: 'Syntactical Pro',
+  source: 'house',
+};
+
+// The results card shows once ROUNDS_BETWEEN rounds have completed since the last card (or since the first
+// launch), so the first one lands on the third round's results and then every third round.
+export const SPONSOR = { ROUNDS_BETWEEN: 3 } as const;
+
+// AdMob's attribution rule: the "Sponsored" label is at least 15 points high, at the top of the card.
+export const SPONSOR_LABEL_MIN_HEIGHT = 15;
+
+// Every card slot is this tall from its first frame, empty or filled, so a feed that fills late never
+// moves Retry, Menu, or the track list (AdMob's rule against placements that invite accidental taps).
+export const SPONSOR_SLOT_HEIGHT = 160;
+
+// The direct sponsor file under the content base URL, its button label, and how long a fetched copy is fresh.
+export const DIRECT_SPONSOR_PATH = 'sponsor.json';
+export const DIRECT_SPONSOR_CALL_TO_ACTION = 'Learn more';
+export const DIRECT_SPONSOR_STALE_MS = 60 * 60 * 1000;
+
+// The EthicalAds client script, and the longest the web card waits after load() for the client to say
+// whether the placement filled; past it, the card shows the direct sponsor or the house card.
+export const ETHICAL_ADS_SCRIPT_URL = 'https://media.ethicalads.io/media/client/ethicalads.min.js';
+export const ETHICAL_ADS_FILL_CEILING_MS = 5000;

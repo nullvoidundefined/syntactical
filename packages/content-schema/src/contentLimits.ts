@@ -20,6 +20,7 @@ const MAX_EVIDENCE_SOURCES = 3;
 const MAX_DOC_LINKS = 3;
 const SOURCE_URL_LENGTH = 2048;
 const FETCH_TIMEOUT_MS = 8000;
+const SPONSOR_KILOBYTES = 4;
 
 export const CONTENT_LIMITS = {
   bankBytes: BANK_KILOBYTES * BYTES_PER_KILOBYTE,
@@ -42,5 +43,6 @@ export const CONTENT_LIMITS = {
   rationaleLength: RATIONALE_LENGTH,
   referenceIdLength: REFERENCE_ID_LENGTH,
   sourceUrlLength: SOURCE_URL_LENGTH,
+  sponsorBytes: SPONSOR_KILOBYTES * BYTES_PER_KILOBYTE,
   tagLength: TAG_LENGTH,
 } as const;

@@ -7,6 +7,8 @@
 // sampled 20 or 50 question round, a topic round, and a review round do not.
 // When the screen says the learner may ask, the drawer offers "Ask about this
 // card" after an answer, naming the question by its bank and bank-order choice.
+// It reads the sponsored card cadence when the round starts, so its results screen
+// knows on its first render whether a card is due.
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import type { Grammar, Question } from '@syntactical/content-schema';
@@ -22,6 +24,7 @@ import { useQuizEngine, type RoundKind } from '../../state/useQuizEngine';
 import { useRoundAnalytics } from '../../state/useRoundAnalytics';
 import { useRoundCompletion } from '../../state/useRoundCompletion';
 import { useRoundKeyboard } from '../../state/useRoundKeyboard';
+import { useRoundSponsorCadence } from '../../state/useRoundSponsorCadence';
 import { QueryDrawer } from '../query/QueryDrawer';
 
 import { AbCard } from './AbCard';
@@ -157,6 +160,7 @@ export function QuizRound(props: QuizRoundProps) {
     topic,
   } = props;
   const engine = useQuizEngine(questions, { roundKind, sampleSize, topic });
+  const cadenceAtStart = useRoundSponsorCadence();
   const { advanceQuestion, currentQuestion, isAnswered, isComplete, submitAnswer, submittedAnswer, wasCorrect } =
     engine;
   const { recordAnswer } = useQuizStats();
@@ -217,7 +221,15 @@ export function QuizRound(props: QuizRoundProps) {
   if (isComplete || !currentQuestion) {
     const { accuracy, correctCount, totalQuestions } = engine;
     const results = { accuracy, correctCount, difficultyLabel, languageLabel, totalQuestions };
-    return <ResultsScreen {...results} onMenu={onExit} onRetry={onRetry} />;
+    return (
+      <ResultsScreen
+        {...results}
+        cadenceAtStart={cadenceAtStart}
+        onMenu={onExit}
+        onRetry={onRetry}
+        roundKind={roundKind}
+      />
+    );
   }
 
   const {

@@ -12,3 +12,12 @@
     transform: translateY(0);
   }
 }
+
+/* EthicalAds text placements take the sponsored card's colours: the surface background, signal links, ink
+   for bold link text, at the app's small text size. The hex values mirror tailwind.config.js. */
+:root {
+  --ea-bgcolor: #0d0f14;
+  --ea-color-link: #39e88f;
+  --ea-color-link-bold: #e6e8eb;
+  --ea-font-size: 14px;
+}
