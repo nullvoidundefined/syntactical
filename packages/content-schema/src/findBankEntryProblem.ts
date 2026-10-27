@@ -1,12 +1,16 @@
-// Finds the first rule one manifest bank entry breaks, or null. Every bank is free, so `access` and
-// `productId` are not checked: the free-banks contract step rejects them by name.
+// Finds the first rule one manifest bank entry breaks, or null. Every bank is free, so the keys that once marked a
+// paid bank are rejected by name before any other rule: a stale entry is reported for what is stale.
 import { SHA256_HEX } from './SHA256_HEX.js';
 import { CONTENT_LIMITS } from './contentLimits.js';
 import { isRecord } from './isRecord.js';
 import { isSafeBankPath } from './isSafeBankPath.js';
 
+const RETIRED_KEYS = ['access', 'productId'] as const;
+
 export function findBankEntryProblem(bank: unknown, topicIds: readonly string[]): string | null {
   if (!isRecord(bank)) return 'is not an object';
+  const retiredKey = RETIRED_KEYS.find((key) => key in bank);
+  if (retiredKey !== undefined) return `${retiredKey} is not allowed`;
   const { contentVersion, hash, path, topicCounts } = bank;
   if (typeof hash !== 'string' || !SHA256_HEX.test(hash)) return 'hash is invalid';
   if (!isSafeBankPath(path)) return 'path is unsafe';

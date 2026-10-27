@@ -62,7 +62,7 @@ Each question is multiple choice (`mc`), true/false (`bool`), or A/B (`ab`), and
 ### Adding a track
 
 1. Add the bank files `content/<track>/easy.json`, `medium.json`, and `hard.json`.
-2. Add an entry to `languages` in `content/manifest.json` with `id`, `label`, `glyph`, `tagline`, `grammar` (one of `GRAMMARS` in `packages/content-schema/src/grammars.ts`; any other value renders code as plain text), `kind: 'topic'` for a topic track, `topics`, `misconceptions`, and a `banks` object whose entries each have a `path`, `"hash": ""`, `"contentVersion": 1`, and `"topicCounts": {}`.
+2. Add an entry to `languages` in `content/manifest.json` with `id`, `label`, `glyph`, `tagline`, `grammar` (one of `GRAMMARS` in `packages/content-schema/src/grammars.ts`; any other value renders code as plain text), `kind: 'topic'` for a topic track, `topics`, `misconceptions`, and a `banks` object whose entries each have a `path`, `"hash": ""`, `"contentVersion": 1`, and `"topicCounts": {}`. A bank entry carrying `access` or `productId` is rejected.
 3. Run `npm run content:build` to fill in the hashes and regenerate the bundled files, then commit as above.
 
 ### The content pipeline
