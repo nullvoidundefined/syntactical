@@ -56,6 +56,15 @@ describe('trackEvent', () => {
     });
   });
 
+  it('forwards the sponsored card events with placement and source', () => {
+    mockExtra.posthogKey = buildKey();
+    const { trackEvent } = loadClient();
+    trackEvent('ad_shown', { placement: 'results', source: 'house' });
+    trackEvent('ad_clicked', { placement: 'tracks', source: 'admob' });
+    expect(mockCapture).toHaveBeenNthCalledWith(1, 'ad_shown', { placement: 'results', source: 'house' });
+    expect(mockCapture).toHaveBeenNthCalledWith(2, 'ad_clicked', { placement: 'tracks', source: 'admob' });
+  });
+
   it('registers exactly the nine product events, pro_purchased among them', () => {
     expect([...ANALYTICS_EVENTS]).toEqual([
       'round_started',
