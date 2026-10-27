@@ -1,7 +1,9 @@
 // services/content/__tests__/prefetchReviewBanks.test.ts
 // The banks a learner's due reviews come from are downloaded when the device has no copy, so a review of a
 // Medium or Hard question is never skipped for lack of its bank. Due-ness comes from the answer event log alone.
-// A bank the device has, a bank the manifest no longer lists, and a bank with nothing due are not fetched.
+// A bank the device has, a bank the manifest no longer lists, and a bank with nothing due are not fetched. A bank
+// whose download failed is not asked for again until REVIEW_BANK_RETRY_MS has passed, so an offline device or a
+// hash mismatch does not refetch on every coarse clock tick.
 import type { CachedBank, Manifest, Question } from '@syntactical/content-schema';
 import type { AnswerEvent } from '@syntactical/progress';
 import type { QueryClient } from '@tanstack/react-query';
@@ -10,7 +12,7 @@ import { waitFor } from '@testing-library/react-native';
 import { createQueryClient } from '../../../config/queryClient';
 import { settle } from '../../../config/settle';
 import { listDueReviewBankKeys } from '../../review/listDueReviewBankKeys';
-import { prefetchReviewBanks } from '../prefetchReviewBanks';
+import { REVIEW_BANK_RETRY_MS, prefetchReviewBanks } from '../prefetchReviewBanks';
 import type { ContentAccess } from '../types/ContentAccess';
 
 import {
@@ -103,5 +105,25 @@ describe('prefetchReviewBanks', () => {
     await waitFor(() => expect(countFetchesFor(MEDIUM_URL)).toBe(1));
     expect(countFetchesFor(HARD_URL)).toBe(0);
     expect(listFetchedUrls()).toEqual([MEDIUM_URL]);
+  });
+
+  it('waits REVIEW_BANK_RETRY_MS after a failed download before asking for the bank again', async () => {
+    stubFetchRoutes({ [MEDIUM_URL]: async () => Promise.reject(new TypeError('Network request failed')) });
+    const manifest = buildManifest();
+    queryClient.setQueryData(['manifest'], manifest);
+    const access = buildAccess(manifest, {});
+
+    prefetchReviewBanks(queryClient, manifest, access, ['python/medium']);
+    await waitFor(() =>
+      expect(queryClient.getQueryState(['bank', 'python', 'medium', hashUtf8Hex(MEDIUM_TEXT)])?.status).toBe('error'),
+    );
+    const failedAt = queryClient.getQueryState(['bank', 'python', 'medium', hashUtf8Hex(MEDIUM_TEXT)])!.errorUpdatedAt;
+
+    prefetchReviewBanks(queryClient, manifest, access, ['python/medium'], failedAt + REVIEW_BANK_RETRY_MS - 1);
+    await settle();
+    expect(countFetchesFor(MEDIUM_URL)).toBe(1);
+
+    prefetchReviewBanks(queryClient, manifest, access, ['python/medium'], failedAt + REVIEW_BANK_RETRY_MS);
+    await waitFor(() => expect(countFetchesFor(MEDIUM_URL)).toBe(2));
   });
 });
