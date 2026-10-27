@@ -7718,7 +7718,7 @@ const boolQuestion: Question = {
 
 const hardQuestion: Question = {
   ...easyQuestion,
-  id: 'py-hard-0',
+  id: 'fixture-hard-0',
   query: { explanation: 'hard-explanation-marker', title: 'Hard' },
 };
 
