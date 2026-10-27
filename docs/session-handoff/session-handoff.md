@@ -31,20 +31,24 @@ The audit and its cleanup, merged 2026-10-13 and 2026-10-14:
 - Pipeline: the dead judged route, A/B validators, and v1 migration deleted (#169); one runner id list and a TypeScript golden set (#173); a shared command preamble and JSON I/O (#175); review lists topic-track cards (#168); `nodejs` and `typescript-types` track configs (#164, #165).
 - App: one exclusive-action hook, and purchase-complete confirms through `usePurchases` (#174).
 - Server: shared `sendError`, rate-limit keys, layering and dead-config fixes (#176).
-- Docs: this rewrite (README, `docs/stack.md`, the user stories, the feature list, the lexicon, this file).
+- Docs: this rewrite (README, `docs/stack.md`, the user stories, the feature list, the lexicon, this file) (#179).
+
+#177 to #205 (2026-10-14 to 2026-10-27):
+
+- Content: the TypeScript Types (#182) and Node.js (#184) tracks, with near-duplicate easy cards dropped; misconception lists (#160) and before-answer references, rationales, and misconception tags for Python, JavaScript, and Postgres (#162).
+- App: number hints only on cards a key can select (#183) and one shared hint cap; the query drawer no longer gives the answer away before an answer (#159); Ask about a question after answering it (#196); the weekly study note on the home screen (#197); every bank free, with Medium and Hard downloaded on first use (#201).
+- Web: a static export with real page bodies and a Cloudflare Pages deploy step (#203); crawlable track and bank pages, `sitemap.xml`, and `robots.txt` (#205).
+- Server: the `changePassword` service (#178); the `anthropic-workspace-id` header so org-level API keys work (#198).
+- Pipeline: a run-level provider failure cap (#177); node oracles get a `require` (#181); before-answer references, checked doc links, and answer-key enrichment (#161).
+- Audit cleanup slices: one server test-app factory (#186), deduped app helpers (#188), one modal dialog shell (#189), shared pipeline fixtures (#190, #192), shared `expo-router` and `expo-constants` mocks (#191), shared password-test skip import (#194), `settle()` in place of real sleeps (#193), analytics mocks no longer virtual (#180), manifest taxonomy test fixtures (#195).
+- Docs: the monetization and marketing audit (#199); the spec and plan for free content, Pro, sponsored cards, and model failover (#200).
 
 ## Open
 
-The engineering-audit cleanup pass stopped early at the owner's request (2026-10-14). The ranked list is in `docs/audits/2026-10-13-engineering.md`, "Ranked cleanup opportunities"; the slices still open from it are:
-
-- app: one modal dialog shell (`useModalPanel` plus `DialogShell` for `SignOutDialog`, `DeleteAccountDialog`, and `PaywallSheet`; row 10),
-- app: test mock consolidation (the hand-mocked `expo-router` and `expo-constants` in the Jest files; row 17),
-- pipeline: test fixture consolidation (row 17),
-- server: one test-app factory in place of the five `createXTestApp` factories and the per-file `SKIP_DATABASE_TESTS` (row 17),
-- #178 (server `changePassword` service), open and security-touching, so the owner merges it.
+The engineering-audit cleanup slices from `docs/audits/2026-10-13-engineering.md`, "Ranked cleanup opportunities", are merged (above).
 
 1. **Owner decisions** from `docs/audits/2026-10-13-engineering.md`, "Decisions for the owner": the DNS records (above), the 60% coverage rule (enforced nowhere), lint and Prettier as gates (323 files fail `prettier --check`), and workspace pruning (worktrees and merged branches).
-2. **Open PRs** (`gh pr list`): #177 (pipeline provider failure cap), #178 (server `changePassword` service, security-touching, the owner merges), #159 (query drawer before an answer), #160 and #162 (misconception taxonomies and references, content), #161 (pipeline references and enrichment).
+2. **Open PRs**, built and in review, not merged (`gh api repos/nullvoidundefined/syntactical/pulls`): #202 (Pro from the RevenueCat webhook), #204 (Anthropic and OpenAI failover), #206 (Pro in the app), #207 (the web sponsored card), #208 (AdMob native sponsored cards with consent).
 3. **Owner, outside the repo** (`docs/launch-placeholders.md`): RevenueCat products, keys, and the webhook secret; the PostHog project and key; the Resend key; the Apple Developer account for iOS builds; then remove `ALLOW_STUBBED_INTEGRATIONS`. The free content, Pro, and sponsored cards plan is built in the repository (areas 3, 4, 6, and 9 still in review); its owner actions remain in `docs/launch-placeholders.md` and in the owner checklist at the end of the plan's area 8.
 4. **Drafts awaiting the owner:** `app/privacy.tsx` and `app/delete-account.tsx` carry owner placeholders (see each file's header comment).
 5. **Topic tracks:** `docs/superpowers/plans/2026-10-04-topic-tracks.md` is the live plan; the 2026-10-02 v2 plan and spec were executed and are deleted.
