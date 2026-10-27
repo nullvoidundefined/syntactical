@@ -47,14 +47,38 @@ describe('trackEvent', () => {
   it('accepts every registered event name and forwards name and properties', () => {
     mockExtra.posthogKey = buildKey();
     const { trackEvent } = loadClient();
-    for (const name of ANALYTICS_EVENTS)
-      trackEvent(name, { language: 'python', totalQuestions: 3, isGuest: true });
+    for (const name of ANALYTICS_EVENTS) trackEvent(name, { language: 'python', totalQuestions: 3, isGuest: true });
     expect(mockCapture).toHaveBeenCalledTimes(ANALYTICS_EVENTS.length);
     expect(mockCapture).toHaveBeenCalledWith('round_started', {
       language: 'python',
       totalQuestions: 3,
       isGuest: true,
     });
+  });
+
+  it('registers exactly the nine product events, pro_purchased among them', () => {
+    expect([...ANALYTICS_EVENTS]).toEqual([
+      'round_started',
+      'round_completed',
+      'signup_prompt_shown',
+      'signup_prompt_accepted',
+      'paywall_viewed',
+      'purchase_completed',
+      'pro_purchased',
+      'review_round_completed',
+      'bank_exhausted',
+    ]);
+  });
+
+  it('forwards pro_purchased with its product and paywall_viewed with its source', () => {
+    mockExtra.posthogKey = buildKey();
+    const { trackEvent } = loadClient();
+    trackEvent('pro_purchased', { product: 'annual' });
+    trackEvent('paywall_viewed', { source: 'ask_limit' });
+    expect(mockCapture.mock.calls).toEqual([
+      ['pro_purchased', { product: 'annual' }],
+      ['paywall_viewed', { source: 'ask_limit' }],
+    ]);
   });
 
   it('rejects a name outside the registry at type level and throws at run time', () => {
@@ -65,22 +89,15 @@ describe('trackEvent', () => {
     expect(mockCapture).not.toHaveBeenCalled();
   });
 
-  it.each([
-    'email',
-    'code',
-    'token',
-    'Email',
-    'TOKEN',
-    'userEmail',
-    'email_address',
-    'otp_code',
-    'sessionToken',
-  ])('throws on a property named %s and sends nothing', (property) => {
-    mockExtra.posthogKey = buildKey();
-    const { trackEvent } = loadClient();
-    expect(() => trackEvent('round_started', { [property]: 'x' })).toThrow('forbidden property');
-    expect(mockCapture).not.toHaveBeenCalled();
-  });
+  it.each(['email', 'code', 'token', 'Email', 'TOKEN', 'userEmail', 'email_address', 'otp_code', 'sessionToken'])(
+    'throws on a property named %s and sends nothing',
+    (property) => {
+      mockExtra.posthogKey = buildKey();
+      const { trackEvent } = loadClient();
+      expect(() => trackEvent('round_started', { [property]: 'x' })).toThrow('forbidden property');
+      expect(mockCapture).not.toHaveBeenCalled();
+    },
+  );
 
   it('validates before the no-op, so a bad call throws even with no key', () => {
     const { trackEvent } = loadClient();

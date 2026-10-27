@@ -1,21 +1,23 @@
-// Buying a paid bank and restoring purchases. The store call only starts the
-// purchase; a bank unlocks solely when GET /me lists its entitlement, so every
-// success path refetches /me through the entitlements query. Store prices load
-// only on request and only for a signed-in user (the SDKs are identified then).
+// Buying Pro and restoring purchases. The store call only starts the purchase; Pro shows solely
+// when GET /me says pro.isActive, so every success path refetches /me through the Pro status
+// query. Store prices load only on request and only for a signed-in user (the SDKs are
+// identified then). The store is chosen per call by clients/selectPurchaseStoreClient.ts.
 import { useCallback, useEffect, useState } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { Platform } from 'react-native';
 
 import { trackEvent } from '../clients/analyticsClient';
-import { buyStoreProduct, readStorePrices, restoreStorePurchases } from '../clients/purchaseStoreClient';
+import { normalizeProductId } from '../clients/normalizeProductId';
+import { selectPurchaseStoreClient } from '../clients/selectPurchaseStoreClient';
+import { readProPlan } from '../constants/proProducts';
 
 import { useSignedInUserId } from './AuthProvider';
-import { buildEntitlementsKey, fetchEntitlements } from './useEntitlements';
+import { buildProStatusKey, fetchProStatus, type ProStatus } from './useProStatus';
+import { PRO_RECHECK_COUNT, waitForProRecheck } from './waitForProRecheck';
 
-// unlocked: /me lists the product. redirect: web checkout finished, the
+// unlocked: /me says Pro is active. redirect: web checkout finished, the
 // purchase-complete route confirms it. pending: the store finished but /me does
-// not list the product yet. cancelled and unavailable: nothing was bought.
+// not say Pro yet. cancelled and unavailable: nothing was bought.
 export type BuyOutcome = 'cancelled' | 'pending' | 'redirect' | 'unavailable' | 'unlocked';
 
 // A caller that gives up while GET /me is pending (the purchase-complete route
@@ -23,6 +25,9 @@ export type BuyOutcome = 'cancelled' | 'pending' | 'redirect' | 'unavailable' | 
 // result reads as not confirmed and no event is recorded.
 export type ConfirmOptions = { signal?: AbortSignal };
 
+// restore resolves true only when GET /me says Pro after the store's restore, false when GET /me
+// still says this account is not Pro after the re-checks (the TRANSFER webhook lands a few seconds
+// after the store's restore), and rejects when the store call or any GET /me failed.
 export type PurchasesState = {
   buy: (productId: string) => Promise<BuyOutcome>;
   confirm: (productId: string, options?: ConfirmOptions) => Promise<boolean>;
@@ -40,20 +45,22 @@ export function usePurchases({ shouldLoadPrices = false } = {}): PurchasesState 
   useEffect(() => {
     if (!shouldLoadPrices || userId === null) return undefined;
     let isCurrent = true;
-    void readStorePrices().then((found) => {
-      if (isCurrent) setPrices(found);
-    });
+    void selectPurchaseStoreClient()
+      .client.readStorePrices()
+      .then((found) => {
+        if (isCurrent) setPrices(found);
+      });
     return () => {
       isCurrent = false;
     };
   }, [shouldLoadPrices, userId]);
 
-  // The server's entitlements after a fresh GET /me, or null when it fails.
-  const refetchEntitlements = useCallback(async (): Promise<string[] | null> => {
+  // The server's Pro status after a fresh GET /me, or null when it fails.
+  const refetchProStatus = useCallback(async (): Promise<ProStatus | null> => {
     try {
       return await queryClient.fetchQuery({
-        queryFn: fetchEntitlements,
-        queryKey: buildEntitlementsKey(userId),
+        queryFn: fetchProStatus,
+        queryKey: buildProStatusKey(userId),
         staleTime: 0,
       });
     } catch {
@@ -61,32 +68,45 @@ export function usePurchases({ shouldLoadPrices = false } = {}): PurchasesState 
     }
   }, [queryClient, userId]);
 
-  // Refetches GET /me; true (and records purchase_completed) when it lists the
-  // product and the caller has not aborted meanwhile.
+  // Refetches GET /me; true when it says Pro is active and the caller has not aborted meanwhile.
+  // Then records purchase_completed with the product id and, for a Pro product (a Play base-plan
+  // suffix stripped), pro_purchased with its plan.
   const confirm = useCallback(
     async (productId: string, { signal }: ConfirmOptions = {}): Promise<boolean> => {
-      const entitlements = await refetchEntitlements();
-      if (signal?.aborted || !entitlements?.includes(productId)) return false;
+      const pro = await refetchProStatus();
+      if (signal?.aborted || pro?.isPro !== true) return false;
       trackEvent('purchase_completed', { productId });
+      const plan = readProPlan(normalizeProductId(productId));
+      if (plan !== null) trackEvent('pro_purchased', { product: plan });
       return true;
     },
-    [refetchEntitlements],
+    [refetchProStatus],
   );
 
   const buy = useCallback(
     async (productId: string): Promise<BuyOutcome> => {
-      const outcome = await buyStoreProduct(productId);
+      const { client, hasCheckoutRedirect } = selectPurchaseStoreClient();
+      const outcome = await client.buyStoreProduct(productId, userId);
       if (outcome !== 'purchased') return outcome;
-      if (Platform.OS === 'web') return 'redirect';
+      if (hasCheckoutRedirect) return 'redirect';
       return (await confirm(productId)) ? 'unlocked' : 'pending';
     },
-    [confirm],
+    [confirm, userId],
   );
 
+  // True only when GET /me says Pro after the store restored, so a restore that found nothing for
+  // this account never reads as restored. While it says free, GET /me is read again after a wait,
+  // PRO_RECHECK_COUNT times, since the TRANSFER webhook reaches the server after the restore. A failed store call or GET /me rejects instead of
+  // resolving false, so Settings can tell "nothing to restore" from "try again".
   const restore = useCallback(async (): Promise<boolean> => {
-    if (!(await restoreStorePurchases())) return false;
-    return (await refetchEntitlements()) !== null;
-  }, [refetchEntitlements]);
+    if (!(await selectPurchaseStoreClient().client.restoreStorePurchases())) throw new Error('store restore failed');
+    for (let attempt = 0; ; attempt += 1) {
+      const pro = await refetchProStatus();
+      if (pro === null) throw new Error('profile request failed');
+      if (pro.isPro || attempt === PRO_RECHECK_COUNT) return pro.isPro;
+      await waitForProRecheck();
+    }
+  }, [refetchProStatus]);
 
   return { buy, confirm, prices: userId === null ? NO_PRICES : prices, restore };
 }

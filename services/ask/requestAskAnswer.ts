@@ -1,25 +1,49 @@
 // Sends one learner question about a quiz question to POST ask and reads the reply. Never throws:
-// an unreachable server, a timeout, or an unexpected reply is 'unavailable', and each refusal the
-// server names maps to its own reason so the ask box can say what happened.
+// an unreachable server, a timeout, or an unexpected reply is 'unavailable'. A 200 carries the
+// answer with the day's limit and the answers left of it; a 429 is the daily limit (with the tier,
+// its limit, and the Pro limit the server names) or the per-minute burst limit. Asking needs only a
+// session, so there is no purchase refusal to map. The limits are the server's: the app keeps no
+// copy of them.
 import { apiFetch } from '../../clients/apiClient';
 import { readErrorCode } from '../../clients/readErrorCode';
-import {
-  ASK_FETCH_TIMEOUT_MS,
-  HTTP_STATUS_FORBIDDEN,
-  HTTP_STATUS_OK,
-  HTTP_STATUS_TOO_MANY_REQUESTS,
-} from '../../constants/appConfig';
+import { ASK_FETCH_TIMEOUT_MS, HTTP_STATUS_OK, HTTP_STATUS_TOO_MANY_REQUESTS } from '../../constants/appConfig';
 
-import type { AskResult } from './types/AskResult';
+import type { AskResult, AskTier } from './types/AskResult';
 import type { AskTarget } from './types/AskTarget';
 
 const DAILY_LIMIT_CODE = 'ASK_DAILY_LIMIT_REACHED';
 
-function readAnswer(body: unknown): { answer: string; remaining: number } | null {
-  const data = (body as { data?: { answer?: unknown; remaining?: unknown } } | null)?.data;
-  const { answer, remaining } = data ?? {};
-  if (typeof answer !== 'string' || answer === '' || typeof remaining !== 'number') return null;
-  return { answer, remaining };
+function isCount(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+}
+
+function readAnswer(body: unknown): { answer: string; limit: number; remaining: number } | null {
+  const data = (body as { data?: Record<string, unknown> } | null)?.data;
+  const { answer, limit, remaining } = data ?? {};
+  if (typeof answer !== 'string' || answer === '') return null;
+  if (!isCount(limit) || limit === 0 || !isCount(remaining) || remaining > limit) return null;
+  return { answer, limit, remaining };
+}
+
+function readPositiveCount(value: unknown): number | undefined {
+  return isCount(value) && value > 0 ? value : undefined;
+}
+
+function readTier(value: unknown): AskTier | undefined {
+  return value === 'free' || value === 'pro' ? value : undefined;
+}
+
+// What a daily-limit refusal names in its error envelope ({ error: { code, limit, message,
+// proLimit, requestId, tier } }); each field is kept only when it is well formed.
+function readDailyLimit(body: unknown): Extract<AskResult, { reason: 'limit' }> {
+  const error = (body as { error?: Record<string, unknown> } | null)?.error ?? {};
+  return {
+    limit: readPositiveCount(error.limit),
+    proLimit: readPositiveCount(error.proLimit),
+    reason: 'limit',
+    status: 'failed',
+    tier: readTier(error.tier),
+  };
 }
 
 export async function requestAskAnswer(target: AskTarget, message: string): Promise<AskResult> {
@@ -39,8 +63,7 @@ export async function requestAskAnswer(target: AskTarget, message: string): Prom
     return reply ? { ...reply, status: 'answered' } : { reason: 'unavailable', status: 'failed' };
   }
   if (status === HTTP_STATUS_TOO_MANY_REQUESTS) {
-    return { reason: readErrorCode(body) === DAILY_LIMIT_CODE ? 'limit' : 'busy', status: 'failed' };
+    return readErrorCode(body) === DAILY_LIMIT_CODE ? readDailyLimit(body) : { reason: 'busy', status: 'failed' };
   }
-  if (status === HTTP_STATUS_FORBIDDEN) return { reason: 'locked', status: 'failed' };
   return { reason: 'unavailable', status: 'failed' };
 }

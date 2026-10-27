@@ -1,18 +1,19 @@
-// The admin route's load and failure states on native (IAN-636), with the real AdminScreen,
-// AuthProvider, query client, and apiFetch/apiPut against a routed fetch stand-in:
-// - the access list is fetched again each time the page is opened;
+// The admin route's load and failure states on native, with the real AdminScreen, AuthProvider,
+// query client, and apiFetch/apiPut against a routed fetch stand-in:
+// - the access entry is fetched again each time the page is opened;
 // - only a 401 or 403 shows "not available"; any other failed load shows a load-failed state with
 //   a Retry button that fetches again;
 // - every state (loading, not available, load failed, ready) renders the one h1 "Admin";
-// - a failed change's alert stays while another change is still in flight;
-// - signing out removes the cached access list;
-// - an id listed twice shows once, with no duplicate-key warning;
+// - a failed change's alert clears when the next change succeeds;
+// - signing out removes the cached access entry;
 // - before the stored sign-in is read, the page shows the loading state, not "not available".
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
+import { setExpoExtra } from '../../config/expoConstantsMock';
 import { createQueryClient } from '../../config/queryClient';
+import { settle } from '../../config/settle';
 import {
   AUTH_STORAGE_KEY,
   SESSION_TOKEN_KEY,
@@ -25,27 +26,21 @@ import { AdminCacheReset } from '../../state/AdminCacheReset';
 import { AuthProvider, useAuth } from '../../state/AuthProvider';
 import { ContentProvider } from '../../state/ContentProvider';
 import { OwnedStatsProvider } from '../../state/OwnedStatsProvider';
+import { buildAdminAccessKey } from '../../state/useAdminAccess';
 import AdminScreen from '../admin';
 
 import {
   ACCESS_ROUTE,
   ACCESS_UPDATE_ROUTE,
-  JAVASCRIPT_MEDIUM,
+  ADMIN_GRANT_NAME,
   NOT_AVAILABLE_TEXT,
-  POSTGRES_HARD,
   PROFILE_ROUTE,
-  PYTHON_MEDIUM,
-  PYTHON_MEDIUM_NAME,
-  accessReply,
   buildEntry,
   buildErrorReply,
   entryReply,
   meReply,
-  mixedProducts,
-  rawAccessReply,
+  rawEntryReply,
 } from './adminAccessTestSupport';
-import { setExpoExtra } from '../../config/expoConstantsMock';
-import { settle } from '../../config/settle';
 
 setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
@@ -117,14 +112,10 @@ function listAccessReads(requests: { method: string; path: string }[]) {
   return requests.filter(({ method, path }) => method === 'GET' && path === 'admin/access');
 }
 
-function getH1s() {
-  return screen
+function expectOneAdminH1(): void {
+  const h1s = screen
     .queryAllByRole('heading')
     .filter((heading) => (heading.props['aria-level'] ?? heading.props.accessibilityLevel) === 1);
-}
-
-function expectOneAdminH1(): void {
-  const h1s = getH1s();
   expect(h1s).toHaveLength(1);
   expect(h1s[0]).toHaveTextContent(/^Admin$/);
 }
@@ -143,30 +134,30 @@ afterEach(async () => {
 });
 
 describe('admin route revisited', () => {
-  it('fetches the access list again when the page is opened again', async () => {
+  it('fetches the access entry again when the page is opened again', async () => {
     const identity = buildIdentity();
     const { requests, setRoute } = installRoutedFetch({
-      [ACCESS_ROUTE]: accessReply([buildEntry(PYTHON_MEDIUM, null)]),
+      [ACCESS_ROUTE]: entryReply(buildEntry(null)),
       [PROFILE_ROUTE]: meReply(identity.email, { isAdmin: true }),
     });
     await signIn(identity);
     const view = await render(<Tree />);
-    expect(await screen.findByRole('switch', { name: PYTHON_MEDIUM_NAME })).not.toBeChecked();
+    expect(await screen.findByRole('switch', { name: ADMIN_GRANT_NAME })).not.toBeChecked();
 
     await view.rerender(<Tree isShowingAdmin={false} />);
-    setRoute(ACCESS_ROUTE, accessReply([buildEntry(PYTHON_MEDIUM, 'admin')]));
+    setRoute(ACCESS_ROUTE, entryReply(buildEntry('admin')));
     await view.rerender(<Tree />);
 
-    await waitFor(() => expect(screen.getByRole('switch', { name: PYTHON_MEDIUM_NAME })).toBeChecked());
+    await waitFor(() => expect(screen.getByRole('switch', { name: ADMIN_GRANT_NAME })).toBeChecked());
     expect(listAccessReads(requests)).toHaveLength(2);
   });
 });
 
-describe('admin route when the access list fails to load', () => {
+describe('admin route when the access entry fails to load', () => {
   const failures = [
     { label: '503', reply: buildErrorReply(503, 'SERVICE_UNAVAILABLE', 'Database unavailable').reply },
     { label: 'a network failure', reply: 'reject' as const },
-    { label: 'a malformed 200', reply: rawAccessReply('nope') },
+    { label: 'a malformed 200', reply: rawEntryReply('nope') },
   ];
 
   it.each(failures)(
@@ -184,9 +175,9 @@ describe('admin route when the access list fails to load', () => {
       expect(screen.queryAllByRole('switch')).toHaveLength(0);
       expectOneAdminH1();
 
-      setRoute(ACCESS_ROUTE, accessReply(mixedProducts()));
+      setRoute(ACCESS_ROUTE, entryReply(buildEntry(null)));
       await fireEvent.press(screen.getByRole('button', { name: /retry/i }));
-      await screen.findByRole('switch', { name: PYTHON_MEDIUM_NAME });
+      await screen.findByRole('switch', { name: ADMIN_GRANT_NAME });
       expect(screen.queryByText(LOAD_FAILED_TEXT)).toBeNull();
       expect(listAccessReads(requests)).toHaveLength(2);
     },
@@ -207,7 +198,7 @@ describe('admin route when the access list fails to load', () => {
 });
 
 describe('admin route renders the one h1 in every state', () => {
-  it('shows the h1 while the list is loading and once it is ready', async () => {
+  it('shows the h1 while the entry is loading and once it is ready', async () => {
     const identity = buildIdentity();
     const held = holdReply();
     installRoutedFetch({
@@ -219,8 +210,8 @@ describe('admin route renders the one h1 in every state', () => {
     await settle();
     expect(screen.queryAllByRole('switch')).toHaveLength(0);
     expectOneAdminH1();
-    await act(async () => held.release(accessReply(mixedProducts())));
-    await screen.findByRole('switch', { name: PYTHON_MEDIUM_NAME });
+    await act(async () => held.release(entryReply(buildEntry(null))));
+    await screen.findByRole('switch', { name: ADMIN_GRANT_NAME });
     expectOneAdminH1();
   });
 });
@@ -230,7 +221,7 @@ describe('admin route before the stored sign-in is read', () => {
     const identity = buildIdentity();
     const gate = holdReply();
     installRoutedFetch({
-      [ACCESS_ROUTE]: accessReply(mixedProducts()),
+      [ACCESS_ROUTE]: entryReply(buildEntry(null)),
       [PROFILE_ROUTE]: meReply(identity.email, { isAdmin: true }),
     });
     await signIn(identity);
@@ -247,7 +238,7 @@ describe('admin route before the stored sign-in is read', () => {
       expect(screen.queryByText(NOT_AVAILABLE_TEXT)).toBeNull();
       expectOneAdminH1();
       await act(async () => gate.release({ status: 200 }));
-      await screen.findByRole('switch', { name: PYTHON_MEDIUM_NAME });
+      await screen.findByRole('switch', { name: ADMIN_GRANT_NAME });
     } finally {
       spy.mockImplementation(realGetItem);
     }
@@ -255,75 +246,45 @@ describe('admin route before the stored sign-in is read', () => {
 });
 
 describe('admin route change failures', () => {
-  it('keeps a failed change alert when another change starts while one is still in flight', async () => {
+  it('clears a failed change alert when the next change succeeds', async () => {
     const identity = buildIdentity();
-    const first = holdReply();
-    const second = holdReply();
-    const third = holdReply();
     installRoutedFetch({
-      [ACCESS_ROUTE]: accessReply([
-        buildEntry(PYTHON_MEDIUM, null),
-        buildEntry(POSTGRES_HARD, null),
-        buildEntry(JAVASCRIPT_MEDIUM, null),
-      ]),
-      [ACCESS_UPDATE_ROUTE]: [first, second, third],
+      [ACCESS_ROUTE]: entryReply(buildEntry(null)),
+      [ACCESS_UPDATE_ROUTE]: [
+        buildErrorReply(503, 'SERVICE_UNAVAILABLE', 'down').reply,
+        entryReply(buildEntry('admin')),
+      ],
       [PROFILE_ROUTE]: meReply(identity.email, { isAdmin: true }),
     });
     await signIn(identity);
     await render(<Tree />);
-    const switches = await screen.findAllByRole('switch');
-    await fireEvent.press(switches[0]);
-    await fireEvent.press(switches[1]);
-    await act(async () => first.release(buildErrorReply(503, 'SERVICE_UNAVAILABLE', 'down').reply));
+    await fireEvent.press(await screen.findByRole('switch', { name: ADMIN_GRANT_NAME }));
     await screen.findByRole('alert');
+    await waitFor(() => expect(screen.getByRole('switch', { name: ADMIN_GRANT_NAME })).not.toBeChecked());
 
-    await fireEvent.press(screen.getAllByRole('switch')[2]);
-    await settle();
-    expect(screen.getAllByRole('alert')).toHaveLength(1);
-    await act(async () => {
-      second.release(entryReply(buildEntry(POSTGRES_HARD, 'admin')));
-      third.release(entryReply(buildEntry(JAVASCRIPT_MEDIUM, 'admin')));
-    });
+    await fireEvent.press(screen.getByRole('switch', { name: ADMIN_GRANT_NAME }));
+    await waitFor(() => expect(screen.getByRole('switch', { name: ADMIN_GRANT_NAME })).toBeChecked());
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });
 
 describe('admin route cache on sign-out', () => {
-  it('removes the cached access list when the user signs out', async () => {
+  it('removes the cached access entry when the user signs out', async () => {
     const identity = buildIdentity();
     installRoutedFetch({
-      [ACCESS_ROUTE]: accessReply(mixedProducts()),
+      [ACCESS_ROUTE]: entryReply(buildEntry(null)),
       [PROFILE_ROUTE]: meReply(identity.email, { isAdmin: true }),
       'DELETE auth/sessions/current': { status: 204 },
     });
     await signIn(identity);
     await render(<Tree isShowingAdmin={false} />);
     await settle();
-    queryClient.setQueryData(['admin', 'access', identity.userId], mixedProducts());
-    expect(queryClient.getQueryData(['admin', 'access', identity.userId])).toBeDefined();
+    queryClient.setQueryData(buildAdminAccessKey(identity.userId), buildEntry('admin'));
+    expect(queryClient.getQueryData(buildAdminAccessKey(identity.userId))).toBeDefined();
 
     await act(async () => {
       await authHandle.current?.signOut();
     });
-    await waitFor(() => expect(queryClient.getQueryData(['admin', 'access', identity.userId])).toBeUndefined());
-  });
-});
-
-describe('admin route with a repeated product id', () => {
-  it('shows one switch for the id and logs no duplicate-key warning', async () => {
-    const identity = buildIdentity();
-    const errors = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-    try {
-      installRoutedFetch({
-        [ACCESS_ROUTE]: accessReply([buildEntry(PYTHON_MEDIUM, null), buildEntry(PYTHON_MEDIUM, 'admin')]),
-        [PROFILE_ROUTE]: meReply(identity.email, { isAdmin: true }),
-      });
-      await signIn(identity);
-      await render(<Tree />);
-      await screen.findAllByRole('switch', { name: PYTHON_MEDIUM_NAME });
-      expect(screen.getAllByRole('switch')).toHaveLength(1);
-      expect(errors.mock.calls.some((call) => String(call[0]).includes('same key'))).toBe(false);
-    } finally {
-      errors.mockRestore();
-    }
+    await waitFor(() => expect(queryClient.getQueryData(buildAdminAccessKey(identity.userId))).toBeUndefined());
   });
 });

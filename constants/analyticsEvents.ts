@@ -7,6 +7,7 @@ export const ANALYTICS_EVENTS = [
   'signup_prompt_accepted',
   'paywall_viewed',
   'purchase_completed',
+  'pro_purchased',
   'review_round_completed',
   'bank_exhausted',
 ] as const;
