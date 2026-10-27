@@ -1,7 +1,7 @@
 // The web store behind the paywall, through the Web Billing wrapper. Web
 // Billing purchases belong to the signed-in account, so there is nothing to restore.
 import type { WebPurchaseOutcome } from './types/WebPurchaseOutcome';
-import { purchaseWebBillingProduct, readWebBillingPrices } from './webBillingClient';
+import { purchaseWebBillingProduct, readWebBillingManagementUrl, readWebBillingPrices } from './webBillingClient';
 
 export function readStorePrices(): Promise<Record<string, string>> {
   return readWebBillingPrices();
@@ -13,4 +13,8 @@ export function buyStoreProduct(productId: string): Promise<WebPurchaseOutcome> 
 
 export function restoreStorePurchases(): Promise<boolean> {
   return Promise.resolve(false);
+}
+
+export function readManagementUrl(): Promise<string | null> {
+  return readWebBillingManagementUrl();
 }

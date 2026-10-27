@@ -1,8 +1,9 @@
-// Settings route: the daily goal (10, 20, or 50 XP, in force from today on)
-// and the account: sign in for a guest, sign out and delete account for a signed-in user. A
-// guest's goal is stored on the device; a signed-in user's goal is sent with
-// PATCH /v1/me and stored on the device once the server accepts it, and a
-// refused or failed change is announced and leaves the goal unchanged.
+// Settings route: the daily goal (10, 20, or 50 XP, in force from today on) and the account:
+// sign in for a guest; for a signed-in user the Pro row (Go Pro, or the plan in force with Manage
+// subscription wherever RevenueCat reports a management page), Restore purchases on native, sign
+// out, and delete account. A guest's goal is stored on the device; a signed-in user's goal is
+// sent with PATCH /v1/me and stored on the device once the server accepts it, and a refused or
+// failed change is announced and leaves the goal unchanged.
 import { useState } from 'react';
 
 import { router, useLocalSearchParams } from 'expo-router';
@@ -12,6 +13,7 @@ import { DeleteAccountDialog } from '../components/auth/DeleteAccountDialog';
 import { PasswordSettingsForm } from '../components/auth/PasswordSettingsForm';
 import { SignOutDialog } from '../components/auth/SignOutDialog';
 import { DailyGoalPicker } from '../components/progress/DailyGoalPicker';
+import { ProRow } from '../components/purchase/ProRow';
 import { useAuth } from '../state/AuthProvider';
 import { useQuizStats } from '../state/StatsProvider';
 import { useProfile } from '../state/useProfile';
@@ -105,6 +107,7 @@ function AccountSection() {
           shouldFocusFirstField={form === 'password'}
         />
       ) : null}
+      {isSignedIn ? <ProRow /> : null}
       {isSignedIn && Platform.OS !== 'web' ? <RestorePurchases /> : null}
       {isSignedIn && isAdmin ? <AdminLink /> : null}
     </View>

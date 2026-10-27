@@ -2,4 +2,5 @@
 export { configureWebBilling } from './configureWebBilling';
 export { purchaseWebBillingProduct } from './purchaseWebBillingProduct';
 export { readWebBillingPrices } from './readWebBillingPrices';
+export { readWebBillingManagementUrl } from './readWebBillingManagementUrl';
 export { resetWebBilling } from './resetWebBilling';

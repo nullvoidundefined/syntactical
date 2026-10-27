@@ -48,3 +48,24 @@ jest.mock('posthog-react-native', () => ({
   __esModule: true,
   default: jest.fn(),
 }));
+
+// jsdom has no matchMedia, and react-native-reanimated reads prefers-reduced-motion through it
+// when the module loads, so a web suite that renders a component importing it (the Pro sheet,
+// through useIsReducedMotion) would fail to import. A stand-in that matches nothing is installed
+// only where none exists; a suite that needs a query to match defines its own.
+if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    writable: true,
+    value: (query: string) => ({
+      addEventListener: () => undefined,
+      addListener: () => undefined,
+      dispatchEvent: () => false,
+      matches: false,
+      media: query,
+      onchange: null,
+      removeEventListener: () => undefined,
+      removeListener: () => undefined,
+    }),
+  });
+}

@@ -55,3 +55,16 @@ export async function restoreStorePurchases(): Promise<boolean> {
     return false;
   }
 }
+
+// The store's page for managing this purchaser's subscription (App Store or Google Play), from
+// RevenueCat's CustomerInfo.managementURL; null when RevenueCat reports none or the read fails.
+export async function readManagementUrl(): Promise<string | null> {
+  try {
+    // The identity call configures the SDK; wait for it before reading customer info.
+    await purchaserQueue.tail;
+    return (await Purchases.getCustomerInfo()).managementURL ?? null;
+  } catch {
+    logWarning({ err: new Error('store customer info unavailable') }, 'store management url unavailable');
+    return null;
+  }
+}
