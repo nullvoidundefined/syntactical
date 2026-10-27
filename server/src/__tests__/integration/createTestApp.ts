@@ -27,7 +27,7 @@ export interface TestClock {
 
 interface TestAppOptions {
   // The /v1/admin routes, on `pool`, the clock, and the generated rate-limit key secret.
-  admin?: { paidProductIds: ReadonlySet<string> };
+  admin?: boolean;
   // The /v1/ask route, on `pool`, the clock, and the generated rate-limit key secret.
   ask?: Omit<AskDeps, 'database' | 'now' | 'rateLimitKeySecret'>;
   // The /v1/auth routes, on the clock and the generated rate-limit key secret; `database`
@@ -41,8 +41,9 @@ interface TestAppOptions {
   studyNote?: Omit<StudyNoteDeps, 'database' | 'now' | 'rateLimitKeySecret'>;
   // The /v1 sync routes, on `pool`, the clock, and the generated rate-limit key secret.
   sync?: { answerKey: AnswerKey };
-  // The RevenueCat webhook, on `pool`, the clock, and the generated authorization value.
-  webhooks?: { paidProductIds: ReadonlySet<string> };
+  // The RevenueCat webhook, on `pool`, the clock, and the generated authorization value. `true`
+  // accepts SANDBOX events, as staging does, because the suites' events are SANDBOX.
+  webhooks?: boolean | { acceptSandbox: boolean };
 }
 
 function createTestClock(): TestClock {
@@ -73,7 +74,7 @@ export function createTestApp(options: TestAppOptions) {
   const rateLimitKeySecret = randomBytes(SECRET_BYTES).toString('hex');
   const revenueCatAuth = randomBytes(SECRET_BYTES).toString('hex');
   const app = createApp({
-    ...(admin ? { admin: { ...admin, database: pool, now: clock.now, rateLimitKeySecret } } : {}),
+    ...(admin ? { admin: { database: pool, now: clock.now, rateLimitKeySecret } } : {}),
     allowedOrigins: [ALLOWED_ORIGIN],
     ...(ask ? { ask: { ...ask, database: pool, now: clock.now, rateLimitKeySecret } } : {}),
     ...(auth ? { auth: { ...auth, database: auth.database ?? pool, now: clock.now, rateLimitKeySecret } } : {}),
@@ -82,7 +83,16 @@ export function createTestApp(options: TestAppOptions) {
     logger,
     ...(studyNote ? { studyNote: { ...studyNote, database: pool, now: clock.now, rateLimitKeySecret } } : {}),
     ...(sync ? { sync: { ...sync, database: pool, now: clock.now, rateLimitKeySecret } } : {}),
-    ...(webhooks ? { webhooks: { ...webhooks, database: pool, now: clock.now, revenueCatAuth } } : {}),
+    ...(webhooks
+      ? {
+          webhooks: {
+            acceptSandbox: webhooks === true || webhooks.acceptSandbox,
+            database: pool,
+            now: clock.now,
+            revenueCatAuth,
+          },
+        }
+      : {}),
   });
   return { app, clock, rateLimitKeySecret, revenueCatAuth };
 }

@@ -17,7 +17,7 @@ const WAIT_LIMIT_MS = 5_000;
 // Above WAIT_LIMIT_MS, so a missing lock fails on the isBlocked assertion, not on a test timeout.
 const TEST_TIMEOUT_MS = 15_000;
 const POLL_MS = 20;
-const PRODUCT = 'syntactical.python.medium';
+const PRODUCT = 'syntactical.pro.lifetime';
 // Names the PUT's connections so the poll matches no other test's blocked FOR UPDATE.
 const PUT_APPLICATION_NAME = 'ian664-set-admin-access';
 
@@ -58,7 +58,7 @@ describe.skipIf(SKIP_DATABASE_TESTS)('setAdminAccess vs an in-flight webhook tra
         // Exactly the lock recordPurchaseEvent takes; no entitlement row is touched.
         await webhook.query('SELECT id FROM users WHERE id = $1 FOR KEY SHARE', [userId]);
 
-        const put = setAdminAccess(putPool, userId, PRODUCT, true);
+        const put = setAdminAccess(putPool, userId, true, new Date());
         const deadline = Date.now() + WAIT_LIMIT_MS;
         let isBlocked = false;
         while (!isBlocked && Date.now() < deadline) {
@@ -79,10 +79,10 @@ describe.skipIf(SKIP_DATABASE_TESTS)('setAdminAccess vs an in-flight webhook tra
 
         expect(entry).toEqual({ grantSource: 'admin', isGranted: true, productId: PRODUCT });
         const { rows } = await database.pool.query(
-          'SELECT source, status FROM entitlements WHERE user_id = $1 AND product_id = $2',
+          'SELECT source, status, expires_at FROM entitlements WHERE user_id = $1 AND product_id = $2',
           [userId, PRODUCT],
         );
-        expect(rows).toEqual([{ source: 'admin', status: 'granted' }]);
+        expect(rows).toEqual([{ expires_at: null, source: 'admin', status: 'granted' }]);
       } finally {
         if (isHolding) {
           await webhook.query('ROLLBACK').catch(() => undefined);

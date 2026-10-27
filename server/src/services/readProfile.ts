@@ -1,14 +1,18 @@
 // The /v1/me profile (B-35): the user's email, whether they have a password (never the hash), their timezone, the daily goal in force today, the
-// day streak, XP today and in total from stored daily_progress, and the product ids of the
-// entitlements currently granted. Today is the current date in the user's timezone (UTC when
-// none is stored).
+// day streak, XP today and in total from stored daily_progress, and the Pro status at `now` by the
+// hasPro rule (lifetime winning over annual). Today is the current date in the user's timezone
+// (UTC when none is stored).
 import { computeDayStreak, toLocalDate } from '@syntactical/progress';
 import type { DailyProgress } from '@syntactical/progress';
 import type pg from 'pg';
 
 import type { Database } from '../clients/database.js';
+import { PRO_PRODUCT_IDS } from '../constants/proProducts.js';
 import { PROGRESS_DEFAULTS } from '../constants/progressDefaults.js';
 import type { Profile } from '../types/Profile.js';
+import type { ProStatus } from '../types/ProStatus.js';
+
+import { readActiveProRows } from './readActiveProRows.js';
 
 type Queryable = Database | pg.PoolClient;
 
@@ -31,12 +35,20 @@ async function readProgress(queryable: Queryable, userId: string): Promise<Daily
   return rows.map(({ is_goal_met: isGoalMet, local_date: localDate, xp }) => ({ isGoalMet, localDate, xp }));
 }
 
-async function readEntitlements(queryable: Queryable, userId: string): Promise<string[]> {
-  const { rows } = await queryable.query<{ product_id: string }>(
-    `SELECT product_id FROM entitlements WHERE user_id = $1 AND status = 'granted' ORDER BY product_id`,
-    [userId],
-  );
-  return rows.map(({ product_id: productId }) => productId);
+const INACTIVE: ProStatus = { expiresAt: null, isActive: false, product: null };
+
+// From the rows hasPro reads (readActiveProRows); the lifetime product wins over the annual.
+async function readPro(queryable: Queryable, userId: string, now: Date): Promise<ProStatus> {
+  const rows = await readActiveProRows(queryable, userId, now);
+  const winner = rows.find(({ productId }) => productId === PRO_PRODUCT_IDS.LIFETIME) ?? rows[0];
+  if (!winner) {
+    return INACTIVE;
+  }
+  return {
+    expiresAt: winner.expiresAt?.toISOString() ?? null,
+    isActive: true,
+    product: winner.productId === PRO_PRODUCT_IDS.LIFETIME ? 'lifetime' : 'annual',
+  };
 }
 
 // Undefined when the user no longer exists.
@@ -53,18 +65,18 @@ async function readProfile(queryable: Queryable, userId: string, now: Date): Pro
   }
   const { email, has_password: hasPassword, is_admin: isAdmin, timezone } = user;
   const today = toLocalDate(now.toISOString(), timezone ?? PROGRESS_DEFAULTS.TIMEZONE);
-  const [dailyGoal, progress, entitlements] = [
+  const [dailyGoal, progress, pro] = [
     await readGoal(queryable, userId, today),
     await readProgress(queryable, userId),
-    await readEntitlements(queryable, userId),
+    await readPro(queryable, userId, now),
   ];
   return {
     dailyGoal,
     dayStreak: computeDayStreak(progress, today),
     email,
-    entitlements,
     hasPassword,
     isAdmin,
+    pro,
     timezone,
     xpToday: progress.find(({ localDate }) => localDate === today)?.xp ?? 0,
     xpTotal: progress.reduce((sum, { xp }) => sum + xp, 0),

@@ -2,9 +2,10 @@
 import type { Database } from '../clients/database.js';
 
 interface WebhookDeps {
+  // Whether SANDBOX events change an entitlement (REVENUECAT_ACCEPT_SANDBOX). Absent is false.
+  acceptSandbox?: boolean;
   database: Database;
   now?: () => Date;
-  paidProductIds: ReadonlySet<string>;
   // The exact Authorization header value RevenueCat is configured to send.
   revenueCatAuth: string;
 }

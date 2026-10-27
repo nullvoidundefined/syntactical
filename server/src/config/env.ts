@@ -35,6 +35,13 @@ const envSchema = z.object({
   PASSWORD_HASH_CONCURRENCY: hashConcurrency.default(HASH_CONCURRENCY_DEFAULT),
   RATE_LIMIT_KEY_SECRET: strongSecret,
   RESEND_API_KEY: z.string().trim().min(1),
+  // Whether the RevenueCat webhook applies SANDBOX events (TestFlight, Play license testers, Web
+  // Billing sandbox), which cost nothing. Exactly `true` or `false`; absent is false, as in
+  // production. Staging sets true.
+  REVENUECAT_ACCEPT_SANDBOX: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => value === 'true'),
   REVENUECAT_WEBHOOK_AUTH: strongSecret,
 });
 

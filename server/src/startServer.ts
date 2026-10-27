@@ -33,36 +33,6 @@ const MAX_PORT = 65_535;
 // resolve the public content directory to <root>/content.
 const DEFAULT_CONTENT_DIR = fileURLToPath(new URL('../../content', import.meta.url));
 
-// TEMPORARY: area 3 deletes this set and passes the two Pro product ids instead. With no paid banks left to
-// derive them from, the RevenueCat webhook and the admin routes keep accepting the per-bank product ids they
-// accepted before every bank became free: syntactical.<track>.<difficulty> for each Medium and Hard bank.
-const LEGACY_PAID_PRODUCT_IDS: ReadonlySet<string> = new Set([
-  'syntactical.python.medium',
-  'syntactical.python.hard',
-  'syntactical.postgres.medium',
-  'syntactical.postgres.hard',
-  'syntactical.javascript.medium',
-  'syntactical.javascript.hard',
-  'syntactical.go.medium',
-  'syntactical.go.hard',
-  'syntactical.ruby.medium',
-  'syntactical.ruby.hard',
-  'syntactical.backend-security.medium',
-  'syntactical.backend-security.hard',
-  'syntactical.rails.medium',
-  'syntactical.rails.hard',
-  'syntactical.frontend-security.medium',
-  'syntactical.frontend-security.hard',
-  'syntactical.sql.medium',
-  'syntactical.sql.hard',
-  'syntactical.typescript.medium',
-  'syntactical.typescript.hard',
-  'syntactical.typescript-types.medium',
-  'syntactical.typescript-types.hard',
-  'syntactical.nodejs.medium',
-  'syntactical.nodejs.hard',
-]);
-
 interface RunningServer {
   close(): Promise<void>;
   port: number;
@@ -78,6 +48,10 @@ interface StartOptions {
   // Test-only seam: replaces the HIBP client. Refused outside NODE_ENV test, so a deployed
   // server cannot skip the real breach check.
   passwordBreachClient?: PasswordBreachClient;
+  // Test-only seam: mounts POST /v1/test/webhook, the RevenueCat webhook with no Authorization
+  // check, for the e2e fixture purchase store. Refused outside NODE_ENV test; only
+  // e2e/support/runApi.mts passes it.
+  testWebhook?: boolean;
 }
 
 function readPort(source: NodeJS.ProcessEnv): number {
@@ -119,6 +93,9 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
   if (options.modelProvider !== undefined && source.NODE_ENV !== 'test') {
     throw new Error('An injected model provider is allowed only when NODE_ENV is test');
   }
+  if (options.testWebhook !== undefined && source.NODE_ENV !== 'test') {
+    throw new Error('The test-only webhook is allowed only when NODE_ENV is test');
+  }
   const env = loadEnv(source);
   const port = readPort(source);
   const contentDir = source.CONTENT_DIR?.trim() || DEFAULT_CONTENT_DIR;
@@ -145,8 +122,12 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
 
   const dummyPasswordHash = await createDummyPasswordHash();
   const pool = createDatabasePool(DATABASE_URL, NODE_ENV, logger);
+  const isTestWebhookMounted = options.testWebhook === true;
+  if (isTestWebhookMounted) {
+    logger.warn('POST /v1/test/webhook is mounted; it records RevenueCat events without authorization');
+  }
   const app = createApp({
-    admin: { database: pool, paidProductIds: LEGACY_PAID_PRODUCT_IDS, rateLimitKeySecret: env.RATE_LIMIT_KEY_SECRET },
+    admin: { database: pool, rateLimitKeySecret: env.RATE_LIMIT_KEY_SECRET },
     allowedOrigins: ALLOWED_ORIGINS.split(',')
       .map((origin) => origin.trim())
       .filter(Boolean),
@@ -183,12 +164,13 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
       rateLimitKeySecret: env.RATE_LIMIT_KEY_SECRET,
     },
     sync: { answerKey, database: pool, rateLimitKeySecret: env.RATE_LIMIT_KEY_SECRET },
+    ...(isTestWebhookMounted ? { testWebhook: { acceptSandbox: env.REVENUECAT_ACCEPT_SANDBOX, database: pool } } : {}),
     ...(REVENUECAT_WEBHOOK_AUTH === undefined
       ? { webhooksDisabled: true }
       : {
           webhooks: {
+            acceptSandbox: env.REVENUECAT_ACCEPT_SANDBOX,
             database: pool,
-            paidProductIds: LEGACY_PAID_PRODUCT_IDS,
             revenueCatAuth: REVENUECAT_WEBHOOK_AUTH,
           },
         }),
