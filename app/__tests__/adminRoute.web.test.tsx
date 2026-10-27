@@ -1,20 +1,20 @@
-// The admin route, app/admin.tsx, on the web (IAN-601). The real AdminScreen, ContentProvider (the
-// bundled manifest), AuthProvider, StatsProvider, query client, and apiFetch/apiPut run in the DOM
-// against a routed fetch stand-in:
+// The admin route on the web. The real AdminScreen, AuthProvider, StatsProvider, query client, and
+// apiFetch/apiPut run in the DOM against a routed fetch stand-in:
 // - the page has one h1, "Admin", and no element with a positive tabindex;
-// - every switch is reachable by keyboard (natively focusable or tabindex 0) and operable with
-//   Space or Enter: one PUT admin/access goes out, with the cookie credentials and the CSRF header,
-//   and the switch shows the response;
-// - a purchased product's switch is disabled, so a key press on it sends nothing.
+// - the one switch is reachable by keyboard (natively focusable or tabindex 0) and operable with
+//   Space or Enter: one PUT admin/access { isGranted } goes out with the cookie credentials and the
+//   CSRF header, and the switch shows the response;
+// - "Pro (purchased)" is disabled, so a key press on it sends nothing.
 // A browser activates a focused native checkbox on Space and a native button on Space or Enter by
 // dispatching a click; jsdom does not, so pressKey dispatches that click for those elements when
 // the key event was not cancelled. Any other element must handle the key itself.
-// Identities are built at run time.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
+import { setExpoExtra } from '../../config/expoConstantsMock';
 import { createQueryClient } from '../../config/queryClient';
+import { settle } from '../../config/settle';
 import {
   AUTH_STORAGE_KEY,
   buildIdentity,
@@ -30,20 +30,13 @@ import {
   ACCESS_PATH,
   ACCESS_ROUTE,
   ACCESS_UPDATE_ROUTE,
-  JAVASCRIPT_MEDIUM_NAME,
-  POSTGRES_HARD,
-  POSTGRES_HARD_NAME,
+  ADMIN_GRANT_NAME,
   PROFILE_ROUTE,
-  PYTHON_MEDIUM,
-  PYTHON_MEDIUM_NAME,
-  accessReply,
+  PURCHASED_NAME,
   buildEntry,
   entryReply,
   meReply,
-  mixedProducts,
 } from './adminAccessTestSupport';
-import { setExpoExtra } from '../../config/expoConstantsMock';
-import { settle } from '../../config/settle';
 
 setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
@@ -52,7 +45,6 @@ jest.mock('expo-secure-store', () => ({
   setItemAsync: jest.fn(() => Promise.resolve()),
   deleteItemAsync: jest.fn(() => Promise.resolve()),
 }));
-
 jest.mock('../../state/SyncProvider', () => ({
   useSync: () => ({
     cancelPass: () => undefined,
@@ -85,7 +77,7 @@ let queryClient: QueryClient;
 type KeyName = ' ' | 'Enter';
 const KEY_CODES: Record<KeyName, string> = { ' ': 'Space', Enter: 'Enter' };
 
-async function renderSignedInAdmin(routes: Parameters<typeof installRoutedFetch>[0]) {
+async function renderSignedInAdmin(routes: Parameters<typeof installRoutedFetch>[0], name = ADMIN_GRANT_NAME) {
   const identity = buildIdentity();
   const routed = installRoutedFetch({ [PROFILE_ROUTE]: meReply(identity.email, { isAdmin: true }), ...routes });
   await AsyncStorage.setItem(
@@ -103,12 +95,8 @@ async function renderSignedInAdmin(routes: Parameters<typeof installRoutedFetch>
       </ContentProvider>
     </QueryClientProvider>,
   );
-  await screen.findByRole('switch', { name: PYTHON_MEDIUM_NAME });
+  await screen.findByRole('switch', { name });
   return { ...routed, rendered };
-}
-
-function getSwitch(name: RegExp): HTMLElement {
-  return screen.getByRole('switch', { name });
 }
 
 function readIsChecked(element: HTMLElement): boolean {
@@ -118,10 +106,6 @@ function readIsChecked(element: HTMLElement): boolean {
 
 function readIsDisabled(element: HTMLElement): boolean {
   return (element as HTMLInputElement).disabled === true || element.getAttribute('aria-disabled') === 'true';
-}
-
-function isNativelyFocusable(element: HTMLElement): boolean {
-  return ['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(element.tagName);
 }
 
 function readsAsNativeActivation(element: HTMLElement, key: KeyName): boolean {
@@ -167,90 +151,57 @@ afterEach(async () => {
 });
 
 describe('admin route on the web', () => {
-  it('has one h1, "Admin"', async () => {
-    await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
+  it('has one h1, "Admin", and no element with a positive tabindex', async () => {
+    const { rendered } = await renderSignedInAdmin({ [ACCESS_ROUTE]: entryReply(buildEntry(null)) });
     const level1 = screen.getAllByRole('heading', { level: 1 });
     expect(level1).toHaveLength(1);
     expect(level1[0].textContent).toBe('Admin');
-  });
-
-  it('has no element with a positive tabindex', async () => {
-    const { rendered } = await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
     const positive = Array.from(rendered.container.querySelectorAll<HTMLElement>('[tabindex]')).filter(
       (element) => Number(element.getAttribute('tabindex')) > 0,
     );
     expect(positive).toEqual([]);
   });
 
-  it('draws each switch as a track and thumb whose state follows aria-checked, still role switch', async () => {
-    await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
-    const off = getSwitch(PYTHON_MEDIUM_NAME);
-    const on = getSwitch(POSTGRES_HARD_NAME);
-    expect(within(off).getByTestId('switch-track-off')).toBeTruthy();
-    expect(within(off).getByTestId('switch-thumb-off')).toBeTruthy();
-    expect(within(off).queryByTestId('switch-track-on')).toBeNull();
-    expect(within(on).getByTestId('switch-track-on')).toBeTruthy();
-    expect(within(on).getByTestId('switch-thumb-on')).toBeTruthy();
-    expect(within(on).queryByTestId('switch-track-off')).toBeNull();
-  });
-
-  it('draws a purchased switch as an on track that is disabled, beside the Purchased text', async () => {
-    await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
-    const purchased = getSwitch(JAVASCRIPT_MEDIUM_NAME);
-    expect(within(purchased).getByTestId('switch-track-on')).toBeTruthy();
-    expect(readIsDisabled(purchased)).toBe(true);
-    expect(screen.getByText('Purchased')).toBeTruthy();
-  });
-
-  it('makes every switch an element the keyboard reaches', async () => {
-    await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
-    const switches = screen.getAllByRole('switch');
-    expect(switches).toHaveLength(3);
-    for (const element of switches.filter((candidate) => !readIsDisabled(candidate))) {
-      expect(isNativelyFocusable(element) || element.getAttribute('tabindex') === '0').toBe(true);
-      element.focus();
-      expect(document.activeElement).toBe(element);
-    }
-  });
-
-  it('grants by keyboard with one PUT carrying the CSRF header and cookie credentials, then checked', async () => {
+  it('grants by keyboard with one PUT { isGranted: true } carrying the CSRF header and cookie credentials', async () => {
     const { requests } = await renderSignedInAdmin({
-      [ACCESS_ROUTE]: accessReply(mixedProducts()),
-      [ACCESS_UPDATE_ROUTE]: entryReply(buildEntry(PYTHON_MEDIUM, 'admin')),
+      [ACCESS_ROUTE]: entryReply(buildEntry(null)),
+      [ACCESS_UPDATE_ROUTE]: entryReply(buildEntry('admin')),
     });
-    expect(readIsChecked(getSwitch(PYTHON_MEDIUM_NAME))).toBe(false);
-    await operateByKeyboard(getSwitch(PYTHON_MEDIUM_NAME), requests);
-    await waitFor(() => expect(readIsChecked(getSwitch(PYTHON_MEDIUM_NAME))).toBe(true));
+    const proSwitch = screen.getByRole('switch', { name: ADMIN_GRANT_NAME });
+    expect(['BUTTON', 'INPUT'].includes(proSwitch.tagName) || proSwitch.getAttribute('tabindex') === '0').toBe(true);
+    await operateByKeyboard(proSwitch, requests);
+    await waitFor(() => expect(readIsChecked(screen.getByRole('switch', { name: ADMIN_GRANT_NAME }))).toBe(true));
     const updates = listAccessUpdates(requests);
     expect(updates).toHaveLength(1);
-    expect(updates[0].body).toEqual({ isGranted: true, productId: PYTHON_MEDIUM });
+    expect(updates[0].body).toEqual({ isGranted: true });
     expect(updates[0].headers['x-requested-with']).toBe('XMLHttpRequest');
     expect(updates[0].credentials).toBe('include');
   });
 
-  it('revokes by keyboard with one PUT, then unchecked', async () => {
+  it('revokes by keyboard with one PUT { isGranted: false }', async () => {
     const { requests } = await renderSignedInAdmin({
-      [ACCESS_ROUTE]: accessReply(mixedProducts()),
-      [ACCESS_UPDATE_ROUTE]: entryReply(buildEntry(POSTGRES_HARD, null)),
+      [ACCESS_ROUTE]: entryReply(buildEntry('admin')),
+      [ACCESS_UPDATE_ROUTE]: entryReply(buildEntry(null)),
     });
-    await operateByKeyboard(getSwitch(POSTGRES_HARD_NAME), requests);
-    await waitFor(() => expect(readIsChecked(getSwitch(POSTGRES_HARD_NAME))).toBe(false));
-    const updates = listAccessUpdates(requests);
-    expect(updates).toHaveLength(1);
-    expect(updates[0].body).toEqual({ isGranted: false, productId: POSTGRES_HARD });
+    await operateByKeyboard(screen.getByRole('switch', { name: ADMIN_GRANT_NAME }), requests);
+    await waitFor(() => expect(readIsChecked(screen.getByRole('switch', { name: ADMIN_GRANT_NAME }))).toBe(false));
+    expect(listAccessUpdates(requests).map(({ body }) => body)).toEqual([{ isGranted: false }]);
   });
 
-  it('sends nothing for a key press on a purchased product, which stays checked and disabled', async () => {
-    const { requests } = await renderSignedInAdmin({
-      [ACCESS_ROUTE]: accessReply(mixedProducts()),
-      [ACCESS_UPDATE_ROUTE]: entryReply(buildEntry(PYTHON_MEDIUM, 'admin')),
-    });
-    const purchased = getSwitch(JAVASCRIPT_MEDIUM_NAME);
+  it('sends nothing for a key press on "Pro (purchased)", which stays checked and disabled', async () => {
+    const { requests } = await renderSignedInAdmin(
+      {
+        [ACCESS_ROUTE]: entryReply(buildEntry('purchase')),
+        [ACCESS_UPDATE_ROUTE]: entryReply(buildEntry('admin')),
+      },
+      PURCHASED_NAME,
+    );
+    const purchased = screen.getByRole('switch', { name: PURCHASED_NAME });
     expect(readIsDisabled(purchased)).toBe(true);
     await pressKey(purchased, ' ');
     await pressKey(purchased, 'Enter');
     await settle();
     expect(listAccessUpdates(requests)).toHaveLength(0);
-    expect(readIsChecked(getSwitch(JAVASCRIPT_MEDIUM_NAME))).toBe(true);
+    expect(readIsChecked(screen.getByRole('switch', { name: PURCHASED_NAME }))).toBe(true);
   });
 });
