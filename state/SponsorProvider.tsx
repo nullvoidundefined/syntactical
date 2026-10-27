@@ -21,9 +21,12 @@ import { type ProStatusState, useProStatus } from './useProStatus';
 
 export type SponsorEligibility = 'eligible' | 'hidden';
 
+// isDirectSponsorSettled is false until the first sponsor.json request answers (or falls back), so a card
+// can wait for it instead of showing the house card first.
 type SponsorContextValue = {
   directSponsor: DirectSponsor | null;
   eligibility: SponsorEligibility;
+  isDirectSponsorSettled: boolean;
   readToday: () => string;
 };
 
@@ -31,7 +34,12 @@ function readDeviceToday(): string {
   return readLocalToday();
 }
 
-const HIDDEN: SponsorContextValue = { directSponsor: null, eligibility: 'hidden', readToday: readDeviceToday };
+const HIDDEN: SponsorContextValue = {
+  directSponsor: null,
+  eligibility: 'hidden',
+  isDirectSponsorSettled: true,
+  readToday: readDeviceToday,
+};
 const SponsorContext = createContext<SponsorContextValue>(HIDDEN);
 
 export function readSponsorEligibility(proStatus: ProStatusState, isAuthHydrated: boolean): SponsorEligibility {
@@ -48,7 +56,7 @@ export function SponsorProvider({ children, readToday = readDeviceToday }: Spons
   const { isHydrated } = useAuth();
   const eligibility = readSponsorEligibility(proStatus, isHydrated);
   const contentBaseUrl = readExtraString('contentBaseUrl');
-  const { data: directSponsor = null } = useQuery({
+  const { data: directSponsor = null, isPending } = useQuery({
     enabled: eligibility === 'eligible',
     queryFn: () => loadDirectSponsor(contentBaseUrl),
     queryKey: ['sponsor', contentBaseUrl],
@@ -56,8 +64,8 @@ export function SponsorProvider({ children, readToday = readDeviceToday }: Spons
     staleTime: DIRECT_SPONSOR_STALE_MS,
   });
   const value = useMemo<SponsorContextValue>(
-    () => ({ directSponsor, eligibility, readToday }),
-    [directSponsor, eligibility, readToday],
+    () => ({ directSponsor, eligibility, isDirectSponsorSettled: !isPending, readToday }),
+    [directSponsor, eligibility, isPending, readToday],
   );
   return <SponsorContext.Provider value={value}>{children}</SponsorContext.Provider>;
 }
