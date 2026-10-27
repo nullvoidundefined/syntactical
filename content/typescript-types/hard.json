@@ -1,0 +1,4241 @@
+{
+  "questions": [
+    {
+      "id": "gen-typescript-types-hard-d2f0d79f",
+      "prompt": "What is the type of `x`?",
+      "topic": "conditional-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string[] | number[]"
+        },
+        {
+          "text": "(string | number)[]",
+          "rationale": "That result requires blocking distribution, e.g. by writing `[T] extends [unknown]`, which keeps the union intact inside one array."
+        },
+        {
+          "text": "string[]",
+          "rationale": "Distribution applies the conditional to every union member, not only the first one, and then unions the results."
+        },
+        {
+          "text": "never",
+          "rationale": "`string | number` does satisfy `extends unknown`, so the true branch is taken for each member; `never` is never reached."
+        }
+      ],
+      "code": "type ToArray<T> = T extends unknown ? T[] : never;\ndeclare const x: ToArray<string | number>;",
+      "query": {
+        "explanation": "Because the checked type is a naked type parameter, the conditional type distributes over each member of `string | number`, producing `string[] | number[]` rather than a single array of the union.",
+        "syntax": "T extends U ? X : Y",
+        "tags": [
+          "conditional-types",
+          "distributive",
+          "union"
+        ],
+        "title": "Distributive conditional type over a union"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-41fc8c0f",
+      "prompt": "What is the type of `x`?",
+      "topic": "conditional-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "(string | number)[]"
+        },
+        {
+          "text": "string[] | number[]",
+          "rationale": "That is the distributive result; the tuple wrapping here turns distribution off, so the union is handled as a single type."
+        },
+        {
+          "text": "unknown[]",
+          "rationale": "`T` is not widened to the type it is compared against; it keeps the type argument that was supplied."
+        },
+        {
+          "text": "never",
+          "rationale": "`[string | number]` is assignable to `[unknown]`, so the true branch is chosen and the false branch is unused."
+        }
+      ],
+      "code": "type ToArray<T> = [T] extends [unknown] ? T[] : never;\ndeclare const x: ToArray<string | number>;",
+      "query": {
+        "explanation": "Wrapping both the checked type and the extends type in one-element tuples makes the type parameter non-naked, so the conditional is evaluated once with `T` still equal to the whole union.",
+        "syntax": "[T] extends [U] ? X : Y",
+        "tags": [
+          "conditional-types",
+          "non-distributive",
+          "tuple"
+        ],
+        "title": "Blocking distribution with tuple wrapping"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-4b054759",
+      "prompt": "What is the type of `x`?",
+      "topic": "conditional-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "never"
+        },
+        {
+          "text": "true",
+          "rationale": "That needs a non-distributive check such as `[T] extends [never]`; with a naked parameter there is no member to test at all."
+        },
+        {
+          "text": "false",
+          "rationale": "The false branch is not selected either; distribution over an empty union skips both branches entirely."
+        },
+        {
+          "text": "boolean",
+          "rationale": "`boolean` would come from distributing over `true | false`, where one member picks each branch, not from distributing over `never`."
+        }
+      ],
+      "code": "type IsNever<T> = T extends never ? true : false;\ndeclare const x: IsNever<never>;",
+      "query": {
+        "explanation": "`never` is the empty union, so a distributive conditional type has no members to map over and the whole instantiation collapses to `never`, which is why naive `IsNever` checks fail.",
+        "syntax": "T extends never ? true : false",
+        "tags": [
+          "conditional-types",
+          "never",
+          "distributive"
+        ],
+        "title": "Distributing over never"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-12cf7563",
+      "prompt": "What is the type of `x`?",
+      "topic": "conditional-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"yes\" | \"no\""
+        },
+        {
+          "text": "\"yes\"",
+          "rationale": "`any` is assignable to `string`, but the checker does not commit to the true branch; it keeps both possibilities."
+        },
+        {
+          "text": "\"no\"",
+          "rationale": "The false branch alone is what `unknown` would give, not `any`, which yields both branches."
+        },
+        {
+          "text": "string",
+          "rationale": "The branches are string literal types and are combined as a union; no widening to `string` happens here."
+        }
+      ],
+      "code": "type Check<T> = T extends string ? \"yes\" : \"no\";\ndeclare const x: Check<any>;",
+      "query": {
+        "explanation": "When the checked type is `any`, the conditional type resolves to the union of both branches, since `any` could be either assignable or not assignable to the test type.",
+        "syntax": "T extends U ? X : Y",
+        "tags": [
+          "conditional-types",
+          "any",
+          "union"
+        ],
+        "title": "Conditional types applied to any"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-02f101a7",
+      "prompt": "What is the type of `x`?",
+      "topic": "conditional-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "number",
+          "rationale": "Tuple element types stay as literal types in an `infer` position; nothing widens `3` to `number` here."
+        },
+        {
+          "text": "[3]",
+          "rationale": "`infer L` binds the element type itself; only the rest pattern `...infer _` captures a tuple."
+        },
+        {
+          "text": "never",
+          "rationale": "A mutable tuple is assignable to the readonly tuple pattern, so the match succeeds and the false branch is unused."
+        }
+      ],
+      "code": "type Last<T extends readonly unknown[]> = T extends readonly [...infer _, infer L] ? L : never;\ndeclare const x: Last<[1, 2, 3]>;",
+      "query": {
+        "explanation": "The pattern `readonly [...infer _, infer L]` matches any non-empty tuple, binding `L` to the final element type, so `Last<[1, 2, 3]>` is the literal type `3`.",
+        "syntax": "T extends [...infer Rest, infer Last] ? Last : never",
+        "tags": [
+          "conditional-types",
+          "infer",
+          "variadic-tuple"
+        ],
+        "title": "infer with a variadic tuple pattern"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-6fd723f6",
+      "prompt": "What is the type of `x`?",
+      "topic": "conditional-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string | number"
+        },
+        {
+          "text": "string & number",
+          "rationale": "Intersections of `infer` candidates come from contravariant positions such as parameters, not from property types."
+        },
+        {
+          "text": "never",
+          "rationale": "Conflicting candidates do not make the match fail; the inference succeeds and the candidates are merged."
+        },
+        {
+          "text": "unknown",
+          "rationale": "`unknown` would only appear if no candidate were inferred at all, but both properties supply candidates here."
+        }
+      ],
+      "code": "type Both<T> = T extends { a: infer U; b: infer U } ? U : never;\ndeclare const x: Both<{ a: string; b: number }>;",
+      "query": {
+        "explanation": "When the same `infer` variable appears in several covariant positions, TypeScript collects all candidates and combines them into a union, so `U` becomes `string | number`.",
+        "syntax": "T extends { a: infer U; b: infer U } ? U : never",
+        "tags": [
+          "conditional-types",
+          "infer",
+          "variance"
+        ],
+        "title": "Multiple infer candidates in covariant positions"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-934f4ad9",
+      "prompt": "Does this snippet compile with no type errors?",
+      "topic": "conditional-types",
+      "answer": false,
+      "code": "type Box<T> = T extends string ? { s: T } : { n: T };\n\nfunction f<T extends string>(t: T): Box<T> {\n  return { s: t };\n}",
+      "query": {
+        "explanation": "A conditional type whose checked type is still an unresolved type parameter stays deferred, even when the constraint would decide the branch. TypeScript therefore rejects the return value, which is why such functions need an overload signature or an assertion.",
+        "syntax": "function f<T extends string>(t: T): Box<T>",
+        "tags": [
+          "conditional-types",
+          "deferred",
+          "assignability"
+        ],
+        "title": "Returning a deferred conditional type"
+      },
+      "rationale": "The conditional type is not resolved while `T` is a type parameter, so `{ s: t }` is not seen as assignable to `Box<T>` despite the `extends string` constraint.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-a5b2dc88",
+      "prompt": "Is the type of `x` exactly `true`?",
+      "topic": "conditional-types",
+      "answer": true,
+      "code": "type IsNever<T> = [T] extends [never] ? true : false;\ndeclare const x: IsNever<never>;",
+      "query": {
+        "explanation": "Wrapping the checked type in a tuple prevents distribution, so the conditional is evaluated once: `[never]` is assignable to `[never]`, giving the true branch.",
+        "syntax": "[T] extends [never] ? true : false",
+        "tags": [
+          "conditional-types",
+          "never",
+          "non-distributive"
+        ],
+        "title": "A reliable never check"
+      },
+      "rationale": "The tuple wrapping blocks distribution, so the instantiation does not collapse to `never` the way a naked `T extends never` check would.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-21b18b51",
+      "prompt": "Is the type of `x` exactly `[string, number]`?",
+      "topic": "conditional-types",
+      "answer": false,
+      "code": "type Params<T> = T extends (...args: infer P) => unknown ? P : never;\ndeclare const x: Params<(a: string, b?: number) => void>;",
+      "query": {
+        "explanation": "Inferring a rest parameter produces a tuple that keeps parameter names as labels and keeps optionality, so the result prints as `[a: string, b?: number | undefined]` rather than a plain required tuple.",
+        "syntax": "T extends (...args: infer P) => unknown ? P : never",
+        "tags": [
+          "conditional-types",
+          "infer",
+          "tuple-labels"
+        ],
+        "title": "Inferring a parameter list tuple"
+      },
+      "rationale": "The inferred tuple carries the parameter labels and the optional marker, so it is `[a: string, b?: number | undefined]`, not the bare `[string, number]`.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-723dcbf6",
+      "prompt": "Does the final assignment type-check?",
+      "topic": "conditional-types",
+      "answer": true,
+      "code": "type D<T> = T extends unknown ? T[] : never;\ntype N<T> = [T] extends [unknown] ? T[] : never;\n\ndeclare let d: D<string | number>;\ndeclare let n: N<string | number>;\n\nn = d;",
+      "query": {
+        "explanation": "`D<string | number>` is `string[] | number[]` and `N<string | number>` is `(string | number)[]`. Each branch of the union is assignable to the array of the union, so the assignment is allowed; the reverse direction would be rejected.",
+        "syntax": "T extends unknown ? T[] : never",
+        "tags": [
+          "conditional-types",
+          "distributive",
+          "assignability"
+        ],
+        "title": "Assignability between distributive and non-distributive results"
+      },
+      "rationale": "Both `string[]` and `number[]` are assignable to `(string | number)[]`, so the union source is accepted; only assigning the wider array back to the union would fail.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-1e6ded9b",
+      "prompt": "What is the type of `x`?",
+      "topic": "infer",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string | number"
+        },
+        {
+          "text": "string & number",
+          "rationale": "Intersections are formed from candidates in contravariant positions such as parameters; property types are covariant, so the candidates are unioned instead."
+        },
+        {
+          "text": "string",
+          "rationale": "The second candidate is not discarded: both `a` and `b` contribute to the inference for `U`, not just the first match."
+        },
+        {
+          "text": "never",
+          "rationale": "The object type does match the pattern, so inference succeeds and the true branch is taken rather than the `never` branch."
+        }
+      ],
+      "code": "type Both<T> = T extends { a: infer U; b: infer U } ? U : never;\ntype X = Both<{ a: string; b: number }>;\ndeclare const x: X;",
+      "query": {
+        "explanation": "When the same `infer` variable gets several candidates from covariant positions (such as property types), TypeScript combines them into a union. Here `a` contributes `string` and `b` contributes `number`, so `U` becomes `string | number`. Intersections are produced only when the candidates come from contravariant positions, like function parameters.",
+        "syntax": "T extends { a: infer U; b: infer U } ? U : never",
+        "tags": [
+          "typescript",
+          "infer",
+          "conditional-types",
+          "variance"
+        ],
+        "title": "Multiple inference candidates in covariant positions"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-04e1aea4",
+      "prompt": "What is the type of `x`?",
+      "topic": "infer",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "never"
+        },
+        {
+          "text": "\"a\" | \"b\"",
+          "rationale": "Candidates collected from a function parameter position are combined with an intersection, so the original union is not simply handed back."
+        },
+        {
+          "text": "\"a\" & \"b\"",
+          "rationale": "That intersection is formed, but the checker reduces an intersection of two disjoint unit types on creation, so this is not what the type displays as."
+        },
+        {
+          "text": "\"a\"",
+          "rationale": "The distribution produces one candidate per union member, so a single arbitrary member is not kept while the other is dropped."
+        }
+      ],
+      "code": "type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I) => void ? I : never;\ntype X = UnionToIntersection<\"a\" | \"b\">;\ndeclare const x: X;",
+      "query": {
+        "explanation": "The distributive conditional turns `\"a\" | \"b\"` into `((k: \"a\") => void) | ((k: \"b\") => void)`. Inferring `I` from the parameter position gives two candidates in a contravariant position, so they are intersected: `\"a\" & \"b\"`. Because two disjoint unit types can never both hold, TypeScript reduces that intersection to `never` when the type is created.",
+        "syntax": "(U extends unknown ? (k: U) => void : never) extends (k: infer I) => void ? I : never",
+        "tags": [
+          "typescript",
+          "infer",
+          "contravariance",
+          "intersection"
+        ],
+        "title": "UnionToIntersection with disjoint literals"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-4c3bcaac",
+      "prompt": "What is the type of `x`?",
+      "topic": "infer",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"none\""
+        },
+        {
+          "text": "42",
+          "rationale": "The candidate `42` violates the `extends string` constraint, so it is rejected instead of being inferred for `S`."
+        },
+        {
+          "text": "string",
+          "rationale": "The constraint filters the match; it does not become the inferred type when the real candidate fails to satisfy it."
+        },
+        {
+          "text": "never",
+          "rationale": "The false branch of this conditional type is the literal `\"none\"`, so a failed match does not land on `never`."
+        }
+      ],
+      "code": "type FirstStr<T> = T extends [infer S extends string, ...unknown[]] ? S : \"none\";\ntype X = FirstStr<[42, \"a\"]>;\ndeclare const x: X;",
+      "query": {
+        "explanation": "`infer S extends string` constrains the candidate. The first tuple element is `42`, which does not satisfy `string`, so the match fails and the whole conditional type resolves to its false branch, `\"none\"`. The constraint acts as a filter on the match, not as a fallback or a widening target for the inferred type.",
+        "syntax": "T extends [infer S extends string, ...unknown[]] ? S : \"none\"",
+        "tags": [
+          "typescript",
+          "infer",
+          "constraints",
+          "tuples"
+        ],
+        "title": "Constrained infer that fails its constraint"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-56827c21",
+      "prompt": "What is the type of `x`?",
+      "topic": "infer",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"a\""
+        },
+        {
+          "text": "\"a-b\"",
+          "rationale": "Leading placeholders match as little as possible, so the separator is taken at the first `-` rather than at the last one."
+        },
+        {
+          "text": "\"a\" | \"a-b\"",
+          "rationale": "Pattern matching yields one deterministic split, so the alternative ways of cutting the string are not unioned together."
+        },
+        {
+          "text": "never",
+          "rationale": "The literal contains a `-`, so the pattern matches and the true branch is used instead of the false branch."
+        }
+      ],
+      "code": "type Head<S> = S extends `${infer A}-${infer B}` ? A : never;\ntype X = Head<\"a-b-c\">;\ndeclare const x: X;",
+      "query": {
+        "explanation": "When matching a string literal against a template literal pattern, each leading placeholder captures as little text as possible. `${infer A}-${infer B}` therefore stops `A` at the first `-`, giving `A = \"a\"` and `B = \"b-c\"`. A single match is produced, so the result is one literal type rather than a union of all possible splits.",
+        "syntax": "S extends `${infer A}-${infer B}` ? A : never",
+        "tags": [
+          "typescript",
+          "infer",
+          "template-literal-types"
+        ],
+        "title": "Template literal inference is non-greedy at the front"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-185fb70a",
+      "prompt": "How many type errors does this snippet contain?",
+      "topic": "infer",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "0"
+        },
+        {
+          "text": "1",
+          "rationale": "The only candidate error would be `s = b`, but `b` is `never`, which is assignable to every type including `string`."
+        },
+        {
+          "text": "2",
+          "rationale": "Both assignments are legal: `a` resolves to `string` and `b` resolves to `never`, and neither violates the annotation on `s`."
+        },
+        {
+          "text": "3",
+          "rationale": "The alias itself is well-formed and both instantiations resolve, so no diagnostic comes from the conditional type either."
+        }
+      ],
+      "code": "type Ret<T> = T extends (...args: never[]) => infer R ? R : never;\ndeclare const a: Ret<() => string>;\ndeclare const b: Ret<string>;\ndeclare let s: string;\ns = a;\ns = b;",
+      "query": {
+        "explanation": "`Ret<() => string>` matches the function pattern, so `a` is `string`. `Ret<string>` fails the match, so `b` is `never`, and `never` is the bottom type that is assignable to every type. Both assignments are therefore legal and the snippet reports no diagnostics.",
+        "syntax": "T extends (...args: never[]) => infer R ? R : never",
+        "tags": [
+          "typescript",
+          "infer",
+          "never",
+          "assignability"
+        ],
+        "title": "Inferring return types and the never fallback"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-0578f119",
+      "prompt": "What is the type of `x`?",
+      "topic": "infer",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "boolean"
+        },
+        {
+          "text": "number",
+          "rationale": "Inference from an overloaded type picks the last call signature, not the first one declared in the file."
+        },
+        {
+          "text": "number | boolean",
+          "rationale": "Only one signature takes part in the inference, so return types from every overload are not collected and unioned."
+        },
+        {
+          "text": "never",
+          "rationale": "An overloaded function type does match the function pattern, so the true branch is taken rather than the fallback."
+        }
+      ],
+      "code": "type R<T> = T extends (...args: any) => infer U ? U : never;\ndeclare function f(x: string): number;\ndeclare function f(x: number): boolean;\ntype X = R<typeof f>;\ndeclare const x: X;",
+      "query": {
+        "explanation": "When inference matches a type with multiple call signatures against a single function pattern, TypeScript uses only the last signature. The last overload of `f` returns `boolean`, so `U` is inferred as `boolean`. This is the same reason the built-in `ReturnType` reports the final overload's return type.",
+        "syntax": "T extends (...args: any) => infer U ? U : never",
+        "tags": [
+          "typescript",
+          "infer",
+          "overloads",
+          "ReturnType"
+        ],
+        "title": "Inferring from an overloaded function type"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-fcff2efa",
+      "prompt": "What is the type of `x`?",
+      "topic": "infer",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string | number"
+        },
+        {
+          "text": "string & number",
+          "rationale": "Intersections come from candidates gathered in contravariant positions; property types here are covariant, so a union is produced."
+        },
+        {
+          "text": "string",
+          "rationale": "The first candidate does not simply win; every covariant candidate is collected before the variable is resolved."
+        },
+        {
+          "text": "never",
+          "rationale": "Inference succeeds for both occurrences, so the true branch runs instead of the type collapsing to `never`."
+        }
+      ],
+      "code": "type Shared<T> = T extends { a: infer U; b: infer U } ? U : never;\n\ndeclare const x: Shared<{ a: string; b: number }>;",
+      "query": {
+        "explanation": "When the same `infer` variable appears more than once in covariant positions (such as property types), the checker collects every candidate and combines them with a union. Here the candidates are `string` from `a` and `number` from `b`, so `U` resolves to `string | number` and the true branch returns that union.",
+        "syntax": "T extends { a: infer U; b: infer U } ? U : never",
+        "tags": [
+          "infer",
+          "conditional-types",
+          "variance"
+        ],
+        "title": "Multiple covariant infer candidates"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-cd32f667",
+      "prompt": "What is the type of `x`?",
+      "topic": "infer",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "string",
+          "rationale": "`string` is the raw candidate, but a candidate that fails the `extends number` constraint is never handed to the true branch."
+        },
+        {
+          "text": "\"no\""
+        },
+        {
+          "text": "number",
+          "rationale": "The constraint only filters the candidate; it is not substituted for `H` when the check fails."
+        },
+        {
+          "text": "never",
+          "rationale": "A failing constrained `infer` selects the declared false branch, and that branch is the literal `\"no\"`."
+        }
+      ],
+      "code": "type First<T> = T extends [infer H extends number, ...unknown[]] ? H : \"no\";\n\ndeclare const x: First<[string, boolean]>;",
+      "query": {
+        "explanation": "`infer H extends number` still infers a candidate from the first tuple element, but the candidate must also satisfy the constraint. The candidate here is `string`, which is not assignable to `number`, so the whole conditional type resolves to its false branch and `x` is typed as the literal `\"no\"`.",
+        "syntax": "T extends [infer H extends number, ...unknown[]] ? H : \"no\"",
+        "tags": [
+          "infer",
+          "constrained-infer",
+          "conditional-types"
+        ],
+        "title": "infer with a failing constraint"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-02d7990f",
+      "prompt": "How many of the three declarations below does the checker reject?",
+      "topic": "infer",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "That would need `X` to be the union of both parameter types, but contravariant candidates are intersected instead."
+        },
+        {
+          "text": "1",
+          "rationale": "Two of the three initializers lie outside the intersection, not just one of them."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "`2` is present in both `1 | 2` and `2 | 3`, so that one declaration is accepted."
+        }
+      ],
+      "code": "type Both<T> = T extends (a: infer U, b: infer U) => void ? U : never;\ntype X = Both<(a: 1 | 2, b: 2 | 3) => void>;\n\nconst p: X = 1;\nconst q: X = 2;\nconst r: X = 3;",
+      "query": {
+        "explanation": "Parameter positions of the matched function type are contravariant, so repeated `infer U` candidates are combined with an intersection rather than a union: `X` behaves like `(1 | 2) & (2 | 3)`. Only `2` is a member of both unions, so the declarations initialized with `1` and `3` are errors and exactly two lines fail.",
+        "syntax": "T extends (a: infer U, b: infer U) => void ? U : never",
+        "tags": [
+          "infer",
+          "variance",
+          "intersection"
+        ],
+        "title": "Contravariant infer candidates intersect"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-9fd073b8",
+      "prompt": "What is the type of `x`?",
+      "topic": "mapped-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"name\""
+        },
+        {
+          "text": "\"name\" | \"age\"",
+          "rationale": "`number` is not assignable to `string`, so the `age` key is remapped to `never` and dropped from the result."
+        },
+        {
+          "text": "\"name\" | \"age\" | \"id\"",
+          "rationale": "The `as` clause filters keys; only keys whose remapped name is not `never` remain in the mapped type."
+        },
+        {
+          "text": "never",
+          "rationale": "Mapping to `never` happens per key, not for the whole type; `name` survives, so `keyof` is not empty."
+        }
+      ],
+      "code": "type T0 = { name: string; age: number; id: symbol };\ntype StringKeys<T> = { [K in keyof T as T[K] extends string ? K : never]: T[K] };\ndeclare const x: keyof StringKeys<T0>;",
+      "query": {
+        "explanation": "A key remapping clause that resolves to `never` removes that property from the mapped type. Only `name` has a value type assignable to `string`, so the result is `{ name: string }` and its `keyof` is the single literal `\"name\"`.",
+        "syntax": "{ [K in keyof T as Cond]: T[K] }",
+        "tags": [
+          "mapped-types",
+          "key-remapping",
+          "keyof"
+        ],
+        "title": "Filtering keys with `as ... never`"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-d3efe1f7",
+      "prompt": "How many errors does the checker report for these two declarations?",
+      "topic": "mapped-types",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "Because the mapping is non-homomorphic, `?` is not preserved, so `a` is required and `p` fails."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "`q` is valid: `a` has type `string | undefined`, so passing `undefined` explicitly satisfies it."
+        },
+        {
+          "text": "3",
+          "rationale": "Only one declaration is rejected; `Extract<keyof T, string>` keeps both keys and `b: number` matches."
+        }
+      ],
+      "code": "type T0 = { a?: string; b: number };\ntype Flat<T> = { [K in Extract<keyof T, string>]: T[K] };\nconst p: Flat<T0> = { b: 1 };\nconst q: Flat<T0> = { a: undefined, b: 1 };",
+      "query": {
+        "explanation": "A mapped type only copies `?` and `readonly` when it iterates over exactly `keyof T`. Here the constraint is `Extract<keyof T, string>`, so the mapping is non-homomorphic: `a` becomes a required property of type `string | undefined`. `p` is missing `a` (one error), while `q` supplies `a: undefined` and is accepted.",
+        "syntax": "{ [K in Extract<keyof T, string>]: T[K] }",
+        "tags": [
+          "mapped-types",
+          "homomorphic",
+          "optional"
+        ],
+        "title": "Homomorphic vs non-homomorphic mapping"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-8c2da69b",
+      "prompt": "What is the type of `x`?",
+      "topic": "mapped-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"onClick\" | \"onFocus\""
+        },
+        {
+          "text": "\"onclick\" | \"onfocus\"",
+          "rationale": "`Capitalize` upper-cases the first letter of each key, so the names are `onClick` and `onFocus`."
+        },
+        {
+          "text": "\"click\" | \"focus\"",
+          "rationale": "The `as` clause replaces the original key names; the old names no longer exist on the mapped type."
+        },
+        {
+          "text": "`on${string}`",
+          "rationale": "The keys come from the finite union `keyof T0`, so the result is two concrete literals, not an open template pattern."
+        }
+      ],
+      "code": "type T0 = { click: number; focus: string };\ntype Ev<T> = { [K in keyof T as `on${Capitalize<K & string>}`]: T[K] };\ndeclare const x: keyof Ev<T0>;",
+      "query": {
+        "explanation": "The `as` clause rewrites each key through a template literal type, and `Capitalize` upper-cases the first character. The mapped type therefore has keys `onClick` and `onFocus`, so `keyof Ev<T0>` is the union of those two string literals in declaration order.",
+        "syntax": "{ [K in keyof T as `on${Capitalize<K & string>}`]: T[K] }",
+        "tags": [
+          "mapped-types",
+          "key-remapping",
+          "template-literal-types"
+        ],
+        "title": "Template literal key remapping"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-47b906cf",
+      "prompt": "How many of the four assignments below does the checker reject?",
+      "topic": "mapped-types",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "`-readonly` only affects the mapped type; `r` still has type `T0`, whose properties remain readonly."
+        },
+        {
+          "text": "1",
+          "rationale": "Both `r.a` and `r.b` are readonly in `T0`, so each write is reported separately."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "4",
+          "rationale": "Writes through `m` are legal because the mapped type removed `readonly` from both properties."
+        }
+      ],
+      "code": "type T0 = { readonly a: number; readonly b: string };\ntype Mut<T> = { -readonly [K in keyof T]: T[K] };\nconst m: Mut<T0> = { a: 1, b: \"x\" };\nconst r: T0 = { a: 1, b: \"x\" };\nm.a = 2;\nm.b = \"y\";\nr.a = 3;\nr.b = \"z\";",
+      "query": {
+        "explanation": "`-readonly` removes the readonly modifier from every mapped property, so `Mut<T0>` has writable `a` and `b` and both writes through `m` are allowed. The original `T0` keeps both properties readonly, so the two writes through `r` are errors.",
+        "syntax": "{ -readonly [K in keyof T]: T[K] }",
+        "tags": [
+          "mapped-types",
+          "modifiers",
+          "readonly"
+        ],
+        "title": "Stripping `readonly` with `-readonly`"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-1d84d476",
+      "prompt": "What is the type of `x`?",
+      "topic": "mapped-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "never"
+        },
+        {
+          "text": "\"a\" | \"b\"",
+          "rationale": "That is `keyof` of the *intersection*; `keyof` of a union only keeps keys present in every member."
+        },
+        {
+          "text": "\"a\"",
+          "rationale": "No single member's keys win; `keyof` of a union includes only keys common to all members, and `a` is absent from the second."
+        },
+        {
+          "text": "string | number",
+          "rationale": "The mapped type has no index signature, so its `keyof` is a union of literal keys, not the primitive key types."
+        }
+      ],
+      "code": "type Mapped<T> = { [K in keyof T]: T[K] };\ndeclare const x: keyof Mapped<{ a: string } | { b: number }>;",
+      "query": {
+        "explanation": "When the type parameter of a homomorphic mapped type is a naked union, the mapping distributes across the members, yielding `{ a: string } | { b: number }`. The `keyof` of a union is the intersection of the members' keys, and these objects share no keys, so the result is `never`.",
+        "syntax": "keyof (A | B)",
+        "tags": [
+          "mapped-types",
+          "homomorphic",
+          "unions"
+        ],
+        "title": "Homomorphic mapped types distribute over unions"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-6bac621e",
+      "prompt": "What is the type of `x`?",
+      "topic": "mapped-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"a\" | \"c\""
+        },
+        {
+          "text": "\"a\" | \"b\" | \"c\"",
+          "rationale": "`Exclude<\"b\", \"b\">` is `never`, and a key remapped to `never` is removed from the mapped type."
+        },
+        {
+          "text": "\"b\"",
+          "rationale": "The `as Exclude<...>` clause keeps the non-excluded keys; `b` is the one key that is discarded."
+        },
+        {
+          "text": "1 | 3",
+          "rationale": "`keyof` lists the property names, not the property value types of the mapped type."
+        }
+      ],
+      "code": "type Drop<T, K extends keyof T> = { [P in keyof T as Exclude<P, K>]: T[P] };\ndeclare const x: keyof Drop<{ a: 1; b: 2; c: 3 }, \"b\">;",
+      "query": {
+        "explanation": "`Exclude<P, K>` resolves to `never` when `P` is the excluded key, which drops that property from the mapped type; this is how `Omit` is built. The remaining keys are `a` and `c`, so `keyof` is `\"a\" | \"c\"` in declaration order.",
+        "syntax": "{ [P in keyof T as Exclude<P, K>]: T[P] }",
+        "tags": [
+          "mapped-types",
+          "key-remapping",
+          "omit"
+        ],
+        "title": "Omit-style key removal"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-19fabb89",
+      "prompt": "What is the type of `x`?",
+      "topic": "mapped-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string | undefined"
+        },
+        {
+          "text": "string",
+          "rationale": "The copied property stays optional, so an indexed access into it also yields the implicit `undefined`."
+        },
+        {
+          "text": "undefined",
+          "rationale": "The declared value type `string` is kept by the mapping; `undefined` is only added by the optional modifier."
+        },
+        {
+          "text": "never",
+          "rationale": "`\"a\"` is a key of `Copy<T0>`, so the indexed access resolves to that property's type rather than `never`."
+        }
+      ],
+      "code": "type T0 = { a?: string };\ntype Copy<T> = { [K in keyof T]: T[K] };\ndeclare const x: Copy<T0>[\"a\"];",
+      "query": {
+        "explanation": "Because the mapping iterates over exactly `keyof T`, it is homomorphic and preserves the `?` modifier, so `Copy<T0>` is `{ a?: string }`. Indexing an optional property includes the implicit `undefined`, giving `string | undefined`.",
+        "syntax": "{ [K in keyof T]: T[K] }",
+        "tags": [
+          "mapped-types",
+          "homomorphic",
+          "indexed-access"
+        ],
+        "title": "Optionality survives a homomorphic copy"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-adeb0b98",
+      "prompt": "How many type errors does the checker report for the three assignments below?",
+      "topic": "mapped-types",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "`a` still has type `Config`, whose properties keep their `readonly` modifier, so `a.port = 9090` is rejected."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "`Mutable<Config>` is homomorphic over `keyof Config`, so `-readonly` strips the modifier and both writes through `b` are legal."
+        },
+        {
+          "text": "3",
+          "rationale": "Only the write through `a` fails; the mapped type produces mutable `host` and `port` properties on `b`."
+        }
+      ],
+      "code": "type Config = { readonly host: string; readonly port: number };\ntype Mutable<T> = { -readonly [K in keyof T]: T[K] };\n\ndeclare const a: Config;\ndeclare const b: Mutable<Config>;\n\nb.host = \"localhost\";\nb.port = 8080;\na.port = 9090;",
+      "query": {
+        "explanation": "`Mutable<T>` is a homomorphic mapped type over `keyof T`, and the `-readonly` modifier removes the `readonly` flag from every copied property. So both writes through `b` are legal. The original `Config` is untouched by the mapped type, so `a.port = 9090` is still rejected because `port` is `readonly` there. That gives exactly one error.",
+        "syntax": "{ -readonly [K in keyof T]: T[K] }",
+        "tags": [
+          "mapped-types",
+          "readonly",
+          "modifiers"
+        ],
+        "title": "Stripping readonly with a mapped type modifier"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-08465fc2",
+      "prompt": "Is the assignment to `x.a` accepted by the checker?",
+      "topic": "mapped-types",
+      "answer": true,
+      "code": "type Copy<T> = { [K in Exclude<keyof T, never>]: T[K] };\ntype Src = { readonly a: string };\n\ndeclare const x: Copy<Src>;\n\nx.a = \"hi\";",
+      "query": {
+        "explanation": "A mapped type only copies `readonly` and `?` modifiers when it is homomorphic, meaning the constraint is written literally as `keyof T` (optionally with an `as` clause). Wrapping it as `Exclude<keyof T, never>` makes the mapped type non-homomorphic even though the key set is identical, so `readonly` is not carried over and `x.a` is a mutable `string` property.",
+        "syntax": "{ [K in Exclude<keyof T, never>]: T[K] }",
+        "tags": [
+          "mapped-types",
+          "readonly",
+          "homomorphic"
+        ],
+        "title": "Non-homomorphic mapped types drop modifiers"
+      },
+      "rationale": "Wrapping `keyof T` in `Exclude` makes the mapped type non-homomorphic, so the `readonly` modifier is not copied and `x.a` is writable.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-bb11dda0",
+      "prompt": "What is the type of `x`?",
+      "topic": "template-literal-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"b-c\""
+        },
+        {
+          "text": "\"c\"",
+          "rationale": "That would require matching the last \"-\"; inference stops at the first delimiter, so the rest is \"b-c\"."
+        },
+        {
+          "text": "\"a\"",
+          "rationale": "\"a\" is what `H` captures; the conditional returns `R`, the text after the delimiter."
+        },
+        {
+          "text": "never",
+          "rationale": "The false branch is only taken when the pattern fails, but \"a-b-c\" does contain a \"-\"."
+        }
+      ],
+      "code": "type Tail<S extends string> = S extends `${infer H}-${infer R}` ? R : never;\ndeclare const x: Tail<\"a-b-c\">;",
+      "query": {
+        "explanation": "When matching `${infer H}-${infer R}` against \"a-b-c\", TypeScript locks `H` onto the shortest text before the first \"-\", so `H` is \"a\" and `R` picks up everything after that first delimiter: \"b-c\". The pattern is not re-matched against the last delimiter.",
+        "syntax": "S extends `${infer H}-${infer R}` ? R : never",
+        "tags": [
+          "template-literal-types",
+          "infer",
+          "conditional-types"
+        ],
+        "title": "Template literal inference is left-to-right and non-greedy"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-1613d907",
+      "prompt": "What is the type of `x`?",
+      "topic": "template-literal-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"getName\""
+        },
+        {
+          "text": "\"getname\"",
+          "rationale": "`Capitalize` uppercases the first character of the argument, so \"name\" becomes \"Name\" before substitution."
+        },
+        {
+          "text": "\"getNAME\"",
+          "rationale": "Uppercasing the whole argument is `Uppercase`; `Capitalize` touches only the first character."
+        },
+        {
+          "text": "string",
+          "rationale": "Every placeholder resolves to a string literal type, so the template stays a literal type."
+        }
+      ],
+      "code": "type Getter<K extends string> = `get${Capitalize<K>}`;\ndeclare const x: Getter<\"name\">;",
+      "query": {
+        "explanation": "`Capitalize<\"name\">` is the intrinsic that uppercases only the first character, giving \"Name\". Substituting it into the template literal type produces the single string literal type \"getName\" rather than widening to `string`.",
+        "syntax": "`get${Capitalize<K>}`",
+        "tags": [
+          "template-literal-types",
+          "intrinsic-string-types"
+        ],
+        "title": "Intrinsic string types inside template literal types"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-b45aa8ae",
+      "prompt": "What is the type of `x`?",
+      "topic": "template-literal-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "42"
+        },
+        {
+          "text": "\"42\"",
+          "rationale": "The `extends number` constraint on the `infer` converts the captured text into a numeric literal type instead of keeping it as a string."
+        },
+        {
+          "text": "number",
+          "rationale": "The inference keeps the specific literal; the constraint filters the match rather than widening it."
+        },
+        {
+          "text": "never",
+          "rationale": "The false branch is taken only when the pattern or constraint fails, and \"42px\" satisfies both."
+        }
+      ],
+      "code": "type Px<S extends string> = S extends `${infer N extends number}px` ? N : never;\ndeclare const x: Px<\"42px\">;",
+      "query": {
+        "explanation": "Writing `infer N extends number` inside a template literal pattern makes TypeScript parse the captured text and, when it is a valid number, hand back the numeric literal type. Matching \"42px\" therefore yields `42`, not the string literal \"42\".",
+        "syntax": "S extends `${infer N extends number}px` ? N : never",
+        "tags": [
+          "template-literal-types",
+          "infer",
+          "conditional-types"
+        ],
+        "title": "Constrained inference in template literal patterns"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-7285c4b8",
+      "prompt": "What is the type of `x`?",
+      "topic": "template-literal-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[\"a\", \"b\", \"c\"]"
+        },
+        {
+          "text": "[\"a\", \"b,c\"]",
+          "rationale": "That is the result after one pass only; the true branch spreads a recursive `Split` of the remainder."
+        },
+        {
+          "text": "[\"a,b,c\"]",
+          "rationale": "The base case fires only when no delimiter is left, and \"a,b,c\" matches the pattern."
+        },
+        {
+          "text": "string[]",
+          "rationale": "The recursion builds a fixed-length tuple of literal types, not a widened array type."
+        }
+      ],
+      "code": "type Split<S extends string, D extends string> =\n  S extends `${infer H}${D}${infer R}` ? [H, ...Split<R, D>] : [S];\ndeclare const x: Split<\"a,b,c\", \",\">;",
+      "query": {
+        "explanation": "Each pass captures the text before the first delimiter and recurses on the remainder: \"a,b,c\" gives \"a\" plus `Split<\"b,c\">`, then \"b\" plus `Split<\"c\">`, and \"c\" has no delimiter so the base case returns `[\"c\"]`. The spreads flatten to `[\"a\", \"b\", \"c\"]`.",
+        "syntax": "S extends `${infer H}${D}${infer R}` ? [H, ...Split<R, D>] : [S]",
+        "tags": [
+          "template-literal-types",
+          "recursive-types",
+          "tuple-types"
+        ],
+        "title": "Recursive template literal splitting"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-ecbfa9d8",
+      "prompt": "What is the type of `x`?",
+      "topic": "template-literal-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "() => number"
+        },
+        {
+          "text": "number",
+          "rationale": "Key remapping renames keys only; the declared property type here wraps `T[K]` in a function type."
+        },
+        {
+          "text": "() => unknown",
+          "rationale": "`K` is the literal \"age\", so `T[K]` resolves precisely to `number` rather than staying unresolved."
+        },
+        {
+          "text": "never",
+          "rationale": "The `as` clause produces the key \"getAge\", so this indexed access resolves to a real property."
+        }
+      ],
+      "code": "type Getters<T> = { [K in keyof T & string as `get${Capitalize<K>}`]: () => T[K] };\ntype R = Getters<{ age: number }>;\ndeclare const x: R[\"getAge\"];",
+      "query": {
+        "explanation": "The `as` clause renames the key \"age\" to \"getAge\" through the template literal type, while the property type stays whatever the mapped type declares — here `() => T[K]`, which instantiates to `() => number`.",
+        "syntax": "[K in keyof T & string as `get${Capitalize<K>}`]: () => T[K]",
+        "tags": [
+          "template-literal-types",
+          "mapped-types",
+          "key-remapping"
+        ],
+        "title": "Template literal key remapping in mapped types"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-e4fad43c",
+      "prompt": "What is the type of `x`?",
+      "topic": "template-literal-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "boolean"
+        },
+        {
+          "text": "true",
+          "rationale": "Only \"once\" matches the pattern; distribution also contributes a `false` branch for \"off\"."
+        },
+        {
+          "text": "false",
+          "rationale": "\"once\" does begin with \"on\", so at least one branch of the distribution yields `true`."
+        },
+        {
+          "text": "never",
+          "rationale": "Distribution produces a union of the two branch results, not an empty union."
+        }
+      ],
+      "code": "type Starts<S extends string> = S extends `on${string}` ? true : false;\ndeclare const x: Starts<\"once\" | \"off\">;",
+      "query": {
+        "explanation": "`S` is a naked type parameter, so the conditional distributes: \"once\" matches `on${string}` and gives `true`, while \"off\" starts with \"of\" and gives `false`. The union `true | false` is normalized to `boolean`.",
+        "syntax": "S extends `on${string}` ? true : false",
+        "tags": [
+          "template-literal-types",
+          "conditional-types",
+          "distributive-conditional-types"
+        ],
+        "title": "Distribution over a template literal pattern test"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-c7c6dec0",
+      "prompt": "What is the type of `x`?",
+      "topic": "template-literal-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "never"
+        },
+        {
+          "text": "\"a\"",
+          "rationale": "`never` is not substituted as the empty string; being an empty union it makes the whole template empty."
+        },
+        {
+          "text": "string",
+          "rationale": "No widening happens here; the placeholder has no members at all rather than every string."
+        },
+        {
+          "text": "`a${string}`",
+          "rationale": "That is the result for the argument `string`; the argument supplied is `never`."
+        }
+      ],
+      "code": "type Prefix<S extends string> = `a${S}`;\ndeclare const x: Prefix<never>;",
+      "query": {
+        "explanation": "A template literal type distributes over unions in its placeholders, and `never` is the empty union. With no members to combine, the cross product is empty, so `` `a${never}` `` collapses to `never` instead of behaving like an empty string.",
+        "syntax": "type Prefix<S extends string> = `a${S}`",
+        "tags": [
+          "template-literal-types",
+          "never",
+          "distributive-types"
+        ],
+        "title": "Template literal types distribute, so `never` absorbs"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-628035a6",
+      "prompt": "How many of these three initializations are type errors?",
+      "topic": "template-literal-types",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "\"fff\" has no leading \"#\", so it cannot match the pattern and is reported."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "\"#\" is accepted because the `string` placeholder can match the empty string."
+        },
+        {
+          "text": "3",
+          "rationale": "\"#fff\" matches the pattern exactly, so it is not an error."
+        }
+      ],
+      "code": "type Hex = `#${string}`;\nconst a: Hex = \"#fff\";\nconst b: Hex = \"fff\";\nconst c: Hex = \"#\";",
+      "query": {
+        "explanation": "A string literal is assignable to `` `#${string}` `` when it starts with \"#\" and the rest can fill the `string` placeholder — including the empty rest, so \"#\" is fine. \"#fff\" is fine too, and only \"fff\" is rejected, giving exactly one error.",
+        "syntax": "type Hex = `#${string}`",
+        "tags": [
+          "template-literal-types",
+          "assignability"
+        ],
+        "title": "Assigning string literals to a template literal type"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-ae47d341",
+      "prompt": "Is the type of `x` exactly `\"hi\"`?",
+      "topic": "template-literal-types",
+      "answer": true,
+      "code": "type Trim<S extends string> = S extends ` ${infer R}` ? Trim<R> : S;\ndeclare const x: Trim<\"  hi\">;",
+      "query": {
+        "explanation": "Each match strips a single leading space and recurses on the remainder: \"  hi\" becomes \" hi\", then \"hi\", which no longer matches the pattern and is returned by the false branch. The result is the literal type \"hi\".",
+        "syntax": "S extends ` ${infer R}` ? Trim<R> : S",
+        "tags": [
+          "template-literal-types",
+          "recursive-types",
+          "infer"
+        ],
+        "title": "Recursive trimming with template literal patterns"
+      },
+      "rationale": "The true branch recurses instead of returning, so both leading spaces are stripped rather than just one, leaving the literal \"hi\".",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-ce429f70",
+      "prompt": "What is the type of `x`?",
+      "topic": "template-literal-types",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "foo_barBaz",
+          "rationale": "This assumes the first `infer` is greedy and matches \"foo_bar\"; template literal inference stops at the first matching separator instead."
+        },
+        {
+          "text": "FooBarBaz",
+          "rationale": "This would need `Capitalize` applied to the whole result as well; the head segment \"foo\" is emitted unchanged and never capitalized."
+        },
+        {
+          "text": "fooBarBaz",
+          "rationale": "Each recursive tail is capitalized before being appended to the preceding head."
+        },
+        {
+          "text": "fooBarbaz",
+          "rationale": "This assumes one capitalization over the stripped tail \"barbaz\"; the recursion capitalizes every segment after the first, not just one."
+        }
+      ],
+      "code": "type Camel<S extends string> = S extends `${infer H}_${infer T}`\n  ? `${H}${Capitalize<Camel<T>>}`\n  : S;\n\ntype X = Camel<\"foo_bar_baz\">;\ndeclare const x: X;",
+      "query": {
+        "explanation": "Template literal inference is non-greedy at the first placeholder, so `Camel<\"foo_bar_baz\">` splits into H = \"foo\" and T = \"bar_baz\". The recursive call turns \"bar_baz\" into \"barBaz\", and `Capitalize` makes it \"BarBaz\", which is concatenated after \"foo\" to give \"fooBarBaz\". Because the recursion capitalizes each tail before joining, every underscore-separated segment after the first is capitalized while the head keeps its original casing.",
+        "syntax": "type T<S extends string> = S extends `${infer H}_${infer T}` ? `${H}${Capitalize<T>}` : S",
+        "tags": [
+          "template-literal-types",
+          "infer",
+          "recursive-types",
+          "intrinsic-string-types"
+        ],
+        "title": "Recursive template literal inference with Capitalize"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-168f1c7e",
+      "prompt": "What is the type of `x`?",
+      "topic": "distributive-conditionals",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "(string | number)[]"
+        },
+        {
+          "text": "string[] | number[]",
+          "rationale": "That is the distributive result for a naked `T`; the tuple wrapper keeps `T` as the whole union."
+        },
+        {
+          "text": "never",
+          "rationale": "Every type is assignable to `any`, so the check succeeds and the false branch is unused."
+        },
+        {
+          "text": "any[]",
+          "rationale": "`any` appears only in the extends clause; the true branch is `T[]`, built from the checked type."
+        }
+      ],
+      "code": "type ToArray<T> = [T] extends [any] ? T[] : never;\ndeclare const x: ToArray<string | number>;",
+      "query": {
+        "explanation": "A conditional type only distributes over a union when the checked type is a naked type parameter. Writing `[T] extends [any]` wraps `T` in a tuple, so `T` stays the full union `string | number` and the true branch produces a single array type `(string | number)[]` instead of `string[] | number[]`.",
+        "syntax": "[T] extends [U] ? X : Y",
+        "tags": [
+          "conditional-types",
+          "distributive",
+          "tuple-trick"
+        ],
+        "title": "Tuple wrapping disables distribution"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-017cc249",
+      "prompt": "Do both declarations below type-check?",
+      "topic": "distributive-conditionals",
+      "answer": true,
+      "code": "type Flip<T> = T extends true ? \"yes\" : \"no\";\nconst a: Flip<boolean> = \"yes\";\nconst b: Flip<boolean> = \"no\";",
+      "query": {
+        "explanation": "`boolean` is modelled as the union `false | true`, so a distributive conditional splits it: `Flip<boolean>` becomes `Flip<false> | Flip<true>`, i.e. `\"no\" | \"yes\"`. Both literal initializers are therefore assignable.",
+        "syntax": "T extends true ? X : Y",
+        "tags": [
+          "conditional-types",
+          "distributive",
+          "boolean"
+        ],
+        "title": "boolean distributes as false | true"
+      },
+      "rationale": "If the conditional did not distribute, `boolean extends true` would be false and the type would be just `\"no\"`, rejecting `a`; distribution over `false | true` yields `\"no\" | \"yes\"`.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-6077236b",
+      "prompt": "What is the type of `x`?",
+      "topic": "distributive-conditionals",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"b\"",
+          "rationale": "Only the member that fails the check against `U` is kept."
+        },
+        {
+          "text": "never",
+          "rationale": "That would need the whole union checked at once; distribution tests each member, and `\"b\"` passes to the false branch."
+        },
+        {
+          "text": "\"a\" | \"c\"",
+          "rationale": "Matching members take the true branch, which is `never`, so they are removed rather than kept."
+        },
+        {
+          "text": "\"a\" | \"b\" | \"c\"",
+          "rationale": "`\"a\"` and `\"c\"` each resolve to `never` and vanish from the resulting union."
+        }
+      ],
+      "code": "type Filter<T, U> = T extends U ? never : T;\ndeclare const x: Filter<\"a\" | \"b\" | \"c\", \"a\" | \"c\">;",
+      "query": {
+        "explanation": "Because `T` is a bare type parameter, the conditional is applied to each member separately: `\"a\"` and `\"c\"` match `U` and become `never`, while `\"b\"` does not match and is kept. `never` members disappear from a union, leaving `\"b\"`.",
+        "syntax": "T extends U ? never : T",
+        "tags": [
+          "conditional-types",
+          "distributive",
+          "exclude"
+        ],
+        "title": "Distribution powers Exclude"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-eab9c3e4",
+      "prompt": "What is the type of `x`?",
+      "topic": "distributive-conditionals",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2"
+        },
+        {
+          "text": "1 | 2",
+          "rationale": "Distribution only applies when the checked type is a bare type parameter; wrapping it in `Box` blocks the split."
+        },
+        {
+          "text": "1",
+          "rationale": "`{ v: string | number }` is not assignable to `{ v: string }`, so the true branch is not taken."
+        },
+        {
+          "text": "never",
+          "rationale": "Both branches yield numeric literal types, and nothing here reduces to an empty union."
+        }
+      ],
+      "code": "type Box<T> = { v: T };\ntype Check<T> = Box<T> extends Box<string> ? 1 : 2;\ndeclare const x: Check<string | number>;",
+      "query": {
+        "explanation": "`Box<T>` is not a naked type parameter, so no distribution happens. The checker compares `{ v: string | number }` with `{ v: string }`; that fails because `string | number` is not assignable to `string`, so the false branch `2` is selected.",
+        "syntax": "Box<T> extends Box<string> ? X : Y",
+        "tags": [
+          "conditional-types",
+          "distributive",
+          "naked-type-parameter"
+        ],
+        "title": "Distribution needs a naked type parameter"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-5c8d5a58",
+      "prompt": "What is the type of `x`?",
+      "topic": "distributive-conditionals",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string | number"
+        },
+        {
+          "text": "string[] | number[]",
+          "rationale": "`infer U` captures the element type of each array, not the array types themselves."
+        },
+        {
+          "text": "never",
+          "rationale": "Each distributed member matches the array pattern, so the false branch is never selected."
+        },
+        {
+          "text": "unknown",
+          "rationale": "`U` is inferred from the matched element positions, not left as an unconstrained placeholder."
+        }
+      ],
+      "code": "type Elem<T> = T extends readonly (infer U)[] ? U : never;\ndeclare const x: Elem<string[] | number[]>;",
+      "query": {
+        "explanation": "The bare `T` distributes, so the conditional runs once per member: `Elem<string[]>` infers `U = string` and `Elem<number[]>` infers `U = number`. The two results are joined into `string | number`.",
+        "syntax": "T extends readonly (infer U)[] ? U : never",
+        "tags": [
+          "conditional-types",
+          "distributive",
+          "infer"
+        ],
+        "title": "infer inside a distributed conditional"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-443d9b3e",
+      "prompt": "What is the type of `x`?",
+      "topic": "distributive-conditionals",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true"
+        },
+        {
+          "text": "false",
+          "rationale": "That would need `[C]` assignable to `[T]`, but `C` stays the wider union while `T` is narrowed to one member."
+        },
+        {
+          "text": "boolean",
+          "rationale": "Both distributed arms produce `true`, and a union of identical literals collapses to `true`."
+        },
+        {
+          "text": "never",
+          "rationale": "`T extends unknown` always matches, so the outer false branch contributes nothing."
+        }
+      ],
+      "code": "type IsUnion<T, C = T> = T extends unknown ? ([C] extends [T] ? false : true) : never;\ndeclare const x: IsUnion<string | number>;",
+      "query": {
+        "explanation": "The default parameter `C` captures the original union before distribution. Inside the distributed branch `T` is one member, so `[C] extends [T]` compares `[string | number]` with `[string]` (then `[number]`), which fails both times and yields `true`. `true | true` reduces to `true`.",
+        "syntax": "T extends unknown ? ([C] extends [T] ? false : true) : never",
+        "tags": [
+          "conditional-types",
+          "distributive",
+          "is-union"
+        ],
+        "title": "Comparing a member against the saved union"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-ce7b2ff7",
+      "prompt": "How many of the three constants below fail to type-check?",
+      "topic": "distributive-conditionals",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "The distributed type is `[1, 1] | [2, 2]`, so a tuple mixing the two literals has no matching member."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "`[1, 1]` and `[2, 2]` each match one arm of the distributed union exactly, so both are accepted."
+        },
+        {
+          "text": "3",
+          "rationale": "The alias does not collapse to `never`; distribution yields two usable tuple shapes."
+        }
+      ],
+      "code": "type Pair<T> = T extends unknown ? [T, T] : never;\nconst a: Pair<1 | 2> = [1, 1];\nconst b: Pair<1 | 2> = [1, 2];\nconst c: Pair<1 | 2> = [2, 2];",
+      "query": {
+        "explanation": "Distribution expands `Pair<1 | 2>` to `[1, 1] | [2, 2]`, not `[1 | 2, 1 | 2]`. The two positions are therefore correlated: `[1, 1]` and `[2, 2]` match, but the mixed tuple `[1, 2]` matches neither arm and is rejected.",
+        "syntax": "T extends unknown ? [T, T] : never",
+        "tags": [
+          "conditional-types",
+          "distributive",
+          "tuples"
+        ],
+        "title": "Distribution correlates the two tuple slots"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-1bfcecaf",
+      "prompt": "What is the type of `x`?",
+      "topic": "distributive-conditionals",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"b\""
+        },
+        {
+          "text": "\"a\" | \"b\"",
+          "rationale": "A union spelled out in the checked position is tested as a whole; only a bare type parameter splits."
+        },
+        {
+          "text": "\"a\"",
+          "rationale": "`string | number` is not assignable to `string`, so the true branch is not selected."
+        },
+        {
+          "text": "never",
+          "rationale": "Both branches are string literal types, so the conditional always resolves to one of them."
+        }
+      ],
+      "code": "declare const x: string | number extends string ? \"a\" : \"b\";",
+      "query": {
+        "explanation": "Distribution is triggered by a naked type parameter, not by any union in the checked position. Here the union is written literally, so the checker asks once whether `string | number` is assignable to `string`; it is not, so the false branch `\"b\"` wins.",
+        "syntax": "A | B extends C ? X : Y",
+        "tags": [
+          "conditional-types",
+          "distributive",
+          "naked-type-parameter"
+        ],
+        "title": "Only type parameters distribute"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-cfbd81c4",
+      "prompt": "Does the declaration of `a` below type-check?",
+      "topic": "distributive-conditionals",
+      "answer": false,
+      "code": "type Pair<T> = [T] extends [string] ? T[] : never;\nconst a: Pair<string | number> = [\"x\"];",
+      "query": {
+        "explanation": "The tuple wrapper stops distribution, so the checker asks whether `[string | number]` is assignable to `[string]`. It is not, so `Pair<string | number>` resolves to `never`, and no array literal is assignable to `never`.",
+        "syntax": "[T] extends [string] ? T[] : never",
+        "tags": [
+          "conditional-types",
+          "distributive",
+          "never"
+        ],
+        "title": "Blocked distribution can collapse to never"
+      },
+      "rationale": "With distribution the result would be `string[] | never`, i.e. `string[]`, accepting `[\"x\"]`; the tuple wrapper tests the whole union, fails, and yields `never`.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-529abcd0",
+      "prompt": "What is the type of `x`?",
+      "topic": "distributive-conditionals",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"a\" | \"b\""
+        },
+        {
+          "text": "never",
+          "rationale": "That is `keyof` of the un-split union; distribution applies `keyof` to each member before joining them."
+        },
+        {
+          "text": "\"a\"",
+          "rationale": "Distribution visits every member of the union, not only the first one."
+        },
+        {
+          "text": "\"a\" & \"b\"",
+          "rationale": "Distributed results are combined with a union, not an intersection, which for distinct literals would be empty."
+        }
+      ],
+      "code": "type Keys<T> = T extends unknown ? keyof T : never;\ndeclare const x: Keys<{ a: 1 } | { b: 2 }>;",
+      "query": {
+        "explanation": "Distribution applies the branch to each member, so the result is `keyof { a: 1 } | keyof { b: 2 }`, which is `\"a\" | \"b\"`. Writing `keyof ({ a: 1 } | { b: 2 })` directly would instead give `never`, since only shared keys survive.",
+        "syntax": "T extends unknown ? keyof T : never",
+        "tags": [
+          "conditional-types",
+          "distributive",
+          "keyof"
+        ],
+        "title": "Distributing keyof over a union"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-800ffc90",
+      "prompt": "How many type errors does the checker report in this snippet?",
+      "topic": "variance-and-assignability",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "One line is rejected: `readonly number[]` cannot be assigned to the mutable type `number[]`."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "Only one line fails; `number[]` to `readonly (number | string)[]` is fine because readonly arrays are covariant."
+        },
+        {
+          "text": "3",
+          "rationale": "Widening `number[]` to `readonly number[]` is allowed, so the first two initializations are both accepted."
+        }
+      ],
+      "code": "const nums: number[] = [1, 2];\nconst frozen: readonly number[] = nums;\nconst back: number[] = frozen;\nconst mixed: readonly (number | string)[] = nums;",
+      "query": {
+        "explanation": "A mutable `number[]` is assignable to `readonly number[]` (dropping the mutating members is safe), and readonly arrays are covariant, so `number[]` also flows into `readonly (number | string)[]`. The reverse direction is blocked: assigning a `readonly number[]` to `number[]` would hand out `push`/index-write access that the source type deliberately removed, so only the `back` line fails.",
+        "syntax": "readonly T[]",
+        "tags": [
+          "variance",
+          "readonly",
+          "arrays",
+          "assignability"
+        ],
+        "title": "readonly arrays are a one-way street"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-5ba016c4",
+      "prompt": "Are both assignments accepted even though `RO` marks `a` as `readonly`?",
+      "topic": "variance-and-assignability",
+      "answer": true,
+      "code": "interface RO { readonly a: string }\ninterface RW { a: string }\ndeclare const r: RO;\ndeclare const w: RW;\nconst p: RW = r;\nconst q: RO = w;",
+      "query": {
+        "explanation": "Unlike `readonly` on array and tuple types, a `readonly` modifier on a property is not part of the structural assignability check between object types. `RO` and `RW` have identical property types, so each is assignable to the other and the snippet reports no errors. This is a deliberate unsoundness: `p.a = \"x\"` is then allowed on a value that was declared readonly.",
+        "syntax": "interface T { readonly a: string }",
+        "tags": [
+          "variance",
+          "readonly",
+          "assignability",
+          "object-types"
+        ],
+        "title": "readonly property modifiers and assignability"
+      },
+      "rationale": "readonly property modifiers are ignored when comparing object types, so neither direction of the assignment is rejected.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-b04780d2",
+      "prompt": "What is the type of `x`?",
+      "topic": "variance-and-assignability",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "That branch would require `keyof Wide` to be a subtype of `keyof Narrow`, but `\"a\" | \"b\"` is wider than `\"a\"`."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "1 | 2",
+          "rationale": "Distribution needs a naked type parameter in the checked position; `keyof Wide` resolves to one union and picks a single branch."
+        },
+        {
+          "text": "never",
+          "rationale": "The checked type is a concrete union, not `never`, so the conditional evaluates normally instead of collapsing."
+        }
+      ],
+      "code": "interface Wide { a: string; b: number }\ninterface Narrow { a: string }\ndeclare const x: keyof Wide extends keyof Narrow ? 1 : 2;",
+      "query": {
+        "explanation": "`Wide` is a subtype of `Narrow` because it has all of `Narrow`'s members, but `keyof` is contravariant: `keyof Wide` is `\"a\" | \"b\"` while `keyof Narrow` is just `\"a\"`. The union `\"a\" | \"b\"` is not assignable to `\"a\"`, so the conditional takes the false branch and `x` has type `2`.",
+        "syntax": "keyof T extends keyof U ? A : B",
+        "tags": [
+          "variance",
+          "keyof",
+          "conditional-types",
+          "assignability"
+        ],
+        "title": "keyof reverses the subtype direction"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-8c2e1745",
+      "prompt": "Is this arrow function returning `string` accepted where `Logger` is expected?",
+      "topic": "variance-and-assignability",
+      "answer": true,
+      "code": "type Logger = (msg: string) => void;\nconst l: Logger = (msg: string): string => msg;",
+      "query": {
+        "explanation": "When the target signature returns `void`, assignability ignores the source's return type entirely: a function returning `string` is accepted as a `Logger` because callers through the `Logger` type can only discard the result. The relation is one-way, so a `void`-returning function is still not assignable to `(msg: string) => string`.",
+        "syntax": "type F = (x: T) => void",
+        "tags": [
+          "variance",
+          "assignability",
+          "void",
+          "functions"
+        ],
+        "title": "return-type void swallows any return type"
+      },
+      "rationale": "Return-type covariance has a special case for `void` targets, so a `string`-returning function is a valid `Logger` rather than a mismatch.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-177f192a",
+      "prompt": "Which of the three `Handler` assignments does the checker reject?",
+      "topic": "variance-and-assignability",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "h1",
+          "rationale": "Declaring fewer parameters than the target signature is allowed, so this assignment is accepted."
+        },
+        {
+          "text": "h2"
+        },
+        {
+          "text": "h3",
+          "rationale": "A zero-parameter function ignores both arguments, which is permitted for a two-parameter target."
+        },
+        {
+          "text": "None of them",
+          "rationale": "One line does fail: a source signature cannot require more parameters than the target supplies."
+        }
+      ],
+      "code": "type Handler = (a: string, b: number) => void;\nconst h1: Handler = (a: string) => {};\nconst h2: Handler = (a: string, b: number, c: boolean) => {};\nconst h3: Handler = () => {};",
+      "query": {
+        "explanation": "A source signature may declare fewer parameters than the target, because the extra arguments the caller supplies are simply ignored; that is why `h1` and `h3` are fine. A source may not require more parameters than the target provides, since `c` would always arrive as `undefined`, so only `h2` is rejected.",
+        "syntax": "type Handler = (a: string, b: number) => void",
+        "tags": [
+          "variance",
+          "assignability",
+          "functions",
+          "arity"
+        ],
+        "title": "parameter counts in function assignability"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-62e9b7eb",
+      "prompt": "Which of these two `Box` assignments compile?",
+      "topic": "variance-and-assignability",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Only `a` compiles"
+        },
+        {
+          "text": "Only `b` compiles",
+          "rationale": "That is backwards: `get(): string | number` cannot be narrowed to the required `get(): string` for the target."
+        },
+        {
+          "text": "Both `a` and `b` compile",
+          "rationale": "The `bn` assignment fails, since its `get` returns `string | number` where only `string` is acceptable."
+        },
+        {
+          "text": "Neither `a` nor `b` compiles",
+          "rationale": "Method parameters are checked bivariantly, so `set(v: string)` does not block widening `Box<string>` to `Box<string | number>`."
+        }
+      ],
+      "code": "interface Box<T> { get(): T; set(v: T): void }\ndeclare const bs: Box<string>;\ndeclare const bn: Box<string | number>;\nconst a: Box<string | number> = bs;\nconst b: Box<string> = bn;",
+      "query": {
+        "explanation": "`T` appears in an output position (`get`) and in a parameter of a method (`set`). Method parameters are compared bivariantly even under `strictFunctionTypes`, so `set` does not force invariance and `Box<string>` ends up assignable to `Box<string | number>` — the same unsoundness that makes arrays covariant. The reverse fails, because `get(): string | number` cannot be used where `get(): string` is required.",
+        "syntax": "interface Box<T> { get(): T; set(v: T): void }",
+        "tags": [
+          "variance",
+          "generics",
+          "bivariance",
+          "methods"
+        ],
+        "title": "method bivariance makes Box covariant"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-7c2868d9",
+      "prompt": "How many of these four initializations fail to type-check?",
+      "topic": "variance-and-assignability",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "`unknown` is only a target type; it needs narrowing or an assertion before it can fill a `string` slot."
+        },
+        {
+          "text": "1",
+          "rationale": "Two lines fail: besides `unknown`, `any` is assignable to every type except `never`, which also rejects it."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "`never` is assignable to any type and `any` flows into `number` freely, so those two initializations are accepted."
+        }
+      ],
+      "code": "declare const u: unknown;\ndeclare const n: never;\ndeclare const a: any;\nconst p: string = u;\nconst q: string = n;\nconst r: number = a;\nconst s: never = a;",
+      "query": {
+        "explanation": "`unknown` is the top type: everything flows into it, but it flows out of nothing without narrowing, so `p` fails. `never` is the bottom type and is assignable to every type, so `q` is fine. `any` is bidirectionally assignable with every type except one: it is not assignable to `never`, so `r` is accepted and `s` is rejected. That gives two errors.",
+        "syntax": "const x: T = valueOfAnyUnknownOrNever",
+        "tags": [
+          "assignability",
+          "any",
+          "unknown",
+          "never"
+        ],
+        "title": "top and bottom types in the assignability lattice"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-f929247c",
+      "prompt": "Do both `Point` initializations below compile?",
+      "topic": "variance-and-assignability",
+      "answer": false,
+      "code": "interface Point { x: number; y: number }\nconst extra = { x: 1, y: 2, z: 3 };\nconst a: Point = extra;\nconst b: Point = { x: 1, y: 2, z: 3 };",
+      "query": {
+        "explanation": "Structurally, `{ x: number; y: number; z: number }` is assignable to `Point`, which is why routing the value through the variable `extra` is accepted. A fresh object literal assigned directly carries the excess property check, so the extra member `z` is reported as an error on the `b` line.",
+        "syntax": "const b: Point = { x: 1, y: 2, z: 3 }",
+        "tags": [
+          "assignability",
+          "excess-property-check",
+          "freshness",
+          "object-types"
+        ],
+        "title": "freshness adds excess property checking on top of assignability"
+      },
+      "rationale": "Only the pre-declared variable is accepted; the fresh literal triggers an excess property check on `z`, so one of the two lines is an error.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-c5472ef2",
+      "prompt": "What is the type of `x`?",
+      "topic": "variance-and-assignability",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"sub-only\""
+        },
+        {
+          "text": "\"both\"",
+          "rationale": "Mutual assignability would require `Sup` to supply `b: number` as well, but that property is missing."
+        },
+        {
+          "text": "\"neither\"",
+          "rationale": "The outer check succeeds, since an object type with extra members is assignable to one with fewer."
+        },
+        {
+          "text": "\"both\" | \"sub-only\"",
+          "rationale": "Both checked types are concrete object types, so each conditional resolves to one branch instead of distributing."
+        }
+      ],
+      "code": "type Sub = { a: string; b: number };\ntype Sup = { a: string };\ndeclare const x: Sub extends Sup ? (Sup extends Sub ? \"both\" : \"sub-only\") : \"neither\";",
+      "query": {
+        "explanation": "`Sub` has every member of `Sup` with compatible types, so `Sub extends Sup` is true and the outer conditional takes its true branch. The inner check fails: `Sup` lacks the required property `b`, so it is not assignable to `Sub`. The result is the literal type `\"sub-only\"`.",
+        "syntax": "A extends B ? X : Y",
+        "tags": [
+          "assignability",
+          "conditional-types",
+          "structural-typing",
+          "variance"
+        ],
+        "title": "structural subtyping is directional"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-ae94a7a6",
+      "prompt": "Do the assignments between the index-signature type and `One` both compile?",
+      "topic": "variance-and-assignability",
+      "answer": false,
+      "code": "interface Dict { [k: string]: number }\ninterface One { a: number }\ndeclare const d: Dict;\ndeclare const o: One;\nconst p: One = d;\nconst q: Dict = o;",
+      "query": {
+        "explanation": "A string index signature does not count as supplying the declared property `a`, so `Dict` is not assignable to `One`. Going the other way, only object literal types and type aliases get an implicit index signature; an `interface` does not, so `One` is not assignable to `Dict` either. The snippet therefore reports errors rather than compiling cleanly.",
+        "syntax": "interface Dict { [k: string]: number }",
+        "tags": [
+          "assignability",
+          "index-signatures",
+          "interfaces",
+          "structural-typing"
+        ],
+        "title": "index signatures are not interchangeable with declared properties"
+      },
+      "rationale": "An index signature does not satisfy the required property `a`, and an interface never gains an implicit index signature, so the assignments are rejected.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-ab419e7b",
+      "prompt": "What is the type of `x`?",
+      "topic": "overloads-and-satisfies",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string"
+        },
+        {
+          "text": "number",
+          "rationale": "That is the second signature's return; resolution stops at the first applicable signature, which is the `unknown` one."
+        },
+        {
+          "text": "string | number",
+          "rationale": "Resolution commits to one signature; it never unions the returns of every applicable overload."
+        },
+        {
+          "text": "unknown",
+          "rationale": "`unknown` is the parameter type of the chosen signature, not its return type."
+        }
+      ],
+      "code": "declare function f(x: unknown): string;\ndeclare function f(x: string): number;\n\nconst x = f(\"hi\");",
+      "query": {
+        "explanation": "Overload resolution walks the declared signatures top to bottom and commits to the first one whose parameters accept the arguments. `unknown` accepts the string argument, so the first signature wins and the call's type is `string`, even though the second signature is a tighter match.",
+        "syntax": "declare function f(x: A): R1; declare function f(x: B): R2;",
+        "tags": [
+          "overloads",
+          "resolution-order"
+        ],
+        "title": "Overload resolution order"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-937a5c6d",
+      "prompt": "How many type errors does this snippet produce?",
+      "topic": "overloads-and-satisfies",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "The call is not split per union member, so no single signature accepts the argument and the call is rejected."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "Only one diagnostic is raised at the call; the explanation for each candidate overload is related information, not a second error."
+        },
+        {
+          "text": "3",
+          "rationale": "Neither signature declaration is itself invalid, so the only problem reported is the single failing call."
+        }
+      ],
+      "code": "declare function pad(x: string): string;\ndeclare function pad(x: number): number;\n\ndeclare const v: string | number;\nconst r = pad(v);",
+      "query": {
+        "explanation": "An overloaded call must match one single signature. Neither `(x: string)` nor `(x: number)` accepts `string | number`, so the checker reports one `No overload matches this call` error at the call site (the per-overload details are attached as related information, not separate errors).",
+        "syntax": "pad(v) where v: string | number",
+        "tags": [
+          "overloads",
+          "unions"
+        ],
+        "title": "Overloads do not distribute over unions"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-419d023c",
+      "prompt": "What is the type of `x`?",
+      "topic": "overloads-and-satisfies",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "boolean"
+        },
+        {
+          "text": "number",
+          "rationale": "That is the first signature's return, but its parameter is `string`, so a numeric argument does not match it."
+        },
+        {
+          "text": "number | boolean",
+          "rationale": "A call resolves to exactly one signature, so the returns of the candidates are not combined."
+        },
+        {
+          "text": "never",
+          "rationale": "`never` would suggest no signature applied, but the second signature applies because its second parameter is optional."
+        }
+      ],
+      "code": "declare function f(x: string): number;\ndeclare function f(x: number, y?: string): boolean;\n\nconst x = f(1);",
+      "query": {
+        "explanation": "The first signature is skipped because `1` is not a string. The second signature's `y` is optional, so a one-argument call is still applicable, and the chosen signature returns `boolean`.",
+        "syntax": "declare function f(x: number, y?: string): boolean;",
+        "tags": [
+          "overloads",
+          "optional-parameters"
+        ],
+        "title": "Arity and optional parameters in overload picking"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-a233e8ad",
+      "prompt": "How many type errors do these three declarations produce?",
+      "topic": "overloads-and-satisfies",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "`satisfies` is a real assignability check, so extra and missing keys in object literals are both reported."
+        },
+        {
+          "text": "1",
+          "rationale": "Two declarations are bad: one adds an unknown key and one omits a required key."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "The first declaration supplies exactly the keys `a` and `b` with numbers, so it is accepted."
+        }
+      ],
+      "code": "type Keys = \"a\" | \"b\";\n\nconst c1 = { a: 1, b: 2 } satisfies Record<Keys, number>;\nconst c2 = { a: 1, b: 2, c: 3 } satisfies Record<Keys, number>;\nconst c3 = { a: 1 } satisfies Record<Keys, number>;",
+      "query": {
+        "explanation": "`satisfies` checks the literal against the target exactly as an annotation would: `c2` fails excess property checking because of the extra key `c`, and `c3` fails because required key `b` is missing. `c1` matches exactly, so two errors are reported in total.",
+        "syntax": "expr satisfies Record<Keys, number>",
+        "tags": [
+          "satisfies",
+          "excess-property-check"
+        ],
+        "title": "satisfies still runs full assignability checks"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-82a09aad",
+      "prompt": "What is the type of `x`?",
+      "topic": "overloads-and-satisfies",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "number"
+        },
+        {
+          "text": "string | number",
+          "rationale": "That would be the element type if the literal were inferred as an array, but the tuple target makes each position separate."
+        },
+        {
+          "text": "1",
+          "rationale": "The contextual type at that position is `number`, which is not a literal type, so the fresh literal `1` widens."
+        },
+        {
+          "text": "[number, string]",
+          "rationale": "That is the type of `t` itself; indexing with `0` selects the first element's type."
+        }
+      ],
+      "code": "const t = [1, \"a\"] satisfies [number, string];\nconst x = t[0];",
+      "query": {
+        "explanation": "The target of `satisfies` is used as the contextual type for the expression, so the array literal is inferred as the tuple `[number, string]` rather than an array. Index `0` therefore has type `number`; the literal `1` widens because the contextual type `number` is not a literal type.",
+        "syntax": "[1, \"a\"] satisfies [number, string]",
+        "tags": [
+          "satisfies",
+          "tuples"
+        ],
+        "title": "satisfies supplies a contextual type"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-02722206",
+      "prompt": "What is the type of `x`?",
+      "topic": "overloads-and-satisfies",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"a\" | \"b\""
+        },
+        {
+          "text": "string",
+          "rationale": "That is `keyof Record<string, number>`, which is what a type annotation would give; `satisfies` does not replace the inferred type."
+        },
+        {
+          "text": "\"a\"",
+          "rationale": "`keyof` yields the union of every known key, not only the first declared one."
+        },
+        {
+          "text": "never",
+          "rationale": "`never` is the `keyof` of a type with no keys, but the inferred object type has two known keys."
+        }
+      ],
+      "code": "const c = { a: 1, b: 2 } satisfies Record<string, number>;\n\ntype K = keyof typeof c;\ndeclare const x: K;",
+      "query": {
+        "explanation": "`satisfies` validates the literal against `Record<string, number>` but leaves `c`'s type as the inferred `{ a: number; b: number }`. So `keyof typeof c` is the precise key union `\"a\" | \"b\"`, unlike an annotation of `Record<string, number>`, whose `keyof` would be `string`.",
+        "syntax": "const c = {...} satisfies Record<string, number>; keyof typeof c",
+        "tags": [
+          "satisfies",
+          "keyof"
+        ],
+        "title": "satisfies keeps the inferred type"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-939a23c5",
+      "prompt": "Is this single-signature arrow accepted where the overloaded type `Fn` is expected?",
+      "topic": "overloads-and-satisfies",
+      "answer": true,
+      "code": "type Fn = { (x: string): number; (x: number): number };\n\nconst f: Fn = (x: string | number) => 1;",
+      "query": {
+        "explanation": "A source function is assignable to a target with several call signatures when it is assignable to each one. The arrow's parameter `string | number` accepts both a `string` and a `number`, and its return `number` matches, so both call signatures are satisfied and the declaration compiles.",
+        "syntax": "type Fn = { (x: A): R; (x: B): R }",
+        "tags": [
+          "overloads",
+          "assignability"
+        ],
+        "title": "Assigning to an overloaded call-signature type"
+      },
+      "rationale": "The source does not need two signatures: one signature whose parameter is the union of both parameter types is assignable to each target call signature.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-6a35acac",
+      "prompt": "Is `x` typed `number` rather than the literal type `1`?",
+      "topic": "overloads-and-satisfies",
+      "answer": true,
+      "code": "const c = { a: 1 } satisfies Record<string, number>;\nconst x = c.a;",
+      "query": {
+        "explanation": "`satisfies` keeps the expression's own inferred type, and in that inference the mutable property `a` widens its fresh literal `1` to `number` because the contextual type `number` is not a literal type. Writing `as const satisfies ...` is what keeps `1`.",
+        "syntax": "{ a: 1 } satisfies Record<string, number>",
+        "tags": [
+          "satisfies",
+          "literal-widening"
+        ],
+        "title": "satisfies does not preserve literals by itself"
+      },
+      "rationale": "`satisfies` alone does not freeze literals: the property is mutable and its contextual type `number` is not a literal type, so `1` widens to `number`.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-6c5c31f9",
+      "prompt": "Does the `satisfies` check accept this arrow function?",
+      "topic": "overloads-and-satisfies",
+      "answer": false,
+      "code": "type Fn = (n: number) => number;\n\nconst f = ((n: number) => String(n)) satisfies Fn;",
+      "query": {
+        "explanation": "`satisfies` requires the expression to be assignable to the target type without changing the expression's type. The arrow returns `string`, which is not assignable to the `number` return of `Fn`, so the checker reports an error.",
+        "syntax": "expr satisfies Fn",
+        "tags": [
+          "satisfies",
+          "functions"
+        ],
+        "title": "satisfies checks return types"
+      },
+      "rationale": "`satisfies` is not a cast or a no-op: the returned `string` fails assignability against `Fn`'s `number` return, so the declaration is rejected.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-63e4323e",
+      "prompt": "Can `f` be called with a boolean argument here?",
+      "topic": "overloads-and-satisfies",
+      "answer": false,
+      "code": "function f(x: string): string;\nfunction f(x: number): string;\nfunction f(x: string | number | boolean): string {\n  return \"v\";\n}\n\ndeclare const b: boolean;\nconst x = f(b);",
+      "query": {
+        "explanation": "When a function has overload signatures, only those signatures form its call-signature list; the implementation signature is hidden from callers even though it is wider. Since neither `(x: string)` nor `(x: number)` accepts a boolean, the call is an error.",
+        "syntax": "function f(x: A): R; function f(x: B): R; function f(x: wide): R { ... }",
+        "tags": [
+          "overloads",
+          "implementation-signature"
+        ],
+        "title": "The implementation signature is not callable"
+      },
+      "rationale": "The implementation signature only has to be compatible with the overloads; it is not exposed as an extra overload, so a boolean argument matches nothing.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-b91934d2",
+      "prompt": "What is the type of `x`?",
+      "topic": "discriminated-unions",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"kind\""
+        },
+        {
+          "text": "\"kind\" | \"radius\" | \"side\"",
+          "rationale": "keyof over a union yields only the keys present in every member, not the union of all members' keys."
+        },
+        {
+          "text": "\"radius\" | \"side\"",
+          "rationale": "The shared `kind` key is kept; keyof does not drop the discriminant and return only payload keys."
+        },
+        {
+          "text": "never",
+          "rationale": "The members do share the key `kind`, so the intersection of their key sets is not empty."
+        }
+      ],
+      "code": "type Shape =\n  | { kind: \"circle\"; radius: number }\n  | { kind: \"square\"; side: number };\n\ntype X = keyof Shape;\ndeclare const x: X;",
+      "query": {
+        "explanation": "`keyof` of a union type is the intersection of the key sets of its members, because only keys present in every member are guaranteed to exist. Here only the discriminant `kind` is shared, so `keyof Shape` is `\"kind\"`. To get all keys you would need a distributive helper such as `T extends unknown ? keyof T : never`.",
+        "syntax": "keyof (A | B) === keyof A & keyof B",
+        "tags": [
+          "discriminated-unions",
+          "keyof",
+          "union"
+        ],
+        "title": "keyof over a discriminated union"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-07ae35fe",
+      "prompt": "What is the type of `x`?",
+      "topic": "discriminated-unions",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"circle\" | \"rect\""
+        },
+        {
+          "text": "\"circle\" | \"square\" | \"rect\"",
+          "rationale": "The square member fails the `{ kind: \"circle\" | \"rect\" }` filter, so Extract removes it before the indexed access."
+        },
+        {
+          "text": "\"circle\"",
+          "rationale": "Extract distributes over every member and keeps both matches, not just the first one that satisfies the filter."
+        },
+        {
+          "text": "never",
+          "rationale": "A member whose `kind` is `\"circle\"` is assignable to `\"circle\" | \"rect\"`, so two members survive the filter."
+        }
+      ],
+      "code": "type Shape =\n  | { kind: \"circle\"; radius: number }\n  | { kind: \"square\"; side: number }\n  | { kind: \"rect\"; w: number; h: number };\n\ntype X = Extract<Shape, { kind: \"circle\" | \"rect\" }>[\"kind\"];\ndeclare const x: X;",
+      "query": {
+        "explanation": "`Extract<T, U>` is a distributive conditional type, so each member of `Shape` is tested separately against `{ kind: \"circle\" | \"rect\" }`. The circle and rect members pass because their literal `kind` is assignable to that union; square does not. Indexing the surviving two-member union with `\"kind\"` distributes again and yields `\"circle\" | \"rect\"`.",
+        "syntax": "Extract<T, U> = T extends U ? T : never",
+        "tags": [
+          "discriminated-unions",
+          "Extract",
+          "indexed-access"
+        ],
+        "title": "Extract with a union of discriminant values"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-d58844d3",
+      "prompt": "How many of the three initializations below does the checker reject?",
+      "topic": "discriminated-unions",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "`{ kind: \"square\" }` is missing `side` and `{ kind: \"tri\", t: 1 }` matches no member, so some declarations do fail."
+        },
+        {
+          "text": "1",
+          "rationale": "Both the missing-`side` literal and the unknown-`tri` literal are rejected, not only one of them."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "`{ kind: \"circle\", radius: 1 }` matches the circle member exactly and is accepted."
+        }
+      ],
+      "code": "type Shape =\n  | { kind: \"circle\"; radius: number }\n  | { kind: \"square\"; side: number };\n\nconst a: Shape = { kind: \"circle\", radius: 1 };\nconst b: Shape = { kind: \"square\" };\nconst c: Shape = { kind: \"tri\", t: 1 };",
+      "query": {
+        "explanation": "An object literal assigned to a discriminated union is matched against the member selected by its discriminant. `a` matches the circle member completely. `b` picks the square member but omits the required `side`. `c` has a `kind` that matches no member at all, so it is assignable to neither constituent. Two of the three declarations are errors.",
+        "tags": [
+          "discriminated-unions",
+          "assignability",
+          "object-literal"
+        ],
+        "title": "Assigning object literals to a discriminated union"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-239bea1e",
+      "prompt": "What is the type of `x`?",
+      "topic": "discriminated-unions",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "never"
+        },
+        {
+          "text": "string | number",
+          "rationale": "That is the distributive result; distribution requires a naked type parameter, but the union itself is in the checked position here."
+        },
+        {
+          "text": "unknown",
+          "rationale": "A failed `infer` does not fall back to `unknown`; the false branch of this conditional is explicitly `never`."
+        },
+        {
+          "text": "number",
+          "rationale": "The conditional does not pick the first member's payload; the union is tested as one type against the pattern."
+        }
+      ],
+      "code": "type Events =\n  | { type: \"a\"; payload: number }\n  | { type: \"b\" }\n  | { type: \"c\"; payload: string };\n\ntype X = Events extends { payload: infer P } ? P : never;\ndeclare const x: X;",
+      "query": {
+        "explanation": "Distribution only happens when the checked type is a naked type parameter. Here the alias `Events` is written directly in the checked position, so the entire union is tested at once. Because the `{ type: \"b\" }` member has no `payload` property, the union as a whole is not assignable to `{ payload: infer P }`, the false branch is taken, and `x` is `never`. Wrapping the check in a generic such as `type P<T> = T extends { payload: infer U } ? U : never` would give `string | number`.",
+        "syntax": "T extends U ? A : B  // distributes only for naked type parameters",
+        "tags": [
+          "discriminated-unions",
+          "conditional-types",
+          "infer"
+        ],
+        "title": "Non-distributive conditional over a union"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-8bcee830",
+      "prompt": "What is the type of `x`?",
+      "topic": "discriminated-unions",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"a\" | \"c\""
+        },
+        {
+          "text": "\"a\" | \"b\" | \"c\"",
+          "rationale": "`{ type: \"b\" }` declares no `payload` at all, and a missing required property is not assignable to `payload: unknown`."
+        },
+        {
+          "text": "never",
+          "rationale": "Two members do declare `payload`, so Extract keeps them instead of filtering everything away."
+        },
+        {
+          "text": "\"a\"",
+          "rationale": "Extract tests every member, so the member with a `string` payload is kept as well as the `number` one."
+        }
+      ],
+      "code": "type Events =\n  | { type: \"a\"; payload: number }\n  | { type: \"b\" }\n  | { type: \"c\"; payload: string };\n\ntype X = Extract<Events, { payload: unknown }>[\"type\"];\ndeclare const x: X;",
+      "query": {
+        "explanation": "`Extract` distributes, so each member is checked against `{ payload: unknown }`. A missing required property makes a type non-assignable even when the target property type is `unknown`, so `{ type: \"b\" }` is filtered out while the number and string payload members survive. Indexing the remaining union with `\"type\"` gives `\"a\" | \"c\"`.",
+        "syntax": "Extract<T, { prop: unknown }>",
+        "tags": [
+          "discriminated-unions",
+          "Extract",
+          "assignability"
+        ],
+        "title": "Filtering union members by the presence of a property"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-b1a46ba2",
+      "prompt": "How many type errors does the checker report for this snippet?",
+      "topic": "discriminated-unions",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "`tri` is unhandled, so `s` is still a real object type in the default branch and cannot be assigned to `never`."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "The two handled cases narrow correctly, so `s.radius` and `s.side` are valid property accesses."
+        },
+        {
+          "text": "3",
+          "rationale": "Only the exhaustiveness assignment fails; narrowing by the discriminant makes the case bodies type-check."
+        }
+      ],
+      "code": "type Shape =\n  | { kind: \"circle\"; radius: number }\n  | { kind: \"square\"; side: number }\n  | { kind: \"tri\"; base: number };\n\nfunction area(s: Shape): number {\n  switch (s.kind) {\n    case \"circle\":\n      return s.radius;\n    case \"square\":\n      return s.side;\n    default: {\n      const bad: never = s;\n      return bad;\n    }\n  }\n}",
+      "query": {
+        "explanation": "Switching on the discriminant narrows `s` inside each case, so `s.radius` and `s.side` are fine. The `tri` member is never handled, so in the default branch `s` is narrowed to `{ kind: \"tri\"; base: number }`, which is not assignable to `never`. That single assignment is the only error, which is exactly how the `never` idiom surfaces a missing case.",
+        "syntax": "const _exhaustive: never = value;",
+        "tags": [
+          "discriminated-unions",
+          "exhaustiveness",
+          "never"
+        ],
+        "title": "Exhaustiveness checking with never"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-7a84dc05",
+      "prompt": "Does narrowing on the boolean-literal discriminant `ok` type-check here?",
+      "topic": "discriminated-unions",
+      "answer": true,
+      "code": "type Resp =\n  | { ok: true; data: string }\n  | { ok: false; error: string };\n\ndeclare const r: Resp;\nconst x: string = r.ok ? r.data : r.error;",
+      "query": {
+        "explanation": "Discriminants do not have to be string literals: `true` and `false` are unit types too. A truthiness check on `r.ok` therefore narrows `r` to the `{ ok: true; data: string }` member in the then-branch and to the `{ ok: false; error: string }` member in the else-branch, so both property accesses are valid and the snippet has no errors.",
+        "tags": [
+          "discriminated-unions",
+          "narrowing",
+          "boolean-literal"
+        ],
+        "title": "Boolean literal types as discriminants"
+      },
+      "rationale": "`true` and `false` are unit types, so `ok` is a valid discriminant and the truthiness test narrows each branch to one member; nothing in the snippet fails to check.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-cddc15c2",
+      "prompt": "Is `v.b` accessible after the `v.kind === \"b\"` check?",
+      "topic": "discriminated-unions",
+      "answer": false,
+      "code": "type V =\n  | { kind: string; a: number }\n  | { kind: \"b\"; b: string };\n\ndeclare const v: V;\nconst x: string = v.kind === \"b\" ? v.b : \"none\";",
+      "query": {
+        "explanation": "Equality narrowing removes only the members whose discriminant type cannot be the compared value. The first member declares `kind: string`, and `\"b\"` is a possible `string`, so that member survives the check. The narrowed type is still a two-member union, and `b` does not exist on `{ kind: string; a: number }`, so the property access is an error. Discriminated unions need unit (literal) types in every member.",
+        "tags": [
+          "discriminated-unions",
+          "narrowing",
+          "literal-types"
+        ],
+        "title": "A non-literal discriminant blocks narrowing"
+      },
+      "rationale": "Because the first member's `kind` is the wide type `string`, it is not excluded by `=== \"b\"`, so `v` stays a union and `v.b` is reported as not existing on all constituents.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-ab868dcd",
+      "prompt": "Does the assignment of `sh` to the circle member type compile?",
+      "topic": "discriminated-unions",
+      "answer": false,
+      "code": "type Shape =\n  | { kind: \"circle\"; radius: number }\n  | { kind: \"square\"; side: number };\n\ndeclare const sh: Shape;\nconst x: { kind: \"circle\"; radius: number } = sh;",
+      "query": {
+        "explanation": "Assignability from a union requires every constituent to be assignable to the target. The square member has `kind: \"square\"` and no `radius`, so it is not assignable to the circle shape, and the whole assignment is rejected. The reverse direction (member to union) is always fine; to go this way you must narrow first, for example with `if (sh.kind === \"circle\")`.",
+        "tags": [
+          "discriminated-unions",
+          "assignability",
+          "narrowing"
+        ],
+        "title": "Union to member assignability"
+      },
+      "rationale": "A union is assignable only if all of its members are; `{ kind: \"square\"; side: number }` is not assignable to the circle member type, so the declaration is an error without a narrowing check.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-0d0d2eb5",
+      "prompt": "Does the `in` check make `s.value` accessible here?",
+      "topic": "discriminated-unions",
+      "answer": true,
+      "code": "type S =\n  | { kind: \"a\"; value: number }\n  | { kind: \"b\"; value: string }\n  | { kind: \"c\" };\n\ndeclare const s: S;\nconst x: string | number = \"value\" in s ? s.value : 0;",
+      "query": {
+        "explanation": "The `in` operator narrows a union by keeping, in the true branch, the constituents that declare the tested property. Here `{ kind: \"c\" }` is dropped, leaving the two members that have `value`, so `s.value` is `string | number` and is assignable to the annotation. This is the usual way to narrow unions that are distinguished by the presence of a property rather than by a discriminant value.",
+        "syntax": "\"prop\" in value",
+        "tags": [
+          "discriminated-unions",
+          "narrowing",
+          "in-operator"
+        ],
+        "title": "Narrowing a union with the in operator"
+      },
+      "rationale": "`in` narrowing keeps only the constituents declaring `value`, so the member without it is removed and `s.value` resolves to `string | number`, which the annotation accepts.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-3ae7d998",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "A & B"
+        },
+        {
+          "text": "A | B",
+          "rationale": "Unioning is what happens for covariant candidate positions such as return types or plain properties; parameter positions are contravariant and intersect instead."
+        },
+        {
+          "text": "A",
+          "rationale": "The first candidate does not simply win here; both parameter positions contribute candidates and TypeScript combines them rather than discarding one."
+        },
+        {
+          "text": "never",
+          "rationale": "The object type does match the pattern, so the true branch is taken and `U` has candidates; the false branch is never reached."
+        }
+      ],
+      "code": "type A = { a: string };\ntype B = { b: number };\n\ntype P<T> = T extends { f: (x: infer U) => void; g: (x: infer U) => void }\n  ? U\n  : never;\n\ndeclare const x: P<{ f: (x: A) => void; g: (x: B) => void }>;",
+      "prompt": "What is the type of `x`?",
+      "query": {
+        "explanation": "When the same `infer` type variable collects candidates from several positions, TypeScript combines them according to variance. Function parameter positions are contravariant, so the candidates `A` and `B` are intersected, giving `A & B`. Had the same variable appeared in covariant positions (such as return types or plain property types), the candidates would have been unioned to `A | B` instead.",
+        "syntax": "T extends { f: (x: infer U) => void; g: (x: infer U) => void } ? U : never",
+        "tags": [
+          "infer",
+          "conditional-types",
+          "variance"
+        ],
+        "title": "Multiple infer candidates in contravariant positions"
+      },
+      "type": "mc",
+      "topic": "infer",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-aaa2554b",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string | null"
+        },
+        {
+          "text": "string | null | undefined",
+          "rationale": "Assumes `-?` only clears the optional flag; it also subtracts `undefined` from the declared property type."
+        },
+        {
+          "text": "string",
+          "rationale": "Treats `-?` like `NonNullable`, but only `undefined` is removed by the modifier, so `null` stays in the union."
+        },
+        {
+          "text": "string | undefined",
+          "rationale": "Reverses the rule: the modifier removes `undefined` from the property type and leaves `null` in place, not the other way round."
+        }
+      ],
+      "code": "type Src = { a?: string | null };\ntype NoOpt<T> = { [K in keyof T]-?: T[K] };\n\ndeclare const x: NoOpt<Src>[\"a\"];",
+      "prompt": "What is the type of `x`?",
+      "query": {
+        "explanation": "Under strictNullChecks, `a?: string | null` really has the type `string | null | undefined`. When a mapped type applies `-?`, the checker not only drops the optional flag but also removes `undefined` from the property's type. `null` is unaffected, so the property becomes `string | null`, and the indexed access `NoOpt<Src>[\"a\"]` yields `string | null`. This is exactly how the built-in `Required<T>` behaves; it is not the same as `NonNullable<T>`, which would also strip `null`.",
+        "syntax": "{ [K in keyof T]-?: T[K] }",
+        "tags": [
+          "mapped-types",
+          "modifiers",
+          "strict-null-checks",
+          "indexed-access"
+        ],
+        "title": "The `-?` modifier removes `undefined`, not `null`"
+      },
+      "type": "mc",
+      "topic": "mapped-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-37267ae1",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1"
+        },
+        {
+          "text": "number",
+          "rationale": "`as const` keeps the element as the literal `1`, and indexing a readonly tuple at `0` does not widen it."
+        },
+        {
+          "text": "1 | \"a\"",
+          "rationale": "`T[0]` picks only index 0; `T[number]` would give the union of all element types."
+        },
+        {
+          "text": "readonly [1, \"a\"]",
+          "rationale": "That is `T` itself; the return type indexes `T` at position 0."
+        }
+      ],
+      "code": "declare function first<T extends readonly unknown[]>(t: T): T[0];\n\nconst x = first([1, \"a\"] as const);",
+      "prompt": "What is the type of `x`?",
+      "query": {
+        "explanation": "The constraint `readonly unknown[]` lets the argument keep its `as const` tuple type, so `T` is `readonly [1, \"a\"]`. The return type `T[0]` then resolves to the first element type, the literal `1`.",
+        "syntax": "T extends readonly unknown[]",
+        "tags": [
+          "generics",
+          "constraints",
+          "indexed-access"
+        ],
+        "title": "Indexed access through an array constraint"
+      },
+      "type": "mc",
+      "topic": "generic-constraints",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-55e650ad",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "`len(42)` fails because `number` has no `length` property to satisfy the constraint."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "Only the numeric argument breaks the constraint; both `string` and arrays carry a `length` property."
+        },
+        {
+          "text": "3",
+          "rationale": "`string` exposes `length` through its apparent type, so `len(\"abc\")` is accepted."
+        }
+      ],
+      "code": "interface HasLen { length: number }\n\nfunction len<T extends HasLen>(v: T): number { return v.length; }\n\nconst a = len(\"abc\");\nconst b = len([1, 2]);\nconst c = len(42);",
+      "prompt": "How many type errors do these three calls produce?",
+      "query": {
+        "explanation": "`string` and `number[]` both have a numeric `length`, so they satisfy `HasLen`. The apparent type of `number` has no `length`, so only `len(42)` is reported as not satisfying the constraint.",
+        "syntax": "T extends HasLen",
+        "tags": [
+          "generics",
+          "constraints",
+          "assignability"
+        ],
+        "title": "Constraint checking on call arguments"
+      },
+      "type": "mc",
+      "topic": "generic-constraints",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-97dac98f",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string"
+        },
+        {
+          "text": "number",
+          "rationale": "The key `\"b\"` selects the `b` property, not `a`, so the result is the string-valued property."
+        },
+        {
+          "text": "string | number",
+          "rationale": "`K` is inferred as the single literal `\"b\"`, not all of `keyof T`, so only one property type is produced."
+        },
+        {
+          "text": "\"s\"",
+          "rationale": "The object literal is not `as const`, so `b` is widened to `string` in `typeof o`."
+        }
+      ],
+      "code": "function get<T, K extends keyof T>(o: T, k: K): T[K] { return o[k]; }\n\nconst o = { a: 1, b: \"s\" };\nconst x = get(o, \"b\");",
+      "prompt": "What is the type of `x`?",
+      "query": {
+        "explanation": "`K extends keyof T` lets `K` be inferred as the literal `\"b\"`, and `T` is `{ a: number; b: string }`. The return type `T[K]` therefore resolves to `string`.",
+        "syntax": "K extends keyof T",
+        "tags": [
+          "generics",
+          "constraints",
+          "keyof"
+        ],
+        "title": "keyof constraint with indexed access return"
+      },
+      "type": "mc",
+      "topic": "generic-constraints",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-e431fec5",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"a\" | \"b\""
+        },
+        {
+          "text": "string",
+          "rationale": "A primitive constraint suppresses literal widening during inference, so the candidates stay literal types."
+        },
+        {
+          "text": "\"a\"",
+          "rationale": "The first candidate does not simply win; candidates sharing one base type are combined instead."
+        },
+        {
+          "text": "never",
+          "rationale": "Conflicting candidates are not intersected away; literals with the same base type are unioned."
+        }
+      ],
+      "code": "declare function f<T extends string>(a: T, b: T): T;\n\nconst x = f(\"a\", \"b\");",
+      "prompt": "What is the type of `x`?",
+      "query": {
+        "explanation": "Because `T` is constrained to `string`, inference keeps the literal candidates `\"a\"` and `\"b\"` instead of widening them. When all candidates are literals of the same base type, the checker unions them, giving `\"a\" | \"b\"`.",
+        "syntax": "T extends string",
+        "tags": [
+          "generics",
+          "constraints",
+          "inference"
+        ],
+        "title": "Multiple inference candidates under a primitive constraint"
+      },
+      "type": "mc",
+      "topic": "generic-constraints",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-aa8e39bf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Only the Y alias is rejected"
+        },
+        {
+          "text": "Only the X alias is rejected",
+          "rationale": "`\"a\"` is assignable to `string`, so `Pair<\"a\", string>` satisfies `A extends B`."
+        },
+        {
+          "text": "Both aliases are rejected",
+          "rationale": "A constraint may reference a later type parameter, so the declaration order causes no problem for `X`."
+        },
+        {
+          "text": "Neither alias is rejected",
+          "rationale": "`string` is not assignable to the literal `\"a\"`, so `Y` violates `A extends B`."
+        }
+      ],
+      "code": "type Pair<A extends B, B> = [A, B];\n\ntype X = Pair<\"a\", string>;\ntype Y = Pair<string, \"a\">;",
+      "prompt": "Which of these two aliases does the checker reject?",
+      "query": {
+        "explanation": "A type parameter constraint may mention any other parameter of the same declaration, so `A extends B` is legal. Instantiating `A = \"a\"`, `B = string` satisfies it, while `A = string`, `B = \"a\"` does not, so only `Y` errors.",
+        "syntax": "type Pair<A extends B, B>",
+        "tags": [
+          "generics",
+          "constraints",
+          "type-parameters"
+        ],
+        "title": "Constraints referring to another type parameter"
+      },
+      "type": "mc",
+      "topic": "generic-constraints",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-e2025834",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[number, 3]"
+        },
+        {
+          "text": "[number, number]",
+          "rationale": "A fixed-length tuple declares `length` as the literal count, so the second lookup is narrower than `number`."
+        },
+        {
+          "text": "[string, 3]",
+          "rationale": "`string[\"length\"]` goes through the apparent type `String`, whose `length` is declared `number`."
+        },
+        {
+          "text": "[number, 2]",
+          "rationale": "`length` of `[1, 2, 3]` is `3`; the highest valid index is 2 but the length literal is the element count."
+        }
+      ],
+      "code": "type Len<T extends { length: number }> = T[\"length\"];\n\ndeclare const x: [Len<string>, Len<[1, 2, 3]>];",
+      "prompt": "What is the type of `x`?",
+      "query": {
+        "explanation": "Both `string` and `[1, 2, 3]` satisfy `{ length: number }` through their apparent types. `string[\"length\"]` is declared `number`, while a fixed-length tuple declares `length` as the literal `3`.",
+        "syntax": "T extends { length: number }",
+        "tags": [
+          "generics",
+          "constraints",
+          "tuples"
+        ],
+        "title": "Structural constraint satisfied by string and tuple"
+      },
+      "type": "mc",
+      "topic": "generic-constraints",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-ee9d737f",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"hi\"[]"
+        },
+        {
+          "text": "string[]",
+          "rationale": "Widening to `string` happens for an unconstrained `T`; a `string` constraint preserves the literal type during inference."
+        },
+        {
+          "text": "\"hi\"",
+          "rationale": "The return type is `T[]`, an array of `T`, not `T` itself."
+        },
+        {
+          "text": "string",
+          "rationale": "This both widens the literal and drops the array, neither of which the declared return type `T[]` does."
+        }
+      ],
+      "code": "declare function tag<T extends string>(s: T): T[];\nconst x = tag(\"hi\");",
+      "prompt": "What is the type of `x`?",
+      "query": {
+        "explanation": "When a string literal is inferred for a bare, unconstrained type parameter the literal widens to `string`. But because `T` is constrained by `string` (a primitive/literal-like constraint), inference keeps the literal type `\"hi\"`, so the return type `T[]` becomes `\"hi\"[]`.",
+        "syntax": "function f<T extends string>(s: T): T[]",
+        "tags": [
+          "generics",
+          "constraints",
+          "literal-widening"
+        ],
+        "title": "Constraints and literal widening"
+      },
+      "type": "mc",
+      "topic": "generic-constraints",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-3f4d85a2",
+      "answer": false,
+      "code": "function longest<T extends { length: number }>(a: T, b: T): T {\n  return a.length >= b.length ? a : b;\n}\nconst x = longest([1, 2], \"abc\");",
+      "prompt": "Does the call to `longest` type-check?",
+      "query": {
+        "explanation": "Both `number[]` and `string` satisfy the `{ length: number }` constraint, but `T` is a single type parameter inferred from both arguments. Inference does not form a union here; it picks the first candidate (`number[]`), and `\"abc\"` is not assignable to `number[]`, so the call is an error.",
+        "syntax": "function f<T extends { length: number }>(a: T, b: T): T",
+        "tags": [
+          "generics",
+          "constraints",
+          "inference"
+        ],
+        "title": "One type parameter, two inference sites"
+      },
+      "rationale": "Satisfying the constraint individually is not enough: both arguments must produce one common `T`, and inference settles on `number[]`, which rejects `\"abc\"`.",
+      "type": "bool",
+      "topic": "generic-constraints",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-478c8510",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "`{ id: string }` fails the constraint because `string` is not assignable to `number`, so at least one alias is reported."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "This assumes `never` fails the constraint, but `never` is assignable to every type and passes constraint checks."
+        },
+        {
+          "text": "3",
+          "rationale": "This additionally treats `any` as a violation, yet `any` is assignable to any constraint and is accepted as a type argument."
+        }
+      ],
+      "code": "interface Box<T extends { id: number }> { value: T }\ntype A = Box<{ id: number; name: string }>;\ntype B = Box<{ id: string }>;\ntype C = Box<any>;\ntype D = Box<never>;",
+      "prompt": "How many of these four `Box` aliases does the checker reject?",
+      "query": {
+        "explanation": "`A` supplies extra properties, which is fine for an object constraint. `B` has `id: string`, which is not assignable to `{ id: number }`, so it is the only error. `any` is exempted from constraint checking, and `never` is assignable to every type, so `C` and `D` are both accepted.",
+        "syntax": "interface Box<T extends { id: number }>",
+        "tags": [
+          "generics",
+          "constraints",
+          "any",
+          "never"
+        ],
+        "title": "Which type arguments satisfy a constraint"
+      },
+      "type": "mc",
+      "topic": "generic-constraints",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-1f905d06",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Q"
+        },
+        {
+          "text": "P",
+          "rationale": "The constraint is only the fallback when no default is declared; an explicit default type argument takes precedence."
+        },
+        {
+          "text": "P & Q",
+          "rationale": "Constraint and default are not intersected; the default alone is substituted for `T`."
+        },
+        {
+          "text": "unknown",
+          "rationale": "`unknown` is the result only for an unconstrained parameter with no inference sites and no default."
+        }
+      ],
+      "code": "interface P { a: number }\ninterface Q extends P { b: string }\ndeclare function make<T extends P = Q>(): T;\nconst x = make();",
+      "prompt": "What is the type of `x`?",
+      "query": {
+        "explanation": "There is no argument to infer `T` from, so TypeScript uses the declared default `Q` rather than falling back to the constraint `P` or to `unknown`. The return type `T` therefore prints as `Q`.",
+        "syntax": "function f<T extends P = Q>(): T",
+        "tags": [
+          "generics",
+          "constraints",
+          "default-type-arguments"
+        ],
+        "title": "Generic defaults versus constraints"
+      },
+      "type": "mc",
+      "topic": "generic-constraints",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-f1a8ffcc",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "number"
+        },
+        {
+          "text": "number[]",
+          "rationale": "That is the result of recursing only one level instead of continuing until the element type is no longer an array."
+        },
+        {
+          "text": "number[][]",
+          "rationale": "That is `infer U` taken from the outermost array only, with no recursive call applied at all."
+        },
+        {
+          "text": "never",
+          "rationale": "The false branch returns `T`, not `never`, so the non-array base type is preserved by the recursion."
+        }
+      ],
+      "code": "type Flatten<T> = T extends readonly (infer U)[] ? Flatten<U> : T;\ntype X = Flatten<number[][][]>;\ndeclare const x: X;",
+      "prompt": "What is the type of `x`?",
+      "query": {
+        "explanation": "`Flatten` re-applies itself to the inferred element type until the type is no longer an array, so a triply nested `number[][][]` collapses all the way down to `number`. The false branch returns `T` unchanged, which is what stops the recursion.",
+        "syntax": "type Flatten<T> = T extends readonly (infer U)[] ? Flatten<U> : T;",
+        "tags": [
+          "recursive-types",
+          "conditional-types",
+          "infer"
+        ],
+        "title": "Recursive element-type flattening"
+      },
+      "type": "mc",
+      "topic": "recursive-and-indexed-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-197c6bcf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"a-b-c\""
+        },
+        {
+          "text": "\"abc\"",
+          "rationale": "The separator `S` is interpolated between the head and the joined rest, so it does appear in the resulting literal."
+        },
+        {
+          "text": "\"a-b-c-\"",
+          "rationale": "The one-element branch returns `F` alone rather than `${F}${S}`, so no separator is appended at the end."
+        },
+        {
+          "text": "string",
+          "rationale": "Every step matches one of the tuple patterns for a fixed tuple of literals, so the final fallback branch is never reached."
+        }
+      ],
+      "code": "type Join<T extends string[], S extends string> =\n  T extends [] ? \"\" :\n  T extends [infer F extends string, ...infer R extends string[]]\n    ? R extends [] ? F : `${F}${S}${Join<R, S>}`\n    : string;\ntype X = Join<[\"a\", \"b\", \"c\"], \"-\">;\ndeclare const x: X;",
+      "prompt": "What is the type of `x`?",
+      "query": {
+        "explanation": "Each recursive step peels off the head `F` with `infer`, and interpolates `F`, the separator `S`, and the join of the rest. The single-element case returns `F` by itself, so no trailing separator is produced: the result is the literal `\"a-b-c\"`.",
+        "syntax": "`${F}${S}${Join<R, S>}`",
+        "tags": [
+          "recursive-types",
+          "template-literal-types",
+          "infer"
+        ],
+        "title": "Recursive tuple-to-template-literal join"
+      },
+      "type": "mc",
+      "topic": "recursive-and-indexed-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-b7a51ce1",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "0",
+          "rationale": "That is the length of the initial default accumulator, before any recursive step appends an element."
+        },
+        {
+          "text": "number",
+          "rationale": "A fixed-length tuple reports its `length` as a numeric literal type; only arrays of unknown length report `number`."
+        },
+        {
+          "text": "never",
+          "rationale": "The recursion terminates by returning the accumulator tuple, and no branch of the conditional yields `never`."
+        }
+      ],
+      "code": "type Repeat<T, N extends number, A extends T[] = []> =\n  A[\"length\"] extends N ? A : Repeat<T, N, [...A, T]>;\ntype X = Repeat<string, 3>[\"length\"];\ndeclare const x: X;",
+      "prompt": "What is the type of `x`?",
+      "query": {
+        "explanation": "`Repeat` grows the accumulator `A` one element per step and compares `A[\"length\"]` against `N`. Once `A` is `[string, string, string]`, the check succeeds and that tuple is returned; indexing it with `\"length\"` yields the literal type `3`, not the widened `number`.",
+        "syntax": "A[\"length\"] extends N ? A : Repeat<T, N, [...A, T]>",
+        "tags": [
+          "recursive-types",
+          "indexed-access",
+          "tuple-types"
+        ],
+        "title": "Counting with a recursive accumulator tuple"
+      },
+      "type": "mc",
+      "topic": "recursive-and-indexed-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-8bad827e",
+      "answer": true,
+      "code": "type Tree = { value: number; children: Tree[] };\ndeclare const t: Tree;\ndeclare const u: Tree;\nconst x: number = t.value + u.children.length;",
+      "prompt": "Does this snippet with a self-referencing object type compile without errors?",
+      "query": {
+        "explanation": "A type alias may refer to itself when the reference appears in a property type or array element position, because resolution there is deferred. `t.value` is `number` and `u.children.length` is `number`, so the arithmetic and the annotation both check out.",
+        "syntax": "type Tree = { value: number; children: Tree[] };",
+        "tags": [
+          "recursive-types",
+          "type-aliases"
+        ],
+        "title": "Self-referencing type aliases"
+      },
+      "rationale": "Only an immediately circular alias such as `type A = A` is rejected; recursion through a property or array element is legal, and both operands here are `number`.",
+      "type": "bool",
+      "topic": "recursive-and-indexed-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-a1e4985c",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "`undefined` is not listed among the members of the `Json` union, so the property value in `b` has no matching type."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "The mixed nested array in `a` is fine because each element is itself a `Json` value via the recursive members."
+        },
+        {
+          "text": "3",
+          "rationale": "The thrice-nested array of booleans in `c` matches `Json[]` by applying the recursive array member repeatedly."
+        }
+      ],
+      "code": "type Json = string | number | boolean | null | Json[] | { [k: string]: Json };\nconst a: Json = { a: [1, \"two\", { b: null }] };\nconst b: Json = { c: undefined };\nconst c: Json = [[[true]]];",
+      "prompt": "How many type errors does the checker report for these three declarations?",
+      "query": {
+        "explanation": "`Json` recurses through its array member and its index signature, so arbitrarily nested arrays and objects of JSON values are accepted. `undefined` is not one of the union members, so only the declaration of `b` is rejected.",
+        "syntax": "type Json = string | number | boolean | null | Json[] | { [k: string]: Json };",
+        "tags": [
+          "recursive-types",
+          "union-types",
+          "index-signatures"
+        ],
+        "title": "A recursive JSON union type"
+      },
+      "type": "mc",
+      "topic": "recursive-and-indexed-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-d1beb469",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"b\"",
+          "rationale": "Flipping swaps keys and values, so key `\"y\"` holds the original key `\"b\"`."
+        },
+        {
+          "text": "\"y\"",
+          "rationale": "The remapped property type is `K`, the original key, not the new key produced by the `as` clause."
+        },
+        {
+          "text": "\"a\"",
+          "rationale": "The original key `\"a\"` becomes the property named `\"x\"`, so indexing `\"y\"` selects the other property."
+        },
+        {
+          "text": "never",
+          "rationale": "`\"y\"` is one of the remapped keys, so the lookup resolves to a property type instead of failing."
+        }
+      ],
+      "code": "type Flip<T extends Record<string, string>> = { [K in keyof T as T[K]]: K };\ntype X = Flip<{ a: \"x\"; b: \"y\" }>[\"y\"];\ndeclare const x: X;",
+      "prompt": "What is the type of `x`?",
+      "query": {
+        "explanation": "The `as T[K]` clause makes each property's value type become the new key, while the property type becomes the original key `K`. So `Flip<{a:\"x\"; b:\"y\"}>` is `{ x: \"a\"; y: \"b\" }`, and looking up `\"y\"` gives the literal `\"b\"`.",
+        "syntax": "{ [K in keyof T as T[K]]: K }",
+        "tags": [
+          "mapped-types",
+          "key-remapping",
+          "indexed-access"
+        ],
+        "title": "Key remapping plus indexed access"
+      },
+      "type": "mc",
+      "topic": "recursive-and-indexed-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-47be5fa5",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "The key `\"a\"` holds an object, so it only ever appears with a dotted suffix and is not a member of the path union."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "The leaf key `\"c\"` is emitted directly by the false branch of the inner conditional, so that call is fine."
+        },
+        {
+          "text": "3",
+          "rationale": "The nested leaf produces exactly the path `\"a.b\"`, which satisfies the constraint on `P`."
+        }
+      ],
+      "code": "type Paths<T> = T extends object\n  ? { [K in keyof T & string]: T[K] extends object ? `${K}.${Paths<T[K]>}` : K }[keyof T & string]\n  : never;\ntype Obj = { a: { b: string }; c: number };\ndeclare function get<P extends Paths<Obj>>(p: P): void;\nget(\"a.b\");\nget(\"c\");\nget(\"a\");",
+      "prompt": "How many of these three `get` calls does the checker reject?",
+      "query": {
+        "explanation": "`Paths` builds a mapped type and immediately indexes it with `keyof T & string` to collapse it into a union. Object-valued keys only contribute dotted paths, so the union is `\"a.b\" | \"c\"`; the bare key `\"a\"` is not a member and that call fails the constraint.",
+        "syntax": "{ [K in keyof T & string]: ... }[keyof T & string]",
+        "tags": [
+          "recursive-types",
+          "template-literal-types",
+          "indexed-access"
+        ],
+        "title": "Recursive dotted path union as a constraint"
+      },
+      "type": "mc",
+      "topic": "recursive-and-indexed-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-41342fe8",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "1",
+          "rationale": "That is the head of the original tuple, which the reversal moves to the final position rather than index 0."
+        },
+        {
+          "text": "2",
+          "rationale": "That is the element sitting at index 1 of the reversed tuple, since the middle element keeps its position."
+        },
+        {
+          "text": "never",
+          "rationale": "The base case returns `[]` only for an empty tuple, and index 0 of the three-element result is a real element."
+        }
+      ],
+      "code": "type Reverse<T extends unknown[]> = T extends [infer F, ...infer R] ? [...Reverse<R>, F] : [];\ntype X = Reverse<[1, 2, 3]>[0];\ndeclare const x: X;",
+      "prompt": "What is the type of `x`?",
+      "query": {
+        "explanation": "Each step removes the head `F` and appends it after the reversal of the tail, giving `[3, 2, 1]`. Indexing position `0` of that tuple therefore yields the last element of the original input, the literal `3`.",
+        "syntax": "T extends [infer F, ...infer R] ? [...Reverse<R>, F] : []",
+        "tags": [
+          "recursive-types",
+          "tuple-types",
+          "indexed-access"
+        ],
+        "title": "Recursive tuple reversal with indexed access"
+      },
+      "type": "mc",
+      "topic": "recursive-and-indexed-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-67e759ac",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "boolean"
+        },
+        {
+          "text": "never",
+          "rationale": "Each segment of the path is a key of the type at that level, so neither `never` branch of the conditional is taken."
+        },
+        {
+          "text": "{ c: boolean }",
+          "rationale": "That is the type reached after two segments; the recursion continues with the remaining segment `\"c\"`."
+        },
+        {
+          "text": "unknown",
+          "rationale": "The terminal branch returns the indexed access `T[P]`, which is the declared property type rather than `unknown`."
+        }
+      ],
+      "code": "type Get<T, P extends string> =\n  P extends `${infer K}.${infer Rest}`\n    ? K extends keyof T ? Get<T[K], Rest> : never\n    : P extends keyof T ? T[P] : never;\ntype Obj = { a: { b: { c: boolean } } };\ntype X = Get<Obj, \"a.b.c\">;\ndeclare const x: X;",
+      "prompt": "What is the type of `x`?",
+      "query": {
+        "explanation": "The template literal pattern splits `\"a.b.c\"` into `K = \"a\"` and `Rest = \"b.c\"`, then recurses into `T[\"a\"]` with the remaining path. After two descents the path has no dot left, so the final branch returns `T[P]`, which is `boolean`.",
+        "syntax": "P extends `${infer K}.${infer Rest}` ? Get<T[K], Rest> : T[P]",
+        "tags": [
+          "recursive-types",
+          "indexed-access",
+          "template-literal-types"
+        ],
+        "title": "Recursive deep lookup by string path"
+      },
+      "type": "mc",
+      "topic": "recursive-and-indexed-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-types-hard-2edfafe0",
+      "answer": false,
+      "code": "type Last<T extends unknown[]> = T extends [...infer R, infer L] ? L : never;\ntype X = Last<[1, 2, 3]>;\ndeclare const x: X;\nconst y: 2 = x;",
+      "prompt": "Is the declaration of `y` below accepted by the checker?",
+      "query": {
+        "explanation": "A leading rest pattern `[...infer R, infer L]` binds `L` to the final element of the tuple, so `Last<[1, 2, 3]>` is the literal type `3`. Assigning a `3` to a variable annotated `2` is a mismatch between two different literal types.",
+        "syntax": "T extends [...infer R, infer L] ? L : never",
+        "tags": [
+          "variadic-tuple-types",
+          "infer",
+          "assignability"
+        ],
+        "title": "Inferring the last tuple element"
+      },
+      "rationale": "`infer L` after a rest element captures the last member, making `x` of type `3`; the literal `3` is not assignable to the literal type `2`, so the declaration errors.",
+      "type": "bool",
+      "topic": "recursive-and-indexed-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    }
+  ],
+  "schemaVersion": 2
+}

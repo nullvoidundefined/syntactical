@@ -1,0 +1,4089 @@
+{
+  "questions": [
+    {
+      "id": "gen-typescript-medium-760aa6f3",
+      "prompt": "What type does TypeScript infer for x?",
+      "topic": "types-and-inference",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "number"
+        },
+        {
+          "text": "5",
+          "rationale": "The literal type 5 is only preserved for immutable bindings like const; a let binding is widened."
+        },
+        {
+          "text": "any",
+          "rationale": "An initializer is present, so the type is inferred from it rather than falling back to any."
+        },
+        {
+          "text": "never",
+          "rationale": "never is for values that cannot exist; 5 is a perfectly inhabited number value."
+        }
+      ],
+      "code": "let x = 5;",
+      "query": {
+        "explanation": "A mutable `let` binding initialized with a numeric literal gets its literal type widened to `number`, because the variable can later hold any number. Literal types are only kept for immutable positions such as `const` declarations.",
+        "syntax": "let x = 5; // number",
+        "tags": [
+          "inference",
+          "widening",
+          "let"
+        ],
+        "title": "let widens literal types"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-d79197f9",
+      "prompt": "What type does TypeScript infer for y?",
+      "topic": "types-and-inference",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "number",
+          "rationale": "Widening to number happens for let/var bindings, not for an immutable const declaration."
+        },
+        {
+          "text": "5"
+        },
+        {
+          "text": "string",
+          "rationale": "The initializer is a numeric literal, so no string type is involved."
+        },
+        {
+          "text": "never",
+          "rationale": "never describes unreachable values; the binding clearly holds the value 5."
+        }
+      ],
+      "code": "const y = 5;",
+      "query": {
+        "explanation": "Because a `const` binding can never be reassigned, TypeScript keeps the narrow literal type `5` instead of widening to `number`. This is what makes `const` values usable where a specific literal type is required.",
+        "syntax": "const y = 5; // 5",
+        "tags": [
+          "inference",
+          "literal-types",
+          "const"
+        ],
+        "title": "const keeps literal types"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-b3902a30",
+      "prompt": "What type does TypeScript infer for arr?",
+      "topic": "types-and-inference",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "[number, number, number]",
+          "rationale": "Tuple types are only inferred with an explicit annotation or as const, not from a plain array literal."
+        },
+        {
+          "text": "readonly number[]",
+          "rationale": "readonly arrays come from as const or an explicit readonly annotation; the literal infers a mutable array."
+        },
+        {
+          "text": "number[]"
+        },
+        {
+          "text": "any[]",
+          "rationale": "The elements are numbers, so the element type is inferred as number rather than any."
+        }
+      ],
+      "code": "const arr = [1, 2, 3];",
+      "query": {
+        "explanation": "An array literal is inferred as a mutable array of the widened element type, so `[1, 2, 3]` becomes `number[]`. You need `as const` or an explicit annotation to get a tuple or a readonly array.",
+        "syntax": "const arr = [1, 2, 3]; // number[]",
+        "tags": [
+          "inference",
+          "arrays",
+          "tuples"
+        ],
+        "title": "Array literals infer array types, not tuples"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-fb4c74ad",
+      "prompt": "What type does TypeScript infer for v?",
+      "topic": "types-and-inference",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string"
+        },
+        {
+          "text": "unknown",
+          "rationale": "unknown would only appear if no inference site existed; the argument supplies a candidate for T."
+        },
+        {
+          "text": "string[]",
+          "rationale": "The function returns T, a single element, not the array type T[]."
+        },
+        {
+          "text": "any",
+          "rationale": "Inference succeeds from the argument, so no implicit any is produced."
+        }
+      ],
+      "code": "function first<T>(a: T[]): T {\n  return a[0];\n}\nconst v = first([\"a\", \"b\"]);",
+      "query": {
+        "explanation": "When a generic function is called without explicit type arguments, TypeScript infers them from the argument types. Here `string[]` matches `T[]`, so `T` is `string` and the return type is `string`.",
+        "syntax": "function first<T>(a: T[]): T",
+        "tags": [
+          "generics",
+          "inference"
+        ],
+        "title": "Type argument inference from arguments"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-ace09974",
+      "prompt": "How many type errors does the compiler report for this program?",
+      "topic": "types-and-inference",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "Both assignments mix string and number, which are not mutually assignable."
+        },
+        {
+          "text": "1",
+          "rationale": "There are two separate bad assignments: n = \"two\" and const s: string = 3."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "Declaring an unused variable is not an error, so only the two assignments fail."
+        }
+      ],
+      "code": "let n = 1;\nn = \"two\";\nconst s: string = 3;",
+      "query": {
+        "explanation": "`n` is inferred as `number`, so assigning a string is an error. The annotated `s: string` cannot receive the number 3, which is a second error. Both are plain assignability failures reported independently.",
+        "tags": [
+          "assignability",
+          "inference",
+          "errors"
+        ],
+        "title": "Counting assignability errors"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-f03d8874",
+      "prompt": "Does this program compile with no type errors?",
+      "topic": "types-and-inference",
+      "answer": true,
+      "code": "const x = [1, 2, 3];\nx.push(4);",
+      "query": {
+        "explanation": "`const` prevents rebinding the variable, but the inferred type is still the mutable `number[]`, so mutating methods like `push` are allowed as long as the argument is a number.",
+        "tags": [
+          "arrays",
+          "const",
+          "mutation"
+        ],
+        "title": "const bindings vs mutable contents"
+      },
+      "rationale": "x is inferred as the mutable type number[], so push(4) type-checks; const only forbids reassigning the binding itself.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-9ce07e0b",
+      "prompt": "Is the assignment to o.b accepted by the compiler?",
+      "topic": "types-and-inference",
+      "answer": false,
+      "code": "const o = { a: 1 };\no.b = 2;",
+      "query": {
+        "explanation": "The inferred type of `o` is `{ a: number }`. TypeScript does not add properties to an inferred object type on later assignment, so writing to `o.b` is an error about a property that does not exist.",
+        "tags": [
+          "objects",
+          "inference",
+          "errors"
+        ],
+        "title": "Object literal types are closed"
+      },
+      "rationale": "o is inferred as { a: number }, a closed type with no b property, so the assignment is a compile error rather than an implicit extension.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-1c7e7e7e",
+      "prompt": "Does the call setMode(config.mode) compile without errors?",
+      "topic": "types-and-inference",
+      "answer": false,
+      "code": "const config = { mode: \"dark\" };\nfunction setMode(m: \"dark\" | \"light\") {}\nsetMode(config.mode);",
+      "query": {
+        "explanation": "Even in a `const` object, mutable properties are inferred with widened types, so `config.mode` is `string`, not `\"dark\"`. `string` is not assignable to the literal union, so `as const` or an annotation is needed.",
+        "syntax": "const config = { mode: \"dark\" } as const;",
+        "tags": [
+          "widening",
+          "literal-types",
+          "objects"
+        ],
+        "title": "Property types widen inside object literals"
+      },
+      "rationale": "config.mode widens to string because the property is mutable, and string is not assignable to \"dark\" | \"light\", so the call errors.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-733dcd8a",
+      "prompt": "Is the element assignment pair[0] = 2 allowed here?",
+      "topic": "types-and-inference",
+      "answer": false,
+      "code": "const pair = [1, \"a\"] as const;\npair[0] = 2;",
+      "query": {
+        "explanation": "`as const` infers the narrowest form: a readonly tuple `readonly [1, \"a\"]`. Readonly tuple elements cannot be assigned to, and the literal element type `1` would also reject the value 2.",
+        "syntax": "const pair = [1, \"a\"] as const; // readonly [1, \"a\"]",
+        "tags": [
+          "as-const",
+          "tuples",
+          "readonly"
+        ],
+        "title": "as const produces readonly tuples"
+      },
+      "rationale": "as const makes pair a readonly tuple readonly [1, \"a\"], so writing to index 0 is a compile error instead of a normal array write.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-d96f4dee",
+      "prompt": "Does this program compile with no type errors?",
+      "topic": "unions-and-narrowing",
+      "answer": false,
+      "code": "function len(x: string | number): number {\n  return x.length;\n}\n\nconsole.log(len(\"abc\"));",
+      "query": {
+        "explanation": "A property may only be accessed on a union if it exists on every member. `length` exists on string but not on number, so `x.length` is a type error until x is narrowed (for example with a typeof check).",
+        "syntax": "x: string | number",
+        "tags": [
+          "unions",
+          "narrowing",
+          "property-access"
+        ],
+        "title": "Property access on an un-narrowed union"
+      },
+      "rationale": "It does not compile: `length` is not present on the number member of the union, so accessing it before narrowing is an error.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-29f2946f",
+      "prompt": "What number does this program print?",
+      "topic": "unions-and-narrowing",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "16"
+        },
+        {
+          "text": "8",
+          "rationale": "8 would be 2 * s; the square branch multiplies s by itself."
+        },
+        {
+          "text": "48",
+          "rationale": "48 is 3 * 4 * 4, the circle formula, but the discriminant is \"square\" so that branch is not taken."
+        },
+        {
+          "text": "12",
+          "rationale": "12 is 3 * 4; neither branch computes that."
+        }
+      ],
+      "code": "type Shape =\n  | { kind: \"circle\"; r: number }\n  | { kind: \"square\"; s: number };\n\nfunction area(sh: Shape): number {\n  if (sh.kind === \"circle\") return 3 * sh.r * sh.r;\n  return sh.s * sh.s;\n}\n\nconsole.log(area({ kind: \"square\", s: 4 }));",
+      "query": {
+        "explanation": "Comparing the discriminant `sh.kind` to the literal \"circle\" narrows sh to the circle member inside the if, and to the square member afterwards. The argument has kind \"square\" and s = 4, so the function returns 4 * 4 = 16.",
+        "syntax": "if (sh.kind === \"circle\")",
+        "tags": [
+          "discriminated-union",
+          "narrowing"
+        ],
+        "title": "Discriminated union narrowing by literal property"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-4d3d5e02",
+      "prompt": "What does this program print to the console?",
+      "topic": "unions-and-narrowing",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "HI"
+        },
+        {
+          "text": "hi",
+          "rationale": "The false branch calls toUpperCase(), so the printed value is uppercased."
+        },
+        {
+          "text": "1",
+          "rationale": "The true branch would need property a, which the argument does not have."
+        },
+        {
+          "text": "undefined",
+          "rationale": "The false branch returns a real string, not undefined."
+        }
+      ],
+      "code": "type A = { a: number };\ntype B = { b: string };\n\nfunction f(x: A | B): string {\n  return \"a\" in x ? String(x.a + 1) : x.b.toUpperCase();\n}\n\nconsole.log(f({ b: \"hi\" }));",
+      "query": {
+        "explanation": "`\"a\" in x` narrows x to A in the true branch and to B in the false branch. The argument only has property b, so the false branch runs and returns \"hi\".toUpperCase(), which is HI.",
+        "syntax": "\"a\" in x",
+        "tags": [
+          "unions",
+          "narrowing",
+          "in-operator"
+        ],
+        "title": "The `in` operator as a narrowing check"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-78bfd053",
+      "prompt": "Does this program print 3?",
+      "topic": "unions-and-narrowing",
+      "answer": true,
+      "code": "function count(x: string | string[]): number {\n  return Array.isArray(x) ? x.length : x.split(\",\").length;\n}\n\nconsole.log(count(\"a,b,c\"));",
+      "query": {
+        "explanation": "Array.isArray is a type guard, so x is string[] in the true branch and string in the false branch. The argument \"a,b,c\" is a string, so it is split on commas into three parts and 3 is printed.",
+        "syntax": "Array.isArray(x)",
+        "tags": [
+          "unions",
+          "narrowing",
+          "type-guard"
+        ],
+        "title": "Array.isArray narrows a string | string[] union"
+      },
+      "rationale": "The string branch runs and \"a,b,c\".split(\",\") has three elements, so 3 is printed rather than the string's character length of 5.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-d8d7843f",
+      "prompt": "What line does this program output?",
+      "topic": "unions-and-narrowing",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "OK other"
+        },
+        {
+          "text": "ok other",
+          "rationale": "The guarded branch calls toUpperCase(), so the first value is uppercased."
+        },
+        {
+          "text": "OK 7",
+          "rationale": "The number 7 fails the predicate, so the function returns the literal \"other\"."
+        },
+        {
+          "text": "other other",
+          "rationale": "\"ok\" is a string, so the predicate succeeds for the first call."
+        }
+      ],
+      "code": "function isStr(v: unknown): v is string {\n  return typeof v === \"string\";\n}\n\nfunction f(v: unknown): string {\n  if (isStr(v)) return v.toUpperCase();\n  return \"other\";\n}\n\nconsole.log(f(\"ok\"), f(7));",
+      "query": {
+        "explanation": "A function whose return type is `v is string` narrows its argument when used in a condition, so v is string inside the if and toUpperCase() is allowed. \"ok\" becomes OK, while 7 fails the guard and yields \"other\", printing `OK other`.",
+        "syntax": "function isStr(v: unknown): v is string",
+        "tags": [
+          "narrowing",
+          "type-predicate",
+          "unknown"
+        ],
+        "title": "User-defined type predicates"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-63bd9e9e",
+      "prompt": "What does this program print?",
+      "topic": "unions-and-narrowing",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "0.0 none"
+        },
+        {
+          "text": "none none",
+          "rationale": "`0 == null` is false, so 0 reaches the toFixed branch instead of returning \"none\"."
+        },
+        {
+          "text": "0 none",
+          "rationale": "toFixed(1) formats with one decimal place, producing \"0.0\"."
+        },
+        {
+          "text": "0.0 undefined",
+          "rationale": "null matches the `== null` check and returns the string \"none\"."
+        }
+      ],
+      "code": "function label(n: number | null | undefined): string {\n  if (n == null) return \"none\";\n  return n.toFixed(1);\n}\n\nconsole.log(label(0), label(null));",
+      "query": {
+        "explanation": "`n == null` is true for both null and undefined, so the else path narrows n to number. 0 is not equal to null under loose equality, so label(0) returns \"0.0\", and label(null) returns \"none\", printing `0.0 none`.",
+        "syntax": "if (n == null)",
+        "tags": [
+          "unions",
+          "narrowing",
+          "null-undefined"
+        ],
+        "title": "Loose equality with null narrows out both null and undefined"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-68f34b95",
+      "prompt": "Does the compiler accept this program without errors?",
+      "topic": "unions-and-narrowing",
+      "answer": false,
+      "code": "function f(x: string | number): string {\n  if (typeof x === \"number\") {\n    x = \"hi\";\n    return x.toFixed(1);\n  }\n  return x;\n}",
+      "query": {
+        "explanation": "Narrowing follows control flow: assigning `x = \"hi\"` re-narrows x to string for the rest of the branch, so the later `x.toFixed(1)` call is an error even though the branch began with x narrowed to number.",
+        "syntax": "x = \"hi\";",
+        "tags": [
+          "narrowing",
+          "assignment",
+          "control-flow-analysis"
+        ],
+        "title": "Assignment resets a narrowed type"
+      },
+      "rationale": "It fails to compile: after `x = \"hi\"` the compiler narrows x to string, and string has no toFixed method.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-da5c5cb9",
+      "prompt": "What output does this program produce?",
+      "topic": "unions-and-narrowing",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "-1 3"
+        },
+        {
+          "text": "0 3",
+          "rationale": "The empty string is falsy, so the length branch is skipped and -1 is returned instead of 0."
+        },
+        {
+          "text": "-1 -1",
+          "rationale": "\"abc\" is truthy, so the second call returns its length, 3."
+        },
+        {
+          "text": "undefined 3",
+          "rationale": "The fallback returns the number -1, never undefined."
+        }
+      ],
+      "code": "function f(s: string | undefined): number {\n  if (s) return s.length;\n  return -1;\n}\n\nconsole.log(f(\"\"), f(\"abc\"));",
+      "query": {
+        "explanation": "A plain truthiness check removes undefined from the union, but it also rejects falsy strings. The empty string is falsy, so f(\"\") takes the fallback and returns -1, while f(\"abc\") returns 3, printing `-1 3`.",
+        "syntax": "if (s) { ... }",
+        "tags": [
+          "unions",
+          "narrowing",
+          "truthiness"
+        ],
+        "title": "Truthiness narrowing also excludes the empty string"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-a9f3fe5a",
+      "prompt": "Does this program compile with no type errors?",
+      "topic": "unions-and-narrowing",
+      "answer": true,
+      "code": "type Ev = { t: \"a\" } | { t: \"b\" } | { t: \"c\" };\n\nfunction f(e: Ev): string {\n  switch (e.t) {\n    case \"a\": return \"A\";\n    case \"b\": return \"B\";\n    case \"c\": return \"C\";\n    default: {\n      const x: never = e;\n      return x;\n    }\n  }\n}",
+      "query": {
+        "explanation": "Every member of Ev is handled by a case, so in the default clause e has been narrowed to never. Assigning a never value to `const x: never` is legal, so the exhaustiveness check compiles cleanly.",
+        "syntax": "const x: never = e;",
+        "tags": [
+          "discriminated-union",
+          "narrowing",
+          "never",
+          "exhaustiveness"
+        ],
+        "title": "Exhaustiveness checking with never"
+      },
+      "rationale": "It compiles: because all three discriminant values are covered, e is narrowed to never in the default clause, so the assignment to a never-typed variable is valid.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-7f2bccd6",
+      "prompt": "What two numbers does this program log, in order?",
+      "topic": "unions-and-narrowing",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "10 then 9"
+        },
+        {
+          "text": "20 then 9",
+          "rationale": "The rect branch multiplies w by h (2 * 5 = 10); it does not double the result."
+        },
+        {
+          "text": "10 then 6",
+          "rationale": "The square branch squares s (3 * 3 = 9) rather than doubling it."
+        },
+        {
+          "text": "9 then 10",
+          "rationale": "The rect call is logged first, so the order is reversed here."
+        }
+      ],
+      "code": "type Shape =\n  | { kind: \"circle\"; r: number }\n  | { kind: \"square\"; s: number }\n  | { kind: \"rect\"; w: number; h: number };\n\nfunction area(sh: Shape): number {\n  switch (sh.kind) {\n    case \"circle\":\n      return 3 * sh.r * sh.r;\n    case \"rect\":\n      return sh.w * sh.h;\n    default:\n      return sh.s * sh.s;\n  }\n}\n\nconsole.log(area({ kind: \"rect\", w: 2, h: 5 }));\nconsole.log(area({ kind: \"square\", s: 3 }));",
+      "query": {
+        "explanation": "Shape is a discriminated union keyed on the literal `kind` property. In a switch on `sh.kind`, each case narrows `sh` to the matching member, so `sh.w`/`sh.h` are available in the \"rect\" case. The `default` clause narrows to the only member not handled by an earlier case, `{ kind: \"square\"; s: number }`, so `sh.s` is legal there. Therefore area({kind:\"rect\",w:2,h:5}) is 2 * 5 = 10 and area({kind:\"square\",s:3}) is 3 * 3 = 9, logged in that order.",
+        "syntax": "switch (value.kind) { case \"literal\": /* value narrowed */ }",
+        "tags": [
+          "unions",
+          "narrowing",
+          "discriminated-union",
+          "switch"
+        ],
+        "title": "Discriminated union narrowing in switch"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-ec80515b",
+      "prompt": "Which labelled declaration fails to compile?",
+      "topic": "interfaces-vs-types",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "A",
+          "rationale": "A type alias may name a union of primitives, so `type ID = string | number` is valid."
+        },
+        {
+          "text": "B",
+          "rationale": "A plain interface with one property member is the most ordinary interface declaration there is."
+        },
+        {
+          "text": "C"
+        },
+        {
+          "text": "D",
+          "rationale": "A type alias may name a tuple type, so `type Pair = [number, number]` is valid."
+        }
+      ],
+      "code": "// A\ntype ID = string | number;\n\n// B\ninterface Point { x: number }\n\n// C\ninterface Mixed = { x: number } | { y: number };\n\n// D\ntype Pair = [number, number];",
+      "query": {
+        "explanation": "`interface` always declares an object shape with a body in braces; it has no `=` form and cannot be a union. Unions, tuples and other non-object shapes must be written with `type`. Declarations A, B and D are all legal; C is a syntax error.",
+        "syntax": "type Name = A | B;",
+        "tags": [
+          "interface",
+          "type-alias",
+          "union",
+          "tuple"
+        ],
+        "title": "Unions and tuples need a type alias"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-0d60f45e",
+      "prompt": "How many keys does this program log?",
+      "topic": "interfaces-vs-types",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "The object literal is not empty; it is created with two own properties."
+        },
+        {
+          "text": "1",
+          "rationale": "Only one key would appear if the second merged interface member were rejected, but merging requires both `a` and `b`."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "Only `a` and `b` are assigned, so there is no third own property."
+        }
+      ],
+      "code": "interface Config { a: number }\ninterface Config { b: number }\n\nconst c: Config = { a: 1, b: 2 };\nconsole.log(Object.keys(c).length);",
+      "query": {
+        "explanation": "The two `Config` interfaces merge into one type requiring `a` and `b`, so the literal must supply both. Interfaces only affect compile time; at runtime `Object.keys` sees the two own properties actually written, giving 2.",
+        "syntax": "Object.keys(obj).length",
+        "tags": [
+          "interface",
+          "declaration-merging",
+          "runtime"
+        ],
+        "title": "Merged interface requires every member"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-917b0655",
+      "prompt": "How many of these four declarations compile cleanly?",
+      "topic": "interfaces-vs-types",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "At least the two function-type declarations are both valid, so more than one compiles."
+        },
+        {
+          "text": "2",
+          "rationale": "Both call-signature forms plus the mapped type alias are valid, which is already three."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "Mapped type syntax is not allowed inside an interface body, so one of the four is an error."
+        }
+      ],
+      "code": "type Keys = { [K in \"a\" | \"b\"]: number };\n\ninterface IKeys { [K in \"a\" | \"b\"]: number }\n\ntype Fn = (x: number) => string;\n\ninterface IFn { (x: number): string }",
+      "query": {
+        "explanation": "Both `type` and `interface` can describe a callable shape (`(x: number) => string` versus a call signature). Mapped types, however, are only valid in a type alias; writing `[K in ...]` inside an interface body is an error. So three of the four declarations compile.",
+        "syntax": "type M = { [K in Union]: T };",
+        "tags": [
+          "mapped-type",
+          "interface",
+          "type-alias",
+          "call-signature"
+        ],
+        "title": "Mapped types belong to type aliases"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-fd6246d2",
+      "prompt": "Which declaration in this snippet does tsc reject?",
+      "topic": "interfaces-vs-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Only the interface extends A",
+          "rationale": ""
+        },
+        {
+          "text": "Only the intersection type C",
+          "rationale": "Declaring the intersection is accepted; the conflict only collapses `x` to an unusable type, it is not a declaration error."
+        },
+        {
+          "text": "Both are rejected",
+          "rationale": "The intersection declaration itself raises no error, so only one of the two is rejected."
+        },
+        {
+          "text": "Neither is rejected",
+          "rationale": "An interface may not redeclare an inherited property with an incompatible type, so one of them is an error."
+        }
+      ],
+      "code": "interface A { x: number }\ninterface B extends A { x: string }\n\ntype C = { x: number } & { x: string };",
+      "query": {
+        "explanation": "When an interface extends another, a redeclared member must be assignable to the inherited one, so `x: string` over `x: number` is an error. An intersection type alias simply combines the members: declaring `{ x: number } & { x: string }` is legal and `x` becomes effectively unusable (`never`-like) only when you try to use it.",
+        "syntax": "interface B extends A { ... } / type C = A & B;",
+        "tags": [
+          "extends",
+          "intersection",
+          "interface",
+          "type-alias"
+        ],
+        "title": "extends checks compatibility, & does not"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-f5632941",
+      "prompt": "How many of the three calls to g.f are rejected by tsc?",
+      "topic": "interfaces-vs-types",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "No overload produced by the merge accepts a boolean, so at least one call is an error."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "Merging produces overloads for both `number` and `string`, so the first two calls are both fine."
+        },
+        {
+          "text": "3",
+          "rationale": "The merged interface accepts `number` and `string` arguments, so those two calls type-check."
+        }
+      ],
+      "code": "interface Fmt { f(x: number): string }\ninterface Fmt { f(x: string): string }\n\ndeclare const g: Fmt;\ng.f(1);\ng.f(\"a\");\ng.f(true);",
+      "query": {
+        "explanation": "Merging two interface declarations with the same method name produces an overload set, so `g.f` accepts a `number` or a `string`. Passing `true` matches no overload and is the single error. A type alias cannot be re-declared to build overloads this way; you would write them in one body instead.",
+        "syntax": "interface I { f(x: A): R }  interface I { f(x: B): R }",
+        "tags": [
+          "declaration-merging",
+          "overloads",
+          "interface"
+        ],
+        "title": "Merging methods creates overloads"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-7a042f77",
+      "prompt": "Are both of these same-named declarations legal in one file?",
+      "topic": "interfaces-vs-types",
+      "answer": false,
+      "code": "type Box = { w: number };\ntype Box = { h: number };\nconst b: Box = { w: 1 };",
+      "query": {
+        "explanation": "Unlike interfaces, type aliases cannot be declared twice with the same name in the same scope; the compiler reports a duplicate identifier error. Interface declaration merging is an interface-only feature.",
+        "syntax": "type Name = ...; // only once per scope",
+        "tags": [
+          "type-aliases",
+          "declaration-merging",
+          "duplicate-identifier"
+        ],
+        "title": "Type aliases do not merge"
+      },
+      "rationale": "Saying yes is wrong: repeating a `type` name is a duplicate identifier error — only interfaces merge when declared more than once.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-88d8c250",
+      "prompt": "What number does this program log?",
+      "topic": "interfaces-vs-types",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "The later declarations do not shadow earlier ones; all three interface bodies are combined."
+        },
+        {
+          "text": "2",
+          "rationale": "All three merged declarations contribute a property, not just two of them."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "Only three properties are declared and assigned; no extra key exists at runtime."
+        }
+      ],
+      "code": "interface Config { host: string }\ninterface Config { port: number }\ninterface Config { secure: boolean }\nconst cfg: Config = { host: \"a\", port: 1, secure: true };\nconsole.log(Object.keys(cfg).length);",
+      "query": {
+        "explanation": "Three interfaces named `Config` merge into one type requiring host, port and secure. The object literal therefore carries three own properties, so Object.keys returns an array of length 3.",
+        "syntax": "interface X { a: ... }\ninterface X { b: ... } // merged",
+        "tags": [
+          "interfaces",
+          "declaration-merging"
+        ],
+        "title": "Interface declaration merging"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-0583c9f4",
+      "prompt": "Which of the four labelled snippets is rejected by tsc?",
+      "topic": "interfaces-vs-types",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "A",
+          "rationale": "A union type alias such as `string | number` is perfectly valid and `5` fits it."
+        },
+        {
+          "text": "B",
+          "rationale": "Intersecting an interface with an object type via `&` is allowed, and the literal provides both members."
+        },
+        {
+          "text": "C"
+        },
+        {
+          "text": "D",
+          "rationale": "Naming a function type with a type alias is valid, and the arrow function matches the signature."
+        }
+      ],
+      "code": "// A\ntype IdA = string | number;\nexport const a: IdA = 5;\n\n// B\ninterface NamedB { name: string }\ntype PersonB = NamedB & { age: number };\nexport const b: PersonB = { name: \"x\", age: 1 };\n\n// C\ntype MixedC = { a: string } | { b: number };\ninterface CfgC extends MixedC { c: boolean }\nexport const c: CfgC = { a: \"x\", c: true };\n\n// D\ntype FnD = (x: number) => string;\nexport const d: FnD = (x: number) => String(x);",
+      "query": {
+        "explanation": "Type aliases can name unions, intersections and function types freely. An interface, however, may only extend object types with statically known members, so extending the union alias `MixedC` is an error.",
+        "syntax": "interface I extends ObjectType {} // ok\ninterface I extends UnionAlias {} // error",
+        "tags": [
+          "interfaces",
+          "type-aliases",
+          "unions",
+          "extends"
+        ],
+        "title": "Interfaces cannot extend unions"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-88c0e472",
+      "prompt": "Can a class implement this union type alias without error?",
+      "topic": "interfaces-vs-types",
+      "answer": false,
+      "code": "type Shape = { kind: \"a\"; r: number } | { kind: \"b\"; s: number };\nexport class Circle implements Shape {\n  kind: \"a\" = \"a\";\n  r = 2;\n}",
+      "query": {
+        "explanation": "A class can implement an interface or an object type alias, but not a union: the compiler cannot know statically which members are required, so `implements Shape` on a union alias is an error.",
+        "syntax": "class C implements ObjectTypeOrInterface { ... }",
+        "tags": [
+          "classes",
+          "implements",
+          "unions",
+          "type-aliases"
+        ],
+        "title": "implements requires statically known members"
+      },
+      "rationale": "Saying yes is wrong: satisfying one branch is not enough — `implements` only accepts object types (or intersections) with statically known members, never a union.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-d33199b7",
+      "prompt": "What text appears in the console when this runs?",
+      "topic": "generics",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3:a"
+        },
+        {
+          "text": "3:c",
+          "rationale": "first is items[0], the first element \"a\", not the last element \"c\"."
+        },
+        {
+          "text": "0:a",
+          "rationale": "size is items.length for a three-element array, so it is 3, not 0."
+        },
+        {
+          "text": "3:undefined",
+          "rationale": "The array has three elements, so items[0] is \"a\" rather than undefined."
+        }
+      ],
+      "code": "function wrap<T>(items: T[]): { size: number; first: T } {\n  return { size: items.length, first: items[0] };\n}\n\nconst r = wrap([\"a\", \"b\", \"c\"]);\nconsole.log(`${r.size}:${r.first}`);",
+      "query": {
+        "explanation": "T is inferred as string from the argument [\"a\", \"b\", \"c\"], so wrap returns { size: number; first: string }. size is items.length (3) and first is items[0] (\"a\"), producing the line 3:a.",
+        "syntax": "function f<T>(items: T[]): { size: number; first: T }",
+        "tags": [
+          "generics",
+          "inference",
+          "runtime"
+        ],
+        "title": "Generic function returning a composed object"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-d746886c",
+      "prompt": "Which type does tsc assign to the constant v below?",
+      "topic": "generics",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string"
+        },
+        {
+          "text": "number",
+          "rationale": "number is the type of the id property, but the key argument selects name."
+        },
+        {
+          "text": "string | number",
+          "rationale": "K is the single literal \"name\", so T[K] is one property type, not the union of all of them."
+        },
+        {
+          "text": "\"name\"",
+          "rationale": "\"name\" is the inferred type of K itself; the result type is the looked-up property type T[K]."
+        }
+      ],
+      "code": "function pluck<T, K extends keyof T>(obj: T, key: K): T[K] {\n  return obj[key];\n}\n\nconst v = pluck({ id: 7, name: \"kit\" }, \"name\");",
+      "query": {
+        "explanation": "K is inferred as the literal type \"name\" and T as { id: number; name: string }. The return type T[K] therefore resolves to the type of the name property, which is string.",
+        "syntax": "function f<T, K extends keyof T>(obj: T, key: K): T[K]",
+        "tags": [
+          "generics",
+          "keyof",
+          "indexed-access"
+        ],
+        "title": "Indexed access return type T[K]"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-5fcbcd8d",
+      "prompt": "Does tsc accept assigning nums to mixed here?",
+      "topic": "generics",
+      "answer": true,
+      "code": "const nums: number[] = [1, 2, 3];\nconst mixed: Array<number | string> = nums;",
+      "query": {
+        "explanation": "TypeScript treats array element types as covariant, so number[] is assignable to Array<number | string>. The assignment compiles with no errors (even though it is unsound if mixed later receives a string).",
+        "syntax": "const mixed: Array<number | string> = nums;",
+        "tags": [
+          "generics",
+          "variance",
+          "assignability"
+        ],
+        "title": "Array type arguments are covariant"
+      },
+      "rationale": "Array<T> is covariant in T in TypeScript, so number[] is assignable to Array<number | string>; claiming an error would require invariant arrays, which TypeScript does not enforce.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-b2ce7939",
+      "prompt": "Which value does the final log statement produce?",
+      "topic": "generics",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "11"
+        },
+        {
+          "text": "13",
+          "rationale": "13 is 4 + 9, the sum of the stored items, but the program adds count() to last()."
+        },
+        {
+          "text": "9",
+          "rationale": "This ignores count(), which contributes 2 because two items were added."
+        },
+        {
+          "text": "2",
+          "rationale": "This is only count(); last() returns 9 and is added to it."
+        }
+      ],
+      "code": "class Box<T> {\n  private items: T[] = [];\n  add(item: T): this { this.items.push(item); return this; }\n  last(): T | undefined { return this.items[this.items.length - 1]; }\n  count(): number { return this.items.length; }\n}\n\nconst b = new Box<number>().add(4).add(9);\nconsole.log(b.count() + (b.last() ?? 0));",
+      "query": {
+        "explanation": "Box<number> stores 4 then 9, so count() is 2 and last() is 9. The sum 2 + 9 printed is 11.",
+        "syntax": "class Box<T> { add(item: T): this }",
+        "tags": [
+          "generics",
+          "classes",
+          "runtime"
+        ],
+        "title": "Generic class with chained methods"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-b1a75bb6",
+      "prompt": "Which labelled call does the compiler reject?",
+      "topic": "generics",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "A",
+          "rationale": "string has a numeric length property, so T = string satisfies the constraint."
+        },
+        {
+          "text": "B",
+          "rationale": "Arrays have a numeric length property, so T = number[] satisfies the constraint."
+        },
+        {
+          "text": "C"
+        },
+        {
+          "text": "D",
+          "rationale": "An object literal { length: 1 } structurally matches { length: number }, so this call is fine."
+        }
+      ],
+      "code": "function longest<T extends { length: number }>(a: T, b: T): T {\n  return a.length >= b.length ? a : b;\n}\n\nconst A = longest(\"abc\", \"de\");\nconst B = longest([1], [2, 3]);\nconst C = longest(10, 20);\nconst D = longest({ length: 1 }, { length: 5 });",
+      "query": {
+        "explanation": "Strings, arrays and object literals with a numeric length property all satisfy the constraint { length: number }. number has no length property, so only call C fails the constraint check.",
+        "syntax": "function f<T extends { length: number }>(a: T, b: T): T",
+        "tags": [
+          "generics",
+          "constraints",
+          "type-errors"
+        ],
+        "title": "Constrained type parameter T extends { length: number }"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-99cc6b86",
+      "prompt": "Is out typed as string[] when make() is called with no type argument?",
+      "topic": "generics",
+      "answer": true,
+      "code": "function make<T = string>(): T[] {\n  return [];\n}\n\nconst out = make();",
+      "query": {
+        "explanation": "There is nothing to infer T from, so the default T = string applies and make() returns string[]. Without the default, T would fall back to unknown.",
+        "syntax": "function make<T = string>(): T[]",
+        "tags": [
+          "generics",
+          "default-type-parameter",
+          "inference"
+        ],
+        "title": "Default type parameter"
+      },
+      "rationale": "With no argument to infer from, TypeScript uses the declared default T = string, so out is string[]; it is not unknown[] because the default takes priority over the fallback.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-31316e35",
+      "prompt": "Is the call pair(1, \"a\") free of type errors?",
+      "topic": "generics",
+      "answer": false,
+      "code": "function pair<T>(a: T, b: T): T[] {\n  return [a, b];\n}\n\nconst p = pair(1, \"a\");",
+      "query": {
+        "explanation": "Both parameters use the same T, so inference picks a single candidate (number, from the first argument). The string \"a\" is then not assignable to number and tsc reports an error. Two independent parameters would need <T, U>.",
+        "syntax": "function pair<T>(a: T, b: T): T[]",
+        "tags": [
+          "generics",
+          "inference",
+          "type-errors"
+        ],
+        "title": "One type parameter shared by two parameters"
+      },
+      "rationale": "Sharing one T forces both arguments to the same type: T resolves to number, so passing the string \"a\" is an error rather than silently widening T to number | string.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-5e153dab",
+      "prompt": "What value ends up logged by this program?",
+      "topic": "generics",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "23"
+        },
+        {
+          "text": "43",
+          "rationale": "size counts distinct keys (2), not the four input elements."
+        },
+        {
+          "text": "20",
+          "rationale": "t.get(\"a\") is 3 because \"a\" appears three times, so 3 is added to 20."
+        },
+        {
+          "text": "34",
+          "rationale": "This swaps the roles: the count 3 is added, while the size 2 is multiplied by 10."
+        }
+      ],
+      "code": "function tally<K>(keys: K[]): Map<K, number> {\n  const m = new Map<K, number>();\n  for (const k of keys) m.set(k, (m.get(k) ?? 0) + 1);\n  return m;\n}\n\nconst t = tally([\"a\", \"b\", \"a\", \"a\"]);\nconsole.log(t.size * 10 + (t.get(\"a\") ?? 0));",
+      "query": {
+        "explanation": "K is inferred as string. The map has two distinct keys (\"a\" and \"b\"), so size is 2, and \"a\" occurs three times. The result is 2 * 10 + 3 = 23.",
+        "syntax": "function tally<K>(keys: K[]): Map<K, number>",
+        "tags": [
+          "generics",
+          "map",
+          "runtime"
+        ],
+        "title": "Generic key type with Map<K, number>"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-e0132a51",
+      "prompt": "What string does this program log?",
+      "topic": "generics",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3/9"
+        },
+        {
+          "text": "5/9",
+          "rationale": "filter removes the two undefined entries, so kept has 3 elements, not 5."
+        },
+        {
+          "text": "3/0",
+          "rationale": "reduce starts at 0 but adds 1 + 3 + 5, giving 9."
+        },
+        {
+          "text": "5/undefined",
+          "rationale": "The undefined values are filtered out, so neither the length nor the sum involves undefined."
+        }
+      ],
+      "code": "function isDefined<T>(v: T | undefined): v is T {\n  return v !== undefined;\n}\n\nconst vals: (number | undefined)[] = [1, undefined, 3, undefined, 5];\nconst kept = vals.filter(isDefined);\nconsole.log(`${kept.length}/${kept.reduce((a, b) => a + b, 0)}`);",
+      "query": {
+        "explanation": "isDefined is a generic type guard, so filter narrows (number | undefined)[] to number[]. Three defined values remain (1, 3, 5), giving length 3 and sum 9, printed as 3/9.",
+        "syntax": "function isDefined<T>(v: T | undefined): v is T",
+        "tags": [
+          "generics",
+          "type-guards",
+          "runtime"
+        ],
+        "title": "Generic type predicate used with filter"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-693fe210",
+      "prompt": "Does t.length inside sizeOf type-check as written?",
+      "topic": "generics",
+      "answer": false,
+      "code": "function sizeOf<T>(t: T): number {\n  return t.length;\n}",
+      "query": {
+        "explanation": "An unconstrained T could be any type, so TypeScript knows no properties on t and reports that length does not exist on type T. Adding a constraint such as T extends { length: number } fixes it.",
+        "syntax": "function sizeOf<T extends { length: number }>(t: T): number",
+        "tags": [
+          "generics",
+          "constraints",
+          "type-errors"
+        ],
+        "title": "Unconstrained type parameters have no known members"
+      },
+      "rationale": "Without a constraint, T may be any type at all, so tsc errors with \"Property 'length' does not exist on type 'T'\"; member access is only allowed once the constraint guarantees it.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-4a5c6c5a",
+      "prompt": "Which number is written to the console?",
+      "topic": "utility-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "9"
+        },
+        {
+          "text": "24",
+          "rationale": "reduce adds with + and starts at 0; it never multiplies the values."
+        },
+        {
+          "text": "3",
+          "rationale": "3 is the number of keys, not the sum of the values."
+        },
+        {
+          "text": "234",
+          "rationale": "The initial value 0 is a number, so + performs numeric addition, not string concatenation."
+        }
+      ],
+      "code": "type Scores = Record<\"a\" | \"b\" | \"c\", number>;\nconst s: Scores = { a: 2, b: 3, c: 4 };\nconsole.log(Object.values(s).reduce((x, y) => x + y, 0));",
+      "query": {
+        "explanation": "Record<K, V> produces an object type with one property of type V for every key in the union K. Here the value is { a: 2, b: 3, c: 4 }, so Object.values gives [2, 3, 4] and the reduce sums them to 9.",
+        "syntax": "Record<Keys, ValueType>",
+        "tags": [
+          "utility-types",
+          "Record"
+        ],
+        "title": "Record builds an object type from keys"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-84cae2f6",
+      "prompt": "Which line of text is printed here?",
+      "topic": "utility-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "id,name"
+        },
+        {
+          "text": "id,name,email",
+          "rationale": "Types are erased at runtime; Object.keys reports the literal's own keys, and email was never assigned."
+        },
+        {
+          "text": "email,id,name",
+          "rationale": "Only id and name exist on the value, so email cannot appear in the sorted key list."
+        },
+        {
+          "text": "name",
+          "rationale": "join(\",\") prints every key in the array, not just the last one."
+        }
+      ],
+      "code": "type User = { id: number; name: string; email: string };\ntype Small = Pick<User, \"id\" | \"name\">;\nconst u: Small = { id: 1, name: \"ada\" };\nconsole.log(Object.keys(u).sort().join(\",\"));",
+      "query": {
+        "explanation": "Pick<T, K> creates a type with just the properties named in K, so Small has id and name only. The literal assigned to u therefore has two keys, and sorting them alphabetically and joining yields \"id,name\".",
+        "syntax": "Pick<Type, Keys>",
+        "tags": [
+          "utility-types",
+          "Pick"
+        ],
+        "title": "Pick keeps only the listed keys"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-83f25133",
+      "prompt": "Which string does this program write to the console?",
+      "topic": "utility-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "x1,x2"
+        },
+        {
+          "text": "1,2",
+          "rationale": "The map projects the label property, not id."
+        },
+        {
+          "text": "x,x",
+          "rationale": "\"x\" + n concatenates the argument, so each label includes its number."
+        },
+        {
+          "text": "x1",
+          "rationale": "Two elements are built, and join emits both separated by a comma."
+        }
+      ],
+      "code": "function build(n: number) {\n  return { id: n, label: \"x\" + n };\n}\ntype Built = ReturnType<typeof build>;\nconst items: Built[] = [build(1), build(2)];\nconsole.log(items.map(i => i.label).join(\",\"));",
+      "query": {
+        "explanation": "ReturnType<typeof build> resolves to { id: number; label: string }, the inferred return type of build. The array holds build(1) and build(2), whose labels are \"x1\" and \"x2\", so the joined output is x1,x2.",
+        "syntax": "ReturnType<typeof fn>",
+        "tags": [
+          "utility-types",
+          "ReturnType"
+        ],
+        "title": "ReturnType captures a function's result type"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-93646b86",
+      "prompt": "What output does the console receive from this snippet?",
+      "topic": "utility-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "dev|prod"
+        },
+        {
+          "text": "dev|prod|test",
+          "rationale": "The filter callback returns false for \"test\", so that element is not kept."
+        },
+        {
+          "text": "test",
+          "rationale": "The predicate keeps elements that are not \"test\", so it keeps the opposite set."
+        },
+        {
+          "text": "dev",
+          "rationale": "\"prod\" also satisfies m !== \"test\" and is kept in the result."
+        }
+      ],
+      "code": "type Mode = \"dev\" | \"prod\" | \"test\";\ntype Live = Exclude<Mode, \"test\">;\nconst modes: Mode[] = [\"dev\", \"prod\", \"test\"];\nconst live = modes.filter((m): m is Live => m !== \"test\");\nconsole.log(live.join(\"|\"));",
+      "query": {
+        "explanation": "Exclude<Mode, \"test\"> is the union \"dev\" | \"prod\". The type predicate narrows the filtered array to Live, and the runtime filter drops \"test\", so joining the survivors prints dev|prod.",
+        "syntax": "Exclude<UnionType, ExcludedMembers>",
+        "tags": [
+          "utility-types",
+          "Exclude"
+        ],
+        "title": "Exclude removes members from a union"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-e1908c87",
+      "prompt": "Which value reaches the console in this program?",
+      "topic": "utility-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "8080"
+        },
+        {
+          "text": "80",
+          "rationale": "The spread of over appears after port: 80, so the later value wins."
+        },
+        {
+          "text": "undefined",
+          "rationale": "Partial only makes the parameter's properties optional; the returned object always has a port from the defaults or the override."
+        },
+        {
+          "text": "localhost",
+          "rationale": "The program logs the port property, not host."
+        }
+      ],
+      "code": "type Cfg = { host: string; port: number };\nfunction withDefaults(over: Partial<Cfg>): Cfg {\n  return { host: \"localhost\", port: 80, ...over };\n}\nconsole.log(withDefaults({ port: 8080 }).port);",
+      "query": {
+        "explanation": "Partial<Cfg> allows any subset of Cfg's properties, so { port: 8080 } is a valid argument. Spreading it last overwrites the default port of 80, so the returned object reports 8080.",
+        "syntax": "Partial<Type>",
+        "tags": [
+          "utility-types",
+          "Partial"
+        ],
+        "title": "Partial makes every property optional"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-79fde29d",
+      "prompt": "How many of the three assignments below does tsc reject?",
+      "topic": "utility-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1"
+        },
+        {
+          "text": "0",
+          "rationale": "The square literal is not assignable to the extracted circle type, so at least one line fails."
+        },
+        {
+          "text": "2",
+          "rationale": "Both circle literals supply kind: \"circle\" and a numeric r, so only the square literal fails."
+        },
+        {
+          "text": "3",
+          "rationale": "Extract keeps the circle member, so circle literals remain valid."
+        }
+      ],
+      "code": "type Shape = { kind: \"circle\"; r: number } | { kind: \"square\"; s: number };\ntype Circle = Extract<Shape, { kind: \"circle\" }>;\nconst a: Circle = { kind: \"circle\", r: 1 };\nconst b: Circle = { kind: \"square\", s: 2 };\nconst c: Circle = { kind: \"circle\", r: 3 };",
+      "query": {
+        "explanation": "Extract<Shape, { kind: \"circle\" }> narrows the union down to { kind: \"circle\"; r: number }. The circle literals for a and c fit that type, while the square literal for b does not, so exactly one assignment is rejected.",
+        "syntax": "Extract<Type, Union>",
+        "tags": [
+          "utility-types",
+          "Extract"
+        ],
+        "title": "Extract keeps the matching union members"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-38792aff",
+      "prompt": "Which line does this program output?",
+      "topic": "utility-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "abab"
+        },
+        {
+          "text": "ab",
+          "rationale": "repeat(2) returns two copies of the string joined together."
+        },
+        {
+          "text": "ab,2",
+          "rationale": "The tuple is spread into the call, so greet receives two separate arguments instead of being printed."
+        },
+        {
+          "text": "ababab",
+          "rationale": "times is 2, so repeat produces two copies, not three."
+        }
+      ],
+      "code": "function greet(name: string, times: number) {\n  return name.repeat(times);\n}\ntype Args = Parameters<typeof greet>;\nconst a: Args = [\"ab\", 2];\nconsole.log(greet(...a));",
+      "query": {
+        "explanation": "Parameters<typeof greet> is the tuple [name: string, times: number], so a holds \"ab\" and 2. Spreading that tuple calls greet(\"ab\", 2), and \"ab\".repeat(2) produces abab.",
+        "syntax": "Parameters<typeof fn>",
+        "tags": [
+          "utility-types",
+          "Parameters"
+        ],
+        "title": "Parameters yields a tuple of argument types"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-9141dc69",
+      "prompt": "What string does this program log?",
+      "topic": "utility-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "read,exec"
+        },
+        {
+          "text": "read,write,exec",
+          "rationale": "write is set to false, so the filter on the truthy value removes it."
+        },
+        {
+          "text": "read",
+          "rationale": "exec is also true, so it survives the filter alongside read."
+        },
+        {
+          "text": "write",
+          "rationale": "The filter keeps keys whose value is true, and write is the only false one."
+        }
+      ],
+      "code": "type Flags = Record<\"read\" | \"write\" | \"exec\", boolean>;\n\nconst f: Flags = { read: true, write: false, exec: true };\n\nconst on = (Object.keys(f) as (keyof Flags)[]).filter(k => f[k]);\nconsole.log(on.join(\",\"));",
+      "query": {
+        "explanation": "Record<K, V> creates an object type with one property of type V for each member of the union K. Here Flags requires the keys read, write and exec, all booleans. Object.keys returns them in insertion order of the literal, so filtering for truthy values keeps read and exec and drops write, producing \"read,exec\".",
+        "syntax": "Record<Keys, Value>",
+        "tags": [
+          "utility-types",
+          "record",
+          "keyof"
+        ],
+        "title": "Record builds a fixed-key object type"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-c00404f2",
+      "prompt": "Does tsc reject the write to p.x below?",
+      "topic": "utility-types",
+      "answer": true,
+      "code": "type Point = { x: number; y: number };\n\nconst p: Readonly<Point> = { x: 1, y: 2 };\np.x = 5;",
+      "query": {
+        "explanation": "Readonly<T> maps each property of T with the readonly modifier, so Readonly<Point> has readonly x and readonly y. Assigning to p.x is therefore a compile error (\"Cannot assign to 'x' because it is a read-only property\"), even though const only protects the binding p itself, not its members.",
+        "syntax": "Readonly<Type>",
+        "tags": [
+          "utility-types",
+          "readonly",
+          "mapped-types"
+        ],
+        "title": "Readonly marks every property as readonly"
+      },
+      "rationale": "Readonly<Point> adds the readonly modifier to x, so the assignment is a compile error rather than accepted code.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-d60d4ba9",
+      "prompt": "Which types does tsc give to a and b in this snippet?",
+      "topic": "literal-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "a: \"red\", b: string"
+        },
+        {
+          "text": "a: string, b: \"red\"",
+          "rationale": "It is the mutable `let` that widens, not the immutable `const`; the roles are reversed here."
+        },
+        {
+          "text": "a: string, b: string",
+          "rationale": "A `const` initialised with a string literal keeps the literal type, so a is \"red\", not string."
+        },
+        {
+          "text": "a: \"red\", b: \"red\"",
+          "rationale": "A `let` is reassignable, so TypeScript widens its inferred literal type to string."
+        }
+      ],
+      "code": "const a = \"red\";\nlet b = \"red\";",
+      "query": {
+        "explanation": "A `const` binding keeps the literal type \"red\" because it can never be reassigned. A `let` binding widens the literal to its base type `string`, since it may later hold any string.",
+        "syntax": "const x = \"lit\"; // \"lit\"\nlet y = \"lit\";   // string",
+        "tags": [
+          "literal-types",
+          "widening",
+          "inference"
+        ],
+        "title": "const vs let literal widening"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-e125240b",
+      "prompt": "Are both calls to run accepted by the compiler?",
+      "topic": "literal-types",
+      "answer": false,
+      "code": "const mode = \"fast\";\nconst config = { mode: \"fast\" };\n\nfunction run(m: \"fast\" | \"slow\") { return m; }\n\nrun(mode);\nrun(config.mode);",
+      "query": {
+        "explanation": "`const mode = \"fast\"` keeps the literal type \"fast\", so the first call is fine. But properties of a mutable object literal are widened, so `config.mode` has type `string`, which is not assignable to \"fast\" | \"slow\". Adding `as const` would fix it.",
+        "syntax": "const o = { k: \"v\" } as const; // k: \"v\"",
+        "tags": [
+          "literal-types",
+          "widening",
+          "objects"
+        ],
+        "title": "Object literal properties widen"
+      },
+      "rationale": "The second call fails: `config.mode` is widened to `string`, which is not assignable to the literal union \"fast\" | \"slow\".",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-a4e0adc5",
+      "prompt": "Which word does this program print?",
+      "topic": "literal-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "boolean"
+        },
+        {
+          "text": "true",
+          "rationale": "`typeof` returns a type-name string like \"boolean\"; it never returns the value itself."
+        },
+        {
+          "text": "Flag",
+          "rationale": "Type aliases do not exist at runtime, so `typeof` cannot report them."
+        },
+        {
+          "text": "object",
+          "rationale": "A primitive boolean reports \"boolean\"; only non-null objects report \"object\"."
+        }
+      ],
+      "code": "type Flag = true;\n\nconst f: Flag = true;\nconsole.log(typeof f);",
+      "query": {
+        "explanation": "`true` can be used as a type that admits only the boolean value true, but types vanish after compilation. At runtime `f` is just the boolean true, so `typeof f` is \"boolean\".",
+        "syntax": "type T = true; // boolean literal type",
+        "tags": [
+          "literal-types",
+          "boolean",
+          "runtime"
+        ],
+        "title": "Literal types are erased at runtime"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-8d316948",
+      "prompt": "Does the annotated declaration of n type-check here?",
+      "topic": "literal-types",
+      "answer": true,
+      "code": "const t = [1, 2] as const;\nlet n: 1 = t[0];",
+      "query": {
+        "explanation": "`[1, 2] as const` has type `readonly [1, 2]`, so `t[0]` has the numeric literal type 1, which is assignable to the annotation `1`. Without `as const` the array would be `number[]` and the assignment would fail.",
+        "syntax": "const t = [1, 2] as const; // readonly [1, 2]",
+        "tags": [
+          "literal-types",
+          "as-const",
+          "tuples"
+        ],
+        "title": "as const produces literal tuple members"
+      },
+      "rationale": "`as const` freezes the array into `readonly [1, 2]`, so `t[0]` is the literal 1 rather than the widened `number`.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-f0420a1e",
+      "prompt": "What string does this program send to the console?",
+      "topic": "literal-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "high"
+        },
+        {
+          "text": "mid",
+          "rationale": "\"mid\" is only returned for the input 2, and the argument here is 3."
+        },
+        {
+          "text": "low",
+          "rationale": "\"low\" is only returned for the input 1."
+        },
+        {
+          "text": "undefined",
+          "rationale": "The default branch returns a value for 3, so the function never falls off its end."
+        }
+      ],
+      "code": "type Level = 1 | 2 | 3;\n\nfunction label(l: Level): string {\n  switch (l) {\n    case 1: return \"low\";\n    case 2: return \"mid\";\n    default: return \"high\";\n  }\n}\n\nconsole.log(label(3));",
+      "query": {
+        "explanation": "Level is a union of numeric literals. The switch narrows 1 and 2 explicitly; the remaining member 3 falls to the default branch, so label(3) returns \"high\".",
+        "syntax": "type Level = 1 | 2 | 3;",
+        "tags": [
+          "literal-types",
+          "narrowing",
+          "switch"
+        ],
+        "title": "Narrowing a numeric literal union"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-7dbad428",
+      "prompt": "Is the write to cfg.mode accepted by tsc?",
+      "topic": "literal-types",
+      "answer": false,
+      "code": "const cfg = { mode: \"fast\" } as const;\ncfg.mode = \"slow\";",
+      "query": {
+        "explanation": "`as const` does two things: it keeps property types as literals and it marks every property `readonly`. Assigning to `cfg.mode` therefore fails, and \"slow\" would not match the literal type \"fast\" either.",
+        "syntax": "const o = { k: \"v\" } as const; // readonly k: \"v\"",
+        "tags": [
+          "literal-types",
+          "as-const",
+          "readonly"
+        ],
+        "title": "as const implies readonly"
+      },
+      "rationale": "`as const` makes the properties readonly and pins mode to the literal \"fast\", so the assignment is rejected.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-518c6786",
+      "prompt": "Which string value is assignable to type Cls?",
+      "topic": "literal-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "btn-lg"
+        },
+        {
+          "text": "btn-md",
+          "rationale": "\"md\" is not a member of Size, so \"btn-md\" is not produced by the template."
+        },
+        {
+          "text": "lg-btn",
+          "rationale": "The template fixes the prefix \"btn-\"; a reversed string does not match the pattern."
+        },
+        {
+          "text": "btn",
+          "rationale": "The template requires a Size suffix after \"btn-\", so the bare prefix is not a member."
+        }
+      ],
+      "code": "type Size = \"sm\" | \"lg\";\ntype Cls = `btn-${Size}`;",
+      "query": {
+        "explanation": "A template literal type distributes over the union in its placeholder, so Cls expands to \"btn-sm\" | \"btn-lg\". Only those two exact strings are assignable.",
+        "syntax": "type Cls = `btn-${Size}`;",
+        "tags": [
+          "literal-types",
+          "template-literal-types",
+          "unions"
+        ],
+        "title": "Template literal types"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-39920b20",
+      "prompt": "Which value does the final statement log?",
+      "topic": "literal-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "blue"
+        },
+        {
+          "text": "BLUE",
+          "rationale": "toLowerCase() returns a new lowercased string rather than the original uppercase value."
+        },
+        {
+          "text": "RED",
+          "rationale": "The variable was initialised with \"BLUE\", not \"RED\"."
+        },
+        {
+          "text": "undefined",
+          "rationale": "toLowerCase() always returns a string for a string receiver."
+        }
+      ],
+      "code": "const Colors = { red: \"RED\", blue: \"BLUE\" } as const;\ntype ColorValue = (typeof Colors)[keyof typeof Colors];\n\nconst v: ColorValue = \"BLUE\";\nconsole.log(v.toLowerCase());",
+      "query": {
+        "explanation": "`as const` keeps the property values as literals, so ColorValue is \"RED\" | \"BLUE\". The variable holds the string \"BLUE\", and at runtime toLowerCase() turns it into \"blue\".",
+        "syntax": "type V = (typeof O)[keyof typeof O];",
+        "tags": [
+          "literal-types",
+          "as-const",
+          "keyof"
+        ],
+        "title": "Literal unions from a const object"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-d18d425a",
+      "prompt": "Does the declaration of ok compile here?",
+      "topic": "literal-types",
+      "answer": true,
+      "code": "function pick<T extends string>(x: T): T { return x; }\n\nconst r = pick(\"yes\");\nconst ok: \"yes\" = r;",
+      "query": {
+        "explanation": "When a type parameter is constrained by `string`, TypeScript infers the literal type from a string-literal argument instead of widening it. So T is \"yes\", r has type \"yes\", and the annotated declaration succeeds.",
+        "syntax": "function f<T extends string>(x: T): T",
+        "tags": [
+          "literal-types",
+          "generics",
+          "inference"
+        ],
+        "title": "Literal inference under a string constraint"
+      },
+      "rationale": "The `extends string` constraint makes inference keep the literal, so r is \"yes\" rather than the widened `string`.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-97665507",
+      "prompt": "What type does tsc infer for k here?",
+      "topic": "literal-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"circle\""
+        },
+        {
+          "text": "string",
+          "rationale": "Widening to string would require a fresh literal initializer; the value comes from an `as const` property, which is non-fresh."
+        },
+        {
+          "text": "readonly \"circle\"",
+          "rationale": "`readonly` is a property modifier on the object type, not part of the type of the value read from it."
+        },
+        {
+          "text": "\"circle\" | 2",
+          "rationale": "Only `base.kind` is read, so the union of both property value types never appears."
+        }
+      ],
+      "code": "const base = { kind: \"circle\", r: 2 } as const;\nlet k = base.kind;",
+      "query": {
+        "explanation": "Literal widening only happens when a `let` is initialized by a *fresh* literal expression. `base.kind` is a property read whose type `\"circle\"` is already non-fresh (the `as const` assertion removed freshness), so the inferred type of `k` stays the literal type `\"circle\"` rather than widening to `string`. The `readonly` modifier applies to the object's properties, not to the type of the extracted value.",
+        "syntax": "as const",
+        "tags": [
+          "literal-types",
+          "const-assertion",
+          "widening",
+          "inference"
+        ],
+        "title": "Literal types and widening"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-8a6f7414",
+      "prompt": "How many of these four assignments does tsc reject?",
+      "topic": "any-unknown-never",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "unknown is not assignable to string or number, so some lines do fail."
+        },
+        {
+          "text": "1",
+          "rationale": "Two lines fail, not one: both the string and the number annotation reject unknown."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "`const c: unknown = u` is legal, so only two of the four lines are errors."
+        }
+      ],
+      "code": "declare const u: unknown;\n\nconst a: any = u;\nconst b: string = u;\nconst c: unknown = u;\nconst d: number = u;",
+      "query": {
+        "explanation": "A value of type unknown may be assigned to any or unknown, but not to a narrower type such as string or number without a type assertion or narrowing. So `b` and `c`... precisely: `b: string` and `d: number` are errors, while `a: any` and `c: unknown` are fine — 2 rejections.",
+        "syntax": "const x: T = someUnknown;",
+        "tags": [
+          "unknown",
+          "assignability"
+        ],
+        "title": "unknown is only assignable to unknown and any"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-73742b64",
+      "prompt": "Is this assignment from a never-typed value to string accepted by tsc?",
+      "topic": "any-unknown-never",
+      "answer": true,
+      "code": "declare const n: never;\nconst s: string = n;",
+      "query": {
+        "explanation": "never is assignable to every type because it has no values; the assignment can never actually happen at runtime. The opposite claim fails because only the reverse direction (string to never) is an error.",
+        "tags": [
+          "never",
+          "assignability"
+        ],
+        "title": "never is the bottom type"
+      },
+      "rationale": "never is the bottom type and is assignable to every other type, so tsc reports no error here; only assigning string to never would fail.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-bb33fe41",
+      "prompt": "What return type does tsc infer for the function declaration fail?",
+      "topic": "any-unknown-never",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "void"
+        },
+        {
+          "text": "never",
+          "rationale": "never is inferred only for function expressions and arrow functions, not for function declarations."
+        },
+        {
+          "text": "any",
+          "rationale": "The body is checked normally; an unreachable-return declaration is typed void, not any."
+        },
+        {
+          "text": "unknown",
+          "rationale": "unknown is never produced by return-type inference for a throwing body."
+        }
+      ],
+      "code": "function fail(msg: string) {\n  throw new Error(msg);\n}",
+      "query": {
+        "explanation": "TypeScript only infers never for function expressions and arrow functions whose body never returns. A function *declaration* with no reachable return gets the inferred return type void, so you must annotate `: never` explicitly to get never.",
+        "syntax": "function fail(msg: string): never { throw new Error(msg); }",
+        "tags": [
+          "never",
+          "inference"
+        ],
+        "title": "never inference applies to function expressions, not declarations"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-b46fa00d",
+      "prompt": "Which string does this program log?",
+      "topic": "any-unknown-never",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "arr:2"
+        },
+        {
+          "text": "str:2",
+          "rationale": "typeof an array is \"object\", so the string branch is not taken."
+        },
+        {
+          "text": "other",
+          "rationale": "Array.isArray returns true for the argument, so the fallback branch is unreachable here."
+        },
+        {
+          "text": "arr:undefined",
+          "rationale": "Array.isArray narrows v to any[], and the array has two elements, so length is 2."
+        }
+      ],
+      "code": "function describe(v: unknown): string {\n  if (typeof v === \"string\") return \"str:\" + v.length;\n  if (Array.isArray(v)) return \"arr:\" + v.length;\n  return \"other\";\n}\n\nconsole.log(describe([\"a\", \"b\"]));",
+      "query": {
+        "explanation": "An unknown parameter must be narrowed before members are touched. typeof v === \"string\" is false for an array, but Array.isArray narrows unknown to any[], so v.length is legal and equals 2.",
+        "syntax": "if (Array.isArray(v)) { /* v: any[] */ }",
+        "tags": [
+          "unknown",
+          "narrowing"
+        ],
+        "title": "Narrowing unknown with type guards"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-4aaf1a7a",
+      "prompt": "Does the arithmetic expression on the unknown value compile here?",
+      "topic": "any-unknown-never",
+      "answer": false,
+      "code": "declare const u: unknown;\nconst n = u + 1;",
+      "query": {
+        "explanation": "Unlike any, unknown permits almost no operations: arithmetic requires a number (or bigint/string) operand, so `u + 1` is an error until u is narrowed or asserted. The opposite answer would be right only if u were typed any.",
+        "tags": [
+          "unknown",
+          "operators"
+        ],
+        "title": "unknown blocks operators"
+      },
+      "rationale": "unknown supports no arithmetic operands, so tsc errors on `u + 1`; the expression would only be allowed if u were typed any or narrowed to number.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-e0089a9c",
+      "prompt": "How many type errors does tsc report for this program?",
+      "topic": "any-unknown-never",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "The \"c\" member is unhandled, so the narrowed type in default is not never and the assignment fails."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "Only the `const x: never = s` line fails; String(x) and the returns are fine."
+        },
+        {
+          "text": "3",
+          "rationale": "There is a single error; every switch arm returns, so no implicit-return error is added."
+        }
+      ],
+      "code": "type Shape = { k: \"a\" } | { k: \"b\" } | { k: \"c\" };\n\nfunction area(s: Shape): string {\n  switch (s.k) {\n    case \"a\": return \"A\";\n    case \"b\": return \"B\";\n    default: {\n      const x: never = s;\n      return String(x);\n    }\n  }\n}",
+      "query": {
+        "explanation": "In the default branch s is narrowed to the remaining member { k: \"c\" }, which is not assignable to never. That single error is exactly how the never pattern reports a missing case; handling \"c\" would make the branch's narrowed type never and silence it.",
+        "syntax": "default: { const _x: never = value; }",
+        "tags": [
+          "never",
+          "exhaustiveness"
+        ],
+        "title": "The never exhaustiveness trick"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-946624b1",
+      "prompt": "Which of these four type aliases is NOT equivalent to never?",
+      "topic": "any-unknown-never",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "A (string & never)",
+          "rationale": "An intersection containing never collapses to never."
+        },
+        {
+          "text": "B (never[])"
+        },
+        {
+          "text": "C (Extract<\"a\" | \"b\", \"c\">)",
+          "rationale": "Extract keeps only overlapping members; with no overlap the result is never."
+        },
+        {
+          "text": "D (unknown & never)",
+          "rationale": "unknown is the identity for intersection, so unknown & never is never."
+        }
+      ],
+      "code": "type A = string & never;\ntype B = never[];\ntype C = Extract<\"a\" | \"b\", \"c\">;\ntype D = unknown & never;",
+      "query": {
+        "explanation": "Intersecting anything with never reduces to never, and Extract with no overlap produces never. But never[] is an array type: it is a real object type whose elements can never exist, so it is not itself never (an empty array is a valid never[]).",
+        "tags": [
+          "never",
+          "intersection"
+        ],
+        "title": "never in intersections and arrays"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-d641e283",
+      "prompt": "What value does this program log?",
+      "topic": "any-unknown-never",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "71"
+        },
+        {
+          "text": "8",
+          "rationale": "The runtime value is the string \"7\", so + concatenates instead of adding."
+        },
+        {
+          "text": "NaN",
+          "rationale": "String concatenation succeeds; no numeric coercion failure occurs."
+        },
+        {
+          "text": "The code fails to compile",
+          "rationale": "any is assignable to number, so the annotation is accepted without error."
+        }
+      ],
+      "code": "const raw: any = { n: \"7\" };\nconst total: number = raw.n;\n\nconsole.log(String(total + 1));",
+      "query": {
+        "explanation": "any propagates through property access, so `const total: number = raw.n` compiles even though the runtime value is the string \"7\". At runtime `\"7\" + 1` is string concatenation, producing \"71\".",
+        "tags": [
+          "any",
+          "unsoundness"
+        ],
+        "title": "any silences checks but not runtime semantics"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-0043782d",
+      "prompt": "Is the final assignment legal, i.e. is R equal to never here?",
+      "topic": "any-unknown-never",
+      "answer": true,
+      "code": "type F<T> = T extends string ? \"yes\" : \"no\";\ntype R = F<never>;\n\ndeclare const r: R;\nconst x: never = r;",
+      "query": {
+        "explanation": "A naked type parameter in a conditional type distributes over unions, and never is the empty union, so F<never> distributes over zero members and yields never — not \"yes\". Wrapping the check (e.g. [T] extends [string]) would instead give \"yes\".",
+        "syntax": "type F<T> = [T] extends [string] ? \"yes\" : \"no\";",
+        "tags": [
+          "never",
+          "conditional-types"
+        ],
+        "title": "Distributive conditional types over never"
+      },
+      "rationale": "The naked T distributes, and never is the empty union, so F<never> is never and the assignment compiles; it would be \"yes\" only with a non-distributive check like [T] extends [string].",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-685933ad",
+      "prompt": "Does this call to toString on an unknown[] element compile?",
+      "topic": "any-unknown-never",
+      "answer": false,
+      "code": "const arr: unknown[] = [1, \"a\"];\nconsole.log(arr[0].toString());",
+      "query": {
+        "explanation": "Building the array is fine because every value is assignable to unknown, but arr[0] has type unknown, and no members may be accessed on unknown without narrowing or an assertion. With any[] the same member access would be allowed.",
+        "tags": [
+          "unknown",
+          "member-access"
+        ],
+        "title": "Indexing unknown[] yields unknown"
+      },
+      "rationale": "arr[0] is unknown, and member access on unknown is an error; the call would only compile if the element were narrowed, asserted, or typed any.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-db015583",
+      "prompt": "Which value does this program print?",
+      "topic": "classes",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "AB",
+          "rationale": "super.greet() returns \"A\" and the override appends \"B\"."
+        },
+        {
+          "text": "BA",
+          "rationale": "The super call happens first in the expression, so \"A\" comes before \"B\"."
+        },
+        {
+          "text": "A",
+          "rationale": "The override does not return the super result alone; it concatenates \"B\" to it."
+        },
+        {
+          "text": "B",
+          "rationale": "super.greet() is actually invoked, so \"A\" is part of the result."
+        }
+      ],
+      "code": "class A {\n  greet(): string { return \"A\"; }\n}\nclass B extends A {\n  greet(): string { return super.greet() + \"B\"; }\n}\nconsole.log(new B().greet());",
+      "query": {
+        "explanation": "B.greet overrides A.greet but calls super.greet() first, which runs the base implementation and returns \"A\". The subclass then appends \"B\", so the logged string is \"AB\".",
+        "syntax": "super.method()",
+        "tags": [
+          "classes",
+          "inheritance",
+          "super"
+        ],
+        "title": "Overriding with super"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-d6d23381",
+      "prompt": "What does this program log when new B() runs?",
+      "topic": "classes",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "undefined",
+          "rationale": "B's field initializer has not run when the base constructor calls the override."
+        },
+        {
+          "text": "42",
+          "rationale": "value is assigned after super() completes, not before the base constructor body."
+        },
+        {
+          "text": "A",
+          "rationale": "B overrides log, and dynamic dispatch picks B's version even from the base constructor."
+        },
+        {
+          "text": "0",
+          "rationale": "Class fields are not default-initialized to 0; they are simply not yet defined."
+        }
+      ],
+      "code": "class A {\n  constructor() { this.log(); }\n  log(): void { console.log(\"A\"); }\n}\nclass B extends A {\n  value = 42;\n  log(): void { console.log(this.value); }\n}\nnew B();",
+      "query": {
+        "explanation": "Derived class field initializers run only after the super constructor finishes. The base constructor calls the overridden log(), and at that moment B's value field has not been assigned yet, so it reads undefined.",
+        "tags": [
+          "classes",
+          "initialization",
+          "inheritance"
+        ],
+        "title": "Field initialization order"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-0c50c4ec",
+      "prompt": "Which pair of numbers does this program print?",
+      "topic": "classes",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3 3",
+          "rationale": "Three constructions bump the single shared static, and Sub inherits that same static."
+        },
+        {
+          "text": "1 2",
+          "rationale": "Sub does not get its own counter; all three constructors touch Counter.count."
+        },
+        {
+          "text": "3 0",
+          "rationale": "Sub.count is not a separate zero-initialized field; it resolves through the prototype chain to Counter.count."
+        },
+        {
+          "text": "3 undefined",
+          "rationale": "Static members are inherited by subclasses, so Sub.count is defined."
+        }
+      ],
+      "code": "class Counter {\n  static count = 0;\n  constructor() { Counter.count++; }\n}\nclass Sub extends Counter {}\nnew Counter();\nnew Sub();\nnew Sub();\nconsole.log(Counter.count, Sub.count);",
+      "query": {
+        "explanation": "There is one static count slot on Counter, incremented by every construction including subclass instances, so it reaches 3. Sub inherits the static side of Counter, so Sub.count reads the same 3.",
+        "tags": [
+          "classes",
+          "static",
+          "inheritance"
+        ],
+        "title": "Static members and inheritance"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-e1628edd",
+      "prompt": "What number does this program log?",
+      "topic": "classes",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "100",
+          "rationale": "The setter converts 212 with (212 - 32) * 5 / 9, storing 100."
+        },
+        {
+          "text": "212",
+          "rationale": "The assigned value passes through the setter's conversion instead of being stored directly."
+        },
+        {
+          "text": "0",
+          "rationale": "The field initializer 0 is overwritten by the setter before celsius() is called."
+        },
+        {
+          "text": "180",
+          "rationale": "That is only the (212 - 32) subtraction, before multiplying by 5 and dividing by 9."
+        }
+      ],
+      "code": "class Temp {\n  private c = 0;\n  get f(): number { return this.c * 9 / 5 + 32; }\n  set f(v: number) { this.c = (v - 32) * 5 / 9; }\n  celsius(): number { return this.c; }\n}\nconst t = new Temp();\nt.f = 212;\nconsole.log(t.celsius());",
+      "query": {
+        "explanation": "Writing t.f = 212 invokes the setter, which stores (212 - 32) * 5 / 9 = 100 in the private field c, so celsius() returns 100.",
+        "syntax": "get p() / set p(v)",
+        "tags": [
+          "classes",
+          "accessors"
+        ],
+        "title": "Accessors"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-145b2e3a",
+      "prompt": "What total does this program print?",
+      "topic": "classes",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "7",
+          "rationale": "The overrides contribute 4 and 3, and the plain Shape contributes 0."
+        },
+        {
+          "text": "0",
+          "rationale": "The static type Shape does not force the base implementation; overrides are dispatched at runtime."
+        },
+        {
+          "text": "4",
+          "rationale": "That counts only the square and ignores the circle's 3."
+        },
+        {
+          "text": "9",
+          "rationale": "The circle's area is 3 * 1 * 1 = 3, not 5, and the base shape adds 0."
+        }
+      ],
+      "code": "class Shape {\n  area(): number { return 0; }\n}\nclass Sq extends Shape {\n  constructor(private s: number) { super(); }\n  area(): number { return this.s * this.s; }\n}\nclass Circ extends Shape {\n  constructor(private r: number) { super(); }\n  area(): number { return 3 * this.r * this.r; }\n}\nconst shapes: Shape[] = [new Sq(2), new Circ(1), new Shape()];\nconsole.log(shapes.reduce((a, s) => a + s.area(), 0));",
+      "query": {
+        "explanation": "Even though the array is typed Shape[], each element's own area() implementation runs: 2 * 2 = 4, 3 * 1 * 1 = 3, and the base Shape returns 0, giving 7.",
+        "tags": [
+          "classes",
+          "polymorphism",
+          "inheritance"
+        ],
+        "title": "Polymorphic method dispatch"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-8dfc7668",
+      "prompt": "What text does this program log?",
+      "topic": "classes",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "yo ts",
+          "rationale": "The arrow captured this at construction, and name was already initialized to \"ts\"."
+        },
+        {
+          "text": "yo undefined",
+          "rationale": "name is declared before arrow, so it is already assigned when the arrow field is created."
+        },
+        {
+          "text": "hi ts",
+          "rationale": "The called value is the arrow field, not the greet method."
+        },
+        {
+          "text": "TypeError: Cannot read properties of undefined",
+          "rationale": "Arrow fields do not lose their this binding when detached; a plain method would."
+        }
+      ],
+      "code": "class Greeter {\n  name = \"ts\";\n  greet(): string { return \"hi \" + this.name; }\n  arrow = (): string => \"yo \" + this.name;\n}\nconst g = new Greeter();\nconst m = g.arrow;\nconsole.log(m());",
+      "query": {
+        "explanation": "An arrow function stored in a class field captures the instance's this when the field is initialized, so it keeps working after being detached from the object and prints \"yo ts\".",
+        "tags": [
+          "classes",
+          "this",
+          "fields"
+        ],
+        "title": "Arrow function class fields"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-b9d65570",
+      "prompt": "What number does this program print?",
+      "topic": "classes",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "7",
+          "rationale": "4 from the argument plus the default 3."
+        },
+        {
+          "text": "4",
+          "rationale": "Only `x` would be counted; `y` is still initialised to its default 3 and added."
+        },
+        {
+          "text": "3",
+          "rationale": "That is only the default `y`; the passed `x` of 4 is also added."
+        },
+        {
+          "text": "NaN",
+          "rationale": "`y` is never undefined here, because the default value 3 applies when the argument is omitted."
+        }
+      ],
+      "code": "class Point {\n  constructor(public x: number, private y: number = 3) {}\n  sum(): number {\n    return this.x + this.y;\n  }\n}\n\nconsole.log(new Point(4).sum());",
+      "query": {
+        "explanation": "Writing an access modifier on a constructor parameter (`public x`, `private y`) declares and assigns a field automatically. `new Point(4)` leaves `y` at its default `3`, so `sum()` returns `4 + 3 = 7`.",
+        "syntax": "constructor(public x: number, private y: number = 3) {}",
+        "tags": [
+          "classes",
+          "parameter-properties",
+          "defaults"
+        ],
+        "title": "Parameter properties with defaults"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-47720be5",
+      "prompt": "Does this program compile with no type errors?",
+      "topic": "classes",
+      "answer": false,
+      "code": "class Base {\n  private secret = 1;\n}\n\nclass Derived extends Base {\n  reveal(): number {\n    return this.secret;\n  }\n}\n\nconsole.log(new Derived().reveal());",
+      "query": {
+        "explanation": "`private` restricts access to the declaring class body only, so a subclass cannot read `this.secret`. `protected` is the modifier that allows access from derived classes.",
+        "syntax": "protected secret = 1;",
+        "tags": [
+          "classes",
+          "access-modifiers",
+          "inheritance"
+        ],
+        "title": "private versus protected members"
+      },
+      "rationale": "A `private` member is visible only inside the class that declares it, so `this.secret` in `Derived` is an error; `protected` would have been required.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-94588290",
+      "prompt": "What string does this program log?",
+      "topic": "classes",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "animal-dog",
+          "rationale": "The base result comes first, then the suffix added by the override."
+        },
+        {
+          "text": "dog-animal",
+          "rationale": "The concatenation order is `super.speak()` first, then the literal suffix."
+        },
+        {
+          "text": "animal",
+          "rationale": "The override appends `\"-dog\"` to the base result, so the suffix is part of the output."
+        },
+        {
+          "text": "animal-dog-dog",
+          "rationale": "`super.speak()` runs the base implementation, not the override, so the suffix is added only once."
+        }
+      ],
+      "code": "class Animal {\n  speak(): string {\n    return \"animal\";\n  }\n}\n\nclass Dog extends Animal {\n  speak(): string {\n    return super.speak() + \"-dog\";\n  }\n}\n\nconsole.log(new Dog().speak());",
+      "query": {
+        "explanation": "`super.speak()` invokes the base-class implementation rather than re-entering the override, so `Dog.speak` returns `\"animal\"` concatenated with `\"-dog\"`.",
+        "syntax": "return super.speak() + \"-dog\";",
+        "tags": [
+          "classes",
+          "inheritance",
+          "super"
+        ],
+        "title": "Calling an overridden method with super"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-2c9209b5",
+      "prompt": "What text does this program log?",
+      "topic": "enums-and-const",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2,11"
+        },
+        {
+          "text": "1,10",
+          "rationale": "Those are the values of Up and Left, not of the members that follow them."
+        },
+        {
+          "text": "2,3",
+          "rationale": "The explicit Left = 10 resets the auto-increment counter, so Right is 11, not 3."
+        },
+        {
+          "text": "0,2",
+          "rationale": "Auto-increment starts at 0 only when no previous member has a value; here Up = 1 precedes Down."
+        }
+      ],
+      "code": "enum Dir { Up = 1, Down, Left = 10, Right }\n\nconsole.log(`${Dir.Down},${Dir.Right}`);",
+      "query": {
+        "explanation": "A numeric enum member without an initializer takes the previous member's value plus one. Up = 1 makes Down = 2; Left = 10 restarts the counter, so Right = 11.",
+        "syntax": "enum Name { A = 1, B }",
+        "tags": [
+          "enums",
+          "numeric-enum"
+        ],
+        "title": "Numeric enum auto-increment"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-6b6789ff",
+      "prompt": "What number does this program log?",
+      "topic": "enums-and-const",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "5"
+        },
+        {
+          "text": "3",
+          "rationale": "3 is Read | Write; the expression combines Read and Exec instead."
+        },
+        {
+          "text": "4",
+          "rationale": "4 is Exec alone; the OR also sets the Read bit."
+        },
+        {
+          "text": "0",
+          "rationale": "0 would be the result of Read & Exec, since the two bits do not overlap."
+        }
+      ],
+      "code": "const enum Flag { Read = 1, Write = 2, Exec = 4 }\n\nconsole.log(Flag.Read | Flag.Exec);",
+      "query": {
+        "explanation": "Members of a const enum are substituted with their literal values at the use site, so the expression is simply 1 | 4, which is 5.",
+        "syntax": "const enum Name { A = 1 }",
+        "tags": [
+          "enums",
+          "const-enum"
+        ],
+        "title": "const enum members inline as literals"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-4dcb0718",
+      "prompt": "What number does this program log?",
+      "topic": "enums-and-const",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "6"
+        },
+        {
+          "text": "3",
+          "rationale": "That counts only the member names and ignores the numeric reverse-mapping keys."
+        },
+        {
+          "text": "4",
+          "rationale": "There is no single extra key; every numeric member adds its own reverse entry."
+        },
+        {
+          "text": "2",
+          "rationale": "The enum has three members, and each contributes two keys to the emitted object."
+        }
+      ],
+      "code": "enum Level { Low, Mid, High }\n\nconsole.log(Object.keys(Level).length);",
+      "query": {
+        "explanation": "A numeric enum object holds both name-to-value and value-to-name entries, so three members produce six keys: \"0\", \"1\", \"2\", \"Low\", \"Mid\", \"High\".",
+        "tags": [
+          "enums",
+          "numeric-enum",
+          "reverse-mapping"
+        ],
+        "title": "Reverse mappings in numeric enums"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-e0190fbf",
+      "prompt": "What does this program log?",
+      "topic": "enums-and-const",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Blue"
+        },
+        {
+          "text": "2",
+          "rationale": "Color[2] is a reverse lookup, so it yields the member name rather than echoing the number."
+        },
+        {
+          "text": "Color.Blue",
+          "rationale": "The stored reverse-mapped value is the bare name string \"Blue\" with no qualifying prefix."
+        },
+        {
+          "text": "undefined",
+          "rationale": "Numeric enums do generate reverse mappings, so index 2 resolves to \"Blue\"."
+        }
+      ],
+      "code": "enum Color { Red, Green, Blue }\nconsole.log(Color[2]);",
+      "query": {
+        "explanation": "A numeric enum compiles to an object that maps names to numbers and numbers back to names, so Color[2] returns the string \"Blue\".",
+        "syntax": "enum E { A, B }  // E[0] === \"A\"",
+        "tags": [
+          "enums",
+          "reverse-mapping"
+        ],
+        "title": "Numeric enum reverse mapping"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-b1feb6f2",
+      "prompt": "Does this program log Up?",
+      "topic": "enums-and-const",
+      "answer": false,
+      "code": "enum Dir { Up = \"UP\", Down = \"DOWN\" }\nconst lookup: Record<string, unknown> = Dir;\nconsole.log(lookup[\"UP\"]);",
+      "query": {
+        "explanation": "Only numeric enum members are emitted in both directions. For string enums the runtime object holds name-to-value entries only, so looking up a value returns undefined.",
+        "tags": [
+          "enums",
+          "string-enums"
+        ],
+        "title": "String enums have no reverse mapping"
+      },
+      "rationale": "String enums get no reverse mapping, so the generated object has only Up and Down keys and lookup[\"UP\"] is undefined, not \"Up\".",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-641e63a6",
+      "prompt": "Which two numbers does this program log?",
+      "topic": "enums-and-const",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2,11"
+        },
+        {
+          "text": "1,10",
+          "rationale": "B and D have no initializer, so they continue the sequence rather than repeating the previous member's value."
+        },
+        {
+          "text": "2,4",
+          "rationale": "D follows C = 10, so auto-increment resumes from 10, giving 11 instead of continuing the A/B run."
+        },
+        {
+          "text": "0,11",
+          "rationale": "Auto-increment continues after A = 1, so B is 2, not 0."
+        }
+      ],
+      "code": "enum Code { A = 1, B, C = 10, D }\nconsole.log(`${Code.B},${Code.D}`);",
+      "query": {
+        "explanation": "An uninitialized enum member takes the previous member's value plus one. B follows A = 1 so it is 2, and D follows C = 10 so it is 11.",
+        "syntax": "enum E { A = 1, B /* 2 */, C = 10, D /* 11 */ }",
+        "tags": [
+          "enums",
+          "auto-increment"
+        ],
+        "title": "Enum auto-increment after explicit values"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-05fa31a0",
+      "prompt": "What text does this program log?",
+      "topic": "enums-and-const",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "done:6"
+        },
+        {
+          "text": "DONE:6",
+          "rationale": "toLowerCase() is applied to the member value \"DONE\", so the logged text is lowercase."
+        },
+        {
+          "text": "done:4",
+          "rationale": "length is read from the value \"ACTIVE\" (6 characters), not from a 4-letter member name."
+        },
+        {
+          "text": "Done:6",
+          "rationale": "The output comes from the value \"DONE\" lowercased, so the member name's casing never appears."
+        }
+      ],
+      "code": "enum Status { Active = \"ACTIVE\", Done = \"DONE\" }\nconst s: Status = Status.Done;\nconsole.log(s.toLowerCase() + \":\" + Status.Active.length);",
+      "query": {
+        "explanation": "Status.Done is the string \"DONE\", so toLowerCase() gives \"done\", and Status.Active is \"ACTIVE\" whose length is 6.",
+        "tags": [
+          "enums",
+          "string-enums"
+        ],
+        "title": "String enum members behave like strings"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-38d4b61e",
+      "prompt": "What string does this program log?",
+      "topic": "enums-and-const",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Apple|Kiwi"
+        },
+        {
+          "text": "apple|kiwi",
+          "rationale": "keyof typeof Fruit yields the member names, and the array literal holds those names, not the lowercase values."
+        },
+        {
+          "text": "Apple,Kiwi",
+          "rationale": "join(\"|\") uses the pipe separator rather than the default comma."
+        },
+        {
+          "text": "0|1",
+          "rationale": "The enum has string values, so no numeric indexes or positions are logged."
+        }
+      ],
+      "code": "enum Fruit { Apple = \"apple\", Kiwi = \"kiwi\" }\ntype Keys = keyof typeof Fruit;\nconst k: Keys[] = [\"Apple\", \"Kiwi\"];\nconsole.log(k.join(\"|\"));",
+      "query": {
+        "explanation": "typeof Fruit is the enum object type, so keyof typeof Fruit is the union of member names \"Apple\" | \"Kiwi\"; joining those names with \"|\" prints Apple|Kiwi.",
+        "syntax": "type Keys = keyof typeof SomeEnum;",
+        "tags": [
+          "enums",
+          "keyof",
+          "typeof"
+        ],
+        "title": "keyof typeof an enum"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-3a7f02a4",
+      "prompt": "Does tsc accept passing this const enum to Object.keys?",
+      "topic": "enums-and-const",
+      "answer": false,
+      "code": "const enum Size { S = 1, M = 2 }\nconsole.log(Object.keys(Size).length);",
+      "query": {
+        "explanation": "const enum members are substituted inline at compile time, so the enum name cannot be used as a value. Drop the const modifier if you need to enumerate keys at runtime.",
+        "syntax": "const enum E { A = 1 } // E.A inlines to 1; E alone is an error",
+        "tags": [
+          "enums",
+          "const-enum"
+        ],
+        "title": "const enums have no runtime object"
+      },
+      "rationale": "A const enum is fully inlined and emits no runtime object, so tsc rejects using Size as a value; it may only appear in property or index access expressions.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-fe1c9834",
+      "prompt": "Does this program log number?",
+      "topic": "compile-vs-runtime",
+      "answer": false,
+      "code": "const x: unknown = \"5\";\nconst n = x as number;\nconsole.log(typeof n);",
+      "query": {
+        "explanation": "`as number` only tells the compiler how to treat the expression; it emits no conversion code. At run time `n` is still the string \"5\", so `typeof n` is \"string\". A real conversion needs `Number(x)`.",
+        "syntax": "expr as Type",
+        "tags": [
+          "type-assertion",
+          "erasure",
+          "typeof"
+        ],
+        "title": "A type assertion is compile-time only"
+      },
+      "rationale": "`as` emits no runtime conversion, so the value remains the string \"5\" and typeof logs \"string\".",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-962f12f6",
+      "prompt": "Does this program log object?",
+      "topic": "compile-vs-runtime",
+      "answer": true,
+      "code": "enum Color { Red, Green }\nconsole.log(typeof Color);",
+      "query": {
+        "explanation": "Unlike interfaces and type aliases, a non-const enum is emitted as a real JavaScript object holding the member names and reverse mappings, so `typeof Color` is \"object\".",
+        "syntax": "enum Name { Member }",
+        "tags": [
+          "enum",
+          "runtime-value",
+          "typeof"
+        ],
+        "title": "Enums survive compilation"
+      },
+      "rationale": "An enum declaration creates both a type and a runtime object, so typeof yields \"object\" rather than \"undefined\".",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-8b046e1f",
+      "prompt": "Does tsc accept this instanceof check against an interface name?",
+      "topic": "compile-vs-runtime",
+      "answer": false,
+      "code": "interface Animal { legs: number }\nconst a: unknown = { legs: 4 };\nif (a instanceof Animal) { console.log(\"animal\"); }",
+      "query": {
+        "explanation": "`instanceof` needs a value (a constructor function) on its right side, but an interface exists only in the type space and is erased before emit. tsc reports that `Animal` only refers to a type. Use a hand-written type guard such as `typeof a === \"object\" && a !== null && \"legs\" in a` instead.",
+        "syntax": "value instanceof Constructor",
+        "tags": [
+          "interface",
+          "erasure",
+          "instanceof"
+        ],
+        "title": "Interfaces have no runtime value"
+      },
+      "rationale": "An interface is erased at compile time, so it cannot appear as the value operand of instanceof; tsc reports an error.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-1c8f167b",
+      "prompt": "What happens when this program is compiled and then run?",
+      "topic": "compile-vs-runtime",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "It throws a TypeError at run time"
+        },
+        {
+          "text": "It logs an empty line",
+          "rationale": "`names[0]` is undefined, not an empty string, so no string method call succeeds."
+        },
+        {
+          "text": "It logs undefined",
+          "rationale": "The program never reaches console.log; the method call on undefined fails first."
+        },
+        {
+          "text": "It fails to compile",
+          "rationale": "The `!` assertion makes the type `string`, so the compiler reports no error."
+        }
+      ],
+      "code": "const names: string[] = [];\nconst first = names[0]!;\nconsole.log(first.toUpperCase());",
+      "query": {
+        "explanation": "`!` silences the compiler's concern about `undefined`; it emits nothing. Indexing an empty array yields `undefined` at run time, so calling `.toUpperCase()` throws a TypeError. Compiling cleanly does not guarantee running cleanly.",
+        "syntax": "expr!",
+        "tags": [
+          "non-null-assertion",
+          "runtime-error",
+          "erasure"
+        ],
+        "title": "Non-null assertion is not a runtime check"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-7fe27142",
+      "prompt": "What text does this program log?",
+      "topic": "compile-vs-runtime",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "42",
+          "rationale": "The function returns `v.length`, not `v`, so the argument itself is never logged."
+        },
+        {
+          "text": "2",
+          "rationale": "No digit counting happens; numbers have no `length` property, unlike strings."
+        },
+        {
+          "text": "It throws a TypeError",
+          "rationale": "Reading a missing property on a number is legal JavaScript and simply yields undefined."
+        }
+      ],
+      "code": "function len(v: string) { return v.length; }\nconst n: any = 42;\nconsole.log(String(len(n)));",
+      "query": {
+        "explanation": "Passing an `any` value skips the parameter check at compile time, but nothing is verified at run time: `len` receives the number 42, `(42).length` is `undefined`, and `String(undefined)` is \"undefined\".",
+        "syntax": "const x: any = value",
+        "tags": [
+          "any",
+          "unsound",
+          "runtime-behaviour"
+        ],
+        "title": "`any` disables the compile-time check only"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-eaa62c4d",
+      "prompt": "Does this program print {\"port\":8080}?",
+      "topic": "compile-vs-runtime",
+      "answer": true,
+      "code": "const config = { port: 8080 } satisfies Record<string, number>;\nconsole.log(JSON.stringify(config));",
+      "query": {
+        "explanation": "`satisfies` verifies at compile time that the expression matches the given type while keeping the narrow inferred type. It emits no code, so the serialized object is exactly the literal that was written.",
+        "syntax": "expr satisfies Type",
+        "tags": [
+          "satisfies",
+          "erasure",
+          "compile-time-check"
+        ],
+        "title": "`satisfies` checks without changing the value"
+      },
+      "rationale": "`satisfies` is erased during compilation and adds no properties or wrappers, so the object serializes unchanged.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-16980b00",
+      "prompt": "What does this program log?",
+      "topic": "compile-vs-runtime",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "function"
+        },
+        {
+          "text": "object",
+          "rationale": "Classes compile to constructor functions, and typeof a function is \"function\", not \"object\"."
+        },
+        {
+          "text": "undefined",
+          "rationale": "Unlike an interface, an abstract class is a real emitted declaration, so the binding exists."
+        },
+        {
+          "text": "abstract",
+          "rationale": "\"abstract\" is never a result of typeof; the operator returns only a fixed set of strings."
+        }
+      ],
+      "code": "abstract class Shape { abstract area(): number; }\nconsole.log(typeof Shape);",
+      "query": {
+        "explanation": "`abstract` is purely a compile-time restriction on `new`. The class declaration itself is emitted as a JavaScript constructor function, so `typeof Shape` is \"function\" even though `new Shape()` would be a compile error.",
+        "syntax": "abstract class Name { }",
+        "tags": [
+          "abstract-class",
+          "runtime-value",
+          "typeof"
+        ],
+        "title": "Abstract classes still emit a value"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-89aecb3a",
+      "prompt": "What text does this program log?",
+      "topic": "compile-vs-runtime",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "7"
+        },
+        {
+          "text": "undefined",
+          "rationale": "The property is emitted normally; only the type checker hides it, so the read succeeds."
+        },
+        {
+          "text": "0",
+          "rationale": "The field is initialised to 7, and nothing reassigns it."
+        },
+        {
+          "text": "It throws a TypeError",
+          "rationale": "Reading an ordinary property through an `any`-typed reference raises no runtime error."
+        }
+      ],
+      "code": "class Box { private secret = 7; }\nconst b = new Box();\nconsole.log(String((b as any).secret));",
+      "query": {
+        "explanation": "The `private` modifier is a compile-time visibility rule; the emitted JavaScript stores an ordinary property. Casting to `any` bypasses the check, and the value 7 is readable at run time. Real runtime privacy needs `#secret`.",
+        "syntax": "private name = value",
+        "tags": [
+          "private",
+          "encapsulation",
+          "erasure"
+        ],
+        "title": "`private` is enforced only by the compiler"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-6abb9f29",
+      "prompt": "What number does the last line log here?",
+      "topic": "compile-vs-runtime",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "5"
+        },
+        {
+          "text": "1",
+          "rationale": "`readonly` adds no runtime guard, so the assignment really changes the property."
+        },
+        {
+          "text": "0",
+          "rationale": "Nothing in the program ever stores 0 in the property."
+        },
+        {
+          "text": "NaN",
+          "rationale": "No arithmetic occurs; the property is assigned the literal 5."
+        }
+      ],
+      "code": "interface P { readonly x: number }\nconst p: P = { x: 1 };\n(p as any).x = 5;\nconsole.log(p.x);",
+      "query": {
+        "explanation": "`readonly` makes the compiler reject direct writes, but it emits no protection. Writing through an `any`-typed reference mutates the object, so `p.x` becomes 5. Use `Object.freeze` for runtime immutability.",
+        "syntax": "readonly prop: Type",
+        "tags": [
+          "readonly",
+          "mutation",
+          "erasure"
+        ],
+        "title": "`readonly` is not frozen at run time"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-760eed4b",
+      "prompt": "What does this program log?",
+      "topic": "compile-vs-runtime",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string:2"
+        },
+        {
+          "text": "number:2",
+          "rationale": "The annotation is erased; the parsed elements stay the strings \"a\" and \"b\"."
+        },
+        {
+          "text": "undefined:0",
+          "rationale": "Parsing succeeds and produces a two-element array, so index 0 is defined."
+        },
+        {
+          "text": "It throws a SyntaxError",
+          "rationale": "`[\"a\",\"b\"]` is valid JSON, so parsing completes normally."
+        }
+      ],
+      "code": "const data: number[] = JSON.parse('[\"a\",\"b\"]');\nconsole.log(typeof data[0] + \":\" + data.length);",
+      "query": {
+        "explanation": "`JSON.parse` returns `any`, so annotating the result as `number[]` is accepted without complaint. At run time the array actually holds two strings, so `typeof data[0]` is \"string\" and the length is 2. Validate parsed input yourself if the shape matters.",
+        "syntax": "const x: Type = JSON.parse(text)",
+        "tags": [
+          "json-parse",
+          "any",
+          "unsound"
+        ],
+        "title": "Annotations do not validate external data"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-5374d7d8",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "number",
+          "rationale": "Widening to number happens for a plain object literal, but the const assertion makes the literal type non-widening."
+        },
+        {
+          "text": "readonly 3",
+          "rationale": "readonly is a property modifier on settings, not part of the type of the value read from it."
+        },
+        {
+          "text": "3 | number",
+          "rationale": "No union is formed; the property has exactly one literal type."
+        }
+      ],
+      "code": "const settings = { retries: 3, label: \"a\" } as const;\nlet r = settings.retries;",
+      "prompt": "Which type does r end up with in this snippet?",
+      "query": {
+        "explanation": "A fresh literal like 3 normally widens to number when it flows into a mutable `let`. A const assertion produces non-widening literal types, so settings.retries has type 3 and that exact literal type is kept for r, meaning only the value 3 can later be assigned to r. The readonly modifier applies to the property, not to the type of the value read out of it.",
+        "syntax": "as const",
+        "tags": [
+          "inference",
+          "literal-types",
+          "widening",
+          "const-assertion"
+        ],
+        "title": "as const blocks literal widening"
+      },
+      "type": "mc",
+      "topic": "types-and-inference",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-7b989973",
+      "answer": false,
+      "code": "type Shape = { kind: \"a\"; size: number } | { kind: \"b\"; label: string };\n\ninterface Named extends Shape {\n  name: string;\n}",
+      "prompt": "Can an interface extend this type alias?",
+      "query": {
+        "explanation": "An interface's `extends` clause accepts only an object type, or an intersection of object types, with statically known members. `Shape` is a union, so `interface Named extends Shape` fails with error TS2312. A type alias has no such restriction: `type Named = Shape & { name: string }` compiles fine and distributes the intersection over both union members. This is one of the practical differences between interfaces and type aliases: aliases can express unions, conditional and mapped types, while interfaces are limited to object shapes but support declaration merging.",
+        "syntax": "interface I extends ObjectType { ... }   // union not allowed\ntype T = UnionType & { ... }             // allowed",
+        "tags": [
+          "interfaces-vs-types",
+          "union-types",
+          "extends",
+          "type-aliases"
+        ],
+        "title": "Interfaces cannot extend union type aliases"
+      },
+      "rationale": "False: `extends` on an interface requires an object type or an intersection of object types, so extending the union alias `Shape` is rejected (TS2312); only `type Named = Shape & { name: string }` would compile.",
+      "type": "bool",
+      "topic": "interfaces-vs-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-4d694dfb",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "Only A is error-free; three of the four declarations are rejected."
+        },
+        {
+          "text": "2",
+          "rationale": "Three fail, not two: Required<P> misses b, Readonly<P> blocks c.a = 2, and Pick<P, \"a\"> rejects the extra b."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "A is valid, since Partial<P> makes both properties optional and {} satisfies it."
+        }
+      ],
+      "code": "type P = { a: number; b?: string };\n\n// A\nconst a: Partial<P> = {};\n\n// B\nconst b: Required<P> = { a: 1 };\n\n// C\nconst c: Readonly<P> = { a: 1 };\nc.a = 2;\n\n// D\nconst d: Pick<P, \"a\"> = { a: 1, b: \"x\" };",
+      "prompt": "How many of the four labelled declarations below does tsc reject?",
+      "query": {
+        "explanation": "A is fine: Partial<P> makes every property optional, so {} satisfies it. B fails: Required<P> strips the optionality from b, so b: string becomes mandatory and the literal is missing it. C fails on the mutation: Readonly<P> marks a as readonly, so c.a = 2 is not allowed (the initializer itself is fine). D fails because Pick<P, \"a\"> is just { a: number }, and the object literal's extra b triggers an excess-property error. That makes three rejected declarations.",
+        "syntax": "Partial<T> / Required<T> / Readonly<T> / Pick<T, K>",
+        "tags": [
+          "utility-types",
+          "partial",
+          "required",
+          "readonly",
+          "pick"
+        ],
+        "title": "Partial, Required, Readonly and Pick in one snippet"
+      },
+      "type": "mc",
+      "topic": "utility-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-9ff0eeb3",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Shape:circle/r=3"
+        },
+        {
+          "text": "Shape:circle",
+          "rationale": "That is only the base result; the override appends \"/r=\" and the radius before returning."
+        },
+        {
+          "text": "Shape:undefined/r=3",
+          "rationale": "super(\"circle\") assigns the parameter property name, so this.name is \"circle\", not undefined."
+        },
+        {
+          "text": "Shape:circle/r=undefined",
+          "rationale": "`private r: number` is a parameter property, so r is assigned 3 automatically when the constructor runs."
+        }
+      ],
+      "code": "class Shape {\n  constructor(protected name: string) {}\n  describe(): string {\n    return `Shape:${this.name}`;\n  }\n}\n\nclass Circle extends Shape {\n  constructor(private r: number) {\n    super(\"circle\");\n  }\n  describe(): string {\n    return `${super.describe()}/r=${this.r}`;\n  }\n}\n\nconsole.log(new Circle(3).describe());",
+      "prompt": "What string does this program log?",
+      "query": {
+        "explanation": "Circle.describe overrides Shape.describe but calls super.describe() first, which runs the base implementation with this.name set to \"circle\" by the super(\"circle\") call. The parameter property `private r` stores 3, so the override appends \"/r=3\", giving \"Shape:circle/r=3\".",
+        "syntax": "super.method()",
+        "tags": [
+          "classes",
+          "inheritance",
+          "super",
+          "parameter-properties"
+        ],
+        "title": "Overriding a method and calling super"
+      },
+      "type": "mc",
+      "topic": "classes",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    },
+    {
+      "id": "gen-typescript-medium-63afc2db",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "11,B"
+        },
+        {
+          "text": "4,B",
+          "rationale": "D has no initializer, so it continues from the member right before it (C = 10), giving 11 rather than continuing the A/B sequence."
+        },
+        {
+          "text": "11,undefined",
+          "rationale": "Numeric enum members do generate a reverse mapping, so Code[2] resolves to the name \"B\"."
+        },
+        {
+          "text": "11,C",
+          "rationale": "Code[2] looks up the member whose value is 2, which is B; C was explicitly set to 10."
+        }
+      ],
+      "code": "enum Code { A = 1, B, C = 10, D }\n\nconsole.log(`${Code.D},${Code[2]}`);",
+      "prompt": "Which pair of values does this snippet log?",
+      "query": {
+        "explanation": "In a numeric enum, any member without an initializer takes the previous member's value plus one. So A = 1, B = 2, C = 10 (explicit), and D = 11 because it follows C. Numeric enums also emit a reverse mapping from value to member name, so Code[2] is the string \"B\". The template literal therefore produces \"11,B\". Reverse mappings exist only for numeric members; string enum members do not get them, and `const enum` members are inlined so no lookup object exists at runtime.",
+        "syntax": "enum Name { Member = value, NextMember /* = value + 1 */ }",
+        "tags": [
+          "enum",
+          "numeric-enum",
+          "reverse-mapping",
+          "auto-increment"
+        ],
+        "title": "Numeric enum auto-increment and reverse mapping"
+      },
+      "type": "mc",
+      "topic": "enums-and-const",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "TypeScript 5.9.3 (Node v24.21.0)"
+      }
+    }
+  ],
+  "schemaVersion": 2
+}

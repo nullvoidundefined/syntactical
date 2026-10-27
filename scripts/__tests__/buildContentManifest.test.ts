@@ -10,12 +10,12 @@ const REPOSITORY_CONTENT_DIR = join(__dirname, '..', '..', 'content');
 const LANGUAGE_IDS = (
   JSON.parse(readFileSync(join(REPOSITORY_CONTENT_DIR, 'manifest.json'), 'utf8')) as { languages: { id: string }[] }
 ).languages.map(({ id }) => id);
-// Only free banks are in the public content tree (B-60); paid banks live in syntactical-content.
-const FREE_DIFFICULTY_IDS = ['easy'];
+// Every bank is hashed; only Easy banks are bundled.
+const BUNDLED_DIFFICULTY_IDS = ['easy'];
 const STALE_HASH = 'a'.repeat(64);
 const UTF8_BYTE_ORDER_MARK = Buffer.from([0xef, 0xbb, 0xbf]);
 
-type BankEntry = { access: 'free' | 'paid'; path: string; hash: string; contentVersion: number };
+type BankEntry = { path: string; hash: string; contentVersion: number };
 type ManifestLanguage = { id: string; banks: Record<string, BankEntry> } & Record<string, unknown>;
 type ManifestDocument = { schemaVersion: number; languages: ManifestLanguage[] };
 type GeneratedModule = { BUNDLED_MANIFEST: ManifestDocument; BUNDLED_BANKS: Record<string, unknown> };
@@ -72,15 +72,12 @@ describe('buildContentManifest', () => {
         const bankEntries = await Promise.all(
           Object.entries(language.banks).map(async ([difficulty, bank]) => [
             difficulty,
-            // A paid bank is not read without a private content root, so its entry stays as it was.
-            bank.access === 'paid'
-              ? bank
-              : {
-                  ...bank,
-                  // Only the bank whose recorded hash was stale changed, so only it bumps.
-                  contentVersion: bank.hash === STALE_HASH ? bank.contentVersion + 1 : bank.contentVersion,
-                  hash: await hashFileBytes(join(contentDir, bank.path)),
-                },
+            {
+              ...bank,
+              // Only the bank whose recorded hash was stale changed, so only it bumps.
+              contentVersion: bank.hash === STALE_HASH ? bank.contentVersion + 1 : bank.contentVersion,
+              hash: await hashFileBytes(join(contentDir, bank.path)),
+            },
           ]),
         );
         return { ...language, banks: Object.fromEntries(bankEntries) };
@@ -89,11 +86,9 @@ describe('buildContentManifest', () => {
     expect(rewrittenManifest).toEqual({ ...originalManifest, languages: expectedLanguages });
 
     const writtenHashes = rewrittenManifest.languages.flatMap((language) =>
-      Object.values(language.banks)
-        .filter((bank) => bank.access === 'free')
-        .map((bank) => bank.hash),
+      Object.values(language.banks).map((bank) => bank.hash),
     );
-    expect(writtenHashes).toHaveLength(LANGUAGE_IDS.length * FREE_DIFFICULTY_IDS.length);
+    expect(writtenHashes).toHaveLength(LANGUAGE_IDS.length * 3);
     for (const writtenHash of writtenHashes) {
       expect(writtenHash).toMatch(/^[0-9a-f]{64}$/);
     }
@@ -109,7 +104,7 @@ describe('buildContentManifest', () => {
     expect(generatedModule.BUNDLED_MANIFEST).toEqual(rewrittenManifest);
 
     const expectedBankKeys = LANGUAGE_IDS.flatMap((language) =>
-      FREE_DIFFICULTY_IDS.map((difficulty) => `${language}/${difficulty}`),
+      BUNDLED_DIFFICULTY_IDS.map((difficulty) => `${language}/${difficulty}`),
     );
     expect(Object.keys(generatedModule.BUNDLED_BANKS).sort()).toEqual([...expectedBankKeys].sort());
 
@@ -126,7 +121,7 @@ describe('buildContentManifest', () => {
 
     expect(generatedSource).not.toContain(workDir);
     for (const language of LANGUAGE_IDS) {
-      for (const difficulty of FREE_DIFFICULTY_IDS) {
+      for (const difficulty of BUNDLED_DIFFICULTY_IDS) {
         expect(generatedSource).toMatch(
           new RegExp(`require\\(\\s*['"]\\.\\.?/[^'"]*${language}/${difficulty}\\.json['"]\\s*\\)`),
         );

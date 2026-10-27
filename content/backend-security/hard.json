@@ -1,0 +1,4434 @@
+{
+  "questions": [
+    {
+      "id": "gen-backend-security-hard-b280a8e3",
+      "prompt": "Which PostgreSQL function returns a text value wrapped as a SQL string literal?",
+      "topic": "sql-injection",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "quote_literal"
+        },
+        {
+          "text": "quote_ident",
+          "rationale": "quote_ident wraps the text in double quotes for use as an identifier, producing \"O'Brien\" rather than a string literal."
+        },
+        {
+          "text": "concat",
+          "rationale": "concat only joins text together; it performs no quoting or escaping at all."
+        },
+        {
+          "text": "upper",
+          "rationale": "upper only changes letter case and does nothing about quoting."
+        }
+      ],
+      "query": {
+        "explanation": "When a value must be inlined into dynamically built SQL, quote_literal wraps it in single quotes and doubles any embedded single quotes, so the result is a single self-contained literal. Parameter binding is still preferred when available.",
+        "syntax": "quote_literal(text) -> text",
+        "tags": [
+          "postgres",
+          "dynamic-sql",
+          "escaping"
+        ],
+        "title": "quote_literal for dynamic SQL values"
+      },
+      "type": "mc",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-d7ff0f17",
+      "prompt": "In PostgreSQL's format(), which specifier quotes its argument as an identifier?",
+      "topic": "sql-injection",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "%I"
+        },
+        {
+          "text": "%L",
+          "rationale": "%L quotes the argument as a string literal in single quotes, not as an identifier."
+        },
+        {
+          "text": "%s",
+          "rationale": "%s inserts the argument's text with no quoting or escaping whatsoever."
+        },
+        {
+          "text": "%Q",
+          "rationale": "%Q is not a specifier recognised by PostgreSQL's format() function."
+        }
+      ],
+      "query": {
+        "explanation": "Table and column names cannot be bound as parameters, so dynamic SQL must quote them. format with %I applies identifier quoting, wrapping the name in double quotes and doubling any embedded double quotes.",
+        "syntax": "format('SELECT * FROM %I', tbl)",
+        "tags": [
+          "postgres",
+          "dynamic-sql",
+          "identifiers"
+        ],
+        "title": "format('%I') for identifiers"
+      },
+      "type": "mc",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-8aa5a029",
+      "prompt": "When a LIKE pattern comes from a bound parameter, which characters still keep special meaning?",
+      "topic": "sql-injection",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "% and _"
+        },
+        {
+          "text": "' and \"",
+          "rationale": "Quote characters are handled by the binding layer and have no special meaning inside a LIKE pattern value."
+        },
+        {
+          "text": "; and --",
+          "rationale": "Statement separators and comment markers are never interpreted inside a bound value, in LIKE patterns or anywhere else."
+        },
+        {
+          "text": "none; the driver escapes them",
+          "rationale": "The driver escapes nothing inside the value; LIKE still interprets the pattern metacharacters after binding."
+        }
+      ],
+      "query": {
+        "explanation": "Binding stops a value from altering SQL structure, but the LIKE operator still interprets % and _ inside the pattern it receives. Unescaped wildcards from users cause over-broad matching, so escape them with an ESCAPE clause when an exact substring is intended.",
+        "syntax": "WHERE s LIKE ? ESCAPE '\\\\'",
+        "tags": [
+          "like",
+          "parameterized-queries",
+          "pattern-matching"
+        ],
+        "title": "Wildcards survive parameter binding"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-54c27a35",
+      "prompt": "Which placeholder marker matches the paramstyle reported by Python's sqlite3 module?",
+      "topic": "sql-injection",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "?"
+        },
+        {
+          "text": "%s",
+          "rationale": "%s is the 'format' paramstyle used by drivers such as psycopg and MySQLdb, not by sqlite3."
+        },
+        {
+          "text": "$1",
+          "rationale": "$1 is PostgreSQL's numbered parameter notation used in PREPARE, not a DB-API paramstyle for sqlite3."
+        },
+        {
+          "text": ":name",
+          "rationale": "sqlite3 does accept named :name parameters, but the paramstyle attribute it reports is qmark."
+        }
+      ],
+      "query": {
+        "explanation": "Each DB-API driver advertises a paramstyle, and using the wrong marker tempts developers back into string formatting. sqlite3 reports 'qmark', so the ? marker is the one bound positionally.",
+        "syntax": "import sqlite3; sqlite3.paramstyle",
+        "tags": [
+          "db-api",
+          "parameterized-queries",
+          "python"
+        ],
+        "title": "Knowing your driver's paramstyle"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-5e4f6632",
+      "prompt": "What does PostgreSQL's quote_nullable(NULL) return?",
+      "topic": "sql-injection",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "the unquoted text NULL"
+        },
+        {
+          "text": "the quoted text 'NULL'",
+          "rationale": "Quoting the word would produce a four-character string value instead of the SQL null keyword."
+        },
+        {
+          "text": "an empty string",
+          "rationale": "An empty result would leave a gap in the generated SQL and cause a syntax error."
+        },
+        {
+          "text": "a SQL NULL value",
+          "rationale": "Returning null would make the whole concatenated query text null, which is exactly the problem quote_nullable avoids."
+        }
+      ],
+      "query": {
+        "explanation": "quote_literal(NULL) returns null, which silently wipes out a concatenated query string. quote_nullable instead returns the literal text NULL so the generated SQL stays valid and expresses an unknown value.",
+        "syntax": "quote_nullable(anyelement) -> text",
+        "tags": [
+          "postgres",
+          "dynamic-sql",
+          "null-handling"
+        ],
+        "title": "quote_nullable handles missing values"
+      },
+      "type": "mc",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-b69600db",
+      "prompt": "After this code runs, how many rows does table t contain?",
+      "topic": "sql-injection",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2"
+        },
+        {
+          "text": "0",
+          "rationale": "The table is never dropped or emptied; the payload is only compared as a string value."
+        },
+        {
+          "text": "1",
+          "rationale": "A SELECT does not delete rows, so neither inserted row is removed."
+        },
+        {
+          "text": "The table no longer exists",
+          "rationale": "The DROP text stays inside a bound parameter and is never parsed as SQL."
+        }
+      ],
+      "code": "import sqlite3\ncon = sqlite3.connect(\":memory:\")\ncon.execute(\"create table t(name text)\")\ncon.executemany(\"insert into t values (?)\", [(\"a\",), (\"b\",)])\ncon.execute(\"select * from t where name = ?\", (\"a'; drop table t; --\",))",
+      "query": {
+        "explanation": "The payload \"a'; drop table t; --\" is sent as a bound value, so the database compares it as one literal string. No DROP is parsed, the SELECT simply matches nothing, and both inserted rows survive.",
+        "syntax": "cur.execute(\"... WHERE name = ?\", (value,))",
+        "tags": [
+          "sql-injection",
+          "parameterized-queries",
+          "sqlite3"
+        ],
+        "title": "Bound parameters are data, not SQL"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-1a7ca422",
+      "prompt": "What exact text does this PostgreSQL expression return?",
+      "topic": "sql-injection",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"My Table\""
+        },
+        {
+          "text": "'My Table'",
+          "rationale": "Single quotes make a string literal; quote_ident emits an identifier wrapped in double quotes."
+        },
+        {
+          "text": "My Table",
+          "rationale": "The space and capitals make the name invalid unquoted, so quote_ident must add quotes."
+        },
+        {
+          "text": "\"my table\"",
+          "rationale": "quote_ident never folds case; it keeps the supplied spelling verbatim."
+        }
+      ],
+      "code": "SELECT quote_ident('My Table');",
+      "query": {
+        "explanation": "quote_ident adds double quotes whenever the name is not a valid lowercase bare identifier, and it preserves the original case exactly. Mixed case plus a space both force quoting, giving \"My Table\", which is the only safe way to splice an untrusted identifier into dynamic SQL.",
+        "syntax": "quote_ident(name) -> text",
+        "tags": [
+          "sql-injection",
+          "postgres",
+          "quote_ident"
+        ],
+        "title": "quote_ident on a mixed-case name"
+      },
+      "type": "mc",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-4a9c2feb",
+      "prompt": "What does shlex.quote return for this value?",
+      "topic": "command-injection",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "'a; rm -rf /'"
+        },
+        {
+          "text": "a\\; rm -rf /",
+          "rationale": "shlex.quote wraps unsafe values in single quotes; it never emits backslash escapes."
+        },
+        {
+          "text": "\"a; rm -rf /\"",
+          "rationale": "Double quotes would still allow $, backtick and backslash expansion, so shlex.quote uses single quotes."
+        },
+        {
+          "text": "a; rm -rf /",
+          "rationale": "The value contains spaces and a semicolon, so it is not returned unchanged."
+        }
+      ],
+      "code": "import shlex\nshlex.quote(\"a; rm -rf /\")",
+      "query": {
+        "explanation": "shlex.quote wraps any value containing characters outside [\\w@%+=:,./-] in single quotes, so the semicolon and spaces become literal text for /bin/sh instead of a command separator.",
+        "syntax": "shlex.quote(s) -> str",
+        "tags": [
+          "python",
+          "shell",
+          "quoting"
+        ],
+        "title": "shlex.quote on a value with a separator"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-2c0dd0e2",
+      "prompt": "What does shlex.quote return for the empty string?",
+      "topic": "command-injection",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "''"
+        },
+        {
+          "text": "(empty string, nothing is printed)",
+          "rationale": "An empty result would vanish from the command line and shift the remaining arguments, so quote emits explicit quotes."
+        },
+        {
+          "text": "\"\"",
+          "rationale": "shlex.quote always uses single quotes when it quotes a value."
+        },
+        {
+          "text": "None",
+          "rationale": "shlex.quote always returns a str, never None."
+        }
+      ],
+      "code": "import shlex\nshlex.quote(\"\")",
+      "query": {
+        "explanation": "An unquoted empty string would disappear from a shell command line and shift every later argument, so shlex.quote special-cases it and returns a pair of single quotes.",
+        "syntax": "shlex.quote('') -> \"''\"",
+        "tags": [
+          "python",
+          "shell",
+          "quoting"
+        ],
+        "title": "Quoting an empty argument"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-9144b898",
+      "prompt": "Does shlex.split produce three tokens here?",
+      "topic": "command-injection",
+      "answer": true,
+      "code": "import shlex\nshlex.split(\"cat $(ls) file\")",
+      "query": {
+        "explanation": "shlex.split only performs word splitting and quote removal. It does not evaluate command substitution, so '$(ls)' survives as a single literal token rather than being expanded or split.",
+        "syntax": "shlex.split(s) -> list[str]",
+        "tags": [
+          "python",
+          "parsing",
+          "shell"
+        ],
+        "title": "shlex.split does not expand substitutions"
+      },
+      "rationale": "shlex only does POSIX word splitting and quote removal; it never expands or splits on $( ), so '$(ls)' stays one token and the result is exactly ['cat', '$(ls)', 'file'].",
+      "type": "bool",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-85710d36",
+      "prompt": "Does the quoted result still begin with a dash?",
+      "topic": "command-injection",
+      "answer": true,
+      "code": "import shlex\nshlex.quote(\"--version\")",
+      "query": {
+        "explanation": "Letters, digits and '-' are all inside shlex's safe set, so '--version' is returned untouched. Shell quoting only neutralises shell metacharacters; a value that looks like an option flag is still parsed as a flag by the target program, which is why option terminators or fixed argument positions are needed.",
+        "syntax": "shlex.quote('--version') -> '--version'",
+        "tags": [
+          "python",
+          "argument-injection",
+          "quoting"
+        ],
+        "title": "Quoting does not stop argument injection"
+      },
+      "rationale": "'-', letters and digits are all in shlex's safe character set, so the value is returned unquoted and is still read as an option flag.",
+      "type": "bool",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-f3912b77",
+      "prompt": "How many of these four values does shlex.quote return unchanged?",
+      "topic": "command-injection",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "Only one value ('a b') contains an unsafe character, so three come back unchanged, not one."
+        },
+        {
+          "text": "2",
+          "rationale": "'@opt' and 'a=b' are both safe because @ and = are in shlex's allowed set, pushing the count higher."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "'a b' contains a space, which shlex always quotes, so not all four survive unchanged."
+        }
+      ],
+      "code": "import shlex\nvals = [\"safe.txt\", \"a b\", \"@opt\", \"a=b\"]",
+      "query": {
+        "explanation": "shlex.quote leaves a non-empty value alone when every character matches [\\w@%+=:,./-]. Only 'a b' has a character outside that set (the space), so three of the four values come back untouched.",
+        "syntax": "shlex.quote(s) == s when s has only safe characters",
+        "tags": [
+          "python",
+          "quoting",
+          "shell"
+        ],
+        "title": "shlex.quote's safe character set"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-03444e01",
+      "prompt": "What does this helper print?",
+      "topic": "command-injection",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "'it'\\''s'"
+        },
+        {
+          "text": "'it\\'s'",
+          "rationale": "A backslash does not escape anything inside a POSIX single-quoted string, so the regex emits '\\'' instead."
+        },
+        {
+          "text": "\"it's\"",
+          "rationale": "The helper hard-codes single quotes around the value, not double quotes."
+        },
+        {
+          "text": "it's",
+          "rationale": "The value is always wrapped in quotes, even when the apostrophe is the only special character."
+        }
+      ],
+      "code": "const shq = (s) => \"'\" + s.replace(/'/g, \"'\\\\''\") + \"'\";\nconsole.log(shq(\"it's\"));",
+      "query": {
+        "explanation": "Inside a single-quoted shell word nothing is special except the closing quote, so the only safe escape is to close the quote, emit a backslash-quote, and reopen: ' -> '\\''. The helper therefore turns it's into 'it'\\''s'.",
+        "syntax": "\"'\" + s.replace(/'/g, \"'\\\\''\") + \"'\"",
+        "tags": [
+          "node",
+          "shell",
+          "quoting"
+        ],
+        "title": "POSIX single-quote escaping in JavaScript"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-dd8c59a0",
+      "prompt": "Does the sanitized value still contain a shell separator?",
+      "topic": "command-injection",
+      "answer": true,
+      "code": "const clean = (s) => s.replace(';', '');\nconst out = clean('a;;id');",
+      "query": {
+        "explanation": "String.prototype.replace with a string pattern substitutes only the first occurrence. 'a;;id' becomes 'a;id', which still carries a command separator — a classic blacklist bypass that a /g flag or, better, an argument-array API would avoid.",
+        "syntax": "s.replace(';', '') // first match only",
+        "tags": [
+          "node",
+          "sanitization",
+          "blacklist"
+        ],
+        "title": "Non-global replace leaves metacharacters behind"
+      },
+      "rationale": "replace with a string pattern removes only the first match, so one semicolon survives in 'a;id' and the separator is still present.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-a0e91e16",
+      "prompt": "How many of the entries in meta appear in cmd?",
+      "topic": "command-injection",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "2",
+          "rationale": "'$' appears once and '&' appears twice, giving three matches rather than two."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "The string contains no ';', '|' or backtick, so only the single '$' and the two '&' characters match."
+        },
+        {
+          "text": "5",
+          "rationale": "Only three characters are in meta; '-c' and the digits are not metacharacters."
+        }
+      ],
+      "code": "const meta = [';', '|', '&', '$', '`'];\nconst cmd = 'ping -c 1 $HOST && echo done';",
+      "query": {
+        "explanation": "The string contains one '$' (in $HOST) and two '&' characters from '&&', for three matches in total. No semicolon, pipe or backtick appears, which is why blacklist counting is a fragile way to judge whether a command string is safe.",
+        "syntax": "[...cmd].filter((c) => meta.includes(c)).length",
+        "tags": [
+          "node",
+          "shell",
+          "metacharacters"
+        ],
+        "title": "Counting shell metacharacters in a built command"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-ad8ad957",
+      "prompt": "What does this query return?",
+      "topic": "command-injection",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "lscat/etc/passwd"
+        },
+        {
+          "text": "ls; cat /etc/passwd",
+          "rationale": "The filter deletes every character outside the allow-list, including the semicolon and the spaces."
+        },
+        {
+          "text": "ls cat /etc/passwd",
+          "rationale": "Spaces are not in the allow-list either, so they are removed rather than preserved."
+        },
+        {
+          "text": "lscatetcpasswd",
+          "rationale": "'/', '.', '_' and '-' are inside the allow-list, so the slashes remain in the output."
+        }
+      ],
+      "code": "SELECT regexp_replace('ls; cat /etc/passwd', '[^a-zA-Z0-9._/-]', '', 'g');",
+      "query": {
+        "explanation": "With the 'g' flag every character outside [a-zA-Z0-9._/-] is deleted, so the semicolon and both spaces disappear while the slashes stay, yielding lscat/etc/passwd. Deleting characters silently corrupts the value, so rejecting bad input is usually safer than stripping it.",
+        "syntax": "regexp_replace(source, pattern, replacement, flags)",
+        "tags": [
+          "postgres",
+          "regexp",
+          "allow-list"
+        ],
+        "title": "Allow-list stripping before building a command"
+      },
+      "type": "mc",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-05d06cd6",
+      "prompt": "Does this filename pass the allow-list check?",
+      "topic": "command-injection",
+      "answer": false,
+      "code": "SELECT 'backup $(date).sql' ~ '^[A-Za-z0-9._-]+$';",
+      "query": {
+        "explanation": "The pattern is anchored at both ends and permits only letters, digits, dot, underscore and hyphen. The candidate contains a space plus '$', '(' and ')', so the match fails and the value must be rejected before it is ever placed in a command line.",
+        "syntax": "text ~ '^[A-Za-z0-9._-]+$'",
+        "tags": [
+          "postgres",
+          "allow-list",
+          "validation"
+        ],
+        "title": "Anchored allow-list regex as a gate"
+      },
+      "rationale": "The value contains a space, '$', '(' and ')', none of which are in [A-Za-z0-9._-], so the anchored pattern cannot match the whole string.",
+      "type": "bool",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-e095c95d",
+      "prompt": "What does this join call print?",
+      "topic": "path-traversal",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "/etc/passwd"
+        },
+        {
+          "text": "/var/www/html/etc/passwd",
+          "rationale": "join does not concatenate when the later argument is absolute; it restarts from that argument."
+        },
+        {
+          "text": "/var/www/html//etc/passwd",
+          "rationale": "No double separator is produced, and the base is dropped rather than kept."
+        },
+        {
+          "text": "/var/www/html",
+          "rationale": "The base is the part that is thrown away, not the part that survives."
+        }
+      ],
+      "code": "import os.path\nprint(os.path.join(\"/var/www/html\", \"/etc/passwd\"))",
+      "query": {
+        "explanation": "os.path.join discards everything before an argument that is itself absolute. Joining a user-controlled value that starts with '/' therefore throws away the intended base directory entirely, giving an absolute-path injection even with no '..' in the input. Validate or strip leading separators before joining.",
+        "syntax": "os.path.join(base, user_part)",
+        "tags": [
+          "path-traversal",
+          "python",
+          "os.path"
+        ],
+        "title": "os.path.join and absolute second arguments"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-aa9b00bb",
+      "prompt": "What does this normpath call print?",
+      "topic": "path-traversal",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "../c"
+        },
+        {
+          "text": "c",
+          "rationale": "Only two of the three '..' segments can be cancelled, so one remains in front."
+        },
+        {
+          "text": "/c",
+          "rationale": "normpath never turns a relative path into an absolute one."
+        },
+        {
+          "text": "a/b/../../../c",
+          "rationale": "normpath does collapse the segments it can; the string is not returned untouched."
+        }
+      ],
+      "code": "import os.path\nprint(os.path.normpath(\"a/b/../../../c\"))",
+      "query": {
+        "explanation": "normpath collapses '..' lexically against preceding segments, but for a relative path it keeps any '..' that cannot be cancelled. Here 'b' and 'a' are consumed and one '..' survives, so the result still escapes the starting directory. A normalized path is not automatically a safe path.",
+        "syntax": "os.path.normpath(path)",
+        "tags": [
+          "path-traversal",
+          "python",
+          "normalization"
+        ],
+        "title": "normpath can leave escaping '..' segments"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-c54a4cbc",
+      "prompt": "What does this unquote call print?",
+      "topic": "path-traversal",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "%2e%2e%2fetc"
+        },
+        {
+          "text": "../etc",
+          "rationale": "That needs two decoding passes; unquote decodes only once."
+        },
+        {
+          "text": "%252e%252e%252fetc",
+          "rationale": "The '%25' sequences are decoded, so the string does change."
+        },
+        {
+          "text": "..%2fetc",
+          "rationale": "All three escapes decode the same way; none of them resolves to a dot in one pass."
+        }
+      ],
+      "code": "from urllib.parse import unquote\nprint(unquote(\"%252e%252e%252fetc\"))",
+      "query": {
+        "explanation": "'%25' decodes to '%', so one pass over '%252e%252e%252f' yields the literal text '%2e%2e%2f'. If a later layer decodes again, that becomes '../'. Filters that inspect the value after only a single decode miss double-encoded traversal.",
+        "syntax": "urllib.parse.unquote(s)",
+        "tags": [
+          "path-traversal",
+          "python",
+          "encoding"
+        ],
+        "title": "Double URL encoding survives one decode"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-b3036f9b",
+      "prompt": "What does this code print?",
+      "topic": "path-traversal",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "../etc/passwd"
+        },
+        {
+          "text": "etc/passwd",
+          "rationale": "replace does not rescan its own output, so the newly formed '../' remains."
+        },
+        {
+          "text": "..//etc/passwd",
+          "rationale": "The removed match consumes one of the two slashes, leaving a single separator."
+        },
+        {
+          "text": "....//etc/passwd",
+          "rationale": "A '../' substring does occur inside '....//', so a replacement happens."
+        }
+      ],
+      "code": "payload = \"....//etc/passwd\"\nprint(payload.replace(\"../\", \"\"))",
+      "query": {
+        "explanation": "replace scans once and does not re-examine the text it stitches back together. Removing the inner '../' from '....//' leaves '..' followed by the surviving '/', recreating a traversal sequence. Reject suspicious input instead of trying to delete it.",
+        "syntax": "str.replace(old, new)",
+        "tags": [
+          "path-traversal",
+          "python",
+          "blacklist-bypass"
+        ],
+        "title": "Single-pass stripping of '../' is bypassable"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-4b82c8e5",
+      "prompt": "On Linux, what does this normpath call print?",
+      "topic": "path-traversal",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "..\\..\\etc"
+        },
+        {
+          "text": "../../etc",
+          "rationale": "POSIX os.path does not convert backslashes into forward slashes."
+        },
+        {
+          "text": "etc",
+          "rationale": "No separator is recognized, so there are no segments to cancel."
+        },
+        {
+          "text": "..",
+          "rationale": "The whole string is one component; normpath leaves it intact."
+        }
+      ],
+      "code": "import os.path\nprint(os.path.normpath(\"..\\\\..\\\\etc\"))",
+      "query": {
+        "explanation": "On POSIX, os.path treats '\\\\' as a normal filename character, so normpath sees one single segment and changes nothing. Code that normalizes on Linux but later hands the string to a Windows host or an SMB share can let backslash traversal slip through unchecked.",
+        "syntax": "os.path.normpath(path)",
+        "tags": [
+          "path-traversal",
+          "python",
+          "platform"
+        ],
+        "title": "Backslashes are ordinary characters on POSIX"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-9424aac0",
+      "prompt": "Does this comparison print True?",
+      "topic": "path-traversal",
+      "answer": true,
+      "code": "from pathlib import Path\np = Path(\"/srv/files/../../etc/passwd\")\nprint(p.is_relative_to(\"/srv/files\"))",
+      "query": {
+        "explanation": "PurePath comparisons never touch the filesystem and never collapse '..' segments. A containment check must run on an already resolved path, e.g. Path(base, user).resolve().is_relative_to(Path(base).resolve()); otherwise the check approves escaping paths.",
+        "syntax": "Path(p).is_relative_to(base)",
+        "tags": [
+          "path-traversal",
+          "python",
+          "pathlib"
+        ],
+        "title": "is_relative_to does not resolve '..'"
+      },
+      "rationale": "is_relative_to is purely lexical: PurePath keeps '..' as a literal part, so the path still begins with /srv/files and the check passes even though the real target is /etc/passwd.",
+      "type": "bool",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-b87a0aa3",
+      "prompt": "Does this comparison print True?",
+      "topic": "path-traversal",
+      "answer": false,
+      "code": "import os.path\nshared = os.path.commonpath([\"/srv/data\", \"/srv/data2/secret.txt\"])\nprint(shared == \"/srv/data\")",
+      "query": {
+        "explanation": "A naive startswith check would accept '/srv/data2/secret.txt' as being inside '/srv/data'. commonpath splits on separators, so '/srv/data' and '/srv/data2' share only '/srv'. Using commonpath (on resolved paths) is the safer containment test.",
+        "syntax": "os.path.commonpath([a, b])",
+        "tags": [
+          "path-traversal",
+          "python",
+          "containment"
+        ],
+        "title": "commonpath compares components, not characters"
+      },
+      "rationale": "commonpath compares whole components, so the shared prefix of /srv/data and /srv/data2 is only /srv; the equality test is False, which is exactly why component-aware comparison beats raw string prefixes.",
+      "type": "bool",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-81d2b36d",
+      "prompt": "Does this query return True?",
+      "topic": "path-traversal",
+      "answer": true,
+      "code": "SELECT '/srv/data_backup/keys.pem' LIKE '/srv/data%' AS allowed;",
+      "query": {
+        "explanation": "Allow-list checks written as a string prefix ignore directory boundaries, so /srv/data_backup and /srv/database pass a '/srv/data%' test. Always anchor the prefix with the separator, comparing against '/srv/data/%' plus an exact match on the base itself.",
+        "syntax": "value LIKE prefix || '/%'",
+        "tags": [
+          "path-traversal",
+          "postgres",
+          "containment"
+        ],
+        "title": "Prefix matching without a trailing separator"
+      },
+      "rationale": "The LIKE prefix pattern matches character by character, so a sibling directory named data_backup satisfies '/srv/data%' and the guard wrongly allows it; only a separator-terminated prefix like '/srv/data/%' would exclude it.",
+      "type": "bool",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-1c615c2d",
+      "prompt": "What does this commonpath call return?",
+      "topic": "path-traversal",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "/srv/data"
+        },
+        {
+          "text": "/srv",
+          "rationale": "commonpath never resolves \"..\", so it does not back out of the data component when comparing the two paths."
+        },
+        {
+          "text": "/",
+          "rationale": "Both inputs share the literal components srv and data, so the common prefix is longer than the root."
+        },
+        {
+          "text": "/srv/data/..",
+          "rationale": "The shorter path has no \"..\" component, so the comparison stops after data and \"..\" is never part of the common prefix."
+        }
+      ],
+      "code": "import os.path\n\nprint(os.path.commonpath([\"/srv/data\", \"/srv/data/../secret\"]))",
+      "query": {
+        "explanation": "posixpath.commonpath splits each path on the separator and drops only empty and \".\" components; \"..\" is kept as an ordinary name. It therefore compares \"/srv/data/../secret\" as the components srv, data, .., secret, whose common prefix with srv, data is \"/srv/data\". Using commonpath on unresolved user input makes a traversal payload look like it lives inside the base directory, so always call os.path.realpath (or Path.resolve) first and then compare.",
+        "syntax": "os.path.commonpath(paths)",
+        "tags": [
+          "path-traversal",
+          "containment-check",
+          "posixpath"
+        ],
+        "title": "commonpath does not normalize .."
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-b20aeca2",
+      "prompt": "What hostname does this code print?",
+      "topic": "ssrf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "169.254.169.254"
+        },
+        {
+          "text": "internal.example.com",
+          "rationale": "Everything before the last '@' is userinfo, not the host, so this part is never contacted."
+        },
+        {
+          "text": "internal.example.com@169.254.169.254",
+          "rationale": "The .hostname property strips userinfo and port; it never returns the whole netloc."
+        },
+        {
+          "text": "None",
+          "rationale": "The URL has a valid authority section, so hostname is a non-empty string."
+        }
+      ],
+      "code": "from urllib.parse import urlparse\nu = \"http://internal.example.com@169.254.169.254/latest/meta-data/\"\nprint(urlparse(u).hostname)",
+      "query": {
+        "explanation": "A URL authority is userinfo@host:port, and the host is whatever follows the LAST '@'. Naive allow-list checks that substring-match 'internal.example.com' will approve this URL, but the HTTP client connects to 169.254.169.254 (the cloud metadata service). Always parse the URL and compare the parsed hostname, never the raw string.",
+        "syntax": "urlparse(url).hostname",
+        "tags": [
+          "ssrf",
+          "url-parsing",
+          "allow-list"
+        ],
+        "title": "Userinfo tricks in SSRF allow-lists"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-5d6bbaee",
+      "prompt": "What does this ipaddress call print?",
+      "topic": "ssrf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "127.0.0.1"
+        },
+        {
+          "text": "0.0.0.1",
+          "rationale": "That would be the integer 1; 2130706433 has its high byte set to 127."
+        },
+        {
+          "text": "127.0.0.0",
+          "rationale": "That is 2130706432; the trailing 1 in the integer becomes the final octet."
+        },
+        {
+          "text": "169.254.169.254",
+          "rationale": "The metadata address is the integer 2852039166, a different value."
+        }
+      ],
+      "code": "import ipaddress\nprint(ipaddress.ip_address(2130706433))",
+      "query": {
+        "explanation": "An IPv4 address is just a 32-bit integer, and most HTTP clients and resolvers accept the integer form: http://2130706433/ reaches 127.0.0.1. Blocklists that only compare literal strings like '127.0.0.1' or 'localhost' are bypassed by decimal, octal and hex forms, so normalise with ipaddress before deciding.",
+        "syntax": "ipaddress.ip_address(int)",
+        "tags": [
+          "ssrf",
+          "ip-encoding",
+          "blocklist-bypass"
+        ],
+        "title": "Decimal (integer) IP notation"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-b11a04c3",
+      "prompt": "Which integer equals the IPv4 address 169.254.169.254?",
+      "topic": "ssrf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2852039166"
+        },
+        {
+          "text": "2130706433",
+          "rationale": "That integer is 127.0.0.1, the loopback address."
+        },
+        {
+          "text": "2886729728",
+          "rationale": "That integer is 172.16.0.0, the start of an RFC1918 range."
+        },
+        {
+          "text": "3232235520",
+          "rationale": "That integer is 192.168.0.0, a different private range."
+        }
+      ],
+      "query": {
+        "explanation": "169.254.169.254 = 169*2^24 + 254*2^16 + 169*256 + 254 = 2852039166, so http://2852039166/latest/meta-data/ hits the same metadata endpoint. Convert the parsed host to an ipaddress object (or resolve it) and test range membership instead of matching strings.",
+        "syntax": "int(ipaddress.ip_address('169.254.169.254'))",
+        "tags": [
+          "ssrf",
+          "metadata-service",
+          "ip-encoding"
+        ],
+        "title": "Normalising alternate IP encodings"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-844ab335",
+      "prompt": "Does Python's ipaddress.ip_address accept the shorthand form '127.1'?",
+      "topic": "ssrf",
+      "answer": false,
+      "query": {
+        "explanation": "The ipaddress module is strict: '127.1' is rejected with ValueError. But the C library's inet_aton (used by many socket stacks and curl) expands it to 127.0.0.1. Code that says 'this is not an IP literal, so treat it as a hostname' can therefore let a loopback shorthand through. Reject hosts you cannot canonicalise, and re-check the address you actually connect to.",
+        "syntax": "ipaddress.ip_address('127.1')  # ValueError",
+        "tags": [
+          "ssrf",
+          "validation",
+          "loopback"
+        ],
+        "title": "Validator vs. resolver disagreement"
+      },
+      "rationale": "ip_address requires four dotted octets and raises ValueError on '127.1', even though inet_aton-based resolvers expand it to 127.0.0.1 — so a validator and the real connection can disagree.",
+      "type": "bool",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-0d202cdd",
+      "prompt": "What does this code print?",
+      "topic": "ssrf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "::1"
+        },
+        {
+          "text": "[::1]",
+          "rationale": "hostname strips the IPv6 brackets; only netloc keeps them."
+        },
+        {
+          "text": "[::1]:8080",
+          "rationale": "hostname never includes the port; that is available separately as .port."
+        },
+        {
+          "text": "::1:8080",
+          "rationale": "The port is not appended to the hostname value."
+        }
+      ],
+      "code": "from urllib.parse import urlparse\nprint(urlparse(\"http://[::1]:8080/admin\").hostname)",
+      "query": {
+        "explanation": "IPv6 literals appear bracketed in a URL, but .hostname returns the unbracketed, lowercased address '::1'. Deny-lists that only know '127.0.0.1' and 'localhost' miss the IPv6 loopback ::1 (and ::ffff:127.0.0.1). Feed the unbracketed value into ipaddress and check is_loopback/is_private for both families.",
+        "syntax": "urlparse(url).hostname",
+        "tags": [
+          "ssrf",
+          "ipv6",
+          "loopback"
+        ],
+        "title": "IPv6 hosts in URLs"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-001dfeb7",
+      "prompt": "What URL does this urljoin call print?",
+      "topic": "ssrf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "http://169.254.169.254/latest/meta-data/"
+        },
+        {
+          "text": "http://api.example.com/169.254.169.254/latest/meta-data/",
+          "rationale": "A leading '//' starts a new authority, so it replaces the host rather than becoming a path."
+        },
+        {
+          "text": "//169.254.169.254/latest/meta-data/",
+          "rationale": "urljoin inherits the base scheme, producing an absolute http URL."
+        },
+        {
+          "text": "http://api.example.com/fetch?u=1",
+          "rationale": "The reference is not empty, so it does not resolve back to the base URL."
+        }
+      ],
+      "code": "from urllib.parse import urljoin\nbase = \"http://api.example.com/fetch?u=1\"\nprint(urljoin(base, \"//169.254.169.254/latest/meta-data/\"))",
+      "query": {
+        "explanation": "A Location header of '//169.254.169.254/...' is protocol-relative: it keeps the scheme but swaps the host. Validating only the first URL and then letting the client follow redirects re-introduces SSRF. Validate every hop: disable automatic redirects, or re-run the host/IP check on each resolved Location before connecting.",
+        "syntax": "urljoin(base, location)",
+        "tags": [
+          "ssrf",
+          "redirects",
+          "url-parsing"
+        ],
+        "title": "Protocol-relative redirects"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-6592b27c",
+      "prompt": "Does Python's ipaddress report 169.254.169.254 as link-local?",
+      "topic": "ssrf",
+      "answer": true,
+      "query": {
+        "explanation": "An SSRF deny-list needs more than 10/8, 172.16/12 and 192.168/16. The 169.254.0.0/16 link-local range hosts cloud metadata services (169.254.169.254), and you also need loopback (127/8, ::1), 0.0.0.0/8, 100.64/10 CGNAT, multicast and IPv6 unique-local fc00::/7. ipaddress exposes is_link_local, is_loopback, is_private and is_reserved for exactly this.",
+        "syntax": "ipaddress.ip_address(h).is_link_local",
+        "tags": [
+          "ssrf",
+          "metadata-service",
+          "deny-list"
+        ],
+        "title": "Ranges a deny-list must cover"
+      },
+      "rationale": "169.254.169.254 lies in 169.254.0.0/16, so is_link_local is True; treating only RFC1918 ranges as internal would leave the cloud metadata endpoint reachable.",
+      "type": "bool",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-a1a9abd6",
+      "prompt": "What hostname does Node's URL parser print here?",
+      "topic": "ssrf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "169.254.169.254"
+        },
+        {
+          "text": "allowed.example",
+          "rationale": "The first segment is userinfo; the WHATWG parser splits at the last '@' in the authority."
+        },
+        {
+          "text": "attacker.example",
+          "rationale": "This is also part of the percent-encoded userinfo, not the host."
+        },
+        {
+          "text": "The constructor throws a TypeError",
+          "rationale": "Extra '@' characters are percent-encoded into the username, so the URL parses successfully."
+        }
+      ],
+      "code": "const u = new URL('http://allowed.example@attacker.example@169.254.169.254/');\nconsole.log(u.hostname);",
+      "query": {
+        "explanation": "WHATWG URL parsing treats everything before the LAST '@' as userinfo, so the connected host is the final segment. Allow-list checks using startsWith or indexOf on the raw string see 'allowed.example' and pass. Build a URL object, read .hostname, and compare it with an exact-match allow-list.",
+        "syntax": "new URL(input).hostname",
+        "tags": [
+          "ssrf",
+          "url-parsing",
+          "node"
+        ],
+        "title": "Multiple '@' in the authority"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-32c771f8",
+      "prompt": "What does Node print for the hostname of the URL http://0/ ?",
+      "topic": "ssrf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "0.0.0.0"
+        },
+        {
+          "text": "0",
+          "rationale": "The host parser sees a numeric final label and normalises it as an IPv4 address, so the stored host is dotted-quad."
+        },
+        {
+          "text": "localhost",
+          "rationale": "The parser never substitutes names; it only canonicalises the numeric form."
+        },
+        {
+          "text": "The constructor throws a TypeError",
+          "rationale": "'0' is a valid IPv4 number, so parsing succeeds."
+        }
+      ],
+      "code": "console.log(new URL('http://0/').hostname);",
+      "query": {
+        "explanation": "Because the last label is numeric, the WHATWG host parser runs the IPv4 parser: 'http://0/' becomes 0.0.0.0, which on Linux routes to the local machine. The same trick covers http://127.1/ and hex/octal forms. Compare the normalised .hostname against ipaddress-style range checks rather than blocking literal strings like '127.0.0.1'.",
+        "syntax": "new URL('http://0/').hostname",
+        "tags": [
+          "ssrf",
+          "ip-encoding",
+          "node"
+        ],
+        "title": "Short numeric hosts normalise to IPv4"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-82f11062",
+      "prompt": "What value does this query return?",
+      "topic": "ssrf",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "Both 10.1.2.3 and 192.168.0.5 match, so the count is larger than one."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "172.32.0.1 is outside 172.16.0.0/12, which only spans 172.16–172.31."
+        },
+        {
+          "text": "4",
+          "rationale": "169.254.169.254 and 8.8.8.8 match none of the four listed networks."
+        }
+      ],
+      "code": "SELECT count(DISTINCT v.h)::text\nFROM (VALUES ('10.1.2.3'),('169.254.169.254'),('8.8.8.8'),\n             ('192.168.0.5'),('172.32.0.1')) AS v(h),\n     unnest(ARRAY['10.0.0.0/8','172.16.0.0/12',\n                  '192.168.0.0/16','127.0.0.0/8']::inet[]) AS r(net)\nWHERE v.h::inet <<= r.net;",
+      "query": {
+        "explanation": "PostgreSQL's <<= operator tests 'is contained within or equals' a network, which is the right primitive for an SSRF deny-list stored in a table. Here only 10.1.2.3 and 192.168.0.5 match: 172.32.0.1 sits just outside 172.16.0.0/12, and 169.254.169.254 is link-local — a reminder that an RFC1918-only list still leaves the metadata endpoint reachable.",
+        "syntax": "inet <<= inet",
+        "tags": [
+          "ssrf",
+          "postgres",
+          "deny-list"
+        ],
+        "title": "Range checks with the inet type"
+      },
+      "type": "mc",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-0178d7ce",
+      "prompt": "What Authorization header value does HTTP Basic auth send for these credentials?",
+      "topic": "authentication",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Basic dXNlcjpwYXNz"
+        },
+        {
+          "text": "Basic user:pass",
+          "rationale": "Basic auth base64-encodes the colon-joined credentials; the raw clear-text pair is never put in the header."
+        },
+        {
+          "text": "Basic dXNlcg==:cGFzcw==",
+          "rationale": "The two fields are joined before encoding, not encoded separately and then joined by a colon."
+        },
+        {
+          "text": "Basic cGFzczp1c2Vy",
+          "rationale": "That is base64 of \"pass:user\"; the username must come first."
+        }
+      ],
+      "code": "username = \"user\"\npassword = \"pass\"",
+      "query": {
+        "explanation": "RFC 7617 joins the username and password with a single colon, encodes the whole UTF-8 string with base64, and prefixes the scheme name: Basic <base64>. base64(\"user:pass\") is \"dXNlcjpwYXNz\". The credentials are only encoded, never encrypted, which is why Basic auth requires TLS.",
+        "syntax": "Authorization: Basic base64(user \":\" password)",
+        "tags": [
+          "http",
+          "basic-auth",
+          "base64"
+        ],
+        "title": "Basic auth header encoding"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-4ff2dc0b",
+      "prompt": "What six digit HOTP code does this key and counter produce?",
+      "topic": "authentication",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "755224"
+        },
+        {
+          "text": "287082",
+          "rationale": "That is the RFC 4226 vector for counter 1, not counter 0."
+        },
+        {
+          "text": "359152",
+          "rationale": "That is the RFC 4226 vector for counter 2, not counter 0."
+        },
+        {
+          "text": "520489",
+          "rationale": "That is the RFC 4226 vector for counter 9, not counter 0."
+        }
+      ],
+      "code": "key     = b\"12345678901234567890\"  # RFC 4226 test key\ncounter = 0\ndigits  = 6",
+      "query": {
+        "explanation": "HOTP (RFC 4226) computes HMAC-SHA1 over the 8-byte big-endian counter, takes the low nibble of the last byte as an offset, reads 4 bytes at that offset, masks off the top bit, and reduces modulo 10^digits. For the RFC test key, counter 0 yields 755224.",
+        "syntax": "HOTP(K, C) = truncate(HMAC-SHA1(K, C)) mod 10^d",
+        "tags": [
+          "hotp",
+          "mfa",
+          "hmac"
+        ],
+        "title": "HOTP dynamic truncation"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-077a951a",
+      "prompt": "How many characters long is the string returned by this call?",
+      "topic": "authentication",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "43"
+        },
+        {
+          "text": "32",
+          "rationale": "32 is the byte count of the random input, not the length of its base64url text form."
+        },
+        {
+          "text": "44",
+          "rationale": "44 is the padded base64 length; token_urlsafe strips the single '=' pad character."
+        },
+        {
+          "text": "64",
+          "rationale": "64 would be the length of a hex encoding, which token_hex produces instead."
+        }
+      ],
+      "code": "import secrets\ntoken = secrets.token_urlsafe(32)",
+      "query": {
+        "explanation": "token_urlsafe(n) generates n random bytes and base64url-encodes them with padding stripped. 32 bytes need ceil(32/3) = 11 four-character groups = 44 characters, and because 32 mod 3 == 2 exactly one '=' is removed, leaving 43 characters. The token still carries 256 bits of entropy.",
+        "syntax": "secrets.token_urlsafe(nbytes)",
+        "tags": [
+          "tokens",
+          "entropy",
+          "sessions"
+        ],
+        "title": "Length of a URL-safe token"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-6cdc6c11",
+      "prompt": "How many characters long is out?",
+      "topic": "authentication",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "64"
+        },
+        {
+          "text": "32",
+          "rationale": "32 is the raw byte count; hex encoding uses two characters per byte."
+        },
+        {
+          "text": "128",
+          "rationale": "128 hex characters would mean 64 raw bytes, which is SHA-512's digest size, not SHA-256's."
+        },
+        {
+          "text": "44",
+          "rationale": "44 is the length of a padded base64 form of 32 bytes, not of a hex form."
+        }
+      ],
+      "code": "import hashlib\ndk = hashlib.pbkdf2_hmac(\"sha256\", b\"correct horse\", b\"NaCl\", 50000)\nout = dk.hex()",
+      "query": {
+        "explanation": "When dklen is omitted, pbkdf2_hmac returns exactly the digest size of the chosen hash, so SHA-256 gives 32 raw bytes. Hex encoding doubles that to 64 characters. Passing dklen explicitly is the only way to get a longer or shorter derived key.",
+        "syntax": "hashlib.pbkdf2_hmac(hash_name, password, salt, iterations, dklen=None)",
+        "tags": [
+          "pbkdf2",
+          "password-hashing",
+          "kdf"
+        ],
+        "title": "Default PBKDF2 output length"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-aaa2d1a9",
+      "prompt": "Which signing algorithm does this JWT header segment declare?",
+      "topic": "authentication",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "HS256"
+        },
+        {
+          "text": "RS256",
+          "rationale": "RS256 is RSA-SHA256; the decoded header names the symmetric HMAC variant instead."
+        },
+        {
+          "text": "ES256",
+          "rationale": "ES256 is ECDSA on P-256, which this header does not mention."
+        },
+        {
+          "text": "none",
+          "rationale": "The unsecured \"none\" algorithm would appear literally in the alg field, and it does not here."
+        }
+      ],
+      "code": "segment = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\"",
+      "query": {
+        "explanation": "The first dot-separated part of a JWT is base64url-encoded JSON. Decoding this segment gives {\"alg\":\"HS256\",\"typ\":\"JWT\"}, so the token claims HMAC-SHA256. The header is attacker-controlled data, so a verifier must compare alg against an expected allow list rather than trusting it.",
+        "syntax": "base64url(header) '.' base64url(payload) '.' base64url(signature)",
+        "tags": [
+          "jwt",
+          "base64url",
+          "tokens"
+        ],
+        "title": "Reading a JWT header"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-121e0251",
+      "prompt": "How many characters long is the string this query returns?",
+      "topic": "authentication",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "35"
+        },
+        {
+          "text": "32",
+          "rationale": "32 counts only the hex digest and ignores the three-character 'md5' prefix."
+        },
+        {
+          "text": "36",
+          "rationale": "36 is the length of a dashed UUID text form, not of this verifier."
+        },
+        {
+          "text": "60",
+          "rationale": "60 is the usual length of a bcrypt hash string, not of an md5 verifier."
+        }
+      ],
+      "code": "-- verifier = 'md5' || md5(password || username)\nselect 'md5' || md5('secret' || 'alice');",
+      "query": {
+        "explanation": "PostgreSQL's deprecated md5 authentication stores the literal prefix 'md5' followed by the 32 hex characters of md5(password || username), giving 35 characters total. The username acts as the salt, which is why these verifiers are not portable between accounts and why SCRAM-SHA-256 replaced them.",
+        "syntax": "'md5' || md5(password || username)",
+        "tags": [
+          "postgres",
+          "password-storage",
+          "md5"
+        ],
+        "title": "Length of an md5 password verifier"
+      },
+      "type": "mc",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-52156b50",
+      "prompt": "Which TOTP counter value does a 30 second time step use at this Unix time?",
+      "topic": "authentication",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "37037036"
+        },
+        {
+          "text": "37037037",
+          "rationale": "That counter starts at Unix time 1111111110, one second after the given timestamp, so the step has not advanced yet."
+        },
+        {
+          "text": "37037035",
+          "rationale": "That is the previous 30 second window, which ended at Unix time 1111111079."
+        },
+        {
+          "text": "1111111109",
+          "rationale": "Using the raw timestamp skips the division by the 30 second step, so a new code would be required every second."
+        }
+      ],
+      "code": "unix_time = 1111111109  # RFC 6238 test vector\ntime_step = 30",
+      "query": {
+        "explanation": "TOTP is HOTP whose counter is floor((current_unix_time - T0) / X), with T0 = 0 and X = 30 by default. 1111111109 // 30 = 37037036, matching the RFC 6238 vector 0x00000000023523EC. Verifiers usually also accept the neighbouring counters to tolerate clock skew.",
+        "syntax": "T = floor((unix_time - T0) / X)",
+        "tags": [
+          "totp",
+          "mfa",
+          "rfc6238"
+        ],
+        "title": "TOTP time step counter"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-8ed3680f",
+      "prompt": "What value does the sub claim in this JWT payload segment hold?",
+      "topic": "authentication",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "admin"
+        },
+        {
+          "text": "user",
+          "rationale": "Nothing in the segment encodes \"user\"; the decoded JSON names \"admin\" as the subject."
+        },
+        {
+          "text": "1700000000",
+          "rationale": "That is the exp expiry claim in the same payload, not the sub claim."
+        },
+        {
+          "text": "HS256",
+          "rationale": "Algorithm names live in the header segment, not in the payload's sub claim."
+        }
+      ],
+      "code": "payload_segment = \"eyJzdWIiOiJhZG1pbiIsImV4cCI6MTcwMDAwMDAwMH0\"",
+      "query": {
+        "explanation": "A JWT is three dot-separated base64url segments. The payload is not encrypted or hashed, just encoded, so anyone holding the token can decode it. Decoding this segment yields {\"sub\":\"admin\",\"exp\":1700000000}, so the sub claim is \"admin\". The signature protects integrity, not confidentiality: never put secrets in a JWT payload, and always verify the signature before trusting any claim. Note the segment has no '=' padding, which is standard for base64url in JWTs, so decoders must re-add padding.",
+        "syntax": "base64.urlsafe_b64decode(seg + \"=\" * (-len(seg) % 4))",
+        "tags": [
+          "jwt",
+          "base64url",
+          "claims",
+          "token-inspection"
+        ],
+        "title": "JWT payload segments are only base64url-encoded"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-372a6998",
+      "prompt": "How many accounts does this query return?",
+      "topic": "authentication",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "Both ana and eve satisfy every condition, so the count is higher than one."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "That would require one of ben, cleo, or dan to pass, but each fails a condition: lockout, NULL hash, and disabled respectively."
+        },
+        {
+          "text": "4",
+          "rationale": "Only one of the five rows would then be excluded, yet three separate rows fail the predicate."
+        }
+      ],
+      "code": "-- accounts\n-- username | pw_hash | failed_attempts | disabled\n-- ana      | h1      | 0               | false\n-- ben      | h2      | 5               | false\n-- cleo     | NULL    | 0               | false\n-- dan      | h4      | 4               | true\n-- eve      | h5      | 4               | false\n\nSELECT username\nFROM accounts\nWHERE pw_hash IS NOT NULL\n  AND failed_attempts < 5\n  AND NOT disabled;",
+      "query": {
+        "explanation": "Only ana and eve pass all three conditions. ben is locked out because failed_attempts is not below 5, dan is explicitly disabled, and cleo has a NULL pw_hash so she has no credential to verify against. The NULL case is the subtle one: a plain equality test like pw_hash = $1 would silently yield NULL rather than true, and an account with no hash must never be treated as authenticable. Lockout counters and disabled flags belong in the same predicate so no single check can be forgotten.",
+        "syntax": "WHERE pw_hash IS NOT NULL AND failed_attempts < 5 AND NOT disabled",
+        "tags": [
+          "postgres",
+          "login-policy",
+          "account-lockout",
+          "null-handling"
+        ],
+        "title": "Composing a login eligibility predicate"
+      },
+      "type": "mc",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-3424a6bb",
+      "prompt": "Which cookie attribute is absent from this Set-Cookie header?",
+      "topic": "sessions",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "HttpOnly"
+        },
+        {
+          "text": "Secure",
+          "rationale": "Secure is present in the header, so the cookie is already restricted to HTTPS."
+        },
+        {
+          "text": "Path",
+          "rationale": "Path=/ is explicitly set in the header."
+        },
+        {
+          "text": "SameSite",
+          "rationale": "SameSite=Lax is explicitly set in the header."
+        }
+      ],
+      "code": "Set-Cookie: sid=9f3a1c; Path=/; Secure; SameSite=Lax",
+      "query": {
+        "explanation": "A session cookie should normally carry Secure, HttpOnly, SameSite and an explicit Path. This header sets Path=/, Secure and SameSite=Lax, but it omits HttpOnly, so client-side JavaScript can still read document.cookie and exfiltrate the session id via XSS.",
+        "syntax": "Set-Cookie: name=value; Path=/; Secure; HttpOnly; SameSite=Lax",
+        "tags": [
+          "sessions",
+          "cookies",
+          "http"
+        ],
+        "title": "Session cookie attributes"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-1df61bca",
+      "prompt": "Does the session id change when this login helper authenticates a user?",
+      "topic": "sessions",
+      "answer": false,
+      "code": "store = {}\n\ndef new_session():\n    sid = \"s%d\" % (len(store) + 1)\n    store[sid] = {\"user\": None}\n    return sid\n\ndef login(sid, user):\n    store[sid][\"user\"] = user\n    return sid\n\nanon = new_session()\nauthed = login(anon, \"ian\")",
+      "query": {
+        "explanation": "login() mutates the existing session record and hands back the same identifier, so an id an attacker planted before authentication becomes an authenticated id. Fixing this means issuing a brand new id at login and discarding the pre-auth session.",
+        "tags": [
+          "sessions",
+          "session-fixation",
+          "authentication"
+        ],
+        "title": "Session fixation"
+      },
+      "rationale": "login() only writes the user into the existing record and returns the same sid, so the pre-authentication identifier survives the privilege change — the classic session fixation flaw.",
+      "type": "bool",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-d278c75c",
+      "prompt": "What does this code print?",
+      "topic": "sessions",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "invalid"
+        },
+        {
+          "text": "valid",
+          "rationale": "The tag was computed over \"user=guest\", not the delivered \"user=admin\", so the recomputed HMAC does not match."
+        },
+        {
+          "text": "admin",
+          "rationale": "The program prints only the verification verdict, never the payload contents."
+        },
+        {
+          "text": "guest",
+          "rationale": "The program prints only the verification verdict, never the originally signed payload."
+        }
+      ],
+      "code": "import hmac, hashlib\n\nSECRET = b\"k1\"\n\ndef sign(value):\n    return hmac.new(SECRET, value.encode(), hashlib.sha256).hexdigest()[:16]\n\ncookie = \"user=admin|\" + sign(\"user=guest\")\nvalue, sig = cookie.rsplit(\"|\", 1)\nprint(\"valid\" if hmac.compare_digest(sig, sign(value)) else \"invalid\")",
+      "query": {
+        "explanation": "The payload was edited to user=admin but the attached tag still signs user=guest. Recomputing the HMAC over the delivered payload produces a different tag, so compare_digest fails and the cookie is rejected. This is why the signature must cover exactly the bytes you later trust.",
+        "syntax": "hmac.compare_digest(received_tag, hmac.new(key, msg, hashlib.sha256).hexdigest())",
+        "tags": [
+          "sessions",
+          "hmac",
+          "cookies"
+        ],
+        "title": "Verifying signed session cookies"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-c62a26bb",
+      "prompt": "How many of these four sessions end up in alive?",
+      "topic": "sessions",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "Both a (idle 500s, age 3500s) and c (idle 200s, age 2000s) are inside both limits."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "That counts d, whose 9000s age exceeds the 3600s absolute lifetime despite recent activity."
+        },
+        {
+          "text": "4",
+          "rationale": "b fails the idle check (1000s > 900s) and d fails the absolute check (9000s > 3600s)."
+        }
+      ],
+      "code": "NOW = 10000\nIDLE = 900\nABSOLUTE = 3600\n\nsessions = [\n    {\"id\": \"a\", \"created\": 6500, \"last_seen\": 9500},\n    {\"id\": \"b\", \"created\": 9000, \"last_seen\": 9000},\n    {\"id\": \"c\", \"created\": 8000, \"last_seen\": 9800},\n    {\"id\": \"d\", \"created\": 1000, \"last_seen\": 9900},\n]\n\nalive = [\n    s for s in sessions\n    if NOW - s[\"last_seen\"] <= IDLE and NOW - s[\"created\"] <= ABSOLUTE\n]",
+      "query": {
+        "explanation": "A session must pass both checks. Session b has been idle 1000s (> 900) and session d is 9000s old (> 3600), even though it was active one second ago. Only a and c satisfy both the idle and absolute limits, so two sessions remain live.",
+        "tags": [
+          "sessions",
+          "timeouts",
+          "expiry"
+        ],
+        "title": "Idle versus absolute session timeouts"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-8c3fc275",
+      "prompt": "What number does this query return?",
+      "topic": "sessions",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "2",
+          "rationale": "s1, s4 and s5 all have future expiries and no revocation, so three rows qualify."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "That ignores either the expired s2 or the revoked s3; both are filtered out."
+        },
+        {
+          "text": "5",
+          "rationale": "s2 expired at 09:00 and s3 has a non-null revoked_at, so neither matches."
+        }
+      ],
+      "code": "SELECT count(*)\nFROM sessions\nWHERE expires_at > '2026-01-01 10:00:00+00'\n  AND revoked_at IS NULL;",
+      "query": {
+        "explanation": "A session is usable only if it has not expired and has not been revoked. s2 expired at 09:00, and s3 was revoked at 10:30 but revoked_at IS NULL already excludes it regardless of when. That leaves s1, s4 and s5, so the count is 3.",
+        "syntax": "SELECT count(*) FROM sessions WHERE expires_at > now() AND revoked_at IS NULL;",
+        "tags": [
+          "sessions",
+          "postgres",
+          "expiry"
+        ],
+        "title": "Counting usable sessions"
+      },
+      "type": "mc",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-eaef4eeb",
+      "prompt": "What Max-Age value does the resulting header contain?",
+      "topic": "sessions",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "0"
+        },
+        {
+          "text": "-3600",
+          "rationale": "Math.max(0, -3600) clamps the value to 0, so the negative ttl never reaches the header."
+        },
+        {
+          "text": "3600",
+          "rationale": "Nothing takes the absolute value; clamping with Math.max against 0 yields 0, not 3600."
+        },
+        {
+          "text": "-1",
+          "rationale": "The clamp floor is 0 and no -1 sentinel appears anywhere in the builder."
+        }
+      ],
+      "code": "function sessionCookie(name, value, ttl) {\n  const parts = [`${name}=${value}`, \"Path=/\", \"HttpOnly\", \"Secure\", \"SameSite=Lax\"];\n  parts.push(`Max-Age=${Math.max(0, Math.trunc(ttl))}`);\n  return parts.join(\"; \");\n}\n\nconst header = sessionCookie(\"sid\", \"\", -3600);",
+      "query": {
+        "explanation": "Math.max(0, -3600) clamps the negative ttl to 0, so the header carries Max-Age=0. That tells the browser to delete the cookie immediately, which is exactly the behaviour you want on logout — but the server must also destroy the server-side session record.",
+        "syntax": "Set-Cookie: sid=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+        "tags": [
+          "sessions",
+          "cookies",
+          "logout"
+        ],
+        "title": "Expiring a session cookie"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-29603c2f",
+      "prompt": "Is a cookie scoped with Domain=example.com sent to the host api.example.com?",
+      "topic": "sessions",
+      "answer": true,
+      "code": "def domain_match(cookie_domain, host):\n    cd = cookie_domain.lstrip(\".\").lower()\n    h = host.lower()\n    if h == cd:\n        return True\n    return h.endswith(\".\" + cd)\n\ndomain_match(\"example.com\", \"api.example.com\")",
+      "query": {
+        "explanation": "Per RFC 6265 domain-matching, setting a Domain attribute widens the cookie to that host and every subdomain of it. So a session cookie with Domain=example.com is also attached to requests for api.example.com — which is why a single compromised subdomain can expose the session.",
+        "tags": [
+          "sessions",
+          "cookies",
+          "domain-scope"
+        ],
+        "title": "Cookie domain scope"
+      },
+      "rationale": "An explicit Domain attribute broadens rather than narrows scope: the cookie matches example.com and all of its subdomains, api.example.com included. Omitting Domain is what would make it host-only.",
+      "type": "bool",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-b138ef78",
+      "prompt": "Does this Set-Cookie header satisfy the __Host- cookie prefix rules?",
+      "topic": "sessions",
+      "answer": false,
+      "code": "Set-Cookie: __Host-sid=abc123; Domain=example.com; Path=/; Secure",
+      "query": {
+        "explanation": "A conforming browser accepts a __Host- cookie only when it is Secure, has Path=/ and carries no Domain attribute, so the cookie stays locked to the exact host that set it. This header sets Domain=example.com, which breaks the third rule and causes the cookie to be rejected.",
+        "syntax": "Set-Cookie: __Host-sid=...; Path=/; Secure; HttpOnly; SameSite=Lax",
+        "tags": [
+          "sessions",
+          "cookies",
+          "cookie-prefixes"
+        ],
+        "title": "The __Host- cookie prefix"
+      },
+      "rationale": "The __Host- prefix forbids a Domain attribute entirely, and this header sets Domain=example.com, so browsers reject the cookie even though Secure and Path=/ are present.",
+      "type": "bool",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-87969224",
+      "prompt": "What timestamp does this query return?",
+      "topic": "sessions",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2026-03-15 00:20:00"
+        },
+        {
+          "text": "2026-03-15 00:15:00",
+          "rationale": "That extends 23:45 instead of the later 23:50 that greatest() selects."
+        },
+        {
+          "text": "2026-03-14 00:20:00",
+          "rationale": "Adding 30 minutes to 23:50 crosses midnight, so the date advances to 2026-03-15."
+        },
+        {
+          "text": "2026-03-14 23:50:00",
+          "rationale": "That is the greatest() result before the 30 minute interval is added."
+        }
+      ],
+      "code": "SELECT to_char(\n         greatest(\n           timestamp '2026-03-14 23:45:00',\n           timestamp '2026-03-14 23:50:00'\n         ) + interval '30 minutes',\n         'YYYY-MM-DD HH24:MI:SS'\n       ) AS expires_at;",
+      "query": {
+        "explanation": "greatest() picks the later of the stored last_seen (23:45) and the current request time (23:50), then adds the 30 minute idle window. The renewed expiry is therefore 2026-03-15 00:20:00, and the date rolls over past midnight.",
+        "syntax": "SELECT greatest(last_seen, now()) + interval '30 minutes';",
+        "tags": [
+          "sessions",
+          "postgres",
+          "expiry"
+        ],
+        "title": "Sliding session expiry in SQL"
+      },
+      "type": "mc",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-4046bd7e",
+      "prompt": "What value does n hold?",
+      "topic": "sessions",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "\"/\" , \"/app\" and \"/app/admin\" each satisfy one of the three matching rules."
+        },
+        {
+          "text": "2",
+          "rationale": "\"/app\" also matches because character 4 of the request path is \"/\"."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "\"/app/admin\".startsWith(\"/apple\") is false, so \"/apple\" fails immediately."
+        }
+      ],
+      "code": "function pathMatch(cookiePath, requestPath) {\n  if (cookiePath === requestPath) return true;\n  if (!requestPath.startsWith(cookiePath)) return false;\n  if (cookiePath.endsWith(\"/\")) return true;\n  return requestPath[cookiePath.length] === \"/\";\n}\n\nconst paths = [\"/\", \"/app\", \"/app/admin\", \"/apple\"];\nconst n = paths.filter((p) => pathMatch(p, \"/app/admin\")).length;",
+      "query": {
+        "explanation": "RFC 6265 path-matching accepts an exact match, a prefix ending in /, or a prefix followed by / in the request path. \"/\", \"/app\" and \"/app/admin\" all match, but \"/apple\" is not a prefix of \"/app/admin\" at all — which is why Path is a scoping tool, never a security boundary.",
+        "tags": [
+          "sessions",
+          "cookies",
+          "path-scope"
+        ],
+        "title": "Cookie path matching"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-4010e08c",
+      "prompt": "What does this code print?",
+      "topic": "access-control",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "0o640"
+        },
+        {
+          "text": "0o644",
+          "rationale": "That would come from umask 0o022, which clears only the group and other write bits."
+        },
+        {
+          "text": "0o660",
+          "rationale": "The mask clears the group write bit too, so group keeps only read."
+        },
+        {
+          "text": "0o666",
+          "rationale": "A umask subtracts bits from the request; it never leaves the requested mode untouched here."
+        }
+      ],
+      "code": "requested = 0o666\numask = 0o027\nprint(oct(requested & ~umask))",
+      "query": {
+        "explanation": "A umask is a set of bits to remove. 0o666 is rw-rw-rw-; masking with ~0o027 clears group write and all other bits, leaving rw-r----- = 0o640. Choosing a restrictive umask is a cheap way to enforce least privilege on newly created files.",
+        "syntax": "mode & ~umask",
+        "tags": [
+          "access-control",
+          "unix-permissions",
+          "least-privilege"
+        ],
+        "title": "umask narrows requested permissions"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-9f2e710e",
+      "prompt": "Does this evaluator permit the action for a user holding both roles?",
+      "topic": "access-control",
+      "answer": false,
+      "code": "POLICY = [\n    (\"allow\", \"editor\", \"article:publish\"),\n    (\"deny\", \"contractor\", \"article:publish\"),\n]\n\ndef permitted(roles, action):\n    matches = [p for p in POLICY if p[1] in roles and p[2] == action]\n    if any(effect == \"deny\" for effect, _, _ in matches):\n        return False\n    return any(effect == \"allow\" for effect, _, _ in matches)\n\nprint(permitted({\"editor\", \"contractor\"}, \"article:publish\"))",
+      "query": {
+        "explanation": "When one principal matches several rules, the combining algorithm decides the outcome. Deny-overrides (used by XACML's deny-overrides and by most firewall-style policies) returns deny if any applicable rule denies, which is the safe default for authorization.",
+        "tags": [
+          "access-control",
+          "policy-evaluation",
+          "rbac"
+        ],
+        "title": "Deny-overrides combining rule"
+      },
+      "rationale": "The evaluator is deny-overrides: it checks for any matching deny before considering allows, so the contractor deny beats the editor allow and the result is False.",
+      "type": "bool",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-93461c1a",
+      "prompt": "What does this code print?",
+      "topic": "access-control",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "WRITE,ADMIN"
+        },
+        {
+          "text": "WRITE,DELETE,ADMIN",
+          "rationale": "The auditor role contributes the DELETE bit, so DELETE is present in the union."
+        },
+        {
+          "text": "DELETE,ADMIN",
+          "rationale": "Neither viewer nor auditor contributes WRITE, so WRITE is also missing."
+        },
+        {
+          "text": "ADMIN",
+          "rationale": "WRITE comes only from the author role, which is not part of the union."
+        }
+      ],
+      "code": "READ, WRITE, DELETE, ADMIN = 1, 2, 4, 8\nROLES = {\"viewer\": READ, \"author\": READ | WRITE, \"auditor\": READ | DELETE}\n\ngranted = ROLES[\"viewer\"] | ROLES[\"auditor\"]\nnames = {READ: \"READ\", WRITE: \"WRITE\", DELETE: \"DELETE\", ADMIN: \"ADMIN\"}\nmissing = [names[bit] for bit in (READ, WRITE, DELETE, ADMIN) if not granted & bit]\nprint(\",\".join(missing))",
+      "query": {
+        "explanation": "Packing permissions into bit flags makes the effective set of a multi-role user a bitwise OR. viewer|auditor = 1|5 = 5 (READ+DELETE), so the WRITE and ADMIN bits are unset and reported as missing.",
+        "syntax": "granted & bit",
+        "tags": [
+          "access-control",
+          "bitmask",
+          "rbac"
+        ],
+        "title": "Permission bitmasks union across roles"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-09246210",
+      "prompt": "What number does this code print?",
+      "topic": "access-control",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "Inheritance is transitive here, so manager gets more than just its own report:approve."
+        },
+        {
+          "text": "2",
+          "rationale": "That counts only manager and editor; editor also pulls in viewer's post:read."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "user:delete belongs to admin, which inherits from manager, not the other way round."
+        }
+      ],
+      "code": "INHERITS = {\"admin\": [\"manager\"], \"manager\": [\"editor\"], \"editor\": [\"viewer\"], \"viewer\": []}\nPERMS = {\n    \"admin\": {\"user:delete\"},\n    \"manager\": {\"report:approve\"},\n    \"editor\": {\"post:write\"},\n    \"viewer\": {\"post:read\"},\n}\n\ndef effective(role):\n    perms = set(PERMS[role])\n    for parent in INHERITS[role]:\n        perms |= effective(parent)\n    return perms\n\nprint(len(effective(\"manager\")))",
+      "query": {
+        "explanation": "Hierarchical RBAC makes a senior role inherit the permissions of its juniors transitively. manager -> editor -> viewer yields {report:approve, post:write, post:read} = 3 permissions. Inheritance only flows downward, so admin's user:delete is not included.",
+        "tags": [
+          "access-control",
+          "rbac",
+          "role-hierarchy"
+        ],
+        "title": "Transitive role inheritance in RBAC"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-cb58eff3",
+      "prompt": "How many documents can user 7 read under the rule shown?",
+      "topic": "access-control",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "2",
+          "rationale": "Ownership alone gives documents 1 and 4, but team membership adds document 2."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "Document 5 is in team 12 where user 7 is only a 'viewer', not a 'member'."
+        },
+        {
+          "text": "5",
+          "rationale": "Documents 3 and 5 match neither ownership nor a 'member' membership for user 7."
+        }
+      ],
+      "code": "-- documents(id, owner_id, team_id):\n--   (1,7,10) (2,9,10) (3,9,11) (4,7,11) (5,8,12)\n-- memberships(user_id, team_id, role):\n--   (7,10,'member') (7,12,'viewer')\n-- rule: readable if you own the document, or you are a 'member' of its team",
+      "query": {
+        "explanation": "Object-level authorization is usually expressed as a row filter: own the row, or belong to a group with the right role on it. User 7 owns documents 1 and 4 and is a 'member' of team 10 (document 2), giving three distinct readable rows; the 'viewer' membership in team 12 does not qualify.",
+        "tags": [
+          "access-control",
+          "postgres",
+          "row-level-security"
+        ],
+        "title": "Ownership plus group membership filtering"
+      },
+      "type": "mc",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-6bcd44e0",
+      "prompt": "Does this handler let the caller read document 31?",
+      "topic": "access-control",
+      "answer": false,
+      "code": "const docs = {\n  31: { ownerId: 7, visibility: \"private\" },\n  32: { ownerId: 9, visibility: \"public\" },\n};\n\nfunction canRead(userId, docId) {\n  const doc = docs[docId];\n  if (!doc) return false;\n  return doc.visibility === \"public\" || doc.ownerId === userId;\n}\n\nconsole.log(canRead(\"7\", 31));",
+      "query": {
+        "explanation": "Object-level checks compare an identity from the request with an identity from storage. Request values are strings, database ids are numbers, so strict equality silently fails. Normalising both sides (Number(userId) or String(doc.ownerId)) prevents both false denials and, with loose ==, surprising false approvals.",
+        "tags": [
+          "access-control",
+          "idor",
+          "javascript"
+        ],
+        "title": "Type mismatches in ownership checks"
+      },
+      "rationale": "The caller id arrives as the string \"7\" (as request params do), and === does no coercion, so \"7\" === 7 is false and the private document is denied even to its real owner.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-6ef10aa5",
+      "prompt": "What number does this code print?",
+      "topic": "access-control",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "The prefix branch alone already allows billing:refund, and users:read matches exactly."
+        },
+        {
+          "text": "2",
+          "rationale": "The literal string \"billing:*\" also passes, because the first branch compares it for exact equality."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "users:write is covered by no grant: users:read is exact-only and billing:* has the wrong prefix."
+        }
+      ],
+      "code": "granted = [\"billing:*\", \"users:read\"]\n\ndef allows(needed):\n    for g in granted:\n        if g == needed:\n            return True\n        if g.endswith(\":*\") and needed.startswith(g[:-1]):\n            return True\n    return False\n\nchecks = [\"billing:refund\", \"users:write\", \"billing:*\", \"users:read\"]\nprint(sum(1 for c in checks if allows(c)))",
+      "query": {
+        "explanation": "The matcher allows billing:refund (prefix billing:), billing:* (exact string equality with the grant) and users:read (exact), but not users:write. Treating a requested permission that itself contains a wildcard as a plain string is a classic hole: a caller can ask for the wildcard and be approved.",
+        "tags": [
+          "access-control",
+          "scopes",
+          "wildcards"
+        ],
+        "title": "Wildcard scope matching pitfalls"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-beeefb28",
+      "prompt": "What does this code print?",
+      "topic": "access-control",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "deny"
+        },
+        {
+          "text": "allow",
+          "rationale": "The specific allow rule is listed after the broad deny, and the loop returns on the first match."
+        },
+        {
+          "text": "error",
+          "rationale": "fnmatch happily matches these patterns; nothing raises."
+        },
+        {
+          "text": "no match",
+          "rationale": "The function never prints that string, and the first pattern already matches the path."
+        }
+      ],
+      "code": "import fnmatch\n\nRULES = [\n    (\"/admin/*\", \"deny\"),\n    (\"/admin/health\", \"allow\"),\n    (\"/*\", \"allow\"),\n]\n\ndef decide(path):\n    for pattern, effect in RULES:\n        if fnmatch.fnmatch(path, pattern):\n            return effect\n    return \"deny\"\n\nprint(decide(\"/admin/health\"))",
+      "query": {
+        "explanation": "With first-match-wins evaluation, order is the policy. /admin/* matches /admin/health (fnmatch's * also spans slashes), so the deny returns immediately and the more specific allow below it is dead. Exceptions must be placed before the broader rule they override.",
+        "syntax": "fnmatch.fnmatch(path, pattern)",
+        "tags": [
+          "access-control",
+          "acl",
+          "rule-ordering"
+        ],
+        "title": "Rule order in first-match ACLs"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-e930dff9",
+      "prompt": "How many of these five requests are permitted?",
+      "topic": "access-control",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "Two requests clear both tests: editor/doc:readme and admin/doc:salary, since no deny rule applies to either."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "editor/report:q3 is not a third permit: the only editor permit covers doc:*, so no permit rule matches and the default is denial."
+        },
+        {
+          "text": "5",
+          "rationale": "Deny rules and the absent-permit default both bite here, so not every request survives evaluation."
+        }
+      ],
+      "code": "policies = [\n    (\"permit\", \"role:editor\", \"doc:*\"),\n    (\"deny\",   \"role:editor\", \"doc:salary\"),\n    (\"permit\", \"role:admin\",  \"*\"),\n    (\"deny\",   \"role:*\",      \"doc:secret\"),\n]\n\nrequests = [\n    (\"editor\", \"doc:readme\"),\n    (\"editor\", \"doc:salary\"),\n    (\"admin\",  \"doc:salary\"),\n    (\"admin\",  \"doc:secret\"),\n    (\"editor\", \"report:q3\"),\n]\n\n# A request is permitted only if some permit rule matches\n# and no deny rule matches. A bare \"*\" matches anything,\n# and a \"prefix:*\" pattern matches that prefix.",
+      "query": {
+        "explanation": "With deny-overrides, access needs a matching permit AND no matching deny. editor/doc:readme is permitted by doc:* with no deny. editor/doc:salary is permitted but then denied explicitly. admin/doc:salary is permitted by the admin wildcard and matches no deny (the salary deny is scoped to role:editor). admin/doc:secret is permitted by the wildcard but killed by the role:* deny. editor/report:q3 matches no permit at all, so it is denied by default. That leaves 2 permitted.",
+        "syntax": "effect = permit_matched and not deny_matched",
+        "tags": [
+          "access-control",
+          "authorization",
+          "policy-evaluation",
+          "deny-overrides"
+        ],
+        "title": "Deny-overrides rule combining"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-e93f3c65",
+      "prompt": "What type name does this code print?",
+      "topic": "deserialization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "list"
+        },
+        {
+          "text": "tuple",
+          "rationale": "Tuples survive pickle, not JSON; the encoder writes an array and the decoder builds a list."
+        },
+        {
+          "text": "str",
+          "rationale": "Only the whole document is text; the decoder parses the array back into a sequence object, not a string."
+        },
+        {
+          "text": "dict",
+          "rationale": "A JSON array decodes to a list; a dict would require an object with member names."
+        }
+      ],
+      "code": "import json\n\ndata = json.loads(json.dumps({\"p\": (1, 2)}))\nprint(type(data[\"p\"]).__name__)",
+      "query": {
+        "explanation": "JSON has only objects, arrays, strings, numbers, booleans and null. Tuples are encoded as arrays and come back as lists, so a round-trip is lossy. Code that assumes a tuple (for example unpacking a fixed-width key) can break or be steered by attacker-supplied lengths after deserialization.",
+        "syntax": "json.dumps(obj) / json.loads(text)",
+        "tags": [
+          "deserialization",
+          "json",
+          "python",
+          "type-fidelity"
+        ],
+        "title": "JSON round-trips lose Python types"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-5e8a8d4d",
+      "prompt": "What number does this code print?",
+      "topic": "deserialization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2"
+        },
+        {
+          "text": "4",
+          "rationale": "A reviver that returns undefined removes the property, so the two prefixed keys are not kept."
+        },
+        {
+          "text": "3",
+          "rationale": "Both prefixed keys match the condition, so two are dropped rather than one."
+        },
+        {
+          "text": "0",
+          "rationale": "The reviver returns the original value unchanged for keys without the prefix, so those survive."
+        }
+      ],
+      "code": "const text = '{\"name\":\"a\",\"__class\":\"x\",\"__module\":\"y\",\"age\":3}';\nconst obj = JSON.parse(text, (k, v) => (k.startsWith(\"__\") ? undefined : v));\nconsole.log(Object.keys(obj).length);",
+      "query": {
+        "explanation": "When a reviver returns undefined for a key, that property is deleted from the result. This is the standard hook for stripping metadata fields before the data reaches application logic, so only the two ordinary keys survive here.",
+        "syntax": "JSON.parse(text, reviver)",
+        "tags": [
+          "deserialization",
+          "json",
+          "node",
+          "allow-list"
+        ],
+        "title": "Filtering fields with a JSON.parse reviver"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-c56d4757",
+      "prompt": "What does this query return?",
+      "topic": "deserialization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string"
+        },
+        {
+          "text": "number",
+          "rationale": "The value is wrapped in quotes in the document, so it was parsed as a string, not a number."
+        },
+        {
+          "text": "integer",
+          "rationale": "jsonb_typeof never returns integer; its numeric answer is the single label number."
+        },
+        {
+          "text": "text",
+          "rationale": "text is a SQL type name, not one of the labels jsonb_typeof returns."
+        }
+      ],
+      "code": "SELECT jsonb_typeof('{\"id\": \"42\"}'::jsonb -> 'id');",
+      "query": {
+        "explanation": "jsonb_typeof reports the JSON type of a value, and the quoted 42 was encoded as a string, so the answer is string rather than number. Verifying the type after parsing stops a quoted value from slipping through a check that expected a numeric identifier.",
+        "syntax": "jsonb_typeof(jsonb)",
+        "tags": [
+          "deserialization",
+          "json",
+          "postgres",
+          "validation"
+        ],
+        "title": "Checking parsed JSON types in PostgreSQL"
+      },
+      "type": "mc",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-fdee9408",
+      "prompt": "What text does this cast produce?",
+      "topic": "deserialization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "{\"a\": 2, \"b\": 1}"
+        },
+        {
+          "text": "{\"b\": 1, \"a\": 2}",
+          "rationale": "jsonb does not preserve the original key order; json would, but jsonb sorts keys on output."
+        },
+        {
+          "text": "{\"a\":2,\"b\":1}",
+          "rationale": "The key order is right, but jsonb's text output inserts a space after each colon."
+        },
+        {
+          "text": "{\"b\":1,\"a\":2}",
+          "rationale": "Both details are wrong: jsonb reorders keys and adds a space after the colon."
+        }
+      ],
+      "code": "SELECT '{\"b\": 1, \"a\": 2}'::jsonb::text;",
+      "query": {
+        "explanation": "jsonb stores a decomposed representation, so rendering it back to text sorts object keys and uses canonical spacing instead of preserving the original bytes. Any signature or hash computed over the raw document is therefore invalid after a jsonb round-trip.",
+        "syntax": "value::jsonb::text",
+        "tags": [
+          "deserialization",
+          "json",
+          "postgres",
+          "canonicalisation"
+        ],
+        "title": "jsonb normalises documents on parse"
+      },
+      "type": "mc",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-c6f5f8ef",
+      "prompt": "What does this code print for the document shown?",
+      "topic": "deserialization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "rejected"
+        },
+        {
+          "text": "accepted",
+          "rationale": "Only Point is in the allow-list, and the document declares Timer, so the membership test fails."
+        },
+        {
+          "text": "{'__type__': 'Timer', 'x': 1}",
+          "rationale": "The dict is only returned when no type tag is present; here the tag is set, so a marker string is returned."
+        },
+        {
+          "text": "None",
+          "rationale": "Every branch of the hook returns a value, so the result is never None."
+        }
+      ],
+      "code": "import json\n\nALLOWED = {\"Point\"}\n\ndef hook(d):\n    tag = d.get(\"__type__\")\n    if tag is None:\n        return d\n    return \"accepted\" if tag in ALLOWED else \"rejected\"\n\nprint(json.loads('{\"__type__\": \"Timer\", \"x\": 1}', object_hook=hook))",
+      "query": {
+        "explanation": "object_hook runs for every decoded object, which is the right place to compare a declared type tag against a closed allow-list. Timer is not in the set, so the hook returns the rejection marker; a deny-list would instead have to guess every unwanted name in advance.",
+        "syntax": "json.loads(text, object_hook=fn)",
+        "tags": [
+          "deserialization",
+          "json",
+          "python",
+          "allow-list"
+        ],
+        "title": "Allow-listing type tags during decoding"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-f6f67521",
+      "prompt": "What value does this code print for id?",
+      "topic": "deserialization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "9007199254740992"
+        },
+        {
+          "text": "9007199254740993",
+          "rationale": "That value is above Number.MAX_SAFE_INTEGER and is not representable as a double, so it cannot be returned exactly."
+        },
+        {
+          "text": "9007199254740994",
+          "rationale": "Rounding goes to the nearest representable value, which here is the lower neighbour, not the higher one."
+        },
+        {
+          "text": "NaN",
+          "rationale": "The literal is valid JSON and parses as a finite number; it is only rounded, not rejected."
+        }
+      ],
+      "code": "console.log(JSON.parse('{\"id\": 9007199254740993}').id);",
+      "query": {
+        "explanation": "JSON.parse produces IEEE-754 doubles, which can represent integers exactly only up to 2**53 - 1. The odd value 9007199254740993 rounds to the nearest representable even neighbour, so two distinct identifiers can collide after deserialization unless they are carried as strings or parsed as BigInt.",
+        "syntax": "JSON.parse(text)",
+        "tags": [
+          "deserialization",
+          "json",
+          "node",
+          "numeric-precision"
+        ],
+        "title": "Integer precision loss when parsing JSON"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-477ddb38",
+      "prompt": "What does this pickle round trip print?",
+      "topic": "deserialization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "ABC"
+        },
+        {
+          "text": "abc",
+          "rationale": "The argument 'abc' is passed to str.upper, so the reconstructed value is uppercased."
+        },
+        {
+          "text": "<__main__.P object>",
+          "rationale": "Because __reduce__ names a different callable, no P instance is ever rebuilt."
+        },
+        {
+          "text": "TypeError",
+          "rationale": "A (callable, args) tuple is a valid __reduce__ result, so pickling and unpickling both succeed."
+        }
+      ],
+      "code": "import pickle\n\nclass P:\n    def __reduce__(self):\n        return (str.upper, (\"abc\",))\n\nprint(pickle.loads(pickle.dumps(P())))",
+      "query": {
+        "explanation": "pickle.dumps asks the object for its __reduce__, which here says \"call str.upper with the argument 'abc'\". Unpickling therefore invokes that callable and the result of the stream is the string 'ABC', not an instance of P. This is exactly why untrusted pickle data is remote code execution: the payload chooses the callable and the arguments.",
+        "syntax": "pickle.loads(data)",
+        "tags": [
+          "pickle",
+          "deserialization",
+          "rce",
+          "python"
+        ],
+        "title": "pickle __reduce__ controls reconstruction"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-439dd98f",
+      "prompt": "What does this code print?",
+      "topic": "deserialization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "1",
+          "rationale": "Only target's own prototype is swapped; Object.prototype never receives the property, so other objects are unaffected."
+        },
+        {
+          "text": "[object Object]",
+          "rationale": "The nested object is assigned as target's prototype, not stored as a value on Object.prototype."
+        },
+        {
+          "text": "null",
+          "rationale": "Reading a missing property yields undefined, never null."
+        }
+      ],
+      "code": "const payload = JSON.parse('{\"__proto__\": {\"polluted\": \"1\"}}');\nconst target = {};\nfor (const k in payload) target[k] = payload[k];\nconsole.log(String(({}).polluted));",
+      "query": {
+        "explanation": "JSON.parse creates a real own data property named __proto__, so the for-in loop does see it. The assignment target[k] = ... goes through Object.prototype's __proto__ setter, which only re-points target's own prototype at the attacker object. Object.prototype itself is untouched, so a fresh {} has no polluted property. A recursive merge that walks into existing objects is what actually pollutes Object.prototype.",
+        "syntax": "for (const k in obj) target[k] = obj[k]",
+        "tags": [
+          "prototype-pollution",
+          "json",
+          "deserialization",
+          "node"
+        ],
+        "title": "JSON.parse keeps __proto__ as an own key"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-d8716b42",
+      "prompt": "How many rows does this query return?",
+      "topic": "deserialization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "Three keys are written in the text, but jsonb keeps only the last value for the repeated key \"a\"."
+        },
+        {
+          "text": "1",
+          "rationale": "Only the duplicate is collapsed; the distinct key \"b\" is still present."
+        },
+        {
+          "text": "4",
+          "rationale": "Parsing never adds keys beyond those written in the document."
+        }
+      ],
+      "code": "SELECT jsonb_object_keys('{\"a\": 1, \"b\": 2, \"a\": 3}'::jsonb);",
+      "query": {
+        "explanation": "The json type stores the original text verbatim and keeps both copies of \"a\", while jsonb parses into a decomposed binary form that keeps only the last value for a repeated key. So the object deserializes to {\"a\": 3, \"b\": 2} with two keys. Duplicate-key payloads are a classic way to make two parsers disagree about the same document.",
+        "syntax": "jsonb_object_keys(jsonb)",
+        "tags": [
+          "json",
+          "jsonb",
+          "duplicate-keys",
+          "postgres"
+        ],
+        "title": "jsonb parsing drops duplicate keys"
+      },
+      "type": "mc",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-98facc09",
+      "prompt": "How many characters does encoded contain?",
+      "topic": "cryptography",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "32",
+          "rationale": "32 is the raw digest size in bytes, before base64 expands it by 4/3."
+        },
+        {
+          "text": "43",
+          "rationale": "43 is the length without the trailing '=' pad character that standard base64 adds."
+        },
+        {
+          "text": "44"
+        },
+        {
+          "text": "64",
+          "rationale": "64 is the hex encoding length; base64 packs 6 bits per character, not 4."
+        }
+      ],
+      "code": "import hmac, hashlib, base64\ntag = hmac.new(b'k' * 32, b'message', hashlib.sha256).digest()\nencoded = base64.b64encode(tag)",
+      "query": {
+        "explanation": "HMAC-SHA256 emits a 32-byte tag. Standard base64 encodes every 3 input bytes as 4 characters, so 32 bytes become ceil(32/3) * 4 = 44 characters, with one '=' pad byte at the end because 32 is not a multiple of 3. Hex encoding of the same tag would be 64 characters, so the chosen encoding changes the expected field width in your protocol or database column.",
+        "syntax": "base64.b64encode(digest)",
+        "tags": [
+          "hmac",
+          "encoding",
+          "python"
+        ],
+        "title": "Base64 length of a SHA-256 HMAC"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-5ba1e4c9",
+      "prompt": "What hex string does this PBKDF2 call produce?",
+      "topic": "cryptography",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0c60c80f961f0e71f3a9b524af6012062fe037a6",
+          "rationale": "That is the same vector with only 1 iteration; 4096 iterations give a different output."
+        },
+        {
+          "text": "4b007901b765489abead49d926f721d065a429c1"
+        },
+        {
+          "text": "ea6c014dc72d6f8ccd1ed92ace1d41f0d8de8957",
+          "rationale": "That is the 2-iteration vector; PBKDF2 output changes completely with the iteration count."
+        },
+        {
+          "text": "eefe3d61cd4da4e4e9945b3d6ba2158c2634e984",
+          "rationale": "That is the 16777216-iteration vector, not the 4096-iteration one."
+        }
+      ],
+      "code": "import hashlib\ndk = hashlib.pbkdf2_hmac('sha1', b'password', b'salt', 4096, 20)\nprint(dk.hex())",
+      "query": {
+        "explanation": "PBKDF2 output depends on the PRF, password, salt, iteration count and requested length; changing any one of them yields an unrelated key. This specific combination (SHA-1, 'password', 'salt', 4096 iterations, 20 bytes) is the well-known RFC 6070 vector 4b007901b765489abead49d926f721d065a429c1, which is useful for checking that a new implementation or migration still derives the same keys.",
+        "syntax": "hashlib.pbkdf2_hmac(hash_name, password, salt, iterations, dklen)",
+        "tags": [
+          "pbkdf2",
+          "key-derivation",
+          "python"
+        ],
+        "title": "PBKDF2-HMAC-SHA1 test vector"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-be2c146c",
+      "prompt": "What number does this query return?",
+      "topic": "cryptography",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "20",
+          "rationale": "20 bytes is a SHA-1 digest; SHA-256 is wider."
+        },
+        {
+          "text": "32"
+        },
+        {
+          "text": "48",
+          "rationale": "48 bytes is a SHA-384 digest, not SHA-256."
+        },
+        {
+          "text": "64",
+          "rationale": "64 is the hex-character count, or the byte length of SHA-512, not the raw SHA-256 byte length."
+        }
+      ],
+      "code": "SELECT length(sha256('abc'::bytea));",
+      "query": {
+        "explanation": "PostgreSQL's built-in sha256 function takes bytea and returns bytea, and length() on bytea counts bytes rather than characters. SHA-256 always outputs 256 bits, so the result is exactly 32 bytes regardless of input size. Store it in bytea(32) or encode it to 64 hex characters, but size the column from the raw digest width rather than guessing.",
+        "syntax": "sha256(bytea) -> bytea",
+        "tags": [
+          "hashing",
+          "postgres",
+          "bytea"
+        ],
+        "title": "Digest width of built-in sha256 in PostgreSQL"
+      },
+      "type": "mc",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-208c1090",
+      "prompt": "What does this code print?",
+      "topic": "cryptography",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "TOPSECRT"
+        },
+        {
+          "text": "topsecrt",
+          "rationale": "Case flipping would need XOR with 0x20; 0x5a applied twice cancels out entirely."
+        },
+        {
+          "text": "0e1a0a09190809",
+          "rationale": "That is the shape of the intermediate ciphertext, not the value after the second XOR."
+        },
+        {
+          "text": "ZZZZZZZZ",
+          "rationale": "0x5a is the key byte, not the result; XOR of a byte with itself twice returns the original byte."
+        }
+      ],
+      "code": "key = bytes([0x5a]) * 8\nmsg = b'TOPSECRT'\nct = bytes(b ^ k for b, k in zip(msg, key))\npt = bytes(b ^ k for b, k in zip(ct, key))\nprint(pt.decode())",
+      "query": {
+        "explanation": "For any bytes b and k, (b ^ k) ^ k == b, so applying the same keystream twice restores the plaintext. That property is what makes stream ciphers and one-time pads work, and also why reusing a keystream is fatal: XORing two ciphertexts under the same key cancels the key and leaks the XOR of the two plaintexts.",
+        "syntax": "a ^ b",
+        "tags": [
+          "xor",
+          "stream-cipher",
+          "python"
+        ],
+        "title": "XOR is its own inverse"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-01c60dca",
+      "prompt": "Do these two HMAC tags come out equal?",
+      "topic": "cryptography",
+      "answer": true,
+      "code": "import hmac, hashlib\nkey = b'A' * 100\na = hmac.new(key, b'data', hashlib.sha256).hexdigest()\nb = hmac.new(hashlib.sha256(key).digest(), b'data', hashlib.sha256).hexdigest()",
+      "query": {
+        "explanation": "HMAC normalises the key to one compression-function block: keys shorter than the block size are zero-padded, and keys longer than it are replaced by their own hash. With SHA-256 the block size is 64 bytes, so a 100-byte key K is used as SHA-256(K). This means distinct long keys can collide into the same effective key, and an API that accepts arbitrarily long keys gains no extra strength past the block size.",
+        "syntax": "hmac.new(key, msg, digestmod)",
+        "tags": [
+          "hmac",
+          "key-handling",
+          "python"
+        ],
+        "title": "HMAC key pre-hashing collapses long keys"
+      },
+      "rationale": "HMAC pre-hashes any key longer than the hash block size (64 bytes for SHA-256), so a 100-byte key and its SHA-256 digest are the same key to HMAC.",
+      "type": "bool",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-d326c419",
+      "prompt": "How many padding bytes does PKCS#7 append to this message at a 16-byte block size?",
+      "topic": "cryptography",
+      "answerIndex": 3,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "PKCS#7 always appends at least one byte so the padding is unambiguously removable."
+        },
+        {
+          "text": "1",
+          "rationale": "One byte would push the length to 17, which is not a multiple of the block size."
+        },
+        {
+          "text": "8",
+          "rationale": "Eight bytes would give 24 bytes total, still not a whole number of 16-byte blocks."
+        },
+        {
+          "text": "16"
+        }
+      ],
+      "code": "msg = b'YELLOW SUBMARINE'\nblock = 16",
+      "query": {
+        "explanation": "PKCS#7 appends N bytes each holding the value N, where N = block - (len % block) and N is never zero. A message that is already an exact multiple of the block size therefore gets a whole extra block of 0x10 bytes. Without that rule the unpadding step could not tell real trailing data from padding, which is why implementations must pad even when the length already lines up.",
+        "syntax": "pad = block - (len(msg) % block)",
+        "tags": [
+          "block-cipher",
+          "padding",
+          "python"
+        ],
+        "title": "PKCS#7 padding on an exact block boundary"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-2c532e7f",
+      "prompt": "How many stored digests does this lookup match?",
+      "topic": "cryptography",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "One row stores the digest of exactly 'alpha', so the lookup is not empty."
+        },
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "'ALPHA' hashes to a completely different digest, since hashing is case sensitive on the raw bytes."
+        },
+        {
+          "text": "4",
+          "rationale": "Only byte-identical inputs produce the same digest, so the trailing-space and uppercase rows do not match."
+        }
+      ],
+      "code": "SELECT count(*) FROM creds WHERE pwhash = sha256('alpha'::bytea);",
+      "query": {
+        "explanation": "SHA-256 is computed over the exact input bytes, so 'alpha', 'ALPHA' and 'alpha ' produce three unrelated digests with no partial similarity. Comparing stored hashes therefore matches only byte-identical inputs: any normalisation you want (case folding, trimming, Unicode normalisation) has to happen before hashing, not during the comparison.",
+        "syntax": "WHERE pwhash = sha256(input::bytea)",
+        "tags": [
+          "hashing",
+          "postgres",
+          "credentials"
+        ],
+        "title": "Digest comparison is byte-exact"
+      },
+      "type": "mc",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-d60f4fab",
+      "prompt": "How many bits of randomness does this token encode?",
+      "topic": "cryptography",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "16",
+          "rationale": "16 is the byte count argument; each byte carries 8 bits."
+        },
+        {
+          "text": "32",
+          "rationale": "32 is the number of hex characters in the string, and each hex character carries only 4 bits."
+        },
+        {
+          "text": "128"
+        },
+        {
+          "text": "256",
+          "rationale": "256 bits would need token_hex(32); hex doubles the character count, not the entropy."
+        }
+      ],
+      "code": "import secrets\ntoken = secrets.token_hex(16)",
+      "query": {
+        "explanation": "secrets.token_hex(n) draws n random bytes and renders them as 2n hex characters, so entropy is 8n bits: token_hex(16) is a 32-character string carrying 128 bits. The encoding never adds entropy, so size tokens by the byte argument rather than by string length, and pick at least 16 bytes for session identifiers or reset tokens.",
+        "syntax": "secrets.token_hex(nbytes)",
+        "tags": [
+          "randomness",
+          "tokens",
+          "python"
+        ],
+        "title": "Entropy of secrets.token_hex(n)"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-64a17f31",
+      "prompt": "What text does this code print?",
+      "topic": "cryptography",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "RETREAT AT ONE"
+        },
+        {
+          "text": "ATTACK AT DAWN",
+          "rationale": "XORing c1 with p1 alone would return the keystream; the extra c2 term replaces p1 with the second plaintext."
+        },
+        {
+          "text": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+          "rationale": "An all-zero result would need p1 and p2 to be identical; here the two messages differ."
+        },
+        {
+          "text": "a random 14-byte string that changes each run",
+          "rationale": "The random keystream cancels out completely, so the output is fully deterministic across runs."
+        }
+      ],
+      "code": "import os\n\nks  = os.urandom(14)              # one keystream, used twice\np1  = b\"ATTACK AT DAWN\"\np2  = b\"RETREAT AT ONE\"\nc1  = bytes(a ^ b for a, b in zip(p1, ks))\nc2  = bytes(a ^ b for a, b in zip(p2, ks))\n\nout = bytes(x ^ y ^ z for x, y, z in zip(c1, c2, p1))\nprint(out.decode())",
+      "query": {
+        "explanation": "With a stream cipher (or CTR mode) the ciphertext is plaintext XOR keystream. If the same keystream encrypts two messages, c1 ^ c2 = (p1 ^ ks) ^ (p2 ^ ks) = p1 ^ p2, because ks XORs with itself to zero. XORing that difference with a known p1 yields p2 exactly, no key required. This is why nonces must never repeat under the same key.",
+        "syntax": "c1 ^ c2 ^ p1 == p2",
+        "tags": [
+          "stream-cipher",
+          "ctr-mode",
+          "nonce-reuse",
+          "xor"
+        ],
+        "title": "Two-time pad: XOR cancels a reused keystream"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-03a0c711",
+      "prompt": "Does hmac-sha256 treat this 100-byte key as identical to its sha-256 digest?",
+      "topic": "cryptography",
+      "answer": true,
+      "code": "import hmac, hashlib\n\nkey = b\"K\" * 100\nmsg = b\"transfer:100\"\n\nt1 = hmac.new(key, msg, hashlib.sha256).hexdigest()\nt2 = hmac.new(hashlib.sha256(key).digest(), msg, hashlib.sha256).hexdigest()\nprint(t1 == t2)",
+      "query": {
+        "explanation": "RFC 2104 says a key longer than the hash's block size (64 bytes for SHA-256) is first replaced by H(key) before being zero-padded and XORed with the ipad/opad constants. So a 100-byte key and its 32-byte SHA-256 digest are the same key as far as HMAC is concerned, and both produce identical tags. This creates genuine key collisions: anyone who learns the digest can forge tags.",
+        "syntax": "K' = H(K) if len(K) > blocksize else K",
+        "tags": [
+          "hmac",
+          "sha256",
+          "key-derivation",
+          "collision"
+        ],
+        "title": "HMAC pre-hashes keys longer than the block size"
+      },
+      "rationale": "False would require HMAC to use the raw key bytes, but the spec mandates pre-hashing any key longer than the 64-byte SHA-256 block size, so both calls run with the exact same 32-byte key.",
+      "type": "bool",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-723f7f85",
+      "prompt": "What number does this code print for these five values?",
+      "topic": "input-validation",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "2",
+          "rationale": "Three of the non-ASCII strings also report True, not just the plain ASCII one."
+        },
+        {
+          "text": "3",
+          "rationale": "The superscript two also has the Unicode digit property, so it is counted too."
+        },
+        {
+          "text": "4"
+        },
+        {
+          "text": "5",
+          "rationale": "\"12.3\" contains a dot, and isdigit() is False for any string with a non-digit character."
+        }
+      ],
+      "code": "values = [\"123\", \"１２３\", \"٣\", \"²\", \"12.3\"]\nprint(sum(1 for v in values if v.isdigit()))",
+      "query": {
+        "explanation": "str.isdigit() is true for any Unicode character with a digit property, including fullwidth digits, Arabic-Indic digits and superscripts. Only \"12.3\" fails because of the dot. So four of the five pass, yet int() would reject none of the first three and all of the rest differ from ASCII, which is why isdigit() is a poor numeric validator.",
+        "syntax": "str.isdigit()",
+        "tags": [
+          "python",
+          "unicode",
+          "numeric-validation"
+        ],
+        "title": "str.isdigit accepts non-ASCII digits"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-ad4b5633",
+      "prompt": "What number does this code print for these six strings?",
+      "topic": "input-validation",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "3",
+          "rationale": "The hex literal and the empty string also coerce to integers 42 and 0."
+        },
+        {
+          "text": "4",
+          "rationale": "Exactly one input, \"42n\", produces NaN, so four is one too few."
+        },
+        {
+          "text": "5"
+        },
+        {
+          "text": "6",
+          "rationale": "\"42n\" is a BigInt literal only in source code; as a string it coerces to NaN."
+        }
+      ],
+      "code": "const vals = [\"42\", \"4e2\", \" 42 \", \"0x2a\", \"\", \"42n\"];\nconsole.log(vals.filter(v => Number.isInteger(Number(v))).length);",
+      "query": {
+        "explanation": "Number() trims whitespace, understands exponent notation, understands 0x hex literals, and maps the empty string to 0, so \"42\", \"4e2\", \" 42 \", \"0x2a\" and \"\" all become integers. Only \"42n\" yields NaN. Five of six pass, which is why Number.isInteger(Number(x)) is unsafe for untrusted input.",
+        "syntax": "Number.isInteger(Number(value))",
+        "tags": [
+          "node",
+          "coercion",
+          "numeric-validation"
+        ],
+        "title": "Number() coerces far more than decimal digits"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-44aef2fc",
+      "prompt": "What two lines does this code print?",
+      "topic": "input-validation",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "True then False"
+        },
+        {
+          "text": "False then True",
+          "rationale": "It is the reverse: $ tolerates the trailing newline while fullmatch demands the entire string match."
+        },
+        {
+          "text": "True then True",
+          "rationale": "fullmatch must consume the newline with [a-z]+, which is impossible, so it returns None."
+        },
+        {
+          "text": "False then False",
+          "rationale": "re.match with $ succeeds because $ also matches immediately before a final newline."
+        }
+      ],
+      "code": "import re\nvalue = \"admin\\n\"\nprint(bool(re.match(r\"^[a-z]+$\", value)))\nprint(bool(re.fullmatch(r\"[a-z]+\", value)))",
+      "query": {
+        "explanation": "In Python, $ matches at the end of the string and also just before a final newline, so re.match with ^[a-z]+$ accepts \"admin\\n\". re.fullmatch requires the whole string to be consumed and so rejects it. Use fullmatch, or \\Z, when a trailing newline must be refused.",
+        "syntax": "re.match(pattern, s) / re.fullmatch(pattern, s)",
+        "tags": [
+          "python",
+          "regex",
+          "anchors"
+        ],
+        "title": "Python $ matches before a trailing newline"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-5afd627f",
+      "prompt": "What does this code print?",
+      "topic": "input-validation",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "<script>"
+        },
+        {
+          "text": "＜script＞",
+          "rationale": "NFKC applies compatibility mappings, so the fullwidth brackets are replaced rather than preserved."
+        },
+        {
+          "text": "script",
+          "rationale": "Normalization maps the brackets to ASCII equivalents; it never deletes characters here."
+        },
+        {
+          "text": "&lt;script&gt;",
+          "rationale": "Unicode normalization does no HTML escaping; that would require a separate escape step."
+        }
+      ],
+      "code": "import unicodedata\nvalue = \"＜script＞\"\nprint(unicodedata.normalize(\"NFKC\", value))",
+      "query": {
+        "explanation": "Fullwidth less-than and greater-than have compatibility decompositions to ASCII < and >, so NFKC turns the value into <script>. Validating before normalizing lets a payload slip through the filter and reappear in its dangerous form afterwards; always normalize first, then validate.",
+        "syntax": "unicodedata.normalize(\"NFKC\", s)",
+        "tags": [
+          "python",
+          "unicode",
+          "normalization"
+        ],
+        "title": "NFKC normalization can recreate dangerous characters"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-b49e27c2",
+      "prompt": "What does this query return?",
+      "topic": "input-validation",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "5 and 6"
+        },
+        {
+          "text": "5 and 5",
+          "rationale": "octet_length counts UTF-8 bytes, and ï occupies two bytes, so the byte count is larger."
+        },
+        {
+          "text": "6 and 6",
+          "rationale": "length() counts characters, and the string has only five characters."
+        },
+        {
+          "text": "6 and 5",
+          "rationale": "The values are reversed: characters are fewer than bytes for multibyte text, never more."
+        }
+      ],
+      "code": "SELECT length('naïve') || ' and ' || octet_length('naïve') AS result;",
+      "query": {
+        "explanation": "length() counts characters, giving 5, while octet_length() counts the UTF-8 bytes, and ï needs two of them, giving 6. A limit enforced in characters can still overflow a byte-sized column or buffer, so pick the unit that matches the storage you are protecting.",
+        "syntax": "length(text) / octet_length(text)",
+        "tags": [
+          "postgres",
+          "encoding",
+          "length-validation"
+        ],
+        "title": "Character length differs from byte length"
+      },
+      "type": "mc",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-7b714d4b",
+      "prompt": "What number does this code print?",
+      "topic": "input-validation",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "The object literal is empty, but in also sees properties inherited from Object.prototype."
+        },
+        {
+          "text": "1",
+          "rationale": "Three inherited names match; \"role\" is the single one that does not."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "\"role\" exists nowhere on the object or its prototype chain, so it is not counted."
+        }
+      ],
+      "code": "const keys = [\"__proto__\", \"constructor\", \"toString\", \"role\"];\nconst obj = {};\nconsole.log(keys.filter(k => k in obj).length);",
+      "query": {
+        "explanation": "in reports true for inherited properties, so __proto__, constructor and toString are all \"present\" on a brand-new empty object; only \"role\" is absent. Use Object.hasOwn or a null-prototype object when checking whether untrusted input actually supplied a field.",
+        "syntax": "key in object / Object.hasOwn(object, key)",
+        "tags": [
+          "node",
+          "prototype-pollution",
+          "object-validation"
+        ],
+        "title": "The in operator walks the prototype chain"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-28fd9aa0",
+      "prompt": "What does this code print for the payload shown?",
+      "topic": "input-validation",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "True 2"
+        },
+        {
+          "text": "False 2",
+          "rationale": "isinstance returns True because bool is a subclass of int, so the first value is not False."
+        },
+        {
+          "text": "True 1",
+          "rationale": "True behaves as the integer 1, so adding 1 gives 2, not 1."
+        },
+        {
+          "text": "TypeError",
+          "rationale": "Booleans support integer arithmetic, so no exception is raised at all."
+        }
+      ],
+      "code": "payload = {\"quantity\": True}\nq = payload[\"quantity\"]\nprint(isinstance(q, int), q + 1)",
+      "query": {
+        "explanation": "bool inherits from int, so isinstance(True, int) is True and True + 1 evaluates to 2. An isinstance(value, int) guard therefore lets a JSON boolean through as a number; reject it explicitly with isinstance(value, bool) or by comparing type(value) is int.",
+        "syntax": "isinstance(value, int)",
+        "tags": [
+          "python",
+          "type-validation",
+          "json"
+        ],
+        "title": "bool is a subclass of int in Python"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-705fb80d",
+      "prompt": "How many of these four usernames does this code count?",
+      "topic": "input-validation",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "\"alice\" is not the only match: \"alice\\n\" also matches because $ allows one trailing newline."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "\"ALICE\" fails the lowercase-only class [a-z], so at most two of the four can match."
+        },
+        {
+          "text": "4",
+          "rationale": "Both \"ALICE\" and \"al ice\" contain characters outside [a-z] and are rejected."
+        }
+      ],
+      "code": "import re\n\ndef valid(u):\n    return re.match(r\"^[a-z]+$\", u) is not None\n\nnames = [\"alice\", \"alice\\n\", \"ALICE\", \"al ice\"]\nprint(sum(valid(n) for n in names))",
+      "query": {
+        "explanation": "In Python's re module, $ matches at the end of the string OR just before a newline at the end of the string. So \"alice\\n\" satisfies ^[a-z]+$ and slips through, alongside \"alice\". \"ALICE\" and \"al ice\" fail the character class. Use re.fullmatch(), or anchor with \\Z instead of $, to reject the trailing newline.",
+        "syntax": "re.fullmatch(pattern, string)  # safer than ^...$",
+        "tags": [
+          "input-validation",
+          "python",
+          "regex"
+        ],
+        "title": "$ matches before a trailing newline"
+      },
+      "type": "mc",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-ab30fcfb",
+      "prompt": "What does this code print for the raw value shown?",
+      "topic": "input-validation",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1000:false",
+          "rationale": "Correct: Number(\"1e3\") is 1000, an integer, but it exceeds the limit of 100."
+        },
+        {
+          "text": "1000:true",
+          "rationale": "1000 is greater than 100, so the n <= 100 condition fails."
+        },
+        {
+          "text": "NaN:false",
+          "rationale": "Number() understands exponent notation, so \"1e3\" converts cleanly rather than producing NaN."
+        },
+        {
+          "text": "1:false",
+          "rationale": "Only parseInt(\"1e3\") would stop at the \"e\" and give 1; Number() reads the whole literal."
+        }
+      ],
+      "code": "const raw = \"1e3\";\nconst n = Number(raw);\nconst ok = Number.isInteger(n) && n <= 100;\nconsole.log(`${n}:${ok}`);",
+      "query": {
+        "explanation": "Number(\"1e3\") applies the full numeric-literal grammar, so it yields 1000, not NaN and not 1. Number.isInteger(1000) is true, but the bound check 1000 <= 100 is false. Number() also accepts \"0x10\", \" 7 \" and \"\" (which becomes 0), so validate the string shape (e.g. /^[0-9]{1,3}$/) before coercing.",
+        "syntax": "Number(\"1e3\") // 1000",
+        "tags": [
+          "input-validation",
+          "node",
+          "coercion"
+        ],
+        "title": "Number() parses exponent notation"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-49f798cf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "3 is the total row count; the WHERE clause filters out the \"bob\" row."
+        },
+        {
+          "text": "0",
+          "rationale": "The comparison does match: two stored rows hold exactly the string \"alice\"."
+        },
+        {
+          "text": "1",
+          "rationale": "\"alice\" was inserted twice by executemany, so two rows satisfy the filter."
+        }
+      ],
+      "code": "import sqlite3\ncon = sqlite3.connect(\":memory:\")\ncur = con.cursor()\ncur.execute(\"create table t(name text)\")\ncur.executemany(\"insert into t(name) values (?)\", [(\"alice\",), (\"bob\",), (\"alice\",)])\nprint(cur.execute(\"select count(*) from t where name = ?\", (\"alice\",)).fetchone()[0])",
+      "prompt": "What number does this code print?",
+      "query": {
+        "explanation": "A bound parameter is sent to the database as a single value, never as SQL text, so `name = ?` matches only rows whose name equals the exact string \"alice\". Two of the three inserted rows hold that name, so the count is 2. This value-only treatment is why parameter binding is the primary defence against SQL injection: the driver never splices user text into the statement.",
+        "syntax": "cur.execute(\"select count(*) from t where name = ?\", (value,))",
+        "tags": [
+          "sql-injection",
+          "parameterized-queries",
+          "sqlite3"
+        ],
+        "title": "Bound parameters compare as plain values"
+      },
+      "type": "mc",
+      "topic": "sql-injection",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-2a42e36b",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"Order\""
+        },
+        {
+          "text": "Order",
+          "rationale": "quote_ident adds double quotes whenever the name is not a plain lower-case identifier, and Order is both mixed case and reserved."
+        },
+        {
+          "text": "'Order'",
+          "rationale": "Single quotes delimit string literals; identifiers are delimited with double quotes, which is what quote_ident emits."
+        },
+        {
+          "text": "\"order\"",
+          "rationale": "quote_ident preserves the given case exactly rather than folding the letters to lower case."
+        }
+      ],
+      "code": "SELECT quote_ident('Order');",
+      "prompt": "What text does this quote_ident call return?",
+      "query": {
+        "explanation": "`quote_ident` returns an identifier that is safe to drop into a dynamically built statement. Because `Order` contains an upper-case letter (and is also a reserved word), the function wraps it in double quotes and preserves the original case, yielding `\"Order\"`. Without the quotes PostgreSQL would fold the name to lower case and choke on the reserved word, so quote_ident is the correct tool when a table or column name must be assembled at runtime.",
+        "syntax": "quote_ident(text) -> text",
+        "tags": [
+          "sql-injection",
+          "postgresql",
+          "dynamic-sql"
+        ],
+        "title": "quote_ident protects identifiers"
+      },
+      "type": "mc",
+      "topic": "sql-injection",
+      "grammar": "sql",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "PostgreSQL 17.11"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-6460a7cd",
+      "answer": false,
+      "code": "import sqlite3\ncon = sqlite3.connect(\":memory:\")\ncur = con.cursor()\ncur.execute(\"create table t(id integer)\")\ncur.execute(\"select count(*) from ?\", (\"t\",))",
+      "prompt": "Can a bound parameter stand in for the table name in this query?",
+      "query": {
+        "explanation": "Placeholders may only appear where the SQL grammar expects a value, so `from ?` fails to parse and sqlite3 raises an OperationalError. Table and column names must therefore come from a fixed allow-list in your code (or be escaped with an identifier-quoting helper such as PostgreSQL's quote_ident) rather than being bound as parameters.",
+        "syntax": "cur.execute(\"select count(*) from \" + ALLOWED[name])",
+        "tags": [
+          "sql-injection",
+          "parameterized-queries",
+          "identifiers"
+        ],
+        "title": "Placeholders bind values, not identifiers"
+      },
+      "rationale": "Answering True is wrong because the statement never even parses: a placeholder is allowed only in a value position, so sqlite3 raises an OperationalError instead of substituting the table name.",
+      "type": "bool",
+      "topic": "sql-injection",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-5d336ad3",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "Two payloads escape, not one: the dot-dot payload normalizes above the base and the absolute path makes os.path.join drop the base."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "\"..%2f..%2fetc/shadow\" is treated as a single literal segment because normpath never percent-decodes, so it stays inside the base."
+        },
+        {
+          "text": "4",
+          "rationale": "\"./a/./b/../c.txt\" collapses to /srv/app/public/a/c.txt, which is still contained in the base directory."
+        }
+      ],
+      "code": "import os\n\nbase = \"/srv/app/public\"\nreqs = [\n    \"img/../../etc/passwd\",\n    \"./a/./b/../c.txt\",\n    \"..%2f..%2fetc/shadow\",\n    \"/etc/hosts\",\n]\nescapes = sum(\n    1 for r in reqs\n    if not os.path.normpath(os.path.join(base, r)).startswith(base + os.sep)\n)\nprint(escapes)",
+      "prompt": "What number does this code print?",
+      "query": {
+        "explanation": "Only two payloads leave the base. \"img/../../etc/passwd\" normalizes to /srv/app/etc/passwd, and \"/etc/hosts\" is absolute, so os.path.join discards the base entirely and returns /etc/hosts. The other two stay inside: \"./a/./b/../c.txt\" collapses to /srv/app/public/a/c.txt, and \"..%2f..%2fetc/shadow\" is one literal path segment because normpath does no percent-decoding — that payload only becomes dangerous if an earlier layer URL-decodes it. Decode first, then normalize, then verify containment.",
+        "syntax": "os.path.normpath(os.path.join(base, user_path))",
+        "tags": [
+          "path-traversal",
+          "normpath",
+          "url-encoding"
+        ],
+        "title": "Normalizing traversal payloads"
+      },
+      "type": "mc",
+      "topic": "path-traversal",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-8b711e32",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "Both ana and dev have three in-window failures with no intervening success, so one locked account is an undercount."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "cleo's success at 11:53 resets her streak, so she carries only the single 11:57 failure and stays unlocked."
+        },
+        {
+          "text": "4",
+          "rationale": "ben's 11:40, 11:42 and 11:44 failures are older than NOW - WINDOW, leaving him just one counted failure."
+        }
+      ],
+      "code": "from datetime import datetime, timedelta\n\nNOW = datetime(2026, 1, 1, 12, 0)\nWINDOW = timedelta(minutes=10)   # only failures at or after NOW - WINDOW count\nTHRESHOLD = 3                    # locked when the counted streak reaches 3\n# a successful login resets the streak to 0\n\nattempts = [\n    (\"ana\",  datetime(2026, 1, 1, 11, 52), False),\n    (\"ana\",  datetime(2026, 1, 1, 11, 54), False),\n    (\"ana\",  datetime(2026, 1, 1, 11, 56), False),\n    (\"ben\",  datetime(2026, 1, 1, 11, 40), False),\n    (\"ben\",  datetime(2026, 1, 1, 11, 42), False),\n    (\"ben\",  datetime(2026, 1, 1, 11, 44), False),\n    (\"ben\",  datetime(2026, 1, 1, 11, 58), False),\n    (\"cleo\", datetime(2026, 1, 1, 11, 50), False),\n    (\"cleo\", datetime(2026, 1, 1, 11, 51), False),\n    (\"cleo\", datetime(2026, 1, 1, 11, 53), True),\n    (\"cleo\", datetime(2026, 1, 1, 11, 57), False),\n    (\"dev\",  datetime(2026, 1, 1, 11, 55), False),\n    (\"dev\",  datetime(2026, 1, 1, 11, 56), False),\n    (\"dev\",  datetime(2026, 1, 1, 11, 59), False),\n]",
+      "prompt": "How many of these four accounts are locked out at NOW?",
+      "query": {
+        "explanation": "A lockout rule has two independent filters. The sliding window discards failures older than NOW - WINDOW, and a successful login resets the consecutive-failure streak. ana (11:52, 11:54, 11:56) and dev (11:55, 11:56, 11:59) each reach three counted failures, so two accounts are locked. ben accumulated three failures, but they happened before 11:50 and fall outside the window, leaving only the 11:58 attempt. cleo's 11:53 success clears her two earlier failures, so only the 11:57 failure counts. Dropping either filter inflates the lock count and locks out legitimate users.",
+        "syntax": "ts >= NOW - WINDOW  # keep only recent failures; success sets streak = 0",
+        "tags": [
+          "authentication",
+          "rate-limiting",
+          "account-lockout",
+          "brute-force"
+        ],
+        "title": "Lockout counting: sliding window plus streak reset"
+      },
+      "type": "mc",
+      "topic": "authentication",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-82bdf29f",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "3 users",
+          "rationale": "This misses one member of a group: the ops grant of approve reaches both erin and frank, not just one of them."
+        },
+        {
+          "text": "4 users"
+        },
+        {
+          "text": "6 users",
+          "rationale": "That counts every user in the tree, but dana only inherits read from eng and all; no group on her path grants approve."
+        },
+        {
+          "text": "2 users",
+          "rationale": "That counts only the senior group's direct members and ignores the separate approve grant held by the ops group."
+        }
+      ],
+      "code": "members = {\n    \"all\": [\"eng\", \"ops\"],\n    \"eng\": [\"senior\", \"u:dana\"],\n    \"ops\": [\"u:erin\", \"u:frank\"],\n    \"senior\": [\"u:alice\", \"u:bob\"],\n}\ngrants = {\n    \"all\": {\"read\"},\n    \"eng\": {\"read\"},\n    \"ops\": {\"approve\", \"read\"},\n    \"senior\": {\"approve\"},\n}\n\ndef reach(group):\n    out = set()\n    for m in members.get(group, []):\n        if m.startswith(\"u:\"):\n            out.add(m[2:])\n        else:\n            out |= reach(m)\n    return out\n\nholders = set()\nfor g, perms in grants.items():\n    if \"approve\" in perms:\n        holders |= reach(g)\nprint(f\"{len(holders)} users\")",
+      "prompt": "What does this code print?",
+      "query": {
+        "explanation": "In a group-based access control model, a permission granted to a group belongs to every user reachable through that group's nested membership. Here approve is granted to senior (alice, bob) and to ops (erin, frank), so four distinct users hold it. The all and eng groups only grant read, so dana — whose only paths are eng and all — never receives approve. Resolving permissions means expanding the group graph down to leaf users and taking the union of the holder sets, de-duplicating users reachable by more than one path.",
+        "syntax": "effective_users(perm) = union of leaf users under each group granted perm",
+        "tags": [
+          "access-control",
+          "rbac",
+          "group-hierarchy",
+          "authorization"
+        ],
+        "title": "Transitive group permission inheritance"
+      },
+      "type": "mc",
+      "topic": "access-control",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-79644d93",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "The list and dict pickles never reach find_class, so nothing blocks them and they load."
+        },
+        {
+          "text": "1",
+          "rationale": "Both container pickles load, not just one; neither needs a global lookup."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "4",
+          "rationale": "The two __reduce__ payloads name builtins.str and posix.system, which are outside ALLOWED, so find_class raises UnpicklingError for each."
+        }
+      ],
+      "code": "import io, os, pickle\n\nALLOWED = {(\"builtins\", \"list\"), (\"builtins\", \"dict\")}\n\nclass Safe(pickle.Unpickler):\n    def find_class(self, module, name):\n        if (module, name) in ALLOWED:\n            return super().find_class(module, name)\n        raise pickle.UnpicklingError(f\"blocked {module}.{name}\")\n\nclass Upper:\n    def __reduce__(self):\n        return (str.upper, (\"x\",))\n\nclass Sys:\n    def __reduce__(self):\n        return (os.system, (\"true\",))\n\npayloads = [\n    pickle.dumps([1, 2]),\n    pickle.dumps({\"a\": 1}),\n    pickle.dumps(Upper()),\n    pickle.dumps(Sys()),\n]",
+      "prompt": "How many of these four payloads load without raising under this unpickler?",
+      "query": {
+        "explanation": "Unpickler.find_class is consulted only for the GLOBAL / STACK_GLOBAL opcodes, i.e. when a pickle names an importable object. Plain lists and dicts are serialised with dedicated opcodes (EMPTY_LIST, EMPTY_DICT, APPENDS, SETITEMS), so the allow-list is never asked about them and both load fine. The two __reduce__ payloads do reference callables by module and qualified name (builtins.str for str.upper, posix.system for os.system), neither of which is in ALLOWED, so both raise UnpicklingError. That leaves 2 successful loads. The lesson: an allow-list cannot be verified by watching plain container pickles, and an empty-looking allow-list is still the only thing standing between you and arbitrary code execution.",
+        "syntax": "class Safe(pickle.Unpickler):\n    def find_class(self, module, name): ...",
+        "tags": [
+          "python",
+          "pickle",
+          "deserialization",
+          "allow-list"
+        ],
+        "title": "Restricted unpickling and find_class"
+      },
+      "type": "mc",
+      "topic": "deserialization",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    },
+    {
+      "id": "gen-backend-security-hard-032bc49c",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "100"
+        },
+        {
+          "text": "rejected",
+          "rationale": "str.isdigit() is True for fullwidth digits U+FF10-U+FF19, so the guard passes and the else branch never runs."
+        },
+        {
+          "text": "ValueError",
+          "rationale": "int() converts any character carrying a Unicode decimal value, not just ASCII 0-9, so no exception is raised."
+        },
+        {
+          "text": "1",
+          "rationale": "int() parses the whole string, not just the first character, so all three fullwidth digits contribute."
+        }
+      ],
+      "code": "raw = \"\\uff11\\uff10\\uff10\"  # pasted from a web form\n\nif raw.isdigit():\n    print(int(raw))\nelse:\n    print(\"rejected\")",
+      "prompt": "What does this code print?",
+      "query": {
+        "explanation": "The input is U+FF11 U+FF10 U+FF10, the fullwidth forms of 1, 0, 0. Both str.isdigit() and int() work on any character with a Unicode decimal value, so the guard passes and int() yields 100. A validator that only means to allow ASCII 0-9 must match an explicit character class such as re.fullmatch(r'[0-9]+', raw), otherwise homoglyph digits slip past checks and may be normalized to different values further downstream.",
+        "syntax": "str.isdigit(); int(str)",
+        "tags": [
+          "input-validation",
+          "unicode",
+          "python"
+        ],
+        "title": "isdigit() accepts non-ASCII digits"
+      },
+      "type": "mc",
+      "topic": "input-validation",
+      "grammar": "python",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Python 3.13.16"
+      }
+    }
+  ],
+  "schemaVersion": 2
+}

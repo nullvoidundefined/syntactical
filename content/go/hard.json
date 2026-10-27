@@ -1,0 +1,4347 @@
+{
+  "questions": [
+    {
+      "id": "gen-go-hard-27db8383",
+      "prompt": "What does this Go program print?",
+      "topic": "operators-and-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-question-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      },
+      "query": {
+        "explanation": "In Go, integer division truncates toward zero, so -7/2 == -3 (not -4). The remainder operator satisfies a == (a/b)*b + a%b, so a%b takes the sign of the dividend: -7%2 == -1. A right shift on a signed integer is an arithmetic shift, which effectively floors: -7>>1 == -4, so a/2 and a>>1 differ for negative odd values. Unary minus binds more tightly than %, so -a%2 means (-a)%2 == 7%2 == 1.",
+        "syntax": "a / b  // truncates toward zero\na % b  // sign follows a\na >> n // arithmetic shift for signed ints (floors)",
+        "tags": [
+          "operators",
+          "integers",
+          "division",
+          "modulo",
+          "bit-shift"
+        ],
+        "title": "Go integer division, remainder, and right shift with negatives"
+      },
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := -7\n\tfmt.Println(a/2, a>>1, a%2, -a%2)\n}",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "-3 -4 -1 1"
+        },
+        {
+          "text": "-4 -4 -1 1",
+          "misconceptionId": "go.int-division-yields-float",
+          "rationale": "This assumes -7/2 floors toward negative infinity like the shift does, giving -4. Go's integer division truncates toward zero, so a/2 is -3 while a>>1 is an arithmetic shift that genuinely floors to -4; the output shows the two differ."
+        },
+        {
+          "text": "-3 -3 1 1",
+          "misconceptionId": "go.int-division-yields-float",
+          "rationale": "This treats >>1 as identical to /2 (both -3) and assumes a remainder is never negative. Go truncates division toward zero but shifts floor, so a>>1 is -4, and % keeps the sign of the dividend, so -7%2 prints -1."
+        },
+        {
+          "text": "-3 -4 1 -1",
+          "misconceptionId": "go.int-division-yields-float",
+          "rationale": "This gives the remainder the sign of the divisor, as Python does, expecting -7%2 to be 1, and reads -a%2 as -(a%2). In Go % takes the dividend's sign, so a%2 is -1, and unary minus binds tighter than %, so -a%2 is 7%2 = 1."
+        }
+      ],
+      "type": "mc"
+    },
+    {
+      "id": "gen-go-hard-27357cff",
+      "prompt": "Which three lines does this program print?",
+      "topic": "operators-and-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-question-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      },
+      "query": {
+        "explanation": "An untyped complex constant such as 3+4i has default type complex128, so %T on it reports complex128. real and imag applied to an untyped constant yield an untyped floating-point constant, whose default type is float64 (not complex128). complex(x, y) returns complex64 when its arguments are float32, so z := complex(f32, 2.5) with f32 float32 is complex64; imag(z) is then float32 and prints 2.5. z*z = (1.5+2.5i)^2 = (2.25-6.25) + 7.5i = -4+7.5i, exactly representable in float32. Constant complex division is exact: (3+4i)/(1-2i) = (3+4i)(1+2i)/5 = (-5+10i)/5 = -1+2i, and := gives it the default type complex128.",
+        "syntax": "complex(re, im); real(z); imag(z)  // complex64 from float32 args, complex128 from float64 args",
+        "tags": [
+          "operators",
+          "types",
+          "complex",
+          "untyped-constants"
+        ],
+        "title": "Complex types: untyped constants, complex/real/imag, complex64"
+      },
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tconst c = 3 + 4i\n\tvar f32 float32 = 1.5\n\tz := complex(f32, 2.5)\n\tq := (3 + 4i) / (1 - 2i)\n\tfmt.Printf(\"%T %T %T\\n\", c, real(c), z)\n\tfmt.Println(z*z, imag(z))\n\tfmt.Printf(\"%v %T\\n\", q, q)\n}\n",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "complex128 float64 complex64\n(-4+7.5i) 2.5\n(-1+2i) complex128"
+        },
+        {
+          "text": "complex128 complex128 complex64\n(-4+7.5i) 2.5\n(-1+2i) complex128",
+          "misconceptionId": "go.numeric-types-auto-convert",
+          "rationale": "You expected real(c) to stay complex128, as if the builtin just hands back the same numeric type. real of a complex128 value yields its float64 component, and the untyped constant c defaults to complex128 only for the %T of c itself, so the output prints float64 second."
+        },
+        {
+          "text": "complex128 float64 complex128\n(-4+7.5i) 2.5\n(-1+2i) complex128",
+          "misconceptionId": "go.numeric-types-auto-convert",
+          "rationale": "You assumed complex(f32, 2.5) widens to the default complex128, treating the float32 and the untyped 2.5 as auto-promoted. Go has no implicit widening: a float32 argument makes the untyped 2.5 float32 too, so z is complex64, as the third %T shows."
+        },
+        {
+          "text": "complex128 float64 complex64\n(-4+7.5i) 2.5\n(11-2i) complex128",
+          "misconceptionId": "go.int-division-yields-float",
+          "rationale": "11-2i is (3+4i)*(1-2i): you multiplied by the conjugate but never divided by |1-2i|^2 = 5. Constant complex division is real division, giving (-5+10i)/5, so q prints (-1+2i)."
+        }
+      ],
+      "type": "mc"
+    },
+    {
+      "id": "gen-go-hard-082fa03d",
+      "prompt": "Which single line does this program print?",
+      "topic": "numbers-and-math",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-question-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      },
+      "query": {
+        "explanation": "For a signed integer type, the most negative value has no positive counterpart in two's complement, so operations that would produce it wrap instead of panicking (only division by zero panics).\n\n- x / d with x = -128 and d = -1: the Go spec states that when the dividend is the most negative value of its type, x / -1 == x, so q is -128, and the remainder r is 0.\n- -x is also -128: negating the most negative value overflows back to itself, which is why the usual `if a < 0 { a = -a }` absolute-value idiom leaves a as -128.\n- x >> 7 is an arithmetic shift on a signed value: the sign bit is replicated, giving -1.\n- uint8(x) reinterprets the bit pattern 0x80 as 128, and 128 >> 7 is a logical shift giving 1 (type uint8).\n- uint8(x) >> 1 is 0x80 >> 1 == 0x40 == 64, which converts to int8 64 (no overflow, since 64 fits).\n\nNote that the same arithmetic written with untyped constants (e.g. the constant expression -128 / -1 assigned to int8) would be a compile-time constant-overflow error; wrapping only happens for non-constant operands.",
+        "syntax": "q := x / d   // x == most negative value, d == -1  =>  q == x, x%d == 0\n-x           // most negative value negates to itself\nx >> 7       // arithmetic (sign-extending) shift on signed type\nuint8(x) >> 7 // logical shift on the reinterpreted bit pattern",
+        "tags": [
+          "go",
+          "integer-overflow",
+          "two's-complement",
+          "shifts",
+          "division"
+        ],
+        "title": "Go: int8 overflow in / -1, negation, and signed vs unsigned shifts"
+      },
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tx := int8(-128)\n\td := int8(-1)\n\n\tq := x / d\n\tr := x % d\n\tn := -x\n\n\ta := x\n\tif a < 0 {\n\t\ta = -a\n\t}\n\n\tfmt.Println(q, r, n, a, x>>7, uint8(x)>>7, int8(uint8(x)>>1))\n}\n",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "-128 0 -128 -128 -1 1 64"
+        },
+        {
+          "text": "-128 0 -128 128 -1 1 64",
+          "misconceptionId": "go.numeric-types-auto-convert",
+          "rationale": "You tracked the division and shifts correctly but assumed -a is computed in a wider type, so abs(-128) could be 128. a stays int8, whose range stops at 127, so negating -128 wraps back to -128 and the output shows -128 there, not 128."
+        },
+        {
+          "text": "127 -1 -128 -128 -1 1 -64",
+          "misconceptionId": "go.numeric-types-auto-convert",
+          "rationale": "This assumes -128/-1 is evaluated in a bigger type and clamped to 127 with remainder -1. Go computes it in int8: the mathematical 128 wraps to -128 and the remainder is exactly 0, as printed. The uint8 shift also yields a positive 64, not -64."
+        },
+        {
+          "text": "-128 0 -128 -128 -1 -1 -64",
+          "misconceptionId": "go.conversion-is-assertion",
+          "rationale": "You expected uint8(x) to leave the value signed, so the shifts stay arithmetic: -1 and -64. The conversion really reinterprets the bits as 128, and >> on an unsigned operand fills with zeros, so the output is 1 and 64."
+        }
+      ],
+      "type": "mc"
+    },
+    {
+      "id": "gen-go-hard-edd7b36f",
+      "prompt": "Which single line does this program print?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"pher\" \"gopher\" \"ophe\" \"\"",
+          "rationale": "TrimLeft treats \"og\" as a rune set, TrimPrefix needs the literal prefix, and TrimRight eats every trailing rune in {a,b}."
+        },
+        {
+          "text": "\"pher\" \"pher\" \"ophe\" \"\"",
+          "rationale": "TrimPrefix removes only the exact literal prefix; \"gopher\" does not start with \"og\", so it is returned unchanged."
+        },
+        {
+          "text": "\"gopher\" \"gopher\" \"gopher\" \"abba\"",
+          "rationale": "TrimLeft and Trim use a cutset of runes, so leading 'g' and 'o' and trailing 'r' are removed even though \"og\" and \"rg\" are not prefixes or suffixes."
+        },
+        {
+          "text": "\"pher\" \"gopher\" \"ophe\" \"abba\"",
+          "rationale": "TrimRight keeps cutting while the trailing rune is in the cutset; every rune of \"abba\" is in {a,b}, so the whole string is consumed."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\nfunc main() {\n\tx1 := strings.TrimLeft(\"gopher\", \"og\")\n\tx2 := strings.TrimPrefix(\"gopher\", \"og\")\n\tx3 := strings.Trim(\"gopher\", \"rg\")\n\tx4 := strings.TrimRight(\"abba\", \"ab\")\n\tfmt.Printf(\"%q %q %q %q\\n\", x1, x2, x3, x4)\n}",
+      "query": {
+        "explanation": "TrimLeft, TrimRight and Trim interpret their second argument as an unordered set of runes and keep removing runes from the end(s) while they belong to that set: \"gopher\" loses leading 'g' and 'o' giving \"pher\", and Trim with {r,g} removes leading 'g' and trailing 'r' giving \"ophe\". TrimPrefix instead requires the literal prefix, and \"gopher\" does not begin with \"og\", so it is unchanged. TrimRight(\"abba\", \"ab\") consumes every rune, yielding the empty string.",
+        "syntax": "strings.Trim(s, cutset) · strings.TrimLeft/TrimRight(s, cutset) · strings.TrimPrefix(s, prefix)",
+        "tags": [
+          "strings",
+          "trim",
+          "cutset",
+          "prefix"
+        ],
+        "title": "Cutset trimming versus literal prefix trimming"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-d63e1336",
+      "prompt": "In the snippet below, the expression Sunday + 1 has type main.Weekday, not int.",
+      "topic": "operators-and-types",
+      "answer": true,
+      "code": "package main\n\nimport \"fmt\"\n\ntype Weekday int\n\nconst Sunday Weekday = 0\n\nfunc main() {\n\tfmt.Printf(\"%T\\n\", Sunday+1)\n}",
+      "query": {
+        "explanation": "In a binary operation where one operand is typed and the other is an untyped constant, the constant is converted to the typed operand's type. Sunday already has the named type Weekday, so 1 becomes Weekday(1) and the sum keeps the named type Weekday. The named type is only lost if you explicitly convert.",
+        "syntax": "type Named int; Named(0) + 1 // type Named",
+        "tags": [
+          "types",
+          "named-types",
+          "untyped-constants",
+          "operators"
+        ],
+        "title": "Mixing a typed operand with an untyped constant"
+      },
+      "rationale": "The untyped constant 1 adopts the type of the typed operand, so the result keeps the named type Weekday; it does not fall back to the underlying type int.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-3b0ad9ea",
+      "prompt": "What single line does this program print?",
+      "topic": "operators-and-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "244 (0b11110100)"
+        },
+        {
+          "text": "245 (0b11110101)",
+          "rationale": "245 is just ^uint8(0b1010); the &^ 0b0011 still clears bit 0, which is set in 245."
+        },
+        {
+          "text": "247 (0b11110111)",
+          "rationale": "247 is ^(uint8(0b1010) &^ 0b0011); unary ^ binds tighter than &^, so the complement happens first."
+        },
+        {
+          "text": "246 (0b11110110)",
+          "rationale": "246 would be ^uint8(0b1010) ^ 0b0011; &^ clears the masked bits rather than flipping them."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tv := ^uint8(0b1010) &^ 0b0011\n\tfmt.Printf(\"%d (0b%08b)\\n\", v, v)\n}",
+      "query": {
+        "explanation": "Unary ^ binds tighter than any binary operator, so ^uint8(0b1010) is evaluated first: within uint8 it is 0b11110101 = 245. The binary operator &^ is bit clear: x &^ y == x & (^y), so 245 &^ 0b0011 clears bits 0 and 1, leaving 0b11110100 = 244.",
+        "syntax": "^x        // unary complement\nx &^ y    // bit clear (AND NOT)",
+        "tags": [
+          "operators",
+          "bitwise",
+          "unsigned",
+          "unary"
+        ],
+        "title": "Unary complement combined with AND NOT"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-44a35b97",
+      "prompt": "What single line does this program print?",
+      "topic": "operators-and-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "0 -1 -1 255"
+        },
+        {
+          "text": "0 0 -1 255",
+          "rationale": "Right shift of a signed value is arithmetic: shifting -8 by 9 fills with sign bits and yields -1, not 0."
+        },
+        {
+          "text": "512 -1 -1 255",
+          "rationale": "one << s is computed entirely in uint8, so the set bit is shifted out and a is 0; there is no promotion to a wider type."
+        },
+        {
+          "text": "0 -1 2 -1",
+          "rationale": "(-8/2)%3 is -1 because Go truncates toward zero and % takes the dividend's sign, and one-2 wraps inside uint8 to 255."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar one uint8 = 1\n\tvar n int8 = -8\n\tvar s uint = 9\n\ta := one << s\n\tb := n >> s\n\tc := n / 2 % 3\n\td := one - 2\n\tfmt.Println(a, b, c, d)\n}",
+      "query": {
+        "explanation": "Go never promotes operands to a wider type. a: uint8(1) << 9 shifts the only set bit out, so a is 0. b: >> on a signed value is arithmetic, and shifting by at least the bit width fills with the sign bit, so b is -1. c: / and % share one precedence level and associate left to right, so it is (-8/2)%3; division truncates toward zero and % takes the sign of the dividend, giving -1. d: one - 2 is uint8 arithmetic, which wraps to 255.",
+        "syntax": "x << s   x >> s   x / y   x % y",
+        "tags": [
+          "operators",
+          "shifts",
+          "integer-overflow",
+          "division"
+        ],
+        "title": "Sized integer operands: shifts, truncated division and wraparound"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-ef1568f8",
+      "prompt": "Which of these Go string comparisons evaluates to true?",
+      "topic": "operators-and-types",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "\"ä\" < \"z\"",
+          "rationale": "Comparison is byte-wise: \"ä\" begins with 0xC3, which is greater than 'z' (0x7A), so this is false."
+        },
+        {
+          "text": "\"\\xff\" < \"ÿ\"",
+          "rationale": "\"ÿ\" is the two bytes 0xC3 0xBF, and the raw byte 0xFF is greater than 0xC3, so this is false."
+        },
+        {
+          "text": "\"ab\" < \"b\""
+        },
+        {
+          "text": "\"\\x00\" < \"\"",
+          "rationale": "The empty string is a prefix of \"\\x00\" and shorter, so \"\" is the smaller value and this is false."
+        }
+      ],
+      "query": {
+        "explanation": "The <, <=, > and >= operators on strings compare the underlying UTF-8 bytes one by one; if one string is a prefix of the other, the shorter one is smaller. Non-ASCII runes therefore sort above every ASCII character, because their first UTF-8 byte is at least 0xC2. \"ab\" < \"b\" is true at the very first byte: 'a' (0x61) is less than 'b' (0x62), and the extra length of the left operand never comes into play.",
+        "syntax": "s1 < s2   // byte-wise lexicographic order",
+        "tags": [
+          "operators",
+          "strings",
+          "comparison",
+          "utf-8"
+        ],
+        "title": "Lexicographic byte-wise string comparison"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-646e8ffd",
+      "prompt": "a container ring holding four elements is given to r unlink 4 is it true that this call leaves the ring unchanged and returns nil as the removed subring",
+      "topic": "data-structures",
+      "answer": false,
+      "code": "package main\n\nimport (\n\t\"container/ring\"\n\t\"fmt\"\n)\n\nfunc main() {\n\tr := ring.New(4)\n\tfor i := 1; i <= 4; i++ {\n\t\tr.Value = i\n\t\tr = r.Next()\n\t}\n\tsub := r.Unlink(4)\n\t// is sub == nil and is the ring still the same four values?\n\t_ = sub\n\tfmt.Println(r.Len())\n}",
+      "query": {
+        "explanation": "Unlink(n) removes n % r.Len() elements starting at r.Next(). With n equal to the length nothing is removed, so the ring is intact, but Unlink is implemented as r.Link(r.Move(n+1)) and returns r.Next(), a still-linked element. Only n <= 0 makes Unlink return nil.",
+        "syntax": "r.Unlink(n) *Ring",
+        "tags": [
+          "container/ring",
+          "circular list",
+          "nil"
+        ],
+        "title": "Ring.Unlink when n is a multiple of the length"
+      },
+      "rationale": "The ring really is left intact because 4 % 4 == 0, but Unlink is r.Link(r.Move(n+1)) and returns r.Next(), a still-linked element, so the returned subring is not nil; only n <= 0 yields nil.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-a240a2cd",
+      "prompt": "What output does this program produce?",
+      "topic": "operators-and-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "7 8 4"
+        },
+        {
+          "text": "32 10 4",
+          "rationale": "That is C/Java precedence, where + binds tighter than << ; in Go << and & sit in the highest binary level, above + ."
+        },
+        {
+          "text": "7 10 4",
+          "rationale": "Go uses one precedence table for both expressions, so 2+3<<1 is 2+(3<<1)=8, not (2+3)<<1=10."
+        },
+        {
+          "text": "4 6 3",
+          "rationale": "This drops the additions entirely; each expression still adds after the shift or the bitwise AND."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Printf(\"%d %d %d\\n\", 1<<2+3, 2+3<<1, 0x0f&3+1)\n}",
+      "query": {
+        "explanation": "Go has only five binary precedence levels. Level 5 (highest) holds * / % << >> & &^, level 4 holds + - | ^. So 1<<2+3 is (1<<2)+3=7, 2+3<<1 is 2+(3<<1)=8, and 0x0f&3+1 is (0x0f&3)+1=4. This differs from C, where shifts and & bind more loosely than +.",
+        "syntax": "expr << expr + expr",
+        "tags": [
+          "operators",
+          "precedence",
+          "shift"
+        ],
+        "title": "Go binary operator precedence"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-a98a9f2e",
+      "prompt": "In Go, does -7/2 evaluate to -3 while -7%2 evaluates to -1?",
+      "topic": "operators-and-types",
+      "answer": true,
+      "query": {
+        "explanation": "Go's integer division truncates toward zero, so -7/2 is -3, and the remainder satisfies a == (a/b)*b + a%b, which makes -7%2 equal -1 (the remainder takes the sign of the dividend). Floor-based languages like Python give -4 and 1 instead.",
+        "syntax": "a / b, a % b",
+        "tags": [
+          "operators",
+          "integer-division",
+          "modulo"
+        ],
+        "title": "Integer division and remainder signs"
+      },
+      "rationale": "Go truncates quotients toward zero and gives the remainder the dividend's sign; floor semantics (-4 and 1) belong to languages like Python, not Go.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-b6db409b",
+      "prompt": "What does this Printf call output?",
+      "topic": "operators-and-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "10100100 10101100"
+        },
+        {
+          "text": "10101100 10100100",
+          "rationale": "The two results are swapped: &^ clears mask bits, so it can only turn bits off, while ^ flips them in both directions."
+        },
+        {
+          "text": "10111110 10101100",
+          "rationale": "10111110 is x|mask; &^ clears the mask bits rather than setting them."
+        },
+        {
+          "text": "10110110 10101100",
+          "rationale": "&^ does change x here, because bits 1 and 4 of x are set and appear in the mask."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar x uint8 = 0b10110110\n\tfmt.Printf(\"%08b %08b\\n\", x&^0b00011010, x^0b00011010)\n}",
+      "query": {
+        "explanation": "x &^ m is x & ~m: it clears exactly the bits set in m. With x=10110110 and m=00011010, bits 1, 3 and 4 are forced to 0, giving 10100100. The XOR operator flips those bits instead, so bit 3 (a 0 in x) becomes 1, giving 10101100.",
+        "syntax": "x &^ mask",
+        "tags": [
+          "operators",
+          "bitwise",
+          "uint8"
+        ],
+        "title": "AND NOT (&^) versus XOR (^)"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-bc090a38",
+      "prompt": "Which three booleans does this program print?",
+      "topic": "operators-and-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true false true"
+        },
+        {
+          "text": "true true true",
+          "rationale": "float64(f) only widens the value already rounded to float32 precision, so it is 0.10000000149..., not the float64 nearest 0.1."
+        },
+        {
+          "text": "false false true",
+          "rationale": "Untyped constant arithmetic is done in arbitrary precision, so 1e100/1e90 is exactly 1e10."
+        },
+        {
+          "text": "true false false",
+          "rationale": "In f == 0.1 the untyped constant is converted to float32 before comparing, and it rounds to exactly the value stored in f."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tconst c = 1e100 / 1e90\n\tvar f float32 = 0.1\n\tfmt.Printf(\"%v %v %v\\n\", c == 1e10, float64(f) == 0.1, f == 0.1)\n}",
+      "query": {
+        "explanation": "Constant expressions are evaluated exactly, so c is precisely 1e10 and c == 1e10 is true. Assigning 0.1 to a float32 rounds it; widening that rounded value with float64(f) does not recover the float64 nearest 0.1, so that comparison is false. In f == 0.1 the untyped constant is converted to f's type, float32, so both sides round identically and the comparison is true.",
+        "syntax": "const c = expr; float64(f32) == untypedConst",
+        "tags": [
+          "types",
+          "constants",
+          "floating-point"
+        ],
+        "title": "Untyped constants versus float32 precision"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-a4f35e5f",
+      "prompt": "Is 0.1 + 0.2 == 0.3 true for untyped constants but false for float64 variables in Go?",
+      "topic": "numbers-and-math",
+      "answer": true,
+      "code": "const c = 0.1 + 0.2\na, b := 0.1, 0.2\nfmt.Println(c == 0.3, a+b == 0.3)",
+      "query": {
+        "explanation": "Go evaluates untyped constant expressions exactly (at least 256 bits of mantissa, rationally for these literals), so 0.1 + 0.2 == 0.3 is true before any value is stored. Once the literals become float64 variables, each is rounded to the nearest binary double and the sum is 0.30000000000000004, so the runtime comparison is false.",
+        "syntax": "const c = 0.1 + 0.2",
+        "tags": [
+          "constants",
+          "floating-point",
+          "precision"
+        ],
+        "title": "Constant vs float64 arithmetic"
+      },
+      "rationale": "Untyped constant arithmetic is exact and arbitrary-precision, so c == 0.3 holds at compile time; float64 variables round 0.1+0.2 to 0.30000000000000004, which is not equal to 0.3.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-89d7e6d6",
+      "prompt": "Which line does this snippet print?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "-3 -2 -2 -3 -2"
+        },
+        {
+          "text": "-3 -2 -3 -3 -2",
+          "rationale": "Trunc discards the fraction toward zero, so Trunc(-2.5) is -2, not -3."
+        },
+        {
+          "text": "-3 -2 -2 -2 -2",
+          "rationale": "Round rounds halves away from zero, so Round(-2.5) is -3, not -2."
+        },
+        {
+          "text": "-2 -3 -2 -3 -2",
+          "rationale": "Floor goes toward negative infinity (-3) and Ceil toward positive infinity (-2); these two are swapped here."
+        }
+      ],
+      "code": "x := -2.5\nfmt.Println(math.Floor(x), math.Ceil(x), math.Trunc(x), math.Round(x), math.RoundToEven(x))",
+      "query": {
+        "explanation": "Floor(-2.5) = -3 (toward -Inf), Ceil(-2.5) = -2 (toward +Inf), Trunc(-2.5) = -2 (toward zero), Round(-2.5) = -3 (halves away from zero), and RoundToEven(-2.5) = -2 (halves to the even neighbor). Println formats float64 with %g, so whole values print without a decimal point.",
+        "syntax": "math.Round(x) / math.RoundToEven(x)",
+        "tags": [
+          "math",
+          "rounding",
+          "floating-point"
+        ],
+        "title": "Five ways to round -2.5"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-07e9ad27",
+      "prompt": "Which line does this snippet print?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "-56 200 -112"
+        },
+        {
+          "text": "-56 200 112",
+          "rationale": "400 keeps its low 8 bits, 0x90 = 144, whose int8 interpretation has the sign bit set, giving -112 rather than 112."
+        },
+        {
+          "text": "200 200 144",
+          "rationale": "int8 cannot hold 200 or 144; converting to a narrower integer type keeps the low bits and reinterprets the sign bit."
+        },
+        {
+          "text": "compile error: constant 200 overflows int8",
+          "rationale": "n is a variable of type int, not an untyped constant, so the conversion is a legal runtime truncation instead of a compile-time overflow."
+        }
+      ],
+      "code": "n := 200\nfmt.Println(int8(n), uint8(n), int8(int16(n)*2))",
+      "query": {
+        "explanation": "Converting a variable to a narrower integer type discards the high bits and reinterprets what remains in the target type. 200 is 0xC8, so int8(n) is -56 while uint8(n) stays 200. int16(n)*2 is 400 = 0x190; keeping the low byte gives 0x90 = 144, which as a signed 8-bit value is -112. Only constant expressions trigger overflow errors at compile time.",
+        "syntax": "int8(n)",
+        "tags": [
+          "conversions",
+          "integers",
+          "overflow"
+        ],
+        "title": "Truncating integer conversions"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-119acb6d",
+      "prompt": "Does float64(1<<53) == float64(1<<53 + 1) evaluate to true in Go?",
+      "topic": "numbers-and-math",
+      "answer": true,
+      "query": {
+        "explanation": "float64 stores 53 significand bits, so every integer up to 2^53 is exact, but above that only even integers are representable. 2^53+1 rounds to 2^53, making the comparison true. This is why large int64 values must not be round-tripped through float64.",
+        "syntax": "float64(x) == float64(y)",
+        "tags": [
+          "floating-point",
+          "precision",
+          "integers"
+        ],
+        "title": "The 2^53 gap in float64"
+      },
+      "rationale": "A float64 has a 53-bit significand, so 2^53+1 is not representable and rounds to 2^53; the two converted values are bit-identical and compare equal.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-b8e05852",
+      "prompt": "Which line do these math/bits calls produce for x = 40?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2 3 6 20"
+        },
+        {
+          "text": "2 3 5 20",
+          "rationale": "Len reports the number of bits needed to represent the value, and 40 needs 6 bits (2^5 = 32 <= 40 < 64)."
+        },
+        {
+          "text": "2 0 6 20",
+          "rationale": "40 is 0b101000, so its three lowest bits are zero and TrailingZeros returns 3, not 0."
+        },
+        {
+          "text": "3 3 6 5",
+          "rationale": "0b101000 has two set bits, and Reverse8 reverses all eight bit positions to 0b00010100 = 20, which is not a plain shift to 5."
+        }
+      ],
+      "code": "const x uint = 40\nfmt.Println(bits.OnesCount(x), bits.TrailingZeros(x), bits.Len(x), bits.Reverse8(uint8(x)))",
+      "query": {
+        "explanation": "40 is 0b00101000. OnesCount counts set bits (2), TrailingZeros counts low zero bits (3), Len is the minimum bit width needed (6), and Reverse8 reverses the eight bits of the byte to 0b00010100 = 20.",
+        "syntax": "bits.OnesCount(x) / bits.Len(x)",
+        "tags": [
+          "math/bits",
+          "bit-manipulation",
+          "integers"
+        ],
+        "title": "Bit counting helpers"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-37a059fe",
+      "prompt": "Which line does this big.Int snippet produce for -7 and 2?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "-3 -1 -4 1"
+        },
+        {
+          "text": "-3 -1 -3 -1",
+          "rationale": "DivMod uses Euclidean division with a non-negative modulus, so it yields -4 and 1 rather than repeating the truncated pair."
+        },
+        {
+          "text": "-4 1 -4 1",
+          "rationale": "QuoRem truncates toward zero like Go's / and % operators, giving -3 and -1, not the Euclidean pair."
+        },
+        {
+          "text": "-3 1 -4 -1",
+          "rationale": "The remainder of truncated division takes the sign of the dividend (-1), while the Euclidean modulus is always non-negative (1)."
+        }
+      ],
+      "code": "a, b := big.NewInt(-7), big.NewInt(2)\nq, r := new(big.Int).QuoRem(a, b, new(big.Int))\nd, m := new(big.Int).DivMod(a, b, new(big.Int))\nfmt.Println(q, r, d, m)",
+      "query": {
+        "explanation": "QuoRem implements T-division (truncation toward zero), matching Go's / and % operators: -7/2 = -3 with remainder -1. DivMod implements Euclidean division, where the modulus is always in [0, |b|): -7 = 2*(-4) + 1, so Div is -4 and Mod is 1.",
+        "syntax": "z.QuoRem(x, y, r) / z.DivMod(x, y, m)",
+        "tags": [
+          "math/big",
+          "division",
+          "modulo"
+        ],
+        "title": "QuoRem versus DivMod"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-18949827",
+      "prompt": "Which line does this snippet produce?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true true -Inf"
+        },
+        {
+          "text": "false true -Inf",
+          "rationale": "IEEE 754 defines +0 == -0 as true, so the equality comparison succeeds even though the bit patterns differ."
+        },
+        {
+          "text": "true false +Inf",
+          "rationale": "Negating 0.0 flips the sign bit, so Signbit reports true and dividing by -0 gives -Inf."
+        },
+        {
+          "text": "true true +Inf",
+          "rationale": "Division of a positive number by negative zero yields negative infinity, which fmt prints as -Inf."
+        }
+      ],
+      "code": "z := 0.0\nnz := -z\nfmt.Println(z == nz, math.Signbit(nz), 1/nz)",
+      "query": {
+        "explanation": "float64 has distinct +0 and -0 values. Comparison treats them as equal, but the sign bit survives: math.Signbit(-0.0) is true and 1 divided by -0 is -Inf. Use Signbit or math.Copysign to detect the sign, never ==.",
+        "syntax": "math.Signbit(x)",
+        "tags": [
+          "floating-point",
+          "ieee754",
+          "signed-zero"
+        ],
+        "title": "Negative zero in float64"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-71d63257",
+      "prompt": "Which line do these shifts produce?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "-1 144 -1"
+        },
+        {
+          "text": "0 144 -1",
+          "rationale": "Right shifting a negative signed value is arithmetic, so the sign bit fills in and -1 stays -1 for any shift count."
+        },
+        {
+          "text": "-1 400 -1",
+          "rationale": "u is uint8, so 200<<1 = 400 wraps modulo 256 to 144 instead of widening."
+        },
+        {
+          "text": "-1 144 0",
+          "rationale": "-1<<1 is -2 and -2>>1 is -1; the arithmetic right shift restores the value rather than producing 0."
+        }
+      ],
+      "code": "x := -1\nvar u uint8 = 200\nfmt.Println(x>>100, u<<1, x<<1>>1)",
+      "query": {
+        "explanation": "Go defines shifts for every count: shifting right by more than the width of a signed negative value gives -1 because the shift is arithmetic and the sign bit is replicated. Shifts also stay in the left operand's type, so uint8(200)<<1 wraps to 144. Finally -1<<1 is -2 and -2>>1 is back to -1.",
+        "syntax": "x >> n",
+        "tags": [
+          "shifts",
+          "integers",
+          "overflow"
+        ],
+        "title": "Shift counts and width"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-8ff77bf7",
+      "prompt": "Which line does this Printf call produce?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "0 2 2 0.2"
+        },
+        {
+          "text": "1 2 3 0.3",
+          "rationale": "fmt does not round halves away from zero; it rounds exact ties to the even digit, giving 0, 2, 2 and 0.2."
+        },
+        {
+          "text": "0 2 2 0.3",
+          "rationale": "0.25 is exactly representable and ties to the even digit 2, so it formats as 0.2, not 0.3."
+        },
+        {
+          "text": "1 2 2 0.2",
+          "rationale": "0.5 is an exact tie whose even neighbour is 0, so %.0f prints 0 rather than 1."
+        }
+      ],
+      "code": "fmt.Printf(\"%.0f %.0f %.0f %.1f\\n\", 0.5, 1.5, 2.5, 0.25)",
+      "query": {
+        "explanation": "fmt formats floats through strconv, which rounds to nearest with ties going to the even digit. 0.5, 1.5, 2.5 and 0.25 are all exactly representable ties, so they render as 0, 2, 2 and 0.2. Values like 0.15 are not exact ties, so their output follows the stored binary value instead.",
+        "syntax": "fmt.Printf(\"%.0f\", x)",
+        "tags": [
+          "formatting",
+          "rounding",
+          "floating-point"
+        ],
+        "title": "Round-half-to-even in fmt"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-809f4793",
+      "prompt": "What does this snippet print?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "6 5 5"
+        },
+        {
+          "text": "5 5 5",
+          "rationale": "len on a string counts bytes, not runes, and \"é\" occupies 2 bytes, so the first value is 6."
+        },
+        {
+          "text": "6 6 6",
+          "rationale": "Both utf8.RuneCountInString and []rune decode UTF-8, so they report 5 code points, not 6 bytes."
+        },
+        {
+          "text": "6 5 6",
+          "rationale": "len([]rune(s)) is the number of decoded code points, 5, exactly matching utf8.RuneCountInString."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"unicode/utf8\"\n)\n\nfunc main() {\n\ts := \"héllo\"\n\tfmt.Println(len(s), utf8.RuneCountInString(s), len([]rune(s)))\n}",
+      "query": {
+        "explanation": "A Go string is an immutable sequence of bytes holding UTF-8 text, so len(s) returns the byte count. \"é\" (U+00E9) encodes as 2 bytes, so \"héllo\" is 6 bytes but only 5 runes. utf8.RuneCountInString decodes UTF-8 and returns 5, and converting to []rune produces a slice of the same 5 code points, so len([]rune(s)) is also 5.",
+        "syntax": "len(s string) int; utf8.RuneCountInString(s string) int",
+        "tags": [
+          "strings",
+          "unicode",
+          "len"
+        ],
+        "title": "len counts bytes, not characters"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-01b204f5",
+      "prompt": "Which line do these strings.Split calls produce?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3 1 2"
+        },
+        {
+          "text": "3 0 2",
+          "rationale": "Splitting \"\" by a non-empty separator returns a one-element slice containing the empty string, so the length is 1, not 0."
+        },
+        {
+          "text": "5 1 2",
+          "rationale": "An empty separator splits after each rune, giving exactly 3 pieces for \"abc\", not leading and trailing empty strings."
+        },
+        {
+          "text": "3 1 3",
+          "rationale": "One separator in \"a,b\" produces two pieces, \"a\" and \"b\"; there is no trailing empty element."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\nfunc main() {\n\tfmt.Println(len(strings.Split(\"abc\", \"\")),\n\t\tlen(strings.Split(\"\", \",\")),\n\t\tlen(strings.Split(\"a,b\", \",\")))\n}",
+      "query": {
+        "explanation": "With an empty separator, Split splits after each UTF-8 rune, so \"abc\" yields 3 one-rune strings. Splitting an empty string by a non-empty separator does not yield an empty slice: it returns a slice of length 1 containing \"\". A normal split of \"a,b\" on \",\" gives 2 pieces, because n separators produce n+1 pieces.",
+        "syntax": "strings.Split(s, sep string) []string",
+        "tags": [
+          "strings",
+          "split"
+        ],
+        "title": "Split edge cases: empty separator and empty input"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-1d8bf9d1",
+      "prompt": "What line does this program print?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "STRAßE 7"
+        },
+        {
+          "text": "STRASSE 7",
+          "rationale": "Go applies only simple case mapping, so 'ß' is not expanded to \"SS\"; the rune stays as 'ß'."
+        },
+        {
+          "text": "STRASSE 8",
+          "rationale": "No expansion happens at all, so the output keeps 'ß' and its 7-byte length is unchanged."
+        },
+        {
+          "text": "STRAßE 6",
+          "rationale": "'ß' takes two bytes in UTF-8, so the six-rune result is 7 bytes long, not 6."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\nfunc main() {\n\tu := strings.ToUpper(\"straße\")\n\tfmt.Println(u, len(u))\n}",
+      "query": {
+        "explanation": "strings.ToUpper maps each rune with unicode.ToUpper, which implements simple (one rune to one rune) case mapping. U+00DF 'ß' has no single-rune uppercase form, so it is left unchanged; the special-casing rule that uppercases it to \"SS\" is not applied. The result is \"STRAßE\", still 7 bytes because 'ß' encodes as two bytes.",
+        "syntax": "strings.ToUpper(s string) string",
+        "tags": [
+          "strings",
+          "unicode",
+          "case"
+        ],
+        "title": "ToUpper applies simple case mapping only"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-426b603c",
+      "prompt": "Which line do these lookups print?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3 1 6"
+        },
+        {
+          "text": "2 1 6",
+          "rationale": "Index returns a byte offset, not a rune position; the two-byte 'é' pushes the first \"l\" to byte 3."
+        },
+        {
+          "text": "3 1 5",
+          "rationale": "LastIndex with an empty substring returns len(s), and \"héllo\" is 6 bytes long, not 5."
+        },
+        {
+          "text": "3 2 6",
+          "rationale": "IndexRune reports the byte where 'é' begins, which is 1, since only the one-byte 'h' precedes it."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\nfunc main() {\n\ts := \"héllo\"\n\tfmt.Println(strings.Index(s, \"l\"),\n\t\tstrings.IndexRune(s, 'é'),\n\t\tstrings.LastIndex(s, \"\"))\n}",
+      "query": {
+        "explanation": "All strings index functions return byte offsets. 'é' takes two bytes, so the first \"l\" sits at byte 3 even though it is the third rune. IndexRune finds 'é' starting at byte 1. For an empty substring, Index returns 0 but LastIndex returns len(s), which is 6 here, since the empty string also matches at the very end.",
+        "syntax": "strings.Index(s, substr string) int; strings.LastIndex(s, substr string) int",
+        "tags": [
+          "strings",
+          "index",
+          "unicode"
+        ],
+        "title": "Index results are byte offsets, and empty substrings are special"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-de7903d6",
+      "prompt": "Which line do these strings.Count calls produce?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3 5 1"
+        },
+        {
+          "text": "3 4 0",
+          "rationale": "With an empty substring Count returns rune count plus one, so \"five\" gives 5 and \"\" gives 1, not 4 and 0."
+        },
+        {
+          "text": "3 5 0",
+          "rationale": "Count(\"\", \"\") is 0 runes plus 1, which is 1; the empty substring still matches once."
+        },
+        {
+          "text": "2 5 1",
+          "rationale": "\"cheese\" has three 'e' characters at indexes 2, 4 and 5, so the first count is 3."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\nfunc main() {\n\tfmt.Println(strings.Count(\"cheese\", \"e\"),\n\t\tstrings.Count(\"five\", \"\"),\n\t\tstrings.Count(\"\", \"\"))\n}",
+      "query": {
+        "explanation": "Count returns the number of non-overlapping instances of substr. \"cheese\" contains 'e' three times. When substr is empty, Count is documented to return 1 plus the number of runes in s, because the empty string matches at every rune boundary including the end: \"five\" has 4 runes, so the answer is 5, and the empty string gives 0+1 = 1.",
+        "syntax": "strings.Count(s, substr string) int",
+        "tags": [
+          "strings",
+          "count"
+        ],
+        "title": "Count with an empty substring counts rune boundaries"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-c7df54a6",
+      "prompt": "Which line does this snippet print?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true false true"
+        },
+        {
+          "text": "true true true",
+          "rationale": "Simple folding maps one rune to one rune, so 'ß' cannot fold to the two runes of \"ss\" and EqualFold is false."
+        },
+        {
+          "text": "false false true",
+          "rationale": "The Kelvin sign U+212A shares a folding orbit with 'K' and 'k', so EqualFold(\"K\", \"\\u212A\") is true."
+        },
+        {
+          "text": "true false false",
+          "rationale": "unicode.ToLower maps the Kelvin sign to ordinary 'k', so ToLower(\"\\u212A\") == \"k\" is true."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\nfunc main() {\n\tfmt.Println(strings.EqualFold(\"K\", \"\\u212A\"),\n\t\tstrings.EqualFold(\"ß\", \"ss\"),\n\t\tstrings.ToLower(\"\\u212A\") == \"k\")\n}",
+      "query": {
+        "explanation": "EqualFold compares rune by rune under Unicode simple case folding. The Kelvin sign U+212A is in the same folding orbit as 'K' and 'k', so EqualFold(\"K\", \"\\u212A\") is true and ToLower(U+212A) is \"k\". Simple folding is one rune to one rune, so 'ß' never folds to the two-rune \"ss\" and that comparison is false.",
+        "syntax": "strings.EqualFold(s, t string) bool",
+        "tags": [
+          "strings",
+          "unicode",
+          "case"
+        ],
+        "title": "EqualFold uses Unicode simple folding"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-f5e68f28",
+      "prompt": "Which line do these calls produce?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2 7 0"
+        },
+        {
+          "text": "2 7 1",
+          "rationale": "Fields drops empty results, so a string of only spaces returns a slice of length 0, not one empty field."
+        },
+        {
+          "text": "2 6 0",
+          "rationale": "Split returns one more piece than there are separators: 6 spaces produce 7 elements."
+        },
+        {
+          "text": "2 9 0",
+          "rationale": "The string has 8 bytes with 6 spaces, giving 7 pieces; 9 would require 8 separators."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\nfunc main() {\n\ts := \"  a  b  \"\n\tfmt.Println(len(strings.Fields(s)),\n\t\tlen(strings.Split(s, \" \")),\n\t\tlen(strings.Fields(\"   \")))\n}",
+      "query": {
+        "explanation": "Fields splits around runs of one or more whitespace characters and discards empty results, so \"  a  b  \" yields just [\"a\" \"b\"] and an all-space string yields an empty slice of length 0. Split treats each single space as a separator: the 8-byte string contains 6 spaces, so it returns 6+1 = 7 pieces, several of them empty strings.",
+        "syntax": "strings.Fields(s string) []string; strings.Split(s, sep string) []string",
+        "tags": [
+          "strings",
+          "fields",
+          "split"
+        ],
+        "title": "Fields collapses whitespace runs, Split does not"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-6a39ee7a",
+      "prompt": "What line does this snippet print?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "6 6"
+        },
+        {
+          "text": "3 6",
+          "rationale": "The appends do run, so s really does end up with 6 elements; only the iteration count is frozen."
+        },
+        {
+          "text": "6 66",
+          "rationale": "Would require iterating over the appended elements too, but the loop bound was fixed at the original len(s) == 3."
+        },
+        {
+          "text": "the loop never terminates",
+          "rationale": "Appending during a range loop cannot extend it, because the range expression and length are captured before the first iteration."
+        }
+      ],
+      "code": "s := []int{1, 2, 3}\nsum := 0\nfor _, v := range s {\n\ts = append(s, v*10)\n\tsum += v\n}\nfmt.Println(len(s), sum)",
+      "query": {
+        "explanation": "For a slice, the range expression is evaluated a single time before the loop starts, so the loop uses the original length (3). Appending inside the body reassigns s and grows it to 6 elements, but it never adds iterations, so sum stays 1+2+3 = 6.",
+        "syntax": "for i, v := range slice { ... }",
+        "tags": [
+          "range",
+          "slices",
+          "append",
+          "iteration-count"
+        ],
+        "title": "Range expression is evaluated once"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-6771e437",
+      "prompt": "What line does this loop print?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1 2 3 [1 20 30]"
+        },
+        {
+          "text": "1 20 30 [1 20 30]",
+          "rationale": "That is slice behaviour; ranging over an array value iterates a copy, so later writes to a are invisible to v."
+        },
+        {
+          "text": "1 2 3 [1 2 3]",
+          "rationale": "The assignment a[1], a[2] = 20, 30 mutates the real array, so printing a afterwards shows [1 20 30]."
+        },
+        {
+          "text": "1 20 30 [1 2 3]",
+          "rationale": "Both halves are wrong: v reads the copy, and a itself was modified."
+        }
+      ],
+      "code": "a := [3]int{1, 2, 3}\nfor i, v := range a {\n\tif i == 0 {\n\t\ta[1], a[2] = 20, 30\n\t}\n\tfmt.Print(v, \" \")\n}\nfmt.Println(a)",
+      "query": {
+        "explanation": "With two iteration variables the range expression is evaluated once, and because a is an array (not a slice or pointer) that evaluation makes a copy. The value variable v therefore yields the original 1, 2, 3 even though the real array a was mutated to [1 20 30].",
+        "syntax": "for i, v := range arrayValue { ... }",
+        "tags": [
+          "range",
+          "arrays",
+          "value-semantics",
+          "copy"
+        ],
+        "title": "Ranging over an array copies it"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-8a8048d5",
+      "prompt": "What line does this snippet print?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "0:233 2:65533 3:120"
+        },
+        {
+          "text": "0:233 2:255 3:120",
+          "rationale": "An invalid byte is reported as the replacement rune U+FFFD (65533), not as its raw byte value 255."
+        },
+        {
+          "text": "0:233 1:65533 2:120",
+          "rationale": "The index is a byte offset, and \"é\" takes two bytes, so the next offsets are 2 and 3, not 1 and 2."
+        },
+        {
+          "text": "0:233 1:255 2:120",
+          "rationale": "Both the offsets and the decoded rune are wrong: offsets are byte positions and bad bytes become U+FFFD."
+        }
+      ],
+      "code": "s := \"é\\xffx\"\nvar parts []string\nfor i, r := range s {\n\tparts = append(parts, fmt.Sprintf(\"%d:%d\", i, r))\n}\nfmt.Println(strings.Join(parts, \" \"))",
+      "query": {
+        "explanation": "Ranging a string decodes UTF-8: the index is a byte offset, not a rune counter. \"é\" occupies bytes 0-1 and decodes to 233. The byte 0xff is not valid UTF-8, so it yields the replacement rune U+FFFD (65533) and advances exactly one byte, putting 'x' (120) at index 3.",
+        "syntax": "for byteIndex, r := range s { ... }",
+        "tags": [
+          "range",
+          "strings",
+          "utf8",
+          "runes"
+        ],
+        "title": "Range over string yields byte index and rune"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-40dfccbe",
+      "prompt": "What does this program print?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "10"
+        },
+        {
+          "text": "15",
+          "rationale": "Range over an int starts at 0 and stops before n, so the values are 0..4 summing to 10, not 1..5."
+        },
+        {
+          "text": "310",
+          "rationale": "A negative (or zero) range bound produces zero iterations, so the +100 body never executes."
+        },
+        {
+          "text": "compile error: cannot range over a negative constant",
+          "rationale": "Any integer value is accepted; a non-positive bound simply means no iterations, which is a runtime-free no-op."
+        }
+      ],
+      "code": "n := 0\nfor i := range 5 {\n\tn += i\n}\nfor range -3 {\n\tn += 100\n}\nfmt.Println(n)",
+      "query": {
+        "explanation": "`for i := range n` iterates i from 0 through n-1, so range 5 adds 0+1+2+3+4 = 10. When the integer is zero or negative the body never runs, so `for range -3` is a legal statement that contributes nothing.",
+        "syntax": "for i := range n { ... }",
+        "tags": [
+          "range",
+          "range-over-int",
+          "go1.22",
+          "iteration-count"
+        ],
+        "title": "Range over an integer"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-fa17e7a0",
+      "prompt": "What line does this program log?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "y1 g1 y2 g2 stop"
+        },
+        {
+          "text": "y1 g1 y2 g2",
+          "rationale": "A break makes yield return false, and the iterator still runs its own code after that call, appending \"stop\" before returning."
+        },
+        {
+          "text": "y1 y2 y3 g1 g2 g3 done",
+          "rationale": "The iterator and the loop body interleave one value at a time; the iterator does not produce everything first."
+        },
+        {
+          "text": "y1 g1 y2 g2 stop done",
+          "rationale": "After logging \"stop\" the iterator returns immediately, so the trailing \"done\" line is never executed."
+        }
+      ],
+      "code": "var log []string\n\nfunc seq(yield func(int) bool) {\n\tfor i := 1; i <= 3; i++ {\n\t\tlog = append(log, fmt.Sprintf(\"y%d\", i))\n\t\tif !yield(i) {\n\t\t\tlog = append(log, \"stop\")\n\t\t\treturn\n\t\t}\n\t}\n\tlog = append(log, \"done\")\n}\n\nfunc main() {\n\tfor v := range seq {\n\t\tlog = append(log, fmt.Sprintf(\"g%d\", v))\n\t\tif v == 2 {\n\t\t\tbreak\n\t\t}\n\t}\n\tfmt.Println(strings.Join(log, \" \"))\n}",
+      "query": {
+        "explanation": "Ranging over a func(yield func(V) bool) turns the loop body into yield. Control alternates: the iterator logs y1, calls yield, the body logs g1 and returns true; then y2, g2, and because the body breaks, yield returns false. The iterator sees that, logs stop and returns, so \"done\" is never reached.",
+        "syntax": "for v := range func(yield func(V) bool) { ... }",
+        "tags": [
+          "range-over-func",
+          "iterators",
+          "iter.Seq",
+          "yield",
+          "break"
+        ],
+        "title": "Range over func and the yield protocol"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-fce7e90e",
+      "prompt": "What line does this snippet print?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "alpha delta 4"
+        },
+        {
+          "text": "delta alpha 4",
+          "rationale": "slices.Sorted returns ascending order, so index 0 is alpha and the final element is delta."
+        },
+        {
+          "text": "alpha delta 1",
+          "rationale": "slices.Collect gathers every value from the iterator, giving a slice of length 4, not 1."
+        },
+        {
+          "text": "alpha charlie 4",
+          "rationale": "There are four keys; the largest in sorted order is delta, not charlie."
+        }
+      ],
+      "code": "m := map[string]int{\"delta\": 4, \"alpha\": 1, \"charlie\": 3, \"bravo\": 2}\nks := slices.Sorted(maps.Keys(m))\nfmt.Println(ks[0], ks[len(ks)-1], len(slices.Collect(maps.Values(m))))",
+      "query": {
+        "explanation": "In modern Go, maps.Keys and maps.Values return iter.Seq values rather than slices. slices.Sorted drains the key iterator and returns a sorted slice (alpha, bravo, charlie, delta), so ks[0] is alpha and the last is delta. slices.Collect drains the value iterator into a slice of length 4.",
+        "syntax": "slices.Sorted(maps.Keys(m)); slices.Collect(seq)",
+        "tags": [
+          "iterators",
+          "iter.Seq",
+          "maps",
+          "slices",
+          "map-order"
+        ],
+        "title": "maps.Keys/Values return iterators"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-7b58d266",
+      "prompt": "What line does this snippet print?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "6 0 false"
+        },
+        {
+          "text": "6 3 true",
+          "rationale": "The range loop already consumed every buffered value, so the extra receive yields the zero value with ok false."
+        },
+        {
+          "text": "fatal error: all goroutines are asleep - deadlock!",
+          "rationale": "Receiving from a closed channel never blocks, and the range loop terminates cleanly once the buffer is empty."
+        },
+        {
+          "text": "6 0 true",
+          "rationale": "The comma-ok form reports false precisely because the value came from a closed, drained channel."
+        }
+      ],
+      "code": "ch := make(chan int, 3)\nch <- 1\nch <- 2\nch <- 3\nclose(ch)\nsum := 0\nfor v := range ch {\n\tsum += v\n}\nv, ok := <-ch\nfmt.Println(sum, v, ok)",
+      "query": {
+        "explanation": "A range over a channel keeps receiving until the channel is both closed and drained, so it yields 1, 2, 3 and exits with sum 6. Further receives on a drained closed channel return immediately with the element type's zero value and ok == false; they never block.",
+        "syntax": "for v := range ch { ... }",
+        "tags": [
+          "range",
+          "channels",
+          "close",
+          "zero-value"
+        ],
+        "title": "Ranging over a closed channel"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-0baa343a",
+      "prompt": "What total does this program print?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "9",
+          "rationale": "That is the old shared-variable result; modern Go gives each iteration its own copy of i."
+        },
+        {
+          "text": "6",
+          "rationale": "Range over 3 produces 0, 1, 2, so the captured values sum to 3; 6 would need 1, 2, 3."
+        },
+        {
+          "text": "0",
+          "rationale": "Each closure captures a distinct i that keeps its iteration's value, so only the first returns 0."
+        }
+      ],
+      "code": "var fs []func() int\nfor i := range 3 {\n\tfs = append(fs, func() int { return i })\n}\ntotal := 0\nfor _, f := range fs {\n\ttotal += f()\n}\nfmt.Println(total)",
+      "query": {
+        "explanation": "Since Go 1.22 the variables declared by a for/range clause are fresh on every iteration, so each closure captures its own i holding 0, 1 and 2. The total is 0+1+2 = 3. Under the pre-1.22 single-variable rule all three closures shared one i left at 3, giving 9.",
+        "syntax": "for i := range n { fs = append(fs, func() int { return i }) }",
+        "tags": [
+          "range",
+          "closures",
+          "loop-variable-scope",
+          "go1.22"
+        ],
+        "title": "Per-iteration loop variables"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-54d1dad8",
+      "prompt": "Do range loops over a nil map and a nil slice both run zero iterations?",
+      "topic": "iterables",
+      "answer": true,
+      "code": "var m map[string]int\nvar s []int\nn := 0\nfor range m {\n\tn++\n}\nfor range s {\n\tn++\n}\nfmt.Println(n == 0)",
+      "query": {
+        "explanation": "A nil map has length 0 and a nil slice has length 0, so range over either performs zero iterations and does not panic. This is why code can safely iterate results without a nil check. The exception is a nil channel, where range blocks forever.",
+        "syntax": "for k := range nilMap { ... }",
+        "tags": [
+          "range",
+          "nil",
+          "maps",
+          "slices",
+          "zero-value"
+        ],
+        "title": "Ranging over nil maps and slices"
+      },
+      "rationale": "Nil maps and nil slices are simply empty for iteration purposes, so neither loop body executes and neither panics; only a nil channel behaves differently by blocking forever.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-0ba0d35e",
+      "prompt": "What is the result of running this program?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "0",
+          "rationale": "The length of a *[3]int is the constant 3, so the loop runs three times rather than being skipped."
+        },
+        {
+          "text": "panic: runtime error: invalid memory address or nil pointer dereference",
+          "rationale": "With at most one iteration variable and a constant length, the range expression is not evaluated, so the nil pointer is never dereferenced."
+        },
+        {
+          "text": "1",
+          "rationale": "Ranging a pointer to array iterates over all N element positions, not once over the pointer itself."
+        }
+      ],
+      "code": "var p *[3]int\nn := 0\nfor range p {\n\tn++\n}\nfmt.Println(n)",
+      "query": {
+        "explanation": "The spec says the range expression is evaluated once, except when at most one iteration variable is present and len(x) is constant. For p of type *[3]int the length is the constant 3, so p is never dereferenced: the loop runs 3 times and prints 3. Adding a value variable (for i, v := range p) would dereference p and panic.",
+        "syntax": "for range p // p *[N]T",
+        "tags": [
+          "range",
+          "array-pointer",
+          "nil",
+          "spec",
+          "constant-length"
+        ],
+        "title": "Range over a pointer to array is not always evaluated"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-ea3051bf",
+      "prompt": "What line does this snippet print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2 4 99 3 4"
+        },
+        {
+          "text": "2 4 0 3 4",
+          "rationale": "The append reuses b's backing array, so the write is visible through a[3]; it is not copied to a new array."
+        },
+        {
+          "text": "2 5 99 3 5",
+          "rationale": "The third index sets cap to max-low = 5-1 = 4, not 5."
+        },
+        {
+          "text": "2 4 99 3 8",
+          "rationale": "No growth happens because len(b)=2 is below cap(b)=4, so the capacity stays 4."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := make([]int, 5, 10)\n\tb := a[1:3:5]\n\tc := append(b, 99)\n\tfmt.Println(len(b), cap(b), a[3], len(c), cap(c))\n}",
+      "query": {
+        "explanation": "a[1:3:5] has len 3-1=2 and cap 5-1=4. Because len(b) < cap(b), append writes in place into the existing backing array at index 3 of a, so a[3] becomes 99 and c has len 3, cap 4.",
+        "syntax": "s[low:high:max]",
+        "tags": [
+          "slices",
+          "append",
+          "capacity"
+        ],
+        "title": "Full slice expressions cap the reslice"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-91fdc387",
+      "prompt": "What line does this snippet print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "4 [1 1 2 3 4]"
+        },
+        {
+          "text": "4 [1 1 1 1 1]",
+          "rationale": "A naive forward element-by-element copy would smear, but Go's copy is defined to work correctly for overlapping slices."
+        },
+        {
+          "text": "5 [1 1 2 3 4]",
+          "rationale": "copy returns the number of elements copied, which is min(4, 4) = 4, not the length of s."
+        },
+        {
+          "text": "4 [1 2 3 4 4]",
+          "rationale": "The destination is s[1:], so elements are shifted right by one; s[1] is overwritten with the old s[0]."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ts := []int{1, 2, 3, 4, 5}\n\tn := copy(s[1:], s[:4])\n\tfmt.Println(n, s)\n}",
+      "query": {
+        "explanation": "copy returns min(len(dst), len(src)) = 4 and behaves like memmove: the source values 1,2,3,4 are moved as if read first, so s becomes [1 1 2 3 4] rather than smearing one value.",
+        "syntax": "n := copy(dst, src)",
+        "tags": [
+          "slices",
+          "copy",
+          "aliasing"
+        ],
+        "title": "copy handles overlapping slices"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-c6e040b0",
+      "prompt": "Does storing math.NaN() twice as a map key give len 2 with no retrievable entry?",
+      "topic": "data-structures",
+      "answer": true,
+      "query": {
+        "explanation": "NaN is never equal to itself, so each insertion of math.NaN() creates a distinct entry and later lookups with NaN can never match. The map grows to len 2 and both entries are unreachable by key.",
+        "tags": [
+          "maps",
+          "floats",
+          "equality"
+        ],
+        "title": "NaN keys in a Go map"
+      },
+      "rationale": "The second assignment cannot overwrite the first because NaN != NaN, so the map holds two separate, unreachable entries instead of one replaceable entry.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-c684400f",
+      "prompt": "What line does this container/list program print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[9 1 2] 3"
+        },
+        {
+          "text": "[3 9 1 2] 4",
+          "rationale": "Remove(e3) unlinks the element holding 3, so it is gone and Len drops to 3."
+        },
+        {
+          "text": "[9 1 2] 4",
+          "rationale": "Len tracks the live elements, and after the removal there are only three."
+        },
+        {
+          "text": "[1 2 9] 3",
+          "rationale": "MoveToFront ran before the insert, and InsertBefore places 9 ahead of the element holding 1, not at the back."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"container/list\"\n\t\"fmt\"\n)\n\nfunc main() {\n\tl := list.New()\n\te1 := l.PushBack(1)\n\tl.PushBack(2)\n\te3 := l.PushBack(3)\n\tl.MoveToFront(e3)\n\tl.InsertBefore(9, e1)\n\tl.Remove(e3)\n\tout := []int{}\n\tfor e := l.Front(); e != nil; e = e.Next() {\n\t\tout = append(out, e.Value.(int))\n\t}\n\tfmt.Println(out, l.Len())\n}",
+      "query": {
+        "explanation": "PushBack builds [1 2 3]; MoveToFront(e3) gives [3 1 2]; InsertBefore(9, e1) puts 9 just before the element holding 1, giving [3 9 1 2]; Remove(e3) drops 3, leaving [9 1 2] with Len 3.",
+        "tags": [
+          "container/list",
+          "linked-list"
+        ],
+        "title": "Doubly linked list reordering"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-ba6020d4",
+      "prompt": "What line does this program print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2 2 3 6"
+        },
+        {
+          "text": "1 2 3 6",
+          "rationale": "No copy is made, so the second append overwrites the slot b[3] refers to; both views read 2."
+        },
+        {
+          "text": "2 2 4 6",
+          "rationale": "append returns a new slice header; the length of a is unchanged at 3."
+        },
+        {
+          "text": "1 2 4 6",
+          "rationale": "Both the shared-slot overwrite and a's unchanged length are wrong here."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := make([]int, 3, 6)\n\tb := append(a, 1)\n\tc := append(a, 2)\n\tfmt.Println(b[3], c[3], len(a), cap(a))\n}",
+      "query": {
+        "explanation": "a has spare capacity, so both appends write to the same slot (index 3) of the shared array. The second append overwrites the first, so b[3] and c[3] are both 2, while a itself keeps len 3 and cap 6.",
+        "tags": [
+          "slices",
+          "append",
+          "aliasing"
+        ],
+        "title": "Two appends to one spare slot"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-b2ee49a2",
+      "prompt": "What line does this snippet print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "0 false 10 1"
+        },
+        {
+          "text": "0 false 10 2",
+          "rationale": "The key \"a\" was deleted and \"zz\" never existed, so only one entry remains."
+        },
+        {
+          "text": "0 true 10 1",
+          "rationale": "The comma-ok result is false because \"b\" is absent at the time of the read."
+        },
+        {
+          "text": "0 false 0 1",
+          "rationale": "The assignment stores 0 + 10, so m[\"b\"] is 10 afterwards."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tm := map[string]int{\"a\": 1}\n\tv, ok := m[\"b\"]\n\tm[\"b\"] = m[\"b\"] + 10\n\tdelete(m, \"a\")\n\tdelete(m, \"zz\")\n\tfmt.Println(v, ok, m[\"b\"], len(m))\n}",
+      "query": {
+        "explanation": "Reading an absent key yields the zero value with ok false and does not insert anything. m[\"b\"] + 10 therefore computes 0 + 10. Deleting an absent key is a no-op, so only \"b\" remains and len is 1.",
+        "syntax": "v, ok := m[k]; delete(m, k)",
+        "tags": [
+          "maps",
+          "comma-ok",
+          "delete"
+        ],
+        "title": "Missing keys, zero values, and delete"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-c29c4797",
+      "prompt": "What line does this container/heap program print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "5 4 2"
+        },
+        {
+          "text": "1 3 2",
+          "rationale": "Less compares with >, which makes the largest element the heap root, so the smallest values are not popped first."
+        },
+        {
+          "text": "5 4 3",
+          "rationale": "Four elements exist after the push and two are popped, leaving two."
+        },
+        {
+          "text": "1 3 3",
+          "rationale": "Both the ordering and the remaining count are wrong: it is a max-heap and two pops leave two elements."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"container/heap\"\n\t\"fmt\"\n)\n\ntype h []int\n\nfunc (x h) Len() int            { return len(x) }\nfunc (x h) Less(i, j int) bool  { return x[i] > x[j] }\nfunc (x h) Swap(i, j int)       { x[i], x[j] = x[j], x[i] }\nfunc (x *h) Push(v any)         { *x = append(*x, v.(int)) }\nfunc (x *h) Pop() any {\n\told := *x\n\tn := len(old)\n\tv := old[n-1]\n\t*x = old[:n-1]\n\treturn v\n}\n\nfunc main() {\n\tq := &h{3, 1, 4}\n\theap.Init(q)\n\theap.Push(q, 5)\n\ta := heap.Pop(q).(int)\n\tb := heap.Pop(q).(int)\n\tfmt.Println(a, b, q.Len())\n}",
+      "query": {
+        "explanation": "container/heap always pops the element that Less puts first. Because Less uses >, this is a max-heap: after pushing 5 the pops yield 5 then 4, and two of the four elements remain.",
+        "tags": [
+          "container/heap",
+          "priority-queue",
+          "interfaces"
+        ],
+        "title": "Less decides heap orientation"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-7a919827",
+      "prompt": "What line does this program print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2 3 0"
+        },
+        {
+          "text": "3 3 0",
+          "rationale": "Reading m[key{\"x\",\"y\"}] does not insert a key, so the map holds only two entries."
+        },
+        {
+          "text": "2 2 0",
+          "rationale": "The ++ adds 1 and the += adds 2 to the same key, giving 3."
+        },
+        {
+          "text": "1 3 0",
+          "rationale": "{\"a\",\"b\"} and {\"b\",\"a\"} differ element-wise, so they are two distinct keys."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\ntype key [2]string\n\nfunc main() {\n\tm := map[key]int{}\n\tm[key{\"a\", \"b\"}]++\n\tm[key{\"a\", \"b\"}] += 2\n\tm[key{\"b\", \"a\"}] = 7\n\tfmt.Println(len(m), m[key{\"a\", \"b\"}], m[key{\"x\", \"y\"}])\n}",
+      "query": {
+        "explanation": "Arrays of comparable elements are comparable, so two array values with the same elements hash to the same key. {\"a\",\"b\"} accumulates 1 then +2 = 3, {\"b\",\"a\"} is a different key, and reading an absent key yields 0 without inserting it.",
+        "tags": [
+          "maps",
+          "arrays",
+          "comparability"
+        ],
+        "title": "Arrays are comparable map keys"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-d352d811",
+      "prompt": "Can you read from a nil map while writing to it panics?",
+      "topic": "data-structures",
+      "answer": true,
+      "query": {
+        "explanation": "A nil map behaves like an empty map for reads: indexing yields the zero value, len is 0, and ranging runs zero times. Any assignment to a nil map panics with 'assignment to entry in nil map'.",
+        "syntax": "var m map[string]int",
+        "tags": [
+          "maps",
+          "nil",
+          "panic"
+        ],
+        "title": "Reads and writes on a nil map"
+      },
+      "rationale": "Reads are not an error on a nil map, and the write does not silently allocate a map; it panics with 'assignment to entry in nil map'.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-ba6b158a",
+      "prompt": "What single line of output does this program produce?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "9 3"
+        },
+        {
+          "text": "3 3",
+          "rationale": "This assumes the defer in f cannot change the result, but f's result variable is named n, so the deferred closure's update is observed by the caller."
+        },
+        {
+          "text": "9 9",
+          "rationale": "g returns an unnamed result, so the value 3 is copied out before the deferred closure mutates the local n; the caller never sees 9."
+        },
+        {
+          "text": "6 3",
+          "rationale": "In f the result variable is set to n+1 = 3 before the defer runs, so the defer triples 3, not the earlier value 2."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc f() (n int) {\n\tdefer func() { n *= 3 }()\n\tn = 2\n\treturn n + 1\n}\n\nfunc g() int {\n\tn := 2\n\tdefer func() { n *= 3 }()\n\treturn n + 1\n}\n\nfunc main() {\n\tfmt.Println(f(), g())\n}",
+      "query": {
+        "explanation": "A `return expr` statement first assigns expr to the result variables, then runs the deferred calls, then leaves the function. In f the result is the named variable n, so `return n + 1` sets n = 3 and the deferred closure multiplies that same result variable, yielding 9. In g the result is unnamed, so the value 3 is already copied out; the deferred closure mutates only the local n, which nobody reads again, so g returns 3.",
+        "syntax": "func f() (n int) { defer func(){ n *= 3 }(); return n + 1 }",
+        "tags": [
+          "defer",
+          "named-return-values",
+          "closures",
+          "scope"
+        ],
+        "title": "Deferred functions can modify named results only"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-d8b773c8",
+      "prompt": "Which line does this program print?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "if case outer"
+        },
+        {
+          "text": "if case if",
+          "rationale": "The `x` declared in the if's init statement is out of scope after the if statement, so the final Println cannot see \"if\"."
+        },
+        {
+          "text": "outer outer outer",
+          "rationale": "Both the if init statement and the case clause declare their own `x`, which shadows main's `x` inside those blocks."
+        },
+        {
+          "text": "if 1 outer",
+          "rationale": "The case clause declares a new string `x` that shadows the switch's int `x`, so \"case\" is printed, not 1."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nvar x = \"pkg\"\n\nfunc main() {\n\tx := \"outer\"\n\tif x := \"if\"; len(x) > 0 {\n\t\tfmt.Print(x, \" \")\n\t} else {\n\t\tfmt.Print(\"else \")\n\t}\n\tswitch x := 1; x {\n\tcase 1:\n\t\tx := \"case\"\n\t\tfmt.Print(x, \" \")\n\t}\n\tfmt.Println(x)\n}",
+      "query": {
+        "explanation": "Each `if` and `switch` with an init statement opens an implicit block whose scope holds the variables it declares, and every case clause is another implicit block. So the `x` printed inside the if body is \"if\", the `x` declared in the case clause shadows the switch's int `x` and prints \"case\", and the final Println still sees main's `x`, which is \"outer\". The package-level `x` is shadowed everywhere inside main.",
+        "syntax": "if x := \"if\"; len(x) > 0 { /* inner x */ }",
+        "tags": [
+          "scope",
+          "shadowing",
+          "blocks",
+          "short-variable-declaration"
+        ],
+        "title": "Implicit blocks in if and switch create nested scopes"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-ea1eaecd",
+      "prompt": "What single line does this program print?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "C10,B20,A0"
+        },
+        {
+          "text": "A0,B20,C10",
+          "rationale": "Deferred calls run in last-in-first-out order, so the C defer registered last runs first."
+        },
+        {
+          "text": "C20,B20,A20",
+          "rationale": "The A and C defers pass i as an argument, which is evaluated at the defer statement, freezing 0 and 10 respectively."
+        },
+        {
+          "text": "C10,B10,A10",
+          "rationale": "The B defer closes over the variable i rather than copying it, so it reads i's final value 20."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\nfunc main() {\n\tvar out []string\n\ti := 0\n\tdefer func() { fmt.Println(strings.Join(out, \",\")) }()\n\tdefer func(v int) { out = append(out, fmt.Sprint(\"A\", v)) }(i)\n\tdefer func() { out = append(out, fmt.Sprint(\"B\", i)) }()\n\ti = 10\n\tdefer func(v int) { out = append(out, fmt.Sprint(\"C\", v)) }(i)\n\ti = 20\n}",
+      "query": {
+        "explanation": "Deferred calls run last-in-first-out, so the C defer runs first, then B, then A, and finally the printing defer registered first. Arguments to a deferred call are evaluated when the `defer` statement executes: the A defer froze i = 0 and the C defer froze i = 10. The B defer takes no arguments and closes over the variable i itself, so it sees the final value 20.",
+        "syntax": "defer func(v int){ /* v frozen now */ }(i)",
+        "tags": [
+          "defer",
+          "closures",
+          "evaluation-order",
+          "scope"
+        ],
+        "title": "Defer argument evaluation time versus closure capture"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-3727c805",
+      "prompt": "Does calling recover inside helper stop the panic from leaving inner?",
+      "topic": "functions-and-scope",
+      "answer": false,
+      "code": "package main\n\nfunc helper() { recover() }\n\nfunc inner() {\n\tdefer func() { helper() }()\n\tpanic(\"boom\")\n}",
+      "query": {
+        "explanation": "recover returns nil and has no effect unless it is called directly by a function that was deferred. Here the deferred function is the anonymous literal; helper is an ordinary call made by that literal, so recover inside helper returns nil and the panic keeps unwinding past inner. Writing `defer helper()` instead would make helper the deferred function and would stop the panic.",
+        "syntax": "defer func() { if r := recover(); r != nil { /* handled */ } }()",
+        "tags": [
+          "recover",
+          "panic",
+          "defer",
+          "functions"
+        ],
+        "title": "recover only works when called directly by a deferred function"
+      },
+      "rationale": "recover has effect only when invoked directly by a deferred function; the deferred literal calls helper, so recover returns nil and the panic continues to propagate.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-6aea3f1d",
+      "prompt": "Which line does this program print?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1 2 2"
+        },
+        {
+          "text": "2 2 2",
+          "rationale": "The value-receiver method value `c.Val` copies the receiver when it is created, so f still reports n = 1."
+        },
+        {
+          "text": "1 1 2",
+          "rationale": "`c.PVal` binds &c because PVal has a pointer receiver, so g reads the updated field and reports 2."
+        },
+        {
+          "text": "1 2 1",
+          "rationale": "The method expression C.Val receives c as a regular argument evaluated at the call, after n was set to 2."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\ntype C struct{ n int }\n\nfunc (c C) Val() int   { return c.n }\nfunc (c *C) PVal() int { return c.n }\n\nfunc main() {\n\tc := C{1}\n\tf := c.Val\n\tg := c.PVal\n\tc.n = 2\n\tfmt.Println(f(), g(), C.Val(c))\n}",
+      "query": {
+        "explanation": "A method value such as `c.Val` evaluates and saves a copy of the receiver at the moment the method value is created, so f keeps the struct as it was, with n = 1. For a pointer-receiver method, `c.PVal` is shorthand for `(&c).PVal`, so the saved receiver is the address of c and g later observes n = 2. The method expression `C.Val` takes the receiver as an explicit argument, which is evaluated at call time and so sees 2.",
+        "syntax": "f := c.Val // receiver copied now",
+        "tags": [
+          "methods",
+          "method-values",
+          "receivers",
+          "functions"
+        ],
+        "title": "Method values bind the receiver when they are evaluated"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-0b515045",
+      "prompt": "Which line does this program print?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "nil nil 0 1"
+        },
+        {
+          "text": "0 0 0 1",
+          "rationale": "With no arguments, and when forwarding a nil slice with s..., the variadic parameter is nil rather than an allocated empty slice."
+        },
+        {
+          "text": "nil nil nil 1",
+          "rationale": "`[]int{}...` forwards an allocated empty slice, which is non-nil, so the length branch prints 0."
+        },
+        {
+          "text": "0 nil 0 1",
+          "rationale": "Calling count() with no arguments also yields a nil slice, not an empty allocated one."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc count(xs ...int) string {\n\tif xs == nil {\n\t\treturn \"nil\"\n\t}\n\treturn fmt.Sprint(len(xs))\n}\n\nfunc main() {\n\tvar s []int\n\tfmt.Println(count(), count(s...), count([]int{}...), count(0))\n}",
+      "query": {
+        "explanation": "Inside a variadic function the parameter is an ordinary slice. Calling with no arguments gives a nil slice, and passing a nil slice with `s...` forwards that very slice, so it stays nil. Passing `[]int{}...` forwards an allocated empty slice, which is non-nil with length 0, and `count(0)` builds a one-element slice. Length checks are therefore safer than nil checks for variadic parameters.",
+        "syntax": "func count(xs ...int) string { /* xs is a []int */ }",
+        "tags": [
+          "variadic",
+          "functions",
+          "slices",
+          "nil"
+        ],
+        "title": "A variadic parameter can be nil or empty-but-non-nil"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-f18d36b5",
+      "prompt": "What line does this program print?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "7 6 3 [init1 init2]"
+        },
+        {
+          "text": "1 0 3 [init1 init2]",
+          "rationale": "Go resolves initialization dependencies instead of using textual order, so b and a are not computed from zero values."
+        },
+        {
+          "text": "7 6 3 [init2 init1]",
+          "rationale": "Multiple init functions within a single file run in the order they appear in the source."
+        },
+        {
+          "text": "1 0 3 []",
+          "rationale": "Both initialization order and the init functions matter here: dependencies give 7 6 3 and both init functions do run before main."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nvar a = b + 1\nvar b = c * 2\nvar c = 3\n\nfunc init() { order = append(order, \"init1\") }\n\nvar order []string\n\nfunc init() { order = append(order, \"init2\") }\n\nfunc main() {\n\tfmt.Println(a, b, c, order)\n}",
+      "query": {
+        "explanation": "Package-level variables are initialized in dependency order, not in the order they are written, so c becomes 3, then b becomes 6, then a becomes 7. All variable initialization finishes before any init function runs, and multiple init functions in one file run in the order they appear in the source, giving [init1 init2].",
+        "syntax": "var a = b + 1 // b initialized first",
+        "tags": [
+          "initialization-order",
+          "init",
+          "package-scope",
+          "functions"
+        ],
+        "title": "Package variables initialize by dependency, init funcs in source order"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-b84901a5",
+      "prompt": "Which line does this program print?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2 true -1 false"
+        },
+        {
+          "text": "2 true 0 false",
+          "rationale": "The deferred closure assigns -1 to the named result res, and that assignment is visible to the caller."
+        },
+        {
+          "text": "2 true -1 true",
+          "rationale": "The defer also sets the named err result to a non-nil error, so the comparison e2 == nil is false."
+        },
+        {
+          "text": "0 false -1 false",
+          "rationale": "div(6, 3) never panics, so recover returns nil, the closure assigns nothing, and the normal results 2 and nil are returned."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc div(a, b int) (res int, err error) {\n\tdefer func() {\n\t\tif r := recover(); r != nil {\n\t\t\tres = -1\n\t\t\terr = fmt.Errorf(\"recovered\")\n\t\t}\n\t}()\n\treturn a / b, nil\n}\n\nfunc main() {\n\tr1, e1 := div(6, 3)\n\tr2, e2 := div(1, 0)\n\tfmt.Println(r1, e1 == nil, r2, e2 == nil)\n}",
+      "query": {
+        "explanation": "Because the results are named, the deferred closure can assign to res and err after a panic is recovered, and those values are what the caller receives. For div(6, 3) no panic occurs, so recover returns nil and the normal results 2 and nil survive. For div(1, 0) integer division by zero panics, the defer recovers it, and the function returns -1 together with a non-nil error.",
+        "syntax": "func div(a, b int) (res int, err error) { defer func(){ recover() }(); ... }",
+        "tags": [
+          "recover",
+          "named-return-values",
+          "defer",
+          "panic"
+        ],
+        "title": "Recovering inside a defer can rewrite named results"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-98ba1399",
+      "prompt": "What single line does this program print?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "p2 a3 6"
+        },
+        {
+          "text": "a3 p2 6",
+          "rationale": "Go evaluates the calls in lexical left-to-right order, and pick(2) appears to the left of arg(3), so it runs first."
+        },
+        {
+          "text": "p2 a3 5",
+          "rationale": "The returned closure multiplies its argument by the captured n, giving 3 * 2 = 6, not a sum."
+        },
+        {
+          "text": "a3 p2 5",
+          "rationale": "Both the ordering and the arithmetic are wrong: pick(2) runs first and the closure computes 3 * 2."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nvar log string\n\nfunc pick(n int) func(int) int {\n\tlog += fmt.Sprintf(\"p%d \", n)\n\treturn func(x int) int { return x * n }\n}\n\nfunc arg(n int) int {\n\tlog += fmt.Sprintf(\"a%d \", n)\n\treturn n\n}\n\nfunc main() {\n\tv := pick(2)(arg(3))\n\tfmt.Printf(\"%s%d\\n\", log, v)\n}",
+      "query": {
+        "explanation": "In `pick(2)(arg(3))` the callee expression pick(2) is itself a call, and the specification says that function calls appearing in an expression are evaluated in lexical left-to-right order. So pick(2) runs first and appends \"p2 \", then arg(3) runs and appends \"a3 \", and only then is the returned closure invoked with 3, producing 3 * 2 = 6.",
+        "syntax": "pick(2)(arg(3)) // pick(2) evaluated before arg(3)",
+        "tags": [
+          "evaluation-order",
+          "higher-order-functions",
+          "closures",
+          "functions"
+        ],
+        "title": "Function operands are evaluated in lexical left-to-right order"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-ca4a9aa1",
+      "prompt": "Does a defer registered inside an inner block run when that block ends?",
+      "topic": "functions-and-scope",
+      "answer": false,
+      "code": "package main\n\nvar out []string\n\nfunc run() {\n\t{\n\t\tdefer func() { out = append(out, \"defer\") }()\n\t\tout = append(out, \"blockEnd\")\n\t}\n\tout = append(out, \"afterBlock\")\n}",
+      "query": {
+        "explanation": "Although the variables declared in a block go out of scope at the end of that block, a deferred call is pushed onto the surrounding function's defer list and runs only when that function returns or panics. Here out ends up as [blockEnd afterBlock defer], proving the deferred append happened after the statement following the block. To bound cleanup to a narrower region you must wrap it in its own function literal and call it.",
+        "syntax": "func() { defer cleanup() }() // defer bounded by this literal",
+        "tags": [
+          "defer",
+          "scope",
+          "blocks",
+          "functions"
+        ],
+        "title": "Defer is scoped to the function, not the enclosing block"
+      },
+      "rationale": "Deferred calls are attached to the enclosing function, so the append runs after the statement following the block, when run returns, rather than at the closing brace of the block.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-97d9801e",
+      "prompt": "Does this program print true?",
+      "topic": "errors-and-control-flow",
+      "answer": true,
+      "code": "package main\n\nimport \"fmt\"\n\ntype MyErr struct{}\n\nfunc (e *MyErr) Error() string { return \"my\" }\n\nfunc mayFail(fail bool) error {\n\tvar p *MyErr\n\tif fail {\n\t\tp = &MyErr{}\n\t}\n\treturn p\n}\n\nfunc main() { fmt.Println(mayFail(false) != nil) }",
+      "query": {
+        "explanation": "An interface value is nil only when both its type word and its data word are empty. Returning a nil *MyErr through an error result fills in the type word with *MyErn, so the interface itself is non-nil even though the pointer inside is nil. This classic bug makes err != nil succeed for a 'no error' path; the fix is to return a literal nil error instead of a typed nil pointer.",
+        "syntax": "var p *MyErr; var err error = p // err != nil",
+        "tags": [
+          "errors",
+          "interfaces",
+          "typed-nil"
+        ],
+        "title": "Typed nil stored in an error interface"
+      },
+      "rationale": "The interface carries the concrete type *MyErr with a nil pointer, so it is not the nil interface; false would require an empty type word.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-c884b9f9",
+      "prompt": "What does this program write to stdout?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "R 2 1 0 A"
+        },
+        {
+          "text": "A 0 1 2 R",
+          "rationale": "Deferred calls run last-in-first-out, so the recovering closure runs first and the \"A\" defer runs last."
+        },
+        {
+          "text": "R 2 1 0",
+          "rationale": "recover stops the panic, but the remaining deferred calls, including the one printing A, still run."
+        },
+        {
+          "text": "R 0 1 2 A",
+          "rationale": "The loop's three defers unwind in reverse registration order, printing 2 then 1 then 0."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tdefer fmt.Println(\"A\")\n\tfor i := 0; i < 3; i++ {\n\t\tdefer fmt.Print(i, \" \")\n\t}\n\tdefer func() {\n\t\trecover()\n\t\tfmt.Print(\"R \")\n\t}()\n\tpanic(\"x\")\n}",
+      "query": {
+        "explanation": "Deferred arguments are evaluated at defer time, so the loop queues prints of 0, 1 and 2. Panicking runs the deferred calls last-in-first-out: the closure runs first, recovers the panic and prints \"R \", then the loop defers print \"2 1 0 \", then the first defer prints \"A\". Because the panic was recovered, main returns normally. fmt.Print inserts no space between an int and a string operand.",
+        "syntax": "defer f(args) // args evaluated now, call runs LIFO",
+        "tags": [
+          "defer",
+          "panic",
+          "recover",
+          "ordering"
+        ],
+        "title": "Defer order during panicking and recovery"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-e293ee35",
+      "prompt": "What does this program print?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "Once does not retry: a panicking f still marks the Once as done, so the second function never runs."
+        },
+        {
+          "text": "0",
+          "rationale": "The first function does run and increments calls before it panics."
+        },
+        {
+          "text": "panic: boom",
+          "rationale": "The deferred recover in the anonymous function swallows the panic, so main continues normally."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tvar once sync.Once\n\tcalls := 0\n\tfunc() {\n\t\tdefer func() { recover() }()\n\t\tonce.Do(func() {\n\t\t\tcalls++\n\t\t\tpanic(\"boom\")\n\t\t})\n\t}()\n\tonce.Do(func() { calls++ })\n\tfmt.Println(calls)\n}",
+      "query": {
+        "explanation": "sync.Once.Do guarantees f runs at most once. The documentation states that if f panics, Do considers it to have returned, so the Once is already marked done. The second Do therefore returns immediately without invoking its function, leaving calls at 1. Once gives no retry-on-failure semantics; code that needs retries must track success itself.",
+        "syntax": "once.Do(f)",
+        "tags": [
+          "sync",
+          "once",
+          "panic",
+          "concurrency"
+        ],
+        "title": "sync.Once treats a panicking f as done"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-5cffeffb",
+      "prompt": "Which line does this program print?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "b 7"
+        },
+        {
+          "text": "a 0",
+          "rationale": "A receive from a nil channel blocks forever rather than yielding the zero value, so that case is never ready."
+        },
+        {
+          "text": "fatal error: all goroutines are asleep - deadlock!",
+          "rationale": "One case is ready, so select proceeds immediately instead of blocking."
+        },
+        {
+          "text": "panic: receive from nil channel",
+          "rationale": "Receiving from a nil channel blocks; it does not panic, and inside a select it is simply ignored."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar a chan int\n\tb := make(chan int, 1)\n\tb <- 7\n\tselect {\n\tcase v := <-a:\n\t\tfmt.Println(\"a\", v)\n\tcase v := <-b:\n\t\tfmt.Println(\"b\", v)\n\t}\n}",
+      "query": {
+        "explanation": "Operations on a nil channel block forever, so a select case guarding a nil channel can never be chosen. Here only the buffered channel b holds a value, so that case is the single ready case and select picks it deterministically. Assigning nil to a channel variable is the standard trick for disabling one arm of a select loop.",
+        "syntax": "select { case <-nilCh: ... case <-ready: ... }",
+        "tags": [
+          "select",
+          "channels",
+          "nil-channel",
+          "concurrency"
+        ],
+        "title": "A nil channel case is never ready"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-a9cae932",
+      "prompt": "Does ranging a closed buffered channel still deliver the values buffered before close?",
+      "topic": "async-and-concurrency",
+      "answer": true,
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tch := make(chan int, 3)\n\tch <- 1\n\tch <- 2\n\tclose(ch)\n\tgot := []int{}\n\tfor v := range ch {\n\t\tgot = append(got, v)\n\t}\n\tfmt.Println(got)\n}",
+      "query": {
+        "explanation": "close only marks a channel as closed; the values already in its buffer stay there. Receives keep returning buffered values in FIFO order, and only once the buffer is empty do they return the zero value with ok == false, which is what ends a range loop. So this program prints [1 2]. Closing is a broadcast of 'no more sends', not a flush of pending data.",
+        "syntax": "close(ch); for v := range ch { ... }",
+        "tags": [
+          "channels",
+          "close",
+          "range",
+          "concurrency"
+        ],
+        "title": "close drains, it does not discard"
+      },
+      "rationale": "If close discarded buffered values the range loop would run zero times, but Go guarantees buffered values are received first and only then does the loop see the closed, empty channel.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-e1c24a0d",
+      "prompt": "What does this snippet print?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "a true 1 4"
+        },
+        {
+          "text": "a false 1 4",
+          "rationale": "ok is false only when the receive returns a zero value from a drained closed channel; here a real buffered value was received."
+        },
+        {
+          "text": "a true 1 0",
+          "rationale": "cap stays at the buffer size 4; closing a channel does not reset its capacity."
+        },
+        {
+          "text": " false 0 4",
+          "rationale": "Closing does not discard buffered values, so the first receive returns \"a\" and one value remains queued."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tch := make(chan string, 4)\n\tch <- \"a\"\n\tch <- \"b\"\n\tclose(ch)\n\tv, ok := <-ch\n\tfmt.Println(v, ok, len(ch), cap(ch))\n}",
+      "query": {
+        "explanation": "cap(ch) is the fixed buffer size given to make, and close never changes it. len(ch) is the number of values currently queued, so after sending two values and receiving one, len is 1 and cap stays 4. The receive succeeds with ok == true because a buffered value was available; ok only becomes false once the channel is closed and drained.",
+        "syntax": "v, ok := <-ch; len(ch); cap(ch)",
+        "tags": [
+          "channels",
+          "buffered",
+          "close",
+          "len-cap"
+        ],
+        "title": "len and cap of a closed buffered channel"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-24d47fb3",
+      "prompt": "Which line does this program print?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true false"
+        },
+        {
+          "text": "false true",
+          "rationale": "DeadlineExceeded is reported only if the one-hour timer fires first; the explicit parent cancel wins here."
+        },
+        {
+          "text": "false false",
+          "rationale": "Err is non-nil once Done is closed, and for a cancelled parent it is exactly context.Canceled."
+        },
+        {
+          "text": "true true",
+          "rationale": "Err returns a single error value, so it cannot equal both sentinel errors at once."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"context\"\n\t\"fmt\"\n\t\"time\"\n)\n\nfunc main() {\n\tparent, cancel := context.WithCancel(context.Background())\n\tchild, childCancel := context.WithTimeout(parent, time.Hour)\n\tdefer childCancel()\n\tcancel()\n\t<-child.Done()\n\tfmt.Println(child.Err() == context.Canceled, child.Err() == context.DeadlineExceeded)\n}",
+      "query": {
+        "explanation": "Cancelling a parent context cancels every context derived from it, including timeout contexts whose deadline has not been reached. The child's Done channel closes immediately and its Err reports context.Canceled, not context.DeadlineExceeded; DeadlineExceeded appears only when the timer actually fires first. So the program prints 'true false'.",
+        "syntax": "context.WithTimeout(parent, d); ctx.Err()",
+        "tags": [
+          "context",
+          "cancellation",
+          "deadline",
+          "concurrency"
+        ],
+        "title": "Cancellation propagates to derived contexts"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-abf67eef",
+      "prompt": "What number does this program print?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "30",
+          "rationale": "default runs only when no other case is ready, but a closed channel is always ready to receive."
+        },
+        {
+          "text": "1",
+          "rationale": "A closed channel does not become exhausted; every one of the three iterations receives successfully."
+        },
+        {
+          "text": "panic: receive on closed channel",
+          "rationale": "Only sending on a closed channel panics; receiving yields the zero value."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tch := make(chan int)\n\tclose(ch)\n\tn := 0\n\tfor i := 0; i < 3; i++ {\n\t\tselect {\n\t\tcase <-ch:\n\t\t\tn++\n\t\tdefault:\n\t\t\tn += 10\n\t\t}\n\t}\n\tfmt.Println(n)\n}",
+      "query": {
+        "explanation": "A receive on a closed channel never blocks: it returns the element's zero value immediately, forever. In a select that makes the receive case permanently ready, so default is never taken and the receive case runs on all three iterations, giving 3. This is why a closed channel is the usual way to broadcast 'done' to many waiters.",
+        "syntax": "select { case <-closedCh: ... default: ... }",
+        "tags": [
+          "select",
+          "default",
+          "close",
+          "channels"
+        ],
+        "title": "A closed channel is always ready to receive"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-2e8e38ec",
+      "prompt": "Does calling a context cancel function a second time panic?",
+      "topic": "async-and-concurrency",
+      "answer": false,
+      "code": "package main\n\nimport (\n\t\"context\"\n\t\"fmt\"\n)\n\nfunc main() {\n\tctx, cancel := context.WithCancel(context.Background())\n\tcancel()\n\tcancel()\n\tfmt.Println(ctx.Err())\n}",
+      "query": {
+        "explanation": "context.CancelFunc is documented as safe to call multiple times: after the first call subsequent calls do nothing. That is why `defer cancel()` is safe even when the code already cancelled explicitly or the deadline fired. Contrast this with close(ch), which panics if a channel is closed twice.",
+        "syntax": "ctx, cancel := context.WithCancel(parent); defer cancel()",
+        "tags": [
+          "context",
+          "cancel",
+          "idempotent",
+          "concurrency"
+        ],
+        "title": "CancelFunc is idempotent"
+      },
+      "rationale": "Unlike close on a channel, CancelFunc is explicitly documented as a no-op after the first call, so repeated cancellation is safe and the usual defer cancel() pattern cannot crash.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-bd063cc2",
+      "prompt": "What does this sync.Map snippet print?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1 false 1 true"
+        },
+        {
+          "text": "1 false 2 true",
+          "rationale": "LoadOrStore does not overwrite an existing key, so the second call returns the stored 1, not the new 2."
+        },
+        {
+          "text": "1 true 1 true",
+          "rationale": "The first call actually stores the value, so loaded is false for it."
+        },
+        {
+          "text": "1 false 2 false",
+          "rationale": "loaded is true on the second call because the key was already present."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tvar m sync.Map\n\tv1, l1 := m.LoadOrStore(\"k\", 1)\n\tv2, l2 := m.LoadOrStore(\"k\", 2)\n\tfmt.Println(v1, l1, v2, l2)\n}",
+      "query": {
+        "explanation": "LoadOrStore stores and returns the given value if the key is absent, reporting loaded == false. If the key already exists it leaves the stored value untouched and returns it with loaded == true. So the first call returns 1/false and the second returns the already-stored 1 with true; the value 2 is discarded. The pair is applied atomically, which is why it is the standard 'get or create' primitive for sync.Map.",
+        "syntax": "actual, loaded := m.LoadOrStore(key, value)",
+        "tags": [
+          "sync.Map",
+          "atomic",
+          "concurrency",
+          "stdlib"
+        ],
+        "title": "sync.Map LoadOrStore returns the existing value"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-45204545",
+      "prompt": "What does this program print?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "panic"
+        },
+        {
+          "text": "no panic",
+          "rationale": "The extra Done drives the counter to -1, which sync.WaitGroup rejects with a panic rather than clamping at zero."
+        },
+        {
+          "text": "fatal error: all goroutines are asleep - deadlock!",
+          "rationale": "Nothing ever blocks here: Wait is never called and Done does not block."
+        },
+        {
+          "text": "compile error: wg.Done called too many times",
+          "rationale": "Done's argument count is fixed and the misuse is a runtime condition, so the compiler cannot detect it."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tvar wg sync.WaitGroup\n\twg.Add(1)\n\twg.Done()\n\tres := \"no panic\"\n\tfunc() {\n\t\tdefer func() {\n\t\t\tif recover() != nil {\n\t\t\t\tres = \"panic\"\n\t\t\t}\n\t\t}()\n\t\twg.Done()\n\t}()\n\tfmt.Println(res)\n}",
+      "query": {
+        "explanation": "Done is Add(-1), and sync.WaitGroup panics as soon as its counter would drop below zero. Here Add(1) then two Done calls drive the counter to -1, so the second Done panics and the recover sets res to \"panic\". The usual bug is calling Done twice (for example both explicitly and via defer) or forgetting an Add.",
+        "syntax": "wg.Add(n); wg.Done(); wg.Wait()",
+        "tags": [
+          "WaitGroup",
+          "sync",
+          "panic",
+          "concurrency"
+        ],
+        "title": "A WaitGroup counter must never go negative"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-6e3c9063",
+      "prompt": "What does this program print?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "6 3"
+        },
+        {
+          "text": "6 5",
+          "rationale": "The closed-channel receives hit the continue branch, so they never increment count."
+        },
+        {
+          "text": "3 2",
+          "rationale": "Both buffered values in a are received before it reports closed, so 1, 3 and 2 all contribute."
+        },
+        {
+          "text": "fatal error: all goroutines are asleep - deadlock!",
+          "rationale": "Each channel is set to nil once drained and the loop condition then ends the loop, so select is never entered with only nil cases."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := make(chan int, 2)\n\tb := make(chan int, 1)\n\ta <- 1\n\ta <- 3\n\tclose(a)\n\tb <- 2\n\tclose(b)\n\tsum, count := 0, 0\n\tfor a != nil || b != nil {\n\t\tselect {\n\t\tcase v, ok := <-a:\n\t\t\tif !ok {\n\t\t\t\ta = nil\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\tsum += v\n\t\t\tcount++\n\t\tcase v, ok := <-b:\n\t\t\tif !ok {\n\t\t\t\tb = nil\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\tsum += v\n\t\t\tcount++\n\t\t}\n\t}\n\tfmt.Println(sum, count)\n}",
+      "query": {
+        "explanation": "This is the canonical fan-in loop. When a receive reports ok == false the channel is drained and closed, and the code sets that variable to nil so its select case can never be chosen again; without that, the loop would spin forever receiving zero values. select may pick ready cases in any order, but every value is still received exactly once, so the totals 1+3+2 = 6 over 3 values are deterministic.",
+        "syntax": "case v, ok := <-ch: if !ok { ch = nil; continue }",
+        "tags": [
+          "select",
+          "fan-in",
+          "nil-channel",
+          "close"
+        ],
+        "title": "Disabling select cases by setting channels to nil"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-4ccdfe11",
+      "prompt": "What does this snippet print?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "len=9 cap=16"
+        },
+        {
+          "text": "len=9 cap=9",
+          "rationale": "append grows by doubling for small slices, not by the exact number of elements needed."
+        },
+        {
+          "text": "len=9 cap=8",
+          "rationale": "Capacity cannot be smaller than length; the ninth append must reallocate."
+        },
+        {
+          "text": "len=9 cap=12",
+          "rationale": "Growth of 1.5x applies only once the old capacity is large (256+ elements)."
+        }
+      ],
+      "code": "s := make([]int, 0, 8)\nfor i := 0; i < 9; i++ {\n\ts = append(s, i)\n}\nfmt.Printf(\"len=%d cap=%d\\n\", len(s), cap(s))",
+      "query": {
+        "explanation": "make([]int, 0, 8) reserves room for eight elements, so the first eight appends are allocation free and cap stays 8. The ninth append exceeds capacity: for small slices the runtime doubles the old capacity (8 -> 16) and copies the data, so len=9 cap=16. Sizing the hint to the real maximum (9) would have avoided the extra allocation and copy.",
+        "syntax": "make([]T, len, cap)",
+        "tags": [
+          "slices",
+          "append",
+          "preallocation",
+          "capacity"
+        ],
+        "title": "Preallocation only avoids growth while capacity lasts"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-5c6af399",
+      "prompt": "What two sizes does this program print on a 64-bit build?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "24 16"
+        },
+        {
+          "text": "16 16",
+          "rationale": "The Go compiler does not reorder struct fields, so packedA keeps its interior and tail padding."
+        },
+        {
+          "text": "24 24",
+          "rationale": "In packedB both bools fit in one 8-byte word after the int64, so no extra word is needed."
+        },
+        {
+          "text": "10 10",
+          "rationale": "Sizeof includes alignment padding, so sizes are multiples of the 8-byte alignment of int64."
+        }
+      ],
+      "code": "type packedA struct {\n\ta bool\n\tb int64\n\tc bool\n}\n\ntype packedB struct {\n\tb int64\n\ta bool\n\tc bool\n}\n\nfmt.Printf(\"%d %d\\n\", unsafe.Sizeof(packedA{}), unsafe.Sizeof(packedB{}))",
+      "query": {
+        "explanation": "int64 must sit on an 8-byte boundary. In packedA the leading bool forces 7 bytes of padding before b, and the trailing bool forces 7 more bytes of tail padding: 24 bytes. In packedB the int64 comes first and both bools pack into the next word, giving 16 bytes. Go never reorders fields for you, so grouping fields from widest to narrowest is a real memory optimization.",
+        "syntax": "unsafe.Sizeof(x)",
+        "tags": [
+          "structs",
+          "alignment",
+          "padding",
+          "memory-layout"
+        ],
+        "title": "Field ordering changes struct size because of alignment padding"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-74c1b2c2",
+      "prompt": "Does slices.Clip reduce cap(s) to len(s) for s := make([]int, 3, 100)?",
+      "topic": "optimization",
+      "answer": true,
+      "code": "s := make([]int, 3, 100)\ns = slices.Clip(s)\nfmt.Println(len(s), cap(s))",
+      "query": {
+        "explanation": "slices.Clip returns s[:len(s):len(s)], so capacity becomes 3. That lets the garbage collector reclaim the unused tail of a large backing array and guarantees a later append allocates a fresh array instead of overwriting shared memory.",
+        "syntax": "slices.Clip(s) // s[:len(s):len(s)]",
+        "tags": [
+          "slices",
+          "capacity",
+          "memory",
+          "aliasing"
+        ],
+        "title": "slices.Clip drops unused capacity"
+      },
+      "rationale": "Clip is defined as the full slice expression s[:len(s):len(s)], so capacity cannot stay at 100; it is pinned to the length.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-b4e2e6c6",
+      "prompt": "Does the map still hold \"key\" with value 1 after b is mutated?",
+      "topic": "optimization",
+      "answer": true,
+      "code": "b := []byte(\"key\")\nm := map[string]int{}\nm[string(b)] = 1\nb[0] = 'K'\nv, ok := m[\"key\"]\nfmt.Println(v, ok, len(m))",
+      "query": {
+        "explanation": "Strings are immutable, so string(b) produces an independent copy when it is stored as a key; later writes to b cannot change the key. The compiler's related optimization is that a lookup m[string(b)] needs no copy at all, because the temporary string never escapes the map access.",
+        "syntax": "m[string(byteSlice)]",
+        "tags": [
+          "maps",
+          "strings",
+          "conversions",
+          "allocations"
+        ],
+        "title": "string(b) as a map key copies the bytes"
+      },
+      "rationale": "A string key is a copy of the bytes, not a view of the slice, so mutating b leaves the stored key \"key\" and the entry intact.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-8ac3938b",
+      "prompt": "Which statement holds after this slices.Grow call?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "len(s)==3 and cap(s)>=13"
+        },
+        {
+          "text": "len(s)==13 and cap(s)>=13",
+          "rationale": "Grow reserves capacity only; it never appends elements, so the length is untouched."
+        },
+        {
+          "text": "len(s)==3 and cap(s)==5",
+          "rationale": "The spare capacity of 2 is less than the requested 10, so the backing array is reallocated."
+        },
+        {
+          "text": "len(s)==13 and cap(s)==13 exactly",
+          "rationale": "Grow changes neither the length nor promises an exact capacity; the request is rounded up to a size class."
+        }
+      ],
+      "code": "s := make([]int, 3, 5)\ns = slices.Grow(s, 10)\nfmt.Println(len(s), cap(s))",
+      "query": {
+        "explanation": "slices.Grow(s, n) guarantees room for n more elements without reallocating, i.e. cap(s) >= len(s)+n, while len(s) is unchanged. Here that means len stays 3 and cap is at least 13 (the exact value may be rounded up to a size class). It is the idiomatic way to preallocate when you already hold data.",
+        "syntax": "s = slices.Grow(s, n)",
+        "tags": [
+          "slices",
+          "preallocation",
+          "capacity",
+          "stdlib"
+        ],
+        "title": "slices.Grow reserves capacity without changing length"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-8725a3de",
+      "prompt": "What does this snippet report?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "n=0 len=0"
+        },
+        {
+          "text": "n=5 len=5",
+          "rationale": "copy never grows the destination or raises its length; it stops at len(dst), which is 0."
+        },
+        {
+          "text": "n=5 len=0",
+          "rationale": "copy cannot write 5 elements into a destination of length 0, so its return value is 0."
+        },
+        {
+          "text": "n=0 len=5",
+          "rationale": "The length of dst stays 0; only append or a make with a length would change it."
+        }
+      ],
+      "code": "src := []int{1, 2, 3, 4, 5}\ndst := make([]int, 0, 5)\nn := copy(dst, src)\nfmt.Printf(\"n=%d len=%d\\n\", n, len(dst))",
+      "query": {
+        "explanation": "copy transfers min(len(dst), len(src)) elements. dst has capacity 5 but length 0, so nothing is copied and n=0. To use copy as a fast bulk move you need make([]int, len(src)); to keep the capacity-only form you must use dst = append(dst, src...).",
+        "syntax": "n := copy(dst, src)",
+        "tags": [
+          "copy",
+          "slices",
+          "capacity",
+          "pitfall"
+        ],
+        "title": "copy is bounded by length, not capacity"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-4391c70b",
+      "prompt": "Do both appends reuse the same backing array so that a[1] == 2?",
+      "topic": "optimization",
+      "answer": true,
+      "code": "s := make([]int, 1, 4)\na := append(s, 1)\nb := append(s, 2)\nfmt.Println(a[1], b[1])",
+      "query": {
+        "explanation": "s has length 1 and capacity 4, so both appends write element index 1 of the same array instead of allocating. The second append overwrites the first value, so a[1] and b[1] are both 2. Clipping with s[:len(s):len(s)] or slices.Clip forces each append to allocate and removes the aliasing.",
+        "syntax": "a := append(s, v)",
+        "tags": [
+          "append",
+          "aliasing",
+          "capacity",
+          "pitfall"
+        ],
+        "title": "Spare capacity makes independent appends alias"
+      },
+      "rationale": "append reallocates only when capacity is exhausted; here capacity 4 is spare, so the second append overwrites the slot the first one wrote.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-e4d75e6e",
+      "prompt": "Which statement describes the output of this snippet?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "strings.Builder drops its buffer; bytes.Buffer keeps its capacity"
+        },
+        {
+          "text": "both keep their capacity",
+          "rationale": "Builder.Reset sets its buffer to nil so the string it already returned can never be mutated, leaving Cap() at 0."
+        },
+        {
+          "text": "both drop to zero capacity",
+          "rationale": "bytes.Buffer.Reset only reslices to zero length; the allocated array and its capacity are retained for reuse."
+        },
+        {
+          "text": "strings.Builder keeps its capacity; bytes.Buffer drops to zero",
+          "rationale": "This reverses the two types: the Builder is the one that discards its buffer on Reset."
+        }
+      ],
+      "code": "var sb strings.Builder\nsb.WriteString(\"12345678\")\nsb.Reset()\n\nvar bb bytes.Buffer\nbb.WriteString(\"12345678\")\nbb.Reset()\n\nfmt.Println(sb.Cap(), bb.Cap())",
+      "query": {
+        "explanation": "strings.Builder.Reset drops its buffer entirely (capacity returns to 0), because Builder.String hands the buffer out without copying, so it must never be rewritten. bytes.Buffer.Reset only truncates to zero length and keeps the array, which is why a Buffer is the better candidate for reuse in a sync.Pool, or you must call Grow again after resetting a Builder.",
+        "syntax": "b.Reset()",
+        "tags": [
+          "strings",
+          "bytes",
+          "reuse",
+          "allocations"
+        ],
+        "title": "Reset semantics differ for Builder and Buffer"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-eb399f84",
+      "prompt": "For x := -7, does x/2 equal x>>1 in Go?",
+      "topic": "optimization",
+      "answer": false,
+      "code": "x := -7\nfmt.Println(x/2, x>>1)",
+      "query": {
+        "explanation": "Go's integer division truncates toward zero, so -7/2 is -3, while an arithmetic right shift rounds toward negative infinity, giving -4. That is why a compiler replacing a signed division by a power of two with a shift must add a bias correction first; the shortcut is only exact for unsigned (or non-negative) values.",
+        "syntax": "x / 2 vs x >> 1",
+        "tags": [
+          "integers",
+          "division",
+          "shifts",
+          "strength-reduction"
+        ],
+        "title": "Signed division is not a plain arithmetic shift"
+      },
+      "rationale": "Division truncates toward zero (-3) but the arithmetic shift floors (-4), so the two expressions differ for negative operands.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-fa328d8a",
+      "prompt": "What single line does this program print?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "0 10 30 4 5"
+        },
+        {
+          "text": "0 10 20 0 1",
+          "rationale": "iota keeps counting through the blank identifier line, so D is at index 3 (30), and E/F are at indexes 4 and 5, not 0 and 1."
+        },
+        {
+          "text": "0 10 30 0 1",
+          "rationale": "iota is not reset by a new expression list; it counts ConstSpec lines in the block, so E is 4 and F is 5."
+        },
+        {
+          "text": "0 10 30 4 4",
+          "rationale": "F has no expression, so it repeats `iota` itself, which is re-evaluated at F's own index (5), not frozen at E's value."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nconst (\n\tA = iota * 10\n\tB\n\t_\n\tD\n\tE = iota\n\tF\n)\n\nfunc main() {\n\tfmt.Println(A, B, D, E, F)\n}",
+      "query": {
+        "explanation": "In a grouped const declaration, iota is the zero-based index of the ConstSpec line within the block. A line with no expression repeats the previous expression list textually, and iota is re-evaluated at that line's index. The blank identifier still occupies a line, so it still advances iota. Thus A=0, B=10, _=20, D=30, then `E = iota` restarts the expression but not the counter, giving E=4 and F=5.",
+        "syntax": "const ( A = iota * 10; B; _; D; E = iota; F )",
+        "tags": [
+          "go",
+          "constants",
+          "iota"
+        ],
+        "title": "iota counts lines, implicit repetition reuses the expression"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-290677e4",
+      "prompt": "What line does this program print?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "C 3 [195 136 200]"
+        },
+        {
+          "text": "C 2 [200 200]",
+          "rationale": "string(rune(200)) does not store the byte 200; it UTF-8 encodes code point U+00C8 as the two bytes 195 136."
+        },
+        {
+          "text": "C 3 [200 195 136]",
+          "rationale": "The rune conversion comes first in the concatenation, so its two encoded bytes precede the raw byte 200."
+        },
+        {
+          "text": "E 3 [195 136 200]",
+          "rationale": "'A' is 65, so 'A'+2 is 67, which is 'C'; 'E' would require adding 4."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tr := 'A' + 2\n\tb := byte(200)\n\ts := string(rune(b)) + string([]byte{b})\n\tfmt.Println(string(rune(r)), len(s), []byte(s))\n}",
+      "query": {
+        "explanation": "string(rune(200)) treats 200 as code point U+00C8 and writes its 2-byte UTF-8 encoding 0xC3 0x88 (195, 136). string([]byte{200}) copies the single raw byte 200, producing an invalid UTF-8 string of length 1. Concatenating them gives 3 bytes in order [195 136 200]. Separately, 'A'+2 is the rune 67, printed as \"C\".",
+        "syntax": "string(rune(b)) != string([]byte{b})",
+        "tags": [
+          "go",
+          "strings",
+          "runes",
+          "conversions"
+        ],
+        "title": "Converting a rune encodes UTF-8; converting a byte slice copies raw bytes"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-9530325d",
+      "prompt": "Does `err == nil` evaluate to true in the program below?",
+      "topic": "wtf",
+      "answer": false,
+      "code": "package main\n\nimport \"fmt\"\n\ntype E struct{}\n\nfunc (e *E) Error() string { return \"boom\" }\n\nfunc f() error {\n\tvar p *E\n\treturn p\n}\n\nfunc main() {\n\terr := f()\n\tfmt.Println(err == nil)\n}",
+      "query": {
+        "explanation": "An interface value holds a (type, value) pair. `return p` converts the nil *E into an `error` interface whose dynamic type is *E and whose dynamic value is nil. Comparing that against the untyped nil tests whether the interface itself is empty, and it is not, so err == nil is false. To return a真 nil error you must `return nil` explicitly rather than returning a nil concrete pointer.",
+        "syntax": "var p *E; return p // error(*E, nil) != nil",
+        "tags": [
+          "go",
+          "interfaces",
+          "nil"
+        ],
+        "title": "A typed nil pointer stored in an interface is not nil"
+      },
+      "rationale": "Returning the nil *E wraps it in an interface whose type word is *E and value word is nil, and an interface equals nil only when both words are nil, so the comparison is false.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-fba35f46",
+      "prompt": "What does this program print?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[{2} {3} {4}]"
+        },
+        {
+          "text": "[{11} {21} {31}]",
+          "rationale": "The first loop multiplies only the copy `p`, so the stored values are still 1, 2, 3 when the second loop increments them."
+        },
+        {
+          "text": "[{10} {20} {30}]",
+          "rationale": "The first loop writes to a copy and the second loop does mutate the slice, so neither the multiplication sticks nor the increment is lost."
+        },
+        {
+          "text": "[{1} {2} {3}]",
+          "rationale": "The second loop indexes the slice directly (ps[i]), so its increments are visible in the backing array."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\ntype P struct{ N int }\n\nfunc main() {\n\tps := []P{{1}, {2}, {3}}\n\tfor _, p := range ps {\n\t\tp.N *= 10\n\t}\n\tfor i := range ps {\n\t\tps[i].N++\n\t}\n\tfmt.Println(ps)\n}",
+      "query": {
+        "explanation": "`for _, p := range ps` assigns a copy of each struct element to p, so `p.N *= 10` modifies only that copy and the slice is untouched. `for i := range ps` combined with `ps[i].N++` writes through the slice into the backing array, so each element gains 1. Starting from 1, 2, 3 the result is 2, 3, 4.",
+        "syntax": "for i := range s { s[i].F = ... }",
+        "tags": [
+          "go",
+          "range",
+          "slices",
+          "structs"
+        ],
+        "title": "Range copies elements; index to mutate them"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-6259da7d",
+      "prompt": "What line does this program print?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "bighugeend neg end"
+        },
+        {
+          "text": "big neg end",
+          "rationale": "fallthrough does execute the next clause's body, so classify(5) also appends \"huge\" and \"end\"."
+        },
+        {
+          "text": "bighuge neg end",
+          "rationale": "The second fallthrough transfers into the default clause's body too, appending \"end\" as well."
+        },
+        {
+          "text": "bighugeend neg bighugeend",
+          "rationale": "For n == 1 the guard n > 1 is false, so no case matches and only the default body runs."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc classify(n int) string {\n\ts := \"\"\n\tswitch {\n\tcase n > 1:\n\t\ts += \"big\"\n\t\tfallthrough\n\tcase n > 100:\n\t\ts += \"huge\"\n\t\tfallthrough\n\tdefault:\n\t\ts += \"end\"\n\tcase n < 0:\n\t\ts += \"neg\"\n\t}\n\treturn s\n}\n\nfunc main() {\n\tfmt.Println(classify(5), classify(-1), classify(1))\n}",
+      "query": {
+        "explanation": "fallthrough jumps unconditionally into the body of the textually next clause without evaluating its expression, so n==5 appends \"big\", then \"huge\", then the default's \"end\". The default clause may appear anywhere, but it only runs when no case expression matches, so n==-1 matches `case n < 0` and yields \"neg\", while n==1 matches nothing and falls to default for \"end\".",
+        "syntax": "switch { case cond: ...; fallthrough; default: ... }",
+        "tags": [
+          "go",
+          "switch",
+          "fallthrough",
+          "control-flow"
+        ],
+        "title": "fallthrough ignores the next case's condition, and default is tried last"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-30c038f0",
+      "prompt": "What line does this program print?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2 [99 20 30]"
+        },
+        {
+          "text": "2 [10 20 99]",
+          "rationale": "The index expression a[i] is evaluated in the first phase, while i is still 0, so the new value of i never selects the element."
+        },
+        {
+          "text": "2 [10 99 30]",
+          "rationale": "Nothing in the statement produces index 1; a[i] resolves to a[0] because i was 0 when operands were evaluated."
+        },
+        {
+          "text": "0 [99 20 30]",
+          "rationale": "The assignment to i is still carried out in the second phase, leaving i equal to 2."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ti := 0\n\ta := []int{10, 20, 30}\n\ti, a[i] = 2, 99\n\tfmt.Println(i, a)\n}",
+      "query": {
+        "explanation": "Go performs an assignment in two phases: first the index expressions and pointer indirections on the left and all expressions on the right are evaluated in the usual order, then the assignments are carried out left to right. So a[i] is resolved to a[0] using the old i (0), then i becomes 2 and a[0] becomes 99, giving `2 [99 20 30]`.",
+        "syntax": "i, a[i] = 2, 99",
+        "tags": [
+          "go",
+          "assignment",
+          "evaluation-order"
+        ],
+        "title": "Tuple assignment evaluates index operands before assigning"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-713c18e3",
+      "prompt": "What line does this program print?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "hi base derived base"
+        },
+        {
+          "text": "hi derived derived base",
+          "rationale": "Greet's receiver is a Base, which knows nothing about the outer type, so its call to b.Name() cannot dispatch to Derived.Name."
+        },
+        {
+          "text": "hi base base base",
+          "rationale": "d.Name() resolves at depth 0 to Derived.Name, which shadows the promoted Base.Name and returns \"derived\"."
+        },
+        {
+          "text": "hi derived derived derived",
+          "rationale": "Embedding is composition, not inheritance: both Greet's inner call and the explicit d.Base.Name() use Base's own method."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\ntype Base struct{}\n\nfunc (Base) Name() string    { return \"base\" }\nfunc (b Base) Greet() string { return \"hi \" + b.Name() }\n\ntype Derived struct{ Base }\n\nfunc (Derived) Name() string { return \"derived\" }\n\nfunc main() {\n\tvar d Derived\n\tfmt.Println(d.Greet(), d.Name(), d.Base.Name())\n}",
+      "query": {
+        "explanation": "Promoted methods are rewritten to call on the embedded field: d.Greet() is Base.Greet(d.Base), so inside Greet the receiver b is a plain Base and b.Name() always selects Base.Name, printing \"hi base\". Selector resolution at the outer type prefers the shallowest match, so d.Name() picks Derived.Name (\"derived\"), while the explicit path d.Base.Name() yields \"base\".",
+        "syntax": "type Derived struct{ Base }",
+        "tags": [
+          "go",
+          "embedding",
+          "methods",
+          "shadowing"
+        ],
+        "title": "Embedding promotes methods but gives no virtual dispatch"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-9e1207ff",
+      "prompt": "What line does this program print?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "nil nil int-ish int int-ish int64"
+        },
+        {
+          "text": "nil error int-ish int int-ish int64",
+          "rationale": "A nil error interface converted to any is just a nil interface value, so it matches `case nil`, not `case error`."
+        },
+        {
+          "text": "nil nil int-ish int int-ish int",
+          "rationale": "In a multi-type case x keeps the static type any, so %T reports the dynamic type actually stored, which is int64 for the last call."
+        },
+        {
+          "text": "nil nil other other",
+          "rationale": "`case int, int64` does match both calls; a multi-type case still matches, it only changes the static type bound to x."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc kind(v any) string {\n\tswitch x := v.(type) {\n\tcase nil:\n\t\treturn \"nil\"\n\tcase error:\n\t\treturn \"error\"\n\tcase int, int64:\n\t\treturn fmt.Sprintf(\"int-ish %T\", x)\n\tdefault:\n\t\treturn \"other\"\n\t}\n}\n\nfunc main() {\n\tvar e error\n\tfmt.Println(kind(nil), kind(e), kind(3), kind(int64(3)))\n}",
+      "query": {
+        "explanation": "Assigning a nil `error` variable to an `any` parameter yields a completely empty interface, so it hits `case nil` before `case error` is considered. In a case listing several types, the bound variable x keeps the switch expression's static type (any), so fmt's %T verb reports the dynamic type stored inside: int for 3 and int64 for int64(3).",
+        "syntax": "switch x := v.(type) { case nil: ...; case int, int64: ... }",
+        "tags": [
+          "go",
+          "type-switch",
+          "interfaces",
+          "nil"
+        ],
+        "title": "case nil matches an empty interface; multi-type cases keep the original static type"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-f89e3f91",
+      "prompt": "What number does this program print?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "10"
+        },
+        {
+          "text": "0",
+          "rationale": "The i==1, j==0 iteration reaches the addition and contributes 10 before the inner loop is cut short."
+        },
+        {
+          "text": "13",
+          "rationale": "j never reaches 2, because continue outer fires at j==1 and restarts the outer loop."
+        },
+        {
+          "text": "30",
+          "rationale": "The i==2 pass hits break outer before any addition, so 20 is never added."
+        }
+      ],
+      "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tn := 0\nouter:\n\tfor i := 0; i < 3; i++ {\n\t\tfor j := 0; j < 3; j++ {\n\t\t\tif j == 1 {\n\t\t\t\tcontinue outer\n\t\t\t}\n\t\t\tif i == 2 {\n\t\t\t\tbreak outer\n\t\t\t}\n\t\t\tn += 10*i + j\n\t\t}\n\t}\n\tfmt.Println(n)\n}",
+      "query": {
+        "explanation": "`continue outer` jumps to the outer loop's post statement, so the inner loop only ever runs j==0 before being abandoned at j==1. For i==0 the sum gains 0, for i==1 it gains 10, and for i==2 the `break outer` check fires first and terminates both loops before any addition. The total printed is 10.",
+        "syntax": "outer: for ... { for ... { continue outer; break outer } }",
+        "tags": [
+          "go",
+          "labels",
+          "loops",
+          "control-flow"
+        ],
+        "title": "Labeled continue restarts the outer loop; labeled break exits it"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-32f3fe87",
+      "prompt": "Does the program below panic at run time?",
+      "topic": "wtf",
+      "answer": true,
+      "code": "package main\n\nimport \"fmt\"\n\ntype Box struct{ V any }\n\nfunc main() {\n\ta := Box{V: []int{1}}\n\tb := Box{V: []int{1}}\n\tfmt.Println(a == b)\n}",
+      "query": {
+        "explanation": "A struct type is comparable if every field type is comparable, and interface types count as comparable, so `a == b` compiles. At run time, comparing two non-nil interface values with identical dynamic types compares those values, and slices are not comparable, so the runtime panics with \"comparing uncomparable type []int\". Use reflect.DeepEqual or a hand-written comparison for such data.",
+        "syntax": "a == b // panic: comparing uncomparable type []int",
+        "tags": [
+          "go",
+          "interfaces",
+          "comparison",
+          "panic"
+        ],
+        "title": "Interface comparison can panic on uncomparable dynamic types"
+      },
+      "rationale": "Box is statically comparable because its only field has interface type, but comparing two interfaces whose dynamic type is []int is a run-time error: \"comparing uncomparable type []int\".",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-265418d4",
+      "prompt": "What single line does this program print?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"bcd\" 3"
+        },
+        {
+          "text": "\"b2c3d4\" 6",
+          "rationale": "This assumes the digits are also incremented, but returning -1 for them deletes them instead of mapping them to a new rune."
+        },
+        {
+          "text": "\"b1c2d3\" 6",
+          "rationale": "This assumes a negative return leaves the rune unchanged; in strings.Map a negative result drops the rune entirely."
+        },
+        {
+          "text": "\"bcd\" 6",
+          "rationale": "The dropped runes contribute no bytes, so the returned string has length 3, not the original 6."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\nfunc main() {\n\ts := \"a1b2c3\"\n\tout := strings.Map(func(r rune) rune {\n\t\tif r >= '0' && r <= '9' {\n\t\t\treturn -1\n\t\t}\n\t\treturn r + 1\n\t}, s)\n\tfmt.Printf(\"%q %d\\n\", out, len(out))\n}",
+      "query": {
+        "explanation": "strings.Map applies the mapping function to every rune of s. If the function returns a negative value, that rune is dropped from the result rather than encoded. Here the three digits return -1 and disappear, while 'a', 'b', 'c' are incremented to 'b', 'c', 'd'. The result is \"bcd\", three ASCII bytes, so len(out) is 3.",
+        "syntax": "func Map(mapping func(rune) rune, s string) string",
+        "tags": [
+          "strings",
+          "runes",
+          "map"
+        ],
+        "title": "strings.Map and the negative sentinel"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-81a492c1",
+      "prompt": "Does strings.Cut return the full string as before, empty after, and false when the separator is absent?",
+      "topic": "strings",
+      "answer": true,
+      "code": "before, after, found := strings.Cut(\"go-lang\", \"=\")",
+      "query": {
+        "explanation": "strings.Cut(s, sep) splits around the first occurrence of sep. When sep does not occur in s, it returns s, \"\", false: the whole input is handed back as before, after is empty, and found reports false. Only when sep is present are before and after the pieces on either side of it.",
+        "syntax": "func Cut(s, sep string) (before, after string, found bool)",
+        "tags": [
+          "strings",
+          "cut"
+        ],
+        "title": "strings.Cut when the separator is missing"
+      },
+      "rationale": "The opposite is wrong because Cut does not blank out before on a miss; it returns the original string in before with after empty and found false.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-34389058",
+      "prompt": "What single line does this program print?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true false top: mid: base"
+        },
+        {
+          "text": "true true top: mid: base",
+          "rationale": "%v only formats the message; it records no wrapped error, so e2's chain ends at itself."
+        },
+        {
+          "text": "false false top: mid: base",
+          "rationale": "%w does record the operand as a wrapped error, so errors.Is(e1, base) is true."
+        },
+        {
+          "text": "true false top: %!v(*errors.errorString)",
+          "rationale": "%v on a value implementing error simply calls Error(), producing no formatting error."
+        }
+      ],
+      "code": "var base = errors.New(\"base\")\n\nfunc main() {\n\te1 := fmt.Errorf(\"mid: %w\", base)\n\te2 := fmt.Errorf(\"top: %v\", e1)\n\tfmt.Printf(\"%t %t %s\\n\", errors.Is(e1, base), errors.Is(e2, base), e2.Error())\n}",
+      "query": {
+        "explanation": "fmt.Errorf with %w returns an error whose Unwrap method yields the operand, so errors.Is can walk the chain to base. With %v the operand is only rendered into the text, leaving no Unwrap link, so errors.Is(e2, base) is false even though the message still reads \"top: mid: base\".",
+        "syntax": "fmt.Errorf(\"ctx: %w\", err)",
+        "tags": [
+          "errors",
+          "wrapping",
+          "errors.Is"
+        ],
+        "title": "%w versus %v in fmt.Errorf"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-1f7cac5f",
+      "prompt": "What line does this program print?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"a\\nb\" 2 true"
+        },
+        {
+          "text": "\"a\\nb\" 3 true",
+          "rationale": "Join drops nil arguments, so the joined error wraps only the two non-nil errors."
+        },
+        {
+          "text": "\"a\\nb\\n\" 2 true",
+          "rationale": "Error() puts a newline between messages only, with no trailing newline."
+        },
+        {
+          "text": "\"a\\nb\" 2 false",
+          "rationale": "Join returns a nil error when every argument is nil, so the comparison is true."
+        }
+      ],
+      "code": "func main() {\n\tjoined := errors.Join(errors.New(\"a\"), nil, errors.New(\"b\"))\n\tu, _ := joined.(interface{ Unwrap() []error })\n\tfmt.Printf(\"%q %d %t\\n\", joined.Error(), len(u.Unwrap()), errors.Join(nil, nil) == nil)\n}",
+      "query": {
+        "explanation": "errors.Join discards nil arguments and returns nil if nothing remains. Otherwise it returns a value whose Error() concatenates the messages separated by newlines (no trailing newline) and whose Unwrap() []error returns the retained errors, here two of them.",
+        "syntax": "errors.Join(errs...) // Unwrap() []error",
+        "tags": [
+          "errors",
+          "errors.Join",
+          "unwrap"
+        ],
+        "title": "errors.Join and multi-error unwrapping"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-93ef5031",
+      "prompt": "What line does this program print?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true cfg false"
+        },
+        {
+          "text": "false cfg false",
+          "rationale": "errors.As unwraps through %w, so it does find the *NotFound and returns true."
+        },
+        {
+          "text": "true cfg true",
+          "rationale": "No error in the chain has type *Perm, so the second As call fails."
+        },
+        {
+          "text": "true missing cfg false",
+          "rationale": "nf.Name is the field \"cfg\"; \"missing cfg\" is the Error() string, not the field."
+        }
+      ],
+      "code": "type NotFound struct{ Name string }\n\nfunc (e *NotFound) Error() string { return \"missing \" + e.Name }\n\ntype Perm struct{}\n\nfunc (e *Perm) Error() string { return \"denied\" }\n\nfunc main() {\n\terr := fmt.Errorf(\"lookup: %w\", &NotFound{Name: \"cfg\"})\n\tvar nf *NotFound\n\tvar p *Perm\n\tfmt.Printf(\"%t %s %t\\n\", errors.As(err, &nf), nf.Name, errors.As(err, &p))\n}",
+      "query": {
+        "explanation": "errors.As walks the chain looking for an error assignable to the pointed-to target type. The wrapped *NotFound matches, so As stores that pointer in nf and returns true, making nf.Name equal \"cfg\". No *Perm appears in the chain, so the second call returns false and leaves p nil.",
+        "syntax": "var e *MyErr; errors.As(err, &e)",
+        "tags": [
+          "errors",
+          "errors.As",
+          "wrapping"
+        ],
+        "title": "errors.As target assignment"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-e79221f1",
+      "prompt": "What does this program print?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "recovered: second"
+        },
+        {
+          "text": "recovered: first",
+          "rationale": "The panic raised inside inner's deferred call replaces the active panic value seen later."
+        },
+        {
+          "text": "recovered: <nil>",
+          "rationale": "A panic is still propagating when main's defer runs, so recover returns that value, not nil."
+        },
+        {
+          "text": "nothing; the program dies with a panic trace",
+          "rationale": "main's deferred recover runs during unwinding and stops the panic before the runtime prints a trace."
+        }
+      ],
+      "code": "func inner() {\n\tdefer func() { panic(\"second\") }()\n\tpanic(\"first\")\n}\n\nfunc main() {\n\tdefer func() { fmt.Println(\"recovered:\", recover()) }()\n\tinner()\n}",
+      "query": {
+        "explanation": "When a deferred call panics while another panic is unwinding, the new panic takes over as the current panic value (the old one is listed as \"panic: first [recovered...]\" only in traces). main's deferred recover therefore returns \"second\" and halts unwinding, so the program exits normally after printing.",
+        "syntax": "defer func() { recover() }()",
+        "tags": [
+          "panic",
+          "recover",
+          "defer"
+        ],
+        "title": "Panicking inside a deferred function"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-9ec11f5d",
+      "prompt": "What number does this program print?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "34"
+        },
+        {
+          "text": "24",
+          "rationale": "A plain break only leaves the switch, so iteration i==2 still executes sum += 10 afterwards."
+        },
+        {
+          "text": "44",
+          "rationale": "break Loop leaves the loop at once, so sum += 10 is skipped for i==4."
+        },
+        {
+          "text": "45",
+          "rationale": "i==4 never reaches default, and the labeled break stops the loop before i==5 runs."
+        }
+      ],
+      "code": "func main() {\n\tsum := 0\nLoop:\n\tfor i := 1; i <= 5; i++ {\n\t\tswitch {\n\t\tcase i == 2:\n\t\t\tbreak\n\t\tcase i == 4:\n\t\t\tbreak Loop\n\t\tdefault:\n\t\t\tsum += i\n\t\t}\n\t\tsum += 10\n\t}\n\tfmt.Println(sum)\n}",
+      "query": {
+        "explanation": "Unlabeled break terminates the innermost for, switch or select, which here is the switch; execution continues after the switch body. So i=1 adds 1+10, i=2 adds only 10, i=3 adds 3+10, and i=4 hits break Loop, which exits the for statement immediately and skips the trailing sum += 10: total 34.",
+        "syntax": "Loop: for { switch { case c: break Loop } }",
+        "tags": [
+          "control-flow",
+          "break",
+          "labels",
+          "switch"
+        ],
+        "title": "break inside a switch inside a loop"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-1e94edc3",
+      "prompt": "What line does this program print?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "9 227"
+        },
+        {
+          "text": "9 219",
+          "rationale": "i==8 is also not a multiple of 3, so 8 is added to n before the final pass."
+        },
+        {
+          "text": "7 212",
+          "rationale": "i==7 fails i%3 == 0, so the first if jumps back and i keeps growing."
+        },
+        {
+          "text": "6 212",
+          "rationale": "Execution only falls through to Println when i is a multiple of 3 and i >= 7."
+        }
+      ],
+      "code": "func main() {\n\ti, n := 0, 0\nagain:\n\ti++\n\tif i%3 != 0 {\n\t\tn += i\n\t\tgoto again\n\t}\n\tif i < 7 {\n\t\tn += 100\n\t\tgoto again\n\t}\n\tfmt.Println(i, n)\n}",
+      "query": {
+        "explanation": "Each pass increments i. While i is not a multiple of 3 it adds i and jumps back; multiples of 3 below 7 add 100 and jump back. Passes add 1, 2, 100(i=3), 4, 5, 100(i=6), 7, 8, and at i=9 both conditions fail, so it prints 9 and 1+2+100+4+5+100+7+8 = 227.",
+        "syntax": "label: ... goto label",
+        "tags": [
+          "control-flow",
+          "goto",
+          "labels"
+        ],
+        "title": "goto as a backward loop"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-b0afd4a0",
+      "prompt": "What single line does this program print?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true false true 404"
+        },
+        {
+          "text": "false false true 404",
+          "rationale": "errors.Is does not stop at equality: after unwrapping it calls CodeError's Is method, and 418/100 equals 404/100, so the first value is true."
+        },
+        {
+          "text": "true true true 404",
+          "rationale": "500/100 is 5 while 404/100 is 4, so the custom Is method reports no match and the second value is false."
+        },
+        {
+          "text": "true false true 0",
+          "rationale": "errors.As finds the wrapped CodeError and assigns it to c, so c.Code is 404, not the zero value."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n)\n\ntype CodeError struct{ Code int }\n\nfunc (e CodeError) Error() string { return fmt.Sprintf(\"code %d\", e.Code) }\n\nfunc (e CodeError) Is(target error) bool {\n\tt, ok := target.(CodeError)\n\treturn ok && t.Code/100 == e.Code/100\n}\n\nfunc main() {\n\terr := fmt.Errorf(\"request failed: %w\", CodeError{Code: 404})\n\ta := errors.Is(err, CodeError{Code: 418})\n\tb := errors.Is(err, CodeError{Code: 500})\n\tvar c CodeError\n\td := errors.As(err, &c)\n\tfmt.Println(a, b, d, c.Code)\n}",
+      "query": {
+        "explanation": "fmt.Errorf with %w wraps CodeError{404}. errors.Is walks the chain; at each step it tries equality and then any Is(error) bool method. CodeError.Is compares the HTTP class, so 418 matches 404 (both 4xx) and 500 does not. errors.As independently walks the chain and assigns the concrete CodeError{404} to c, so the line is \"true false true 404\".",
+        "syntax": "errors.Is(err, target) / errors.As(err, &target) / func (e T) Is(target error) bool",
+        "tags": [
+          "errors",
+          "errors-is",
+          "errors-as",
+          "wrapping",
+          "control-flow"
+        ],
+        "title": "errors.Is honours a custom Is method"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-50a9c262",
+      "prompt": "Which expression does not equal x % 8 for every int x?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "x & 7"
+        },
+        {
+          "text": "x - (x/8)*8",
+          "rationale": "Go integer division truncates toward zero, so this reconstructs the remainder with the same sign as x, matching % exactly."
+        },
+        {
+          "text": "x % 8",
+          "rationale": "This is the operation itself, so it trivially agrees with x % 8."
+        },
+        {
+          "text": "int(math.Mod(float64(x), 8))",
+          "rationale": "math.Mod returns a result with the sign of the dividend, matching Go's % for int values representable in float64."
+        }
+      ],
+      "query": {
+        "explanation": "Replacing `x % 8` with `x & 7` is only valid when x is non-negative (or unsigned). For negative ints, two's-complement masking yields a non-negative result, e.g. -5 & 7 == 3, while Go's % truncates toward zero and gives -5. That is why the Go compiler cannot lower a signed `% 8` to a single AND; it emits extra sign-fixup code (or you write `x - (x/8)*8`, which truncates the same way %, does). math.Mod also follows the sign of the dividend, so it agrees with % for values exactly representable in float64.",
+        "syntax": "x % n  ≡  x & (n-1)   // only for unsigned or provably non-negative x",
+        "tags": [
+          "optimization",
+          "integers",
+          "strength-reduction",
+          "signed-arithmetic"
+        ],
+        "title": "Strength reduction on signed remainder"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    },
+    {
+      "id": "gen-go-hard-35314e63",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true true true"
+        },
+        {
+          "text": "false true true",
+          "rationale": "errors.Unwrap requires an Unwrap() error method; a multi-%w error only has Unwrap() []error, so errors.Unwrap returns nil and the first value is true, not false."
+        },
+        {
+          "text": "true false false",
+          "rationale": "errors.Is traverses Unwrap() []error branches, so it matches both wrapped sentinels; both Is calls are true."
+        },
+        {
+          "text": "false false true",
+          "rationale": "Neither part holds: errors.Unwrap yields nil here, and errors.Is(err, e1) succeeds because e1 is one of the wrapped errors."
+        }
+      ],
+      "code": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n)\n\nvar e1 = errors.New(\"e1\")\nvar e2 = errors.New(\"e2\")\n\nfunc main() {\n\terr := fmt.Errorf(\"wrap: %w and %w\", e1, e2)\n\tfmt.Printf(\"%v %v %v\\n\",\n\t\terrors.Unwrap(err) == nil,\n\t\terrors.Is(err, e1),\n\t\terrors.Is(err, e2))\n}",
+      "prompt": "What does this program print?",
+      "query": {
+        "explanation": "Since Go 1.20, fmt.Errorf accepts more than one %w and returns an error whose method set contains Unwrap() []error, not Unwrap() error. The single-error function errors.Unwrap only looks for the Unwrap() error form, so it finds nothing and returns nil, making the first value true. errors.Is, by contrast, understands the multi-error tree: it walks every branch of Unwrap() []error, so both errors.Is(err, e1) and errors.Is(err, e2) report true. The result is 'true true true'.",
+        "syntax": "fmt.Errorf(\"...%w...%w\", e1, e2); errors.Unwrap(err); errors.Is(err, target)",
+        "tags": [
+          "errors",
+          "wrapping",
+          "errors.Is",
+          "errors.Unwrap",
+          "control-flow"
+        ],
+        "title": "Multiple %w verbs: Unwrap() []error vs errors.Unwrap"
+      },
+      "type": "mc",
+      "topic": "errors-and-control-flow",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Go 1.25.14"
+      }
+    }
+  ],
+  "schemaVersion": 2
+}

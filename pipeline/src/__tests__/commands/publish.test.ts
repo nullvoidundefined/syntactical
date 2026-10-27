@@ -2,7 +2,7 @@
 // or human-reviewed questions are written, a failed one never is, a bank that fails the publish
 // validator is refused whole, paid banks stay out of the public content dir, and the rebuilt
 // manifest carries topic counts and bumps a content version only for a bank that changed.
-import { mkdir, mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -99,18 +99,31 @@ function seedManifest(): Json {
     return buildManifest(buildLanguage({ banks, glyph: 'PY', grammar: 'python', label: 'Python' }));
 }
 
+// Transitional until publish stops writing paid banks under the content root: the content build now reads every
+// bank from contentDir, so each paid bank publish wrote is mirrored there for the build and removed afterwards.
 async function build(contentRoot: string): Promise<void> {
     const { contentDir, pipelineDir } = dirs;
     const { buildContentManifest } = (await import(BUILD_SCRIPT)) as {
         buildContentManifest: (...args: unknown[]) => Promise<void>;
     };
     const generated = join(dirs.root, 'generated');
-    await buildContentManifest(
-        contentDir,
-        { banksPath: join(generated, 'banks.ts'), manifestPath: join(generated, 'manifest.ts') },
-        join(pipelineDir, 'taxonomy'),
-        contentRoot,
-    );
+    const manifest = (await readJson(join(contentDir, 'manifest.json'))) as {
+        languages: { banks: Record<string, { access?: string; path: string }> }[];
+    };
+    const mirrored = manifest.languages
+        .flatMap(({ banks }) => Object.values(banks))
+        .filter(({ access }) => access === 'paid')
+        .map(({ path }) => path);
+    for (const path of mirrored) await cp(join(contentRoot, path), join(contentDir, path));
+    try {
+        await buildContentManifest(
+            contentDir,
+            { banksPath: join(generated, 'banks.ts'), manifestPath: join(generated, 'manifest.ts') },
+            join(pipelineDir, 'taxonomy'),
+        );
+    } finally {
+        for (const path of mirrored) await rm(join(contentDir, path), { force: true });
+    }
 }
 
 function run(overrides: { buildManifest?: (root: string) => Promise<void> } = {}) {

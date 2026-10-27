@@ -1,0 +1,4234 @@
+{
+  "questions": [
+    {
+      "id": "gen-rails-medium-dd9dcf4a",
+      "prompt": "What does the last line print?",
+      "topic": "activerecord-queries",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "nil"
+        },
+        {
+          "text": "[]",
+          "rationale": "The relation itself is empty, but `first` unwraps it and returns a single record or nil, never an array."
+        },
+        {
+          "text": "raises ActiveRecord::RecordNotFound",
+          "rationale": "Only `find` and the bang finders raise; `first` returns nil."
+        },
+        {
+          "text": "#<User id: nil, name: nil>",
+          "rationale": "ActiveRecord does not build a blank record for a missing match."
+        }
+      ],
+      "code": "User.create!(name: \"Ada\")\nputs User.where(name: \"nobody\").first.inspect",
+      "query": {
+        "explanation": "`where` builds a relation and never raises when nothing matches. Calling `first` on an empty relation returns `nil`; only the bang/finder methods like `find` or `find_by!` raise ActiveRecord::RecordNotFound.",
+        "syntax": "Model.where(...).first",
+        "tags": [
+          "where",
+          "first",
+          "nil"
+        ],
+        "title": "first on an empty relation"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-cc75ab8c",
+      "prompt": "What does the last line print?",
+      "topic": "activerecord-queries",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[20, 25, 30]"
+        },
+        {
+          "text": "[30, 20, 25]",
+          "rationale": "`order(:age)` sorts ascending by age, so insertion order is not preserved."
+        },
+        {
+          "text": "[[20], [25], [30]]",
+          "rationale": "Nested arrays only appear when plucking two or more columns."
+        },
+        {
+          "text": "{20=>1, 25=>1, 30=>1}",
+          "rationale": "A hash comes from `group(...).count`, not from `pluck`."
+        }
+      ],
+      "code": "User.create!(age: 30); User.create!(age: 20); User.create!(age: 25)\nputs User.order(:age).pluck(:age).inspect",
+      "query": {
+        "explanation": "`pluck` issues a SELECT for just the named columns and returns raw values, not model instances. With a single column it returns a flat array, in the order imposed by the relation.",
+        "syntax": "Model.order(:col).pluck(:col)",
+        "tags": [
+          "pluck",
+          "order"
+        ],
+        "title": "pluck returns a flat array"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-925223f7",
+      "prompt": "Does User.where(age: nil).to_sql produce an `IS NULL` comparison?",
+      "topic": "activerecord-queries",
+      "answer": true,
+      "query": {
+        "explanation": "ActiveRecord translates a nil value into `IS NULL` rather than `= NULL`, because `= NULL` is never true in SQL. The opposite answer is wrong since the generated SQL contains \"age\" IS NULL.",
+        "syntax": "Model.where(col: nil)",
+        "tags": [
+          "where",
+          "nil",
+          "to_sql"
+        ],
+        "title": "where with a nil value"
+      },
+      "rationale": "The opposite is wrong: ActiveRecord never emits `= NULL`, which would match no rows; it builds `\"users\".\"age\" IS NULL`.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-dc353456",
+      "prompt": "What does the last line print?",
+      "topic": "activerecord-queries",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2"
+        },
+        {
+          "text": "4",
+          "rationale": "4 is the total number of orders; the hash value is the count per group."
+        },
+        {
+          "text": "3",
+          "rationale": "3 is the number of distinct statuses, i.e. the size of the hash, not the \"open\" count."
+        },
+        {
+          "text": "nil",
+          "rationale": "The hash is keyed by the grouped column value, and \"open\" is present as a key."
+        }
+      ],
+      "code": "# statuses created: \"open\", \"open\", \"paid\", \"cancelled\"\nputs Order.group(:status).count[\"open\"].inspect",
+      "query": {
+        "explanation": "`group(:status).count` runs `SELECT status, COUNT(*) ... GROUP BY status` and returns a hash keyed by the grouped value, so indexing with \"open\" yields the number of open orders.",
+        "syntax": "Model.group(:col).count",
+        "tags": [
+          "group",
+          "count",
+          "aggregates"
+        ],
+        "title": "group(...).count returns a hash"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-adf6d58f",
+      "prompt": "What does the last line print?",
+      "topic": "activerecord-queries",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "2",
+          "rationale": "2 would be the count of users aged 20 alone; `or` also adds the user named Bo."
+        },
+        {
+          "text": "0",
+          "rationale": "That would be the result of ANDing the conditions, which `or` does not do."
+        },
+        {
+          "text": "4",
+          "rationale": "Dee matches neither condition, so she is excluded."
+        }
+      ],
+      "code": "# users: (Ada,20) (Bo,35) (Cid,20) (Dee,40)\nputs User.where(age: 20).or(User.where(name: \"Bo\")).count",
+      "query": {
+        "explanation": "`or` ORs two relations together, producing `age = 20 OR name = 'Bo'`. Matches are Ada, Cid (age 20) and Bo (by name), giving 3 distinct rows.",
+        "syntax": "Model.where(a).or(Model.where(b))",
+        "tags": [
+          "or",
+          "where",
+          "count"
+        ],
+        "title": "combining conditions with or"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-33971447",
+      "prompt": "Does User.where.not(age: [20, 30]) return a user whose age is NULL?",
+      "topic": "activerecord-queries",
+      "answer": false,
+      "query": {
+        "explanation": "`where.not(age: [20, 30])` becomes `age NOT IN (20, 30)`, and any comparison with NULL evaluates to UNKNOWN, so NULL rows are filtered out. You must add `.or(Model.where(age: nil))` to include them.",
+        "syntax": "Model.where.not(col: [..])",
+        "tags": [
+          "where.not",
+          "null",
+          "three-valued-logic"
+        ],
+        "title": "where.not and NULL values"
+      },
+      "rationale": "Answering true is wrong: `age NOT IN (20, 30)` is UNKNOWN (not true) when age is NULL, so SQL drops that row from the result set.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-b56e1b5d",
+      "prompt": "What does the last line print?",
+      "topic": "activerecord-queries",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[\"d\", \"c\"]"
+        },
+        {
+          "text": "[\"e\", \"d\"]",
+          "rationale": "That ignores `offset(1)`, which skips the first row of the ordered set."
+        },
+        {
+          "text": "[\"b\", \"a\"]",
+          "rationale": "That would be the result of ascending order with the offset applied from the low end."
+        },
+        {
+          "text": "[\"c\", \"b\"]",
+          "rationale": "That skips two rows; `offset(1)` skips only the highest age."
+        }
+      ],
+      "code": "# users: (a,10) (b,20) (c,30) (d,40) (e,50)\nputs User.order(age: :desc).limit(2).offset(1).pluck(:name).inspect",
+      "query": {
+        "explanation": "The relation sorts by age descending (e, d, c, b, a), skips 1 row with `offset`, then takes 2 rows, so the names plucked are d and c.",
+        "syntax": "Model.order(col: :desc).limit(n).offset(m)",
+        "tags": [
+          "order",
+          "limit",
+          "offset",
+          "pluck"
+        ],
+        "title": "order, limit and offset together"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-e8ffaf71",
+      "prompt": "Does User.find_by!(name: \"zz\") raise ActiveRecord::RecordNotFound when no row matches?",
+      "topic": "activerecord-queries",
+      "answer": true,
+      "query": {
+        "explanation": "`find_by` returns nil when nothing matches, while the bang version `find_by!` raises ActiveRecord::RecordNotFound. The opposite answer confuses the two forms.",
+        "syntax": "Model.find_by!(attrs)",
+        "tags": [
+          "find_by",
+          "exceptions"
+        ],
+        "title": "find_by! versus find_by"
+      },
+      "rationale": "Saying false confuses `find_by!` with `find_by`; only the non-bang version returns nil instead of raising.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-f3b8dc03",
+      "prompt": "What does the last line print?",
+      "topic": "activerecord-queries",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[0, nil]"
+        },
+        {
+          "text": "[nil, nil]",
+          "rationale": "`sum` returns 0 rather than nil for an empty relation."
+        },
+        {
+          "text": "[0, 0]",
+          "rationale": "`maximum` of no rows is SQL NULL, which ActiveRecord maps to nil, not 0."
+        },
+        {
+          "text": "[nil, 0]",
+          "rationale": "The two values are swapped: sum defaults to 0 and maximum to nil."
+        }
+      ],
+      "code": "# no user has age 100\nputs [User.where(age: 100).sum(:age), User.where(age: 100).maximum(:age)].inspect",
+      "query": {
+        "explanation": "`sum` coerces an empty result to 0 (an additive identity), while `maximum` has no sensible default and returns nil. This asymmetry is a common source of nil errors.",
+        "syntax": "Model.where(..).sum(:col) / .maximum(:col)",
+        "tags": [
+          "sum",
+          "maximum",
+          "aggregates"
+        ],
+        "title": "sum and maximum on an empty relation"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-d8cd700f",
+      "prompt": "What does the last line print?",
+      "topic": "activerecord-queries",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "2",
+          "rationale": "2 is the number of distinct authors with books; plain `count` counts joined rows, so Ada is counted twice."
+        },
+        {
+          "text": "1",
+          "rationale": "Both Ada and Bo have books, so more than one row survives the join."
+        },
+        {
+          "text": "0",
+          "rationale": "`joins(:books)` is an inner join that still matches every author/book pair that exists."
+        }
+      ],
+      "code": "# authors: Ada (2 books), Bo (1 book), Cid (0 books)\nputs Author.joins(:books).count",
+      "query": {
+        "explanation": "An INNER JOIN yields one row per author/book pair, so counting gives 3 (2 for Ada + 1 for Bo). Cid is excluded because inner joins drop parents with no children; use `.distinct.count` to get 2 authors.",
+        "syntax": "Model.joins(:assoc).count",
+        "tags": [
+          "joins",
+          "count",
+          "distinct"
+        ],
+        "title": "joins produces one row per match"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-0628e5e2",
+      "prompt": "With dependent: :destroy on has_many :posts, does destroying the author delete its post rows?",
+      "topic": "associations",
+      "answer": true,
+      "code": "class Author < ActiveRecord::Base\n  has_many :posts, dependent: :destroy\nend\n\nclass Post < ActiveRecord::Base\n  belongs_to :author, optional: true\nend\n\na = Author.create!(name: \"A\")\na.posts.create!(title: \"x\")\na.posts.create!(title: \"y\")\na.destroy",
+      "query": {
+        "explanation": "Declaring dependent: :destroy on a has_many tells ActiveRecord to destroy every associated record when the owner is destroyed. Each child is instantiated and destroyed (running its callbacks), so after a.destroy the posts table is empty.",
+        "syntax": "has_many :posts, dependent: :destroy",
+        "tags": [
+          "associations",
+          "has_many",
+          "dependent"
+        ],
+        "title": "has_many dependent: :destroy"
+      },
+      "rationale": "dependent: :destroy loads each associated post and calls destroy on it before the author row is removed, so no post rows survive.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-848ed52b",
+      "prompt": "Does post.valid? return false when belongs_to :author is optional: false and author is nil?",
+      "topic": "associations",
+      "answer": true,
+      "code": "class Post < ActiveRecord::Base\n  belongs_to :author, optional: false\nend\n\npost = Post.new(title: \"x\")\npost.valid?",
+      "query": {
+        "explanation": "A belongs_to with optional: false (the Rails 5+ default when belongs_to_required_by_default is on) validates the presence of the associated object. With no author assigned, valid? is false and errors[:author] contains 'must exist'.",
+        "syntax": "belongs_to :author, optional: false",
+        "tags": [
+          "associations",
+          "belongs_to",
+          "validations"
+        ],
+        "title": "belongs_to optional: false"
+      },
+      "rationale": "optional: false adds a presence validation on the association, so a nil author makes the record invalid rather than merely leaving the foreign key NULL.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-a11d8622",
+      "prompt": "What does this script print?",
+      "topic": "associations",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3 2"
+        },
+        {
+          "text": "2 2",
+          "rationale": "size adds in-memory unsaved records to the database tally, so the built post is included and size is 3."
+        },
+        {
+          "text": "3 3",
+          "rationale": "count always issues a SELECT COUNT(*), which cannot see the unsaved built post, so it is 2."
+        },
+        {
+          "text": "2 3",
+          "rationale": "This reverses the two: size is the one that counts the new record, while count only sees persisted rows."
+        }
+      ],
+      "code": "a = Author.create!(name: \"A\")\nPost.create!(author: a, title: \"x\")\nPost.create!(author: a, title: \"y\")\na.posts.build(title: \"z\")\n\nputs \"#{a.posts.size} #{a.posts.count}\"",
+      "query": {
+        "explanation": "On a has_many collection, count runs a SQL COUNT and therefore sees only persisted rows (2). size adds the unsaved records currently held in the association target to that tally, so it reports 3.",
+        "syntax": "author.posts.size / author.posts.count",
+        "tags": [
+          "associations",
+          "has_many",
+          "size",
+          "count"
+        ],
+        "title": "Association size vs count"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-c6e72e8f",
+      "prompt": "What number does this query print?",
+      "topic": "associations",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2"
+        },
+        {
+          "text": "1",
+          "rationale": "Each appointment points at a different patient, so the through association returns two distinct patient rows."
+        },
+        {
+          "text": "0",
+          "rationale": "The join rows exist, so traversing appointments does reach patients."
+        },
+        {
+          "text": "3",
+          "rationale": "Only two appointments were created, so at most two patients can be reached."
+        }
+      ],
+      "code": "class Doctor < ActiveRecord::Base\n  has_many :appointments\n  has_many :patients, through: :appointments\nend\n\nd = Doctor.create!(name: \"D\")\np1 = Patient.create!(name: \"P1\")\np2 = Patient.create!(name: \"P2\")\nAppointment.create!(doctor: d, patient: p1)\nAppointment.create!(doctor: d, patient: p2)\n\nputs d.patients.count",
+      "query": {
+        "explanation": "has_many :patients, through: :appointments joins doctors to patients via the appointments table. With two appointment rows pointing at two different patients, doctor.patients.count returns 2.",
+        "syntax": "has_many :patients, through: :appointments",
+        "tags": [
+          "associations",
+          "has_many",
+          "through"
+        ],
+        "title": "has_many :through"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-5d17bacc",
+      "prompt": "Does << on a persisted author's posts collection insert the post row immediately?",
+      "topic": "associations",
+      "answer": true,
+      "code": "a = Author.create!(name: \"A\")\na.posts << Post.new(title: \"x\")\n# no explicit save on a or on the post",
+      "query": {
+        "explanation": "collection << record sets the foreign key and saves the record immediately when the owner is persisted. Only when the owner is still a new record does the append wait for the owner to be saved.",
+        "syntax": "author.posts << Post.new(title: \"x\")",
+        "tags": [
+          "associations",
+          "has_many",
+          "persistence"
+        ],
+        "title": "Appending with << on a has_many"
+      },
+      "rationale": "For an owner that is already persisted, << saves the appended record right away; nothing is left pending until a later save.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-035ae81b",
+      "prompt": "What does this reflection call on the Supplier association print?",
+      "topic": "associations",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "supplier_id"
+        },
+        {
+          "text": "account_id",
+          "rationale": "account_id would be the key for a belongs_to :account; a has_one keeps the key on the other table, named after the owner."
+        },
+        {
+          "text": "id",
+          "rationale": "id is the primary key of suppliers, not the foreign key the association uses to find the account."
+        },
+        {
+          "text": "supplier_account_id",
+          "rationale": "Rails derives the key from the owning model name alone, giving supplier_id, not a combined name."
+        }
+      ],
+      "code": "class Supplier < ActiveRecord::Base\n  has_one :account\nend\n\nputs Supplier.reflect_on_association(:account).foreign_key",
+      "query": {
+        "explanation": "In a has_one, the foreign key lives on the associated table and is derived from the declaring model's name. Supplier has_one :account looks for accounts.supplier_id, so the reflection's foreign_key is \"supplier_id\".",
+        "syntax": "has_one :account  # accounts.supplier_id",
+        "tags": [
+          "associations",
+          "has_one",
+          "foreign_key"
+        ],
+        "title": "has_one foreign key location"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-09ce7132",
+      "prompt": "With dependent: :nullify, does destroying the author keep the post row and clear its author_id?",
+      "topic": "associations",
+      "answer": true,
+      "code": "class Author < ActiveRecord::Base\n  has_many :posts, dependent: :nullify\nend\n\na = Author.create!(name: \"A\")\npost = a.posts.create!(title: \"x\")\na.destroy\npost.reload",
+      "query": {
+        "explanation": "dependent: :nullify issues an UPDATE setting the foreign key of the associated rows to NULL when the owner is destroyed. The children stay in the table (and their destroy callbacks are not run), orphaned instead of deleted.",
+        "syntax": "has_many :posts, dependent: :nullify",
+        "tags": [
+          "associations",
+          "has_many",
+          "dependent"
+        ],
+        "title": "dependent: :nullify"
+      },
+      "rationale": "dependent: :nullify only updates the children's foreign key to NULL; it never deletes them, so the post row remains with author_id nil.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-a68f7269",
+      "prompt": "What does Post.count print at the end of this script?",
+      "topic": "associations",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2"
+        },
+        {
+          "text": "0",
+          "rationale": "Saving the owner autosaves the children it holds, so both built posts are inserted."
+        },
+        {
+          "text": "1",
+          "rationale": "Both built records are in the association target, so both get inserted, not just the first."
+        },
+        {
+          "text": "3",
+          "rationale": "Only two posts were built, so only two rows can be inserted."
+        }
+      ],
+      "code": "a = Author.new(name: \"A\")\na.posts.build(title: \"x\")\na.posts.build(title: \"y\")\na.save!\n\nputs Post.count",
+      "query": {
+        "explanation": "When the owner is a new record, collection.build keeps the children in memory. Saving the owner assigns the new foreign key and autosaves every record in the association target, inserting both posts.",
+        "syntax": "author.posts.build(title: \"x\"); author.save!",
+        "tags": [
+          "associations",
+          "has_many",
+          "autosave"
+        ],
+        "title": "Autosaving built children"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-862b5f5c",
+      "prompt": "What does this script print?",
+      "topic": "associations",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2 1"
+        },
+        {
+          "text": "1 1",
+          "rationale": "The INNER JOIN produces one row per matching post, so the plain count is 2."
+        },
+        {
+          "text": "2 2",
+          "rationale": "distinct collapses the duplicated author rows, leaving a single author counted."
+        },
+        {
+          "text": "1 2",
+          "rationale": "This reverses the pair: the join duplicates rows and distinct removes the duplicates."
+        }
+      ],
+      "code": "a = Author.create!(name: \"A\")\na.posts.create!(title: \"x\")\na.posts.create!(title: \"y\")\n\nputs \"#{Author.joins(:posts).count} #{Author.joins(:posts).distinct.count}\"",
+      "query": {
+        "explanation": "Author.joins(:posts) builds an INNER JOIN that yields one row per associated post, so counting gives 2 for an author with two posts. Adding distinct counts distinct authors instead, giving 1.",
+        "syntax": "Author.joins(:posts).distinct.count",
+        "tags": [
+          "associations",
+          "joins",
+          "distinct"
+        ],
+        "title": "joins duplicates and distinct"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-321f525c",
+      "prompt": "Does habtm between Student and Course read from a courses_students join table?",
+      "topic": "associations",
+      "answer": true,
+      "code": "class Student < ActiveRecord::Base\n  has_and_belongs_to_many :courses\nend\n\nclass Course < ActiveRecord::Base\n  has_and_belongs_to_many :students\nend\n\n# join table created as :courses_students (id: false)\ns.courses << c\ns.reload.courses.count",
+      "query": {
+        "explanation": "has_and_belongs_to_many expects a join table whose name is the two table names in alphabetical order joined by an underscore: courses_students for Course and Student. With that table present (and no id column), appending a course writes a join row and the association reads it back.",
+        "syntax": "has_and_belongs_to_many :courses  # join table: courses_students",
+        "tags": [
+          "associations",
+          "habtm",
+          "join_table"
+        ],
+        "title": "habtm join table naming"
+      },
+      "rationale": "Rails derives the habtm join table by sorting the two table names alphabetically, so courses comes before students and the expected table is courses_students.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-f22760da",
+      "prompt": "What does the last line print?",
+      "topic": "callbacks-and-validations",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "before_save,before_create,after_create,after_save"
+        },
+        {
+          "text": "before_create,before_save,after_save,after_create",
+          "rationale": "The save callbacks wrap the create callbacks, so before_save runs first and after_save runs last."
+        },
+        {
+          "text": "before_save,before_create,after_save,after_create",
+          "rationale": "after_create is inside the save cycle, so it runs before after_save, not after it."
+        },
+        {
+          "text": "before_create,before_save,after_create,after_save",
+          "rationale": "before_save runs before before_create because the create callbacks are nested inside the save callbacks."
+        }
+      ],
+      "code": "LOG = []\nclass Thing < ActiveRecord::Base\n  before_save   { LOG << \"before_save\" }\n  before_create { LOG << \"before_create\" }\n  after_create  { LOG << \"after_create\" }\n  after_save    { LOG << \"after_save\" }\nend\n\nThing.create!(name: \"a\")\nputs LOG.join(\",\")",
+      "query": {
+        "explanation": "On a create, Active Record runs before_save, then before_create, then the INSERT, then after_create, and finally after_save. The 'create' callbacks are nested inside the 'save' callbacks, so after_create fires before after_save.",
+        "syntax": "before_save / before_create / after_create / after_save",
+        "tags": [
+          "callbacks",
+          "create",
+          "order"
+        ],
+        "title": "Create callback order"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-2225268d",
+      "prompt": "What does the last line print?",
+      "topic": "callbacks-and-validations",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Name can't be blank"
+        },
+        {
+          "text": "can't be blank",
+          "rationale": "That is errors[:name].first; full_messages prepends the humanized attribute name."
+        },
+        {
+          "text": "name can't be blank",
+          "rationale": "full_messages humanizes the attribute, which capitalizes it to \"Name\"."
+        },
+        {
+          "text": "Name is required",
+          "rationale": "The default presence error message in Active Record is \"can't be blank\", not \"is required\"."
+        }
+      ],
+      "code": "class Thing < ActiveRecord::Base\n  validates :name, presence: true\nend\n\nt = Thing.new\nt.valid?\nputs t.errors.full_messages.first",
+      "query": {
+        "explanation": "full_messages prefixes the message with the humanized attribute name, and the default presence message is \"can't be blank\", giving \"Name can't be blank\".",
+        "syntax": "record.errors.full_messages",
+        "tags": [
+          "validations",
+          "errors",
+          "messages"
+        ],
+        "title": "full_messages wording"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-ecb7e891",
+      "prompt": "What does the last line print?",
+      "topic": "callbacks-and-validations",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "false 0"
+        },
+        {
+          "text": "true 1",
+          "rationale": "throw :abort cancels the save, so the INSERT never happens and save reports failure."
+        },
+        {
+          "text": "false 1",
+          "rationale": "The abort happens before the INSERT, so the table stays empty."
+        },
+        {
+          "text": "true 0",
+          "rationale": "An aborted callback chain makes save return false, not true."
+        }
+      ],
+      "code": "class Thing < ActiveRecord::Base\n  before_create { throw :abort }\nend\n\nok = Thing.new(name: \"a\").save\nputs \"#{ok} #{Thing.count}\"",
+      "query": {
+        "explanation": "throw :abort halts the callback chain and rolls the save back, so save returns false and no row is inserted.",
+        "syntax": "before_create { throw :abort }",
+        "tags": [
+          "callbacks",
+          "halting",
+          "save"
+        ],
+        "title": "throw :abort in before_create"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-9cb51874",
+      "prompt": "What does the last line print?",
+      "topic": "callbacks-and-validations",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"alice\""
+        },
+        {
+          "text": "\"  ALICE  \"",
+          "rationale": "The callback runs before the row is written, so the original padded value is never persisted."
+        },
+        {
+          "text": "\"ALICE\"",
+          "rationale": "The callback calls downcase as well as strip, so the stored value is lowercase."
+        },
+        {
+          "text": "\"  alice  \"",
+          "rationale": "strip removes the surrounding whitespace before the value is saved."
+        }
+      ],
+      "code": "class Thing < ActiveRecord::Base\n  before_validation { self.name = name.to_s.strip.downcase }\n  validates :name, presence: true\nend\n\nt = Thing.create!(name: \"  ALICE  \")\nputs t.reload.name.inspect",
+      "query": {
+        "explanation": "before_validation mutates the attribute before validations and before the INSERT, so the stripped, downcased value \"alice\" is what gets stored.",
+        "syntax": "before_validation { self.attr = ... }",
+        "tags": [
+          "callbacks",
+          "before_validation",
+          "normalization"
+        ],
+        "title": "Normalizing in before_validation"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-9ca328d4",
+      "prompt": "What does the last line print?",
+      "topic": "callbacks-and-validations",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true false"
+        },
+        {
+          "text": "false false",
+          "rationale": "The create is not validated at all here, because the validation only applies in the :update context."
+        },
+        {
+          "text": "true true",
+          "rationale": "The update runs in the :update context, where the nil name violates the presence validation."
+        },
+        {
+          "text": "false true",
+          "rationale": "This reverses the contexts: creates skip the validation and updates enforce it."
+        }
+      ],
+      "code": "class Thing < ActiveRecord::Base\n  validates :name, presence: true, on: :update\nend\n\nt = Thing.new\na = t.save\nb = t.update(age: 1)\nputs \"#{a} #{b}\"",
+      "query": {
+        "explanation": "on: :update limits the validation to the update context, so the initial create succeeds even with a nil name, while the later update fails.",
+        "syntax": "validates :attr, presence: true, on: :update",
+        "tags": [
+          "validations",
+          "context",
+          "on"
+        ],
+        "title": "Validation contexts with on: :update"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-98d68a36",
+      "prompt": "What does the last line print?",
+      "topic": "callbacks-and-validations",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "false Alice"
+        },
+        {
+          "text": "true Bob",
+          "rationale": "\"Bob\" is only three characters, so the minimum: 5 length validation rejects the update."
+        },
+        {
+          "text": "false Bob",
+          "rationale": "The UPDATE never runs, and reload discards the in-memory \"Bob\" in favour of the stored value."
+        },
+        {
+          "text": "true Alice",
+          "rationale": "update returns false when validations fail, so it cannot report true here."
+        }
+      ],
+      "code": "class Thing < ActiveRecord::Base\n  validates :name, length: { minimum: 5 }\nend\n\nt = Thing.create!(name: \"Alice\")\nok = t.update(name: \"Bob\")\nputs \"#{ok} #{t.reload.name}\"",
+      "query": {
+        "explanation": "update assigns the attributes and then saves; because \"Bob\" fails the minimum length validation, no UPDATE is issued and reload brings back the stored \"Alice\".",
+        "syntax": "record.update(attrs)",
+        "tags": [
+          "validations",
+          "update",
+          "length"
+        ],
+        "title": "Failed update leaves the row untouched"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-4987046e",
+      "prompt": "What does this script print?",
+      "topic": "callbacks-and-validations",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "before_validation,after_validation,before_save,after_save"
+        },
+        {
+          "text": "before_save,before_validation,after_validation,after_save",
+          "rationale": "Callbacks are not run in class-body declaration order; all validation callbacks precede before_save."
+        },
+        {
+          "text": "before_validation,before_save,after_validation,after_save",
+          "rationale": "after_validation runs immediately after validations complete, before the save callbacks begin."
+        },
+        {
+          "text": "before_validation,after_validation,after_save,before_save",
+          "rationale": "before_save always precedes the INSERT, and after_save always follows it."
+        }
+      ],
+      "code": "ActiveRecord::Schema.define do\n  create_table :posts do |t|\n    t.string :title\n  end\nend\n\n$log = []\n\nclass Post < ActiveRecord::Base\n  before_save      { $log << \"before_save\" }\n  before_validation{ $log << \"before_validation\" }\n  after_validation { $log << \"after_validation\" }\n  after_save       { $log << \"after_save\" }\nend\n\nPost.create!(title: \"x\")\nputs $log.join(\",\")",
+      "query": {
+        "explanation": "ActiveRecord runs the validation callbacks first (before_validation, then the validations, then after_validation), and only then the save callbacks (before_save, the INSERT, after_save). Declaration order in the class body does not change this relative ordering between different callback kinds.",
+        "syntax": "before_validation / after_validation / before_save / after_save",
+        "tags": [
+          "callbacks",
+          "validations",
+          "lifecycle"
+        ],
+        "title": "Callback firing order on create"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-b4b4c157",
+      "prompt": "Does save(validate: false) persist a record that fails a presence validation?",
+      "topic": "callbacks-and-validations",
+      "answer": true,
+      "code": "class User < ActiveRecord::Base\n  validates :name, presence: true\nend\n\nu = User.new\nu.save(validate: false)\nputs u.persisted?",
+      "query": {
+        "explanation": "Passing validate: false tells save to bypass the whole validation step, so the INSERT runs and the object becomes persisted even though name is blank. Normal callbacks other than the validation ones still fire.",
+        "syntax": "record.save(validate: false)",
+        "tags": [
+          "validations",
+          "save",
+          "presence"
+        ],
+        "title": "Skipping validations with save(validate: false)"
+      },
+      "rationale": "The record really is inserted: validate: false skips validations entirely, so claiming it stays unsaved is wrong.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-f5400784",
+      "prompt": "What does this script print?",
+      "topic": "callbacks-and-validations",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "false / 0"
+        },
+        {
+          "text": "true / 1",
+          "rationale": "The abort halts the chain before the INSERT, so nothing is written and save reports failure."
+        },
+        {
+          "text": "false / 1",
+          "rationale": "No row is inserted at all when a before_save callback aborts."
+        },
+        {
+          "text": "true / 0",
+          "rationale": "save cannot return true when the callback chain was halted."
+        }
+      ],
+      "code": "class Post < ActiveRecord::Base\n  before_save { throw :abort }\nend\n\nresult = Post.new(title: \"x\").save\nputs \"#{result} / #{Post.count}\"",
+      "query": {
+        "explanation": "Throwing :abort inside a before_ callback halts the callback chain: no INSERT is issued and save returns false (save! would raise ActiveRecord::RecordNotSaved). Returning false from the callback would not halt anything in modern Rails.",
+        "syntax": "before_save { throw :abort }",
+        "tags": [
+          "callbacks",
+          "throw-abort",
+          "save"
+        ],
+        "title": "Halting the save chain with throw :abort"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-15c6ec44",
+      "prompt": "What does the last line print?",
+      "topic": "callbacks-and-validations",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Name is too short (minimum is 3 characters)"
+        },
+        {
+          "text": "name is too short (minimum is 3 characters)",
+          "rationale": "full_messages humanizes the attribute name, so it is capitalized as \"Name\"."
+        },
+        {
+          "text": "Name is invalid",
+          "rationale": "That is the default :invalid message used by format validations, not the length validator."
+        },
+        {
+          "text": "is too short (minimum is 3 characters)",
+          "rationale": "That is errors[:name].first; full_messages prepends the attribute name."
+        }
+      ],
+      "code": "class User < ActiveRecord::Base\n  validates :name, length: { minimum: 3 }\nend\n\nu = User.new(name: \"ab\")\nu.valid?\nputs u.errors.full_messages.first",
+      "query": {
+        "explanation": "valid? populates errors, and full_messages prefixes the humanized attribute name to the generated message. The default :too_short message interpolates the count, giving \"Name is too short (minimum is 3 characters)\".",
+        "syntax": "validates :name, length: { minimum: 3 }",
+        "tags": [
+          "validations",
+          "errors",
+          "length"
+        ],
+        "title": "Full messages from a length validation"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-99246274",
+      "prompt": "What does this script print?",
+      "topic": "migrations-and-schema",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "3",
+          "rationale": "This counts only name, age and id, forgetting that t.timestamps is a shortcut for two separate columns."
+        },
+        {
+          "text": "4",
+          "rationale": "This treats t.timestamps as a single column; it actually creates both created_at and updated_at."
+        },
+        {
+          "text": "5"
+        },
+        {
+          "text": "6",
+          "rationale": "There is only one implicit column (id); no extra column such as a type or lock_version is added."
+        }
+      ],
+      "code": "ActiveRecord::Schema.verbose = false\nActiveRecord::Schema.define do\n  create_table :users do |t|\n    t.string :name\n    t.integer :age\n    t.timestamps\n  end\nend\n\nputs ActiveRecord::Base.connection.columns(:users).size",
+      "query": {
+        "explanation": "create_table adds an implicit primary key column `id` unless you pass `id: false`, then your declared columns (name, age), and `t.timestamps` expands into two columns: created_at and updated_at. That totals 5 columns.",
+        "syntax": "t.timestamps",
+        "tags": [
+          "migrations",
+          "schema"
+        ],
+        "title": "Counting columns created by create_table"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-8a08f507",
+      "prompt": "What does the last line print?",
+      "topic": "migrations-and-schema",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "false"
+        },
+        {
+          "text": "true",
+          "rationale": "true would mean NULLs are permitted, which is the default; the migration explicitly passed null: false."
+        },
+        {
+          "text": "nil",
+          "rationale": "Column#null always returns a boolean for an existing column, not nil."
+        },
+        {
+          "text": "NOT NULL",
+          "rationale": "Column#null is a boolean flag, not the SQL constraint text."
+        }
+      ],
+      "code": "ActiveRecord::Schema.verbose = false\nActiveRecord::Schema.define do\n  create_table :users do |t|\n    t.string :name, null: false\n  end\nend\n\ncol = ActiveRecord::Base.connection.columns(:users).find { |c| c.name == \"name\" }\nputs col.null",
+      "query": {
+        "explanation": "`null: false` in a migration adds a database-level NOT NULL constraint. The column object's `null` attribute reports whether NULL is allowed, so it is false here.",
+        "syntax": "t.string :name, null: false",
+        "tags": [
+          "migrations",
+          "schema",
+          "constraints"
+        ],
+        "title": "Reading a NOT NULL constraint from the schema"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-e7f8861a",
+      "prompt": "What does the last line print?",
+      "topic": "migrations-and-schema",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "integer"
+        },
+        {
+          "text": "string",
+          "rationale": "Foreign keys for the default integer primary key are numeric; string would only appear if you declared type: :string."
+        },
+        {
+          "text": "uuid",
+          "rationale": "uuid foreign keys require type: :uuid and a database that supports it; SQLite's default here is numeric."
+        },
+        {
+          "text": "reference",
+          "rationale": "There is no :reference column type; references is a migration helper, not a storage type."
+        }
+      ],
+      "code": "ActiveRecord::Schema.verbose = false\nActiveRecord::Schema.define do\n  create_table :posts do |t|\n    t.references :author\n  end\nend\n\ncol = ActiveRecord::Base.connection.columns(:posts).find { |c| c.name == \"author_id\" }\nputs col.type",
+      "query": {
+        "explanation": "A references column is a numeric foreign key. On SQLite the bigint SQL type maps back to the Active Record type :integer, so Column#type prints integer.",
+        "syntax": "col.type",
+        "tags": [
+          "migrations",
+          "schema",
+          "column-types"
+        ],
+        "title": "The type behind a references column"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-a235400e",
+      "prompt": "What does this script print?",
+      "topic": "migrations-and-schema",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "full_name,id"
+        },
+        {
+          "text": "id,name",
+          "rationale": "The rename already ran inside the schema block, so `name` no longer exists."
+        },
+        {
+          "text": "full_name,id,name",
+          "rationale": "rename_column renames in place; it does not add a copy while keeping the original column."
+        },
+        {
+          "text": "full_name,name",
+          "rationale": "The implicit primary key column id is still part of the table."
+        }
+      ],
+      "code": "ActiveRecord::Schema.verbose = false\nActiveRecord::Schema.define do\n  create_table :users do |t|\n    t.string :name\n  end\n  rename_column :users, :name, :full_name\nend\n\nputs ActiveRecord::Base.connection.columns(:users).map(&:name).sort.join(\",\")",
+      "query": {
+        "explanation": "rename_column changes the existing column's name in place, keeping its data and type. The old name disappears, so only id and full_name remain.",
+        "syntax": "rename_column :users, :name, :full_name",
+        "tags": [
+          "migrations",
+          "schema"
+        ],
+        "title": "rename_column replaces the old column"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-8d9d6640",
+      "prompt": "What does Post.primary_key print here?",
+      "topic": "migrations-and-schema",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "uuid"
+        },
+        {
+          "text": "id",
+          "rationale": "\"id\" is only the default when create_table is called without a primary_key option."
+        },
+        {
+          "text": "post_id",
+          "rationale": "Active Record never derives the primary key name from the table name; it uses the actual schema column."
+        },
+        {
+          "text": "nil",
+          "rationale": "The table does have a primary key, so primary_key returns its name rather than nil."
+        }
+      ],
+      "code": "ActiveRecord::Schema.verbose = false\nActiveRecord::Schema.define do\n  create_table :posts, primary_key: \"uuid\" do |t|\n    t.string :title\n  end\nend\n\nclass Post < ActiveRecord::Base; end\nputs Post.primary_key",
+      "query": {
+        "explanation": "create_table's `primary_key:` option names the primary key column. Active Record reads the primary key from the database schema, so Post.primary_key reports \"uuid\" without any extra model configuration.",
+        "syntax": "create_table :posts, primary_key: \"uuid\"",
+        "tags": [
+          "migrations",
+          "schema",
+          "primary-key"
+        ],
+        "title": "Custom primary key names"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-590d8499",
+      "prompt": "What does Post.new.views print here?",
+      "topic": "migrations-and-schema",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "0"
+        },
+        {
+          "text": "nil",
+          "rationale": "Attributes start as nil only when the column has no default; this column declares default: 0."
+        },
+        {
+          "text": "1",
+          "rationale": "Nothing increments the counter; the schema default is 0."
+        },
+        {
+          "text": "false",
+          "rationale": "views is an integer column, and its default is the number 0, not a boolean."
+        }
+      ],
+      "code": "ActiveRecord::Schema.verbose = false\nActiveRecord::Schema.define do\n  create_table :posts do |t|\n    t.integer :views, default: 0\n  end\nend\n\nclass Post < ActiveRecord::Base; end\nputs Post.new.views",
+      "query": {
+        "explanation": "Active Record reads column defaults from the schema and pre-populates attributes of unsaved objects, so a brand new Post already has views set to 0 before any INSERT happens.",
+        "syntax": "t.integer :views, default: 0",
+        "tags": [
+          "migrations",
+          "schema",
+          "defaults"
+        ],
+        "title": "Schema defaults appear on new objects"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-d3a5030f",
+      "prompt": "What does this script print?",
+      "topic": "migrations-and-schema",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "nil",
+          "rationale": "The add_column call records a default of \"guest\" in the schema, so the column object reports that value rather than nil."
+        },
+        {
+          "text": "admin",
+          "rationale": "No part of this schema mentions admin; the only default declared for role is \"guest\"."
+        },
+        {
+          "text": "guest"
+        },
+        {
+          "text": "an empty string",
+          "rationale": "A missing default would show as nil, not \"\"; here an explicit default string was supplied."
+        }
+      ],
+      "code": "ActiveRecord::Schema.define do\n  create_table :users do |t|\n    t.string :name\n  end\n  add_column :users, :role, :string, default: \"guest\", null: false\nend\n\nclass User < ActiveRecord::Base; end\n\nputs User.columns_hash[\"role\"].default",
+      "query": {
+        "explanation": "add_column accepts the same options as a create_table column, so :default is stored in the table definition. Reading User.columns_hash[\"role\"].default returns the schema-level default (\"guest\") that the database will apply to new rows, independent of any model code.",
+        "syntax": "add_column :table, :column, :type, default: value, null: false",
+        "tags": [
+          "migrations",
+          "schema",
+          "defaults"
+        ],
+        "title": "Column defaults from add_column"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-dd0d1ea1",
+      "prompt": "How many columns in this table have names starting with subject?",
+      "topic": "migrations-and-schema",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "t.references does create real columns named after the association, so the count cannot be zero."
+        },
+        {
+          "text": "1",
+          "rationale": "A plain reference adds only subject_id, but polymorphic: true also adds a subject_type column."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "Only subject_id and subject_type are added; body does not start with subject and no third subject column is created."
+        }
+      ],
+      "code": "ActiveRecord::Schema.define do\n  create_table :comments do |t|\n    t.references :subject, polymorphic: true\n    t.text :body\n  end\nend\n\nclass Comment < ActiveRecord::Base; end",
+      "query": {
+        "explanation": "t.references :subject normally adds a subject_id column. Adding polymorphic: true also adds subject_type, which stores the class name of the associated record. So the migration creates exactly two subject-prefixed columns: subject_id and subject_type.",
+        "syntax": "t.references :subject, polymorphic: true",
+        "tags": [
+          "migrations",
+          "schema",
+          "polymorphic"
+        ],
+        "title": "Polymorphic references add two columns"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-48950784",
+      "prompt": "What does this script print?",
+      "topic": "migrations-and-schema",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "body,id,title",
+          "rationale": "remove_column actually drops the body column from the table, so it is gone from column_names."
+        },
+        {
+          "text": "id,title"
+        },
+        {
+          "text": "id,title,body",
+          "rationale": "Besides still listing the dropped body column, this order is not what sort returns for these names."
+        },
+        {
+          "text": "title",
+          "rationale": "create_table adds an implicit id primary key column, which remains in column_names."
+        }
+      ],
+      "code": "ActiveRecord::Schema.define do\n  create_table :posts do |t|\n    t.string :title\n    t.text :body\n  end\n  remove_column :posts, :body\nend\n\nclass Post < ActiveRecord::Base; end\n\nputs Post.column_names.sort.join(\",\")",
+      "query": {
+        "explanation": "create_table adds an implicit integer id primary key plus title and body. remove_column :posts, :body drops body from the table before the model is defined, so the model loads only id and title. Sorting those names alphabetically yields \"id,title\".",
+        "syntax": "remove_column :table, :column",
+        "tags": [
+          "migrations",
+          "schema",
+          "columns"
+        ],
+        "title": "remove_column and the resulting column list"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-38b198ca",
+      "prompt": "What does params[:page] hold for this request?",
+      "topic": "controllers-and-params",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"2\" (a String)"
+        },
+        {
+          "text": "2 (an Integer)",
+          "rationale": "Rails does not cast query string values; you must call to_i yourself."
+        },
+        {
+          "text": "[\"2\"] (an Array)",
+          "rationale": "An array only appears when the key is sent with brackets, like page[]=2."
+        },
+        {
+          "text": "nil (nothing was sent)",
+          "rationale": "The key page was sent in the query string, so it is present in params."
+        }
+      ],
+      "code": "# GET /posts?page=2\n# inside PostsController#index\nparams[:page]",
+      "query": {
+        "explanation": "Everything that arrives in a query string or form body is text, so Rails stores \"2\", not the Integer 2. Convert explicitly when you need a number, e.g. params[:page].to_i.",
+        "tags": [
+          "controllers",
+          "params",
+          "types"
+        ],
+        "title": "Query string values are strings"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-d534a10c",
+      "prompt": "What does params[:user] contain for this request body?",
+      "topic": "controllers-and-params",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "name, age"
+        },
+        {
+          "text": "user[name], user[age]",
+          "rationale": "The bracket syntax is parsed away; the literal bracketed strings are not kept as keys."
+        },
+        {
+          "text": "user",
+          "rationale": "user is the outer key in params; params[:user] is already the nested hash itself."
+        },
+        {
+          "text": "(no keys — params[:user] is empty)",
+          "rationale": "Rails parses bracketed names into a nested hash rather than discarding them."
+        }
+      ],
+      "code": "# POST body: user[name]=Ada&user[age]=36\nparams[:user]",
+      "query": {
+        "explanation": "Bracket syntax in a field name builds a nested hash. The outer name becomes the key in params, and the names inside the brackets become the keys of the nested hash, so params[:user] has keys name and age.",
+        "tags": [
+          "controllers",
+          "params",
+          "nested"
+        ],
+        "title": "Nested parameters"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-6d776403",
+      "prompt": "What does params[:id] return for this request?",
+      "topic": "controllers-and-params",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"5\""
+        },
+        {
+          "text": "\"9\"",
+          "rationale": "Path parameters are merged last, so the route segment overrides the query string value."
+        },
+        {
+          "text": "[\"5\", \"9\"]",
+          "rationale": "Colliding keys are overwritten, not combined into an array."
+        },
+        {
+          "text": "nil",
+          "rationale": "Both sources supply id, so params[:id] is definitely present."
+        }
+      ],
+      "code": "# routes.rb\nresources :users\n\n# GET /users/5?id=9\nparams[:id]",
+      "query": {
+        "explanation": "Rails merges query parameters, request body parameters, and path parameters, with path parameters merged last. A route segment like :id therefore overrides a same-named query parameter.",
+        "tags": [
+          "controllers",
+          "params",
+          "routing"
+        ],
+        "title": "Path parameters win over query parameters"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-15fff52a",
+      "prompt": "What does this strong parameters call return?",
+      "topic": "controllers-and-params",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "name, email"
+        },
+        {
+          "text": "name, email, admin",
+          "rationale": "admin was not listed in permit, so it is filtered out of the result."
+        },
+        {
+          "text": "name",
+          "rationale": "Both :name and :email were permitted, so email is kept too."
+        },
+        {
+          "text": "(none — permit returns an empty set)",
+          "rationale": "permit keeps exactly the listed keys that were actually submitted."
+        }
+      ],
+      "code": "# params[:user] == { \"name\" => \"Ada\", \"email\" => \"ada@example.com\", \"admin\" => \"true\" }\nparams.require(:user).permit(:name, :email)",
+      "query": {
+        "explanation": "permit returns a new Parameters object containing only the keys you listed. Keys that were submitted but not permitted are dropped (and logged as unpermitted parameters), which is how strong parameters blocks mass-assignment attacks.",
+        "syntax": "params.require(:user).permit(:name, :email)",
+        "tags": [
+          "controllers",
+          "params",
+          "strong-parameters"
+        ],
+        "title": "permit filters unlisted keys"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-40f92a24",
+      "prompt": "Which actions run the set_post callback here?",
+      "topic": "controllers-and-params",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "show, update"
+        },
+        {
+          "text": "index, show, update, destroy",
+          "rationale": "That is the behaviour without :only; the option restricts the callback to the listed actions."
+        },
+        {
+          "text": "index, destroy",
+          "rationale": "Those are the actions skipped here; :except would produce this list instead."
+        },
+        {
+          "text": "show",
+          "rationale": "Both :show and :update are listed in the :only array."
+        }
+      ],
+      "code": "class PostsController < ApplicationController\n  before_action :set_post, only: [:show, :update]\n\n  def index; end\n  def show; end\n  def update; end\n  def destroy; end\nend",
+      "query": {
+        "explanation": "A before_action runs for every action in the controller unless you restrict it. The :only option limits it to exactly the listed actions; :except does the opposite.",
+        "syntax": "before_action :set_post, only: [:show, :update]",
+        "tags": [
+          "controllers",
+          "callbacks",
+          "before_action"
+        ],
+        "title": "before_action with :only"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-a48e146e",
+      "prompt": "What does user.admin return at the end of this snippet?",
+      "topic": "controllers-and-params",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "false"
+        },
+        {
+          "text": "true",
+          "rationale": "admin was submitted but not permitted, so it never reaches the model."
+        },
+        {
+          "text": "nil",
+          "rationale": "The column declares default: false, so the saved record stores false rather than nil."
+        },
+        {
+          "text": "it raises ActiveModel::ForbiddenAttributesError",
+          "rationale": "That error only occurs when an unpermitted Parameters object is mass-assigned; here the attributes were filtered first."
+        }
+      ],
+      "code": "# submitted: user[name]=Ada&user[admin]=true\n# controller: params.require(:user).permit(:name)\nuser = User.create!(permitted)\nuser.admin",
+      "query": {
+        "explanation": "Because :admin was never permitted, it is removed before the hash reaches the model. Mass assignment therefore only sets name, and the admin column keeps its schema default of false.",
+        "tags": [
+          "controllers",
+          "params",
+          "mass-assignment"
+        ],
+        "title": "Strong parameters protect columns"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-9be989e7",
+      "prompt": "What does this pluralize call print?",
+      "topic": "activesupport",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "octopi"
+        },
+        {
+          "text": "octopuses",
+          "rationale": "That is the English alternative plural, but the default Rails inflection rule produces 'octopi'."
+        },
+        {
+          "text": "octopus",
+          "rationale": "pluralize does change this word; it is not already treated as a plural form."
+        },
+        {
+          "text": "octopuss",
+          "rationale": "The naive 'add s' rule is overridden by the more specific (octop|vir)us rule."
+        }
+      ],
+      "code": "puts \"octopus\".pluralize",
+      "query": {
+        "explanation": "ActiveSupport ships default inflection rules that go beyond adding 's'. One of them maps words ending in 'octopus' or 'virus' to an 'i' ending, so \"octopus\".pluralize returns \"octopi\".",
+        "syntax": "String#pluralize",
+        "tags": [
+          "inflector",
+          "string-ext"
+        ],
+        "title": "Inflector pluralization rules"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-09cbb65c",
+      "prompt": "What string does this underscore call produce?",
+      "topic": "activesupport",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "active_support/inflector"
+        },
+        {
+          "text": "active_support::inflector",
+          "rationale": "underscore replaces '::' with '/' so the result maps to a file path."
+        },
+        {
+          "text": "active_support_inflector",
+          "rationale": "The namespace separator becomes a slash, not an underscore."
+        },
+        {
+          "text": "Active_Support/Inflector",
+          "rationale": "underscore also downcases the whole string."
+        }
+      ],
+      "code": "puts \"ActiveSupport::Inflector\".underscore",
+      "query": {
+        "explanation": "underscore converts CamelCase to snake_case and also rewrites the :: namespace separator into a / path separator, which is what makes it the inverse of autoload path lookups.",
+        "syntax": "String#underscore",
+        "tags": [
+          "inflector",
+          "string-ext"
+        ],
+        "title": "underscore on namespaced constants"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-2385d64d",
+      "prompt": "Which sorted key list remains under :config after this deep_merge?",
+      "topic": "activesupport",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[:host, :port]"
+        },
+        {
+          "text": "[:port]",
+          "rationale": "That is the result of plain Hash#merge, which replaces the nested hash instead of merging into it."
+        },
+        {
+          "text": "[:host]",
+          "rationale": "deep_merge keeps :port and updates its value to 443; it never deletes overlapping keys."
+        },
+        {
+          "text": "[]",
+          "rationale": "deep_merge returns a populated hash, not an empty one."
+        }
+      ],
+      "code": "a = { config: { port: 80, host: \"local\" } }\nb = { config: { port: 443 } }\nputs a.deep_merge(b)[:config].keys.sort.inspect",
+      "query": {
+        "explanation": "Plain merge would replace the whole nested hash with {port: 443}, dropping :host. deep_merge recurses into nested hashes and merges them key by key, so :host survives and :port is overwritten with 443.",
+        "syntax": "Hash#deep_merge(other_hash)",
+        "tags": [
+          "hash-ext",
+          "deep-merge"
+        ],
+        "title": "Hash#deep_merge"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-e13fa5fa",
+      "prompt": "What date does this advance call print?",
+      "topic": "activesupport",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2024-02-29"
+        },
+        {
+          "text": "2024-03-02",
+          "rationale": "advance does not spill over into the next month; it clamps to the last day of February."
+        },
+        {
+          "text": "2024-02-28",
+          "rationale": "2024 is a leap year, so the last day of February is the 29th."
+        },
+        {
+          "text": "2024-03-01",
+          "rationale": "The result stays inside February because the day is clamped, not carried forward."
+        }
+      ],
+      "code": "puts Date.new(2024, 1, 31).advance(months: 1).to_s",
+      "query": {
+        "explanation": "ActiveSupport's advance adds calendar months, then clamps the day to the last valid day of the target month. January 31 plus one month lands on February 29 in the leap year 2024, not on an invalid February 31.",
+        "syntax": "Date#advance(options)",
+        "tags": [
+          "date-ext",
+          "calculations"
+        ],
+        "title": "Date#advance across month ends"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-b19a8f46",
+      "prompt": "What does this squish call print?",
+      "topic": "activesupport",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"hello world\""
+        },
+        {
+          "text": "\"hello   world\"",
+          "rationale": "squish collapses internal whitespace runs as well as trimming the ends; strip alone would leave the triple space."
+        },
+        {
+          "text": "\"helloworld\"",
+          "rationale": "Internal whitespace becomes one space, it is not removed entirely."
+        },
+        {
+          "text": "\"  hello world \\n\"",
+          "rationale": "Leading and trailing whitespace, including the newline, is removed."
+        }
+      ],
+      "code": "p \"  hello   world \\n\".squish",
+      "query": {
+        "explanation": "squish strips leading and trailing whitespace and collapses every internal run of whitespace (including newlines and tabs) into a single space, returning \"hello world\".",
+        "syntax": "String#squish",
+        "tags": [
+          "string-ext",
+          "whitespace"
+        ],
+        "title": "String#squish"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-603d25a2",
+      "prompt": "What does this titleize call print?",
+      "topic": "activesupport",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Man From The Boondocks"
+        },
+        {
+          "text": "Man from the boondocks",
+          "rationale": "titleize capitalizes every word, not only the first; humanize is the method that capitalizes just the first word."
+        },
+        {
+          "text": "Man_From_The_Boondocks",
+          "rationale": "Underscores are converted to spaces before capitalization."
+        },
+        {
+          "text": "ManFromTheBoondocks",
+          "rationale": "That is closer to camelize output; titleize keeps spaces between words."
+        }
+      ],
+      "code": "puts \"man_from_the_boondocks\".titleize",
+      "query": {
+        "explanation": "titleize underscores and humanizes the string, replacing underscores with spaces, and then capitalizes every word, producing \"Man From The Boondocks\".",
+        "syntax": "String#titleize",
+        "tags": [
+          "inflector",
+          "string-ext"
+        ],
+        "title": "String#titleize"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-9987f136",
+      "prompt": "What does inspect return for this duration?",
+      "topic": "activesupport",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3 days and 2 hours"
+        },
+        {
+          "text": "266400",
+          "rationale": "That is the value of to_i; Duration#inspect prints the human-readable parts instead."
+        },
+        {
+          "text": "3 days, 2 hours",
+          "rationale": "Duration#inspect joins the final part with ' and ', not a comma."
+        },
+        {
+          "text": "74 hours",
+          "rationale": "The duration keeps the parts it was built from rather than normalizing days into hours."
+        }
+      ],
+      "code": "puts (3.days + 2.hours).inspect",
+      "query": {
+        "explanation": "Adding durations yields an ActiveSupport::Duration that remembers its parts, and inspect renders them in human form joined by 'and', giving \"3 days and 2 hours\" rather than a raw number of seconds.",
+        "syntax": "ActiveSupport::Duration#inspect",
+        "tags": [
+          "duration",
+          "numeric-ext"
+        ],
+        "title": "ActiveSupport::Duration inspect"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-9a483116",
+      "prompt": "What does this parameterize call print?",
+      "topic": "activesupport",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "ruby-on-rails-7"
+        },
+        {
+          "text": "ruby_on_rails_7",
+          "rationale": "Underscores only appear if you pass separator: \"_\"; the default separator is a hyphen."
+        },
+        {
+          "text": "ruby-on-rails-7-",
+          "rationale": "parameterize strips leading and trailing separators, so the dash produced by \"!\" is removed."
+        },
+        {
+          "text": "Ruby-on-Rails-7",
+          "rationale": "parameterize downcases the result, so the capital letters are not preserved."
+        }
+      ],
+      "code": "puts \"Ruby on Rails 7!\".parameterize",
+      "query": {
+        "explanation": "parameterize downcases the string, replaces every run of non-alphanumeric characters with the separator (default \"-\"), and strips leading and trailing separators. So \"Ruby on Rails 7!\" becomes \"ruby-on-rails-7\" — the trailing \"!\" turns into a separator that is then removed.",
+        "syntax": "str.parameterize(separator: \"-\")",
+        "tags": [
+          "activesupport",
+          "string",
+          "parameterize"
+        ],
+        "title": "String#parameterize"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-8a5726d9",
+      "prompt": "Does this script print True?",
+      "topic": "activesupport",
+      "answer": false,
+      "code": "puts 0.blank?",
+      "query": {
+        "explanation": "In ActiveSupport, blank? means \"false or empty\". Only nil, false, empty strings/arrays/hashes, and whitespace-only strings are blank. The number 0 is a present value, so 0.blank? is false and 0.present? is true. (Note that in Ruby 0 is also truthy, unlike in some other languages.)",
+        "syntax": "object.blank? # => true/false",
+        "tags": [
+          "activesupport",
+          "blank",
+          "object"
+        ],
+        "title": "blank? and zero"
+      },
+      "rationale": "0 is not nil, false, or an empty collection, so ActiveSupport treats it as present: 0.blank? returns false, not true.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-cabb4720",
+      "prompt": "What does this in_groups_of call print?",
+      "topic": "activesupport",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[[1, 2], [3, 4], [5, nil]]"
+        },
+        {
+          "text": "[[1, 2], [3, 4], [5]]",
+          "rationale": "That is in_groups_of(2, false); by default the last group is padded with nil."
+        },
+        {
+          "text": "[[1, 2, 3], [4, 5, nil]]",
+          "rationale": "The argument is the group size (2), not the number of groups; in_groups(2) would split into two groups."
+        },
+        {
+          "text": "[[1, 3, 5], [2, 4, nil]]",
+          "rationale": "in_groups_of keeps elements in consecutive runs rather than dealing them round-robin across groups."
+        }
+      ],
+      "code": "puts [1, 2, 3, 4, 5].in_groups_of(2).inspect",
+      "query": {
+        "explanation": "in_groups_of(n) splits an array into consecutive groups of exactly n elements, padding the last group with nil by default so every group is the same size. Pass false as the second argument (in_groups_of(2, false)) to leave the final short group unpadded, or pass any other value to use it as the filler.",
+        "syntax": "array.in_groups_of(number, fill_with = nil)",
+        "tags": [
+          "activesupport",
+          "array",
+          "grouping"
+        ],
+        "title": "Array#in_groups_of"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-41354454",
+      "prompt": "How many seconds of backoff does this retry schedule wait in total?",
+      "topic": "background-jobs",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "45"
+        },
+        {
+          "text": "93",
+          "rationale": "93 counts five delays (3+6+12+24+48), but no wait happens after the last attempt."
+        },
+        {
+          "text": "21",
+          "rationale": "21 is only three delays (3+6+12); the range 1...5 yields four attempt values."
+        },
+        {
+          "text": "24",
+          "rationale": "24 is just the final delay, not the sum of all of them."
+        }
+      ],
+      "code": "BASE = 3\nMAX_ATTEMPTS = 5\n\n# one wait between each pair of attempts\ndelays = (1...MAX_ATTEMPTS).map { |attempt| BASE * (2**(attempt - 1)) }\nputs delays.sum",
+      "query": {
+        "explanation": "With 5 allowed attempts there are only 4 waits between them: 3, 6, 12 and 24 seconds, which sum to 45. A common mistake is to compute one delay per attempt (3+6+12+24+48 = 93), which would add a wait after the final, non-retried attempt.",
+        "syntax": "retry_on StandardError, wait: :polynomially_longer, attempts: 5",
+        "tags": [
+          "background-jobs",
+          "retries",
+          "backoff"
+        ],
+        "title": "Exponential backoff total wait"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-4abc667f",
+      "prompt": "Does this dedup guard leave counter at 5 after the duplicate delivery?",
+      "topic": "background-jobs",
+      "answer": true,
+      "code": "processed = []\ncounter = 0\n\n# the same job id is delivered twice (at-least-once delivery)\n[[\"job-1\", 5], [\"job-1\", 5]].each do |id, amount|\n  next if processed.include?(id)\n  processed << id\n  counter += amount\nend\n\nputs counter",
+      "query": {
+        "explanation": "Most queues guarantee at-least-once delivery, so a job body must be idempotent. Recording the job id before doing the work makes the second delivery a no-op, so counter stays at 5 instead of reaching 10.",
+        "tags": [
+          "background-jobs",
+          "idempotency",
+          "at-least-once"
+        ],
+        "title": "Idempotency guard against duplicate delivery"
+      },
+      "rationale": "The second delivery is skipped because job-1 is already in processed, so the side effect never runs twice and counter never reaches 10.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-51dcb34b",
+      "prompt": "In which order does this priority queue hand the jobs to a worker?",
+      "topic": "background-jobs",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "report,index,mailer,purge"
+        },
+        {
+          "text": "mailer,report,purge,index",
+          "rationale": "That is plain enqueue order, which ignores the priority key entirely."
+        },
+        {
+          "text": "mailer,purge,index,report",
+          "rationale": "That treats a higher priority number as more urgent, the reverse of the sort used here."
+        },
+        {
+          "text": "report,index,purge,mailer",
+          "rationale": "The priority-10 tie is broken by seq, so mailer (seq 1) comes before purge (seq 3)."
+        }
+      ],
+      "code": "jobs = [\n  { name: \"mailer\", priority: 10, seq: 1 },\n  { name: \"report\", priority: 0,  seq: 2 },\n  { name: \"purge\",  priority: 10, seq: 3 },\n  { name: \"index\",  priority: 5,  seq: 4 }\n]\n\n# lower priority number runs first; ties break by enqueue order\norder = jobs.sort_by { |j| [j[:priority], j[:seq]] }.map { |j| j[:name] }\nputs order.join(\",\")",
+      "query": {
+        "explanation": "Numeric job priorities are conventionally 'lower is more urgent', so report (0) runs first, then index (5), then the two priority-10 jobs in enqueue order: mailer before purge.",
+        "syntax": "MyJob.set(priority: 0).perform_later",
+        "tags": [
+          "background-jobs",
+          "priority",
+          "queues"
+        ],
+        "title": "Priority ordering with FIFO tie-break"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-0920ce84",
+      "prompt": "How many times does this retry loop call the job body?",
+      "topic": "background-jobs",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "5",
+          "rationale": "The loop breaks on the first success, so it never uses all five allowed attempts."
+        },
+        {
+          "text": "2",
+          "rationale": "Two runs are the failures only; the successful third call also increments runs."
+        },
+        {
+          "text": "6",
+          "rationale": "The loop body runs at most five times, and it stops earlier than that here."
+        }
+      ],
+      "code": "attempts_allowed = 5\nruns = 0\nsucceed_on = 3\n\nbody = lambda do\n  runs += 1\n  raise \"transient failure\" if runs < succeed_on\n  :ok\nend\n\nattempts_allowed.times do\n  begin\n    body.call\n    break\n  rescue StandardError\n    next\n  end\nend\n\nputs runs",
+      "query": {
+        "explanation": "An attempts limit is a ceiling, not a quota. The body raises on runs 1 and 2 and succeeds on run 3, so the loop breaks after three invocations and the remaining two allowed attempts are never used.",
+        "syntax": "retry_on StandardError, attempts: 5",
+        "tags": [
+          "background-jobs",
+          "retries",
+          "attempts"
+        ],
+        "title": "Retries stop at the first success"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-cf699f5a",
+      "prompt": "Which name does the worker read when it dereferences the stored global id?",
+      "topic": "background-jobs",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Grace"
+        },
+        {
+          "text": "Ada",
+          "rationale": "Only the id is stored in the payload, so the enqueue-time attribute value is not preserved."
+        },
+        {
+          "text": "nil",
+          "rationale": "The row still exists and its name column holds a value, so the attribute is not nil."
+        },
+        {
+          "text": "ActiveRecord::RecordNotFound",
+          "rationale": "The record was updated, not deleted, so find locates the row successfully."
+        }
+      ],
+      "code": "ActiveRecord::Schema.define do\n  create_table :users do |t|\n    t.string :name\n  end\nend\n\nclass User < ActiveRecord::Base; end\n\nuser = User.create!(name: \"Ada\")\nserialized = \"gid://app/User/#{user.id}\"   # what perform_later stores\nuser.update!(name: \"Grace\")\n\nloaded = User.find(serialized.split(\"/\").last.to_i)\nputs loaded.name",
+      "query": {
+        "explanation": "Active Job serializes record arguments as a GlobalID (a class name plus id), not as a frozen copy of the attributes. The worker reloads the row when the job runs, so it observes the value written after the job was enqueued.",
+        "syntax": "MyJob.perform_later(user) # serialized as gid://app/User/1",
+        "tags": [
+          "background-jobs",
+          "globalid",
+          "serialization"
+        ],
+        "title": "GlobalID arguments reload at perform time"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-ccd69720",
+      "prompt": "After this retry loop, how many jobs finished and how many were discarded?",
+      "topic": "background-jobs",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2 done, 1 dead"
+        },
+        {
+          "text": "3 done, 0 dead",
+          "rationale": "Job b's succeed_on is 99, so it can never satisfy attempt >= succeed_on within three attempts."
+        },
+        {
+          "text": "1 done, 2 dead",
+          "rationale": "Job c succeeds on attempt 2, so it joins job a in done rather than being discarded."
+        },
+        {
+          "text": "2 done, 0 dead",
+          "rationale": "The failing job is pushed onto dead when attempt reaches MAX_ATTEMPTS, so dead is not empty."
+        }
+      ],
+      "code": "MAX_ATTEMPTS = 3\ndone = []\ndead = []\n\n# value = the attempt number on which the job would succeed\n{ \"a\" => 1, \"b\" => 99, \"c\" => 2 }.each do |name, succeed_on|\n  attempt = 0\n  loop do\n    attempt += 1\n    if attempt >= succeed_on\n      done << name\n      break\n    elsif attempt == MAX_ATTEMPTS\n      dead << name\n      break\n    end\n  end\nend\n\nputs \"#{done.size} done, #{dead.size} dead\"",
+      "query": {
+        "explanation": "Job a succeeds on its first attempt and job c on its second, so both finish. Job b never succeeds and is moved to the dead set once it burns through all three allowed attempts.",
+        "tags": [
+          "background-jobs",
+          "retries",
+          "dead-letter"
+        ],
+        "title": "Exhausted retries land in the dead set"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-09bcdc4b",
+      "prompt": "What does this script print?",
+      "topic": "background-jobs",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2026-03-02 00:20"
+        },
+        {
+          "text": "2026-03-01 23:50",
+          "rationale": "That is the first scheduled run, before the retry backoff is added."
+        },
+        {
+          "text": "2026-03-02 01:20",
+          "rationale": "The two waits total 70 minutes, not 130 minutes."
+        },
+        {
+          "text": "2026-03-01 00:20",
+          "rationale": "The waits move the time forward past midnight, so the date rolls over to 2 March."
+        }
+      ],
+      "code": "enqueued_at = Time.utc(2026, 3, 1, 23, 10, 0)\n\nfirst_run  = enqueued_at + 40.minutes   # set(wait: 40.minutes)\nsecond_run = first_run + 30.minutes     # one retry with a 30 minute backoff\n\nputs second_run.strftime(\"%Y-%m-%d %H:%M\")",
+      "query": {
+        "explanation": "The initial wait moves the job to 23:50 on 1 March; the 30 minute retry backoff pushes it another half hour past midnight, landing at 00:20 on 2 March UTC.",
+        "syntax": "MyJob.set(wait: 40.minutes).perform_later",
+        "tags": [
+          "background-jobs",
+          "scheduling",
+          "wait"
+        ],
+        "title": "Scheduled delay plus retry backoff"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-c9edd4af",
+      "prompt": "How many seconds does this two-worker pool need to drain the queue?",
+      "topic": "background-jobs",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "13"
+        },
+        {
+          "text": "10",
+          "rationale": "10 is the ideal half of the total work, which greedy assignment in pop order does not achieve here."
+        },
+        {
+          "text": "20",
+          "rationale": "20 is the serial total; two workers run jobs concurrently, so wall time is shorter."
+        },
+        {
+          "text": "11",
+          "rationale": "The last 6 second job starts at 7, not at 5, because both workers are busy until second 7."
+        }
+      ],
+      "code": "durations = [5, 3, 4, 2, 6]   # seconds, popped in this order\nworkers = [0, 0]              # busy-until clock per worker\n\ndurations.each do |d|\n  idx = workers.index(workers.min)   # first idle worker takes the job\n  workers[idx] += d\nend\n\nputs workers.max",
+      "query": {
+        "explanation": "Jobs are assigned to whichever worker frees up first: worker A takes 5 then 2 (7s) and worker B takes 3 then 4 (7s); the final 6 second job goes to worker A, so the queue drains after 13 seconds even though the total work is 20 seconds.",
+        "tags": [
+          "background-jobs",
+          "concurrency",
+          "throughput"
+        ],
+        "title": "Makespan of a greedy two-worker pool"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-23cbba82",
+      "prompt": "Does the queue hold only the after_create entry once this transaction rolls back?",
+      "topic": "background-jobs",
+      "answer": true,
+      "code": "ActiveRecord::Schema.define do\n  create_table :orders do |t|\n    t.string :state\n  end\nend\n\n$queue = []\n\nclass Order < ActiveRecord::Base\n  after_create { $queue << \"after_create\" }\n  after_commit(on: :create) { $queue << \"after_commit\" }\nend\n\nActiveRecord::Base.transaction do\n  Order.create!(state: \"new\")\n  raise ActiveRecord::Rollback\nend\n\nputs $queue.inspect",
+      "query": {
+        "explanation": "after_create fires inside the transaction, so a job enqueued there can reference a row that is rolled back and never exists. after_commit only fires on a real commit, which is why it is the safe hook for perform_later.",
+        "syntax": "after_commit(on: :create) { MyJob.perform_later(self) }",
+        "tags": [
+          "background-jobs",
+          "transactions",
+          "callbacks"
+        ],
+        "title": "Enqueue after commit, not after create"
+      },
+      "rationale": "after_create runs while the transaction is still open, but the rollback means the transaction never commits, so the after_commit hook is discarded and never appends its entry.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-02284ae1",
+      "prompt": "Which lock keys stay queued after this dedup pass?",
+      "topic": "background-jobs",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "sync-1,sync-2,sync-3"
+        },
+        {
+          "text": "sync-1,sync-1,sync-2,sync-1,sync-3,sync-2",
+          "rationale": "That is every enqueue call; the held_locks check skips keys that were already queued."
+        },
+        {
+          "text": "sync-1",
+          "rationale": "The lock is per key, so sync-2 and sync-3 are still allowed into the queue."
+        },
+        {
+          "text": "sync-1,sync-2,sync-3,sync-2",
+          "rationale": "The second sync-2 is skipped because its lock is still held from the earlier enqueue."
+        }
+      ],
+      "code": "queue = []\nheld_locks = []\n\n[\"sync-1\", \"sync-1\", \"sync-2\", \"sync-1\", \"sync-3\", \"sync-2\"].each do |key|\n  next if held_locks.include?(key)   # a lock for this key is already held\n  held_locks << key\n  queue << key\nend\n\nputs queue.join(\",\")",
+      "query": {
+        "explanation": "A uniqueness lock keyed on the job arguments drops any enqueue whose key is already held, so the six enqueue calls collapse to the three distinct keys in the order they were first seen.",
+        "tags": [
+          "background-jobs",
+          "uniqueness",
+          "deduplication"
+        ],
+        "title": "Unique jobs collapse repeated lock keys"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-927b4269",
+      "prompt": "How many rows does this interpolated WHERE clause return?",
+      "topic": "security",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": "0 would be the result of a safely bound comparison, where the whole input is treated as a literal name."
+        },
+        {
+          "text": "1",
+          "rationale": "No single row is favoured here; the injected condition is true for every row, not for one."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "The query raises ActiveRecord::StatementInvalid",
+          "rationale": "The interpolated fragment is syntactically valid SQL, so SQLite executes it without error."
+        }
+      ],
+      "code": "User.create!(name: \"ann\")\nUser.create!(name: \"bob\")\nUser.create!(name: \"cid\")\n\ninput = \"' OR '1'='1\"\nputs User.where(\"name = '#{input}'\").count",
+      "query": {
+        "explanation": "Interpolating user input into a SQL string makes the fragment `name = '' OR '1'='1'`. The injected `OR '1'='1'` is always true, so the WHERE clause matches every row and the count is 3 instead of 0. Using a bound condition such as `User.where(name: input)` or `User.where(\"name = ?\", input)` sends the input as a parameter, so it is compared literally and matches nothing.",
+        "syntax": "User.where(\"name = ?\", input)",
+        "tags": [
+          "security",
+          "sql-injection",
+          "active-record"
+        ],
+        "title": "String interpolation opens a SQL injection hole"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-d3809819",
+      "prompt": "Does fixed_length_secure_compare raise ArgumentError for these two strings?",
+      "topic": "security",
+      "answer": true,
+      "code": "ActiveSupport::SecurityUtils.fixed_length_secure_compare(\"abcd\", \"abcde\")",
+      "query": {
+        "explanation": "ActiveSupport::SecurityUtils.fixed_length_secure_compare compares bytes in constant time but only accepts strings of the same length, raising ArgumentError when they differ. `secure_compare` wraps it by digesting both inputs first, so it accepts any lengths and returns false when they do not match. Use these instead of `==` for tokens and signatures to avoid timing attacks.",
+        "syntax": "ActiveSupport::SecurityUtils.secure_compare(a, b)",
+        "tags": [
+          "security",
+          "timing-attack",
+          "active-support"
+        ],
+        "title": "Constant-time comparison helpers differ on length"
+      },
+      "rationale": "fixed_length_secure_compare requires equal-length inputs and raises ArgumentError otherwise; it is `secure_compare` that hashes both sides first and simply returns false for different lengths.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-95f20775",
+      "prompt": "Does verified return nil for this altered message?",
+      "topic": "security",
+      "answer": true,
+      "code": "v = ActiveSupport::MessageVerifier.new(\"a_long_demo_secret_key\")\nmsg = v.generate({ \"user_id\" => 1 })\nputs v.verified(msg + \"x\").nil?",
+      "query": {
+        "explanation": "MessageVerifier appends an HMAC signature to the serialized payload. Changing any byte of the message or signature makes the recomputed HMAC disagree, so the message is rejected. `verified` reports that failure by returning nil, while `verify` raises ActiveSupport::MessageVerifier::InvalidSignature. Signing proves integrity, not confidentiality: the payload is still readable.",
+        "syntax": "verifier.verified(message)",
+        "tags": [
+          "security",
+          "signing",
+          "active-support"
+        ],
+        "title": "MessageVerifier detects tampering"
+      },
+      "rationale": "Appending a character corrupts the appended signature, so the HMAC check fails and `verified` returns nil instead of the payload; only `verify` would raise InvalidSignature.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-54a56526",
+      "prompt": "Which exception class does this decryption attempt print?",
+      "topic": "security",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "ActiveSupport::MessageEncryptor::InvalidMessage"
+        },
+        {
+          "text": "ActiveSupport::MessageVerifier::InvalidSignature",
+          "rationale": "The encryptor catches verifier and cipher failures and re-raises its own InvalidMessage error instead of letting that one escape."
+        },
+        {
+          "text": "OpenSSL::Cipher::CipherError",
+          "rationale": "Low-level OpenSSL errors are rescued inside MessageEncryptor so callers see a single Rails-level error type."
+        },
+        {
+          "text": "no error",
+          "rationale": "The ciphertext is authenticated, so a different key cannot decrypt it successfully."
+        }
+      ],
+      "code": "len = ActiveSupport::MessageEncryptor.key_len\ntoken = ActiveSupport::MessageEncryptor.new(\"a\" * len).encrypt_and_sign(\"top secret\")\n\nbegin\n  ActiveSupport::MessageEncryptor.new(\"b\" * len).decrypt_and_verify(token)\n  puts \"no error\"\nrescue => e\n  puts e.class.name\nend",
+      "query": {
+        "explanation": "MessageEncryptor authenticates its ciphertext, so a holder of the wrong key cannot distinguish a corrupted message from a forged one. Low-level OpenSSL failures are caught and re-raised uniformly as ActiveSupport::MessageEncryptor::InvalidMessage, which keeps error handling simple and avoids leaking details about why the decryption failed.",
+        "syntax": "encryptor.decrypt_and_verify(token)",
+        "tags": [
+          "security",
+          "encryption",
+          "active-support"
+        ],
+        "title": "Decrypting with the wrong key"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-1db6d965",
+      "prompt": "What string does this sanitize_sql_like call return?",
+      "topic": "security",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "50\\%\\_off"
+        },
+        {
+          "text": "50%_off",
+          "rationale": "The whole point of the helper is to escape the wildcard characters, so the string does change."
+        },
+        {
+          "text": "'50\\%\\_off'",
+          "rationale": "sanitize_sql_like escapes wildcards only; it never adds SQL quoting around the value."
+        },
+        {
+          "text": "50\\%_off",
+          "rationale": "Both wildcards are escaped, including the single-character wildcard `_`."
+        }
+      ],
+      "code": "puts ActiveRecord::Base.sanitize_sql_like(\"50%_off\")",
+      "query": {
+        "explanation": "Binding a value into a LIKE pattern still lets the user supply the wildcards `%` and `_`, which can turn a narrow search into a full scan or leak extra rows. `sanitize_sql_like` escapes both characters with a backslash so they are matched literally, producing `50\\%\\_off`. It does not add quotes or the surrounding `%` signs; you still bind the result as a parameter.",
+        "syntax": "ActiveRecord::Base.sanitize_sql_like(value)",
+        "tags": [
+          "security",
+          "sql-injection",
+          "active-record"
+        ],
+        "title": "Escaping LIKE wildcards"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-7e616fd3",
+      "prompt": "What SQL fragment does this sanitize_sql call produce?",
+      "topic": "security",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "name = 'O''Brien'"
+        },
+        {
+          "text": "name = 'O\\'Brien'",
+          "rationale": "Backslash escaping is not the standard SQL form used here; the adapter doubles the quote instead."
+        },
+        {
+          "text": "name = O'Brien",
+          "rationale": "The value is a string, so it is wrapped in quotes rather than pasted in bare."
+        },
+        {
+          "text": "name = \"O'Brien\"",
+          "rationale": "Double quotes denote identifiers, not string literals, so values are quoted with single quotes."
+        }
+      ],
+      "code": "puts ActiveRecord::Base.sanitize_sql([\"name = ?\", \"O'Brien\"])",
+      "query": {
+        "explanation": "sanitize_sql substitutes each `?` with the properly quoted value for the current adapter. A string is wrapped in single quotes and any embedded single quote is doubled, giving `name = 'O''Brien'`. That doubling is the SQL standard escape, so the apostrophe cannot terminate the literal and close the statement the way a naive interpolation would.",
+        "syntax": "ActiveRecord::Base.sanitize_sql([\"name = ?\", value])",
+        "tags": [
+          "security",
+          "sql-injection",
+          "active-record"
+        ],
+        "title": "Quoting values with sanitize_sql"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-b9cd900c",
+      "prompt": "What does this html_escape call print?",
+      "topic": "security",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "&lt;b&gt;Hi &amp; bye&lt;/b&gt;"
+        },
+        {
+          "text": "<b>Hi &amp; bye</b>",
+          "rationale": "The angle brackets are escaped too, otherwise the tag would still be interpreted as markup."
+        },
+        {
+          "text": "&lt;b&gt;Hi & bye&lt;/b&gt;",
+          "rationale": "A bare ampersand is also escaped, to `&amp;`, so entities in the output stay unambiguous."
+        },
+        {
+          "text": "<b>Hi & bye</b>",
+          "rationale": "Nothing escaped would mean the helper did nothing; it rewrites every HTML-significant character."
+        }
+      ],
+      "code": "puts ERB::Util.html_escape(\"<b>Hi & bye</b>\")",
+      "query": {
+        "explanation": "ERB::Util.html_escape converts the characters that carry meaning in HTML (`&`, `<`, `>`, and quotes) into entities, so user text is rendered as data rather than markup. Here `<b>` becomes `&lt;b&gt;` and the bare ampersand becomes `&amp;`. Rails views escape interpolated strings this way by default; calling `html_safe` or `raw` on untrusted input disables that protection and invites XSS.",
+        "syntax": "ERB::Util.html_escape(string)",
+        "tags": [
+          "security",
+          "xss",
+          "views"
+        ],
+        "title": "HTML escaping guards against XSS"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-4e29c75c",
+      "prompt": "Does this script set admin to true on the new record?",
+      "topic": "security",
+      "answer": true,
+      "code": "class Account < ActiveRecord::Base; end\n\na = Account.new(email: \"x@y.z\", admin: true)\nputs a.admin",
+      "query": {
+        "explanation": "`Account.new` assigns every attribute it is given, including sensitive columns such as `admin`. Nothing in Active Record filters them, which is why controllers must build attributes from `params.require(:account).permit(...)`: the permit list is the allow-list that keeps an attacker from adding `admin=1` to a form post. Models can add defence in depth with validations or by never exposing such columns to user input.",
+        "syntax": "params.require(:account).permit(:email)",
+        "tags": [
+          "security",
+          "mass-assignment",
+          "strong-parameters"
+        ],
+        "title": "Mass assignment is unguarded at the model layer"
+      },
+      "rationale": "Active Record happily assigns any writable column passed to `new`; the allow-list protection lives in ActionController's strong parameters, not in the model layer.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-534d6336",
+      "prompt": "What length does this SecureRandom.hex call report?",
+      "topic": "security",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "16",
+          "rationale": "16 is the byte count requested; each byte needs two hex characters to be written out."
+        },
+        {
+          "text": "32"
+        },
+        {
+          "text": "24",
+          "rationale": "24 is the length of Base64 output for 16 bytes, not of hexadecimal output."
+        },
+        {
+          "text": "64",
+          "rationale": "64 hex characters would come from 32 random bytes, twice what was asked for."
+        }
+      ],
+      "code": "puts SecureRandom.hex(16).length",
+      "query": {
+        "explanation": "SecureRandom.hex(n) draws n random bytes from the operating system's CSPRNG and encodes them as hexadecimal, so the returned string has 2n characters: 32 here, carrying 128 bits of entropy. Mixing the two up is a common bug that halves the intended strength of a token. Use SecureRandom rather than `rand` or `Random` for tokens, since only SecureRandom is cryptographically unpredictable.",
+        "syntax": "SecureRandom.hex(16)",
+        "tags": [
+          "security",
+          "tokens",
+          "random"
+        ],
+        "title": "SecureRandom.hex counts bytes, not characters"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-77bb7583",
+      "prompt": "Which exception class name does this script print?",
+      "topic": "security",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "ActiveSupport::MessageVerifier::InvalidSignature"
+        },
+        {
+          "text": "ActiveSupport::MessageVerifier::ExpiredMessage",
+          "rationale": "No such constant exists; expiry is reported through the same invalid-signature failure path, not a dedicated error class."
+        },
+        {
+          "text": "ActiveSupport::MessageEncryptor::InvalidMessage",
+          "rationale": "That error belongs to MessageEncryptor, which encrypts payloads; MessageVerifier only signs them."
+        },
+        {
+          "text": "ArgumentError",
+          "rationale": "A past expires_at is accepted at generate time, so no argument error is raised; the failure happens during verification."
+        }
+      ],
+      "code": "verifier = ActiveSupport::MessageVerifier.new(\"a\" * 32)\nmessage = verifier.generate(\"alice\", expires_at: 1.hour.ago)\n\nbegin\n  verifier.verify(message)\n  puts \"no exception\"\nrescue => e\n  puts e.class.name\nend",
+      "query": {
+        "explanation": "MessageVerifier embeds the expires_at metadata inside the signed payload. On verify, the signature itself is valid, but the expiry check fails, and Rails treats an unusable message uniformly by raising ActiveSupport::MessageVerifier::InvalidSignature. Use verified instead of verify when you prefer nil over an exception.",
+        "syntax": "ActiveSupport::MessageVerifier#generate(value, expires_at:/expires_in:)",
+        "tags": [
+          "security",
+          "message-verifier",
+          "signing",
+          "expiry"
+        ],
+        "title": "Expired signed messages fail verification"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-7edd64e6",
+      "prompt": "What does this script print for the association's loaded? flag?",
+      "topic": "performance",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true"
+        },
+        {
+          "text": "false",
+          "rationale": "It would be false only if the posts were still lazy; includes preloads them during to_a."
+        },
+        {
+          "text": "nil",
+          "rationale": "loaded? always returns a boolean on a CollectionProxy, never nil."
+        },
+        {
+          "text": "NoMethodError",
+          "rationale": "loaded? is a public method on association proxies, so nothing is raised."
+        }
+      ],
+      "code": "authors = Author.includes(:posts).to_a\nputs authors.first.posts.loaded?",
+      "query": {
+        "explanation": "includes runs a second query that fetches every related post in one shot and stuffs the results into each author's association target. The collection proxy is therefore already loaded, so reading authors.first.posts issues no further SQL and the N+1 pattern disappears.",
+        "syntax": "Model.includes(:association)",
+        "tags": [
+          "activerecord",
+          "eager-loading",
+          "n+1"
+        ],
+        "title": "includes preloads the association"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-07fb06f0",
+      "prompt": "Which exception class name does this strict_loading script print?",
+      "topic": "performance",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "ActiveRecord::StrictLoadingViolationError"
+        },
+        {
+          "text": "ActiveRecord::AssociationNotFoundError",
+          "rationale": "That is raised when the named association does not exist; :posts is declared here."
+        },
+        {
+          "text": "ActiveRecord::RecordNotLoaded",
+          "rationale": "No such error class exists in Active Record."
+        },
+        {
+          "text": "NoMethodError",
+          "rationale": "The posts method is defined by has_many, so dispatch succeeds before the guard fires."
+        }
+      ],
+      "code": "author = Author.strict_loading.first\nbegin\n  author.posts.to_a\nrescue => e\n  puts e.class.name\nend",
+      "query": {
+        "explanation": "Marking a record strict_loading tells Active Record that no association may be lazily fetched from it. Touching author.posts without preloading raises ActiveRecord::StrictLoadingViolationError, which is how teams fail fast on accidental N+1 queries instead of shipping them.",
+        "syntax": "Model.strict_loading",
+        "tags": [
+          "activerecord",
+          "strict-loading",
+          "n+1"
+        ],
+        "title": "strict_loading blocks lazy association loads"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-1cfcfc2a",
+      "prompt": "What does the last line print after this counter cache script runs?",
+      "topic": "performance",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "2 would mean destroy did not decrement, but counter_cache hooks the destroy callback too."
+        },
+        {
+          "text": "0",
+          "rationale": "Only one of the two posts was destroyed, so the cache cannot fall back to the default."
+        },
+        {
+          "text": "3",
+          "rationale": "Only two posts were ever created, so the counter never reaches 3."
+        }
+      ],
+      "code": "a = Author.create!\n2.times { |i| Post.create!(author: a, title: \"t#{i}\") }\nPost.where(author: a).order(:id).first.destroy\nputs a.reload.posts_count",
+      "query": {
+        "explanation": "With counter_cache: true on the belongs_to, Active Record increments authors.posts_count on create and decrements it on destroy. After two creates and one destroy the column holds 1, letting author.posts.size answer from the cached column instead of running a COUNT query.",
+        "syntax": "belongs_to :author, counter_cache: true",
+        "tags": [
+          "activerecord",
+          "counter-cache",
+          "queries"
+        ],
+        "title": "counter_cache keeps a denormalised count"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-d3f56651",
+      "prompt": "How many batches does this find_in_batches loop yield?",
+      "topic": "performance",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "2",
+          "rationale": "Two batches of two only covers four rows; the fifth row needs its own batch."
+        },
+        {
+          "text": "5",
+          "rationale": "That is the number of records; find_in_batches yields groups, not individual rows."
+        },
+        {
+          "text": "1",
+          "rationale": "A single yield would ignore batch_size and load all five rows at once."
+        }
+      ],
+      "code": "5.times { |i| Post.create!(title: \"t#{i}\") }\nbatches = 0\nPost.find_in_batches(batch_size: 2) { |group| batches += 1 }\nputs batches",
+      "query": {
+        "explanation": "find_in_batches pages through the table in primary-key order, loading at most batch_size rows at a time so memory stays flat. Five rows at a batch size of two means groups of 2, 2 and 1, so the block runs three times.",
+        "syntax": "Model.find_in_batches(batch_size: n) { |group| ... }",
+        "tags": [
+          "activerecord",
+          "batching",
+          "memory"
+        ],
+        "title": "find_in_batches chunks a large table"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-54ab63a7",
+      "prompt": "What does this script print for the loaded attribute keys?",
+      "topic": "performance",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[\"id\"]"
+        },
+        {
+          "text": "[\"id\", \"title\", \"views\"]",
+          "rationale": "That is what Post.first would hold; select(:id) never fetched title or views."
+        },
+        {
+          "text": "[]",
+          "rationale": "The id column was selected, so the attribute hash is not empty."
+        },
+        {
+          "text": "[\"id\", \"title\"]",
+          "rationale": "Only the explicitly selected column is present, and title was not selected."
+        }
+      ],
+      "code": "post = Post.select(:id).order(:id).first\nputs post.attributes.keys.inspect",
+      "query": {
+        "explanation": "select(:id) emits SELECT \"posts\".\"id\", so the instantiated record only carries the id attribute. Reading any other column then raises ActiveModel::MissingAttributeError. Narrow selects cut row width on wide tables but must cover every attribute the code touches.",
+        "syntax": "Model.select(:column)",
+        "tags": [
+          "activerecord",
+          "select",
+          "memory"
+        ],
+        "title": "select narrows the attributes loaded"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-171fb6b1",
+      "prompt": "After calling any?, does the relation report loaded? as true?",
+      "topic": "performance",
+      "answer": false,
+      "code": "rel = Post.all\nrel.any?\nputs rel.loaded?",
+      "query": {
+        "explanation": "On an unloaded relation any? without a block delegates to an EXISTS/LIMIT 1 query rather than materialising every row, so the relation stays unloaded and loaded? is false. Calling present? or to_a instead would load the whole result set into memory.",
+        "syntax": "relation.any?",
+        "tags": [
+          "activerecord",
+          "exists",
+          "memory"
+        ],
+        "title": "any? uses an existence query"
+      },
+      "rationale": "any? on an unloaded relation only runs a cheap existence query, so the records are never loaded and loaded? stays false; to_a or present? would be the calls that load it.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-33b54d19",
+      "prompt": "How many SELECT statements does this eager_load script run?",
+      "topic": "performance",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1"
+        },
+        {
+          "text": "2",
+          "rationale": "Two queries is the preload strategy; eager_load uses a single joined statement."
+        },
+        {
+          "text": "4",
+          "rationale": "1 + 3 is the N+1 shape that eager loading exists to avoid."
+        },
+        {
+          "text": "3",
+          "rationale": "There are three authors, but their posts arrive in the same joined result set."
+        }
+      ],
+      "code": "selects = 0\nActiveSupport::Notifications.subscribe(\"sql.active_record\") do |*args|\n  payload = args.last\n  next if payload[:name] == \"SCHEMA\"\n  selects += 1 if payload[:sql].to_s.lstrip.start_with?(\"SELECT\")\nend\n\nAuthor.eager_load(:posts).to_a.each { |a| a.posts.to_a }\nputs selects",
+      "query": {
+        "explanation": "eager_load forces a single LEFT OUTER JOIN that returns authors and their posts together, and Active Record builds both object graphs from that one result set. The later a.posts.to_a calls hit already-loaded associations, so the counter stays at 1 instead of 1 + N.",
+        "syntax": "Model.eager_load(:association)",
+        "tags": [
+          "activerecord",
+          "eager-loading",
+          "n+1"
+        ],
+        "title": "eager_load joins in one query"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-d448565a",
+      "prompt": "Does the blank title survive in the database after this update_all call?",
+      "topic": "performance",
+      "answer": true,
+      "code": "class Post < ActiveRecord::Base\n  validates :title, presence: true\nend\n\nPost.create!(title: \"Hello\")\nPost.update_all(title: \"\")\nputs Post.first.title == \"\"",
+      "query": {
+        "explanation": "update_all compiles one UPDATE statement and sends it straight to the database without instantiating records, so validations, callbacks and updated_at are all skipped. It is the fast way to touch many rows, at the cost of the model layer's guarantees.",
+        "syntax": "Model.update_all(column: value)",
+        "tags": [
+          "activerecord",
+          "update_all",
+          "bulk"
+        ],
+        "title": "update_all bypasses validations and callbacks"
+      },
+      "rationale": "update_all issues raw SQL without loading models, so the presence validation never runs and the blank title is written; only save/update would have rejected it.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-35ae776b",
+      "prompt": "What does this script print for sum then average on an empty table?",
+      "topic": "performance",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "0 then nil"
+        },
+        {
+          "text": "nil then nil",
+          "rationale": "sum converts the SQL NULL total to 0 so callers can keep doing arithmetic."
+        },
+        {
+          "text": "0 then 0",
+          "rationale": "average of no rows is undefined, so Active Record returns nil rather than zero."
+        },
+        {
+          "text": "0 then 0.0",
+          "rationale": "No average is computed at all on an empty relation, so no float is returned."
+        }
+      ],
+      "code": "puts \"#{Post.sum(:views).inspect} then #{Post.average(:views).inspect}\"",
+      "query": {
+        "explanation": "Active Record pushes these calculations into SQL. sum coerces a NULL total to 0 so arithmetic keeps working, while average returns nil because there is no meaningful mean of zero rows. Knowing this avoids a needless load of every row just to total a column in Ruby.",
+        "syntax": "Model.sum(:column) / Model.average(:column)",
+        "tags": [
+          "activerecord",
+          "aggregates",
+          "calculations"
+        ],
+        "title": "SQL aggregates on an empty relation"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-3a14cda3",
+      "prompt": "How many INSERT statements does this insert_all call emit?",
+      "topic": "performance",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1"
+        },
+        {
+          "text": "3",
+          "rationale": "insert_all does not issue one statement per row; it builds a single multi-row VALUES clause."
+        },
+        {
+          "text": "0",
+          "rationale": "insert_all does write to the database, so at least one INSERT statement is sent."
+        },
+        {
+          "text": "4",
+          "rationale": "There is no extra wrapper INSERT in addition to per-row statements; the whole batch is one statement."
+        }
+      ],
+      "code": "ActiveRecord::Schema.verbose = false\nActiveRecord::Schema.define do\n  create_table :posts do |t|\n    t.string :title\n  end\nend\n\nclass Post < ActiveRecord::Base; end\n\ninserts = 0\nActiveSupport::Notifications.subscribe(\"sql.active_record\") do |*, payload|\n  inserts += 1 if payload[:sql].to_s.strip.upcase.start_with?(\"INSERT\")\nend\n\nPost.insert_all([{ title: \"a\" }, { title: \"b\" }, { title: \"c\" }])\nputs inserts",
+      "query": {
+        "explanation": "insert_all compiles all supplied hashes into a single INSERT with a multi-row VALUES list, so three rows cost one round trip instead of three. It also skips instantiating models, validations, and callbacks, which is why it is the fast path for bulk writes. Subscribing to the sql.active_record notification lets you count the statements that actually reach the adapter.",
+        "syntax": "Model.insert_all([{ col: value }, { col: value }])",
+        "tags": [
+          "performance",
+          "insert_all",
+          "active-record",
+          "bulk-insert"
+        ],
+        "title": "insert_all batches rows into one statement"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-5f5c04f0",
+      "prompt": "What does this script print?",
+      "topic": "migrations-and-schema",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "index_users_on_email true"
+        },
+        {
+          "text": "users_email_index true",
+          "rationale": "Rails generates index names as index_<table>_on_<columns>, not <table>_<column>_index."
+        },
+        {
+          "text": "index_users_on_email false",
+          "rationale": "add_index was called with unique: true, so the recorded IndexDefinition reports unique as true."
+        },
+        {
+          "text": "email true",
+          "rationale": "IndexDefinition#name returns the generated index name; the column list is available via #columns."
+        }
+      ],
+      "code": "ActiveRecord::Schema.define do\n  create_table :users do |t|\n    t.string :email, null: false\n    t.timestamps\n  end\n  add_index :users, :email, unique: true\nend\n\nidx = ActiveRecord::Base.connection.indexes(\"users\").first\nputs \"#{idx.name} #{idx.unique}\"",
+      "query": {
+        "explanation": "When add_index is called without a :name option, Rails derives the name as index_<table>_on_<column names joined by _and_>, so indexing :email on :users yields index_users_on_email. The unique: true option is stored on the index, so connection.indexes returns an IndexDefinition whose #unique is true. Reflecting on the schema with connection.indexes is how you confirm what a migration actually created.",
+        "syntax": "add_index :table, :column, unique: true\nActiveRecord::Base.connection.indexes(\"table\")",
+        "tags": [
+          "migrations",
+          "schema",
+          "indexes"
+        ],
+        "title": "Default index naming in migrations"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-9acf1f37",
+      "answer": true,
+      "code": "resources :photos",
+      "prompt": "Does GET /photos/new route to photos#new rather than photos#show?",
+      "query": {
+        "explanation": "`resources :photos` emits the collection and `new` routes before the member routes, so `/photos/new` is matched by `GET /photos/new` and never reaches `GET /photos/:id`. Rails recognizes paths by walking the route set in declaration order and stopping at the first match.",
+        "syntax": "resources :photos",
+        "tags": [
+          "routing",
+          "resources",
+          "route-order"
+        ],
+        "title": "Route order inside resources"
+      },
+      "rationale": "False would require `/photos/:id` to win, but that member route is declared after `/photos/new`, and recognition stops at the first matching route.",
+      "type": "bool",
+      "topic": "routing",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-2f4ed1d9",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "photos#edit"
+        },
+        {
+          "text": "photos#show",
+          "rationale": "`show` answers `GET /photos/:id` with no trailing segment; the `/edit` suffix is matched by a separate route."
+        },
+        {
+          "text": "photos#update",
+          "rationale": "`update` is reached with PATCH or PUT on `/photos/:id`, not with a GET request."
+        },
+        {
+          "text": "photos#new",
+          "rationale": "`new` answers the collection path `GET /photos/new`, which has no `:id` segment."
+        }
+      ],
+      "code": "resources :photos",
+      "prompt": "Which controller#action does GET /photos/3/edit map to here?",
+      "query": {
+        "explanation": "The seven routes from `resources :photos` include `GET /photos/:id/edit` mapped to `photos#edit`. The `:id` segment captures `3`, and the trailing `/edit` distinguishes it from the `show` route.",
+        "syntax": "GET /photos/:id/edit => photos#edit",
+        "tags": [
+          "routing",
+          "resources",
+          "member-route"
+        ],
+        "title": "Resourceful edit route"
+      },
+      "type": "mc",
+      "topic": "routing",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-35bf218c",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "genre=sci-fi id=12"
+        },
+        {
+          "text": "genre=12 id=sci-fi",
+          "rationale": "Segments bind in the order they appear in the pattern, so `:genre` takes the first path piece and `:id` the second."
+        },
+        {
+          "text": "genre=sci id=fi",
+          "rationale": "The hyphen is an ordinary character inside one segment; only `/` ends a dynamic segment."
+        },
+        {
+          "text": "genre=sci-fi id=12 format=html",
+          "rationale": "No `:format` key is set unless the request path carries an extension such as `.html`."
+        }
+      ],
+      "code": "get \"/books/:genre/:id\", to: \"books#show\"",
+      "prompt": "Which params does GET /books/sci-fi/12 produce for this route?",
+      "query": {
+        "explanation": "Each `:name` segment in the pattern is captured positionally and placed in `params` under that key, so `:genre` gets `\"sci-fi\"` and `:id` gets `\"12\"`. Values always arrive as strings; Rails does no casting.",
+        "syntax": "get \"/books/:genre/:id\", to: \"books#show\"",
+        "tags": [
+          "routing",
+          "params",
+          "dynamic-segments"
+        ],
+        "title": "Dynamic segments become params"
+      },
+      "type": "mc",
+      "topic": "routing",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-c001fa63",
+      "answer": false,
+      "code": "get \"/files/:id\", to: \"files#show\"",
+      "prompt": "Does :id capture the whole string \"report.pdf\" for GET /files/report.pdf?",
+      "query": {
+        "explanation": "A default dynamic segment matches `[^/.?]+`, so it stops at a dot. Rails appends an optional `(.:format)` to the pattern, so `/files/report.pdf` yields `id == \"report\"` and `format == \"pdf\"`. Use a constraint such as `id: /.*/` to capture dots.",
+        "syntax": "get \"/files/:id\", to: \"files#show\", constraints: { id: /.*/ }",
+        "tags": [
+          "routing",
+          "format",
+          "constraints"
+        ],
+        "title": "Dots and the format segment"
+      },
+      "rationale": "True would need the segment pattern to accept dots, but the default `[^/.?]+` stops at the dot, leaving `id` as \"report\" and `format` as \"pdf\".",
+      "type": "bool",
+      "topic": "routing",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-e34b29f3",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "4",
+          "rationale": "Four would cover only the bare CRUD verbs and omit the `new` and `edit` form actions plus one more."
+        },
+        {
+          "text": "6",
+          "rationale": "Six is the count for a singular `resource`, which drops `index`."
+        },
+        {
+          "text": "7"
+        },
+        {
+          "text": "8",
+          "rationale": "Eight is the number of verb/path rows printed, because `update` appears twice (PATCH and PUT) for the same action."
+        }
+      ],
+      "code": "resources :photos",
+      "prompt": "How many distinct controller actions does this routing line map to?",
+      "query": {
+        "explanation": "`resources` declares index, create, new, edit, show, update and destroy — seven actions. The listing shows eight verb/path rows because update answers both PATCH and PUT on `/photos/:id`.",
+        "syntax": "resources :photos, only: [:index, :show]",
+        "tags": [
+          "routing",
+          "resources",
+          "crud"
+        ],
+        "title": "The seven resourceful actions"
+      },
+      "type": "mc",
+      "topic": "routing",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-678389a5",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "edit_photo_path"
+        },
+        {
+          "text": "photo_edit_path",
+          "rationale": "The action name is a prefix in Rails helpers, not a suffix."
+        },
+        {
+          "text": "edit_photos_path",
+          "rationale": "Edit is a member route, so it uses the singular name; the plural form belongs to the index helper."
+        },
+        {
+          "text": "photos_edit_path",
+          "rationale": "This mixes the plural collection name with a suffixed action; neither part matches the generated helper."
+        }
+      ],
+      "code": "resources :photos",
+      "prompt": "Which path helper does this routing line define for the edit route?",
+      "query": {
+        "explanation": "Member routes use the singular resource name, and the `new`/`edit` helpers take the action as a prefix. So the edit form helper is `edit_photo_path(photo)`, alongside `photo_path`, `new_photo_path` and the collection helper `photos_path`.",
+        "syntax": "edit_photo_path(@photo)",
+        "tags": [
+          "routing",
+          "url-helpers",
+          "resources"
+        ],
+        "title": "Naming of resourceful path helpers"
+      },
+      "type": "mc",
+      "topic": "routing",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-5f0a55a8",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "PATCH and PUT"
+        },
+        {
+          "text": "PATCH only",
+          "rationale": "PATCH is the default verb emitted by form helpers, but the route set still accepts PUT on the same path."
+        },
+        {
+          "text": "POST and PUT",
+          "rationale": "POST on the collection path `/photos` reaches `create`, not `update`."
+        },
+        {
+          "text": "PUT and DELETE",
+          "rationale": "DELETE on `/photos/:id` is wired to `destroy`, a different action."
+        }
+      ],
+      "code": "resources :photos",
+      "prompt": "Which HTTP verbs map to the update action for this routing line?",
+      "query": {
+        "explanation": "Since Rails 4, `resources` routes both `PATCH /photos/:id` and `PUT /photos/:id` to the `update` action. PATCH is the primary verb used by form helpers, with PUT kept for backwards compatibility.",
+        "syntax": "PATCH|PUT /photos/:id => photos#update",
+        "tags": [
+          "routing",
+          "http-verbs",
+          "resources"
+        ],
+        "title": "PATCH and PUT both reach update"
+      },
+      "type": "mc",
+      "topic": "routing",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-913b6d24",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "/magazines/:magazine_id/ads/:id"
+        },
+        {
+          "text": "/magazines/:id/ads/:ad_id",
+          "rationale": "The ids are the other way round: the parent gets the prefixed name and the innermost resource keeps `:id`."
+        },
+        {
+          "text": "/magazines/ads/:id",
+          "rationale": "A nested resource keeps the parent's member segment, so the parent id cannot be dropped from the path."
+        },
+        {
+          "text": "/ads/:id",
+          "rationale": "That is the shallow or top-level form; plain nesting keeps the full parent prefix."
+        }
+      ],
+      "code": "resources :magazines do\n  resources :ads\nend",
+      "prompt": "Which path pattern matches the ads show route generated here?",
+      "query": {
+        "explanation": "Nesting prefixes the child routes with the parent's member path, but the parent's id is renamed to `:magazine_id` so the child can keep plain `:id`. The show route is therefore `GET /magazines/:magazine_id/ads/:id`.",
+        "syntax": "/magazines/:magazine_id/ads/:id",
+        "tags": [
+          "routing",
+          "nested-resources",
+          "params"
+        ],
+        "title": "Nested resource member paths"
+      },
+      "type": "mc",
+      "topic": "routing",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-7b757ec5",
+      "answer": false,
+      "prompt": "Does a singular `resource :geocoder` declaration generate an index route?",
+      "query": {
+        "explanation": "`resource` (singular) is for resources looked up without an id, so it generates new, create, show, edit, update and destroy — six actions and no `index`. The helpers are singular too, e.g. `geocoder_path`.",
+        "syntax": "resource :geocoder",
+        "tags": [
+          "routing",
+          "singular-resource",
+          "resources"
+        ],
+        "title": "Singular resource routes"
+      },
+      "rationale": "True would mean a singular resource lists a collection, but `resource` omits `index` and only keeps the six routes that need no id.",
+      "type": "bool",
+      "topic": "routing",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-a692d5b3",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "slug=guides/rails/intro"
+        },
+        {
+          "text": "slug=guides",
+          "rationale": "That is what a plain `:slug` dynamic segment would capture; the `*` wildcard spans slashes."
+        },
+        {
+          "text": "slug=guides/rails",
+          "rationale": "The wildcard is greedy and consumes the rest of the path, not just part of it."
+        },
+        {
+          "text": "no match",
+          "rationale": "The glob route matches any non-empty remainder after `/pages/`, so this request is recognized."
+        }
+      ],
+      "code": "get \"/pages/*slug\", to: \"pages#show\"",
+      "prompt": "What value does :slug capture for GET /pages/guides/rails/intro?",
+      "query": {
+        "explanation": "A `*name` wildcard segment is greedy and matches the remainder of the path including slashes, so `params[:slug]` becomes `\"guides/rails/intro\"`. A plain `:slug` segment would stop at the first `/`.",
+        "syntax": "get \"/pages/*slug\", to: \"pages#show\"",
+        "tags": [
+          "routing",
+          "globbing",
+          "wildcard"
+        ],
+        "title": "Route globbing with a wildcard segment"
+      },
+      "type": "mc",
+      "topic": "routing",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-b78e4f33",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[\"name\", \"tags\"]"
+        },
+        {
+          "text": "[\"name\"]",
+          "rationale": "tags: [] explicitly permits an array of scalar values, so :tags is kept too."
+        },
+        {
+          "text": "[\"name\", \"role\", \"tags\"]",
+          "rationale": "permit only keeps listed keys; :role was never listed, so it is filtered out."
+        },
+        {
+          "text": "[\"role\", \"tags\"]",
+          "rationale": ":name is the first permitted scalar, so it cannot be missing while :role, which was not permitted, survives."
+        }
+      ],
+      "code": "require 'action_controller'\n\nparams = ActionController::Parameters.new(\n  user: { name: \"Ada\", role: \"admin\", tags: [\"a\", \"b\"] }\n)\npermitted = params.require(:user).permit(:name, tags: [])\nputs permitted.to_h.keys.sort.inspect",
+      "prompt": "What does this script print?",
+      "query": {
+        "explanation": "require(:user) returns the nested Parameters object for :user, raising ParameterMissing only if it is absent or blank. permit(:name, tags: []) whitelists the scalar :name and the array of scalars :tags; :role is not listed, so it is filtered out. to_h on a permitted Parameters returns a HashWithIndifferentAccess whose keys are strings, so sorting gives [\"name\", \"tags\"].",
+        "syntax": "params.require(:key).permit(:scalar, array_key: [])",
+        "tags": [
+          "strong-parameters",
+          "permit",
+          "require"
+        ],
+        "title": "require + permit with an array filter"
+      },
+      "type": "mc",
+      "topic": "controllers-and-params",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-3628141c",
+      "answer": true,
+      "code": "require 'action_controller'\n\nparams = ActionController::Parameters.new(user: { name: \"Ada\" })\nparams.permit!\nputs params[:user].permitted?",
+      "prompt": "Does this script print true?",
+      "query": {
+        "explanation": "permit! flags the Parameters object as permitted and applies recursively to nested Parameters values, so params[:user].permitted? is true. Only the top-level object stays unpermitted if you use a filtered permit call instead.",
+        "syntax": "params.permit! # => marks self and nested params permitted",
+        "tags": [
+          "strong-parameters",
+          "permit!",
+          "nested-params"
+        ],
+        "title": "permit! marks nested parameters permitted"
+      },
+      "rationale": "False is wrong because permit! propagates to nested Parameters objects, not just the top-level hash, so the :user sub-hash reports permitted? as true.",
+      "type": "bool",
+      "topic": "controllers-and-params",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-c469570b",
+      "answer": false,
+      "code": "require 'action_controller'\n\nparams = ActionController::Parameters.new(user: { name: \"Ada\" })\nbegin\n  value = params[:admin]\n  puts(value.nil? ? \"False\" : \"True\")\nrescue ActionController::ParameterMissing\n  puts \"True\"\nend",
+      "prompt": "Does reading params[:admin] raise ParameterMissing when that key is absent?",
+      "query": {
+        "explanation": "The [] reader simply returns nil for a missing key, exactly like a Hash. Only require(:admin) raises ActionController::ParameterMissing when the key is absent or blank, which is why require is used for mandatory nested hashes.",
+        "syntax": "params[:key]      # nil when missing\nparams.require(:key) # raises ParameterMissing when missing",
+        "tags": [
+          "strong-parameters",
+          "parameter-missing",
+          "require"
+        ],
+        "title": "[] access versus require"
+      },
+      "rationale": "True is wrong because only require raises ParameterMissing; the [] reader behaves like Hash#[] and quietly returns nil for an unknown key.",
+      "type": "bool",
+      "topic": "controllers-and-params",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    },
+    {
+      "id": "gen-rails-medium-99078c48",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "nil"
+        },
+        {
+          "text": "[\"a\", \"b\"]",
+          "rationale": "A bare :tags filter permits only scalar values; the array is rejected rather than copied through."
+        },
+        {
+          "text": "\"a\"",
+          "rationale": "permit never takes the first element of an array; it either keeps the whole value or drops the key."
+        },
+        {
+          "text": "[]",
+          "rationale": "The key is removed completely, so the reader returns nil rather than an empty array."
+        }
+      ],
+      "code": "require 'action_controller'\n\nparams = ActionController::Parameters.new(tags: [\"a\", \"b\"], name: \"Ada\")\nfiltered = params.permit(:tags, :name)\nputs filtered[:tags].inspect",
+      "prompt": "What does this script print?",
+      "query": {
+        "explanation": "Listing a bare key such as :tags only permits permitted scalar types (String, Numeric, Boolean, files, etc.). An Array value does not match a scalar filter, so :tags is dropped entirely and filtered[:tags] is nil. To keep it you must write permit(:name, tags: []).",
+        "syntax": "params.permit(:name, tags: []) # permits an array of scalars",
+        "tags": [
+          "strong-parameters",
+          "permit",
+          "scalar-filters"
+        ],
+        "title": "Scalar filters reject array values"
+      },
+      "type": "mc",
+      "topic": "controllers-and-params",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Rails 8.0.2 (Ruby 3.4.11)"
+      }
+    }
+  ],
+  "schemaVersion": 2
+}
