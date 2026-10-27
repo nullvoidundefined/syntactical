@@ -9,13 +9,23 @@ type ModelFailureOutcome = 'config' | 'decline' | 'transient';
 type ModelFailureKind = Exclude<ModelFailureOutcome, 'decline'>;
 
 const CONFIG_STATUSES = new Set([401, 403, 404]);
-// Error codes a vendor sends with a 400 when the prompt itself is refused. OpenAI's Responses API
-// answers a prompt its usage-policy screen flags with `invalid_prompt`.
-const DECLINE_CODES = new Set(['content_policy_violation', 'invalid_prompt']);
+// Error codes a vendor sends when the prompt itself is refused, with a 400 or on a response that
+// finishes as failed. OpenAI's Responses API answers a prompt its usage-policy screen flags with
+// `invalid_prompt`, and reports `bio_policy` and `misalignment_policy_violation` on a failed response.
+const DECLINE_CODES = new Set([
+  'bio_policy',
+  'content_policy_violation',
+  'invalid_prompt',
+  'misalignment_policy_violation',
+]);
+
+function isDeclineCode(code: string | null | undefined): boolean {
+  return typeof code === 'string' && DECLINE_CODES.has(code);
+}
 
 function classifyModelFailure(status: number | null, code: string | null): ModelFailureOutcome {
   if (status !== null && CONFIG_STATUSES.has(status)) return 'config';
-  if (status === 400 && code !== null && DECLINE_CODES.has(code)) return 'decline';
+  if (status === 400 && isDeclineCode(code)) return 'decline';
   return 'transient';
 }
 
@@ -35,5 +45,5 @@ class ModelProviderError extends Error {
   }
 }
 
-export { classifyModelFailure, ModelProviderError };
+export { classifyModelFailure, isDeclineCode, ModelProviderError };
 export type { ModelFailureKind, ModelFailureOutcome, ProviderId };
