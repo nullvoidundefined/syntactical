@@ -13,19 +13,8 @@ function isHitTestable(control: Locator): Promise<boolean> {
   });
 }
 
+// Area 4 adds the Pro dialog here; the sign-out and delete-account dialogs carry the check meanwhile.
 test.describe('modal dialogs cover the whole page', () => {
-  test('the paywall covers the app bar', async ({ page }) => {
-    await signIn(page, createUniqueEmail());
-    await page.goto('python');
-    const settings = page.getByRole('link', { name: 'Settings' });
-    expect(await isHitTestable(settings)).toBe(true);
-    await page.getByRole('button', { name: 'Medium, locked' }).click();
-    await expect(page.getByRole('dialog', { name: 'Unlock Medium' })).toBeVisible();
-    expect(await isHitTestable(settings)).toBe(false);
-    expect(await isHitTestable(page.getByRole('button', { name: 'Sign out' }))).toBe(false);
-    expect(await isHitTestable(page.getByRole('button', { name: 'Not now' }))).toBe(true);
-  });
-
   test('the delete-account dialog covers the app bar', async ({ page }) => {
     await signIn(page, createUniqueEmail());
     await page.goto('settings');

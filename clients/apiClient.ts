@@ -14,13 +14,10 @@ import { readSessionToken } from './readSessionToken';
 
 type ApiResponse = { status: number; body: unknown };
 
-// responseType 'text' hands back the body exactly as received (a string), for a
-// caller that verifies the bytes, such as a paid bank checked against its hash.
 // timeoutMs replaces API_FETCH_TIMEOUT_MS for a request the server answers slowly by design.
 type ApiRequestInit = {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   body?: unknown;
-  responseType?: 'json' | 'text';
   timeoutMs?: number;
 };
 
@@ -58,14 +55,13 @@ async function buildRequest(hasBody: boolean): Promise<BuiltRequest> {
   return { headers, sentSession: stored || null };
 }
 
-async function parseBody(response: Response, responseType: 'json' | 'text'): Promise<unknown> {
+async function parseBody(response: Response): Promise<unknown> {
   let text: string;
   try {
     text = await response.text();
   } catch (cause) {
     throw new ApiUnavailable('API response body failed', { cause });
   }
-  if (responseType === 'text') return text;
   try {
     return text ? (JSON.parse(text) as unknown) : null;
   } catch {
@@ -73,12 +69,7 @@ async function parseBody(response: Response, responseType: 'json' | 'text'): Pro
   }
 }
 
-async function requestAndRead(
-  url: string,
-  init: RequestInit,
-  signal: AbortSignal,
-  responseType: 'json' | 'text',
-): Promise<ApiResponse> {
+async function requestAndRead(url: string, init: RequestInit, signal: AbortSignal): Promise<ApiResponse> {
   let response: Response;
   try {
     response = await fetch(url, { ...init, redirect: 'error', signal });
@@ -89,7 +80,7 @@ async function requestAndRead(
   if (redirected) {
     throw new ApiUnavailable('API response was redirected');
   }
-  return { body: await parseBody(response, responseType), status };
+  return { body: await parseBody(response), status };
 }
 
 async function handleUnauthorized(sentSession: string | null): Promise<void> {
@@ -123,7 +114,7 @@ export async function apiPut(path: string, body: unknown): Promise<ApiResponse> 
 
 async function sendRequest(path: string, init: SentRequestInit): Promise<ApiResponse> {
   const url = resolveRequestUrl(path);
-  const { body, method, responseType = 'json', timeoutMs = API_FETCH_TIMEOUT_MS } = init;
+  const { body, method, timeoutMs = API_FETCH_TIMEOUT_MS } = init;
   const hasBody = body !== undefined;
   const { headers, sentSession } = await buildRequest(hasBody);
   const controller = new AbortController();
@@ -140,7 +131,6 @@ async function sendRequest(path: string, init: SentRequestInit): Promise<ApiResp
           method: method ?? 'GET',
         },
         controller.signal,
-        responseType,
       ),
       timeout.promise,
     ]);

@@ -235,21 +235,17 @@ describe('useQuestionBank inside ContentProvider', () => {
       expect(new Set(listFetchedUrls())).toEqual(new Set([MANIFEST_URL, PYTHON_EASY_URL]));
     });
 
-    it('prefetches and caches a bank with no local copy without anything asking for it', async () => {
+    it('leaves a bank with no local copy to its first use', async () => {
       respondWithManifest(buildManifestWithAddedLanguage(), {
         [ADDED_EASY_URL]: () => Promise.resolve(ADDED_EASY_TEXT),
       });
 
-      await renderHook(() => useLanguageManifest(), { wrapper: ContentWrapper });
+      const { result } = await renderHook(() => useLanguageManifest(), { wrapper: ContentWrapper });
 
-      await waitFor(async () =>
-        expect((await readCachedBank('fixture-lang', 'easy', EMPTY_BANK_CONTEXT))?.hash).toBe(ADDED_EASY_HASH),
-      );
-      expect(
-        (await readCachedBank('fixture-lang', 'easy', EMPTY_BANK_CONTEXT))?.questions.map((question) => question.id),
-      ).toEqual(['fixture-q-1', 'fixture-q-2']);
+      await waitFor(() => expect(result.current).toEqual(buildManifestWithAddedLanguage()));
       await settle();
-      expect(new Set(listFetchedUrls())).toEqual(new Set([MANIFEST_URL, ADDED_EASY_URL]));
+      expect(await readCachedBank('fixture-lang', 'easy', EMPTY_BANK_CONTEXT)).toBeNull();
+      expect(listFetchedUrls()).toEqual([MANIFEST_URL]);
     });
 
     it('discards a bank response for a manifest hash that is no longer current and serves the current bank', async () => {

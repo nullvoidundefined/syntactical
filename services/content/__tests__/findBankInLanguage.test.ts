@@ -14,7 +14,6 @@ const language: LanguageEntry = {
     easy: {
       path: 'python/easy.json',
       hash: 'a'.repeat(64),
-      access: 'free',
       contentVersion: 1,
       topicCounts: { loops: 3 },
     },

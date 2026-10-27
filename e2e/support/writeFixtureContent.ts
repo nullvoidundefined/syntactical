@@ -1,9 +1,9 @@
 // Builds the content the e2e run serves: a public directory (the repository's manifest with its
-// free banks copied unchanged, so the web bundle's own free banks still match) and a separate
-// paid directory. The private paid banks are not in this repository, so each paid manifest entry
-// gets a small fixture bank made from the free bank of the same language, with its hash written
-// into the copied manifest. The server reads both directories; the web host serves only the
-// public one.
+// Easy banks copied unchanged, so the web bundle's own Easy banks still match) and a second
+// directory for the API's paid bank reader. Each Medium and Hard entry gets a small fixture bank
+// made from the Easy bank of the same language, with its hash written into the copied manifest, and
+// that bank is written to both directories: the app downloads it from the public one like any bank,
+// and the API reads it from the second one, where PAID_CONTENT_DIR points.
 import { createHash } from 'node:crypto';
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -61,6 +61,7 @@ async function writeFixtureContent(options: {
       }));
       const bytes = Buffer.from(`${JSON.stringify({ ...free, questions }, null, 2)}\n`, 'utf8');
       await writeUnder(paidDir, entry.path, bytes);
+      await writeUnder(publicDir, entry.path, bytes);
       entry.hash = sha256Hex(bytes);
       entry.topicCounts = {};
       for (const { topic } of questions) {

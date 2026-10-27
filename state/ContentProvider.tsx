@@ -1,7 +1,7 @@
 // Reads the cached manifest and every cached bank once at startup, then
 // renders the app. Rounds never wait on the network: whatever is cached,
 // or bundled, is available as soon as this read completes. It then
-// refreshes the manifest and prefetches every bank whose hash changed.
+// refreshes the manifest and refetches every local bank whose hash changed.
 import { buildBankContext, validateQuestionBank } from '@syntactical/content-schema';
 import type { CachedBank, Manifest } from '@syntactical/content-schema';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';

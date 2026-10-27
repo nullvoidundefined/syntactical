@@ -1,15 +1,12 @@
-// Task 3.18 RED (B-43) on native: Settings offers "Restore purchases" to a
-// signed-in user; it calls react-native-purchases' restorePurchases, then
-// GET me, and every bank the server now lists unlocks (shown here on the
-// difficulty route sharing the same query client). A failed restore unlocks
-// nothing. The SDK's own restore result never unlocks: the server is the only
-// source of entitlements.
+// Task 3.18 (B-43) on native, narrowed in area 2 once banks stopped being locked: Settings offers
+// "Restore purchases" to a signed-in user; it calls react-native-purchases' restorePurchases, then
+// GET me. A failed restore, or one GET me does not confirm, grants nothing. Area 4 rewrites restore
+// for Pro.
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import '../../components/auth/__tests__/preloadNativeModal';
 import {
-  CONTENT_BASE_URL,
   SIGNED_IN_USER,
   countMeRequests,
   fakeAuth,
@@ -19,8 +16,6 @@ import {
   serveApp,
 } from '../../components/purchase/__tests__/purchaseFlowFakes';
 import { createQueryClient } from '../../config/queryClient';
-import { ContentProvider } from '../../state/ContentProvider';
-import DifficultyScreen from '../[language]/index';
 import SettingsScreen from '../settings';
 import { randomBytes } from 'node:crypto';
 import { setExpoExtra } from '../../config/expoConstantsMock';
@@ -71,13 +66,10 @@ jest.mock('../../clients/analyticsClient', () => ({ trackEvent: () => undefined 
 
 let queryClient: QueryClient;
 
-async function renderSettingsWithDifficulty(): Promise<void> {
+async function renderSettings(): Promise<void> {
   await render(
     <QueryClientProvider client={queryClient}>
-      <ContentProvider contentBaseUrl={CONTENT_BASE_URL}>
-        <SettingsScreen />
-        <DifficultyScreen />
-      </ContentProvider>
+      <SettingsScreen />
     </QueryClientProvider>,
   );
   await settle();
@@ -98,54 +90,40 @@ afterEach(async () => {
 });
 
 describe('Restore purchases in Settings on native', () => {
-  it('calls restorePurchases, then GET me, and unlocks every bank the server lists', async () => {
-    await renderSettingsWithDifficulty();
-    expect(await screen.findByRole('button', { name: /^Medium, locked/ })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^Hard, locked/ })).toBeTruthy();
+  it('calls restorePurchases, then GET me', async () => {
+    await renderSettings();
     const meBefore = countMeRequests();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Restore purchases' }));
     await settle();
 
     expect(nativeSdk.restoreCount).toBe(1);
-    await waitFor(() => {
-      expect(screen.queryByRole('button', { name: /^Medium, locked/ })).toBeNull();
-      expect(screen.queryByRole('button', { name: /^Hard, locked/ })).toBeNull();
-    });
-    expect(screen.getByRole('button', { name: /^Medium\b/ })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^Hard\b/ })).toBeTruthy();
-    expect(countMeRequests()).toBeGreaterThan(meBefore);
+    await waitFor(() => expect(countMeRequests()).toBeGreaterThan(meBefore));
     const restoreAt = fakeServer.events.indexOf('restorePurchases');
     expect(fakeServer.events.slice(restoreAt + 1)).toContain('GET me');
   });
 
-  it('a failed restore unlocks nothing', async () => {
+  it('a failed restore grants nothing', async () => {
     nativeSdk.restoreBehavior = 'fail';
-    await renderSettingsWithDifficulty();
-    expect(await screen.findByRole('button', { name: /^Medium, locked/ })).toBeTruthy();
+    await renderSettings();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Restore purchases' }));
     await settle();
 
     expect(nativeSdk.restoreCount).toBe(1);
-    expect(screen.getByRole('button', { name: /^Medium, locked/ })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^Hard, locked/ })).toBeTruthy();
+    expect(fakeServer.entitlements).toEqual([]);
   });
 
-  it('a restore the store accepts but GET me does not confirm unlocks nothing', async () => {
+  it('a restore the store accepts but GET me does not confirm grants nothing', async () => {
     nativeSdk.restoreBehavior = 'no-grant';
-    await renderSettingsWithDifficulty();
-    expect(await screen.findByRole('button', { name: /^Medium, locked/ })).toBeTruthy();
+    await renderSettings();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Restore purchases' }));
     await settle();
 
     expect(nativeSdk.restoreCount).toBe(1);
     const restoreAt = fakeServer.events.indexOf('restorePurchases');
-    expect(restoreAt).toBeGreaterThanOrEqual(0);
     await waitFor(() => expect(fakeServer.events.slice(restoreAt + 1)).toContain('GET me'));
-    await settle();
-    expect(screen.getByRole('button', { name: /^Medium, locked/ })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^Hard, locked/ })).toBeTruthy();
+    expect(fakeServer.entitlements).toEqual([]);
   });
 });
