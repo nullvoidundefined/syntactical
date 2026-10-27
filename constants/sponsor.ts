@@ -19,3 +19,8 @@ export const SPONSOR_LABEL_MIN_HEIGHT = 15;
 // Every card slot is this tall from its first frame, empty or filled, so a feed that fills late never
 // moves Retry, Menu, or the track list (AdMob's rule against placements that invite accidental taps).
 export const SPONSOR_SLOT_HEIGHT = 160;
+
+// The direct sponsor file under the content base URL, its button label, and how long a fetched copy is fresh.
+export const DIRECT_SPONSOR_PATH = 'sponsor.json';
+export const DIRECT_SPONSOR_CALL_TO_ACTION = 'Learn more';
+export const DIRECT_SPONSOR_STALE_MS = 60 * 60 * 1000;

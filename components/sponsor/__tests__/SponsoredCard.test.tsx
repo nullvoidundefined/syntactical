@@ -82,6 +82,17 @@ async function renderCard(onShown = jest.fn()) {
 beforeEach(() => {
   mockProStatus.current = { status: 'guest' };
   mockAuth.userId = null;
+  // No direct sponsor: SponsorProvider's sponsor.json request answers 404, so the house card stays.
+  global.fetch = jest.fn((url: unknown) =>
+    Promise.resolve({
+      headers: { get: () => null },
+      ok: false,
+      redirected: false,
+      status: 404,
+      text: () => Promise.resolve(''),
+      url: String(url),
+    }),
+  ) as unknown as typeof fetch;
 });
 
 describe('SponsoredCard with the house feed on native', () => {
