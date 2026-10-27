@@ -64,8 +64,10 @@ function setSponsor(adsStatus: 'pending' | 'ready' | 'unavailable') {
     adsStatus,
     directSponsor: null,
     eligibility: 'eligible',
+    isDirectSponsorSettled: true,
     isReady: adsStatus === 'ready',
     privacyOptionsRequired: false,
+    readToday: () => '2026-10-27',
     showPrivacyOptions: () => Promise.resolve(),
   };
 }

@@ -1,7 +1,9 @@
 // state/__tests__/SponsorProviderDirect.test.tsx
 // SponsorProvider fetches the direct sponsor once for the whole app (decision 17): every card shows a live
 // direct sponsor in place of the house card, an expired one leaves the house card (Review Focus 22), and a
-// user who may not see cards never fetches sponsor.json.
+// user who may not see cards never fetches sponsor.json. The dates apply on the day a card reads the
+// sponsor, not the day it was fetched, so a sponsor that ends or starts changes the card without an app
+// restart (SponsorProviderRefetch.test.tsx covers a removed file).
 import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
@@ -34,6 +36,17 @@ function Providers({ children }: { children: ReactNode }) {
   );
 }
 
+// The provider with a clock the test moves, as a device crossing midnight while the app stays open.
+const clock = { today: '2026-11-30' };
+
+function ProvidersOnClock({ children }: { children: ReactNode }) {
+  return (
+    <QueryClientProvider client={createQueryClient()}>
+      <SponsorProvider readToday={() => clock.today}>{children}</SponsorProvider>
+    </QueryClientProvider>
+  );
+}
+
 function serveSponsor(startsOn: string, endsOn: string) {
   return stubFetchRoutes({
     [SPONSOR_URL]: () =>
@@ -50,6 +63,7 @@ function useTwoCards() {
 
 beforeEach(() => {
   mockProStatus.current = { status: 'guest' };
+  clock.today = '2026-11-30';
 });
 
 describe('SponsorProvider and the direct sponsor', () => {
@@ -74,5 +88,28 @@ describe('SponsorProvider and the direct sponsor', () => {
     await renderHook(useTwoCards, { wrapper: Providers });
     await settle();
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('hides a sponsor whose end date passes after it was fetched, without fetching again', async () => {
+    const fetchMock = serveSponsor('2026-11-01', '2026-11-30');
+    const { rerender, result } = await renderHook(useTwoCards, { wrapper: ProvidersOnClock });
+    await waitFor(() => expect(result.current[0].content.source).toBe('direct'));
+    clock.today = '2026-12-01';
+    await rerender({});
+    expect(result.current[0].content).toEqual(HOUSE_CARD);
+    expect(result.current[1].content).toEqual(HOUSE_CARD);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a sponsor whose start date arrives after it was fetched, without fetching again', async () => {
+    clock.today = '2026-10-31';
+    const fetchMock = serveSponsor('2026-11-01', '2026-11-30');
+    const { rerender, result } = await renderHook(useTwoCards, { wrapper: ProvidersOnClock });
+    await settle();
+    expect(result.current[0].content).toEqual(HOUSE_CARD);
+    clock.today = '2026-11-01';
+    await rerender({});
+    expect(result.current[0].content.headline).toBe('Neon');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
