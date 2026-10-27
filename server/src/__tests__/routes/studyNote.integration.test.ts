@@ -5,9 +5,11 @@
 import { randomUUID } from 'node:crypto';
 
 import type { Question } from '@syntactical/content-schema';
+import { pino } from 'pino';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, inject, it } from 'vitest';
 
+import { createFailoverModelProvider } from '../../clients/failoverModelProvider.js';
 import type { ModelProvider } from '../../clients/modelProvider.js';
 import { STUDY_NOTE } from '../../constants/studyNote.js';
 import { createFakeModelProvider } from '../../testing/fakeModelProvider.js';
@@ -209,5 +211,49 @@ describe.skipIf(SKIP_DATABASE_TESTS)('GET /v1/study-note', () => {
     expect(left.body.data.note).toBe(right.body.data.note);
     const { rows } = await database.pool.query('SELECT note FROM study_notes WHERE user_id = $1', [signed.userId]);
     expect(rows).toEqual([{ note: left.body.data.note }]);
+  });
+
+  describe('with a fallback provider', () => {
+    const silentLogger = pino({ level: 'silent' });
+
+    it('writes and stores the note from the secondary when the primary is down', async () => {
+      const signed = await signIn(
+        createFailoverModelProvider({
+          logger: silentLogger,
+          providers: [
+            createFakeModelProvider({ failure: 'transient', id: 'anthropic' }),
+            createFakeModelProvider({ answer: 'A note from the fallback.', id: 'openai' }),
+          ],
+        }),
+      );
+      await insertAnswers(signed.userId, STUDY_NOTE.MIN_ANSWERS, signed.clock.now());
+
+      const response = await getNote(signed);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.note).toBe('A note from the fallback.');
+      const { rows } = await database.pool.query('SELECT note FROM study_notes WHERE user_id = $1', [signed.userId]);
+      expect(rows).toEqual([{ note: 'A note from the fallback.' }]);
+    });
+
+    it('answers 503 STUDY_NOTE_UNAVAILABLE and stores nothing when both providers are down', async () => {
+      const signed = await signIn(
+        createFailoverModelProvider({
+          logger: silentLogger,
+          providers: [
+            createFakeModelProvider({ failure: 'config', id: 'anthropic' }),
+            createFakeModelProvider({ failure: 'transient', id: 'openai' }),
+          ],
+        }),
+      );
+      await insertAnswers(signed.userId, STUDY_NOTE.MIN_ANSWERS, signed.clock.now());
+
+      const response = await getNote(signed);
+
+      expect(response.status).toBe(503);
+      expect(response.body.error.code).toBe('STUDY_NOTE_UNAVAILABLE');
+      const { rows } = await database.pool.query('SELECT 1 FROM study_notes WHERE user_id = $1', [signed.userId]);
+      expect(rows).toEqual([]);
+    });
   });
 });

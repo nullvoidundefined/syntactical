@@ -6,10 +6,12 @@
 // with no new usage date. A failed or declined model call does not use
 // an answer up. The model is a fake that records each prompt.
 import type { Question } from '@syntactical/content-schema';
+import { pino } from 'pino';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, inject, it } from 'vitest';
 
 import { ASK } from '../../constants/ask.js';
+import { createFailoverModelProvider } from '../../clients/failoverModelProvider.js';
 import type { ModelProvider } from '../../clients/modelProvider.js';
 import { createFakeModelProvider } from '../../testing/fakeModelProvider.js';
 import { createMigratedDatabase } from '../integration/createMigratedDatabase.js';
@@ -389,5 +391,45 @@ describe.skipIf(SKIP_DATABASE_TESTS)('POST /v1/ask', () => {
 
     expect(refused.status).toBe(429);
     expect(refused.body.error.code).toBe('RATE_LIMIT_EXCEEDED');
+  });
+
+  describe('with a fallback provider', () => {
+    const silentLogger = pino({ level: 'silent' });
+
+    it('answers from the secondary when the primary is down and counts one use', async () => {
+      const signed = await signIn(
+        createFailoverModelProvider({
+          logger: silentLogger,
+          providers: [
+            createFakeModelProvider({ failure: 'transient', id: 'anthropic' }),
+            createFakeModelProvider({ answer: 'From the fallback.', id: 'openai' }),
+          ],
+        }),
+      );
+
+      const response = await askEasy(signed);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.answer).toBe('From the fallback.');
+      expect(response.body.data).toMatchObject({ limit: FREE_LIMIT, remaining: FREE_LIMIT - 1 });
+    });
+
+    it('answers 503 ASK_UNAVAILABLE and hands the answer back when both providers are down', async () => {
+      const signed = await signIn(
+        createFailoverModelProvider({
+          logger: silentLogger,
+          providers: [
+            createFakeModelProvider({ failure: 'config', id: 'anthropic' }),
+            createFakeModelProvider({ failure: 'transient', id: 'openai' }),
+          ],
+        }),
+      );
+
+      const response = await askEasy(signed);
+
+      expect(response.status).toBe(503);
+      expect(response.body.error.code).toBe('ASK_UNAVAILABLE');
+      expect((await usage(signed.userId))[0]?.count).toBe(0);
+    });
   });
 });
