@@ -2,7 +2,10 @@
 // The OpenAI fallback behind Ask and the study note: one Responses API request with the same system
 // prompt and user turn the Claude provider sends. A complete answer comes back; a refusal, an
 // incomplete response, an empty one, or a 400 that flags the prompt resolves null; any other
-// failure rejects, classified for the failover. The SDK never retries; the failover does.
+// failure rejects, classified for the failover. The SDK never retries; the failover does. Requests send
+// `store: false`, so OpenAI keeps no stored copy of the learner's message or the answer. A response
+// that finishes as `failed` is a decline when its code flags the prompt, and a transient failure
+// otherwise, so a vendor-side error still fails over.
 import OpenAI from 'openai';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -63,6 +66,7 @@ describe('createOpenAIModelProvider', () => {
       instructions: PROMPT.system,
       max_output_tokens: MODEL.MAX_TOKENS,
       model: 'small-model',
+      store: false,
     });
   });
 
@@ -124,5 +128,28 @@ describe('createOpenAIModelProvider', () => {
       .catch((error: unknown) => error);
     expect(failure).toBeInstanceOf(ModelProviderError);
     expect(failure).toMatchObject({ kind: 'transient', status: null });
+  });
+
+  it.each(['invalid_prompt', 'bio_policy', 'misalignment_policy_violation'])(
+    'resolves null for a failed response whose code is %s',
+    async (code) => {
+      const { responses } = fakeResponses({ error: { code, message: 'x' }, output: [], status: 'failed' });
+
+      await expect(build(responses).answer(PROMPT)).resolves.toBeNull();
+    },
+  );
+
+  it('rejects a failed response with a server_error as transient, so it fails over', async () => {
+    const { responses } = fakeResponses({
+      error: { code: 'server_error', message: 'x' },
+      output: [],
+      status: 'failed',
+    });
+
+    await expect(build(responses).answer(PROMPT)).rejects.toMatchObject({
+      kind: 'transient',
+      provider: 'openai',
+      status: null,
+    });
   });
 });
