@@ -25,7 +25,7 @@ const EXPECTED = {
   headline: 'Neon',
   href: 'https://neon.tech',
   iconUri: `${CONTENT_BASE_URL}sponsor/neon.png`,
-  source: 'direct',
+  source: 'direct' as const,
 };
 const EXPECTED_DIRECT = { content: EXPECTED, endsOn: '2026-11-30', startsOn: '2026-11-01' };
 

@@ -1,9 +1,9 @@
-// The direct sponsor from sponsor.json under the content base URL, as card content, or null. The file is
-// fetched like a bank and cached on the device without a hash (the manifest does not list it and it holds
-// no questions). A non-2xx answer means there is no sponsor and clears the cache; a network failure or
-// timeout falls back to the cached copy. A malformed file, or a date outside startsOn..endsOn (inclusive,
-// the device's local date), reads as null, so an expired sponsor shows the house card (Review Focus 22).
-// Never throws.
+// The direct sponsor from sponsor.json under the content base URL, as card content with its dates, or null.
+// The file is fetched like a bank and cached on the device without a hash (the manifest does not list it
+// and it holds no questions). A non-2xx answer means there is no sponsor and clears the cache; a network
+// failure or timeout falls back to the cached copy. A malformed file reads as null. Never throws. The
+// dates are not applied here: readLiveSponsor applies them on the day a card reads the sponsor, so a
+// sponsor fetched before its end date still shows the house card once that date passes (Review Focus 22).
 import { CONTENT_LIMITS, validateSponsor, type Sponsor } from '@syntactical/content-schema';
 
 import { ContentFetchError } from '../../clients/ContentFetchError';
@@ -63,9 +63,18 @@ function toSponsorContent(sponsor: Sponsor, contentBaseUrl: string): SponsorCont
   return iconPath === undefined ? content : { ...content, iconUri: new URL(iconPath, contentBaseUrl).toString() };
 }
 
-export async function loadDirectSponsor(contentBaseUrl: string | null, today: string): Promise<SponsorContent | null> {
+export type DirectSponsor = { content: SponsorContent; endsOn: string; startsOn: string };
+
+export async function loadDirectSponsor(contentBaseUrl: string | null): Promise<DirectSponsor | null> {
   if (contentBaseUrl === null) return null;
   const sponsor = await fetchSponsor(contentBaseUrl);
-  if (sponsor === null || today < sponsor.startsOn || today > sponsor.endsOn) return null;
-  return toSponsorContent(sponsor, contentBaseUrl);
+  if (sponsor === null) return null;
+  return { content: toSponsorContent(sponsor, contentBaseUrl), endsOn: sponsor.endsOn, startsOn: sponsor.startsOn };
+}
+
+// The sponsor's card content on today (YYYY-MM-DD, the device's local date) when today falls within
+// startsOn..endsOn, both included; otherwise null.
+export function readLiveSponsor(directSponsor: DirectSponsor | null, today: string): SponsorContent | null {
+  if (directSponsor === null || today < directSponsor.startsOn || today > directSponsor.endsOn) return null;
+  return directSponsor.content;
 }
