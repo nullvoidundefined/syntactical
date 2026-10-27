@@ -7,12 +7,14 @@
 // RevenueCat redelivers. The stored payload is an allowlist of scalar fields, never the body.
 // Only the two Pro products (constants/proProducts.ts) change an entitlement; any other product is recorded and warned about.
 // product_id is normalised first (a Play id's base-plan suffix stripped); the normalised id is matched, locked on, and stored, and the payload keeps the raw value.
+// A grant without expiration_at_ms on a product that requires one (the annual, PRO_PRODUCT_RULES) is recorded but ignored by recomputeEntitlement (fail closed), and warned about once.
 // A SANDBOX event is recorded but recomputes nothing unless acceptSandbox (REVENUECAT_ACCEPT_SANDBOX), and is warned about once.
 import type { Logger } from 'pino';
 
 import type { Database } from '../clients/database.js';
 import { withTransaction } from '../clients/withTransaction.js';
-import { isProProductId, normalizeProductId } from '../constants/proProducts.js';
+import { isProProductId, normalizeProductId, PRO_PRODUCT_RULES } from '../constants/proProducts.js';
+import type { ProProductId } from '../constants/proProducts.js';
 import { REVENUECAT_EVENTS } from '../constants/revenueCatEvents.js';
 
 import { recomputeEntitlement } from './recomputeEntitlement.js';
@@ -38,6 +40,17 @@ interface RecordPurchaseEventOptions {
 }
 
 type RecordResult = 'duplicate' | 'recorded';
+
+// A grant with no period end on a product that requires one. Granting it would mean Pro forever,
+// so recomputeEntitlement ignores it; it is still recorded (the claim keeps redeliveries
+// idempotent) and answered 200, so RevenueCat does not retry it.
+function isGrantWithoutRequiredExpiry(productId: ProProductId, event: RevenueCatEvent): boolean {
+  return (
+    PRO_PRODUCT_RULES[productId].requiresExpiry &&
+    (REVENUECAT_EVENTS.GRANT_TYPES as readonly string[]).includes(event.type) &&
+    typeof event.expiration_at_ms !== 'number'
+  );
+}
 
 function buildPayload(event: RevenueCatEvent): Record<string, string | number | boolean> {
   const payload: Record<string, string | number | boolean> = {};
@@ -98,6 +111,9 @@ async function recordPurchaseEvent(options: RecordPurchaseEventOptions): Promise
       if (!isProProductId(productId)) {
         logger.warn({ eventType: type, reason: 'unmapped_product' }, 'revenuecat event for an unmapped product');
         return 'recorded';
+      }
+      if (isGrantWithoutRequiredExpiry(productId, event)) {
+        logger.warn({ productId, type }, 'annual grant without expiration ignored');
       }
       if (event.environment === REVENUECAT_EVENTS.SANDBOX_ENVIRONMENT && !acceptSandbox) {
         logger.warn({ eventType: type, reason: 'sandbox' }, 'revenuecat sandbox event not applied');
