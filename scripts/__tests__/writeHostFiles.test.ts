@@ -1,9 +1,9 @@
 // scripts/__tests__/writeHostFiles.test.ts
 // The host files the web build writes beside the static export, which Cloudflare Pages reads: _headers (security
 // headers on every path, a year's cache for Expo's hashed bundles and for the bank files under content/, revalidation
-// on every request for content/manifest.json, content/sponsor.json, and the sponsor icons) and 404.html, a copy of
-// the exported not-found page. It writes no .nojekyll and copies no page, because the static export already holds
-// one page per route.
+// on every request for content/manifest.json, content/sponsor.json, and the sponsor icons), sitemap.xml and
+// robots.txt (Task 7.4), and 404.html, a copy of the exported not-found page. It writes no .nojekyll and copies no
+// page, because the static export already holds one page per route.
 import { execFileSync } from 'node:child_process';
 import { symlinkSync } from 'node:fs';
 import { copyFile, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
@@ -64,10 +64,17 @@ describe('writeHostFiles', () => {
     expect(await readFile(join(outputDir, '404.html'), 'utf8')).toBe(NOT_FOUND_HTML);
   });
 
-  it('writes no .nojekyll and no per-route copies of index.html', async () => {
+  it('writes no .nojekyll and no per-route copies of index.html, beside the sitemap and robots.txt', async () => {
     const outputDir = await makeExport();
     await writeHostFiles(outputDir);
-    expect((await readdir(outputDir)).sort()).toEqual(['+not-found.html', '404.html', '_headers', 'index.html']);
+    expect((await readdir(outputDir)).sort()).toEqual([
+      '+not-found.html',
+      '404.html',
+      '_headers',
+      'index.html',
+      'robots.txt',
+      'sitemap.xml',
+    ]);
   });
 
   it('rejects an export with no not-found page, naming the missing file', async () => {
