@@ -87,7 +87,7 @@ async function advance(ms: number): Promise<void> {
 
 async function open(product: string | string[] | undefined) {
   mockParams = product === undefined ? {} : { product };
-  // The route confirms through the entitlements query, so it renders under a query client.
+  // The route confirms through the Pro status query, so it renders under a query client.
   const rendered = render(
     <QueryClientProvider client={createQueryClient()}>
       <PurchaseCompleteScreen />

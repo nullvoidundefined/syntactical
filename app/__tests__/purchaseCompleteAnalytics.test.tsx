@@ -50,7 +50,7 @@ function MenuStub() {
   return null;
 }
 
-// The route confirms through the entitlements query, so the layout provides a query client.
+// The route confirms through the Pro status query, so the layout provides a query client.
 function QueryLayout() {
   return (
     <QueryClientProvider client={createQueryClient()}>
