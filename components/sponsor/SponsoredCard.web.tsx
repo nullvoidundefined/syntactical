@@ -4,14 +4,14 @@
 // inside the frame, injects the client script if the page has none yet (loadEthicalAdsClient), and runs
 // ethicalads.load() once the client is there. The client's answer decides the fill: when load() returns a
 // promise, a list holding at least one placement (not null) is a fill if the placement element has content
-// too; an empty list, or one of nulls, is no fill.
-// ETHICAL_ADS_FILL_CEILING_MS, counted from mount, is only a ceiling: a card still undecided then (a
-// script that has not loaded, a slow answer, or a client that returns none) counts a placement with a
-// child element as a fill. No fill, a script that fails to load, or no publisher id shows the direct
-// sponsor or the house card. Nothing reloads
-// on a route change: Slot swaps screens, so a card never outlives its route. EthicalAds sets no cookies, so
-// the web asks for no consent.
-import { createElement, useEffect, useRef, useState } from 'react';
+// too; an empty list, or one of nulls, is no fill. ETHICAL_ADS_FILL_CEILING_MS, counted from mount, is only
+// a ceiling: a card still undecided then (a script that has not loaded, a slow answer, or a client that
+// returns none) counts a placement with a child element as a fill. No fill, a script that fails to load, or
+// no publisher id shows the direct sponsor or the house card. ad_clicked is sent only for a press on a link
+// inside the placement once the fill is decided, not for its padding or an ad still loading. Nothing
+// reloads on a route change: Slot swaps screens, so a card never outlives its route. EthicalAds sets no
+// cookies, so the web asks for no consent.
+import { createElement, type MouseEvent, useEffect, useRef, useState } from 'react';
 
 import { readExtraString } from '../../config/readExtraString';
 import { ETHICAL_ADS_FILL_CEILING_MS } from '../../constants/sponsor';
@@ -41,6 +41,7 @@ type EthicalAdsPlacementProps = {
 
 function EthicalAdsPlacement({ onEmpty, publisher, sponsor }: EthicalAdsPlacementProps) {
   const placementRef = useRef<HTMLDivElement>(null);
+  const isFilledRef = useRef(false);
   // Callbacks are read through a ref so a new identity (the direct sponsor arriving) never restarts the
   // load; the effect runs once per mount.
   const latest = useRef({ onEmpty, onShown: sponsor.onShown });
@@ -52,6 +53,7 @@ function EthicalAdsPlacement({ onEmpty, publisher, sponsor }: EthicalAdsPlacemen
     function decide(isFilled: boolean) {
       if (isDecided) return;
       isDecided = true;
+      isFilledRef.current = isFilled;
       if (isFilled) latest.current.onShown('ethicalads');
       else latest.current.onEmpty();
     }
@@ -81,6 +83,13 @@ function EthicalAdsPlacement({ onEmpty, publisher, sponsor }: EthicalAdsPlacemen
     };
   }, []);
 
+  function handleClickCapture(event: MouseEvent<HTMLDivElement>) {
+    const placementElement = placementRef.current;
+    if (!isFilledRef.current || placementElement === null || !(event.target instanceof Element)) return;
+    const link = event.target.closest('a');
+    if (link !== null && placementElement.contains(link)) onClicked('ethicalads');
+  }
+
   return (
     <SponsoredCardFrame headline="EthicalAds">
       {createElement('div', {
@@ -88,7 +97,7 @@ function EthicalAdsPlacement({ onEmpty, publisher, sponsor }: EthicalAdsPlacemen
         'data-ea-manual': 'true',
         'data-ea-publisher': publisher,
         'data-ea-type': 'text',
-        onClickCapture: () => onClicked('ethicalads'),
+        onClickCapture: handleClickCapture,
         ref: placementRef,
       })}
     </SponsoredCardFrame>
