@@ -17,7 +17,8 @@ Set these on the Railway service. The example column holds placeholders or publi
 | `ANTHROPIC_API_KEY`          | Claude API key for `POST /v1/ask` (Ask about this card) and `GET /v1/study-note`. Optional: without it the server starts, logs a warning, and both routes answer 503.                                                                                                                       | no     | `${ANTHROPIC_API_KEY}`                  |
 | `ANTHROPIC_WORKSPACE_ID`     | The Anthropic workspace an organization-level `ANTHROPIC_API_KEY` bills to (`wrkspc_…`, Console → Settings → Workspaces), sent as the `anthropic-workspace-id` header. Required with an organization-level key, which Anthropic refuses without it; leave unset for a workspace-scoped key. | no     | `${ANTHROPIC_WORKSPACE_ID}`             |
 | `RATE_LIMIT_KEY_SECRET`      | At least 32 characters; keys the rate limit counters.                                                                                                                                                                                                                                       | yes    | `${RATE_LIMIT_KEY_SECRET}`              |
-| `REVENUECAT_WEBHOOK_AUTH`    | At least 32 characters; the exact `Authorization` header value RevenueCat sends to the webhook.                                                                                                                                                                                             | yes    | `${REVENUECAT_WEBHOOK_AUTH}`            |
+| `REVENUECAT_WEBHOOK_AUTH`    | At least 32 characters; the exact `Authorization` header value RevenueCat sends to the webhook. Without it (stub mode) the webhook answers 503 and no purchase grants Pro.                                                                                                                  | yes    | `${REVENUECAT_WEBHOOK_AUTH}`            |
+| `REVENUECAT_ACCEPT_SANDBOX`  | Exactly `true` or `false`; unset is `false`. Whether a RevenueCat `SANDBOX` event (TestFlight, Play license testers, Web Billing sandbox, all free) grants or revokes Pro. Set `true` on staging only; never on production.                                                                 | no     | `true` (staging)                        |
 | `PORT`                       | Listen port. Railway injects it; the server defaults to 3001.                                                                                                                                                                                                                               | no     | `${PORT}`                               |
 | `CONTENT_DIR`                | The content directory (the manifest and every bank). The image sets it to `/app/content`.                                                                                                                                                                                                   | no     | `/app/content`                          |
 | `RAILWAY_DOCKERFILE_PATH`    | Build variable. Makes Railway build `server/Dockerfile` instead of guessing with Railpack. The build setting in "Live environments and first-time setup" is what matters; this is a backup.                                                                                                 | no     | `server/Dockerfile`                     |
@@ -105,6 +106,34 @@ Every secret moved from its source to its destination through a pipe, so no huma
 ### DNS
 
 The `api.syntactical.dev` record (Cloudflare) does not exist yet. First add the custom domain on the Railway `api` service: `railway domain api.syntactical.dev --service api --environment production`. Railway then shows the CNAME target to use. Create that CNAME from `api` in Cloudflare (it points at the production Railway domain, currently `api-production-9973.up.railway.app`). For staging, see the `staging-api` row in `docs/launch-placeholders.md`.
+
+## RevenueCat webhook
+
+RevenueCat posts every purchase event to `https://api.syntactical.dev/v1/webhooks/revenuecat` with the `Authorization` header set to `REVENUECAT_WEBHOOK_AUTH`. A wrong or missing header answers 401 before the body is read. The server reads the event type first: a type it does not handle answers 200 `ignored` and is not stored, whatever fields it carries, so RevenueCat never retries it.
+
+Two products change an entitlement: `syntactical.pro.annual` (auto-renewing, one year) and `syntactical.pro.lifetime` (non-consumable). RevenueCat reports a Google Play subscription as `<subscription id>:<base plan id>`, so the annual bought on Play arrives as `syntactical.pro.annual:yearly`; the server strips the base-plan suffix before matching and stores `syntactical.pro.annual`. Any other product id is recorded and changes nothing. For each product the server keeps one `entitlements` row per user:
+
+- `INITIAL_PURCHASE`, `RENEWAL`, `UNCANCELLATION`, and `NON_RENEWING_PURCHASE` grant. On the annual product the row's `expires_at` is the event's `expiration_at_ms`; the lifetime row has none.
+- An annual grant without `expiration_at_ms` is recorded and answered 200 but grants nothing (it would otherwise mean Pro forever), and the server logs a warning, `annual grant without expiration ignored`. Look into any such warning in the logs.
+- `EXPIRATION` and `REFUND` revoke either product.
+- A store refund reaches RevenueCat as a `CANCELLATION` with `cancel_reason` `CUSTOMER_SUPPORT`. It revokes either product at once.
+- Any other `CANCELLATION` on the annual product only updates `expires_at` (auto-renew is off and Pro lasts to the period end); on the lifetime product it revokes.
+- `SUBSCRIPTION_EXTENDED` (a store-granted extension) moves the annual's `expires_at` to the new period end and never changes the status.
+- `TRANSFER` (a restore on another account) moves Pro: every purchase event of the `transferred_from` users is reassigned to the first `transferred_to` id that names a user, and both products are recomputed for all of them, so the new account gains Pro and the old one loses it. A purchase made by an account that was since deleted cannot be moved (its events no longer name a user), and the admin toggle grants only the admin's own account, so the server has no path for those; treat them case by case.
+- Any other type (`BILLING_ISSUE`, `PRODUCT_CHANGE`, and the rest) answers 200 `ignored` and is not stored.
+
+Events apply in `event_timestamp_ms` order, not arrival order, and a revoke wins a tie. A user has Pro while either row is granted and its `expires_at` is empty or in the future. The annual and lifetime rows never affect each other.
+
+Sandbox: an event with `environment` `SANDBOX` is always recorded, but changes an entitlement only where `REVENUECAT_ACCEPT_SANDBOX=true` (staging). On production it grants and revokes nothing, now or later, and the server logs `revenuecat sandbox event not applied` with the event type. TestFlight testers and App Review therefore never get production Pro for free.
+
+Accepted gap, billing grace period: when a renewal payment fails, Apple and Google may keep the subscription active for a grace period and RevenueCat sends `BILLING_ISSUE`. The server ignores `BILLING_ISSUE`, so the annual row expires at the period end it already holds, and the subscriber sees the free tier (sponsored cards, 5 asks a day) during the grace period until a `RENEWAL` arrives and grants it again. This is accepted for launch; revisit it if support tickets show it.
+
+The test-only route `POST /v1/test/webhook` takes the same body with no `Authorization` header, for the fixture purchase store and e2e. It exists only when `startServer` is called with the `testWebhook` option, which it refuses outside `NODE_ENV=test`; only the e2e runner (`e2e/support/runApi.mts`) passes it, and the production entrypoint (`server/src/index.ts`) never does. So no environment variable can turn it on in a deployed server.
+
+To check a deploy:
+
+- Production: send a RevenueCat test event from the dashboard and expect 200 `ignored`.
+- Staging (with `REVENUECAT_ACCEPT_SANDBOX=true`): a sandbox purchase of either product shows `"pro": { "isActive": true, ... }` on `GET /v1/me` for that account; a sandbox refund of the annual then shows `"isActive": false`.
 
 ## Post-deploy checks
 
