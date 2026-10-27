@@ -5,6 +5,9 @@
 // (PostHog still receives the request IP otherwise). Verify that before publishing.
 // Sponsored card statements follow docs/store/privacy-labels.md and Google's Mobile Ads SDK disclosure; re-check them
 // when a feed is added or the SDK version changes.
+// OWNER TO CONFIRM before publishing: Anthropic's and OpenAI's current API data-retention terms,
+// stating any retention period here and on the account deletion page. The fallback provider sends
+// `store: false`, so OpenAI keeps no stored response; confirm what its abuse-monitoring logs keep.
 import { LegalList, LegalPage, LegalParagraph, LegalSection } from '../components/legal/LegalPage';
 
 export default function PrivacyScreen() {
@@ -65,6 +68,8 @@ export default function PrivacyScreen() {
           items={[
             'Neon: hosts the database that holds accounts, answers, progress, and purchase records.',
             'Railway: hosts the server.',
+            'Anthropic: answers a question you ask about a card, and writes your weekly study note. It receives the card, its answer and explanation, your choice, and your question, or a summary of your week (counts by bank and the mistakes you made), never your email or user ID.',
+            'OpenAI: does the same when Anthropic cannot answer, and receives the same text whenever a request is sent to it.',
             'GitHub Pages: hosts the website.',
             'Resend: delivers the one-time sign-in email.',
             'RevenueCat: manages purchases and entitlements, together with Apple and Google.',

@@ -74,7 +74,10 @@ describe('createLogger', () => {
     logger.error(Object.assign(new Error(`duplicate key for ${email}`), { code: PG_UNIQUE_VIOLATION }));
     expect(lines).toHaveLength(1);
     expect(lines[0]).not.toContain(email);
-    expect((JSON.parse(lines[0] ?? '{}') as { err?: unknown }).err).toEqual({ name: 'Error', pgCode: PG_UNIQUE_VIOLATION });
+    expect((JSON.parse(lines[0] ?? '{}') as { err?: unknown }).err).toEqual({
+      name: 'Error',
+      pgCode: PG_UNIQUE_VIOLATION,
+    });
   });
 
   it('logs an Error under cause by name, pg code, and constraint only', () => {

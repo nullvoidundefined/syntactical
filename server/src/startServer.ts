@@ -8,10 +8,10 @@ import type { Logger } from 'pino';
 import { Resend } from 'resend';
 
 import { createApp } from './app.js';
+import { buildModelProvider } from './clients/buildModelProvider.js';
 import { createDatabasePool } from './clients/createDatabasePool.js';
 import { createEmailClient } from './clients/emailClient.js';
 import { createLogger } from './clients/logger.js';
-import { createAnthropicModelProvider } from './clients/modelProvider.js';
 import type { ModelProvider } from './clients/modelProvider.js';
 import type { EmailClient } from './clients/emailTypes.js';
 import { createHttpPasswordBreachClient } from './clients/passwordBreachClient.js';
@@ -105,20 +105,13 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
   const answerKey = toAnswerKey(questions);
   const labels = toContentLabels(await readManifest(contentDir));
 
-  const { ANTHROPIC_API_KEY, ANTHROPIC_WORKSPACE_ID, RESEND_API_KEY, REVENUECAT_WEBHOOK_AUTH, stubbed } = env;
+  const { RESEND_API_KEY, REVENUECAT_WEBHOOK_AUTH, stubbed } = env;
   if (stubbed.length > 0) {
     // Names only, never values. Rate limit counters reset on each restart while their key is a stub.
     logger.warn({ stubbed }, 'running with stubbed integrations');
   }
 
-  if (ANTHROPIC_API_KEY === undefined && options.modelProvider === undefined) {
-    logger.warn('ANTHROPIC_API_KEY is not set; POST /v1/ask and GET /v1/study-note answer 503');
-  }
-  const modelProvider =
-    options.modelProvider ??
-    (ANTHROPIC_API_KEY === undefined
-      ? undefined
-      : createAnthropicModelProvider({ apiKey: ANTHROPIC_API_KEY, workspaceId: ANTHROPIC_WORKSPACE_ID }));
+  const modelProvider = options.modelProvider ?? buildModelProvider(env, logger);
 
   const dummyPasswordHash = await createDummyPasswordHash();
   const pool = createDatabasePool(DATABASE_URL, NODE_ENV, logger);
