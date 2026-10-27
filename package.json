@@ -6,7 +6,7 @@
     "dev": "expo start",
     "pipeline": "npm run cli -w pipeline --",
     "build": "npm run content:build && npm run build -w @syntactical/progress && expo export --platform web --output-dir dist && cp -R content dist/content && node scripts/writeHostFiles.mjs dist",
-    "content:build": "npm run build -w @syntactical/content-schema && tsx scripts/buildContentManifest.mjs",
+    "content:build": "npm run build -w @syntactical/content-schema && tsx scripts/buildContentManifest.mjs && tsx scripts/buildBankTitles.mjs",
     "lint": "oxlint",
     "test": "jest",
     "e2e": "playwright test -c e2e",
