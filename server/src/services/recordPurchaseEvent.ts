@@ -22,6 +22,12 @@ import { recomputeEntitlement } from './recomputeEntitlement.js';
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const LOCK_NAMESPACE = 'revenuecat-entitlement';
 
+// The advisory lock key that serializes events for one (user, product). transferPurchaseEvents
+// takes the same keys.
+function entitlementLockKey(userId: string, productId: string): string {
+  return `${LOCK_NAMESPACE}:${userId}:${productId}`;
+}
+
 interface RevenueCatEvent {
   [key: string]: unknown;
   app_user_id: string;
@@ -52,7 +58,7 @@ function isGrantWithoutRequiredExpiry(productId: ProProductId, event: RevenueCat
   );
 }
 
-function buildPayload(event: RevenueCatEvent): Record<string, string | number | boolean> {
+function buildPayload(event: Readonly<Record<string, unknown>>): Record<string, string | number | boolean> {
   const payload: Record<string, string | number | boolean> = {};
   for (const key of REVENUECAT_EVENTS.PAYLOAD_KEYS) {
     const value = event[key];
@@ -88,7 +94,7 @@ async function recordPurchaseEvent(options: RecordPurchaseEventOptions): Promise
       }
       if (userId) {
         await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [
-          `${LOCK_NAMESPACE}:${userId}:${productId}`,
+          entitlementLockKey(userId, productId),
         ]);
       }
       const { rowCount } = await client.query(
@@ -128,4 +134,4 @@ async function recordPurchaseEvent(options: RecordPurchaseEventOptions): Promise
   );
 }
 
-export { recordPurchaseEvent };
+export { buildPayload, entitlementLockKey, recordPurchaseEvent, UUID_PATTERN };

@@ -10,6 +10,17 @@ const revenueCatSchemas = {
       type: z.string().min(1),
     }),
   }),
+  // A TRANSFER: RevenueCat moved purchases from the transferred_from app user ids to transferred_to.
+  // It names no product and no app_user_id.
+  transfer: z.object({
+    event: z.looseObject({
+      event_timestamp_ms: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+      id: z.string().min(1).max(WEBHOOKS.MAX_EVENT_ID_LENGTH),
+      transferred_from: z.array(z.string().max(WEBHOOKS.MAX_EVENT_ID_LENGTH)).min(1).max(WEBHOOKS.MAX_TRANSFER_IDS),
+      transferred_to: z.array(z.string().max(WEBHOOKS.MAX_EVENT_ID_LENGTH)).min(1).max(WEBHOOKS.MAX_TRANSFER_IDS),
+      type: z.literal('TRANSFER'),
+    }),
+  }),
   webhook: z.object({
     event: z.looseObject({
       app_user_id: z.string().max(WEBHOOKS.MAX_EVENT_ID_LENGTH),

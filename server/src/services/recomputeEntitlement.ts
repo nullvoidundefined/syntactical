@@ -15,6 +15,7 @@
 // is written with source 'revenuecat' only when something differs, so a redelivery leaves
 // updated_at untouched. Callers hold the (user, product) advisory lock so the reads see every
 // committed event.
+// A granted RevenueCat row that no event decides any more (a TRANSFER moved its events away) is revoked.
 import type pg from 'pg';
 
 import { PRO_PRODUCT_RULES, PRO_REFUND_CANCEL_REASON } from '../constants/proProducts.js';
@@ -114,6 +115,13 @@ async function recomputeEntitlement(
 ): Promise<void> {
   const status = await readStatus(client, userId, productId, acceptSandbox);
   if (!status) {
+    // No event decides this row any more: its events moved to another user (a TRANSFER). A
+    // RevenueCat row is revoked, keeping its expiry; an admin row, a test row, or no row is left.
+    await client.query(
+      `UPDATE entitlements SET status = 'revoked'
+       WHERE user_id = $1 AND product_id = $2 AND source = $3 AND status = 'granted'`,
+      [userId, productId, ENTITLEMENT_SOURCE],
+    );
     return;
   }
   const expiryMs = status === 'granted' ? await readExpiryMs(client, userId, productId, acceptSandbox) : null;

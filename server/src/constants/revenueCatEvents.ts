@@ -30,6 +30,8 @@ const REVENUECAT_EVENTS = {
   // The environment RevenueCat stamps on a free test purchase (Task 3.4).
   SANDBOX_ENVIRONMENT: 'SANDBOX',
   STORES: ['APP_STORE', 'PLAY_STORE', 'RC_BILLING'],
+  // Moves purchases between app user ids (a restore on another account); handled by transferPurchaseEvents.
+  TRANSFER_TYPE: 'TRANSFER',
 } as const;
 
 export { REVENUECAT_EVENTS };

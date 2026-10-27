@@ -5,6 +5,7 @@
 // handled type is validated in full (400 when it is not a RevenueCat purchase event) and recorded
 // once with its entitlement recomputed (recordPurchaseEvent) in one transaction. Authentication is
 // the mounting router's job. The payload and the app user id are never logged.
+// A TRANSFER has its own shape (no product, two lists of app user ids) and moves Pro between users (transferPurchaseEvents).
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import type { Logger } from 'pino';
 
@@ -16,14 +17,20 @@ import { isJsonMediaType } from '../middleware/isJsonMediaType.js';
 import { requestLog } from '../middleware/requestLogger.js';
 import { revenueCatSchemas } from '../schemas/revenueCatSchemas.js';
 import { recordPurchaseEvent } from '../services/recordPurchaseEvent.js';
+import { transferPurchaseEvents } from '../services/transferPurchaseEvents.js';
 
 const {
   STATUS: { BAD_REQUEST, OK, UNSUPPORTED_MEDIA_TYPE },
 } = HTTP;
 
-const { EXPIRY_ONLY_TYPES, GRANT_TYPES, REVOKE_TYPES } = REVENUECAT_EVENTS;
+const { EXPIRY_ONLY_TYPES, GRANT_TYPES, REVOKE_TYPES, TRANSFER_TYPE } = REVENUECAT_EVENTS;
 
-const HANDLED_TYPES: ReadonlySet<string> = new Set([...GRANT_TYPES, ...REVOKE_TYPES, ...EXPIRY_ONLY_TYPES]);
+const HANDLED_TYPES: ReadonlySet<string> = new Set([
+  ...GRANT_TYPES,
+  ...REVOKE_TYPES,
+  ...EXPIRY_ONLY_TYPES,
+  TRANSFER_TYPE,
+]);
 
 interface EventHandlerOptions {
   acceptSandbox: boolean;
@@ -56,8 +63,25 @@ function createRevenueCatEventHandler(options: EventHandlerOptions): RequestHand
       sendInvalidBody(res);
       return;
     }
-    if (!HANDLED_TYPES.has(typed.data.event.type)) {
+    const { type } = typed.data.event;
+    if (!HANDLED_TYPES.has(type)) {
       res.status(OK).json({ data: { status: 'ignored' } });
+      return;
+    }
+    const log = requestLog(res, logger);
+    if (type === TRANSFER_TYPE) {
+      const transfer = revenueCatSchemas.transfer.safeParse(req.body);
+      if (!transfer.success) {
+        sendInvalidBody(res);
+        return;
+      }
+      const status = await transferPurchaseEvents({
+        acceptSandbox,
+        database,
+        event: transfer.data.event,
+        logger: log,
+      });
+      res.status(OK).json({ data: { status } });
       return;
     }
     const { data, success } = revenueCatSchemas.webhook.safeParse(req.body);
@@ -65,12 +89,7 @@ function createRevenueCatEventHandler(options: EventHandlerOptions): RequestHand
       sendInvalidBody(res);
       return;
     }
-    const status = await recordPurchaseEvent({
-      acceptSandbox,
-      database,
-      event: data.event,
-      logger: requestLog(res, logger),
-    });
+    const status = await recordPurchaseEvent({ acceptSandbox, database, event: data.event, logger: log });
     res.status(OK).json({ data: { status } });
   };
 }
