@@ -6,6 +6,7 @@ import { render, screen, within } from '@testing-library/react';
 
 import { BANK_TITLES } from '../../../services/content/bankTitles.generated';
 import { BankTitles } from '../BankTitles';
+import { describeBank } from '../describeBank';
 
 type BankQuestion = {
   choices?: { rationale?: string; text: string }[];
@@ -66,15 +67,32 @@ describe('BankTitles on the web', () => {
 
   it('sets the page title, description, and canonical URL', () => {
     render(<BankTitles language="python" difficulty="medium" />);
-    const titles = BANK_TITLES['python/medium'];
-    expect(titles.length).toBeGreaterThan(3);
     expect(mockHeads).toEqual([
       {
         canonicalPath: '/python/medium/',
-        description: `Python Medium quiz on Syntactical. Covers ${titles.slice(0, 3).join(', ')}, and more.`,
+        description: describeBank('Python Medium', BANK_TITLES['python/medium']),
         title: 'Python Medium quiz | Syntactical',
       },
     ]);
+  });
+
+  it('caps a long bank\'s description at 155 characters, on whole titles joined by "; ", with an ellipsis', () => {
+    const titles = BANK_TITLES['go/hard'];
+    const prefix = 'Go Hard quiz on Syntactical. Covers ';
+    const description = describeBank('Go Hard', titles);
+    expect(description.length).toBeLessThanOrEqual(155);
+    expect(description.startsWith(prefix)).toBe(true);
+    expect(description.endsWith('\u2026')).toBe(true);
+    const named = description.slice(prefix.length, -1).split('; ');
+    expect(named.length).toBeGreaterThan(0);
+    expect(named).toEqual(titles.slice(0, named.length));
+    expect(`${prefix}${titles.slice(0, named.length + 1).join('; ')}\u2026`.length).toBeGreaterThan(155);
+  });
+
+  it('names every title, with no ellipsis, when they all fit', () => {
+    expect(describeBank('Python Easy', ['Slicing, step by step', 'Dict ordering'])).toBe(
+      'Python Easy quiz on Syntactical. Covers Slicing, step by step; Dict ordering.',
+    );
   });
 
   it.each([

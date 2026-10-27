@@ -9,22 +9,14 @@ import { Text, View } from 'react-native';
 import { BANK_TITLES } from '../../services/content/bankTitles.generated';
 import { BUNDLED_MANIFEST } from '../../services/content/bundledManifest.generated';
 import { findLanguageEntry } from '../../services/content/findLanguageEntry';
+import { describeBank } from './describeBank';
 import { PageHead } from './PageHead';
 
 type BankTitlesProps = { difficulty: string; language: string };
 
-// How many titles the page description names before "and more".
-const DESCRIBED_TITLE_COUNT = 3;
-
 // Own keys only, so a route segment such as "constructor" never reads the prototype.
 function readTitles(key: string): readonly string[] {
   return Object.hasOwn(BANK_TITLES, key) ? BANK_TITLES[key] : [];
-}
-
-function describeBank(bankLabel: string, titles: readonly string[]): string {
-  const named = titles.slice(0, DESCRIBED_TITLE_COUNT).join(', ');
-  const more = titles.length > DESCRIBED_TITLE_COUNT ? ', and more' : '';
-  return `${bankLabel} quiz on Syntactical. Covers ${named}${more}.`;
 }
 
 export function BankTitles({ difficulty, language }: BankTitlesProps) {
