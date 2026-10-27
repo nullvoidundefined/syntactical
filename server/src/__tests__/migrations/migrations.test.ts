@@ -83,7 +83,7 @@ function insertPurchaseEvent(
 ): Promise<pg.QueryResult> {
   return pool.query(
     `INSERT INTO purchase_events (provider, provider_event_id, user_id, product_id, kind, payload, occurred_at)
-         VALUES ($1, $2, $3, 'syntactical.python.medium', 'INITIAL_PURCHASE', '{}'::jsonb, now())`,
+         VALUES ($1, $2, $3, 'syntactical.pro.annual', 'INITIAL_PURCHASE', '{}'::jsonb, now())`,
     [provider, providerEventId, userId],
   );
 }
@@ -278,8 +278,8 @@ describe.skipIf(SKIP_DATABASE_TESTS)('migrations', () => {
         learner,
       ]);
       const { rows: entitlementRows } = await pool.query<{ id: string }>(
-        `INSERT INTO entitlements (user_id, product_id, status, source)
-                 VALUES ($1, 'syntactical.python.medium', 'granted', 'app_store') RETURNING id`,
+        `INSERT INTO entitlements (user_id, product_id, status, source, expires_at)
+                 VALUES ($1, 'syntactical.pro.annual', 'granted', 'revenuecat', '2027-10-03T00:00:00Z') RETURNING id`,
         [learner],
       );
       const [{ id: entitlementId }] = entitlementRows;
@@ -298,10 +298,11 @@ describe.skipIf(SKIP_DATABASE_TESTS)('migrations', () => {
       ]) {
         expect(await countRows(pool, table, learner), table).toBe(0);
       }
-      const { rows: keptEntitlements } = await pool.query('SELECT user_id FROM entitlements WHERE id = $1', [
-        entitlementId,
-      ]);
-      expect(keptEntitlements).toEqual([{ user_id: null }]);
+      const { rows: keptEntitlements } = await pool.query(
+        'SELECT user_id, expires_at FROM entitlements WHERE id = $1',
+        [entitlementId],
+      );
+      expect(keptEntitlements).toEqual([{ expires_at: new Date('2027-10-03T00:00:00Z'), user_id: null }]);
       const { rows: keptPurchases } = await pool.query(
         'SELECT user_id FROM purchase_events WHERE provider = $1 AND provider_event_id = $2',
         ['revenuecat', providerEventId],

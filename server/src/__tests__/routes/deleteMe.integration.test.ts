@@ -4,6 +4,7 @@
 // with user_id null. Afterwards no public table holds the email or the user id. The route needs
 // a session and, for a cookie caller, the CSRF header; it logs one line with the request id only.
 // Task 7.6 (B-84): the password hash goes with the user row, and nothing else keeps it.
+// Pro (spec "2. Pro"): the annual Pro row keeps its expires_at, and the stored payload its expiration_at_ms, with user_id null.
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 
 import request from 'supertest';
@@ -39,7 +40,8 @@ const BUSY_TEST_TIMEOUT_MS = 30_000;
 const HEX_BYTES = 6;
 const CODE_SEED_BYTES = 16;
 const EPOCH_EXPIRY = 'expires=thu, 01 jan 1970 00:00:00 gmt';
-const PRODUCT_ID = 'bank-advanced';
+const PRODUCT_ID = 'syntactical.pro.annual';
+const PERIOD_MS = 31_536_000_000;
 const OTHER_IP = '203.0.113.9';
 
 let database: Awaited<ReturnType<typeof createMigratedDatabase>>;
@@ -48,6 +50,7 @@ type TestApp = ReturnType<typeof createAuthTestApp>;
 
 interface Seed {
   email: string;
+  expiresAt: Date;
   mixedCaseEmail: string;
   otherUserId: string;
   sessionToken: string;
@@ -127,15 +130,17 @@ async function seedAccount(testApp: TestApp): Promise<Seed> {
   await insertCounter(rateLimitKey(rateLimitKeySecret, VERIFY_EMAIL, email), now, AUTH.RATE_LIMIT.VERIFY_PER_EMAIL);
   await insertCounter(rateLimitKey(rateLimitKeySecret, ISSUE_IP, OTHER_IP), now, 1);
 
+  const expiresAt = new Date(now.getTime() + PERIOD_MS);
   await database.pool.query(
-    "INSERT INTO entitlements (user_id, product_id, source, status) VALUES ($1, $2, 'revenuecat', 'granted')",
-    [userId, PRODUCT_ID],
+    "INSERT INTO entitlements (user_id, product_id, source, status, expires_at) VALUES ($1, $2, 'revenuecat', 'granted', $3)",
+    [userId, PRODUCT_ID, expiresAt],
   );
   // Shaped like the webhook's allowlisted projection (B-39): scalars only, no email, name, or app_user_id.
   const payload = {
     currency: 'USD',
     event_timestamp_ms: now.getTime(),
-    price: 4.99,
+    expiration_at_ms: expiresAt.getTime(),
+    price: 19.99,
     product_id: PRODUCT_ID,
     store: 'APP_STORE',
     transaction_id: `txn-${randomBytes(HEX_BYTES).toString('hex')}`,
@@ -147,7 +152,7 @@ async function seedAccount(testApp: TestApp): Promise<Seed> {
     [`evt-${randomBytes(HEX_BYTES).toString('hex')}`, now, JSON.stringify(payload), PRODUCT_ID, userId],
   );
 
-  return { email, mixedCaseEmail, otherUserId, sessionToken, userId };
+  return { email, expiresAt, mixedCaseEmail, otherUserId, sessionToken, userId };
 }
 
 // Every column of every row in every public table, cast to text, searched case-insensitively.
@@ -237,7 +242,7 @@ describe.skipIf(SKIP_DATABASE_TESTS)('DELETE /v1/me', () => {
   it('erases the account so no table holds the email or id, keeping purchase rows with user_id null', async () => {
     const testApp = createAuthTestApp({ pool: database.pool });
     const seed = await seedAccount(testApp);
-    const { email, otherUserId, sessionToken, userId } = seed;
+    const { email, expiresAt, otherUserId, sessionToken, userId } = seed;
 
     const response = await deleteWithCookie(testApp, sessionToken);
 
@@ -246,8 +251,14 @@ describe.skipIf(SKIP_DATABASE_TESTS)('DELETE /v1/me', () => {
     expectClearedCookie(response);
     expect(await tablesHolding(email)).toEqual([]);
     expect(await tablesHolding(userId)).toEqual([]);
-    const { rows: entitlements } = await database.pool.query('SELECT product_id, user_id FROM entitlements');
-    expect(entitlements).toEqual([{ product_id: PRODUCT_ID, user_id: null }]);
+    const { rows: entitlements } = await database.pool.query(
+      'SELECT product_id, user_id, expires_at FROM entitlements',
+    );
+    expect(entitlements).toEqual([{ expires_at: expiresAt, product_id: PRODUCT_ID, user_id: null }]);
+    const { rows: payloads } = await database.pool.query<{ expiration_at_ms: string }>(
+      "SELECT payload->>'expiration_at_ms' AS expiration_at_ms FROM purchase_events",
+    );
+    expect(payloads).toEqual([{ expiration_at_ms: String(expiresAt.getTime()) }]);
     const { rows: purchases } = await database.pool.query('SELECT product_id, user_id FROM purchase_events');
     expect(purchases).toEqual([{ product_id: PRODUCT_ID, user_id: null }]);
     // The other user and the IP-keyed counter are untouched.
