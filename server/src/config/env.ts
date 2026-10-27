@@ -2,6 +2,8 @@ import { randomBytes } from 'node:crypto';
 
 import { z } from 'zod';
 
+import { MODEL } from '../constants/model.js';
+
 const SECRET_MIN_LENGTH = 32;
 
 // At least 32 characters once trimmed, so padding cannot satisfy the length.
@@ -19,7 +21,7 @@ const hashConcurrency = z
   .transform(Number)
   .refine((value) => value >= HASH_CONCURRENCY_MIN && value <= HASH_CONCURRENCY_MAX);
 
-const envSchema = z.object({
+const envObject = z.object({
   ALLOWED_ORIGINS: z.string().min(1),
   // The Claude API key behind POST /v1/ask. Optional: without it the route answers 503, so a
   // deploy that has not set it still boots.
@@ -27,6 +29,21 @@ const envSchema = z.object({
   // The workspace an organization-level ANTHROPIC_API_KEY bills to, sent as the
   // anthropic-workspace-id header. Optional: a workspace-scoped key needs none.
   ANTHROPIC_WORKSPACE_ID: z.string().trim().min(1).optional(),
+  // The Claude model behind Ask and the study note. Defaults to today's model so a model change is
+  // a variable change, never a code change.
+  ANTHROPIC_MODEL: z
+    .string()
+    .trim()
+    .regex(/^claude-[a-z0-9-]+$/)
+    .default(MODEL.ANTHROPIC_DEFAULT_ID),
+  // Which provider answers first when both are configured.
+  MODEL_PRIMARY: z.enum(['anthropic', 'openai']).default('anthropic'),
+  // The OpenAI fallback. Optional: without a key, Ask and the study note use Anthropic alone.
+  OPENAI_API_KEY: z.string().trim().min(1).optional(),
+  // Required with OPENAI_API_KEY (checked below); no default, the owner picks the model.
+  OPENAI_MODEL: z.string().trim().min(1).optional(),
+  // Sent only when set, so a non-reasoning model never receives a parameter it rejects.
+  OPENAI_REASONING_EFFORT: z.enum(['low', 'medium', 'high']).optional(),
   DATABASE_URL: z.string().min(1),
   // The sign-in email's sender, for example `Syntactical <sign-in@syntactical.dev>`.
   EMAIL_FROM: z.string().trim().min(1),
@@ -43,6 +60,12 @@ const envSchema = z.object({
     .optional()
     .transform((value) => value === 'true'),
   REVENUECAT_WEBHOOK_AUTH: strongSecret,
+});
+
+const envSchema = envObject.superRefine((value, context) => {
+  if (value.OPENAI_API_KEY !== undefined && value.OPENAI_MODEL === undefined) {
+    context.addIssue({ code: 'custom', message: 'required with OPENAI_API_KEY', path: ['OPENAI_MODEL'] });
+  }
 });
 
 const STUB_OPT_IN = 'ALLOW_STUBBED_INTEGRATIONS';

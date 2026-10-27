@@ -27,7 +27,7 @@ interface ModelProviderDeps extends AnthropicCredentials {
   messages?: MessagesClient;
 }
 
-const { EFFORT, ID, MAX_TOKENS } = MODEL;
+const { ANTHROPIC_DEFAULT_ID, EFFORT, MAX_TOKENS } = MODEL;
 
 function createAnthropicModelProvider({ messages, ...credentials }: ModelProviderDeps): ModelProvider {
   const client = messages ?? new Anthropic(buildAnthropicOptions(credentials)).messages;
@@ -36,7 +36,7 @@ function createAnthropicModelProvider({ messages, ...credentials }: ModelProvide
       const response = await client.create({
         max_tokens: MAX_TOKENS,
         messages: [{ content: user, role: 'user' }],
-        model: ID,
+        model: ANTHROPIC_DEFAULT_ID,
         output_config: { effort: EFFORT },
         system,
       });
