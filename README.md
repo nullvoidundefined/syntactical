@@ -2,7 +2,7 @@
 
 Syntactical is a quiz app that drills developers on language syntax and runtime behavior. A learner picks a track, picks a difficulty, and answers a shuffled round of multiple-choice, true/false, and A/B questions. Wrong answers can be explained through the query drawer. A guest's stats stay on the device; a signed-in learner's answers sync to the API, which derives XP, the day streak, daily goals, and the review queue from them (`services/progress/`, `server/src/services/recomputeDailyProgress.ts`).
 
-`content/manifest.json` lists ten tracks: eight language tracks (`python`, `postgres`, `javascript`, `go`, `ruby`, `rails`, `sql`, `typescript`) and two topic tracks (`backend-security`, `frontend-security`, `kind: 'topic'`). Each track has three banks, `easy`, `medium`, and `hard`; the `easy` bank is free and the other two are paid, so the manifest names 30 banks, 10 free and 20 paid.
+`content/manifest.json` lists twelve tracks: ten language tracks (`python`, `postgres`, `javascript`, `go`, `ruby`, `rails`, `sql`, `typescript`, `typescript-types`, `nodejs`) and two topic tracks (`backend-security`, `frontend-security`, `kind: 'topic'`). Each track has three banks, `easy`, `medium`, and `hard`, so the manifest names 36 banks, and every one is free.
 
 The repository is an npm workspace with five packages:
 
@@ -10,7 +10,7 @@ The repository is an npm workspace with five packages:
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | the root                  | The Expo universal app (Expo Router, NativeWind, react-native-web) in `app/`, `components/`, `state/`, `services/`, `clients/`, `config/`, and `constants/`; iOS, Android, web. |
 | `server/`                 | The Express 5 API on Railway with Postgres on Neon: accounts, sessions, answer-event sync, paid banks, RevenueCat and PostHog hooks (`server/DEPLOY.md`).                       |
-| `pipeline/`               | The content pipeline CLI: oracle runners in Docker, model-assisted drafting and review, and publishing of paid banks (`pipeline/src/commands/`).                                |
+| `pipeline/`               | The content pipeline CLI: oracle runners in Docker, model-assisted drafting and review, and publishing into `content/` (`pipeline/src/commands/`).                              |
 | `packages/content-schema` | The manifest and bank validators shared by the app, the build, the server, and the pipeline.                                                                                    |
 | `packages/progress`       | The pure progress functions (XP, daily progress, day streak, review scheduling with `ts-fsrs`) that the app and the server both run.                                            |
 
@@ -49,36 +49,39 @@ Every action is also reachable by pointer or touch; the keyboard bindings are ad
 
 ## Content
 
-Questions are not compiled into the app logic. `content/manifest.json` lists every bank with its SHA-256 hash. Free banks live in `content/<track>/easy.json`; the app downloads them at runtime from the content base URL, verifies each against the manifest hash, and keeps bundled copies so it works offline.
-
-Paid banks are not in this repository. They live in the private repository `nullvoidundefined/syntactical-content` at `<track>/<difficulty>.json`, reach the API image as `PAID_CONTENT_DIR`, and reach entitled users only through `GET /v1/banks/:language/:difficulty` (`server/src/routes/banks.ts`). They are never bundled and never on the static host: `npm run content:build` fails on a paid bank file under `content/`, and `npm run build` fails when the web export holds one (`scripts/assertNoPaidBanks.mjs`). The tests that guard this are `scripts/__tests__/publicContentTree.test.ts`, `paidContentRef.test.ts`, and `noPaidQuestionIds.test.ts`.
+Questions are not compiled into the app logic. Every bank lives in this repository at `content/<track>/<difficulty>.json`, and `content/manifest.json` lists each one with its SHA-256 hash, content version, and topic counts. The Easy banks are bundled into the app (`services/content/bundledBanks.generated.ts`), so a first round works offline. Medium and Hard banks are downloaded from the content base URL the first time they are played, checked against the manifest hash, and cached; offline with no cached copy, the difficulty step shows "Needs a connection to load".
 
 Each question is multiple choice (`mc`), true/false (`bool`), or A/B (`ab`), and carries a `query` (`title`, `explanation`, optional `syntax`, `tags`, and `docs`: up to three https `{ title, url }` links to official documentation) that backs the query drawer. Before an answer the drawer shows only the title and `docs`, so those must not give the answer away; the syntax, explanation, and tags appear after. Each question also carries `provenance` saying where it came from and how it was validated. The full shape is `packages/content-schema/src/validateQuestionBank.ts`.
 
 ### Editing a question
 
-1. Edit the question in `content/<track>/easy.json` (free banks only; paid banks change through the pipeline, below).
-2. Run `npm run content:build`. It validates the content, recomputes every free bank hash into `content/manifest.json` (a paid entry is kept as it is), and regenerates `services/content/bundledManifest.generated.ts` and `services/content/bundledBanks.generated.ts`.
+1. Edit the question in `content/<track>/<difficulty>.json`.
+2. Run `npm run content:build`. It validates every bank, recomputes every hash and topic count into `content/manifest.json`, bumps the content version of each bank whose bytes changed, lists the misconceptions some card links, and regenerates `services/content/bundledManifest.generated.ts` and `services/content/bundledBanks.generated.ts`. It fails on a `.json` file under a track directory that the manifest does not list.
 3. Commit the bank, `content/manifest.json`, and both generated files together. CI fails the pull request if any of them drift from what `npm run content:build` produces.
 
 ### Adding a track
 
-1. Add the free bank file `content/<track>/easy.json`.
-2. Add an entry to `languages` in `content/manifest.json` with `id`, `label`, `glyph`, `tagline`, `grammar` (one of `GRAMMARS` in `packages/content-schema/src/grammars.ts`; any other value renders code as plain text), `kind: 'topic'` for a topic track, and a `banks` object whose entries each have a `path`, `access`, and `"hash": ""`.
-3. Run `npm run content:build` to fill in the hashes and regenerate the bundled files, then commit and push as above.
+1. Add the bank files `content/<track>/easy.json`, `medium.json`, and `hard.json`.
+2. Add an entry to `languages` in `content/manifest.json` with `id`, `label`, `glyph`, `tagline`, `grammar` (one of `GRAMMARS` in `packages/content-schema/src/grammars.ts`; any other value renders code as plain text), `kind: 'topic'` for a topic track, `topics`, `misconceptions`, and a `banks` object whose entries each have a `path`, `"hash": ""`, `"contentVersion": 1`, and `"topicCounts": {}`.
+3. Run `npm run content:build` to fill in the hashes and regenerate the bundled files, then commit as above.
 
-### Publishing paid banks
+### The content pipeline
 
-Clone `nullvoidundefined/syntactical-content` beside this repository (`../syntactical-content`), or pass `--content-root <path>` or set `SYNTACTICAL_CONTENT_ROOT`. The pipeline reads and writes paid banks there and refuses a content root inside this repository. Run `npm run pipeline -- publish`; it writes changed paid banks into the content checkout and rewrites `content/manifest.json` with their hashes. Commit and push in `syntactical-content` first, then commit the manifest and generated files here. In the same PR, set `content/paid-content.ref` to the full sha of that pushed `syntactical-content` commit. Deploys stage exactly that commit, so the manifest hashes and the private banks always match; a manifest change without the matching ref fails the deploy hash check (`server/scripts/stageBuildContent.sh`).
+`npm run pipeline -- <command>` reads every bank from `content/` and stages its work under `pipeline/`: `classifications/`, `generated/`, `disputed/`, `oracles/`, `review/`, `review-queue/`, and `reports/` stay local and untracked, while `pipeline/taxonomy/`, `pipeline/enrichment/`, and `pipeline/references/` are committed. Model commands run through `claude -p` unless you pass `--api`, which uses `ANTHROPIC_API_KEY` (plus `ANTHROPIC_WORKSPACE_ID` when the key is organization-level). The second model, which double-checks each result, is `PIPELINE_SECOND_MODEL` (default `claude-haiku-5-5`). Each step saves as it goes and skips what is already done, so a rerun only pays for what is missing. The `--content-root` and `--free-only` flags from the old two-repository layout are refused.
 
-### Rationales and before-answer references for free banks
+To add questions to a bank:
 
-Each step saves as it goes and skips what is already done, so a rerun only pays for what is missing. Commands run through `claude -p` unless you pass `--api`, which uses `ANTHROPIC_API_KEY` (plus `ANTHROPIC_WORKSPACE_ID` when the key is organization-level). The second model, which double-checks each result, is `PIPELINE_SECOND_MODEL` (default `claude-haiku-5-5`).
+1. `npm run pipeline -- classify` assigns each question a topic; `npm run pipeline -- gap-fill` generates questions for thin topics, keeping each only when its executed oracle proves its answer.
+2. `npm run pipeline -- validate` runs every oracle in Docker and writes the report the next steps read.
+3. `npm run pipeline -- review` writes `pipeline/review/<track>-<difficulty>.md` for the owner to approve or reject; rerun it to record the decisions.
+4. `npm run pipeline -- publish` writes each bank that passes `validateBankForPublish` into `content/<track>/<difficulty>.json` and runs the content build. Commit the banks, the manifest, and the generated files together.
 
-1. `npm run pipeline -- enrich --judge-without-oracle [--free-only] [--language python,postgres]` writes a rationale and misconception tag for each wrong choice into `pipeline/enrichment/`. A language needs an approved `pipeline/taxonomy/<language>.json` (draft one with `draft-taxonomy <language>`). A question without a recorded oracle run is grounded in its answer key and explanation, and both models' judges must accept each rationale.
+To add rationales and before-answer references to existing questions:
+
+1. `npm run pipeline -- enrich --judge-without-oracle [--language python,postgres]` writes a rationale and misconception tag for each wrong choice into `pipeline/enrichment/`. A language needs an approved `pipeline/taxonomy/<language>.json` (draft one with `draft-taxonomy <language>`). A question without a recorded oracle run is grounded in its answer key and explanation, and both models' judges must accept each rationale.
 2. `npm run pipeline -- write-references [--language python,postgres]` writes each question's reference into `pipeline/references/`: a broad topic title and links on the track's documentation hosts, shown before an answer, and a syntax reference with examples, shown after (`pipeline/src/services/references/DOC_HOSTS.ts`). Both models must agree the title and link titles do not give the answer away; a reference that does is rewritten once, then left out.
 3. `npm run pipeline -- verify-doc-links` fetches every staged link (no model, but it needs network access to the documentation hosts) and records the results in `pipeline/references/doc-links.json`. A link to a `#section` passes only when that section is on the page.
-4. `npm run pipeline -- apply-staging` merges the staged rationales and references into the free banks without adding or dropping any question, keeping only links that passed step 3, then runs the content build (no content root needed: paid manifest entries stay as they are). Commit the banks, the manifest, the generated files, and `pipeline/enrichment`, `pipeline/references` together.
+4. `npm run pipeline -- apply-staging` merges the staged rationales and references into every bank without adding or dropping any question, keeping only links that passed step 3, then runs the content build. Commit the banks, the manifest, the generated files, and `pipeline/enrichment` and `pipeline/references` together.
 
 ## Deploying
 
