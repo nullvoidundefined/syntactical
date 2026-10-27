@@ -101,7 +101,7 @@ A `SponsorContent` type carries `{ headline, body, iconUri?, callToAction, href?
 
 ### Web feed (EthicalAds, direct sponsor, house)
 
-- `SponsoredCard.web.tsx` renders a `<div data-ea-publisher data-ea-type="text" data-ea-manual="true" class="dark flat">` inside the card and calls `ethicalads.load()` on mount and `ethicalads.reload()` on route change. The `--ea-` custom properties are set from the app's colour tokens so the ad text uses the card's background, ink, and signal colours. The client script tag goes in `app/+html.tsx` only when a publisher id is configured.
+- `SponsoredCard.web.tsx` renders a `<div data-ea-publisher data-ea-type="text" data-ea-manual="true" class="dark flat">` inside the card and calls `ethicalads.load()` on mount and `ethicalads.reload()` on route change. The `--ea-` custom properties are set from the app's colour tokens so the ad text uses the card's background, ink, and signal colours. No page carries the client script: an eligible card with a publisher id injects it (async, once per page) and waits for `window.ethicalads` within the fill ceiling, so a Pro viewer's browser never contacts EthicalAds and the app bundle is never queued behind it.
 - Until a publisher id exists, or when the client reports no ad, the card renders the house card or a direct sponsor read from a small `content/sponsor.json` (headline, body, href, icon, start and end dates), which the content build validates and copies with the rest of `content/`.
 - EthicalAds sets no cookies, so no consent banner is added on the web.
 

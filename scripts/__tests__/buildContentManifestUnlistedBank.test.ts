@@ -60,7 +60,15 @@ describe('buildContentManifest unlisted bank files', () => {
   });
 
   it('ignores JSON files at the top of content/ and non-JSON files under a track', async () => {
-    await writeFile(join(contentDir, 'sponsor.json'), '{}\n');
+    // A valid direct sponsor: the build validates content/sponsor.json, but never treats it as a bank.
+    const sponsor = {
+      body: 'Managed Postgres with branching for every pull request.',
+      endsOn: '2999-12-31',
+      headline: 'Neon',
+      href: 'https://neon.tech',
+      startsOn: '2026-11-01',
+    };
+    await writeFile(join(contentDir, 'sponsor.json'), `${JSON.stringify(sponsor)}\n`);
     await writeFile(join(contentDir, 'python', '.DS_Store'), '');
 
     await expect(buildContentManifest(contentDir, outputs)).resolves.toBeUndefined();

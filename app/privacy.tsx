@@ -6,6 +6,7 @@
 // OWNER TO CONFIRM before publishing: Anthropic's and OpenAI's current API data-retention terms,
 // stating any retention period here and on the account deletion page. The fallback provider sends
 // `store: false`, so OpenAI keeps no stored response; confirm what its abuse-monitoring logs keep.
+// Sponsored card statements follow docs/store/privacy-labels.md; re-check them when a feed is added or changed.
 import { LegalList, LegalPage, LegalParagraph, LegalSection } from '../components/legal/LegalPage';
 
 export default function PrivacyScreen() {
@@ -26,13 +27,15 @@ export default function PrivacyScreen() {
             'If you are signed in: your answers (which question, your choice, whether it was correct, and how long it took), your daily progress and daily goal, and your timezone (a name such as America/Chicago, used to decide when your day starts). This is not your location.',
             'A random user ID that we create for your account.',
             'Purchase history: which question banks you own, and the purchase events the app stores and RevenueCat send us. We never see your card number; Apple or Google handles payment.',
-            'Usage events, such as starting or finishing a round, seeing the paywall, or completing a purchase, with details like language and difficulty. These go to PostHog. Location lookup is turned off. When you are signed in, events carry your random user ID, never your email. When you are not signed in, events are anonymous, and analytics writes nothing to your device.',
+            'Usage events, such as starting or finishing a round, seeing the Pro sheet, completing a purchase, or seeing or pressing a sponsored card, with details like language, difficulty, and where the card was. These go to PostHog. Location lookup is turned off. When you are signed in, events carry your random user ID, never your email. When you are not signed in, events are anonymous, and analytics writes nothing to your device.',
           ]}
         />
         <LegalParagraph>
           We do not collect your name, phone number, address, contacts, photos, precise or approximate location, or an
-          advertising identifier. The app has no ads and does not track you across other companies&apos; apps or
-          websites. No crash reporting service is installed.
+          advertising identifier. Free users see sponsored cards: a card for Syntactical Pro, a sponsor we name in the
+          card, or on the website a text card from EthicalAds, which sets no cookies. A named sponsor&apos;s card comes
+          from our own site, so the sponsor learns nothing unless you open its link. Pro removes them. The app does not
+          track you across other companies&apos; apps or websites. No crash reporting service is installed.
         </LegalParagraph>
       </LegalSection>
 
@@ -51,6 +54,7 @@ export default function PrivacyScreen() {
             'To sync your progress, streak, and XP across devices.',
             'To unlock the question banks you bought, and to restore purchases.',
             'To understand how the app is used so we can improve it.',
+            'To show sponsored cards to free users and count how often they are seen and pressed.',
           ]}
         />
       </LegalSection>
@@ -66,6 +70,7 @@ export default function PrivacyScreen() {
             'Resend: delivers the one-time sign-in email.',
             'RevenueCat: manages purchases and entitlements, together with Apple and Google.',
             'PostHog: product usage analytics.',
+            'EthicalAds: serves the text sponsored cards on the website, without cookies. Your browser fetches each card from EthicalAds, which sees its IP address.',
             'Apple and Google: process payments and keep their own purchase records.',
           ]}
         />

@@ -24,6 +24,11 @@ export const EVENT_LOG_CAP = 5000;
 // signed in on this device. Never the session value, email, or sign-in code.
 export const AUTH_STORAGE_KEY = 'syntactical.auth.v1';
 
+// The sponsored card cadence counters (services/sponsor/sponsorCadence.ts), kept apart from the stats.
+export const SPONSOR_CADENCE_STORAGE_KEY = 'syntactical.sponsor.v1';
+// The results card cadence; defined with the rest of the sponsored card constants.
+export { SPONSOR } from './sponsor';
+
 // The longest a native purchaser identity call (logIn or logOut) may hold the
 // next one back.
 export const PURCHASER_CALL_TIMEOUT_MS = 10000;

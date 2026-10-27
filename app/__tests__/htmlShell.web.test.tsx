@@ -1,7 +1,8 @@
 // app/__tests__/htmlShell.web.test.tsx
 // The static export's document shell: English, UTF-8, a mobile viewport, the obsidian theme colour (the token in
-// tailwind.config.js), no title of its own (each page sets one through PageHead), the page inside the body, and the
-// EthicalAds client script only when extra.ethicalAdsPublisher is configured.
+// tailwind.config.js), no title of its own (each page sets one through PageHead), the page inside the body, and no
+// EthicalAds client script, whatever the publisher: an eligible web sponsored card injects it, so no page, and no Pro
+// viewer, loads it otherwise.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -49,14 +50,10 @@ describe('app/+html.tsx', () => {
     ['unset', {}],
     ['empty', { ethicalAdsPublisher: '' }],
     ['not a string', { ethicalAdsPublisher: 42 }],
+    ['configured', { ethicalAdsPublisher: 'syntactical' }],
   ])('renders no EthicalAds script when the publisher is %s', (_case, extra) => {
     const shell = renderShell(extra);
     expect(shell.querySelector(`script[src="${ETHICAL_ADS_SCRIPT}"]`)).toBeNull();
     expect(shell.documentElement.outerHTML).not.toContain('ethicalads');
-  });
-
-  it('renders the EthicalAds script when a publisher is configured', () => {
-    const shell = renderShell({ ethicalAdsPublisher: 'syntactical' });
-    expect(shell.querySelector(`script[src="${ETHICAL_ADS_SCRIPT}"]`)).not.toBeNull();
   });
 });

@@ -2,6 +2,7 @@
 // validates banks and manifest with the app's own validators, and generates the TypeScript modules that bundle
 // them offline: one exporting the manifest and one exporting the bank require map. Only BUNDLED_DIFFICULTIES are
 // bundled; the app downloads every other bank on first use and checks it against its manifest hash.
+// An optional content/sponsor.json (the direct sponsor) is validated but not hashed or bundled.
 import {
   CONTENT_LIMITS,
   buildBankContext,
@@ -10,9 +11,10 @@ import {
   isSafeBankPath,
   validateManifest,
   validateQuestionBank,
+  validateSponsor,
 } from '@syntactical/content-schema';
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, sep } from 'node:path';
 
 const UTF8_BYTE_ORDER_MARK = [0xef, 0xbb, 0xbf];
@@ -138,6 +140,30 @@ function assertValidManifest(manifest) {
   if (!result.isValid) throw new Error(`manifest.json is invalid: ${result.rule}`);
 }
 
+async function isFilePresent(path) {
+  return (await stat(path).catch(() => null))?.isFile() ?? false;
+}
+
+// content/sponsor.json is optional. When present it must be a valid direct sponsor within the size limit;
+// an expired sponsor still builds, since the app skips it at run time. It is not hashed or bundled: the app
+// fetches it from the content base URL, and the web build copies content/ as it is.
+async function assertValidSponsor(contentDir) {
+  const sponsorPath = join(contentDir, 'sponsor.json');
+  if (!(await isFilePresent(sponsorPath))) return;
+  const bytes = await readFile(sponsorPath);
+  if (bytes.length > CONTENT_LIMITS.sponsorBytes) {
+    throw new Error(`sponsor.json is over the ${CONTENT_LIMITS.sponsorBytes} byte limit`);
+  }
+  let data;
+  try {
+    data = JSON.parse(bytes.toString('utf8'));
+  } catch {
+    throw new Error('sponsor.json is invalid: not JSON');
+  }
+  const result = validateSponsor(data);
+  if (!result.isValid) throw new Error(`sponsor.json is invalid: ${result.rule}`);
+}
+
 function toRequirePath(fromPath, targetPath) {
   const relativePath = relative(dirname(fromPath), targetPath).split(sep).join('/');
   return relativePath.startsWith('.') ? relativePath : `./${relativePath}`;
@@ -228,6 +254,7 @@ export async function buildContentManifest(contentDir, outputs, taxonomyDir) {
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   assertSafeBankPaths(manifest);
   assertValidManifest(withPlaceholderHashes(manifest));
+  await assertValidSponsor(contentDir);
   await assertNoUnlistedBanks(contentDir, manifest);
   const bankCache = new Map();
   if (taxonomyDir) await applyApprovedTaxonomies(taxonomyDir, manifest, contentDir, bankCache);
