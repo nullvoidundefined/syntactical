@@ -20,109 +20,109 @@ let database: Awaited<ReturnType<typeof createMigratedDatabase>>;
 let uncaught: unknown[] = [];
 
 function recordUncaught(error: unknown): void {
-    uncaught.push(error);
+  uncaught.push(error);
 }
 
 function wait(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // Ends the backend with the given pid from a connection outside the pool under test, so the
 // pool's counts reflect only the client the transaction holds.
 async function terminateBackend(pid: number): Promise<void> {
-    const outsider = new pg.Client({ connectionString: database.databaseUrl });
-    await outsider.connect();
-    try {
-        await outsider.query('SELECT pg_terminate_backend($1)', [pid]);
-    } finally {
-        await outsider.end();
-    }
+  const outsider = new pg.Client({ connectionString: database.databaseUrl });
+  await outsider.connect();
+  try {
+    await outsider.query('SELECT pg_terminate_backend($1)', [pid]);
+  } finally {
+    await outsider.end();
+  }
 }
 
 describe.skipIf(SKIP_DATABASE_TESTS)('withTransaction when the backend dies mid-transaction', () => {
-    beforeAll(async () => {
-        database = await createMigratedDatabase(inject('testDatabaseUrl'));
-    }, SETUP_TIMEOUT_MS);
+  beforeAll(async () => {
+    database = await createMigratedDatabase(inject('testDatabaseUrl'));
+  }, SETUP_TIMEOUT_MS);
 
-    afterAll(async () => {
-        await database?.drop();
-    });
+  afterAll(async () => {
+    await database?.drop();
+  });
 
-    beforeEach(() => {
-        uncaught = [];
-        process.on('uncaughtException', recordUncaught);
-    });
+  beforeEach(() => {
+    uncaught = [];
+    process.on('uncaughtException', recordUncaught);
+  });
 
-    afterEach(() => {
-        process.off('uncaughtException', recordUncaught);
-    });
+  afterEach(() => {
+    process.off('uncaughtException', recordUncaught);
+  });
 
-    it(
-        'rejects without an uncaught exception when the backend is terminated while the work holds the client, destroys that client, and the pool still serves a query',
-        async () => {
-            let totalWhileHeld = 0;
-            const outcome = withTransaction(database.pool, async (client) => {
-                const { rows } = await client.query<{ pid: number }>('SELECT pg_backend_pid() AS pid');
-                totalWhileHeld = database.pool.totalCount;
-                await terminateBackend(rows[0].pid);
-                await wait(AFTER_TERMINATE_WAIT_MS);
-                await client.query('SELECT 1');
-                return 'committed';
-            });
+  it(
+    'rejects without an uncaught exception when the backend is terminated while the work holds the client, destroys that client, and the pool still serves a query',
+    async () => {
+      let totalWhileHeld = 0;
+      const outcome = withTransaction(database.pool, async (client) => {
+        const { rows } = await client.query<{ pid: number }>('SELECT pg_backend_pid() AS pid');
+        totalWhileHeld = database.pool.totalCount;
+        await terminateBackend(rows[0].pid);
+        await wait(AFTER_TERMINATE_WAIT_MS);
+        await client.query('SELECT 1');
+        return 'committed';
+      });
 
-            await expect(outcome).rejects.toBeInstanceOf(Error);
-            expect(uncaught).toEqual([]);
-            expect(totalWhileHeld).toBeGreaterThan(0);
-            expect(database.pool.totalCount).toBe(totalWhileHeld - 1);
+      await expect(outcome).rejects.toBeInstanceOf(Error);
+      expect(uncaught).toEqual([]);
+      expect(totalWhileHeld).toBeGreaterThan(0);
+      expect(database.pool.totalCount).toBe(totalWhileHeld - 1);
 
-            const { rows } = await database.pool.query<{ alive: number }>('SELECT 1 AS alive');
-            expect(rows).toEqual([{ alive: 1 }]);
-        },
-        TEST_TIMEOUT_MS,
-    );
+      const { rows } = await database.pool.query<{ alive: number }>('SELECT 1 AS alive');
+      expect(rows).toEqual([{ alive: 1 }]);
+    },
+    TEST_TIMEOUT_MS,
+  );
 });
 
 async function readTimeouts(client: pg.PoolClient): Promise<string[]> {
-    const statement = await client.query<{ statement_timeout: string }>('SHOW statement_timeout');
-    const lock = await client.query<{ lock_timeout: string }>('SHOW lock_timeout');
-    return [statement.rows[0].statement_timeout, lock.rows[0].lock_timeout];
+  const statement = await client.query<{ statement_timeout: string }>('SHOW statement_timeout');
+  const lock = await client.query<{ lock_timeout: string }>('SHOW lock_timeout');
+  return [statement.rows[0].statement_timeout, lock.rows[0].lock_timeout];
 }
 
 describe.skipIf(SKIP_DATABASE_TESTS)('withTransaction timeouts', () => {
-    beforeAll(async () => {
-        database = await createMigratedDatabase(inject('testDatabaseUrl'));
-    }, SETUP_TIMEOUT_MS);
+  beforeAll(async () => {
+    database = await createMigratedDatabase(inject('testDatabaseUrl'));
+  }, SETUP_TIMEOUT_MS);
 
-    afterAll(async () => {
-        await database?.drop();
-    });
+  afterAll(async () => {
+    await database?.drop();
+  });
 
-    it(
-        'cancels a statement past the 5 s statement timeout with 57014 when hasTimeouts is true',
-        async () => {
-            const outcome = withTransaction(database.pool, (client) => client.query('SELECT pg_sleep(6)'), {
-                hasTimeouts: true,
-            });
+  it(
+    'cancels a statement past the 5 s statement timeout with 57014 when hasTimeouts is true',
+    async () => {
+      const outcome = withTransaction(database.pool, (client) => client.query('SELECT pg_sleep(6)'), {
+        hasTimeouts: true,
+      });
 
-            await expect(outcome).rejects.toMatchObject({ code: '57014' });
-        },
-        TEST_TIMEOUT_MS,
-    );
+      await expect(outcome).rejects.toMatchObject({ code: '57014' });
+    },
+    TEST_TIMEOUT_MS,
+  );
 
-    it('leaves the server default timeouts on the pooled connection afterwards', async () => {
-        const client = await database.pool.connect();
-        const defaults = await readTimeouts(client);
-        client.release();
+  it('leaves the server default timeouts on the pooled connection afterwards', async () => {
+    const client = await database.pool.connect();
+    const defaults = await readTimeouts(client);
+    client.release();
 
-        await withTransaction(database.pool, (inner) => inner.query('SELECT 1'), { hasTimeouts: true });
+    await withTransaction(database.pool, (inner) => inner.query('SELECT 1'), { hasTimeouts: true });
 
-        const reused = await database.pool.connect();
-        try {
-            expect(reused).toBe(client);
-            expect(defaults).toEqual(['0', '0']);
-            expect(await readTimeouts(reused)).toEqual(defaults);
-        } finally {
-            reused.release();
-        }
-    });
+    const reused = await database.pool.connect();
+    try {
+      expect(reused).toBe(client);
+      expect(defaults).toEqual(['0', '0']);
+      expect(await readTimeouts(reused)).toEqual(defaults);
+    } finally {
+      reused.release();
+    }
+  });
 });

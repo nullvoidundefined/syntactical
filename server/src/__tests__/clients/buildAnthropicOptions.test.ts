@@ -43,4 +43,8 @@ describe('buildAnthropicOptions', () => {
 
     expect(headers.has('anthropic-workspace-id')).toBe(false);
   });
+
+  it('turns SDK retries off and bounds each attempt at 10 seconds', () => {
+    expect(buildAnthropicOptions({ apiKey: 'test-key' })).toMatchObject({ maxRetries: 0, timeout: 10_000 });
+  });
 });

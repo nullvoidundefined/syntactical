@@ -1,5 +1,7 @@
 // Account deletion route (web and native), the page Google Play asks for. DRAFT: the owner must fill in
 // [CONTACT EMAIL] before the store listings point at it. The facts match docs/store/privacy-labels.md.
+// OWNER TO CONFIRM: Anthropic's and OpenAI's current API data-retention terms (see app/privacy.tsx);
+// if either keeps inputs for a stated period, add that period to the model line in "What is kept".
 import { LegalList, LegalPage, LegalParagraph, LegalSection } from '../components/legal/LegalPage';
 
 export default function DeleteAccountScreen() {
@@ -43,6 +45,7 @@ export default function DeleteAccountScreen() {
             "Google AdMob's records of the sponsored cards it served to your device on iPhone and Android, kept by Google. They are not tied to your account.",
             'The RevenueCat customer record, kept by RevenueCat.',
             "Resend's record of the sign-in emails it sent, kept by Resend.",
+            'Questions you asked about a card and the weekly summaries behind your study notes, kept by Anthropic, and by OpenAI when a request was sent to it, under their API data-retention terms. They carry no email or user ID.',
             'Purchase transactions kept by Apple and Google.',
           ]}
         />

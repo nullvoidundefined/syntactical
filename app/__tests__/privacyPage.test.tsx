@@ -26,3 +26,12 @@ describe('privacy page password wording', () => {
     expect(screen.getAllByRole('heading', { name: 'Privacy policy' })).toHaveLength(1);
   });
 });
+
+describe('privacy page model processors', () => {
+  it('lists Anthropic as the primary model and OpenAI as the fallback among the processors', async () => {
+    const screen = await render(<PrivacyScreen />);
+
+    expect(screen.getByText(/^Anthropic: /)).toBeTruthy();
+    expect(screen.getByText(/^OpenAI: .*when Anthropic cannot answer/)).toBeTruthy();
+  });
+});

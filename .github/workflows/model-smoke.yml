@@ -1,0 +1,65 @@
+name: Model smoke
+
+# Checks the models behind Ask and the study note. Every day, `--models-only` asks each vendor's
+# Models API whether the configured model still exists, so a retired model or a refused key fails
+# this run (GitHub emails the owner) before a learner meets it. Run by hand, it sends the real Ask
+# and study-note prompts through each configured provider; give a model id as an input to try one
+# before setting it on Railway. The keys are repository secrets and the model ids repository
+# variables, kept equal to the Railway ones (server/DEPLOY.md). While no key is set the run skips
+# the check and passes.
+
+on:
+  schedule:
+    - cron: '23 7 * * *'
+  workflow_dispatch:
+    inputs:
+      anthropic_model:
+        description: Claude model id to check instead of the ANTHROPIC_MODEL variable
+        required: false
+        type: string
+      openai_model:
+        description: OpenAI model id to check instead of the OPENAI_MODEL variable
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      ANTHROPIC_WORKSPACE_ID: ${{ secrets.ANTHROPIC_WORKSPACE_ID }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ANTHROPIC_MODEL: ${{ inputs.anthropic_model || vars.ANTHROPIC_MODEL }}
+      OPENAI_MODEL: ${{ inputs.openai_model || vars.OPENAI_MODEL }}
+      OPENAI_REASONING_EFFORT: ${{ vars.OPENAI_REASONING_EFFORT }}
+    steps:
+      - name: Check a model key is set
+        id: keys
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ] || [ -n "$OPENAI_API_KEY" ]; then
+            echo 'configured=true' >> "$GITHUB_OUTPUT"
+          else
+            echo '::notice::No model key is set (ANTHROPIC_API_KEY or OPENAI_API_KEY secret); nothing to check.'
+          fi
+      - if: steps.keys.outputs.configured == 'true'
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - if: steps.keys.outputs.configured == 'true'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.keys.outputs.configured == 'true'
+        run: npm ci
+      - name: Build the shared packages the server imports
+        if: steps.keys.outputs.configured == 'true'
+        run: npm run build --workspace @syntactical/content-schema --workspace @syntactical/progress
+      - name: Check that the configured models exist
+        if: steps.keys.outputs.configured == 'true' && github.event_name == 'schedule'
+        run: npm run model:smoke -w server -- --models-only
+      - name: Send the Ask and study-note prompts to each configured model
+        if: steps.keys.outputs.configured == 'true' && github.event_name != 'schedule'
+        run: npm run model:smoke -w server
