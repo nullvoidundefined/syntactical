@@ -3,7 +3,8 @@
 // picked. Each ask stands alone; the panel shows the latest answer and "<remaining> of <limit> left
 // today", and says why when there is none. At the daily limit it branches on the tier the server
 // names, never on a number: a free learner is told the free tier's limit and the Pro limit and is
-// offered Pro (See Pro opens the Pro sheet); a Pro learner is told the day's limit. The drawer keys
+// offered Pro (See Pro calls onSeePro when the host gives it, else opens the Pro sheet here); a Pro
+// learner is told the day's limit. The drawer keys
 // the panel by question, so nothing carries over to the next card, and a reply that lands after
 // the panel is gone is dropped.
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -19,7 +20,9 @@ const BUSY = 'Too many questions at once. Try again in a minute.';
 const UNAVAILABLE = 'No answer right now. Try again in a moment.';
 const LIMIT_UNNAMED = "You've used today's questions. They reset at midnight UTC.";
 
-type AskPanelProps = { target: AskTarget };
+// onSeePro: the host opens the Pro sheet itself (the web drawer closes first, so the sheet is never
+// stacked over the drawer's Modal and its focus trap).
+type AskPanelProps = { onSeePro?: () => void; target: AskTarget };
 
 type Failure = Extract<AskResult, { status: 'failed' }>;
 
@@ -39,7 +42,7 @@ function describeFailure(failure: Failure): string {
   return `That is today's ${failure.limit}.`;
 }
 
-export function AskPanel({ target }: AskPanelProps) {
+export function AskPanel({ onSeePro, target }: AskPanelProps) {
   const [message, setMessage] = useState('');
   const [isBusy, setIsBusy] = useState(false);
   const [answered, setAnswered] = useState<Answered | null>(null);
@@ -115,7 +118,7 @@ export function AskPanel({ target }: AskPanelProps) {
         <Pressable
           role="button"
           aria-label="See Pro"
-          onPress={() => setIsOfferOpen(true)}
+          onPress={() => (onSeePro ? onSeePro() : setIsOfferOpen(true))}
           className="mt-3 self-start border border-ink px-4 py-2"
         >
           <Text className="font-mono text-xs uppercase tracking-widest text-ink">See Pro</Text>
