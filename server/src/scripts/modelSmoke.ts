@@ -7,7 +7,7 @@
 // --provider anthropic|openai narrows either mode to one provider. It never connects to a
 // database, and never prints a key, a prompt, or an SDK error object.
 //
-//   npm run model:smoke -w server [-- --models-only] [-- --provider anthropic]
+//   npm run model:smoke -w server [-- [--models-only] [--provider anthropic]]
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 

@@ -160,8 +160,9 @@ The "Model smoke" workflow also runs every day with `--models-only` and fails wh
 or a key is refused (401, 403); GitHub emails you about the failed run. If a model is retired or a parameter is
 rejected before you switch, the server logs `model configuration failure` with the provider, model, and status,
 skips that provider for 15 minutes, and answers from the other one. After three failures in a row it logs
-`model provider skipped after repeated failures` and skips the provider for a minute. With only one key set, Ask
-and the study note answer 503 until the variable is fixed.
+`model provider failing repeatedly` once and, when another provider is configured, skips it for a minute. With only one key set, Ask
+and the study note answer 503 until the variable is fixed. The privacy policy names Anthropic as the primary
+provider; setting `MODEL_PRIMARY=openai` needs a privacy policy update first.
 
 ## Post-deploy checks
 

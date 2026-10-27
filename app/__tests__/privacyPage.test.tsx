@@ -32,6 +32,6 @@ describe('privacy page model processors', () => {
     const screen = await render(<PrivacyScreen />);
 
     expect(screen.getByText(/^Anthropic: /)).toBeTruthy();
-    expect(screen.getByText(/^OpenAI: .*only when Anthropic is unavailable/)).toBeTruthy();
+    expect(screen.getByText(/^OpenAI: .*when Anthropic cannot answer/)).toBeTruthy();
   });
 });

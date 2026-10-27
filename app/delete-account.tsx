@@ -44,7 +44,7 @@ export default function DeleteAccountScreen() {
             'PostHog usage events tied to your random user ID, never your email, kept by PostHog.',
             'The RevenueCat customer record, kept by RevenueCat.',
             "Resend's record of the sign-in emails it sent, kept by Resend.",
-            'Questions you asked about a card and the weekly summaries behind your study notes, kept by Anthropic, and by OpenAI when it answered instead, under their API data-retention terms. They carry no email or user ID.',
+            'Questions you asked about a card and the weekly summaries behind your study notes, kept by Anthropic, and by OpenAI when a request was sent to it, under their API data-retention terms. They carry no email or user ID.',
             'Purchase transactions kept by Apple and Google.',
           ]}
         />
