@@ -7,7 +7,6 @@
 // Focus 12).
 import { QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react-native';
-import type { ReactTestInstance } from 'react-test-renderer';
 
 import { setExpoExtra } from '../../../config/expoConstantsMock';
 import { createQueryClient } from '../../../config/queryClient';
@@ -65,6 +64,9 @@ function setAdMob(admob: Record<string, unknown>) {
 
 const queryClient = createQueryClient();
 
+// A host element of the rendered tree, as the testing library's queries return it.
+type ReactTestInstance = ReturnType<typeof screen.getByTestId>;
+
 function Card({ onShown }: { onShown?: () => void }) {
   return (
     <QueryClientProvider client={queryClient}>
@@ -75,7 +77,7 @@ function Card({ onShown }: { onShown?: () => void }) {
 
 function hostDescendants(node: ReactTestInstance): string[] {
   return node
-    .findAll((candidate: ReactTestInstance) => candidate !== node && typeof candidate.type === 'string')
+    .queryAll((candidate: ReactTestInstance) => candidate !== node && typeof candidate.type === 'string')
     .map((candidate) => candidate.type as string);
 }
 
@@ -139,7 +141,7 @@ describe('SponsoredCard with AdMob on native', () => {
     await render(<Card />);
     await act(async () => deliverAd(buildFakeNativeAd()));
     const card = screen.getByTestId('sponsored-card');
-    const firstHost = card.findAll((node: ReactTestInstance) => node !== card && typeof node.type === 'string')[0];
+    const firstHost = card.queryAll((node: ReactTestInstance) => node !== card && typeof node.type === 'string')[0];
     expect(firstHost).toBe(screen.getByText('Sponsored'));
   });
 
@@ -187,7 +189,7 @@ describe('SponsoredCard with AdMob on native', () => {
     expect(mobileAdsControl.requests).toEqual([]);
     expect(readPlaceholder()).not.toBeNull();
     setSponsor('ready');
-    view.rerender(<Card />);
+    await view.rerender(<Card />);
     await settle();
     expect(mobileAdsControl.requests).toHaveLength(1);
   });
@@ -195,7 +197,7 @@ describe('SponsoredCard with AdMob on native', () => {
   it('destroys an ad that arrives after unmount, reports nothing, and updates no state', async () => {
     const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     const view = await render(<Card />);
-    view.unmount();
+    await view.unmount();
     const ad = buildFakeNativeAd();
     await act(async () => deliverAd(ad));
     expect(ad.destroy).toHaveBeenCalledTimes(1);
@@ -208,7 +210,7 @@ describe('SponsoredCard with AdMob on native', () => {
     const view = await render(<Card />);
     const ad = buildFakeNativeAd();
     await act(async () => deliverAd(ad));
-    view.unmount();
+    await view.unmount();
     expect(ad.destroy).toHaveBeenCalledTimes(1);
   });
 

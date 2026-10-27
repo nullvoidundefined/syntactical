@@ -15,12 +15,15 @@ beforeEach(() => resetMobileAds());
 
 describe('useSponsorNativeAd', () => {
   it('requests nothing while disabled, then one ad once enabled', async () => {
-    const { rerender } = await renderHook(({ enabled }) => useSponsorNativeAd(UNIT_ID, OPTIONS, enabled), {
-      initialProps: { enabled: false },
-    });
+    const { rerender } = await renderHook(
+      ({ enabled }: { enabled: boolean }) => useSponsorNativeAd(UNIT_ID, OPTIONS, enabled),
+      {
+        initialProps: { enabled: false },
+      },
+    );
     expect(mobileAdsControl.requests).toEqual([]);
-    rerender({ enabled: true });
-    rerender({ enabled: true });
+    await rerender({ enabled: true });
+    await rerender({ enabled: true });
     expect(mobileAdsControl.requests).toEqual([{ adUnitId: UNIT_ID, options: OPTIONS }]);
   });
 
@@ -30,14 +33,14 @@ describe('useSponsorNativeAd', () => {
     await act(async () => deliverAd(ad));
     expect(result.current).toEqual({ error: null, nativeAd: ad });
     expect(ad.destroy).not.toHaveBeenCalled();
-    unmount();
+    await unmount();
     expect(ad.destroy).toHaveBeenCalledTimes(1);
   });
 
   it('destroys an ad that arrives after unmount, with no state update', async () => {
     const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     const { unmount } = await renderHook(() => useSponsorNativeAd(UNIT_ID, OPTIONS, true));
-    unmount();
+    await unmount();
     const ad = buildFakeNativeAd();
     await act(async () => deliverAd(ad));
     expect(ad.destroy).toHaveBeenCalledTimes(1);
