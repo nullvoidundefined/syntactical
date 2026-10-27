@@ -1,15 +1,14 @@
 // Buying Pro and restoring purchases. The store call only starts the purchase; Pro shows solely
 // when GET /me says pro.isActive, so every success path refetches /me through the Pro status
 // query. Store prices load only on request and only for a signed-in user (the SDKs are
-// identified then).
+// identified then). The store is chosen per call by clients/selectPurchaseStoreClient.ts.
 import { useCallback, useEffect, useState } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { Platform } from 'react-native';
 
 import { trackEvent } from '../clients/analyticsClient';
 import { normalizeProductId } from '../clients/normalizeProductId';
-import { buyStoreProduct, readStorePrices, restoreStorePurchases } from '../clients/purchaseStoreClient';
+import { selectPurchaseStoreClient } from '../clients/selectPurchaseStoreClient';
 import { readProPlan } from '../constants/proProducts';
 
 import { useSignedInUserId } from './AuthProvider';
@@ -44,9 +43,11 @@ export function usePurchases({ shouldLoadPrices = false } = {}): PurchasesState 
   useEffect(() => {
     if (!shouldLoadPrices || userId === null) return undefined;
     let isCurrent = true;
-    void readStorePrices().then((found) => {
-      if (isCurrent) setPrices(found);
-    });
+    void selectPurchaseStoreClient()
+      .client.readStorePrices()
+      .then((found) => {
+        if (isCurrent) setPrices(found);
+      });
     return () => {
       isCurrent = false;
     };
@@ -82,19 +83,20 @@ export function usePurchases({ shouldLoadPrices = false } = {}): PurchasesState 
 
   const buy = useCallback(
     async (productId: string): Promise<BuyOutcome> => {
-      const outcome = await buyStoreProduct(productId);
+      const { client, hasCheckoutRedirect } = selectPurchaseStoreClient();
+      const outcome = await client.buyStoreProduct(productId, userId);
       if (outcome !== 'purchased') return outcome;
-      if (Platform.OS === 'web') return 'redirect';
+      if (hasCheckoutRedirect) return 'redirect';
       return (await confirm(productId)) ? 'unlocked' : 'pending';
     },
-    [confirm],
+    [confirm, userId],
   );
 
   // True only when GET /me says Pro after the store restored, so a restore that found nothing for
   // this account never reads as restored. A failed store call or GET /me rejects instead of
   // resolving false, so Settings can tell "nothing to restore" from "try again".
   const restore = useCallback(async (): Promise<boolean> => {
-    if (!(await restoreStorePurchases())) throw new Error('store restore failed');
+    if (!(await selectPurchaseStoreClient().client.restoreStorePurchases())) throw new Error('store restore failed');
     const pro = await refetchProStatus();
     if (pro === null) throw new Error('profile request failed');
     return pro.isPro;
