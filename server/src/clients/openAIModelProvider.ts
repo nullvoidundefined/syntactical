@@ -3,7 +3,8 @@
 // retries) and `store: false`, so OpenAI keeps no stored copy of the learner's message or the
 // answer. Resolves the answer text, or null on a refusal, an incomplete response, an empty answer,
 // or a prompt the vendor flags (a 400, or a failed response with a policy code), so a partial
-// answer is never shown and a refused prompt is final. Any other failed response is transient. Rejects with a ModelProviderError; the SDK error is dropped because its request carries
+// answer is never shown and a refused prompt is final. Any other failed response is transient.
+// Rejects with a ModelProviderError; the SDK error is dropped because its request carries
 // the learner's message. The key comes from the caller; this module never reads the environment.
 import OpenAI from 'openai';
 import type { ClientOptions } from 'openai';
