@@ -17,6 +17,8 @@ export { collectMisconceptionIds } from './collectMisconceptionIds.js';
 export { validateManifest } from './validateManifest.js';
 export { validateBankForPublish } from './validateBankForPublish.js';
 export { validateQuestionBank } from './validateQuestionBank.js';
+export { validateSponsor } from './validateSponsor.js';
+export type { Sponsor } from './types/Sponsor.js';
 export type { BankContext } from './types/BankContext.js';
 export type { BankEntry } from './types/BankEntry.js';
 export type { CachedBank } from './types/CachedBank.js';
