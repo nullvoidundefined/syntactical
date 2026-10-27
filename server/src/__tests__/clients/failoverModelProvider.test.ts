@@ -245,13 +245,27 @@ describe('createFailoverModelProvider', () => {
     expect(warnings[0]).toMatchObject({
       cooldownMs: MODEL.BREAKER.TRANSIENT_COOLDOWN_MS,
       model: 'anthropic-model',
-      msg: 'model provider skipped after repeated failures',
+      msg: 'model provider failing repeatedly',
       provider: 'anthropic',
     });
 
     clock.advance(MODEL.BREAKER.TRANSIENT_COOLDOWN_MS);
     await failover.answer(PROMPT);
     expect(primary.calls).toBe(4);
+  });
+
+  it('warns once per opening when the only provider keeps failing while its breaker is open', async () => {
+    const clock = fakeClock();
+    const only = provider('anthropic', ['transient']);
+    const { entries, logger } = createRecordingLogger();
+    const failover = createFailoverModelProvider({ logger, now: clock.now, providers: [only] });
+
+    for (let call = 0; call < MODEL.BREAKER.FAILURES_TO_OPEN; call += 1) {
+      await expect(failover.answer(PROMPT)).rejects.toMatchObject({ kind: 'transient' });
+    }
+
+    expect(only.calls).toBe(2 * MODEL.BREAKER.FAILURES_TO_OPEN);
+    expect(levels(entries, 'warn')).toHaveLength(1);
   });
 
   it('opens the config cooldown on one config failure and logs one error naming provider, model, and status', async () => {

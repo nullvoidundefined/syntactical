@@ -61,11 +61,12 @@ function createFailoverModelProvider({ logger, now = Date.now, providers }: Fail
     }
     state.failures += 1;
     if (state.failures >= FAILURES_TO_OPEN) {
+      // Warn once per opening: failures still count while the breaker is open (one provider, or
+      // every provider open), and re-opening it is not news.
+      const wasOpen = isOpen(provider);
       openBreaker(state, 'transient');
-      logger.warn(
-        { cooldownMs: TRANSIENT_COOLDOWN_MS, model, provider },
-        'model provider skipped after repeated failures',
-      );
+      if (!wasOpen)
+        logger.warn({ cooldownMs: TRANSIENT_COOLDOWN_MS, model, provider }, 'model provider failing repeatedly');
     }
   }
 
