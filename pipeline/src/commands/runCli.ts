@@ -55,6 +55,20 @@ export interface CliDeps {
 
 const FIRST_COMMAND_ARG = 2;
 
+// Flags from the two-repo content layout. They are refused, not ignored, so a command line from before the import
+// fails loudly instead of running against content/ while its caller expects another tree.
+const RETIRED_FLAGS: Record<string, string> = {
+    '--content-root': '--content-root is not supported: every bank is under content/',
+    '--free-only': '--free-only is not supported: every bank is free',
+};
+
+function findRetiredFlagMessage(argv: string[]): string | undefined {
+    const flag = Object.keys(RETIRED_FLAGS).find((name) =>
+        argv.some((arg) => arg === name || arg.startsWith(`${name}=`)),
+    );
+    return flag === undefined ? undefined : RETIRED_FLAGS[flag];
+}
+
 async function runStagingCommand(command: 'classify' | 'gap-fill', argv: string[], deps: CliDeps): Promise<number> {
     const { classify: runClassify, contentDir, createProvider, gapFill: runGapFill, pipelineDir, stdout } = deps;
     const shared = {
@@ -184,6 +198,11 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
         validate,
     } = deps;
     const [command] = argv.slice(FIRST_COMMAND_ARG);
+    const retiredFlagMessage = findRetiredFlagMessage(argv);
+    if (retiredFlagMessage !== undefined) {
+        stderr(`${retiredFlagMessage}\n`);
+        return 1;
+    }
     if (command === 'draft-oracles') {
         await draft({
             contentDir,
