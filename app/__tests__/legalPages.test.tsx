@@ -22,5 +22,6 @@ describe('legal pages', () => {
     expect(screen.getByText(/Type DELETE and confirm/)).toBeTruthy();
     expect(screen.getAllByText(/\[CONTACT EMAIL\]/).length).toBeGreaterThan(0);
     expect(screen.getByText(/RevenueCat customer record/)).toBeTruthy();
+    expect(screen.getByText(/kept by Anthropic, and by OpenAI when it answered instead/)).toBeTruthy();
   });
 });
