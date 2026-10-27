@@ -65,7 +65,7 @@ describe('trackEvent', () => {
     expect(mockCapture).toHaveBeenNthCalledWith(2, 'ad_clicked', { placement: 'tracks', source: 'admob' });
   });
 
-  it('registers exactly the nine product events, pro_purchased among them', () => {
+  it('registers exactly the product and sponsor events', () => {
     expect([...ANALYTICS_EVENTS]).toEqual([
       'round_started',
       'round_completed',
@@ -76,6 +76,8 @@ describe('trackEvent', () => {
       'pro_purchased',
       'review_round_completed',
       'bank_exhausted',
+      'ad_shown',
+      'ad_clicked',
     ]);
   });
 

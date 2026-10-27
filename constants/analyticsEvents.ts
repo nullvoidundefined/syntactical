@@ -1,5 +1,5 @@
 // The fixed registry of analytics events (B-45). trackEvent accepts only these
-// names; a name outside the registry is a type error and throws in development.
+// names; a name outside the registry is a type error and throws in development. ad_shown and ad_clicked carry placement and source.
 export const ANALYTICS_EVENTS = [
   'round_started',
   'round_completed',
@@ -10,6 +10,8 @@ export const ANALYTICS_EVENTS = [
   'pro_purchased',
   'review_round_completed',
   'bank_exhausted',
+  'ad_shown',
+  'ad_clicked',
 ] as const;
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[number];
