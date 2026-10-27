@@ -40,10 +40,9 @@ beforeEach(() => {
   writeFileSync(join(root, 'README.md'), 'scratch\n');
   git(root, 'add', 'README.md');
   git(root, '-c', 'user.name=test', '-c', 'user.email=test@example.invalid', 'commit', '-q', '-m', 'init');
-  mkdirSync(join(root, 'build/content'), { recursive: true });
-  mkdirSync(join(root, 'build/paid-content/python'), { recursive: true });
+  mkdirSync(join(root, 'build/content/python'), { recursive: true });
   writeFileSync(join(root, 'build/content/manifest.json'), '{}\n');
-  writeFileSync(join(root, 'build/paid-content/python/medium.json'), '{}\n');
+  writeFileSync(join(root, 'build/content/python/medium.json'), '{}\n');
 });
 
 afterEach(() => {
@@ -71,14 +70,14 @@ describe('deployToRailway.sh upload guard', () => {
   });
 
   it.each([
-    'build/paid-content/deploy_key',
-    'build/paid-content/id_ed25519',
+    'build/content/deploy_key',
+    'build/content/id_ed25519',
     'build/content/.env.production',
     'build/content/server.pem',
     'build/content/signing.key',
-    'build/paid-content/.ssh/config',
-    'build/paid-content/known_hosts',
-    'build/paid-content/.git/HEAD',
+    'build/content/.ssh/config',
+    'build/content/known_hosts',
+    'build/content/.git/HEAD',
   ])('refuses to upload when %s is staged', (planted) => {
     const path = join(root, planted);
     mkdirSync(join(path, '..'), { recursive: true });
