@@ -3,7 +3,8 @@
 // subscription wherever RevenueCat reports a management page), Restore purchases on native, sign
 // out, and delete account. A guest's goal is stored on the device; a signed-in user's goal is
 // sent with PATCH /v1/me and stored on the device once the server accepts it, and a refused or
-// failed change is announced and leaves the goal unchanged.
+// failed change is announced and leaves the goal unchanged. A "Privacy settings" control reopens the ad
+// consent form where the law requires it.
 import { useState } from 'react';
 
 import { router, useLocalSearchParams } from 'expo-router';
@@ -13,6 +14,7 @@ import { DeleteAccountDialog } from '../components/auth/DeleteAccountDialog';
 import { PasswordSettingsForm } from '../components/auth/PasswordSettingsForm';
 import { SignOutDialog } from '../components/auth/SignOutDialog';
 import { DailyGoalPicker } from '../components/progress/DailyGoalPicker';
+import { PrivacySettingsRow } from '../components/sponsor/PrivacySettingsRow';
 import { ProRow } from '../components/purchase/ProRow';
 import { useAuth } from '../state/AuthProvider';
 import { useQuizStats } from '../state/StatsProvider';
@@ -127,6 +129,7 @@ function LegalLinks() {
         <Pressable role="link" aria-label="Account deletion" onPress={() => router.push('/delete-account')}>
           <Text className="font-mono text-xs uppercase tracking-widest text-ink">Account deletion</Text>
         </Pressable>
+        <PrivacySettingsRow />
       </View>
     </View>
   );

@@ -141,9 +141,9 @@ describe('SponsorProvider consent on native', () => {
     const view = await renderProvider();
     expect(mobileAdsControl.calls).toEqual([]);
     mockProStatus.current = { expiresAt: null, isPro: false, product: null, status: 'ready' };
-    view.rerender(buildTree());
+    await view.rerender(buildTree());
     await waitFor(() => expect(mobileAdsControl.calls).toEqual(CONSENT_FLOW));
-    view.rerender(buildTree());
+    await view.rerender(buildTree());
     await settle();
     expect(mobileAdsControl.calls).toEqual(CONSENT_FLOW);
   });
