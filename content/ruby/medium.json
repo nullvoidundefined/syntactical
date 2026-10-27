@@ -1,0 +1,4308 @@
+{
+  "questions": [
+    {
+      "id": "gen-ruby-medium-e6e4c997",
+      "prompt": "What does this program print?",
+      "topic": "operators-and-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-question-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      },
+      "query": {
+        "explanation": "`Array#*` repeats the array when given an Integer, but acts as `join` when given a String, so `[1, 2] * \"-\"` is `\"1-2\"`. `String#*` repeats the string, so `\"ab\" * 2` is `\"abab\"`. `Integer#*` only accepts numerics: `2 * \"ab\"` tries `String#coerce`, fails, and raises `TypeError: String can't be coerced into Integer` (the \"no implicit conversion\" wording comes from methods that need `to_int`, not from numeric coercion).",
+        "syntax": "ary * int  #=> repeated array\nary * str  #=> ary.join(str)\nstr * int  #=> repeated string\nint * str  #=> TypeError",
+        "tags": [
+          "operators",
+          "types",
+          "coercion",
+          "array",
+          "string"
+        ],
+        "title": "Ruby `*` is receiver-dependent"
+      },
+      "code": "a = [1, 2]\np a * 2\np a * \"-\"\nbegin\n  p 2 * \"ab\"\nrescue TypeError => e\n  puts \"TypeError: #{e.message}\"\nend\np \"ab\" * 2",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[1, 2, 1, 2]\n\"1-2\"\nTypeError: String can't be coerced into Integer\n\"abab\""
+        },
+        {
+          "text": "[1, 2, 1, 2]\n\"1-2\"\n\"abab\"\n\"abab\"",
+          "misconceptionId": "ruby.string-plus-integer-coercion",
+          "rationale": "You read `*` as symmetric, assuming 2 * \"ab\" repeats the string just like \"ab\" * 2 does. But the receiver picks the method: Integer#* asks the argument for a number, and \"ab\" cannot be coerced into Integer, so the output shows that TypeError, not \"abab\"."
+        },
+        {
+          "text": "[1, 2, 1, 2]\nTypeError: String can't be coerced into Array\nTypeError: String can't be coerced into Integer\n\"abab\"",
+          "misconceptionId": "ruby.string-plus-integer-coercion",
+          "rationale": "You assumed Array#* only means repetition, so a String argument must fail to coerce into an Array. Ruby's Array#* actually dispatches on the argument type: given a String it joins, which is why line 2 prints \"1-2\" rather than raising."
+        },
+        {
+          "text": "[1, 2, 1, 2]\n\"12\"\nTypeError: no implicit conversion of String into Integer\n\"abab\"",
+          "misconceptionId": "ruby.string-plus-integer-coercion",
+          "rationale": "You spotted that Array#* joins, but dropped the argument as a separator and expected \"12\", plus the argument-conversion wording used by indexing. The output shows \"1-2\" because \"-\" is the join separator, and Integer#* reports \"String can't be coerced into Integer\"."
+        }
+      ],
+      "type": "mc"
+    },
+    {
+      "id": "gen-ruby-medium-e511026d",
+      "prompt": "What does this program print?",
+      "topic": "functions-and-scope",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-question-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      },
+      "query": {
+        "explanation": "A non-lambda Proc binds arguments loosely: missing parameters become nil, extra arguments are dropped, and a single Array argument is auto-splatted across multiple parameters, so `pr.call([1, 2])` and `pr.call(1, 2, 3)` both give [1, 2]. A lambda binds arguments strictly like a method, so `la.call([1, 2])` raises ArgumentError (1 for 2). `return` inside a lambda returns only from the lambda, so `via_lambda` falls through to :outer; `return` inside a proc performs a non-local return from the enclosing method, so `via_proc` yields :inner immediately. `arity` is 2 for both here (required parameters), and `lambda?` distinguishes them.",
+        "syntax": "proc { |a, b| } / lambda { |a, b| } / ->(a, b) {} ; Proc#arity, Proc#lambda?",
+        "tags": [
+          "proc",
+          "lambda",
+          "closures",
+          "arity",
+          "non-local-return"
+        ],
+        "title": "Proc vs lambda: argument binding and return"
+      },
+      "code": "pr = proc { |a, b| [a, b] }\nla = ->(a, b) { [a, b] }\n\ndef via_lambda\n  l = -> { return :inner }\n  l.call\n  :outer\nend\n\ndef via_proc\n  b = proc { return :inner }\n  b.call\n  :outer\nend\n\np pr.call([1, 2])\np pr.call(1, 2, 3)\nbegin\n  la.call([1, 2])\nrescue ArgumentError\n  p :argument_error\nend\np via_lambda\np via_proc\np [pr.arity, la.arity, pr.lambda?]\n",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[1, 2]\n[1, 2]\n:argument_error\n:outer\n:inner\n[2, 2, false]"
+        },
+        {
+          "text": "[1, nil]\n[1, 2]\n:argument_error\n:outer\n:inner\n[2, 2, false]",
+          "misconceptionId": "ruby.block-vs-proc-vs-lambda-return",
+          "rationale": "This assumes a non-lambda proc binds a single array argument strictly, like a lambda, leaving b unset. But procs auto-splat: pr.call([1, 2]) destructures the array into a=1, b=2, so the first line prints [1, 2], not [1, nil]."
+        },
+        {
+          "text": "[1, 2]\n[1, 2]\n[1, 2]\n:outer\n:inner\n[2, 2, false]",
+          "misconceptionId": "ruby.block-vs-proc-vs-lambda-return",
+          "rationale": "This treats the lambda like the proc, expecting it to auto-splat [1, 2] into its two parameters and return [1, 2]. Lambdas check arity strictly and never splat, so la.call([1, 2]) passes one argument for two parameters and raises ArgumentError, printing :argument_error."
+        },
+        {
+          "text": "[1, 2]\n[1, 2]\n:argument_error\n:inner\n:inner\n[2, 2, true]",
+          "misconceptionId": "ruby.block-vs-proc-vs-lambda-return",
+          "rationale": "This assumes return behaves the same in both, so the lambda's return exits via_lambda, and that any -> or proc reports lambda? as true. Only the proc's return exits the enclosing method (:inner); the lambda returns from itself, so via_lambda yields :outer and pr.lambda? is false."
+        }
+      ],
+      "type": "mc"
+    },
+    {
+      "id": "gen-ruby-medium-119d8b59",
+      "prompt": "In Ruby only false and nil are falsy, so 0, 0.0, \"\" and [] all take the true branch of an if.",
+      "topic": "wtf",
+      "answer": true,
+      "code": "if 0\n  # does this run?\nend",
+      "query": {
+        "explanation": "Ruby's notion of truth is deliberately minimal: exactly two objects, false and nil, are treated as false in a condition, and every other object, including zero, the empty string, the empty array and the empty hash, is truthy. This differs from C (where 0 is false) and from Python (where empty containers are false), and is a frequent source of ported-code bugs.",
+        "syntax": "if 0 then :truthy else :falsy end  # => :truthy\n[nil, false].map { |v| v ? 1 : 0 } # => [0, 0]",
+        "tags": [
+          "truthiness",
+          "conditionals",
+          "nil"
+        ],
+        "title": "Ruby truthiness"
+      },
+      "rationale": "Saying false would require Ruby to treat zero or empty collections as false, but only false and nil are falsy, so `if 0` does run its body.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v1",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-053fd760",
+      "prompt": "What does this Ruby program print?",
+      "topic": "operators-and-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[3, 3.5, 1]"
+        },
+        {
+          "text": "[3.5, 3.5, 1]",
+          "rationale": "Integer / Integer never promotes to Float in Ruby; 7 / 2 truncates toward negative infinity to 3."
+        },
+        {
+          "text": "[4, 3.5, 1]",
+          "rationale": "Integer division floors rather than rounds, so 7 / 2 is 3, not 4."
+        },
+        {
+          "text": "[3, 3.5, 2.3333333333333335]",
+          "rationale": "`%` is modulo, not division, and both operands are Integers, so 7 % 3 is the Integer 1."
+        }
+      ],
+      "code": "a = 7 / 2\nb = 7.0 / 2\nc = 7 % 3\nputs [a, b, c].inspect",
+      "query": {
+        "explanation": "`/` is a method on the receiver. On two Integers it does floor division, so 7 / 2 is 3. If either operand is a Float, Ruby coerces to Float and 7.0 / 2 is 3.5. `%` on Integers also returns an Integer, so 7 % 3 is 1.",
+        "syntax": "Integer#/, Float#/, Integer#%",
+        "tags": [
+          "operators",
+          "numeric-types",
+          "division"
+        ],
+        "title": "Integer vs Float division"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-2d7cbe19",
+      "prompt": "What single line does this Ruby program print?",
+      "topic": "operators-and-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3, 1, -4, 1"
+        },
+        {
+          "text": "3, 1, -3, 1",
+          "rationale": "Integer division floors toward negative infinity, so -7 / 2 is -4, not -3."
+        },
+        {
+          "text": "3.5, 1, -3.5, -1",
+          "rationale": "Dividing two Integers yields an Integer; a Float result requires a Float operand."
+        },
+        {
+          "text": "3, 1, -4, -1",
+          "rationale": "Ruby's % takes the sign of the right operand, so -7 % 2 is 1, not -1."
+        }
+      ],
+      "code": "puts [7 / 2, 7 % 3, -7 / 2, -7 % 2].join(\", \")",
+      "query": {
+        "explanation": "When both operands are Integers, / performs integer division that rounds toward negative infinity (floor), so -7 / 2 is -4 rather than -3. Ruby's % result takes the sign of the right-hand operand, so -7 % 2 is 1, not -1. A Float appears in the result only if one operand is already a Float (7.0 / 2).",
+        "syntax": "a / b, a % b",
+        "tags": [
+          "operators",
+          "integer",
+          "division",
+          "modulo"
+        ],
+        "title": "Integer division and modulo in Ruby"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-c3216838",
+      "prompt": "What single line does this script output?",
+      "topic": "operators-and-types",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "-1 1 0",
+          "rationale": "Comparing incomparable types gives nil, not 0, since 0 would mean 'equal'."
+        },
+        {
+          "text": "-1 1 nil"
+        },
+        {
+          "text": "false true nil",
+          "rationale": "<=> returns an Integer ordering value, not a boolean."
+        },
+        {
+          "text": "-1 -1 nil",
+          "rationale": "\"b\" sorts after \"a\", so \"b\" <=> \"a\" is 1."
+        }
+      ],
+      "code": "puts [(1 <=> 2), (\"b\" <=> \"a\"), (1 <=> \"a\").inspect].join(\" \")",
+      "query": {
+        "explanation": "<=> returns -1, 0, or 1 when the two operands can be ordered: 1 <=> 2 is -1 and \"b\" <=> \"a\" is 1 because strings compare lexicographically. When the types cannot be compared at all, such as an Integer against a String, <=> returns nil instead of raising, which is how sort detects an invalid comparison.",
+        "syntax": "a <=> b",
+        "tags": [
+          "operators",
+          "comparable",
+          "spaceship",
+          "types"
+        ],
+        "title": "The spaceship operator and incomparable types"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-584ee491",
+      "prompt": "In Ruby, is `1 == 1.0` true while `1.eql?(1.0)` is false?",
+      "topic": "operators-and-types",
+      "answer": true,
+      "query": {
+        "explanation": "Numeric#== compares mathematical value across numeric types, so 1 == 1.0 is true. Object#eql? (as implemented by Integer and Float) additionally requires the same type, so 1.eql?(1.0) is false. This matters because Hash keys are matched with eql? plus hash, meaning 1 and 1.0 are distinct keys.",
+        "syntax": "a == b, a.eql?(b)",
+        "tags": [
+          "operators",
+          "equality",
+          "numeric",
+          "types"
+        ],
+        "title": "== versus eql? for numbers"
+      },
+      "rationale": "== coerces between numeric types so 1 == 1.0 holds, but eql? demands the same class, so an Integer is never eql? to a Float.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-68c16c45",
+      "prompt": "What does this expression evaluate to?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "3.5",
+          "rationale": "Integer / Integer stays an Integer in Ruby; use 7.fdiv(2) or 7 / 2.0 to get 3.5."
+        },
+        {
+          "text": "4",
+          "rationale": "Ruby does not round the quotient up; the remainder is simply dropped, leaving 3."
+        },
+        {
+          "text": "2",
+          "rationale": "2 would be 7 / 3; dividing 7 by 2 gives quotient 3 and remainder 1."
+        }
+      ],
+      "code": "p 7 / 2",
+      "query": {
+        "explanation": "When both operands are Integers, Ruby's #/ performs integer division and returns an Integer: 7 / 2 is 3 with remainder 1. To get a Float result you must make one operand a Float (7 / 2.0) or use 7.fdiv(2), both of which give 3.5.",
+        "syntax": "Integer#/ , Integer#fdiv",
+        "tags": [
+          "numbers",
+          "division",
+          "integer"
+        ],
+        "title": "Integer division truncates the remainder"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-46d870b9",
+      "prompt": "What is the result of this expression?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "-4"
+        },
+        {
+          "text": "-3",
+          "rationale": "-3 is truncation toward zero; Ruby floors the quotient instead, giving -4."
+        },
+        {
+          "text": "-3.5",
+          "rationale": "Both operands are Integers, so the result is an Integer, never a Float."
+        },
+        {
+          "text": "3",
+          "rationale": "A negative divided by a positive is negative, so the sign cannot be positive."
+        }
+      ],
+      "code": "p(-7 / 2)",
+      "query": {
+        "explanation": "Ruby's Integer#/ rounds the quotient down (toward negative infinity) rather than truncating toward zero, so -7 / 2 is -4, not -3. Use (-7).fdiv(2) for -3.5 or (-7).divmod(2) to see the pair [-4, 1].",
+        "syntax": "Integer#/",
+        "tags": [
+          "numbers",
+          "division",
+          "negative"
+        ],
+        "title": "Integer division floors toward negative infinity"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-b54cb34c",
+      "prompt": "What value does this expression produce?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2"
+        },
+        {
+          "text": "-1",
+          "rationale": "-1 is what (-7).remainder(3) returns; Ruby's % follows the divisor's sign and gives 2."
+        },
+        {
+          "text": "1",
+          "rationale": "-7 - 3 * (-3) = 2, not 1; 1 would be the result of 7 % 3."
+        },
+        {
+          "text": "-2",
+          "rationale": "The divisor 3 is positive, so the modulo result is positive."
+        }
+      ],
+      "code": "p(-7 % 3)",
+      "query": {
+        "explanation": "In Ruby, a % b satisfies a == b * (a / b) + (a % b) with floored division, so the result has the same sign as b. -7 / 3 is -3, and -7 - 3 * (-3) = 2. For the C/Java style result of -1, use (-7).remainder(3).",
+        "syntax": "Integer#% , Integer#remainder",
+        "tags": [
+          "numbers",
+          "modulo",
+          "negative"
+        ],
+        "title": "Ruby's % takes the sign of the divisor"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-e7cd8a5d",
+      "prompt": "Does 0.1 + 0.2 equal 0.3 exactly under Ruby's Float arithmetic?",
+      "topic": "numbers-and-math",
+      "answer": false,
+      "query": {
+        "explanation": "Ruby Floats are IEEE 754 doubles, and 0.1, 0.2 and 0.3 have no exact binary representation. 0.1 + 0.2 evaluates to 0.30000000000000004, so == is false. Compare with a tolerance, or use Rational(1, 10) + Rational(2, 10) == Rational(3, 10) for exact arithmetic.",
+        "syntax": "Float#== , Rational",
+        "tags": [
+          "numbers",
+          "float",
+          "precision"
+        ],
+        "title": "Floats are binary approximations"
+      },
+      "rationale": "Binary floating point cannot store these decimals exactly; 0.1 + 0.2 is 0.30000000000000004, so the equality is false.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-7410a858",
+      "prompt": "What is the output of this call?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1200"
+        },
+        {
+          "text": "1234",
+          "rationale": "A negative digit count is not ignored; it rounds to the hundreds place."
+        },
+        {
+          "text": "1300",
+          "rationale": "Rounding goes to the nearest multiple of 100, and the tens digit 3 is below 5."
+        },
+        {
+          "text": "12.34",
+          "rationale": "#round never divides the value; it only moves it to the nearest multiple of 100."
+        }
+      ],
+      "code": "p 1234.round(-2)",
+      "query": {
+        "explanation": "A negative argument to #round rounds to a power-of-ten place to the left of the decimal point: -2 means the nearest multiple of 100. Since 1234 is closer to 1200 than to 1300, the result is 1200 (still an Integer).",
+        "syntax": "Integer#round(ndigits)",
+        "tags": [
+          "numbers",
+          "rounding"
+        ],
+        "title": "Rounding with negative digits"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-c5385b82",
+      "prompt": "What array does this program print?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[-3, -4, -3]"
+        },
+        {
+          "text": "[-4, -4, -3]",
+          "rationale": "to_i truncates toward zero and yields -3; only floor drops to -4."
+        },
+        {
+          "text": "[-3, -3, -4]",
+          "rationale": "floor goes toward negative infinity (-4) and ceil toward positive infinity (-3), not the reverse."
+        },
+        {
+          "text": "[-4, -4, -4]",
+          "rationale": "Both to_i and ceil give -3 here, so the three values are not identical."
+        }
+      ],
+      "code": "p [(-3.7).to_i, (-3.7).floor, (-3.7).ceil]",
+      "query": {
+        "explanation": "Float#to_i truncates toward zero, so (-3.7).to_i is -3. Float#floor always moves toward negative infinity, giving -4, and Float#ceil always moves toward positive infinity, giving -3. For positive numbers to_i and floor agree, which is why the difference only shows with negatives.",
+        "syntax": "Float#to_i , Float#floor , Float#ceil",
+        "tags": [
+          "numbers",
+          "float",
+          "conversion"
+        ],
+        "title": "to_i truncates, floor and ceil go in fixed directions"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-87a46409",
+      "prompt": "Does this program print Infinity instead of raising an error?",
+      "topic": "numbers-and-math",
+      "answer": true,
+      "code": "p 10.0 / 0",
+      "query": {
+        "explanation": "Integer division by zero raises ZeroDivisionError, but Float division follows IEEE 754: 10.0 / 0 coerces 0 to 0.0 and returns Float::INFINITY, printed as Infinity. Likewise -10.0 / 0 is -Infinity and 0.0 / 0 is NaN.",
+        "syntax": "Float#/ , Float::INFINITY",
+        "tags": [
+          "numbers",
+          "float",
+          "division"
+        ],
+        "title": "Float division by zero"
+      },
+      "rationale": "ZeroDivisionError is raised only for integer division; with a Float receiver the IEEE 754 rules apply and the value is Float::INFINITY.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-8b85d7ad",
+      "prompt": "What is this script's output?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[4.0, 4]"
+        },
+        {
+          "text": "[4, 4]",
+          "rationale": "Math.sqrt always returns a Float, which inspects as 4.0 rather than 4."
+        },
+        {
+          "text": "[4.0, 4.0]",
+          "rationale": "Integer.sqrt returns an Integer, so the second element inspects as 4."
+        },
+        {
+          "text": "[4, 4.0]",
+          "rationale": "The types are swapped: Math.sqrt gives the Float and Integer.sqrt gives the Integer."
+        }
+      ],
+      "code": "p [Math.sqrt(16), Integer.sqrt(16)]",
+      "query": {
+        "explanation": "Math.sqrt always returns a Float, so Math.sqrt(16) is 4.0. Integer.sqrt returns the integer square root (the floor of the exact square root) as an Integer, so Integer.sqrt(16) is 4 and Integer.sqrt(17) is also 4.",
+        "syntax": "Math.sqrt , Integer.sqrt",
+        "tags": [
+          "numbers",
+          "math",
+          "types"
+        ],
+        "title": "Math.sqrt versus Integer.sqrt"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-eabdbc18",
+      "prompt": "What does this program print?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "(1/2)"
+        },
+        {
+          "text": "(2/9)",
+          "rationale": "Fractions are not added by summing numerators and denominators separately."
+        },
+        {
+          "text": "(3/18)",
+          "rationale": "The common denominator is 6, not 18, and Ruby reduces the result to lowest terms anyway."
+        },
+        {
+          "text": "0.5",
+          "rationale": "Adding two Rationals yields a Rational, not a Float; you would need .to_f to get 0.5."
+        }
+      ],
+      "code": "p Rational(1, 3) + Rational(1, 6)",
+      "query": {
+        "explanation": "Rational addition uses a common denominator: 1/3 + 1/6 = 2/6 + 1/6 = 3/6, and Ruby automatically reduces the result to lowest terms, giving 1/2. Rational + Rational returns a Rational, which #p displays as (1/2).",
+        "syntax": "Rational(numerator, denominator)",
+        "tags": [
+          "numbers",
+          "rational",
+          "exact-arithmetic"
+        ],
+        "title": "Rational arithmetic is exact and normalised"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-6a0720ef",
+      "prompt": "What array does this program print?",
+      "topic": "numbers-and-math",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[3, 4, 2]"
+        },
+        {
+          "text": "[2, 4, 2]",
+          "rationale": "Without the half: option Ruby rounds halves away from zero, so 2.5.round is 3."
+        },
+        {
+          "text": "[3, 4, 3]",
+          "rationale": "half: :even sends the tie 2.5 to the nearest even integer, which is 2."
+        },
+        {
+          "text": "[2, 3, 2]",
+          "rationale": "Banker's rounding is not the default, so both 2.5 and 3.5 round up to 3 and 4."
+        }
+      ],
+      "code": "p [2.5.round, 3.5.round, 2.5.round(half: :even)]",
+      "query": {
+        "explanation": "By default Float#round breaks ties by rounding half away from zero, so 2.5.round is 3 and 3.5.round is 4. Passing half: :even selects banker's rounding, which sends a tie to the nearest even integer, so 2.5.round(half: :even) is 2. half: :down is also available.",
+        "syntax": "Float#round(half: :up | :even | :down)",
+        "tags": [
+          "numbers",
+          "rounding",
+          "float"
+        ],
+        "title": "Float#round and the half: option"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-959aa02e",
+      "prompt": "What does this Ruby expression return?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"heLlo\""
+        },
+        {
+          "text": "\"heLLo\"",
+          "rationale": "That is what gsub would produce; sub stops after the first match."
+        },
+        {
+          "text": "\"hello\"",
+          "rationale": "The pattern \"l\" is present, so a replacement does happen."
+        },
+        {
+          "text": "\"hellL\"",
+          "rationale": "sub replaces the first match from the left, not the last one."
+        }
+      ],
+      "code": "\"hello\".sub(\"l\", \"L\")",
+      "query": {
+        "explanation": "String#sub replaces only the first occurrence of the pattern and returns a new string; String#gsub is the method that replaces every occurrence. Since the first \"l\" in \"hello\" is at index 2, only that character becomes \"L\".",
+        "syntax": "str.sub(pattern, replacement)",
+        "tags": [
+          "strings",
+          "sub",
+          "gsub"
+        ],
+        "title": "sub replaces only the first match"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-02f6593b",
+      "prompt": "Does this expression evaluate to true?",
+      "topic": "strings",
+      "answer": false,
+      "code": "\"abc\".frozen?",
+      "query": {
+        "explanation": "Without the `# frozen_string_literal: true` magic comment (or the matching command-line flag), a double-quoted literal creates a new mutable String each time it is evaluated, so frozen? is false. Symbols and integers are frozen, but ordinary string literals are not.",
+        "syntax": "obj.frozen?",
+        "tags": [
+          "strings",
+          "frozen",
+          "mutability"
+        ],
+        "title": "Plain string literals are mutable by default"
+      },
+      "rationale": "Only with the frozen_string_literal magic comment would the literal be frozen; by default each literal is a fresh mutable String.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-d0192cb7",
+      "prompt": "What is the value of this expression?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"555\""
+        },
+        {
+          "text": "15",
+          "rationale": "Ruby does not coerce the string to a number; multiplication on a String repeats it."
+        },
+        {
+          "text": "\"15\"",
+          "rationale": "No arithmetic is performed, so the digits are never summed or multiplied."
+        },
+        {
+          "text": "TypeError is raised",
+          "rationale": "String#* with an Integer argument is valid; only a non-integer argument would raise."
+        }
+      ],
+      "code": "\"5\" * 3",
+      "query": {
+        "explanation": "String#* takes an Integer and returns the receiver concatenated with itself that many times, so \"5\" * 3 is \"555\". No numeric conversion happens: Ruby never silently turns \"5\" into 5.",
+        "syntax": "str * integer",
+        "tags": [
+          "strings",
+          "operators",
+          "repetition"
+        ],
+        "title": "String#* repeats the string"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-4ee64dfe",
+      "prompt": "What array does this expression produce?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[\"a\", \"b\", \"\", \"c\"]"
+        },
+        {
+          "text": "[\"a\", \"b\", \"c\"]",
+          "rationale": "split does not collapse consecutive separators; only trailing empty fields are dropped."
+        },
+        {
+          "text": "[\"a\", \"b\", nil, \"c\"]",
+          "rationale": "Missing fields become empty strings, never nil."
+        },
+        {
+          "text": "[\"a\", \",\", \"b\", \",\", \",\", \"c\"]",
+          "rationale": "The separator itself is removed from the output unless a capturing regexp is used."
+        }
+      ],
+      "code": "\"a,b,,c\".split(\",\")",
+      "query": {
+        "explanation": "String#split with a default limit removes trailing empty strings but keeps empty fields that appear between separators. The two adjacent commas therefore yield an empty string in the middle of the result.",
+        "syntax": "str.split(separator, limit = 0)",
+        "tags": [
+          "strings",
+          "split",
+          "arrays"
+        ],
+        "title": "split keeps interior empty fields"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-0dfe27d2",
+      "prompt": "Does this expression evaluate to nil?",
+      "topic": "strings",
+      "answer": true,
+      "code": "\"abc\".sub!(\"z\", \"y\")",
+      "query": {
+        "explanation": "Mutating String methods such as sub!, gsub!, strip! and upcase! return the receiver when they modify it and nil when no change was made. Because \"abc\" contains no \"z\", sub! makes no change and returns nil.",
+        "syntax": "str.sub!(pattern, replacement)",
+        "tags": [
+          "strings",
+          "bang-methods",
+          "nil"
+        ],
+        "title": "Bang string methods return nil when nothing changes"
+      },
+      "rationale": "sub! only returns the string when a substitution actually occurs, so an unmatched pattern yields nil rather than the unchanged \"abc\".",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-3b0ad9ea",
+      "prompt": "What single line does this program print?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1 + 1 = #{1 + 1}"
+        },
+        {
+          "text": "1 + 1 = 2",
+          "rationale": "That is the double-quoted result; single quotes do not evaluate #{}."
+        },
+        {
+          "text": "1 + 1 = ",
+          "rationale": "The braces are printed verbatim rather than being dropped."
+        },
+        {
+          "text": "a SyntaxError is raised",
+          "rationale": "#{} inside single quotes is ordinary text and parses fine."
+        }
+      ],
+      "code": "puts '1 + 1 = #{1 + 1}'",
+      "query": {
+        "explanation": "Interpolation with #{} and most escape sequences only work inside double-quoted strings. In a single-quoted string the characters #{1 + 1} are literal text; only \\' and \\\\ are escapes.",
+        "syntax": "'literal text'   vs   \"interpolated #{expr}\"",
+        "tags": [
+          "strings",
+          "interpolation",
+          "quoting"
+        ],
+        "title": "Single quotes do not interpolate"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-476bae82",
+      "prompt": "What string does this call return?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"***ruby***\""
+        },
+        {
+          "text": "\"******ruby\"",
+          "rationale": "That is rjust; center distributes the padding on both sides."
+        },
+        {
+          "text": "\"ruby******\"",
+          "rationale": "That is ljust; center does not put all padding on one side."
+        },
+        {
+          "text": "\"****ruby****\"",
+          "rationale": "The result is exactly 10 characters wide, not 12."
+        }
+      ],
+      "code": "\"ruby\".center(10, \"*\")",
+      "query": {
+        "explanation": "String#center pads the receiver with the given pad string until it reaches the requested width, splitting the padding between both sides. With width 10 and a 4-character string, 6 pad characters are needed: 3 on the left and 3 on the right. Extra odd padding goes on the right.",
+        "syntax": "str.center(width, padstr = ' ')",
+        "tags": [
+          "strings",
+          "center",
+          "padding"
+        ],
+        "title": "center pads both sides"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-1628c4a1",
+      "prompt": "What does this expression return?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"ll\""
+        },
+        {
+          "text": "\"lo\"",
+          "rationale": "That would be \"Hello\"[-2, 2]; -3 starts one character earlier."
+        },
+        {
+          "text": "\"el\"",
+          "rationale": "That is \"Hello\"[1, 2]; the negative index counts from the end, not the start."
+        },
+        {
+          "text": "nil",
+          "rationale": "-3 is a valid offset in a 5-character string, so a substring is returned."
+        }
+      ],
+      "code": "\"Hello\"[-3, 2]",
+      "query": {
+        "explanation": "str[start, length] counts a negative start from the end of the string, where -1 is the last character. In \"Hello\", index -3 is the first \"l\", and taking 2 characters from there gives \"ll\".",
+        "syntax": "str[start, length]",
+        "tags": [
+          "strings",
+          "indexing",
+          "slicing"
+        ],
+        "title": "Negative start index with a length"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-3a6d8df3",
+      "prompt": "What is the result of this call?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\"hippo\""
+        },
+        {
+          "text": "\"hipllo\"",
+          "rationale": "tr replaces characters in place; it does not insert the replacement set as a substring."
+        },
+        {
+          "text": "\"hiplo\"",
+          "rationale": "Both \"l\" characters are translated, so two \"p\" characters appear."
+        },
+        {
+          "text": "\"hello\"",
+          "rationale": "Both \"e\" and \"l\" are in the source set, so the string does change."
+        }
+      ],
+      "code": "\"hello\".tr(\"el\", \"ip\")",
+      "query": {
+        "explanation": "String#tr maps each character of the first set to the character at the same position in the second set: \"e\" becomes \"i\" and \"l\" becomes \"p\". Applying that to \"hello\" gives \"hippo\". Unlike sub/gsub, tr works character by character, not on substrings.",
+        "syntax": "str.tr(from_str, to_str)",
+        "tags": [
+          "strings",
+          "tr",
+          "translation"
+        ],
+        "title": "tr translates characters positionally"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-16e7afa9",
+      "prompt": "What single string does this call produce?",
+      "topic": "strings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "He001, W1r0d"
+        },
+        {
+          "text": "He000, W0r0d",
+          "rationale": "This would require both \"l\" and \"o\" to map to \"0\", but tr pairs characters by position, so \"o\" maps to \"1\"."
+        },
+        {
+          "text": "He001, W1r1d",
+          "rationale": "The \"l\" in \"World\" becomes \"0\", not \"1\"; only \"o\" characters become \"1\"."
+        },
+        {
+          "text": "Hello, World",
+          "rationale": "tr does replace matching characters here; it returns the original string only when no character in the from-string is present."
+        }
+      ],
+      "code": "puts \"Hello, World\".tr(\"lo\", \"01\")",
+      "query": {
+        "explanation": "String#tr translates characters positionally: each character of the from-string maps to the character at the same index in the to-string. Here \"l\" maps to \"0\" and \"o\" maps to \"1\", so every \"l\" becomes \"0\" and every \"o\" becomes \"1\", giving \"He001, W1r0d\". Unlike sub or gsub, tr works character by character rather than on substrings, and it is case sensitive, so the capital letters are untouched.",
+        "syntax": "str.tr(from_str, to_str)",
+        "tags": [
+          "ruby",
+          "strings",
+          "tr"
+        ],
+        "title": "String#tr character translation"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-68c8072b",
+      "prompt": "What does this call return?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[2, 4, 6]"
+        },
+        {
+          "text": "[1, 2, 3]",
+          "rationale": "The receiver is unchanged, but each_with_object returns the memo object, not the receiver."
+        },
+        {
+          "text": "[[1, 2], [2, 4], [3, 6]]",
+          "rationale": "No pairing happens; the block's return value is discarded and only the memo accumulates."
+        },
+        {
+          "text": "nil",
+          "rationale": "each returns nil-like self semantics, but each_with_object explicitly returns the memo object."
+        }
+      ],
+      "code": "p [1, 2, 3].each_with_object([]) { |x, acc| acc << x * 2 }",
+      "query": {
+        "explanation": "each_with_object yields each element along with the same memo object you passed in, and after iterating it returns that memo object (not the original receiver and not the block's value). Here the memo is an empty array that collects each doubled element, so the result is [2, 4, 6]. Compare with inject/reduce, which returns the block's value on each step.",
+        "syntax": "enum.each_with_object(memo) { |element, memo| ... } -> memo",
+        "tags": [
+          "iterables",
+          "enumerable",
+          "each_with_object"
+        ],
+        "title": "each_with_object returns the memo object"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-a363465f",
+      "prompt": "What does this chain produce?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[[\"a\", 1], [\"b\", 2], [\"c\", 3]]"
+        },
+        {
+          "text": "[[\"a\", 0], [\"b\", 1], [\"c\", 2]]",
+          "rationale": "That is the default offset of 0; the explicit argument 1 shifts the numbering."
+        },
+        {
+          "text": "[[1, \"a\"], [2, \"b\"], [3, \"c\"]]",
+          "rationale": "with_index yields the element first and the index second, not the reverse."
+        },
+        {
+          "text": "[[\"b\", 1], [\"c\", 2]]",
+          "rationale": "The offset only changes index numbering; no elements are skipped."
+        }
+      ],
+      "code": "p %w[a b c].each.with_index(1).to_a",
+      "query": {
+        "explanation": "each without a block gives an Enumerator, and Enumerator#with_index takes an optional offset for the first index (default 0). With offset 1 the pairs become [\"a\", 1], [\"b\", 2], [\"c\", 3]. Note each_with_index takes no offset argument, which is why the enumerator form is used for 1-based numbering.",
+        "syntax": "enum.each.with_index(offset) -> Enumerator",
+        "tags": [
+          "iterables",
+          "enumerator",
+          "with_index"
+        ],
+        "title": "with_index accepts a starting offset"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-4c94e80b",
+      "prompt": "What does this pipeline return?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[6, 12, 18]"
+        },
+        {
+          "text": "[3, 6, 9]",
+          "rationale": "The map runs before the select, so only even doubled values are candidates; 3 and 9 never appear."
+        },
+        {
+          "text": "[2, 4, 6]",
+          "rationale": "These are the first three doubles, but select keeps only multiples of 3."
+        },
+        {
+          "text": "It hangs forever on the infinite range",
+          "rationale": "lazy evaluates element by element, so first(3) stops after finding three matches."
+        }
+      ],
+      "code": "p (1..Float::INFINITY).lazy.map { |n| n * 2 }.select { |n| n % 3 == 0 }.first(3)",
+      "query": {
+        "explanation": "A lazy enumerator pulls elements one at a time through the whole chain instead of building intermediate arrays, so it can process an infinite range. The doubles are 2, 4, 6, 8, 10, 12, ...; those divisible by 3 are 6, 12, 18, and first(3) forces exactly those three values and stops.",
+        "syntax": "enum.lazy.map { }.select { }.first(n)",
+        "tags": [
+          "iterables",
+          "lazy",
+          "enumerator"
+        ],
+        "title": "Lazy enumerators work on infinite sequences"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-f341364c",
+      "prompt": "What does sort return for this class?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[1, 2, 3]"
+        },
+        {
+          "text": "[3, 1, 2]",
+          "rationale": "sort really does order the elements; it does not just dump them in insertion order."
+        },
+        {
+          "text": "A Bag instance holding 1, 2, 3",
+          "rationale": "Enumerable methods such as sort return a new Array, not an instance of the including class."
+        },
+        {
+          "text": "NoMethodError: undefined method 'sort' for a Bag",
+          "rationale": "include Enumerable plus a working each is exactly what supplies sort."
+        }
+      ],
+      "code": "class Bag\n  include Enumerable\n\n  def initialize(*items)\n    @items = items\n  end\n\n  def each(&blk)\n    @items.each(&blk)\n  end\nend\n\np Bag.new(3, 1, 2).sort",
+      "query": {
+        "explanation": "Including Enumerable gives a class dozens of methods (sort, map, select, min, include?, ...) that are all implemented in terms of a single required each method. Bag#each forwards the block to the internal array, so sort can collect 3, 1, 2 and return the sorted array [1, 2, 3]. Enumerable methods like sort return plain arrays, not Bag instances.",
+        "syntax": "include Enumerable; def each(&blk) ... end",
+        "tags": [
+          "iterables",
+          "enumerable",
+          "mixin"
+        ],
+        "title": "Enumerable builds everything on top of each"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-2357937e",
+      "prompt": "What does this call return?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[[1, \"a\"], [2, \"b\"], [3, nil]]"
+        },
+        {
+          "text": "[[1, \"a\"], [2, \"b\"]]",
+          "rationale": "zip never shortens below the receiver's length; it pads the missing slot with nil."
+        },
+        {
+          "text": "[[1, \"a\"], [2, \"b\"], [3]]",
+          "rationale": "Every tuple has one slot per collection, so the missing value is an explicit nil, not a shorter tuple."
+        },
+        {
+          "text": "ArgumentError for mismatched lengths",
+          "rationale": "Mismatched lengths are allowed; nil padding is the documented behaviour."
+        }
+      ],
+      "code": "p [1, 2, 3].zip(%w[a b])",
+      "query": {
+        "explanation": "zip builds tuples by taking one element from the receiver and one from each argument. The result always has the same length as the receiver, so shorter arguments are padded with nil and longer ones are truncated. Here the third tuple becomes [3, nil].",
+        "syntax": "array.zip(other, ...) -> array of tuples",
+        "tags": [
+          "iterables",
+          "zip"
+        ],
+        "title": "zip pads with nil using the receiver's length"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-832b9d03",
+      "prompt": "What does this call produce?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[[1, 2], [2, 3], [3, 4], [4, 5]]"
+        },
+        {
+          "text": "[[1, 2], [3, 4], [5]]",
+          "rationale": "Those are the non-overlapping chunks from each_slice(2), not consecutive windows."
+        },
+        {
+          "text": "[[1, 2], [2, 3], [3, 4], [4, 5], [5, nil]]",
+          "rationale": "each_cons never pads; it stops once a full window of n elements is no longer available."
+        },
+        {
+          "text": "[[1, 2], [3, 4]]",
+          "rationale": "each_cons slides by one element, so it yields four windows here rather than dropping elements."
+        }
+      ],
+      "code": "p (1..5).each_cons(2).to_a",
+      "query": {
+        "explanation": "each_cons(n) yields every consecutive run of n elements, sliding one position at a time, so the windows overlap and there are size - n + 1 of them. For 1..5 with n = 2 that gives [1, 2], [2, 3], [3, 4], [4, 5]. Contrast each_slice(2), which produces non-overlapping chunks [[1, 2], [3, 4], [5]].",
+        "syntax": "enum.each_cons(n) -> Enumerator of overlapping windows",
+        "tags": [
+          "iterables",
+          "each_cons",
+          "enumerable"
+        ],
+        "title": "each_cons yields overlapping windows"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-e480c87b",
+      "prompt": "What does this call return?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[[1, 2], [4, 5], [7]]"
+        },
+        {
+          "text": "[[1], [2, 4], [5, 7]]",
+          "rationale": "That is the behaviour of slice_when with this block, which splits where the block is truthy."
+        },
+        {
+          "text": "[[1, 2], [4, 5]]",
+          "rationale": "No element is dropped; the lone 7 forms its own single-element chunk."
+        },
+        {
+          "text": "[[true, false], [true, false]]",
+          "rationale": "chunk_while returns groups of the original elements, not the block's boolean results."
+        }
+      ],
+      "code": "p [1, 2, 4, 5, 7].chunk_while { |a, b| b == a + 1 }.to_a",
+      "query": {
+        "explanation": "chunk_while passes each adjacent pair to the block; a truthy result keeps the two elements in the same chunk, a falsy result starts a new chunk. Here 1-2 and 4-5 are consecutive so they group, while 2-4, 5-7 break the runs, producing [[1, 2], [4, 5], [7]]. slice_when is the inverse, splitting where the block is truthy.",
+        "syntax": "enum.chunk_while { |prev, curr| ... } -> Enumerator",
+        "tags": [
+          "iterables",
+          "chunk_while",
+          "enumerable"
+        ],
+        "title": "chunk_while groups by comparing neighbours"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-237c369f",
+      "prompt": "What output does this script produce?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[10, 20, 10]"
+        },
+        {
+          "text": "[10, 20, 30]",
+          "rationale": "rewind resets the external iterator to the start, so the third next yields the first element again, not the third."
+        },
+        {
+          "text": "[10, 10, 10]",
+          "rationale": "Each next advances the position, so the second call returns 20 rather than repeating 10."
+        },
+        {
+          "text": "[20, 30, 10]",
+          "rationale": "The first next returns the first element, 10, not the second."
+        }
+      ],
+      "code": "e = [10, 20, 30].each\na = e.next\nb = e.next\ne.rewind\nc = e.next\np [a, b, c]",
+      "query": {
+        "explanation": "Calling each without a block returns an Enumerator, which supports external iteration. next pulls one element at a time and remembers its position, so the first two calls give 10 and 20. rewind resets that position to the beginning, so the following next returns 10 again, producing [10, 20, 10].",
+        "syntax": "enum = collection.each; enum.next; enum.rewind",
+        "tags": [
+          "ruby",
+          "iterables",
+          "enumerator",
+          "external-iteration"
+        ],
+        "title": "External iteration with Enumerator#next and #rewind"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-c519c0fe",
+      "prompt": "Does defining each plus including Enumerable give this class map, select, and sort_by?",
+      "topic": "iterables",
+      "answer": true,
+      "code": "class Bag\n  include Enumerable\n  def each\n    yield 3\n    yield 1\n    yield 2\n  end\nend",
+      "query": {
+        "explanation": "The Enumerable module implements dozens of methods purely in terms of each. Once a class includes Enumerable and provides an each that yields its elements, it automatically gains map, select, sort_by, include?, min, reduce and the rest. Bag.new.map { |x| x * 2 } returns [6, 2, 4].",
+        "syntax": "class C\n  include Enumerable\n  def each; yield ...; end\nend",
+        "tags": [
+          "ruby",
+          "iterables",
+          "enumerable",
+          "mixins"
+        ],
+        "title": "Enumerable is built on a single each method"
+      },
+      "rationale": "Enumerable defines all of its methods in terms of each, so providing each is enough for map, select, and sort_by to work on Bag instances.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-45fd715d",
+      "prompt": "What array does this chain print?",
+      "topic": "iterables",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[6, 15, 7]"
+        },
+        {
+          "text": "[6, 15]",
+          "rationale": "each_slice keeps the final short group instead of discarding it, so the leftover [7] contributes a third sum."
+        },
+        {
+          "text": "[6, 15, 13]",
+          "rationale": "The last slice is only [7]; 13 would require a group of [6, 7], which belongs to the second slice."
+        },
+        {
+          "text": "[28]",
+          "rationale": "28 is the sum of the whole range; each_slice(3) splits it into separate groups before summing."
+        }
+      ],
+      "code": "p (1..7).each_slice(3).map(&:sum)",
+      "query": {
+        "explanation": "each_slice(3) without a block returns an Enumerator yielding consecutive groups of three: [1,2,3], [4,5,6], and the short trailing group [7]. Mapping sum over those groups gives [6, 15, 7]. Unlike each_cons, the slices do not overlap, and the final partial slice is always included.",
+        "syntax": "enum.each_slice(n) # => Enumerator of n-sized arrays",
+        "tags": [
+          "ruby",
+          "iterables",
+          "each_slice",
+          "enumerator"
+        ],
+        "title": "each_slice returns an Enumerator of fixed-size groups"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-72d8fe9b",
+      "prompt": "What array does this script print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[3, 0, 3]"
+        },
+        {
+          "text": "[3, nil, 3]",
+          "rationale": "A missing key returns the configured default 0, not nil; nil would come from a plain Hash.new with no default."
+        },
+        {
+          "text": "[3, 0, 4]",
+          "rationale": "Reading h[\"z\"] does not insert the key, so only \"b\", \"a\" and \"n\" are stored and size stays 3."
+        },
+        {
+          "text": "[2, 0, 3]",
+          "rationale": "\"banana\" contains three a's (positions 2, 4 and 6), not two."
+        }
+      ],
+      "code": "h = Hash.new(0)\n\"banana\".each_char { |c| h[c] += 1 }\np [h[\"a\"], h[\"z\"], h.size]",
+      "query": {
+        "explanation": "Hash.new(0) supplies 0 for missing keys, so h[c] += 1 works without initialisation. Reading a missing key like h[\"z\"] returns the default but does NOT store it, so the hash still holds only the three keys \"b\", \"a\", \"n\". \"banana\" has 3 a's, 2 n's, 1 b.",
+        "syntax": "Hash.new(default_value)",
+        "tags": [
+          "hash",
+          "default-value",
+          "counting"
+        ],
+        "title": "Hash.new(0) as a counter"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-9506c114",
+      "prompt": "What array does this script print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[0, [1, 2]]"
+        },
+        {
+          "text": "[2, []]",
+          "rationale": "`<<` never assigns a key, so the hash stays empty, and the shared default array was mutated twice so it is not empty."
+        },
+        {
+          "text": "[0, []]",
+          "rationale": "The size is right, but both `<<` calls mutated the one shared default array, so it now contains 1 and 2."
+        },
+        {
+          "text": "[2, [1, 2]]",
+          "rationale": "Reading h[:a] only returns the default object; it does not store a key, so size remains 0."
+        }
+      ],
+      "code": "h = Hash.new([])\nh[:a] << 1\nh[:b] << 2\np [h.size, h[:c]]",
+      "query": {
+        "explanation": "Hash.new([]) stores one single array as the default. h[:a] reads that default and pushes into it; no assignment ever happens, so no key is added and size stays 0. Both pushes mutated the same array, so any missing key now reads back [1, 2]. Use Hash.new { |h, k| h[k] = [] } instead.",
+        "syntax": "Hash.new { |hash, key| hash[key] = [] }",
+        "tags": [
+          "hash",
+          "default-value",
+          "aliasing"
+        ],
+        "title": "The shared default object trap"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-e0423688",
+      "prompt": "What array does this script print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[3, 1, [2]]"
+        },
+        {
+          "text": "[1, 3, [2]]",
+          "rationale": "pop takes from the end (3) and shift takes from the front (1), not the other way round."
+        },
+        {
+          "text": "[3, 2, [1]]",
+          "rationale": "After pop removes 3 the array is [1, 2], so shift returns 1 and leaves [2]."
+        },
+        {
+          "text": "[1, 2, [3]]",
+          "rationale": "Neither pop nor shift removes from the front-then-middle in this order; pop takes the last element first."
+        }
+      ],
+      "code": "s = []\ns.push(1)\ns.push(2)\ns.push(3)\na = s.pop\nb = s.shift\np [a, b, s]",
+      "query": {
+        "explanation": "push appends to the end. pop removes and returns the last element (LIFO, stack behaviour), giving 3. shift removes and returns the first element (FIFO, queue behaviour), giving 1. The single remaining element is 2.",
+        "syntax": "array.push(x) / array.pop / array.shift / array.unshift(x)",
+        "tags": [
+          "array",
+          "stack",
+          "queue"
+        ],
+        "title": "Array as both stack and queue"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-b3e586c5",
+      "prompt": "What array does this script print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[2, nil, [1, 3]]"
+        },
+        {
+          "text": "[2, nil, [1, 3, 2]]",
+          "rationale": "delete removes every element equal to the argument, not just the first one, so both 2s disappear."
+        },
+        {
+          "text": "[[2, 2], nil, [1, 3]]",
+          "rationale": "delete returns the deleted object itself, not an array of the removed elements."
+        },
+        {
+          "text": "[2, 99, [1, 3]]",
+          "rationale": "When no element matches, delete returns nil rather than the argument."
+        }
+      ],
+      "code": "a = [1, 2, 3, 2]\nr = a.delete(2)\nmissing = a.delete(99)\np [r, missing, a]",
+      "query": {
+        "explanation": "delete(obj) removes ALL elements equal to obj and returns the object that was deleted (2 here), or nil when nothing matched. Use delete_at(index) to remove by position, or delete_if for a condition.",
+        "syntax": "array.delete(obj) -> obj or nil",
+        "tags": [
+          "array",
+          "deletion"
+        ],
+        "title": "Array#delete removes every match"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-dbd386bc",
+      "prompt": "What array does this script print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[4, [3], [1, 2], true]"
+        },
+        {
+          "text": "[5, [3], [1, 2], true]",
+          "rationale": "A Set stores unique elements, so the duplicated 3 is counted once and the union has 4 members, not 5."
+        },
+        {
+          "text": "[4, [3], [1, 2, 3], true]",
+          "rationale": "a - b removes every element of b from a, so 3 is dropped and only [1, 2] remains."
+        },
+        {
+          "text": "[4, [1, 2, 3, 4], [1, 2], false]",
+          "rationale": "`&` is intersection (shared elements only), and a is indeed a subset of a | b, so the flag is true."
+        }
+      ],
+      "code": "require 'set'\na = Set[1, 2, 3]\nb = Set[3, 4]\np [(a | b).size, (a & b).to_a, (a - b).to_a, a.subset?(a | b)]",
+      "query": {
+        "explanation": "Union {1,2,3,4} has size 4. Intersection keeps only the shared element 3. Difference a - b drops 3, leaving [1, 2]. Every set is a subset of its union with another set, so subset? is true.",
+        "syntax": "set1 | set2, set1 & set2, set1 - set2, set.subset?(other)",
+        "tags": [
+          "set",
+          "operations"
+        ],
+        "title": "Set union, intersection and difference"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-7b1ed1eb",
+      "prompt": "What array does this script print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[\"key\", 1, nil, false]"
+        },
+        {
+          "text": "[\"key!\", nil, 1, false]",
+          "rationale": "Hash copies and freezes String keys on insertion, so the stored key stays \"key\" and is unaffected by the mutation."
+        },
+        {
+          "text": "[\"key\", 1, nil, true]",
+          "rationale": "Only the internal copy is frozen; the original variable k remains mutable, which is why `k << \"!\"` succeeded."
+        },
+        {
+          "text": "[\"key\", nil, 1, false]",
+          "rationale": "The stored key is \"key\", so h[\"key\"] finds 1 and h[\"key!\"] finds nothing."
+        }
+      ],
+      "code": "k = \"key\"\nh = { k => 1 }\nk << \"!\"\np [h.keys.first, h[\"key\"], h[\"key!\"], k.frozen?]",
+      "query": {
+        "explanation": "When a String is used as a Hash key, Hash stores a frozen duplicate of it, so later mutation of the original variable cannot corrupt the table. The stored key is still \"key\", lookups with \"key\" succeed, \"key!\" misses, and the original variable k is not frozen.",
+        "syntax": "hash[string_key] = value",
+        "tags": [
+          "hash",
+          "string",
+          "keys",
+          "immutability"
+        ],
+        "title": "String keys are duplicated and frozen"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-546d6121",
+      "prompt": "What array does this script print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[[1, 2, [3, [4]]], 4, 2]"
+        },
+        {
+          "text": "[[1, 2, 3, [4]], 4, 2]",
+          "rationale": "flatten(1) strips exactly one nesting level, so the inner [3, [4]] is left untouched."
+        },
+        {
+          "text": "[[1, 2, [3, [4]]], 4, 4]",
+          "rationale": "flatten returns a new array; a is unchanged and still contains just 1 and the nested array, so a.size is 2."
+        },
+        {
+          "text": "[[1, 2, [3, [4]]], 2, 2]",
+          "rationale": "Full flatten yields [1, 2, 3, 4], whose size is 4."
+        }
+      ],
+      "code": "a = [1, [2, [3, [4]]]]\np [a.flatten(1), a.flatten.size, a.size]",
+      "query": {
+        "explanation": "flatten(1) removes only one level of nesting, turning [1, [2, [3, [4]]]] into [1, 2, [3, [4]]]. flatten with no argument recurses fully, producing [1, 2, 3, 4] with size 4. Neither call mutates a, which still has 2 top-level elements.",
+        "syntax": "array.flatten(depth = nil)",
+        "tags": [
+          "array",
+          "nesting",
+          "flatten"
+        ],
+        "title": "flatten with and without a depth limit"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-811ba127",
+      "prompt": "What array does this script print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[7, nil]"
+        },
+        {
+          "text": "[5, nil]",
+          "rationale": "bsearch returns the smallest element satisfying the block; 5 is not >= 6, so it fails the test."
+        },
+        {
+          "text": "[7, 11]",
+          "rationale": "When no element satisfies the block, bsearch returns nil rather than the closest or last element."
+        },
+        {
+          "text": "[nil, nil]",
+          "rationale": "7 satisfies x >= 6 and the array is sorted, so the first call succeeds."
+        }
+      ],
+      "code": "a = [1, 3, 5, 7, 9, 11]\np [a.bsearch { |x| x >= 6 }, a.bsearch { |x| x >= 12 }]",
+      "query": {
+        "explanation": "In find-minimum mode the block returns true/false and bsearch returns the first element for which the block is true, assuming the array is sorted so that false values precede true ones. The first element >= 6 is 7; no element is >= 12, so the second call returns nil.",
+        "syntax": "sorted_array.bsearch { |x| x >= target }",
+        "tags": [
+          "array",
+          "binary-search",
+          "sorted"
+        ],
+        "title": "Binary search in find-minimum mode"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-b0d7e497",
+      "prompt": "Which array does this script print?",
+      "topic": "data-structures",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[4, 3, 2, 1]"
+        },
+        {
+          "text": "[1, 2, 3, 4]",
+          "rationale": "That is the order of the list before reversal; the while loop rewires every next_node pointer, so the traversal from prev yields the opposite order."
+        },
+        {
+          "text": "[1]",
+          "rationale": "The reversal does not drop nodes. Every node is visited once and relinked, so all four values remain reachable from the new head."
+        },
+        {
+          "text": "[4, 3, 2]",
+          "rationale": "No node is lost: when cur reaches the original head, prev already holds the rest, and the head becomes the final tail with value 1."
+        }
+      ],
+      "code": "Node = Struct.new(:value, :next_node)\n\nlist = [1, 2, 3, 4].reverse.reduce(nil) { |acc, v| Node.new(v, acc) }\n\nprev = nil\ncur = list\nwhile cur\n  nxt = cur.next_node\n  cur.next_node = prev\n  prev = cur\n  cur = nxt\nend\n\nout = []\nnode = prev\nwhile node\n  out << node.value\n  node = node.next_node\nend\np out",
+      "query": {
+        "explanation": "The reduce over [4, 3, 2, 1] conses nodes so the head is 1 and the list reads 1 -> 2 -> 3 -> 4. The while loop is the classic three-pointer reversal: it saves nxt, points cur backwards at prev, then advances prev and cur. When cur becomes nil, prev is the new head (the old tail, 4), so traversing from it collects [4, 3, 2, 1].",
+        "syntax": "Struct.new(:value, :next_node)",
+        "tags": [
+          "linked-list",
+          "struct",
+          "pointers",
+          "ruby"
+        ],
+        "title": "Reversing a linked list built from Struct nodes"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-4c0cc4f7",
+      "prompt": "After deleting :a and then re-inserting it, do the hash keys come out as [:b, :c, :a]?",
+      "topic": "data-structures",
+      "answer": true,
+      "code": "h = { a: 1, b: 2, c: 3 }\nh.delete(:a)\nh[:a] = 9\np h.keys",
+      "query": {
+        "explanation": "Ruby's Hash remembers the order in which keys were first inserted. Deleting :a removes it entirely, so the later assignment h[:a] = 9 is a fresh insertion that lands at the end of the ordering. The result is [:b, :c, :a], and Hash#shift or #first would now return [:b, 2].",
+        "syntax": "hash.delete(key); hash[key] = value",
+        "tags": [
+          "hash",
+          "insertion-order",
+          "delete",
+          "ruby"
+        ],
+        "title": "Ruby hashes keep insertion order"
+      },
+      "rationale": "A deleted key loses its original slot, so re-assigning it appends it at the end; the keys are not restored to [:a, :b, :c].",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-f27ac516",
+      "prompt": "What does this program output?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[[3, 6, 7], [3, 10, 11]]"
+        },
+        {
+          "text": "[[3, 6, 7], [3, 10, 7]]",
+          "rationale": "`c` is recomputed from the actual value of `b`, so when b is 10 the default for c is 11, not the 7 from the first call."
+        },
+        {
+          "text": "[[3, 6, 1], [3, 10, 11]]",
+          "rationale": "`c` defaults to `b + 1`, and `b` is 6 in the first call, so c is 7; the default never uses a bare 1."
+        },
+        {
+          "text": "ArgumentError: wrong number of arguments",
+          "rationale": "Only `a` is required; `b` and `c` are optional, so both `f(3)` and `f(3, 10)` are valid calls."
+        }
+      ],
+      "code": "def f(a, b = a * 2, c = b + 1)\n  [a, b, c]\nend\n\np [f(3), f(3, 10)]",
+      "query": {
+        "explanation": "Ruby evaluates default argument expressions at call time, left to right, in the scope of the method body. So `b` defaults to `a * 2` (6 when a=3), and `c` defaults to `b + 1` using whatever `b` ended up being. With `f(3, 10)`, the supplied 10 replaces the default, so `c` becomes 11.",
+        "syntax": "def name(required, optional = expr_using_earlier_params)",
+        "tags": [
+          "functions-and-scope",
+          "default-arguments",
+          "ruby"
+        ],
+        "title": "Default arguments see earlier parameters"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-8dcfb3df",
+      "prompt": "Does this program print `no x`?",
+      "topic": "functions-and-scope",
+      "answer": true,
+      "code": "x = 10\n\ndef show\n  defined?(x) ? \"sees x\" : \"no x\"\nend\n\nputs show",
+      "query": {
+        "explanation": "`def` opens a brand-new local variable scope. Locals from the surrounding code are not visible inside the method body, so `defined?(x)` returns nil and the method yields \"no x\". Blocks behave differently: they close over surrounding locals.",
+        "syntax": "def name ... end  # new local scope, outer locals invisible",
+        "tags": [
+          "functions-and-scope",
+          "scope-gate",
+          "ruby"
+        ],
+        "title": "def is a scope gate"
+      },
+      "rationale": "A method body does not close over surrounding locals, so `x` is simply undefined inside `show`; it would only be visible to a block or to `define_method`.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-f96ac3b0",
+      "prompt": "What array does this program print?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[60, 100]"
+        },
+        {
+          "text": "[60, 30]",
+          "rationale": "The `; n` declaration makes `n` block-local, so the outer `n` is shadowed and never reassigned; it keeps its original value."
+        },
+        {
+          "text": "[0, 100]",
+          "rationale": "`total` is not in the block-local list, so the block closes over the outer `total` and its `+=` updates really do persist."
+        },
+        {
+          "text": "[100, 60]",
+          "rationale": "The array is `[total, n]` in that order: the accumulated sum first, then the untouched outer `n`."
+        }
+      ],
+      "code": "total = 0\nn = 100\n\n[1, 2, 3].each do |i; n|\n  n = i * 10\n  total += n\nend\n\np [total, n]",
+      "query": {
+        "explanation": "Names listed after the semicolon in a block's parameter list are forced to be block-local, shadowing any outer variable of the same name. So assignments to `n` inside the block never touch the outer `n`, which stays 100. `total` is not shadowed, so the block closes over it and accumulates 10 + 20 + 30 = 60.",
+        "syntax": "collection.each do |param; block_local| ... end",
+        "tags": [
+          "functions-and-scope",
+          "blocks",
+          "closures",
+          "ruby"
+        ],
+        "title": "Block-local variables with the semicolon list"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-d558ac12",
+      "prompt": "What does this program output?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[1, [2, 3], 4, [:z]]"
+        },
+        {
+          "text": "[1, [2, 3], 0, [:k, :z]]",
+          "rationale": "Because `k:` is declared explicitly, `k: 4` binds to it and is not swept into `**opts`, so the default 0 is not used."
+        },
+        {
+          "text": "[1, [2, 3, 4], 0, [:z]]",
+          "rationale": "`k: 4` is passed as a keyword, not a positional argument, so it never lands in the `*rest` array."
+        },
+        {
+          "text": "ArgumentError: unknown keyword: :z",
+          "rationale": "`**opts` exists precisely to absorb unknown keywords; the error would only occur if the double-splat parameter were absent."
+        }
+      ],
+      "code": "def f(a, *rest, k: 0, **opts)\n  [a, rest, k, opts.keys]\nend\n\np f(1, 2, 3, k: 4, z: 5)",
+      "query": {
+        "explanation": "`a` takes the first positional argument, `*rest` collects the remaining positional arguments into an array, `k:` is a declared keyword argument that matches `k: 4`, and `**opts` collects any undeclared keywords, so `opts` is `{z: 5}` and `opts.keys` is `[:z]`.",
+        "syntax": "def f(req, *rest, kw: default, **other_kws)",
+        "tags": [
+          "functions-and-scope",
+          "parameters",
+          "keyword-arguments",
+          "ruby"
+        ],
+        "title": "Splat, keyword, and double-splat parameters"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-02bcd2d8",
+      "prompt": "What does this program print?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "15"
+        },
+        {
+          "text": "5",
+          "rationale": "`factor` is captured as 3, so the multiplication actually happens; it is not treated as 1 or ignored."
+        },
+        {
+          "text": "NameError: undefined local variable or method 'factor'",
+          "rationale": "That is what a `def`-defined method would raise, but `define_method` uses a block, which closes over the class body's locals."
+        },
+        {
+          "text": "nil",
+          "rationale": "The block's last expression is the product `x * factor`, and `define_method` returns a real method whose value is that product."
+        }
+      ],
+      "code": "class Counter\n  factor = 3\n  define_method(:scale) { |x| x * factor }\nend\n\np Counter.new.scale(5)",
+      "query": {
+        "explanation": "Unlike `def`, which opens a fresh scope, `define_method` takes a block, and blocks are closures. The block captures the local variable `factor` from the class body, so the resulting method can still use it long after the class body has finished executing. `5 * 3` is 15.",
+        "syntax": "define_method(:name) { |args| ... }  # block closes over surrounding locals",
+        "tags": [
+          "functions-and-scope",
+          "define-method",
+          "closures",
+          "ruby"
+        ],
+        "title": "define_method closes over the enclosing scope"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-d3ea5e75",
+      "prompt": "What number does this program print?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "0",
+          "rationale": "The captured binding is shared and mutable, so increments performed through `inc` are visible to `get`; the value is not reset."
+        },
+        {
+          "text": "1",
+          "rationale": "`count` is captured once per call to `make_counter`, not re-initialised on each lambda call, so the three increments accumulate."
+        },
+        {
+          "text": "nil",
+          "rationale": "`get` returns the current value of the captured `count`, which is an Integer; the binding does not disappear when the method returns."
+        }
+      ],
+      "code": "def make_counter\n  count = 0\n  inc = -> { count += 1 }\n  get = -> { count }\n  [inc, get]\nend\n\ninc, get = make_counter\n3.times { inc.call }\np get.call",
+      "query": {
+        "explanation": "Both lambdas are created in the same invocation of `make_counter`, so they close over the *same* binding of `count`. That binding outlives the method call. Three calls to `inc` mutate the shared `count` to 3, and `get` reads the same variable, so 3 is printed.",
+        "syntax": "-> { captured_local += 1 }  # closure over an enclosing local",
+        "tags": [
+          "functions-and-scope",
+          "closures",
+          "lambda",
+          "ruby"
+        ],
+        "title": "Lambdas sharing a captured local variable"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-94a82d0b",
+      "prompt": "Does this method print 4?",
+      "topic": "functions-and-scope",
+      "answer": true,
+      "code": "def first_even(nums)\n  nums.each { |n| return n if n.even? }\n  :none\nend\n\np first_even([1, 3, 4, 5, 6])",
+      "query": {
+        "explanation": "A block is not a separate method, so `return` inside it returns from the method that lexically encloses the block. The first even element, 4, causes `first_even` to return immediately, so neither 6 nor the trailing `:none` is ever reached. (A lambda behaves differently: `return` there only exits the lambda.)",
+        "syntax": "def m; coll.each { |x| return x if cond }; fallback; end",
+        "tags": [
+          "functions-and-scope",
+          "blocks",
+          "return",
+          "ruby"
+        ],
+        "title": "return inside a block exits the enclosing method"
+      },
+      "rationale": "`return` in a block aborts the whole method at the first even number, so the iteration stops at 4 and the `:none` fallback line never runs.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-230ed5b7",
+      "prompt": "What array does this program output?",
+      "topic": "functions-and-scope",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[4, 5, \"4\"]"
+        },
+        {
+          "text": "[4, 5, 4]",
+          "rationale": "`&:to_s` turns the symbol into a block that calls `to_s` on the yielded value, so the third result is the String \"4\", not the Integer 4."
+        },
+        {
+          "text": "[nil, 5, \"4\"]",
+          "rationale": "With no block, `block_given?` is false and the guard clause returns `x` itself, so the first element is 4."
+        },
+        {
+          "text": "LocalJumpError: no block given (yield)",
+          "rationale": "The `return x unless block_given?` guard runs before `yield`, so the blockless call never reaches the yield."
+        }
+      ],
+      "code": "def apply(x)\n  return x unless block_given?\n  yield x\nend\n\np [apply(4), apply(4) { |v| v + 1 }, apply(4, &:to_s)]",
+      "query": {
+        "explanation": "`block_given?` reports whether the caller passed a block. The first call passes none, so `x` itself is returned. The second passes a literal block, so `yield 4` gives 5. The third uses `&:to_s`, which converts the symbol to a proc via `Symbol#to_proc`, so yielding 4 calls `4.to_s` and produces the string \"4\".",
+        "syntax": "yield value if block_given?   # and  method(arg, &:symbol)",
+        "tags": [
+          "functions-and-scope",
+          "blocks",
+          "yield",
+          "ruby"
+        ],
+        "title": "Optional blocks, yield, and &:symbol"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-c650698e",
+      "prompt": "What value is returned by this method?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": ":from_body"
+        },
+        {
+          "text": ":from_ensure",
+          "rationale": "The last expression in an `ensure` block is evaluated but its value is thrown away."
+        },
+        {
+          "text": "nil",
+          "rationale": "The body's `return` supplies a value; `ensure` running afterwards does not blank it out."
+        },
+        {
+          "text": "[:from_body, :from_ensure]",
+          "rationale": "Ruby never collects body and ensure values into an array."
+        }
+      ],
+      "code": "def f\n  return :from_body\nensure\n  :from_ensure\nend\n\np f",
+      "query": {
+        "explanation": "An `ensure` block always runs, but its value is discarded. Unless `ensure` contains an explicit `return` (or raises), the method still returns the value produced by the body, so `f` returns `:from_body`.",
+        "syntax": "begin ... ensure ... end",
+        "tags": [
+          "exceptions",
+          "ensure",
+          "return-values"
+        ],
+        "title": "ensure does not change the return value"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-26fc897c",
+      "prompt": "Does this method return 2?",
+      "topic": "errors-and-control-flow",
+      "answer": true,
+      "code": "def g\n  return 1\nensure\n  return 2\nend",
+      "query": {
+        "explanation": "While a plain value in `ensure` is discarded, an explicit `return` inside `ensure` replaces the pending result (and would even swallow a pending exception), so `g` returns 2.",
+        "tags": [
+          "exceptions",
+          "ensure",
+          "return-values"
+        ],
+        "title": "An explicit return inside ensure wins"
+      },
+      "rationale": "Saying it returns 1 ignores that an explicit `return` in `ensure` overrides the pending return value from the body.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-4151790e",
+      "prompt": "What does this script print?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "ok after 3"
+        },
+        {
+          "text": "ok after 1",
+          "rationale": "The first two passes raise before reaching the success string, so the counter is 3 when it succeeds."
+        },
+        {
+          "text": "gave up",
+          "rationale": "`retry` is taken while attempts < 3, and the third pass succeeds, so the `\"gave up\"` line is never reached."
+        },
+        {
+          "text": "boom",
+          "rationale": "The exception is rescued and never becomes the expression's value; the message is not returned."
+        }
+      ],
+      "code": "attempts = 0\n\nresult = begin\n  attempts += 1\n  raise \"boom\" if attempts < 3\n  \"ok after #{attempts}\"\nrescue RuntimeError\n  retry if attempts < 3\n  \"gave up\"\nend\n\nputs result",
+      "query": {
+        "explanation": "`retry` inside a `rescue` clause re-runs the whole `begin` body. The counter reaches 3 on the third attempt, the raise is skipped, and the body's own value `\"ok after 3\"` becomes the result.",
+        "syntax": "begin ... rescue ... retry ... end",
+        "tags": [
+          "exceptions",
+          "retry",
+          "control-flow"
+        ],
+        "title": "retry restarts the begin block"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-dd301662",
+      "prompt": "Which array does this script print?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[\"exception:NotImplementedError\"]"
+        },
+        {
+          "text": "[\"standard\"]",
+          "rationale": "A bare `rescue` matches only StandardError and its subclasses; NotImplementedError is under ScriptError."
+        },
+        {
+          "text": "[\"standard\", \"exception:NotImplementedError\"]",
+          "rationale": "Only one handler runs for a single raise, and the inner one does not match at all."
+        },
+        {
+          "text": "[\"exception:ScriptError\"]",
+          "rationale": "`e.class` reports the actual raised class, NotImplementedError, not the ancestor that was matched."
+        }
+      ],
+      "code": "res = []\n\nbegin\n  begin\n    raise NotImplementedError, \"todo\"\n  rescue => e\n    res << \"standard\"\n  end\nrescue Exception => e\n  res << \"exception:#{e.class}\"\nend\n\np res",
+      "query": {
+        "explanation": "`rescue => e` is shorthand for `rescue StandardError => e`. `NotImplementedError` descends from `ScriptError`, not `StandardError`, so the inner clause does not match and the outer `rescue Exception` handles it.",
+        "syntax": "rescue Exception => e",
+        "tags": [
+          "exceptions",
+          "exception-hierarchy",
+          "rescue"
+        ],
+        "title": "Bare rescue only catches StandardError"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-5d3366c2",
+      "prompt": "What value does this script print?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[2, 6]"
+        },
+        {
+          "text": "[3, 4]",
+          "rationale": "Iteration starts at i=1 and i=2 already yields a product of 12 with j=6, so i=3 is never reached."
+        },
+        {
+          "text": ":not_found",
+          "rationale": "The throw skips the rest of the block, so the trailing `:not_found` expression is never evaluated."
+        },
+        {
+          "text": "[1, 12]",
+          "rationale": "The inner range stops at 10, so j can never be 12."
+        }
+      ],
+      "code": "result = catch(:done) do\n  (1..10).each do |i|\n    (1..10).each do |j|\n      throw :done, [i, j] if i * j == 12\n    end\n  end\n  :not_found\nend\n\np result",
+      "query": {
+        "explanation": "`throw :done, value` unwinds to the matching `catch(:done)`, which then evaluates to that value. The first pair scanned with product 12 is i=2, j=6, so the result is `[2, 6]`.",
+        "syntax": "catch(:tag) { throw :tag, value }",
+        "tags": [
+          "control-flow",
+          "throw-catch",
+          "non-local-exit"
+        ],
+        "title": "throw/catch for non-local exit"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-1d64b357",
+      "prompt": "Which line does this script output?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "standard"
+        },
+        {
+          "text": "zero",
+          "rationale": "The more specific clause is listed second, and matching stops at the first clause that matches."
+        },
+        {
+          "text": "standard\nzero",
+          "rationale": "Only one rescue clause ever runs for a given exception."
+        },
+        {
+          "text": "zero\nstandard",
+          "rationale": "Ruby does not run every matching clause, and it does not reorder them by specificity."
+        }
+      ],
+      "code": "begin\n  1 / 0\nrescue StandardError\n  puts \"standard\"\nrescue ZeroDivisionError\n  puts \"zero\"\nend",
+      "query": {
+        "explanation": "Ruby tests `rescue` clauses in source order and runs the first one whose class matches. `ZeroDivisionError` is a `StandardError`, so the broad clause listed first wins and the more specific clause below is dead code.",
+        "syntax": "begin ... rescue SpecificError ... rescue StandardError ... end",
+        "tags": [
+          "exceptions",
+          "rescue-order",
+          "exception-hierarchy"
+        ],
+        "title": "Rescue clauses are matched top to bottom"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-ff56bdcf",
+      "prompt": "What does this call return?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[1, 0, 3, 0]"
+        },
+        {
+          "text": "[1, 3]",
+          "rationale": "`next` does not skip the element from the result; `map` still records a value for every iteration."
+        },
+        {
+          "text": "[1, nil, 3, nil]",
+          "rationale": "`next 0` passes 0 as the block's value, not nil."
+        },
+        {
+          "text": "[0]",
+          "rationale": "`next` continues iteration rather than stopping it; `break 0` would be the one that cuts the loop short."
+        }
+      ],
+      "code": "r = [1, 2, 3, 4].map do |x|\n  next 0 if x.even?\n  x\nend\n\np r",
+      "query": {
+        "explanation": "`next` ends the current block iteration immediately and the value after it becomes that iteration's block result. So even numbers map to 0 while odd numbers map to themselves.",
+        "syntax": "next value",
+        "tags": [
+          "control-flow",
+          "blocks",
+          "next"
+        ],
+        "title": "next supplies the block's value"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-8a4fdd8e",
+      "prompt": "Does this loop finish without raising, leaving out equal to [1, 2]?",
+      "topic": "errors-and-control-flow",
+      "answer": true,
+      "code": "e = [1, 2].each\nout = []\n\nloop do\n  out << e.next\nend",
+      "query": {
+        "explanation": "`Kernel#loop` catches `StopIteration` and exits normally, so an exhausted enumerator's `next` ends the loop quietly. With `while true` the same code would propagate StopIteration.",
+        "syntax": "loop do ... end",
+        "tags": [
+          "control-flow",
+          "enumerator",
+          "StopIteration"
+        ],
+        "title": "loop rescues StopIteration"
+      },
+      "rationale": "Claiming it raises ignores that `Kernel#loop` has a built-in rescue for StopIteration that simply terminates the loop.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-240757e9",
+      "prompt": "What value is assigned to x here?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "-1"
+        },
+        {
+          "text": "nil",
+          "rationale": "The rescue modifier yields the expression written after `rescue`, which here is -1."
+        },
+        {
+          "text": "0",
+          "rationale": "`Integer(\"abc\")` raises instead of returning 0; only `\"abc\".to_i` gives 0."
+        },
+        {
+          "text": "The script aborts with an ArgumentError",
+          "rationale": "ArgumentError is a StandardError, so the inline rescue catches it."
+        }
+      ],
+      "code": "x = Integer(\"abc\") rescue -1\n\np x",
+      "query": {
+        "explanation": "`expr rescue fallback` is a one-line rescue for StandardError. `Integer(\"abc\")` raises ArgumentError, which is a StandardError, so the whole expression evaluates to the fallback `-1`.",
+        "syntax": "value = risky rescue fallback",
+        "tags": [
+          "exceptions",
+          "rescue-modifier",
+          "control-flow"
+        ],
+        "title": "The inline rescue modifier"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-69216d80",
+      "prompt": "In what order are these log entries appended?",
+      "topic": "errors-and-control-flow",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[\"inner-begin\", \"inner-ensure\", \"outer-rescue\", \"outer-ensure\"]"
+        },
+        {
+          "text": "[\"inner-begin\", \"outer-rescue\", \"inner-ensure\", \"outer-ensure\"]",
+          "rationale": "The inner `ensure` runs while the inner block unwinds, which happens before the exception reaches the outer handler."
+        },
+        {
+          "text": "[\"inner-begin\", \"outer-rescue\", \"outer-ensure\", \"inner-ensure\"]",
+          "rationale": "An inner `ensure` can never run after the enclosing block has already finished."
+        },
+        {
+          "text": "[\"inner-begin\", \"inner-ensure\", \"outer-ensure\"]",
+          "rationale": "The exception is unhandled inside, so it propagates and the outer `rescue ArgumentError` does fire."
+        }
+      ],
+      "code": "def run(log)\n  begin\n    begin\n      log << \"inner-begin\"\n      raise ArgumentError\n    ensure\n      log << \"inner-ensure\"\n    end\n  rescue ArgumentError\n    log << \"outer-rescue\"\n  ensure\n    log << \"outer-ensure\"\n  end\n  log\nend\n\np run([])",
+      "query": {
+        "explanation": "The raise first runs the inner `ensure` as the inner block unwinds, then the exception propagates to the outer `rescue`, and finally the outer `ensure` runs on the way out.",
+        "syntax": "begin ... rescue ... ensure ... end",
+        "tags": [
+          "exceptions",
+          "ensure",
+          "unwinding"
+        ],
+        "title": "Unwinding order of nested ensure and rescue"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-36a135f1",
+      "prompt": "What single number does this program print?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "4000"
+        },
+        {
+          "text": "1000",
+          "rationale": "1000 would be the result of a single thread's work; all four threads contribute to the same counter."
+        },
+        {
+          "text": "4",
+          "rationale": "Each thread increments 1000 times, not once."
+        },
+        {
+          "text": "A value that varies between runs",
+          "rationale": "The mutex serialises every increment, so no updates are lost and the total is always 4000."
+        }
+      ],
+      "code": "counter = 0\nm = Mutex.new\nthreads = 4.times.map do\n  Thread.new do\n    1000.times { m.synchronize { counter += 1 } }\n  end\nend\nthreads.each(&:join)\nputs counter",
+      "query": {
+        "explanation": "Each of the 4 threads increments the shared counter 1000 times, and every increment happens inside m.synchronize, so the read-modify-write cannot interleave. The total is therefore deterministic: 4 * 1000 = 4000.",
+        "syntax": "mutex.synchronize { ... }",
+        "tags": [
+          "mutex",
+          "shared-state",
+          "threads"
+        ],
+        "title": "Mutex#synchronize protecting a shared counter"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-770113dc",
+      "prompt": "Does this program print `caught boom`?",
+      "topic": "async-and-concurrency",
+      "answer": true,
+      "code": "Thread.report_on_exception = false\nt = Thread.new { raise ArgumentError, \"boom\" }\nsleep 0.1\nbegin\n  t.value\nrescue ArgumentError => e\n  puts \"caught #{e.message}\"\nend",
+      "query": {
+        "explanation": "An exception raised in a thread kills only that thread; with abort_on_exception off it is stored and re-raised in the caller when Thread#join or Thread#value is called. So t.value raises ArgumentError in the main thread and the rescue prints 'caught boom'.",
+        "syntax": "thread.value # re-raises the thread's exception",
+        "tags": [
+          "threads",
+          "exceptions",
+          "thread-value"
+        ],
+        "title": "Exceptions escaping a thread"
+      },
+      "rationale": "The exception is not swallowed: Thread#value re-raises the thread's stored exception in the calling thread, so the rescue clause runs.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-b97f99c5",
+      "prompt": "What array does this program print?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[10, 20, 30]"
+        },
+        {
+          "text": "[30, 20, 10]",
+          "rationale": "Queue is first-in-first-out, not a stack, so pop returns the oldest item first."
+        },
+        {
+          "text": "[]",
+          "rationale": "join waits for the consumer to finish its three pops, so out is fully populated before it is printed."
+        },
+        {
+          "text": "[10]",
+          "rationale": "The consumer loops three times and q.pop blocks until each pushed value arrives."
+        }
+      ],
+      "code": "q = Queue.new\nout = []\nconsumer = Thread.new do\n  3.times { out << q.pop }\nend\n[10, 20, 30].each { |n| q.push(n) }\nconsumer.join\np out",
+      "query": {
+        "explanation": "Queue is a thread-safe FIFO: pop blocks until an item is available and items come out in push order. The consumer pops exactly three items, so out ends up as [10, 20, 30] regardless of how the producer and consumer interleave.",
+        "syntax": "q = Queue.new; q.push(x); q.pop",
+        "tags": [
+          "queue",
+          "producer-consumer",
+          "threads"
+        ],
+        "title": "Queue as a thread-safe FIFO channel"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-9a1ede44",
+      "prompt": "Does locking a Mutex that the current thread already holds raise ThreadError?",
+      "topic": "async-and-concurrency",
+      "answer": true,
+      "code": "m = Mutex.new\nm.lock\nm.lock # ???",
+      "query": {
+        "explanation": "Thread::Mutex does not support recursive locking. If the owning thread calls lock (or synchronize) again, Ruby detects the self-deadlock immediately and raises ThreadError: 'deadlock; recursive locking'. Use Monitor if reentrancy is needed.",
+        "syntax": "mutex.lock; mutex.unlock",
+        "tags": [
+          "mutex",
+          "deadlock",
+          "reentrancy"
+        ],
+        "title": "Ruby's Mutex is not reentrant"
+      },
+      "rationale": "Mutex is not reentrant, so the second lock does not simply succeed or block forever; Ruby raises ThreadError for recursive locking.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-c542c875",
+      "prompt": "What array does this program print?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[:a, 1, :b, 2]"
+        },
+        {
+          "text": "[:a, :b, 1, 2]",
+          "rationale": "Execution alternates: the value of the first resume is appended before the fiber is resumed a second time."
+        },
+        {
+          "text": "[:a, 1, :b, 2, :c, 3]",
+          "rationale": "Only two resumes happen, so the fiber stays suspended at the second yield and never appends :c."
+        },
+        {
+          "text": "[1, 2]",
+          "rationale": "The fiber body itself pushes :a and :b onto the same array before each yield."
+        }
+      ],
+      "code": "out = []\nf = Fiber.new do\n  out << :a\n  Fiber.yield 1\n  out << :b\n  Fiber.yield 2\n  out << :c\n  3\nend\nout << f.resume\nout << f.resume\np out",
+      "query": {
+        "explanation": "Each resume runs the fiber until the next Fiber.yield, whose argument becomes the value of resume. The first resume appends :a then returns 1; the second appends :b then returns 2. The fiber is suspended before :c, which is never reached.",
+        "syntax": "f = Fiber.new { Fiber.yield v }; f.resume",
+        "tags": [
+          "fibers",
+          "cooperative-scheduling",
+          "coroutines"
+        ],
+        "title": "Fiber resume and Fiber.yield interleaving"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-98e8b4cf",
+      "prompt": "What array does this program print?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[false, false]"
+        },
+        {
+          "text": "[\"dead\", false]",
+          "rationale": "There is no \"dead\" status string; normal termination is reported as the boolean false."
+        },
+        {
+          "text": "[nil, false]",
+          "rationale": "nil is the status of a thread terminated by an unhandled exception; this thread finished normally."
+        },
+        {
+          "text": "[\"run\", true]",
+          "rationale": "join waits for termination, so by the time status is read the thread is no longer running or alive."
+        }
+      ],
+      "code": "t = Thread.new { 1 }\nt.join\np [t.status, t.alive?]",
+      "query": {
+        "explanation": "Thread#status returns false for a thread that ran to completion normally (and nil for one killed by an exception), while a running thread reports \"run\" or \"sleep\". Thread#alive? is also false once the thread has terminated.",
+        "syntax": "thread.status # => false after normal termination",
+        "tags": [
+          "threads",
+          "thread-status",
+          "lifecycle"
+        ],
+        "title": "Thread#status for a normally terminated thread"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-0212d23c",
+      "prompt": "What does this program print?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[10, 20, 30]"
+        },
+        {
+          "text": "[1, 2, 3]",
+          "rationale": "Thread#value returns the block's last expression, i * 10, not the index i itself."
+        },
+        {
+          "text": "[nil, nil, nil]",
+          "rationale": "value blocks until the thread completes and then returns its result; it would be nil only if the block itself evaluated to nil."
+        },
+        {
+          "text": "[30, 30, 30]",
+          "rationale": "Each block parameter i is a separate local per thread, so there is no shared-variable capture here."
+        }
+      ],
+      "code": "threads = (1..3).map { |i| Thread.new { i * 10 } }\np threads.map(&:value)",
+      "query": {
+        "explanation": "Thread.new starts a thread immediately, and each block captures its own copy of the block parameter i. Thread#value waits for the thread to finish (like join) and then returns the value of the block's last expression, so mapping value over the three threads yields [10, 20, 30] in the order of the original array, regardless of the order in which the threads actually finished.",
+        "syntax": "Thread.new { ... } ; thread.value",
+        "tags": [
+          "threads",
+          "thread-value",
+          "concurrency"
+        ],
+        "title": "Thread#value joins and returns the block result"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-52633c77",
+      "prompt": "Does this program print [\"main\", \"child\"]?",
+      "topic": "async-and-concurrency",
+      "answer": true,
+      "code": "Thread.current[:v] = \"main\"\nt = Thread.new do\n  Thread.current[:v] = \"child\"\n  Thread.current[:v]\nend\nt.join\np [Thread.current[:v], t.value]",
+      "query": {
+        "explanation": "Thread#[] and Thread#[]= store values that belong to the current thread (actually the current fiber), not to the program as a whole. The child thread's assignment to Thread.current[:v] creates its own slot, so the main thread's :v still holds \"main\" after the join, while the child's block returns \"child\". The printed array is therefore [\"main\", \"child\"].",
+        "syntax": "Thread.current[:key] = value",
+        "tags": [
+          "threads",
+          "thread-local",
+          "concurrency"
+        ],
+        "title": "Thread.current[] is per-thread storage"
+      },
+      "rationale": "Thread.current[:v] is thread-local storage, so the child's assignment cannot overwrite the main thread's \"main\" value.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-a1798d4a",
+      "prompt": "What does this program print?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[1, nil, true]"
+        },
+        {
+          "text": "[1, nil, false]",
+          "rationale": "closed? returns true once close has been called on the queue."
+        },
+        {
+          "text": "[nil, nil, true]",
+          "rationale": "close does not drop buffered elements; items pushed before closing can still be popped."
+        },
+        {
+          "text": "raises ClosedQueueError",
+          "rationale": "ClosedQueueError is raised by pushing to a closed queue, not by popping from one."
+        }
+      ],
+      "code": "q = Queue.new\nq << 1\nq.close\np [q.pop, q.pop, q.closed?]",
+      "query": {
+        "explanation": "Queue#close marks the queue as closed but does not discard buffered items. The first pop still returns the already-enqueued 1. Once the queue is empty and closed, pop returns nil immediately instead of blocking forever, which is how consumer threads learn to stop. closed? reports true, and only a further push would raise ClosedQueueError. So the program prints [1, nil, true].",
+        "syntax": "q.close ; q.pop ; q.closed?",
+        "tags": [
+          "queue",
+          "producer-consumer",
+          "concurrency"
+        ],
+        "title": "Closing a Queue drains then returns nil"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-a6b3c41a",
+      "prompt": "What does this program print?",
+      "topic": "async-and-concurrency",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[11, 10]"
+        },
+        {
+          "text": "[11, 20]",
+          "rationale": "y comes from the second resume's argument 5, not from the first resume's 10, so y * 2 is 10."
+        },
+        {
+          "text": "[10, 10]",
+          "rationale": "The first resume returns the argument given to Fiber.yield, which is x + 1 = 11."
+        },
+        {
+          "text": "[11, nil]",
+          "rationale": "When a fiber's block finishes, resume returns the block's last value, here 10, rather than nil."
+        }
+      ],
+      "code": "f = Fiber.new do |x|\n  y = Fiber.yield(x + 1)\n  y * 2\nend\np [f.resume(10), f.resume(5)]",
+      "query": {
+        "explanation": "The first resume(10) passes 10 as the block parameter x and runs until Fiber.yield(x + 1), so resume returns 11. The argument of the second resume(5) becomes the return value of that Fiber.yield expression, so y is 5. The fiber then finishes, and resume returns the block's final value y * 2, which is 10. The printed array is [11, 10].",
+        "syntax": "Fiber.new { |arg| Fiber.yield(v) } ; fiber.resume(x)",
+        "tags": [
+          "fiber",
+          "coroutines",
+          "concurrency"
+        ],
+        "title": "Values flow both ways through Fiber.yield"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-1b33d76b",
+      "prompt": "Does `<<` keep the same String object while `+=` rebinds to a new one here?",
+      "topic": "optimization",
+      "answer": true,
+      "code": "a = \"x\"\norig_a = a.object_id\n3.times { a << \"y\" }\n\nb = \"x\"\norig_b = b.object_id\n3.times { b += \"y\" }\n\np a.object_id == orig_a\np b.object_id != orig_b",
+      "query": {
+        "explanation": "Building strings in a loop with `+=` allocates a brand-new String on every iteration, which is O(n^2) in total copying and heavy on the GC. `<<` appends into the existing buffer and keeps the same object, which is the standard optimization for string building. The same idea applies to Array#<< versus Array#+.",
+        "syntax": "str << \"more\"  # mutates\nstr += \"more\"  # allocates",
+        "tags": [
+          "strings",
+          "allocation",
+          "mutation"
+        ],
+        "title": "In-place append vs. reassignment"
+      },
+      "rationale": "String#<< mutates the receiver in place, so its object_id is unchanged; `b += \"y\"` is `b = b + \"y\"`, and String#+ allocates a fresh string each time, so b ends up pointing at a different object.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-aebb0433",
+      "prompt": "What number does this program print?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "1",
+          "rationale": "`||=` only caches truthy values; because compute returns nil, @value stays nil and the guard never short-circuits."
+        },
+        {
+          "text": "0",
+          "rationale": "lookup is called three times and nothing prevents the body from running, so compute definitely executes."
+        },
+        {
+          "text": "2",
+          "rationale": "There is no partial caching here: every single call re-evaluates compute because nil is falsy."
+        }
+      ],
+      "code": "class Config\n  attr_reader :calls\n\n  def initialize\n    @calls = 0\n  end\n\n  def lookup\n    @value ||= compute\n  end\n\n  def compute\n    @calls += 1\n    nil\n  end\nend\n\nc = Config.new\n3.times { c.lookup }\nputs c.calls",
+      "query": {
+        "explanation": "`@value ||= compute` expands to `@value || @value = compute`, so the cached value is reused only when it is truthy. When the expensive computation legitimately returns nil (or false), the memoization silently stops working and the work is repeated on every call. The fix is `@value = compute unless defined?(@value)` or a separate `@computed` flag.",
+        "syntax": "@v = compute unless defined?(@v)",
+        "tags": [
+          "memoization",
+          "caching",
+          "nil"
+        ],
+        "title": "The nil pitfall in ||= memoization"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-41016232",
+      "prompt": "What number does this program print?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "5"
+        },
+        {
+          "text": "1",
+          "rationale": "include? is a linear scan; it stops early only when a comparison returns true, and this == always returns false."
+        },
+        {
+          "text": "0",
+          "rationale": "The identity shortcut only skips == when the stored element is the very same object as the argument, which is never the case here."
+        },
+        {
+          "text": "25",
+          "rationale": "include? makes one pass over the array, not a nested pair-wise comparison."
+        }
+      ],
+      "code": "$cmp = 0\n\nclass Item\n  def initialize(n)\n    @n = n\n  end\n\n  def ==(other)\n    $cmp += 1\n    false\n  end\nend\n\nitems = (1..5).map { |i| Item.new(i) }\nitems.include?(Item.new(99))\nputs $cmp",
+      "query": {
+        "explanation": "Array#include? walks the array and compares each element with the argument, so a miss costs one == call per element. For repeated membership tests, convert the collection to a Set or Hash once: those use hash/eql? for roughly O(1) lookups instead of a linear scan, turning an O(n*m) loop into O(n+m).",
+        "syntax": "require 'set'\nlookup = items.to_set\nlookup.include?(x)",
+        "tags": [
+          "complexity",
+          "set",
+          "lookup"
+        ],
+        "title": "Array#include? is O(n)"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-e155116e",
+      "prompt": "What number does this program print?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3"
+        },
+        {
+          "text": "1000000",
+          "rationale": "That is the eager behaviour; a lazy enumerator never materialises the whole range, it pulls values on demand."
+        },
+        {
+          "text": "0",
+          "rationale": "`first(3)` is a terminating operation, so it does force the pipeline to produce three values."
+        },
+        {
+          "text": "4",
+          "rationale": "No lookahead element is needed here: the pipeline stops as soon as the third mapped value has been yielded."
+        }
+      ],
+      "code": "calls = 0\n(1..1_000_000).lazy.map { |n| calls += 1; n * n }.first(3)\nputs calls",
+      "query": {
+        "explanation": "Enumerator::Lazy builds a pipeline that pulls one element at a time, so the map block runs exactly as many times as the terminal operation demands. Without `.lazy`, `map` would allocate a one-million-element array before `first(3)` discarded almost all of it. Lazy chains are the standard optimization for long or infinite sources with early termination.",
+        "syntax": "enum.lazy.map { ... }.select { ... }.first(n)",
+        "tags": [
+          "lazy",
+          "enumerable",
+          "short-circuit"
+        ],
+        "title": "Lazy enumerators do only the work you consume"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-3287a3ae",
+      "prompt": "Does flat_map produce the same array here as map followed by flatten(1)?",
+      "topic": "optimization",
+      "answer": true,
+      "code": "nested = [[1, 2], [3], [4, 5, 6]]\n\na = nested.flat_map { |row| row }\nb = nested.map { |row| row }.flatten(1)\n\np a\np b",
+      "query": {
+        "explanation": "`collection.map { ... }.flatten(1)` builds a full array of arrays and then builds a second flattened array. `flat_map` (alias `collect_concat`) appends block results straight into one output array, producing an identical result with half the allocations and one traversal. Note that flat_map only flattens one level, so deeper nesting still needs flatten.",
+        "syntax": "rows.flat_map { |row| row.cells }",
+        "tags": [
+          "enumerable",
+          "allocation",
+          "flat_map"
+        ],
+        "title": "flat_map avoids the intermediate array"
+      },
+      "rationale": "flat_map is defined as a one-level flattening of the mapped results, so for one level of nesting it matches map + flatten(1) exactly; it just avoids allocating the intermediate nested array.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-24182790",
+      "prompt": "Do these two modular exponentiation expressions produce the same value?",
+      "topic": "optimization",
+      "answer": true,
+      "code": "m = 1_000_000_007\n\nx = 2.pow(10_000, m)\ny = (2**10_000) % m\n\np x == y",
+      "query": {
+        "explanation": "`a.pow(b, m)` performs modular exponentiation by repeated squaring with a reduction at each step, so intermediate values never exceed the size of m. Computing `(a**b) % m` instead builds the entire bignum first, which costs huge amounts of memory and time for large exponents. The results agree exactly, so the three-argument form is a free optimization.",
+        "syntax": "base.pow(exponent, modulus)",
+        "tags": [
+          "integers",
+          "modular-arithmetic",
+          "bignum"
+        ],
+        "title": "Integer#pow with a modulus"
+      },
+      "rationale": "Integer#pow with a modulus computes the mathematically identical residue; it only differs in cost, reducing after every squaring step instead of first materialising a 10,000-bit bignum.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-d2c6ed02",
+      "prompt": "What number does this program print?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "8"
+        },
+        {
+          "text": "1",
+          "rationale": "A key has to be extracted for every element before the sort can order them."
+        },
+        {
+          "text": "24",
+          "rationale": "That is roughly the number of pairwise comparisons; sort_by compares precomputed keys, not by re-running the block."
+        },
+        {
+          "text": "28",
+          "rationale": "28 is every pair of eight elements; sort_by never calls the block once per comparison."
+        }
+      ],
+      "code": "calls = 0\nwords = %w[pear fig apple kiwi plum date lime beet]\n\nwords.sort_by { |w| calls += 1; w.length }\nputs calls",
+      "query": {
+        "explanation": "sort_by implements the Schwartzian transform: it calls the block exactly once per element to build keys, sorts the key/value tuples, then strips the keys. `sort { |a, b| f(a) <=> f(b) }` instead evaluates f twice per comparison, which is O(n log n) invocations. When the key is expensive to compute, sort_by is dramatically faster.",
+        "syntax": "items.sort_by { |x| expensive_key(x) }",
+        "tags": [
+          "sorting",
+          "enumerable",
+          "schwartzian-transform"
+        ],
+        "title": "sort_by computes each key once"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-7da773df",
+      "prompt": "Does the block run fewer than 20 times in this bsearch over 1..1024?",
+      "topic": "optimization",
+      "answer": true,
+      "code": "calls = 0\n(1..1024).bsearch { |n| calls += 1; n >= 777 }\np calls",
+      "query": {
+        "explanation": "In find-minimum mode, bsearch requires the block to return false for a prefix of the range and true for the rest. It then halves the search interval on each probe, so the number of block calls grows like log2 of the range size rather than linearly. Over 1024 values that is about ten probes instead of hundreds, which matters when the predicate is expensive.",
+        "syntax": "(lo..hi).bsearch { |n| predicate(n) }",
+        "tags": [
+          "binary-search",
+          "complexity",
+          "range"
+        ],
+        "title": "Range#bsearch is logarithmic"
+      },
+      "rationale": "bsearch halves the candidate span on every probe, so it needs about log2(1024) = 10 block calls; a linear scan would have run the block 777 times before finding the answer.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-b327abf1",
+      "prompt": "What single line does this script print?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "6765 21"
+        },
+        {
+          "text": "6765 20",
+          "rationale": "Keys 0 through 20 are each computed once, which is 21 distinct keys, not 20."
+        },
+        {
+          "text": "6765 13529",
+          "rationale": "That is the naive unmemoized call count; once h[k] is stored the default block is never triggered again for that key."
+        },
+        {
+          "text": "6765 1",
+          "rationale": "The default block fires for every key that is still missing, and the recursion needs every smaller key at least once."
+        }
+      ],
+      "code": "calls = 0\n\nfib = Hash.new do |h, k|\n  calls += 1\n  h[k] = k < 2 ? k : h[k - 1] + h[k - 2]\nend\n\nvalue = fib[20]\nputs \"#{value} #{calls}\"",
+      "query": {
+        "explanation": "`Hash.new { |h, k| ... }` runs the block only when a key is absent, and storing `h[k] = result` inside it caches the value permanently. That turns exponential naive Fibonacci into a linear computation: each of the 21 keys 0..20 triggers the block exactly once, and every later reference is a plain hash hit. fib(20) is 6765.",
+        "syntax": "memo = Hash.new { |h, k| h[k] = compute(k) }",
+        "tags": [
+          "memoization",
+          "hash",
+          "recursion"
+        ],
+        "title": "Memoizing recursion with a Hash default block"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-fe222fe6",
+      "prompt": "Which array does this script print?",
+      "topic": "optimization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[5, 1]"
+        },
+        {
+          "text": "[1, 5]",
+          "rationale": "Reversed: it is `+=` that allocates a fresh String each pass, while `<<` keeps mutating one object."
+        },
+        {
+          "text": "[5, 5]",
+          "rationale": "`<<` appends in place and returns the same receiver, so every recorded object_id is identical."
+        },
+        {
+          "text": "[1, 1]",
+          "rationale": "`s += \"x\"` is `s = s + \"x\"`, and `String#+` builds a brand new String, so each iteration records a different id."
+        }
+      ],
+      "code": "def with_plus(n)\n  s = \"\"\n  ids = []\n  n.times { s += \"x\"; ids << s.object_id }\n  ids.uniq.size\nend\n\ndef with_append(n)\n  s = \"\"\n  ids = []\n  n.times { s << \"x\"; ids << s.object_id }\n  ids.uniq.size\nend\n\np [with_plus(5), with_append(5)]",
+      "query": {
+        "explanation": "`s += \"x\"` expands to `s = s + \"x\"`; `String#+` returns a newly allocated String, so the loop leaves 5 distinct object ids behind. `s << \"x\"` appends into the existing buffer and returns the same receiver, so all 5 recorded ids are the same object — one allocation instead of five. This is why building strings in a loop with `<<` (or `String#concat`) is the usual optimization over repeated `+=`.",
+        "syntax": "str << other   # in-place append, returns self\nstr += other   # rebinds str to a new String object",
+        "tags": [
+          "optimization",
+          "strings",
+          "allocation",
+          "object_id"
+        ],
+        "title": "String += allocates, << mutates in place"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-ade8a8f1",
+      "prompt": "What does this script print?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[[:x], [:x], [:x]]"
+        },
+        {
+          "text": "[[:x], [], []]",
+          "rationale": "That would require three distinct arrays; Array.new(3, []) stores the same array object in all three slots."
+        },
+        {
+          "text": "[[], [], []]",
+          "rationale": "The `<<` mutates the shared array in place, so the change is visible, not discarded."
+        },
+        {
+          "text": "[:x]",
+          "rationale": "`rows` stays a three-element array of arrays; indexing with `rows[0]` does not replace the outer array."
+        }
+      ],
+      "code": "rows = Array.new(3, [])\nrows[0] << :x\np rows",
+      "query": {
+        "explanation": "Array.new(3, []) evaluates the default once and puts that single array into every slot, so mutating rows[0] mutates all three references. Use the block form Array.new(3) { [] } to build independent arrays.",
+        "syntax": "Array.new(3) { [] }",
+        "tags": [
+          "arrays",
+          "aliasing",
+          "mutation"
+        ],
+        "title": "Array.new with a default value shares one object"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-59465a31",
+      "prompt": "What does this program print?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[[], [1, 2]]"
+        },
+        {
+          "text": "[[:a, :b], [1, 2]]",
+          "rationale": "Reading a missing key returns the default but never stores it, so no keys are ever added to the hash."
+        },
+        {
+          "text": "[[:a, :b], []]",
+          "rationale": "Both the keys and a fresh default are wrong: nothing is stored, and the single default object kept both pushes."
+        },
+        {
+          "text": "[[], []]",
+          "rationale": "The two `<<` calls mutated the one shared default array, so it now holds 1 and 2."
+        }
+      ],
+      "code": "h = Hash.new([])\nh[:a] << 1\nh[:b] << 2\np [h.keys, h[:c]]",
+      "query": {
+        "explanation": "Hash.new([]) hands back the same array for every missing key and does not assign it, so h[:a] << 1 mutates the default instead of creating an entry. Hash.new { |h, k| h[k] = [] } is the usual fix.",
+        "syntax": "Hash.new { |h, k| h[k] = [] }",
+        "tags": [
+          "hash",
+          "defaults",
+          "mutation"
+        ],
+        "title": "Hash.new(default) returns a shared, unstored default"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-88255727",
+      "prompt": "What value does p display in this script?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true"
+        },
+        {
+          "text": "false",
+          "rationale": "`and` binds looser than `=`, so the assignment happens first and false is only the result of the whole expression, never stored in x."
+        },
+        {
+          "text": "nil",
+          "rationale": "x is definitely assigned a value, and that value is true."
+        },
+        {
+          "text": "SyntaxError",
+          "rationale": "The line parses fine; `and` is a valid low-precedence operator in Ruby."
+        }
+      ],
+      "code": "x = true and false\np x",
+      "query": {
+        "explanation": "Ruby parses `x = true and false` as `(x = true) and false`, so x becomes true. With `&&`, which binds tighter than `=`, the line would be `x = (true && false)` and x would be false.",
+        "syntax": "x = (true && false)",
+        "tags": [
+          "precedence",
+          "booleans",
+          "assignment"
+        ],
+        "title": "`and` has lower precedence than assignment"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-78b84e87",
+      "prompt": "What array is printed by this script?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[\"aaa\", \"Ba\", \"b0\"]"
+        },
+        {
+          "text": "[\"zza\", \"Aa\", \"a10\"]",
+          "rationale": "String#succ increments the rightmost alphanumeric character with carry; it does not append a character or treat the digits as a number to add to."
+        },
+        {
+          "text": "[\"aa\", \"Ba\", \"b0\"]",
+          "rationale": "When the carry runs off the left end, succ grows the string by one character, so \"zz\" becomes \"aaa\", not \"aa\"."
+        },
+        {
+          "text": "[\"{{\", \"A{\", \"a:\"]",
+          "rationale": "Plain codepoint bumping only happens for strings with no alphanumerics; letters and digits wrap within their own ranges."
+        }
+      ],
+      "code": "p [\"zz\", \"Az\", \"a9\"].map(&:succ)",
+      "query": {
+        "explanation": "succ increments the rightmost alphanumeric char, wrapping z→a, Z→A and 9→0 while carrying left; if the carry escapes the string, an extra character is prepended. So \"zz\"→\"aaa\", \"Az\"→\"Ba\", \"a9\"→\"b0\".",
+        "syntax": "\"az\".succ",
+        "tags": [
+          "string",
+          "succ",
+          "gotchas"
+        ],
+        "title": "String#succ carries across letter and digit classes"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-1f7d5330",
+      "prompt": "Which array does this script print?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[-4, 4, 512]"
+        },
+        {
+          "text": "[4, 4, 512]",
+          "rationale": "Unary minus on a literal binds looser than `**`, so `-2 ** 2` is `-(2 ** 2)` = -4, not 4."
+        },
+        {
+          "text": "[-4, 4, 64]",
+          "rationale": "`**` is right-associative, so `2 ** 3 ** 2` is `2 ** 9` = 512, not `(2 ** 3) ** 2` = 64."
+        },
+        {
+          "text": "[4, 4, 64]",
+          "rationale": "This makes both mistakes: it treats `**` as left-associative and as binding looser than unary minus."
+        }
+      ],
+      "code": "a = -2 ** 2\nb = (-2) ** 2\nc = 2 ** 3 ** 2\np [a, b, c]",
+      "query": {
+        "explanation": "In Ruby `**` binds tighter than unary minus on a numeric literal, so `-2 ** 2` parses as `-(2 ** 2)` = -4, while `(-2) ** 2` is 4. `**` is also right-associative, so `2 ** 3 ** 2` is `2 ** (3 ** 2)` = 2 ** 9 = 512.",
+        "syntax": "-2 ** 2  # => -4",
+        "tags": [
+          "operators",
+          "precedence",
+          "numeric"
+        ],
+        "title": "Exponentiation precedence and associativity"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-dae875e8",
+      "prompt": "Which array does this script print?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[[[:x], [:x], [:x]], [[:y], [], []]]"
+        },
+        {
+          "text": "[[[:x], [], []], [[:y], [], []]]",
+          "rationale": "`Array.new(3, [])` stores one shared array three times, so pushing onto `a[0]` shows up in all three slots."
+        },
+        {
+          "text": "[[[:x], [:x], [:x]], [[:y], [:y], [:y]]]",
+          "rationale": "The block form runs once per index and builds three separate arrays, so only `b[0]` gains an element."
+        },
+        {
+          "text": "[[[:x], [], []], [[:y], [:y], [:y]]]",
+          "rationale": "This swaps the two forms: the default-value form shares one object and the block form creates fresh ones."
+        }
+      ],
+      "code": "a = Array.new(3, [])\nb = Array.new(3) { [] }\na[0] << :x\nb[0] << :y\np [a, b]",
+      "query": {
+        "explanation": "`Array.new(3, [])` evaluates the default once and stores the very same array object in all three slots, so mutating `a[0]` is visible through every slot. `Array.new(3) { [] }` calls the block once per index, producing three independent arrays, so only `b[0]` changes.",
+        "syntax": "Array.new(3) { [] }  # three distinct arrays",
+        "tags": [
+          "arrays",
+          "aliasing",
+          "mutation"
+        ],
+        "title": "Array.new default value versus block"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-445383af",
+      "prompt": "Which array does this script print?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[1, [2, 3], 4, 5, nil]"
+        },
+        {
+          "text": "[1, [2, 3, 4], nil, 5, nil]",
+          "rationale": "The fixed name after the splat is filled first, so `c` gets 4 and the splat only collects the middle values."
+        },
+        {
+          "text": "[1, [2, 3], 4, [5], nil]",
+          "rationale": "`*[5]` expands the array into a bare value, so `d` is the integer 5 rather than the array `[5]`."
+        },
+        {
+          "text": "[1, [2, 3], 4, 5, []]",
+          "rationale": "An unmatched plain name in a multiple assignment becomes nil; only splat names default to an empty array."
+        }
+      ],
+      "code": "a, *b, c = 1, 2, 3, 4\nd, e = *[5]\np [a, b, c, d, e]",
+      "query": {
+        "explanation": "A splat in the middle of a left-hand side is greedy only after the fixed names are satisfied: `a` takes 1, `c` takes the final 4, and `b` collects the leftovers `[2, 3]`. On the second line `*[5]` expands to a single value, so `d` is 5 and `e`, having nothing left, becomes nil.",
+        "syntax": "a, *b, c = 1, 2, 3, 4",
+        "tags": [
+          "assignment",
+          "splat",
+          "destructuring"
+        ],
+        "title": "Splats in multiple assignment"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-24f3b796",
+      "prompt": "What does this script print?",
+      "topic": "operators-and-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[-1, 1, nil]"
+        },
+        {
+          "text": "[-1, 1, 0]",
+          "rationale": "0 would mean the Integer and the String compare as equal; `<=>` returns nil for incomparable operands instead."
+        },
+        {
+          "text": "[-1, 1, false]",
+          "rationale": "`<=>` never returns a boolean; it returns nil when no ordering is defined."
+        },
+        {
+          "text": "[-1, -1, nil]",
+          "rationale": "\"b\" sorts after \"a\", so `\"b\" <=> \"a\"` is 1, not -1."
+        }
+      ],
+      "code": "p [1 <=> 2, \"b\" <=> \"a\", 1 <=> \"a\"]",
+      "query": {
+        "explanation": "`<=>` returns -1, 0, or 1 when the two operands are comparable, and `nil` when they are not. `1 <=> 2` is -1 and `\"b\" <=> \"a\"` is 1, but an Integer and a String have no defined ordering, so `1 <=> \"a\"` yields `nil` rather than raising or returning a boolean. This nil result is what makes `1 < \"a\"` raise an ArgumentError, since Comparable turns a nil comparison into an error.",
+        "syntax": "a <=> b",
+        "tags": [
+          "operators",
+          "comparable",
+          "types"
+        ],
+        "title": "Spaceship operator with incomparable types"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-157896c6",
+      "prompt": "Does this script print true and then false?",
+      "topic": "operators-and-types",
+      "answer": true,
+      "code": "p((1..10) === 5)\np(5 === (1..10))",
+      "query": {
+        "explanation": "`===` is case-equality and is defined by the receiver. `Range#===` tests membership, so `(1..10) === 5` is true. `Integer#===` falls back to `==`, and an Integer is never equal to a Range, so `5 === (1..10)` is false. That asymmetry is why `case` puts the pattern on the left of the implicit `===` call.",
+        "syntax": "pattern === value",
+        "tags": [
+          "operators",
+          "case-equality",
+          "ranges"
+        ],
+        "title": "=== is not symmetric"
+      },
+      "rationale": "`===` is dispatched on the receiver: Range#=== tests membership (true), while Integer#=== is plain equality against a Range (false), so the two lines differ.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-aaead985",
+      "prompt": "What array does this script print?",
+      "topic": "operators-and-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[true, false, false]"
+        },
+        {
+          "text": "[true, true, false]",
+          "rationale": "Ruby derives `!=` from `==`, so a custom `==` returning true makes `!=` return false."
+        },
+        {
+          "text": "[false, true, false]",
+          "rationale": "The custom `==` compares the wrapped values, and both boxes hold 1, so `a == b` is true."
+        },
+        {
+          "text": "[true, false, true]",
+          "rationale": "`equal?` tests object identity and is unaffected by `==`; a and b are two separate objects."
+        }
+      ],
+      "code": "class Box\n  attr_reader :v\n  def initialize(v)\n    @v = v\n  end\n  def ==(other)\n    other.is_a?(Box) && v == other.v\n  end\nend\n\na = Box.new(1)\nb = Box.new(1)\np [a == b, a != b, a.equal?(b)]",
+      "query": {
+        "explanation": "Ruby automatically defines `!=` as the negation of `==` unless you override it, so defining only `==` makes `a != b` return false here. `equal?` is identity comparison and is never redefined by `==`, so two distinct Box instances give false even though they are `==`.",
+        "syntax": "def ==(other); end",
+        "tags": [
+          "operators",
+          "equality",
+          "object-identity"
+        ],
+        "title": "!= is derived from =="
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-993b2d49",
+      "prompt": "What does this script print?",
+      "topic": "operators-and-types",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[Float, Integer, Float, Rational]"
+        },
+        {
+          "text": "[Float, Float, Float, Float]",
+          "rationale": "`3 / 2` between two Integers stays Integer (1), and `2 ** -1` returns a Rational."
+        },
+        {
+          "text": "[Float, Integer, Rational, Float]",
+          "rationale": "A Rational plus a Float coerces to Float, and an Integer to a negative power gives a Rational, so the last two are swapped."
+        },
+        {
+          "text": "[Float, Integer, Float, Float]",
+          "rationale": "`2 ** -1` yields Rational `(1/2)`, not the Float 0.5."
+        }
+      ],
+      "code": "p [(1 + 1.0).class, (3 / 2).class, (Rational(1, 2) + 0.5).class, (2 ** -1).class]",
+      "query": {
+        "explanation": "Mixing an Integer with a Float coerces up to Float. Integer division truncates and stays an Integer. Adding a Float to a Rational coerces the Rational to Float. Raising an Integer to a negative Integer power returns a Rational rather than a Float, so `2 ** -1` is `(1/2)`.",
+        "syntax": "a ** b",
+        "tags": [
+          "types",
+          "numeric",
+          "coercion"
+        ],
+        "title": "Result types of numeric operators"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-09ae79da",
+      "prompt": "What single line does this script print?",
+      "topic": "wtf",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "HELLO!"
+        },
+        {
+          "text": "hello",
+          "rationale": "Prepending puts Loud ahead of Greeter in the ancestor chain, so Loud#greet runs first and transforms the result; the raw class method is never the final answer."
+        },
+        {
+          "text": "hello!",
+          "rationale": "Loud#greet calls upcase on the value returned by super before appending the exclamation mark, so the letters are uppercased."
+        },
+        {
+          "text": "HELLO",
+          "rationale": "Loud#greet appends \"!\" after upcasing, so the exclamation mark is part of the printed string."
+        }
+      ],
+      "code": "module Loud\n  def greet\n    super.upcase + \"!\"\n  end\nend\n\nclass Greeter\n  prepend Loud\n  def greet\n    \"hello\"\n  end\nend\n\nputs Greeter.new.greet",
+      "query": {
+        "explanation": "With `include`, the module sits after the class, so the class's own method wins. With `prepend`, the module is inserted before the class, so `Loud#greet` is found first; its `super` call then dispatches to `Greeter#greet`, which returns \"hello\". Loud upcases that to \"HELLO\" and appends \"!\", giving \"HELLO!\". This is why `prepend` is the idiomatic way to wrap or decorate an existing method without using alias chains.",
+        "syntax": "prepend Mod  # Mod comes before the class: Greeter.ancestors => [Loud, Greeter, ...]",
+        "tags": [
+          "modules",
+          "prepend",
+          "super",
+          "method-lookup"
+        ],
+        "title": "prepend places a module before the class in the ancestor chain"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-d838b405",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[[1, 2, 1, 2], \"1,2\"]"
+        },
+        {
+          "text": "[[1, 2, 1, 2], [1, 2]]",
+          "rationale": "Array#* with a String argument joins into a String; it does not return an array."
+        },
+        {
+          "text": "[[2, 4], \"1,2\"]",
+          "rationale": "An Integer argument repeats the whole array; it does not multiply each element."
+        },
+        {
+          "text": "[[1, 2, 1, 2], \"12\"]",
+          "rationale": "The String argument is used as a separator between elements, so the comma appears in the result."
+        }
+      ],
+      "code": "p [[1, 2] * 2, [1, 2] * \",\"]",
+      "prompt": "Which single line does this script output?",
+      "query": {
+        "explanation": "Array#* is one method whose behaviour depends on the argument's type: with an Integer it repeats the array (like Array#concat applied n times), so [1, 2] * 2 is [1, 2, 1, 2]; with a String it behaves like Array#join using that string as the separator, so [1, 2] * \",\" is \"1,2\". The element values are never multiplied, and the separator is placed between elements rather than discarded.",
+        "syntax": "array * int_or_string",
+        "tags": [
+          "operators",
+          "types",
+          "array",
+          "coercion"
+        ],
+        "title": "Array#* dispatches on argument type"
+      },
+      "type": "mc",
+      "topic": "operators-and-types",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-36a14c34",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "[10, \"no y\"]"
+        },
+        {
+          "text": "[10, 20]",
+          "rationale": "A `def` body does not close over surrounding local variables, so the top-level `y = 20` is invisible inside `show`."
+        },
+        {
+          "text": "[10, nil]",
+          "rationale": "`defined?(y)` returns nil, which is falsy, so the ternary evaluates its else branch and pushes the string \"no y\" rather than nil."
+        },
+        {
+          "text": "NameError is raised for y",
+          "rationale": "`defined?` tests a name safely without evaluating it, so no NameError occurs; `X` is a constant and is also resolvable inside the method."
+        }
+      ],
+      "code": "X = 10\ny = 20\n\ndef show\n  parts = []\n  parts << X\n  parts << (defined?(y) ? y : \"no y\")\n  parts\nend\n\np show",
+      "prompt": "What single line does this script print?",
+      "query": {
+        "explanation": "`def` starts a brand-new local variable scope: local variables from the surrounding (here top-level) scope are not captured, so `y` is simply unknown inside `show` and `defined?(y)` returns nil, selecting the \"no y\" branch. Constants are looked up lexically/through the class hierarchy rather than through local scope, so `X` resolves to 10 inside the method. This is why Ruby methods are not closures, while blocks, `define_method`, and lambdas are.",
+        "syntax": "def name ... end  # new local scope\ndefined?(expr)    # nil when the name is not defined",
+        "tags": [
+          "scope",
+          "methods",
+          "constants",
+          "defined?",
+          "closures"
+        ],
+        "title": "Method bodies open a new local scope"
+      },
+      "type": "mc",
+      "topic": "functions-and-scope",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    },
+    {
+      "id": "gen-ruby-medium-f063cfed",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "03.14|+42|ff"
+        },
+        {
+          "text": "3.14|+42|ff",
+          "rationale": "The 0 flag with width 5 pads \"3.14\" (4 chars) to \"03.14\", so a leading zero is present."
+        },
+        {
+          "text": "03.14|42|0xff",
+          "rationale": "%+d always shows the sign, and %x emits bare hex digits; the \"0x\" prefix needs %#x."
+        },
+        {
+          "text": "03.142|+42|FF",
+          "rationale": ".2 means two digits after the decimal point, and %x produces lowercase hex (%X gives uppercase)."
+        }
+      ],
+      "code": "puts \"%05.2f|%+d|%x\" % [3.14159, 42, 255]",
+      "prompt": "Which single line does this script output?",
+      "query": {
+        "explanation": "String#% applies printf-style directives. \"%05.2f\" rounds 3.14159 to two decimals (\"3.14\") then zero-pads to a total width of 5, giving \"03.14\". \"%+d\" forces an explicit sign, so 42 becomes \"+42\". \"%x\" renders 255 as lowercase hex without any prefix, giving \"ff\"; use \"%#x\" for \"0xff\" and \"%X\" for \"FF\". The joined result is 03.14|+42|ff.",
+        "syntax": "format_string % array_of_arguments",
+        "tags": [
+          "ruby",
+          "strings",
+          "formatting"
+        ],
+        "title": "Ruby format flags: zero-pad, forced sign, hex"
+      },
+      "type": "mc",
+      "topic": "wtf",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Ruby 3.4.11"
+      }
+    }
+  ],
+  "schemaVersion": 2
+}

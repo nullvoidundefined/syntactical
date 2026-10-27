@@ -1,7 +1,7 @@
 // POST /v1/ask answers a learner's follow-up about one quiz question with a model answer, only for
-// a user holding any granted entitlement (and, for a paid bank's question, that bank's). Each user
-// gets ASK.DAILY_LIMIT answers per UTC day; a failed or declined model call does not use one up.
-// The model is a fake that records each prompt.
+// a user holding any granted entitlement; every bank, Medium and Hard included, needs no other.
+// Each user gets ASK.DAILY_LIMIT answers per UTC day; a failed or declined model call does not use
+// one up. The model is a fake that records each prompt.
 import type { Question } from '@syntactical/content-schema';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, inject, it } from 'vitest';
@@ -10,7 +10,6 @@ import { ASK } from '../../constants/ask.js';
 import type { ModelProvider } from '../../clients/modelProvider.js';
 import { createFakeModelProvider } from '../../testing/fakeModelProvider.js';
 import type { FakeModelProvider } from '../../testing/fakeModelProvider.js';
-import type { PaidBank } from '../../types/PaidBank.js';
 import { createMigratedDatabase } from '../integration/createMigratedDatabase.js';
 import { createTestApp } from '../integration/createTestApp.js';
 import { insertSession } from '../integration/insertSession.js';
@@ -21,8 +20,7 @@ const DAY_MS = 86_400_000;
 const MINUTE_MS = 60_000;
 const ALLOWED_ORIGIN = 'https://syntactical.dev';
 const FREE_BANK = 'python/easy';
-const PAID_BANK = 'python/medium';
-const PAID_PRODUCT = 'syntactical.python.medium';
+const MEDIUM_BANK = 'python/medium';
 const OTHER_PRODUCT = 'syntactical.go.medium';
 const MESSAGE = 'Why does the list keep its old value here?';
 const PROVENANCE: Question['provenance'] = {
@@ -55,10 +53,10 @@ const boolQuestion: Question = {
     type: 'bool',
 };
 
-const paidQuestion: Question = {
+const mediumQuestion: Question = {
     ...freeQuestion,
     id: 'py-medium-0',
-    query: { explanation: 'paid-explanation-marker', title: 'Paid' },
+    query: { explanation: 'medium-explanation-marker', title: 'Medium' },
 };
 
 const questions = new Map<string, ReadonlyMap<string, Question>>([
@@ -69,15 +67,14 @@ const questions = new Map<string, ReadonlyMap<string, Question>>([
             [boolQuestion.id, boolQuestion],
         ]),
     ],
-    [PAID_BANK, new Map([[paidQuestion.id, paidQuestion]])],
+    [MEDIUM_BANK, new Map([[mediumQuestion.id, mediumQuestion]])],
 ]);
-const paidBanks = new Map<string, PaidBank>([[PAID_BANK, { body: Buffer.from('{}'), productId: PAID_PRODUCT }]]);
 
 let database: Awaited<ReturnType<typeof createMigratedDatabase>>;
 
 function createAskApp(modelProvider: ModelProvider | undefined) {
     return createTestApp({
-        ask: { ...(modelProvider ? { modelProvider } : {}), paidBanks, questions },
+        ask: { ...(modelProvider ? { modelProvider } : {}), questions },
         pool: database.pool,
     });
 }
@@ -201,20 +198,15 @@ describe.skipIf(SKIP_DATABASE_TESTS)('POST /v1/ask', () => {
         expect(await usedToday(signed.userId)).toBeUndefined();
     });
 
-    it('answers 403 for a paid bank question unless the user holds that bank', async () => {
+    it('answers a Medium bank question for a user holding any entitlement', async () => {
         const model = createFakeModelProvider();
         const signed = await signIn(model);
         await grant(signed.userId, OTHER_PRODUCT);
-        const body = { bankKey: PAID_BANK, message: MESSAGE, questionId: paidQuestion.id };
 
-        const refused = await ask(signed, body);
-        expect(refused.status).toBe(403);
-        expect(model.prompts).toEqual([]);
+        const answered = await ask(signed, { bankKey: MEDIUM_BANK, message: MESSAGE, questionId: mediumQuestion.id });
 
-        await grant(signed.userId, PAID_PRODUCT);
-        const answered = await ask(signed, body);
         expect(answered.status).toBe(200);
-        expect(model.prompts[0]?.user).toContain('paid-explanation-marker');
+        expect(model.prompts[0]?.user).toContain('medium-explanation-marker');
     });
 
     it('answers 404 for an unknown bank or question', async () => {

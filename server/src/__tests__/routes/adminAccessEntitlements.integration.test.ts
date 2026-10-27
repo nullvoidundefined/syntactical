@@ -1,8 +1,8 @@
-// Admin access (IAN-601) end to end: an admin's self-grant through PUT /v1/admin/access opens the
-// paid bank route and lists the product in /v1/me entitlements; revoking closes the bank again
-// (403 ENTITLEMENT_REQUIRED). Purchases win: a RevenueCat purchase delivered through the webhook
-// for a product the admin granted themselves takes the row over (granted, source 'revenuecat'),
-// and a later admin toggle off leaves the purchase in force. Every token is built at run time.
+// Admin access (IAN-601) end to end: an admin's self-grant through PUT /v1/admin/access lists the
+// product in /v1/me entitlements, and revoking removes it. Purchases win: a RevenueCat purchase
+// delivered through the webhook for a product the admin granted themselves takes the row over
+// (granted, source 'revenuecat'), and a later admin toggle off leaves the purchase in force. Every
+// token is built at run time.
 import { randomBytes, randomUUID } from 'node:crypto';
 
 import request from 'supertest';
@@ -16,17 +16,11 @@ import {
   signInUser,
 } from '../integration/adminAccessRequests.js';
 import type { Caller } from '../integration/adminAccessRequests.js';
-import {
-  ADMIN_TEST_MARKERS,
-  ADMIN_TEST_PRODUCTS,
-  ADMIN_TEST_ROUTES,
-  createAdminTestApp,
-} from '../integration/createAdminTestApp.js';
+import { ADMIN_TEST_PRODUCTS, createAdminTestApp } from '../integration/createAdminTestApp.js';
 import { createMigratedDatabase } from '../integration/createMigratedDatabase.js';
 import { SKIP_DATABASE_TESTS } from '../integration/skipDatabaseTests.js';
 
 const HTTP_OK = 200;
-const HTTP_FORBIDDEN = 403;
 const SETUP_TIMEOUT_MS = 120_000;
 const WEBHOOK_ROUTE = '/v1/webhooks/revenuecat';
 const ME_ROUTE = '/v1/me';
@@ -42,24 +36,8 @@ function setup() {
   return { ...testApp, now: testApp.clock.now() };
 }
 
-function getBank(app: App, caller: Caller, path: string): Promise<request.Response> {
-  return authorize(request(app).get(path), caller)
-    .buffer(true)
-    .parse((res, callback) => {
-      const stream = res as unknown as NodeJS.ReadableStream;
-      const chunks: Buffer[] = [];
-      stream.on('data', (chunk: Buffer | string) => chunks.push(Buffer.from(chunk)));
-      stream.on('end', () => callback(null, Buffer.concat(chunks).toString('utf8')));
-    })
-    .then((response) => response);
-}
-
 function getMe(app: App, caller: Caller): Promise<request.Response> {
   return authorize(request(app).get(ME_ROUTE), caller).then((response) => response);
-}
-
-function errorCodeOf(response: request.Response): unknown {
-  return (JSON.parse(String(response.body)) as { error?: { code?: unknown } }).error?.code;
 }
 
 function deliverPurchase(app: App, revenueCatAuth: string, userId: string, productId: string, at: Date) {
@@ -81,7 +59,7 @@ function deliverPurchase(app: App, revenueCatAuth: string, userId: string, produ
     .send(JSON.stringify({ event }));
 }
 
-describe.skipIf(SKIP_DATABASE_TESTS)('admin access reaches the paid bank route and yields to purchases', () => {
+describe.skipIf(SKIP_DATABASE_TESTS)('admin access grants entitlements and yields to purchases', () => {
   beforeAll(async () => {
     database = await createMigratedDatabase(inject('testDatabaseUrl'));
   }, SETUP_TIMEOUT_MS);
@@ -94,30 +72,19 @@ describe.skipIf(SKIP_DATABASE_TESTS)('admin access reaches the paid bank route a
     await database.reset();
   });
 
-  it('an admin self-grant serves the bank and lists the entitlement; a revoke answers 403 ENTITLEMENT_REQUIRED again', async () => {
+  it('an admin self-grant lists the entitlement in /v1/me; a revoke removes it', async () => {
     const { app, now } = setup();
     const admin = await signInUser(database.pool, now, true);
 
-    const beforeGrant = await getBank(app, admin, ADMIN_TEST_ROUTES.MEDIUM_BANK);
     const granted = await putAccess(app, admin, { isGranted: true, productId: MEDIUM });
-    const bankWhileGranted = await getBank(app, admin, ADMIN_TEST_ROUTES.MEDIUM_BANK);
-    const otherBankWhileGranted = await getBank(app, admin, ADMIN_TEST_ROUTES.HARD_BANK);
     const meWhileGranted = await getMe(app, admin);
     const revoked = await putAccess(app, admin, { isGranted: false, productId: MEDIUM });
-    const bankAfterRevoke = await getBank(app, admin, ADMIN_TEST_ROUTES.MEDIUM_BANK);
     const meAfterRevoke = await getMe(app, admin);
 
-    expect(beforeGrant.status).toBe(HTTP_FORBIDDEN);
     expect(granted.status).toBe(HTTP_OK);
-    expect(bankWhileGranted.status).toBe(HTTP_OK);
-    expect(String(bankWhileGranted.body)).toContain(ADMIN_TEST_MARKERS.MEDIUM);
-    expect(otherBankWhileGranted.status).toBe(HTTP_FORBIDDEN);
     expect(meWhileGranted.status).toBe(HTTP_OK);
     expect(meWhileGranted.body.data.entitlements).toEqual([MEDIUM]);
     expect(revoked.status).toBe(HTTP_OK);
-    expect(bankAfterRevoke.status).toBe(HTTP_FORBIDDEN);
-    expect(errorCodeOf(bankAfterRevoke)).toBe('ENTITLEMENT_REQUIRED');
-    expect(String(bankAfterRevoke.body)).not.toContain(ADMIN_TEST_MARKERS.MEDIUM);
     expect(meAfterRevoke.body.data.entitlements).toEqual([]);
   });
 
@@ -131,7 +98,6 @@ describe.skipIf(SKIP_DATABASE_TESTS)('admin access reaches the paid bank route a
     const listedAfterPurchase = await getAccess(app, admin);
     const toggledOff = await putAccess(app, admin, { isGranted: false, productId: HARD });
     const rowsAfterToggle = await readEntitlementRows(database.pool, admin.userId);
-    const bankAfterToggle = await getBank(app, admin, ADMIN_TEST_ROUTES.HARD_BANK);
     const meAfterToggle = await getMe(app, admin);
 
     expect(granted.status).toBe(HTTP_OK);
@@ -147,8 +113,6 @@ describe.skipIf(SKIP_DATABASE_TESTS)('admin access reaches the paid bank route a
     expect(toggledOff.status).toBe(HTTP_OK);
     expect(toggledOff.body).toEqual({ data: { grantSource: 'purchase', isGranted: true, productId: HARD } });
     expect(rowsAfterToggle).toEqual(rowsAfterPurchase);
-    expect(bankAfterToggle.status).toBe(HTTP_OK);
-    expect(String(bankAfterToggle.body)).toContain(ADMIN_TEST_MARKERS.HARD);
     expect(meAfterToggle.body.data.entitlements).toEqual([HARD]);
   });
 });

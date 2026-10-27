@@ -1,6 +1,6 @@
 // The Backend Security topic track as shipped: a manifest entry with kind 'topic' (so the menu
 // lists it under Topics and gap-fill sends it to topic generation), grammar plain, ten topics,
-// a free easy bank and two paid banks with their product ids, and a TRACK_RUNNERS entry.
+// easy, medium, and hard banks under content/ with no access or product id, and a TRACK_RUNNERS entry.
 import { readFileSync } from 'node:fs';
 
 import { validateManifest } from '@syntactical/content-schema';
@@ -36,19 +36,12 @@ describe('backend-security track config', () => {
         ]);
     });
 
-    it('has a free easy bank and paid medium and hard banks with their product ids', () => {
-        expect(ENTRY.banks.easy).toMatchObject({ access: 'free', path: 'backend-security/easy.json' });
-        expect(ENTRY.banks.easy).not.toHaveProperty('productId');
-        expect(ENTRY.banks.medium).toMatchObject({
-            access: 'paid',
-            path: 'backend-security/medium.json',
-            productId: 'syntactical.backend-security.medium',
-        });
-        expect(ENTRY.banks.hard).toMatchObject({
-            access: 'paid',
-            path: 'backend-security/hard.json',
-            productId: 'syntactical.backend-security.hard',
-        });
+    it('has easy, medium, and hard banks under content/, none carrying access or productId', () => {
+        for (const difficulty of ['easy', 'medium', 'hard']) {
+            expect(ENTRY.banks[difficulty]).toMatchObject({ path: `backend-security/${difficulty}.json` });
+            expect(ENTRY.banks[difficulty]).not.toHaveProperty('access');
+            expect(ENTRY.banks[difficulty]).not.toHaveProperty('productId');
+        }
     });
 
     it('keeps the whole manifest valid', () => {

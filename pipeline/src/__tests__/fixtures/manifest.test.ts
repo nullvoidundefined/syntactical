@@ -26,27 +26,14 @@ describe('manifest fixtures', () => {
         });
     });
 
-    it('builds paid and free bank entries with an optional product ID', () => {
-        const paid = buildBankEntry('python/medium.json', 'paid', 'syntactical.python.medium');
-        const free = buildBankEntry('python/easy.json');
-
+    it('builds a bank entry with no access or product id', () => {
         expect(HASH).toBe('0123456789abcdef'.repeat(4));
-        expect(paid).toEqual({
-            access: 'paid',
+        expect(buildBankEntry('python/medium.json')).toEqual({
             contentVersion: 1,
             hash: HASH,
             path: 'python/medium.json',
-            productId: 'syntactical.python.medium',
             topicCounts: {},
         });
-        expect(free).toEqual({
-            access: 'free',
-            contentVersion: 1,
-            hash: HASH,
-            path: 'python/easy.json',
-            topicCounts: {},
-        });
-        expect(free).not.toHaveProperty('productId');
     });
 
     it('preserves language order and sets schema version 2', () => {

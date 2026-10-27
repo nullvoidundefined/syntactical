@@ -5,7 +5,7 @@
 #   DEPLOY_DRY_RUN=1 server/scripts/deployToRailway.sh <staging|production> <cli-version>
 #
 # The upload is a clean directory outside the repository: the committed tree (git archive HEAD,
-# so no .git and no untracked files) plus the staged build/ directory from stageBuildContent.sh.
+# so no .git and no untracked files) plus build/content staged by stageBuildContent.sh.
 # It refuses to upload when that directory holds .git, an .ssh directory, known_hosts, an env file,
 # a PEM or key file, or a deploy key, so a key can never reach Railway even if a later step stages
 # one by mistake. DEPLOY_DRY_RUN=1 runs every check and stops before contacting Railway (tests use
@@ -24,7 +24,7 @@ if [ "$dry_run" != 1 ]; then
 fi
 
 root="${DEPLOY_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
-[ -d "$root/build/content" ] && [ -d "$root/build/paid-content" ] \
+[ -d "$root/build/content" ] \
   || { echo 'build/ is not staged; run server/scripts/stageBuildContent.sh first.' >&2; exit 1; }
 
 upload="$(mktemp -d)"
@@ -32,7 +32,7 @@ trap 'chmod -R u+w "$upload" 2>/dev/null || true; rm -rf "$upload"' EXIT
 
 git -C "$root" archive HEAD | tar -x -C "$upload"
 mkdir -p "$upload/build"
-cp -R "$root/build/content" "$root/build/paid-content" "$upload/build/"
+cp -R "$root/build/content" "$upload/build/"
 
 forbidden="$(find "$upload" \( -name .git -o -name .ssh -o -name known_hosts -o -name '.env*' \
   -o -name '*.pem' -o -name '*.key' -o -name '*.ppk' -o -iname '*deploy_key*' -o -name 'id_*' \) -print)"

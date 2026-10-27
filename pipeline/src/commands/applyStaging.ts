@@ -1,8 +1,8 @@
-// `pipeline apply-staging`: merges staged enrichment (rationales and misconception tags) and staged
-// references into each FREE bank's existing questions, in place. Unlike publish it never adds,
-// drops, or re-decides a question, so hand-written banks whose questions are not validated keep
-// every question; it only fills fields. Content validation runs afterwards in the manifest build
-// (`buildManifest`), which also lists the misconceptions the banks now link.
+// `pipeline apply-staging`: merges staged enrichment (rationales and misconception tags) and staged references
+// into every bank's existing questions, in place. Unlike publish it never adds, drops, or re-decides a question,
+// so hand-written banks whose questions are not validated keep every question; it only fills fields. Content
+// validation runs afterwards in the manifest build (`buildManifest`), which also lists the misconceptions the
+// banks now link.
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -39,8 +39,7 @@ export async function applyStaging(options: ApplyStagingOptions): Promise<{ refe
     const checks = await readDocLinkChecks(join(pipelineDir, 'references', 'doc-links.json'));
     const tally = { references: 0, rationales: 0 };
     for (const { banks, id: languageId } of checked.manifest.languages) {
-        for (const [difficulty, { access, path }] of Object.entries(banks)) {
-            if (access !== 'free') continue;
+        for (const [difficulty, { path }] of Object.entries(banks)) {
             const enrichment = await readEnrichment(join(pipelineDir, 'enrichment', languageId, `${difficulty}.json`));
             const references = await readReferences(join(pipelineDir, 'references', languageId, `${difficulty}.json`));
             if (enrichment.size === 0 && references.size === 0) continue;

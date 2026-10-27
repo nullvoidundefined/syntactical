@@ -1,8 +1,7 @@
 name: Server deploy
 
 # Builds the API image here, checks and scans it, then uploads the same build context to Railway
-# with `railway up`. Railway's builder rejects BuildKit secret mounts, so the paid-content deploy
-# key is used only by stageBuildContent.sh on this runner and never reaches Docker or Railway.
+# with `railway up`. The image bakes in this repository's content, so no content key exists.
 # A push to main deploys staging; production is a manual run.
 
 on:
@@ -55,8 +54,6 @@ jobs:
         run: |
           [ -n "$RAILWAY_TOKEN" ] || { echo 'The RAILWAY_TOKEN_STAGING Actions secret is not set; nothing was deployed.' >&2; exit 1; }
       - uses: ./.github/actions/check-api-image
-        with:
-          content-deploy-key: ${{ secrets.CONTENT_DEPLOY_KEY }}
       - name: Deploy to Railway staging
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
@@ -92,14 +89,7 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PRODUCTION }}
         run: |
           [ -n "$RAILWAY_TOKEN" ] || { echo 'The RAILWAY_TOKEN_PRODUCTION Actions secret is not set; nothing was deployed.' >&2; exit 1; }
-      - name: Check the content deploy key is set
-        env:
-          CONTENT_DEPLOY_KEY: ${{ secrets.CONTENT_DEPLOY_KEY }}
-        run: |
-          [ -n "$CONTENT_DEPLOY_KEY" ] || { echo 'The CONTENT_DEPLOY_KEY Actions secret is not set; production never deploys fixture content. Nothing was deployed.' >&2; exit 1; }
       - uses: ./.github/actions/check-api-image
-        with:
-          content-deploy-key: ${{ secrets.CONTENT_DEPLOY_KEY }}
       - name: Deploy to Railway production
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PRODUCTION }}

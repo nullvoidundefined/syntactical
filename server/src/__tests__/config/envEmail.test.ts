@@ -14,7 +14,6 @@ function buildValidSource(): NodeJS.ProcessEnv {
     DATABASE_URL: 'postgres://localhost:5432/syntactical',
     EMAIL_FROM: SENDER,
     NODE_ENV: 'test',
-    PAID_CONTENT_DIR: '/srv/syntactical-content',
     RATE_LIMIT_KEY_SECRET: randomBytes(RANDOM_BYTES).toString('hex'),
     RESEND_API_KEY: randomBytes(RANDOM_BYTES).toString('hex'),
     REVENUECAT_WEBHOOK_AUTH: randomBytes(RANDOM_BYTES).toString('hex'),

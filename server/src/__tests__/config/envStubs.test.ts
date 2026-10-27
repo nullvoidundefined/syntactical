@@ -23,7 +23,6 @@ function onlyRequired(): NodeJS.ProcessEnv {
   return {
     DATABASE_URL: `postgres://localhost:5432/syntactical_${randomBytes(4).toString('hex')}`,
     NODE_ENV: 'test',
-    PAID_CONTENT_DIR: '/srv/syntactical-content',
   };
 }
 
@@ -60,7 +59,7 @@ describe('loadEnv without the stub opt-in', () => {
 describe('loadEnv with ALLOW_STUBBED_INTEGRATIONS=true', () => {
   const optIn = { ALLOW_STUBBED_INTEGRATIONS: 'true' };
 
-  it('starts with only the database and paid content settings, and lists every stub by name', () => {
+  it('starts with only the database setting, and lists every stub by name', () => {
     const env = loadEnv({ ...onlyRequired(), ...optIn });
 
     expect([...env.stubbed].sort()).toEqual([...STUBBABLE_NAMES].sort());
@@ -71,13 +70,6 @@ describe('loadEnv with ALLOW_STUBBED_INTEGRATIONS=true', () => {
     delete source.DATABASE_URL;
 
     expect(() => loadEnv(source)).toThrow(/DATABASE_URL/);
-  });
-
-  it('never stubs PAID_CONTENT_DIR', () => {
-    const source: NodeJS.ProcessEnv = { ...onlyRequired(), ...optIn };
-    delete source.PAID_CONTENT_DIR;
-
-    expect(() => loadEnv(source)).toThrow(/PAID_CONTENT_DIR/);
   });
 
   it('leaves the email credential and the webhook credential absent, never a placeholder', () => {

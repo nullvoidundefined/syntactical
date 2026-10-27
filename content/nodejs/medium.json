@@ -1,0 +1,4073 @@
+{
+  "questions": [
+    {
+      "id": "gen-nodejs-medium-52022bea",
+      "prompt": "What does this program print?",
+      "topic": "event-loop-and-timers",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "number",
+          "rationale": "Browsers return a numeric timer id, but Node returns a Timeout handle instead."
+        },
+        {
+          "text": "object"
+        },
+        {
+          "text": "function",
+          "rationale": "The return value is a scheduling handle, not the callback that was passed in."
+        },
+        {
+          "text": "undefined",
+          "rationale": "setTimeout returns a value, which is exactly what clearTimeout needs to cancel the timer."
+        }
+      ],
+      "code": "const t = setTimeout(() => {}, 1000);\nconsole.log(typeof t);\nclearTimeout(t);",
+      "query": {
+        "explanation": "In Node.js, setTimeout returns a Timeout handle object (with methods such as ref, unref and refresh), not the integer id that browsers return. clearTimeout accepts that handle.",
+        "syntax": "const t = setTimeout(cb, ms); clearTimeout(t)",
+        "tags": [
+          "timers",
+          "timeout-object",
+          "node-api"
+        ],
+        "title": "What setTimeout returns in Node"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-45097ae1",
+      "prompt": "What does this program print?",
+      "topic": "event-loop-and-timers",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "NaN",
+          "rationale": "Node forwards the extra arguments, so a and b are numbers rather than undefined."
+        },
+        {
+          "text": "1032",
+          "rationale": "The arguments arrive as numbers, so + adds them instead of concatenating strings."
+        },
+        {
+          "text": "42"
+        },
+        {
+          "text": "10",
+          "rationale": "Every argument after the delay is forwarded, not only the first one."
+        }
+      ],
+      "code": "setTimeout((a, b) => console.log(a + b), 0, 10, 32);",
+      "query": {
+        "explanation": "Any arguments after the delay are forwarded to the callback when the timer fires, so a is 10 and b is 32 and the sum 42 is printed.",
+        "syntax": "setTimeout(callback, delay, ...args)",
+        "tags": [
+          "timers",
+          "settimeout",
+          "arguments"
+        ],
+        "title": "Extra arguments passed to a timer callback"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-b0e5eef4",
+      "prompt": "Which lines does this program print, in order?",
+      "topic": "event-loop-and-timers",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "done, fired",
+          "rationale": "The unref'd 50 ms timer never fires because nothing keeps the loop alive after 10 ms."
+        },
+        {
+          "text": "fired, done",
+          "rationale": "Delays still order the timers, and the unref'd 50 ms timer is dropped at exit anyway."
+        },
+        {
+          "text": "done"
+        },
+        {
+          "text": "fired",
+          "rationale": "The referenced 10 ms timer does run; it is the unref'd one that is skipped."
+        }
+      ],
+      "code": "const t = setTimeout(() => console.log('fired'), 50);\nt.unref();\nsetTimeout(() => console.log('done'), 10);",
+      "query": {
+        "explanation": "An unref'd timer no longer keeps the event loop alive. After the 10 ms timer prints 'done' there are no referenced handles left, so the process exits before the 50 ms timer can fire.",
+        "syntax": "timeout.unref()",
+        "tags": [
+          "timers",
+          "unref",
+          "event-loop",
+          "process-exit"
+        ],
+        "title": "unref'd timers and process lifetime"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-64d63969",
+      "prompt": "What does this program print?",
+      "topic": "event-loop-and-timers",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "object"
+        },
+        {
+          "text": "number",
+          "rationale": "Browsers hand back a numeric timer id, but Node's setTimeout returns a Timeout instance instead."
+        },
+        {
+          "text": "function",
+          "rationale": "The callback is a function, yet setTimeout's return value is the timer handle rather than the callback."
+        },
+        {
+          "text": "string",
+          "rationale": "No stringified handle is produced; the returned value is a Timeout instance, so typeof reports an object."
+        }
+      ],
+      "code": "const t = setTimeout(() => {}, 1000);\nconsole.log(typeof t);\nclearTimeout(t);",
+      "query": {
+        "explanation": "In Node.js, setTimeout returns a Timeout instance (with methods like ref, unref and refresh), not the numeric id that browsers return, so typeof gives \"object\". clearTimeout accepts that object.",
+        "syntax": "const t = setTimeout(fn, ms); clearTimeout(t)",
+        "tags": [
+          "timers",
+          "timeout-object"
+        ],
+        "title": "setTimeout returns a Timeout object in Node"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-74537725",
+      "prompt": "Does this program log later before it exits?",
+      "topic": "event-loop-and-timers",
+      "answer": false,
+      "code": "const t = setTimeout(() => console.log('later'), 50);\nt.unref();",
+      "query": {
+        "explanation": "An unref'd Timeout still counts down, but it no longer keeps the event loop alive. With nothing else pending, Node runs out of work immediately after the main module and exits before the 50ms deadline, so the callback never fires.",
+        "syntax": "timeout.unref()",
+        "tags": [
+          "timers",
+          "unref",
+          "event-loop"
+        ],
+        "title": "unref removes a timer's hold on the event loop"
+      },
+      "rationale": "unref does not cancel the timer, but it stops the timer from keeping the loop alive, so the process exits first and the callback never runs.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-2be38e97",
+      "prompt": "What does this program print?",
+      "topic": "event-loop-and-timers",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "5"
+        },
+        {
+          "text": "23",
+          "rationale": "The forwarded arguments stay numbers, so + adds them instead of concatenating them as text."
+        },
+        {
+          "text": "NaN",
+          "rationale": "Both parameters are filled from the trailing arguments, so neither is undefined when the addition happens."
+        },
+        {
+          "text": "undefined",
+          "rationale": "The callback does return undefined, but console.log prints the sum of the forwarded arguments, not the return value."
+        }
+      ],
+      "code": "setTimeout((a, b) => console.log(a + b), 10, 2, 3);",
+      "query": {
+        "explanation": "setTimeout(callback, delay, ...args) passes any arguments after the delay straight to the callback when it fires. Here a is 2 and b is 3, both numbers, so a + b is the number 5.",
+        "syntax": "setTimeout(cb, delay, ...args)",
+        "tags": [
+          "timers",
+          "settimeout-args"
+        ],
+        "title": "Extra setTimeout arguments are forwarded to the callback"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-34561e19",
+      "prompt": "What does this program print?",
+      "topic": "buffers-and-encodings",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "5",
+          "rationale": "5 is the number of JavaScript characters in the string; Buffer.length counts bytes, and 'é' needs two of them."
+        },
+        {
+          "text": "6"
+        },
+        {
+          "text": "10",
+          "rationale": "10 bytes is what 'utf16le' would need (2 bytes per code unit), not UTF-8."
+        },
+        {
+          "text": "12",
+          "rationale": "12 is the length of the hex text representation of the bytes, not the byte count itself."
+        }
+      ],
+      "code": "const buf = Buffer.from('héllo', 'utf8');\nconsole.log(buf.length);",
+      "query": {
+        "explanation": "In UTF-8, 'h', 'l', 'l' and 'o' take one byte each, but 'é' (U+00E9) is encoded as two bytes (0xC3 0xA9). Buffer.length reports bytes, not characters, so the buffer is 6 bytes long.",
+        "syntax": "Buffer.from(string[, encoding])",
+        "tags": [
+          "buffer",
+          "utf8",
+          "encoding"
+        ],
+        "title": "UTF-8 byte length vs character count"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-680f96ee",
+      "prompt": "What does this program print?",
+      "topic": "buffers-and-encodings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Tm9kZQ=="
+        },
+        {
+          "text": "Tm9kZQ=",
+          "rationale": "A single leftover byte produces two padding characters, not one; one '=' corresponds to two leftover bytes."
+        },
+        {
+          "text": "Tm9kZQ",
+          "rationale": "That is the unpadded base64url-style form; Node's 'base64' output always includes '=' padding."
+        },
+        {
+          "text": "Tk9kZQ==",
+          "rationale": "This mis-encodes the first byte: 'N' is 0x4E, which maps to 'Tm9k' for the first group, not 'Tk9k'."
+        }
+      ],
+      "code": "const buf = Buffer.from('Node', 'utf8');\nconsole.log(buf.toString('base64'));",
+      "query": {
+        "explanation": "'Node' is the bytes 4E 6F 64 65. Base64 encodes in 3-byte groups: 4E 6F 64 becomes 'Tm9k', and the leftover byte 65 becomes 'ZQ' plus two '=' padding characters, giving 'Tm9kZQ=='.",
+        "syntax": "buf.toString('base64')",
+        "tags": [
+          "buffer",
+          "base64"
+        ],
+        "title": "Base64 encoding of a 4-byte buffer"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-178ac501",
+      "prompt": "Does Node throw when decoding this hex string?",
+      "topic": "buffers-and-encodings",
+      "answer": false,
+      "code": "const buf = Buffer.from('abcz', 'hex');\nconsole.log(buf.length);",
+      "query": {
+        "explanation": "Node's hex decoder is lenient: it decodes valid two-character pairs and stops silently at the first invalid character. 'ab' decodes to one byte, then 'cz' is rejected, so the buffer has length 1 and no error is thrown.",
+        "syntax": "Buffer.from(string, 'hex')",
+        "tags": [
+          "buffer",
+          "hex",
+          "encoding"
+        ],
+        "title": "Lenient hex decoding"
+      },
+      "rationale": "Hex decoding does not validate the whole string; Node stops at the first invalid pair and returns the bytes decoded so far (here 1 byte) instead of raising an error.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-53427005",
+      "prompt": "What does this program print?",
+      "topic": "buffers-and-encodings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1 false"
+        },
+        {
+          "text": "1 true",
+          "rationale": "The byte count is right, but a latin1 byte 0xE9 is not valid UTF-8, so decoding as UTF-8 yields a replacement character."
+        },
+        {
+          "text": "2 false",
+          "rationale": "Two bytes is the UTF-8 size of 'é'; latin1 always uses one byte per character."
+        },
+        {
+          "text": "2 true",
+          "rationale": "Neither part holds: latin1 stores 'é' in one byte, and re-decoding it as UTF-8 does not reproduce 'é'."
+        }
+      ],
+      "code": "const buf = Buffer.from('é', 'latin1');\nconsole.log(buf.length, buf.toString('utf8') === 'é');",
+      "query": {
+        "explanation": "In latin1 each character becomes exactly one byte, so 'é' is the single byte 0xE9 and length is 1. Decoding that lone 0xE9 as UTF-8 is invalid (a continuation byte is missing), so it becomes U+FFFD and the comparison with 'é' is false.",
+        "syntax": "Buffer.from(string, 'latin1')",
+        "tags": [
+          "buffer",
+          "latin1",
+          "utf8"
+        ],
+        "title": "latin1 encoding is not UTF-8"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-598b0b1b",
+      "prompt": "What does this program print?",
+      "topic": "buffers-and-encodings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3 2"
+        },
+        {
+          "text": "1 2",
+          "rationale": "UTF-8 uses one byte only for code points below U+0080; U+20AC requires three bytes."
+        },
+        {
+          "text": "3 6",
+          "rationale": "utf16le does not scale with the UTF-8 size; it uses two bytes per UTF-16 code unit, and '€' is one code unit."
+        },
+        {
+          "text": "2 2",
+          "rationale": "Two UTF-8 bytes cover code points up to U+07FF only, so U+20AC does not fit in two."
+        }
+      ],
+      "code": "console.log(Buffer.byteLength('€', 'utf8'), Buffer.byteLength('€', 'utf16le'));",
+      "query": {
+        "explanation": "The euro sign U+20AC needs three bytes in UTF-8 (E2 82 AC) but is a single UTF-16 code unit, so utf16le stores it in two bytes. Buffer.byteLength reports the encoded size, which differs per encoding.",
+        "syntax": "Buffer.byteLength(string[, encoding])",
+        "tags": [
+          "buffer",
+          "byteLength",
+          "utf16le"
+        ],
+        "title": "byteLength depends on the encoding"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-bb206d66",
+      "prompt": "What does this program print?",
+      "topic": "buffers-and-encodings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "4 68c3a96c"
+        },
+        {
+          "text": "5 68c3a96c6c",
+          "rationale": "buf.write can never write past the buffer's 4-byte capacity, so neither the return value nor the hex can exceed 4 bytes."
+        },
+        {
+          "text": "4 68c3a96c00",
+          "rationale": "The hex here shows 5 bytes; a 4-byte buffer that is completely filled leaves no trailing zero byte."
+        },
+        {
+          "text": "3 68c3a900",
+          "rationale": "After the 3 bytes of 'hé' there is still room for 'l', so Node writes 4 bytes and the final slot is not left zeroed."
+        }
+      ],
+      "code": "const buf = Buffer.alloc(4);\nconst written = buf.write('héllo', 'utf8');\nconsole.log(written, buf.toString('hex'));",
+      "query": {
+        "explanation": "'héllo' is 68 C3 A9 6C 6C 6F. Only 4 bytes fit, and Node refuses to write a partial multi-byte character, so it writes 68 C3 A9 6C and returns 4. The buffer is exactly full, so no zero bytes remain.",
+        "syntax": "buf.write(string[, offset[, length]][, encoding])",
+        "tags": [
+          "buffer",
+          "write",
+          "utf8"
+        ],
+        "title": "Partial writes never split a UTF-8 character"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-51b83c4d",
+      "prompt": "What does this program print?",
+      "topic": "buffers-and-encodings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2 65533"
+        },
+        {
+          "text": "1 233",
+          "rationale": "The truncated sequence is not dropped and is not completed into 'é' (233); it becomes a replacement character, so the string has two code units."
+        },
+        {
+          "text": "2 195",
+          "rationale": "The decoder does not pass the raw byte 0xC3 (195) through as a character; invalid UTF-8 is replaced by U+FFFD."
+        },
+        {
+          "text": "3 65533",
+          "rationale": "Only two bytes are decoded, producing two code units, not three."
+        }
+      ],
+      "code": "const buf = Buffer.from('aé', 'utf8');\nconst s = buf.toString('utf8', 0, 2);\nconsole.log(s.length, s.charCodeAt(1));",
+      "query": {
+        "explanation": "The buffer holds 61 C3 A9. Decoding bytes 0..2 gives 'a' plus the lone lead byte C3, which is an incomplete sequence and is replaced by U+FFFD. So the string has length 2 and its second code unit is 65533.",
+        "syntax": "buf.toString([encoding[, start[, end]]])",
+        "tags": [
+          "buffer",
+          "utf8",
+          "replacement-character"
+        ],
+        "title": "Decoding a truncated UTF-8 sequence"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-ce38cf5a",
+      "prompt": "What does this program print?",
+      "topic": "buffers-and-encodings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true 0"
+        },
+        {
+          "text": "false 1",
+          "rationale": "The two buffers hold identical bytes, so they are equal and compare returns 0, not a positive ordering value."
+        },
+        {
+          "text": "true 1",
+          "rationale": "Buffer.compare returns 0 for equal byte sequences; a return of 1 would contradict equals being true."
+        },
+        {
+          "text": "false 0",
+          "rationale": "These two results cannot disagree: compare returning 0 means the byte contents match, so equals is true."
+        }
+      ],
+      "code": "const a = Buffer.from('4142', 'hex');\nconst b = Buffer.from('AB', 'utf8');\nconsole.log(a.equals(b), Buffer.compare(a, b));",
+      "query": {
+        "explanation": "Hex '4142' is the bytes 0x41 0x42, and 'AB' in UTF-8 is also 0x41 0x42. Buffer comparison looks only at byte contents, so equals is true and Buffer.compare returns 0.",
+        "syntax": "buf.equals(otherBuffer); Buffer.compare(buf1, buf2)",
+        "tags": [
+          "buffer",
+          "compare",
+          "hex"
+        ],
+        "title": "Buffers compare by bytes, not by source encoding"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-7f04b960",
+      "prompt": "Does the buffer share memory with the Uint8Array here?",
+      "topic": "buffers-and-encodings",
+      "answer": true,
+      "code": "const u8 = new Uint8Array([1, 2, 3]);\nconst buf = Buffer.from(u8.buffer);\nu8[0] = 9;\nconsole.log(buf[0]);",
+      "query": {
+        "explanation": "Passing an ArrayBuffer to Buffer.from makes the Buffer a view over that same memory, so writing through the Uint8Array is visible in the Buffer and the program prints 9. Passing the typed array itself (Buffer.from(u8)) would copy instead.",
+        "syntax": "Buffer.from(arrayBuffer[, byteOffset[, length]])",
+        "tags": [
+          "buffer",
+          "arraybuffer",
+          "typed-array"
+        ],
+        "title": "Buffer.from(arrayBuffer) creates a view, not a copy"
+      },
+      "rationale": "Buffer.from with an ArrayBuffer argument does not copy the bytes; it wraps the existing memory, so buf[0] reflects the later mutation and prints 9 rather than 1.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-226df1a8",
+      "prompt": "What does this program print?",
+      "topic": "buffers-and-encodings",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "C)"
+        },
+        {
+          "text": "Ã©",
+          "rationale": "That is the 'latin1' reading of C3 A9; the 'ascii' decoder additionally unsets the high bit of each byte first."
+        },
+        {
+          "text": "é",
+          "rationale": "Only decoding with 'utf8' reconstructs the original character; 'ascii' handles bytes individually."
+        },
+        {
+          "text": "??",
+          "rationale": "Node does not substitute '?' for non-ASCII bytes when decoding; it masks the high bit instead."
+        }
+      ],
+      "code": "const buf = Buffer.from('é', 'utf8');\nconsole.log(buf.toString('ascii'));",
+      "query": {
+        "explanation": "'é' is the UTF-8 bytes C3 A9. When decoding with 'ascii', Node clears the high bit of each byte before treating it as latin1: 0xC3 becomes 0x43 ('C') and 0xA9 becomes 0x29 (')'), so the output is 'C)'.",
+        "syntax": "buf.toString('ascii')",
+        "tags": [
+          "buffer",
+          "ascii",
+          "encoding"
+        ],
+        "title": "The 'ascii' decoder masks the high bit"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-42e7b37d",
+      "prompt": "What does this program print?",
+      "topic": "path-and-url",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "https://example.com/a/d?x=1"
+        },
+        {
+          "text": "https://example.com/a/b/d?x=1",
+          "rationale": "The '..' segment is applied, so one directory level is removed from the base directory '/a/b/'."
+        },
+        {
+          "text": "https://example.com/d?x=1",
+          "rationale": "Only one level is removed; a single '..' does not walk all the way up to the root."
+        },
+        {
+          "text": "https://example.com/a/b/c/d?x=1",
+          "rationale": "The last segment of the base path is a file name, not a directory, so it is dropped first."
+        }
+      ],
+      "code": "const u = new URL('../d?x=1', 'https://example.com/a/b/c');\n\nconsole.log(u.href);",
+      "query": {
+        "explanation": "The base path '/a/b/c' is treated as a file inside the directory '/a/b/'. The '..' segment moves up one level to '/a/', then 'd' is appended, producing 'https://example.com/a/d?x=1' with the query string preserved.",
+        "syntax": "new URL(input, base)",
+        "tags": [
+          "url",
+          "relative",
+          "resolution"
+        ],
+        "title": "Resolving a relative URL against a base"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-f7761092",
+      "prompt": "What does this program print?",
+      "topic": "path-and-url",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "a:2"
+        },
+        {
+          "text": "a:1",
+          "rationale": "getAll returns every value stored for the key, and the query string supplies two of them."
+        },
+        {
+          "text": "b:2",
+          "rationale": "get returns the first value for the key in document order, not the last."
+        },
+        {
+          "text": "a,b:2",
+          "rationale": "get returns a single value; it does not join repeated values with commas."
+        }
+      ],
+      "code": "const u = new URL('https://e.com/s?q=a&q=b');\n\nconsole.log(u.searchParams.get('q') + ':' + u.searchParams.getAll('q').length);",
+      "query": {
+        "explanation": "searchParams.get returns the first value associated with a key, which is 'a'. searchParams.getAll returns every value for that key as an array, so its length is 2, and the printed string is 'a:2'.",
+        "syntax": "url.searchParams.get(name) / url.searchParams.getAll(name)",
+        "tags": [
+          "url",
+          "searchParams",
+          "query"
+        ],
+        "title": "get versus getAll on URLSearchParams"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-4f030d45",
+      "prompt": "Does this program print `https://user:pass@example.com`?",
+      "topic": "path-and-url",
+      "answer": false,
+      "code": "const u = new URL('https://user:pass@example.com/a');\n\nconsole.log(u.origin);",
+      "query": {
+        "explanation": "The origin is built from the scheme, host and (non-default) port only. Username and password live in u.username and u.password and are never part of the origin, so this prints 'https://example.com'.",
+        "syntax": "url.origin",
+        "tags": [
+          "url",
+          "origin",
+          "credentials"
+        ],
+        "title": "URL origin excludes credentials"
+      },
+      "rationale": "The origin is only scheme, host and non-default port; the embedded credentials are stripped, so it prints 'https://example.com'.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-fc0d6c4c",
+      "prompt": "Does this program print `/y/x`?",
+      "topic": "path-and-url",
+      "answer": false,
+      "code": "const u = new URL('/x', 'https://a.com/y/z');\n\nconsole.log(u.pathname);",
+      "query": {
+        "explanation": "An input starting with '/' is a root-relative reference: it keeps the base's scheme and host but replaces the whole path. The base directory '/y/' is discarded, so the pathname is '/x'.",
+        "syntax": "new URL(input, base)",
+        "tags": [
+          "url",
+          "pathname",
+          "relative"
+        ],
+        "title": "Root-relative references ignore the base directory"
+      },
+      "rationale": "A leading '/' makes the reference root-relative, so the base directory is replaced rather than prefixed, and the pathname is '/x'.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-95d8ca53",
+      "prompt": "Does this program print `?q=a%20b`?",
+      "topic": "path-and-url",
+      "answer": false,
+      "code": "const u = new URL('https://example.com/s');\nu.searchParams.set('q', 'a b');\n\nconsole.log(u.search);",
+      "query": {
+        "explanation": "URLSearchParams serializes with application/x-www-form-urlencoded rules, where a space becomes '+' rather than '%20'. So u.search is '?q=a+b'. Reading u.searchParams.get('q') still returns 'a b', since '+' is decoded back to a space.",
+        "syntax": "url.searchParams.set(name, value)",
+        "tags": [
+          "url",
+          "searchParams",
+          "encoding"
+        ],
+        "title": "URLSearchParams uses form encoding for spaces"
+      },
+      "rationale": "searchParams uses form-urlencoded serialization, so the space is written as '+' and the output is '?q=a+b'; '%20' is what encodeURIComponent would produce.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-7d0c6686",
+      "prompt": "What does this program print?",
+      "topic": "path-and-url",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "port=[]"
+        },
+        {
+          "text": "port=[443]",
+          "rationale": "443 is the default port for https, so the parser strips it from the URL and port reports the empty string."
+        },
+        {
+          "text": "port=[80]",
+          "rationale": "80 is the http default and is never substituted here; the explicit 443 is simply dropped as redundant."
+        },
+        {
+          "text": "port=[null]",
+          "rationale": "An absent port is reported as an empty string, not as null, so interpolating it adds no text."
+        }
+      ],
+      "code": "const u = new URL('https://example.com:443/a?x=1');\n\nconsole.log(`port=[${u.port}]`);",
+      "query": {
+        "explanation": "When the port matches the default port of the scheme (443 for https), the URL parser removes it, so url.port is the empty string and url.host is just 'example.com'. A non-default port such as 8443 would be kept and returned as the string '8443'.",
+        "syntax": "new URL(input).port",
+        "tags": [
+          "url",
+          "port",
+          "parsing"
+        ],
+        "title": "Default ports are dropped from a URL"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-87f9f715",
+      "prompt": "What does this program print?",
+      "topic": "path-and-url",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "/a/c"
+        },
+        {
+          "text": "/a/b/c",
+          "rationale": "The '..' segment removes the preceding 'b' rather than being ignored, so 'b' does not survive in the path."
+        },
+        {
+          "text": "/a/./b/../c",
+          "rationale": "The parser normalizes dot segments at parse time, so pathname never contains '.' or '..' components."
+        },
+        {
+          "text": "/c",
+          "rationale": "Only one '..' appears, which pops just 'b'; 'a' remains because nothing removes it."
+        }
+      ],
+      "code": "const u = new URL('https://example.com/a/./b/../c');\n\nconsole.log(u.pathname);",
+      "query": {
+        "explanation": "URL parsing applies the remove-dot-segments algorithm: '.' is dropped and '..' pops the previous segment. So '/a/./b/../c' becomes '/a/c', and u.pathname (and u.href) show the normalized form.",
+        "syntax": "new URL(input).pathname",
+        "tags": [
+          "url",
+          "pathname",
+          "normalization"
+        ],
+        "title": "The URL parser removes dot segments from the path"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-1b88d41a",
+      "prompt": "What does this program print?",
+      "topic": "error-handling",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "AggregateError 2"
+        },
+        {
+          "text": "Error 2",
+          "rationale": "The rejection reason is an AggregateError instance, so its name is 'AggregateError', not the base 'Error'."
+        },
+        {
+          "text": "AggregateError undefined",
+          "rationale": "AggregateError exposes the collected reasons on an `errors` array, so `errors.length` is defined."
+        },
+        {
+          "text": "AggregateError 1",
+          "rationale": "`errors` holds one entry per rejected input promise; two promises rejected, so the length is 2."
+        }
+      ],
+      "code": "Promise.any([\n  Promise.reject(new Error('a')),\n  Promise.reject(new Error('b')),\n]).catch((err) => {\n  console.log(err.name, err.errors.length);\n});",
+      "query": {
+        "explanation": "When every input promise rejects, `Promise.any` rejects with an `AggregateError` whose `name` is 'AggregateError' and whose `errors` array holds the individual rejection reasons in input order. Here both promises reject, so `errors.length` is 2.",
+        "syntax": "err.errors // [Error: a, Error: b]",
+        "tags": [
+          "error-handling",
+          "promises",
+          "aggregate-error"
+        ],
+        "title": "AggregateError from Promise.any"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-912c43a3",
+      "prompt": "Does the process exit before printing `still running`?",
+      "topic": "error-handling",
+      "answer": false,
+      "code": "process.on('uncaughtException', (err) => {\n  console.log('handled:', err.message);\n});\n\nsetTimeout(() => { throw new Error('boom'); }, 0);\nsetTimeout(() => { console.log('still running'); }, 20);",
+      "query": {
+        "explanation": "Registering an 'uncaughtException' listener replaces Node's default behaviour of printing the stack and exiting with code 1. The throw from the first timer is delivered to the handler, the event loop keeps turning, and the second timer still fires. (Node docs still recommend exiting after an uncaught exception, since state may be corrupt.)",
+        "syntax": "process.on('uncaughtException', handler)",
+        "tags": [
+          "error-handling",
+          "process",
+          "event-loop"
+        ],
+        "title": "uncaughtException keeps the loop alive"
+      },
+      "rationale": "An 'uncaughtException' listener suppresses the default crash, so the event loop survives the throw and the 20 ms timer runs and prints `still running`.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-f9dfb27e",
+      "prompt": "What does this program print?",
+      "topic": "error-handling",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Error AppError"
+        },
+        {
+          "text": "AppError AppError",
+          "rationale": "`name` is inherited from Error.prototype and is not derived from the subclass; it stays 'Error' until assigned explicitly."
+        },
+        {
+          "text": "Error Error",
+          "rationale": "`e.constructor` is the AppError class itself, so `constructor.name` reports 'AppError'."
+        },
+        {
+          "text": "AppError Error",
+          "rationale": "Both halves are swapped: the inherited `name` is 'Error' and the constructor name is 'AppError'."
+        }
+      ],
+      "code": "class AppError extends Error {}\n\nconst e = new AppError('bad');\nconsole.log(e.name, e.constructor.name);",
+      "query": {
+        "explanation": "`name` is an inherited data property on `Error.prototype` with the value 'Error'; subclassing does not update it, so `e.name` stays 'Error' unless the constructor sets `this.name = 'AppError'`. The class identity is still visible through `e.constructor.name`, which is 'AppError'.",
+        "syntax": "class AppError extends Error { constructor(m) { super(m); this.name = 'AppError'; } }",
+        "tags": [
+          "error-handling",
+          "custom-errors",
+          "classes"
+        ],
+        "title": "Custom error subclasses and err.name"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-ba02190f",
+      "prompt": "Which lines does this program print, in order?",
+      "topic": "error-handling",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "sync done then reason: nope"
+        },
+        {
+          "text": "reason: nope then sync done",
+          "rationale": "The unhandledRejection event is emitted only after the synchronous script and microtasks finish, so it cannot precede 'sync done'."
+        },
+        {
+          "text": "sync done only",
+          "rationale": "A rejection with no handler does fire 'unhandledRejection', so the listener also prints its line."
+        },
+        {
+          "text": "reason: nope only",
+          "rationale": "The top-level console.log runs unconditionally on the same tick, so 'sync done' is printed too."
+        }
+      ],
+      "code": "process.on('unhandledRejection', (reason) => {\n  console.log('reason:', reason);\n});\n\nPromise.reject('nope');\nconsole.log('sync done');",
+      "query": {
+        "explanation": "`Promise.reject` only schedules work; the rest of the current script keeps running, so 'sync done' prints first. Node checks for rejections with no handler after the microtask queue drains and then emits 'unhandledRejection', so the handler's line prints afterwards. The listener also prevents the default crash on unhandled rejections.",
+        "syntax": "process.on('unhandledRejection', (reason, promise) => { ... })",
+        "tags": [
+          "error-handling",
+          "promises",
+          "process"
+        ],
+        "title": "unhandledRejection timing"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-bcaeb10b",
+      "prompt": "What does this program print?",
+      "topic": "error-handling",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "AggregateError 2"
+        },
+        {
+          "text": "Error 2",
+          "rationale": "`Promise.any` does not forward the first rejection reason; it wraps all of them in a dedicated `AggregateError`, whose `name` is `AggregateError`."
+        },
+        {
+          "text": "AggregateError 1",
+          "rationale": "`errors` collects one entry for every input promise that rejected, so with two rejected promises the length is 2, not just the first failure."
+        },
+        {
+          "text": "AggregateError undefined",
+          "rationale": "`AggregateError` always exposes an `errors` array property, so reading `.length` on it yields a number rather than `undefined`."
+        }
+      ],
+      "code": "Promise.any([\n  Promise.reject(new Error('a')),\n  Promise.reject(new Error('b')),\n]).catch((err) => {\n  console.log(err.name, err.errors.length);\n});",
+      "query": {
+        "explanation": "When every input promise rejects, `Promise.any` rejects with an `AggregateError` whose `errors` array holds one entry per input promise, in input order. Here both promises reject, so `err.name` is `AggregateError` and `err.errors.length` is `2`.",
+        "syntax": "Promise.any(iterable)",
+        "tags": [
+          "promises",
+          "errors",
+          "AggregateError"
+        ],
+        "title": "AggregateError from Promise.any"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-a65d6e8a",
+      "prompt": "What does this program print?",
+      "topic": "process-and-env",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "30001"
+        },
+        {
+          "text": "3001",
+          "rationale": "This would require process.env to keep the number 3000 so that + 1 is numeric addition, but env values are stored as strings."
+        },
+        {
+          "text": "3000",
+          "rationale": "The + 1 is evaluated, so something is appended or added; the logged value is not the untouched assignment."
+        },
+        {
+          "text": "NaN",
+          "rationale": "\"3000\" + 1 is concatenation, not a failed numeric conversion, so no NaN is produced."
+        }
+      ],
+      "code": "process.env.PORT = 3000;\nconsole.log(process.env.PORT + 1);",
+      "query": {
+        "explanation": "Every value assigned to process.env is coerced with String(), so 3000 becomes the string \"3000\". Adding 1 then performs string concatenation, giving \"30001\". This is why port/flag values read from the environment must be parsed with Number() or parseInt() before arithmetic or comparison.",
+        "syntax": "process.env.KEY = value // value is coerced to a string",
+        "tags": [
+          "process",
+          "env",
+          "coercion"
+        ],
+        "title": "process.env stores only strings"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-7bbb5ec3",
+      "prompt": "What does this program print?",
+      "topic": "process-and-env",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "null string"
+        },
+        {
+          "text": "null object",
+          "rationale": "typeof null is \"object\", but the stored value is a string copy, not the original null reference."
+        },
+        {
+          "text": "undefined undefined",
+          "rationale": "Assigning null does not unset the key; reading it back returns a defined string value."
+        },
+        {
+          "text": "  string",
+          "rationale": "Node does not turn null into an empty string; it applies String(null), which yields \"null\"."
+        }
+      ],
+      "code": "process.env.FOO = null;\nconsole.log(process.env.FOO + ' ' + typeof process.env.FOO);",
+      "query": {
+        "explanation": "process.env coerces assigned values with String(), and String(null) is the four-character string \"null\". The variable is therefore set, not cleared, and typeof reports \"string\". To remove a variable you must use delete process.env.FOO.",
+        "syntax": "delete process.env.FOO // the only way to unset a variable",
+        "tags": [
+          "process",
+          "env",
+          "coercion"
+        ],
+        "title": "Assigning null to an environment variable"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-9d7e9588",
+      "prompt": "Does this program print `true`?",
+      "topic": "process-and-env",
+      "answer": false,
+      "code": "process.env.A = '1';\ndelete process.env.A;\nconsole.log('A' in process.env);",
+      "query": {
+        "explanation": "delete on process.env really unsets the variable in the process environment, so the `in` check reports false and the program prints false. Setting the value to '' or 'undefined' would leave the key present; only delete removes it.",
+        "syntax": "delete process.env.A",
+        "tags": [
+          "process",
+          "env",
+          "delete"
+        ],
+        "title": "delete removes a key from process.env"
+      },
+      "rationale": "delete actually unsets the variable rather than just blanking it, so 'A' in process.env is false and the program prints false.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-e50f95cf",
+      "prompt": "Does this program print `true`?",
+      "topic": "process-and-env",
+      "answer": true,
+      "code": "console.log(process.argv[0] === process.execPath);",
+      "query": {
+        "explanation": "process.argv[0] is the absolute path of the Node executable, which is exactly what process.execPath reports, so the comparison is true. User-supplied arguments start at process.argv[2]; argv[1] is the path of the script (or an internal placeholder when using -e).",
+        "syntax": "process.argv.slice(2) // user arguments",
+        "tags": [
+          "process",
+          "argv",
+          "execPath"
+        ],
+        "title": "The first element of process.argv"
+      },
+      "rationale": "argv[0] is not the script path or the bare word \"node\"; Node fills it with the resolved executable path, the same string as process.execPath.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-cf3d49e1",
+      "prompt": "Which lines does this program print, in order?",
+      "topic": "process-and-env",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "main, exit 0"
+        },
+        {
+          "text": "main, exit 0, timer",
+          "rationale": "The event loop is already finished when the exit handler runs, so the timer callback is dropped instead of firing afterwards."
+        },
+        {
+          "text": "main, timer, exit 0",
+          "rationale": "A zero-delay timer never preempts the synchronous body of the handler, and in an exit handler it never runs at all."
+        },
+        {
+          "text": "main, exit undefined",
+          "rationale": "The exit event always receives a numeric code; a clean shutdown passes 0 rather than no argument."
+        }
+      ],
+      "code": "process.on('exit', (code) => {\n  setTimeout(() => console.log('timer'), 0);\n  console.log('exit ' + code);\n});\nconsole.log('main');",
+      "query": {
+        "explanation": "The exit listener runs after the event loop has stopped, so any asynchronous work scheduled inside it — timers, immediates, I/O — is never executed. Only synchronous logging works there. The default exit code with no error is 0, so the handler prints \"exit 0\" after \"main\".",
+        "syntax": "process.on('exit', (code) => { /* sync work only */ })",
+        "tags": [
+          "process",
+          "exit",
+          "events"
+        ],
+        "title": "The exit event handler is synchronous only"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-983aab84",
+      "prompt": "Does this program print `true`?",
+      "topic": "process-and-env",
+      "answer": true,
+      "code": "console.log(process.version === 'v' + process.versions.node);",
+      "query": {
+        "explanation": "process.version is the Node release string with a leading \"v\" (for example \"v22.5.1\"), while process.versions.node holds the same number without the prefix. Concatenating \"v\" with process.versions.node therefore reproduces process.version exactly.",
+        "syntax": "process.versions // { node, v8, uv, ... } without 'v' prefixes",
+        "tags": [
+          "process",
+          "version",
+          "runtime"
+        ],
+        "title": "process.version vs process.versions.node"
+      },
+      "rationale": "process.versions.node omits the \"v\" prefix that process.version carries, so adding \"v\" back makes the two strings identical rather than different.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-bec00e86",
+      "prompt": "What does this program print?",
+      "topic": "process-and-env",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "bigint"
+        },
+        {
+          "text": "number",
+          "rationale": "A double cannot hold nanosecond counts without precision loss, which is exactly why this API returns a BigInt instead."
+        },
+        {
+          "text": "object",
+          "rationale": "That is what the legacy process.hrtime() returns, a two-element array of seconds and nanoseconds."
+        },
+        {
+          "text": "string",
+          "rationale": "No stringification happens here; the value is a numeric BigInt that you would have to convert yourself."
+        }
+      ],
+      "code": "console.log(typeof process.hrtime.bigint());",
+      "query": {
+        "explanation": "process.hrtime.bigint() returns the high-resolution time in nanoseconds as a BigInt, so typeof reports \"bigint\". The older process.hrtime() form returns an array of two numbers, [seconds, nanoseconds], and that is the call that yields an object.",
+        "syntax": "const start = process.hrtime.bigint(); // nanoseconds as BigInt",
+        "tags": [
+          "process",
+          "hrtime",
+          "timing"
+        ],
+        "title": "process.hrtime.bigint returns a BigInt"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-3f5e79c6",
+      "prompt": "What does this program print?",
+      "topic": "process-and-env",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "b a"
+        },
+        {
+          "text": "b b",
+          "rationale": "The spread produces a plain object with copied strings, so later writes to process.env do not reach it."
+        },
+        {
+          "text": "a a",
+          "rationale": "env is an alias for process.env, not a copy taken at assignment time, so it reflects the latest value."
+        },
+        {
+          "text": "a b",
+          "rationale": "This reverses the roles: the alias tracks updates and the spread is the frozen snapshot."
+        }
+      ],
+      "code": "const env = process.env;\nprocess.env.X = 'a';\nconst copy = { ...process.env };\nprocess.env.X = 'b';\nconsole.log(env.X + ' ' + copy.X);",
+      "query": {
+        "explanation": "env is just another reference to the same live process.env object, so reading env.X after the reassignment sees 'b'. The spread copies the current values into a plain object, so copy.X keeps the value 'a' from the moment the copy was made.",
+        "syntax": "const snapshot = { ...process.env }; // detached copy",
+        "tags": [
+          "process",
+          "env",
+          "references"
+        ],
+        "title": "process.env is live, a spread is a snapshot"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-3b3595bc",
+      "prompt": "Does this program print `false undefined`?",
+      "topic": "process-and-env",
+      "answer": false,
+      "code": "process.env.A = undefined;\nconsole.log('A' in process.env, process.env.A);",
+      "query": {
+        "explanation": "Writing undefined to process.env runs String(undefined), storing the literal text \"undefined\". The key therefore exists and reading it returns the string 'undefined', so the program prints true undefined — with the second value being a string, not the undefined value. Use delete to actually remove the key.",
+        "syntax": "delete process.env.A // actually removes the key",
+        "tags": [
+          "process",
+          "env",
+          "coercion"
+        ],
+        "title": "Assigning undefined to an environment variable"
+      },
+      "rationale": "The assignment coerces undefined to the string \"undefined\", so the key is present and the program prints true followed by that string rather than false.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-a149aa95",
+      "prompt": "What does this program print?",
+      "topic": "process-and-env",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string 30001"
+        },
+        {
+          "text": "number 3001",
+          "rationale": "process.env does not preserve numeric types; every value written to it is converted to a string before being stored."
+        },
+        {
+          "text": "string 3001",
+          "rationale": "typeof is right, but since the stored value is the string \"3000\", `+ 1` concatenates rather than adding."
+        },
+        {
+          "text": "undefined undefined",
+          "rationale": "Non-string assignments are not rejected or dropped; Node stringifies the value and the property reads back fine."
+        }
+      ],
+      "code": "process.env.PORT = 3000;\nconsole.log(typeof process.env.PORT, process.env.PORT + 1);",
+      "query": {
+        "explanation": "process.env is backed by the OS environment, which only stores strings. Assigning the number 3000 stores the string \"3000\", so typeof reports \"string\" and `+ 1` performs string concatenation, giving \"30001\".",
+        "syntax": "process.env.NAME = value",
+        "tags": [
+          "process",
+          "env",
+          "coercion"
+        ],
+        "title": "process.env coerces values to strings"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-4bdc7d5d",
+      "prompt": "What does this program print?",
+      "topic": "async-patterns",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "abc"
+        },
+        {
+          "text": "bca",
+          "rationale": "That is settle order by delay; for await walks the array by index and awaits each element in place."
+        },
+        {
+          "text": "bac",
+          "rationale": "The loop does not re-order results by which promise settles first, so the fastest value does not jump ahead."
+        },
+        {
+          "text": "cba",
+          "rationale": "Iteration follows array order, not reverse order, and the delays do not reverse the sequence either."
+        }
+      ],
+      "code": "const delay = (ms, v) => new Promise(r => setTimeout(() => r(v), ms));\n\n(async () => {\n  const items = [delay(30, 'a'), delay(10, 'b'), delay(20, 'c')];\n  const out = [];\n  for await (const v of items) out.push(v);\n  console.log(out.join(''));\n})();",
+      "query": {
+        "explanation": "for await iterates the array in index order and awaits each promise in turn; all three timers start immediately, but the results are collected in array order, not completion order.",
+        "syntax": "for await (const v of iterableOfPromises)",
+        "tags": [
+          "async",
+          "for-await",
+          "promises"
+        ],
+        "title": "for await over an array of promises"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-78f65d8d",
+      "prompt": "What does this program print?",
+      "topic": "async-patterns",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "rejected,fulfilled"
+        },
+        {
+          "text": "fulfilled,rejected",
+          "rationale": "Results keep the input order, and the rejected promise is listed first in the input array."
+        },
+        {
+          "text": "rejected,resolved",
+          "rationale": "The success status string is 'fulfilled'; 'resolved' is not a status value allSettled produces."
+        },
+        {
+          "text": "caught",
+          "rationale": "allSettled reports failures as result objects and never rejects, so the catch handler is not invoked."
+        }
+      ],
+      "code": "Promise.allSettled([Promise.reject(new Error('x')), Promise.resolve(1)])\n  .then(rs => console.log(rs.map(r => r.status).join(',')))\n  .catch(() => console.log('caught'));",
+      "query": {
+        "explanation": "allSettled always fulfills with one result object per input in input order, each with status 'fulfilled' or 'rejected'; it never rejects, so the catch handler never runs.",
+        "syntax": "Promise.allSettled([...]) -> [{ status, value | reason }]",
+        "tags": [
+          "async",
+          "promises",
+          "allSettled"
+        ],
+        "title": "Promise.allSettled result statuses"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-ad6b668f",
+      "prompt": "In what order are the labels printed?",
+      "topic": "async-patterns",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "A C B"
+        },
+        {
+          "text": "A B C",
+          "rationale": "Even awaiting a non-promise suspends the function and defers the rest to a microtask, so 'C' prints before 'B'."
+        },
+        {
+          "text": "C A B",
+          "rationale": "The body before the first await runs synchronously during the call, so 'A' prints before 'C'."
+        },
+        {
+          "text": "A C",
+          "rationale": "The continuation after await still runs as a microtask before exit, so 'B' is printed even though nobody awaits f()."
+        }
+      ],
+      "code": "async function f() {\n  console.log('A');\n  await null;\n  console.log('B');\n}\n\nf();\nconsole.log('C');",
+      "query": {
+        "explanation": "An async function runs synchronously until its first await, so 'A' prints immediately; the code after await resumes as a microtask, after the synchronous 'C'.",
+        "syntax": "async function f() { ... await x; ... }",
+        "tags": [
+          "async",
+          "await",
+          "microtasks"
+        ],
+        "title": "Async function body before the first await"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-726d54fe",
+      "prompt": "Does this print `caught x`?",
+      "topic": "async-patterns",
+      "answer": false,
+      "code": "async function boom() { throw new Error('x'); }\n\ntry {\n  boom().catch(() => {});\n  console.log('after call');\n} catch (e) {\n  console.log('caught', e.message);\n}",
+      "query": {
+        "explanation": "A throw inside an async function becomes a rejected promise returned by the call, so a surrounding synchronous try/catch never sees it; the rejection must be handled with .catch or await.",
+        "syntax": "try { await asyncFn(); } catch (e) { ... }",
+        "tags": [
+          "async",
+          "errors",
+          "promises"
+        ],
+        "title": "Async functions reject instead of throwing"
+      },
+      "rationale": "The call returns a rejected promise rather than throwing synchronously, so the catch block is skipped and 'after call' is printed instead.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-6f4440d7",
+      "prompt": "What does this program log?",
+      "topic": "async-patterns",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "ok fast"
+        },
+        {
+          "text": "err slow",
+          "rationale": "race settles on the first promise to finish; the later rejection is ignored once the race has resolved."
+        },
+        {
+          "text": "ok [ 'fast' ]",
+          "rationale": "race resolves with the winning value itself; only Promise.all collects results into an array."
+        },
+        {
+          "text": "ok undefined",
+          "rationale": "The resolved value of the winning promise is passed through, so the handler receives 'fast'."
+        }
+      ],
+      "code": "const fail = ms => new Promise((_, rej) => setTimeout(() => rej(new Error('slow')), ms));\nconst win = (ms, v) => new Promise(res => setTimeout(() => res(v), ms));\n\nPromise.race([fail(50), win(10, 'fast')])\n  .then(v => console.log('ok', v), e => console.log('err', e.message));",
+      "query": {
+        "explanation": "race adopts whichever input settles first; the 10 ms fulfillment wins over the 50 ms rejection, and race resolves with that single value, not an array.",
+        "syntax": "Promise.race([...])",
+        "tags": [
+          "async",
+          "promises",
+          "race"
+        ],
+        "title": "Promise.race settles with the first result"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-8d7006c7",
+      "prompt": "Does `immediate` print before `timeout` here?",
+      "topic": "event-loop-and-timers",
+      "answer": true,
+      "code": "const fs = require('node:fs');\n\nfs.writeFileSync('/tmp/el-demo.txt', 'x');\n\nfs.readFile('/tmp/el-demo.txt', () => {\n  setTimeout(() => console.log('timeout'), 0);\n  setImmediate(() => console.log('immediate'));\n});",
+      "query": {
+        "explanation": "Inside an I/O (poll phase) callback the ordering is deterministic: the check phase runs immediately after poll, so the setImmediate callback fires in the same loop turn, while the 0 ms timer must wait for the timers phase of the next iteration. (At the top level of a module the same comparison is non-deterministic, but inside an I/O callback setImmediate always wins.)",
+        "syntax": "setImmediate(cb) vs setTimeout(cb, 0)",
+        "tags": [
+          "event-loop",
+          "timers",
+          "setimmediate",
+          "phases"
+        ],
+        "title": "setImmediate vs setTimeout inside an I/O callback"
+      },
+      "rationale": "If the timer won, a 0 ms timeout would have to be checked before the check phase; but the loop goes poll -> check, so setImmediate runs in the same turn and the timer waits for the next timers phase.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-c1c6ffd3",
+      "prompt": "Does this program print `number`?",
+      "topic": "event-loop-and-timers",
+      "answer": false,
+      "code": "const id = setTimeout(() => console.log('never'), 1000);\nclearTimeout(id);\nconsole.log(typeof id);",
+      "query": {
+        "explanation": "In Node.js, setTimeout returns a Timeout object (with methods such as ref, unref, and refresh), not the numeric handle that browsers return. So typeof id is 'object'. clearTimeout accepts that object and cancels the timer, so 'never' is never logged.",
+        "syntax": "const t = setTimeout(cb, ms); clearTimeout(t)",
+        "tags": [
+          "timers",
+          "event-loop",
+          "settimeout"
+        ],
+        "title": "What setTimeout returns in Node.js"
+      },
+      "rationale": "A numeric timer id is the browser/DOM behaviour; Node's setTimeout returns a Timeout object, so typeof id is 'object'.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-90b03db5",
+      "prompt": "What does this program print, in order?",
+      "topic": "event-loop-and-timers",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "object then 5"
+        },
+        {
+          "text": "number then 5",
+          "rationale": "Browsers return a numeric timer id, but Node returns a Timeout object, so typeof is \"object\"."
+        },
+        {
+          "text": "object then NaN",
+          "rationale": "Arguments given after the delay are passed to the callback, so a and b are 2 and 3 rather than undefined."
+        },
+        {
+          "text": "object then 23",
+          "rationale": "The extra arguments stay numbers, so a + b adds them to 5 instead of concatenating as strings."
+        }
+      ],
+      "code": "const timer = setTimeout((a, b) => console.log(a + b), 0, 2, 3);\nconsole.log(typeof timer);",
+      "query": {
+        "explanation": "In Node.js setTimeout returns a Timeout object (not a numeric id as in browsers), so typeof timer is \"object\" and it is logged first because it runs synchronously. Any arguments after the delay are forwarded to the callback, so a is 2 and b is 3 and the callback logs 5 once the timers phase runs.",
+        "syntax": "setTimeout(callback, delay, ...args)",
+        "tags": [
+          "timers",
+          "event-loop",
+          "setTimeout"
+        ],
+        "title": "setTimeout return value and extra arguments"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-a90aa643",
+      "prompt": "In what order are the labels printed?",
+      "topic": "event-emitter",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "b a c",
+          "rationale": "prependListener moves its listener ahead of the already registered 'a', and the later on() call appends 'c'."
+        },
+        {
+          "text": "a b c",
+          "rationale": "This is registration order; prependListener does not append, it inserts at the front of the listener array."
+        },
+        {
+          "text": "a c b",
+          "rationale": "This would be the order if prepended listeners ran last; Node runs them first."
+        },
+        {
+          "text": "c a b",
+          "rationale": "Node never reverses the on() registrations; 'c' was appended after 'a' and runs after it."
+        }
+      ],
+      "code": "const EventEmitter = require('node:events');\nconst e = new EventEmitter();\ne.on('go', () => console.log('a'));\ne.prependListener('go', () => console.log('b'));\ne.on('go', () => console.log('c'));\ne.emit('go');",
+      "query": {
+        "explanation": "Listeners run in array order. on() appends, so 'a' is first and 'c' is last, but prependListener() inserts 'b' at the head of the list, giving b, a, c.",
+        "syntax": "emitter.prependListener(name, fn)",
+        "tags": [
+          "events",
+          "EventEmitter",
+          "ordering"
+        ],
+        "title": "prependListener puts a listener at the front"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-345d2499",
+      "prompt": "What does this program print?",
+      "topic": "event-emitter",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "first second 1",
+          "rationale": "emit works on a copy of the listener list, so `second` still runs this time, and afterwards only the first listener remains."
+        },
+        {
+          "text": "first 1",
+          "rationale": "Removal during emit does not cancel the already-snapshotted call to `second`."
+        },
+        {
+          "text": "first second 2",
+          "rationale": "removeListener really did detach `second`, so the count afterwards is 1, not 2."
+        },
+        {
+          "text": "second first 1",
+          "rationale": "Listeners run in registration order, and the arrow function was registered before `second`."
+        }
+      ],
+      "code": "const EventEmitter = require('node:events');\nconst e = new EventEmitter();\nconst second = () => console.log('second');\ne.on('ping', () => { e.removeListener('ping', second); console.log('first'); });\ne.on('ping', second);\ne.emit('ping');\nconsole.log(e.listenerCount('ping'));",
+      "query": {
+        "explanation": "When an event has more than one listener, emit() clones the listener array before iterating, so removing `second` during the first listener does not stop it from being called for this emit. The removal does take effect afterwards, leaving a count of 0 (the first listener was also removed? no — only `second` was removed, but the arrow listener remains, so the count is 1).",
+        "syntax": "emitter.removeListener(name, fn)",
+        "tags": [
+          "events",
+          "EventEmitter",
+          "removeListener"
+        ],
+        "title": "emit iterates over a snapshot of the listeners"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-7c6ac832",
+      "prompt": "What does this program log?",
+      "topic": "event-emitter",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "caught boom",
+          "rationale": "With no 'error' listener, emit throws the Error argument itself, so its message is 'boom'."
+        },
+        {
+          "text": "no throw",
+          "rationale": "emit only returns a boolean for ordinary events; an unhandled 'error' event throws instead of returning false."
+        },
+        {
+          "text": "caught Unhandled error.",
+          "rationale": "Node only builds that wrapper message when the emitted argument is not an Error instance."
+        },
+        {
+          "text": "caught ERR_UNHANDLED_ERROR",
+          "rationale": "That is a code, not a message, and it is used only for non-Error payloads."
+        }
+      ],
+      "code": "const EventEmitter = require('node:events');\nconst e = new EventEmitter();\ne.on('done', () => {});\ntry {\n  e.emit('error', new Error('boom'));\n  console.log('no throw');\n} catch (err) {\n  console.log('caught', err.message);\n}",
+      "query": {
+        "explanation": "An 'error' event with no 'error' listener is special: emit() throws. When the argument is an Error instance, that exact Error is thrown, so err.message is 'boom'. A listener for an unrelated event does not help.",
+        "syntax": "emitter.emit('error', err)",
+        "tags": [
+          "events",
+          "EventEmitter",
+          "error"
+        ],
+        "title": "Unhandled 'error' events are thrown"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-d5560aaf",
+      "prompt": "What does this program log?",
+      "topic": "event-emitter",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "c",
+          "rationale": "'a' was cleared explicitly and 'b' lost its only listener when the once handler fired."
+        },
+        {
+          "text": "b,c",
+          "rationale": "A once listener is removed when it fires, so the 'b' entry no longer exists."
+        },
+        {
+          "text": "a,b,c",
+          "rationale": "eventNames reflects the current registry, not every name that was ever used."
+        },
+        {
+          "text": "c,b",
+          "rationale": "Only one name remains, and eventNames keeps insertion order rather than reversing it."
+        }
+      ],
+      "code": "const EventEmitter = require('node:events');\nconst e = new EventEmitter();\ne.on('a', () => {});\ne.once('b', () => {});\ne.on('c', () => {});\ne.removeAllListeners('a');\ne.emit('b');\nconsole.log(e.eventNames().join(','));",
+      "query": {
+        "explanation": "removeAllListeners('a') deletes the 'a' entry, and firing the 'b' once listener removes the last listener for 'b', deleting that entry too. Only 'c' still has a listener.",
+        "syntax": "emitter.eventNames()",
+        "tags": [
+          "events",
+          "EventEmitter",
+          "eventNames"
+        ],
+        "title": "eventNames() only lists events that still have listeners"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-9597505f",
+      "prompt": "What does this program log?",
+      "topic": "event-emitter",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "3",
+          "rationale": "The once listener runs only for the first emit, with 1 and 2 spread into a and b."
+        },
+        {
+          "text": "3 then 30",
+          "rationale": "That is on() behavior; a once listener is removed before the second emit reaches it."
+        },
+        {
+          "text": "30",
+          "rationale": "The listener is consumed by the first emit, not saved for the last one."
+        },
+        {
+          "text": "NaN",
+          "rationale": "emit spreads the trailing arguments, so b is 2 rather than undefined."
+        }
+      ],
+      "code": "const EventEmitter = require('node:events');\nconst e = new EventEmitter();\ne.once('sum', (a, b) => console.log(a + b));\ne.emit('sum', 1, 2);\ne.emit('sum', 10, 20);",
+      "query": {
+        "explanation": "emit passes extra arguments positionally to the listener, so a=1 and b=2 and 3 is printed. The once wrapper is detached after the first emit, so the second emit has no listener and prints nothing.",
+        "syntax": "emitter.emit(name, ...args)",
+        "tags": [
+          "events",
+          "EventEmitter",
+          "once"
+        ],
+        "title": "once fires for a single emit and receives spread arguments"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-cfb32f32",
+      "prompt": "What does this program log?",
+      "topic": "event-emitter",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true false"
+        },
+        {
+          "text": "true true",
+          "rationale": "emit does not return true unconditionally; with no listeners for 'pong' it returns false."
+        },
+        {
+          "text": "1 0",
+          "rationale": "emit reports a boolean, not the number of listeners invoked; listenerCount() gives counts."
+        },
+        {
+          "text": "true undefined",
+          "rationale": "emit always returns a boolean, so an event with no listeners yields false rather than undefined."
+        }
+      ],
+      "code": "const { EventEmitter } = require('node:events');\n\nconst e = new EventEmitter();\ne.on('ping', () => {});\n\nconsole.log(e.emit('ping'), e.emit('pong'));",
+      "query": {
+        "explanation": "emit() returns a boolean: true if the event type had at least one registered listener, false otherwise. 'ping' has one listener so it returns true; 'pong' has none, so emit returns false (it does not throw and does not report a count).",
+        "syntax": "emitter.emit(eventName[, ...args]) -> boolean",
+        "tags": [
+          "events",
+          "emit",
+          "return-value"
+        ],
+        "title": "Return value of emitter.emit"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-a4030b61",
+      "prompt": "Does this program print `a` twice?",
+      "topic": "event-emitter",
+      "answer": false,
+      "code": "const { EventEmitter } = require('node:events');\n\nconst e = new EventEmitter();\ne.once('evt', (x) => console.log(x));\n\ne.emit('evt', 'a');\ne.emit('evt', 'a');",
+      "query": {
+        "explanation": "A listener added with once() is wrapped so that it is removed from the listener list before the wrapped function runs. The first emit logs 'a' and detaches the listener, so the second emit has no listeners and prints nothing.",
+        "syntax": "emitter.once(eventName, listener)",
+        "tags": [
+          "events",
+          "once"
+        ],
+        "title": "once() fires at most one time"
+      },
+      "rationale": "once() removes the listener as part of the first emit, so only one line is printed; it is not re-armed for later emits.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-7b3a6c63",
+      "prompt": "In what order are the labels printed?",
+      "topic": "event-emitter",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "B, A, C"
+        },
+        {
+          "text": "A, B, C",
+          "rationale": "This is plain registration order; prependListener moves B ahead of the already registered A."
+        },
+        {
+          "text": "A, C, B",
+          "rationale": "prependListener inserts at the front of the list, it does not defer the listener to last place."
+        },
+        {
+          "text": "B, C, A",
+          "rationale": "Prepending B does not reorder A and C; the later on() call appends C after A."
+        }
+      ],
+      "code": "const { EventEmitter } = require('node:events');\n\nconst e = new EventEmitter();\ne.on('go', () => console.log('A'));\ne.prependListener('go', () => console.log('B'));\ne.on('go', () => console.log('C'));\n\ne.emit('go');",
+      "query": {
+        "explanation": "Listeners run synchronously in array order. on() appends, while prependListener() inserts at the beginning of the current list. So B sits ahead of A, and the later on() call appends C at the end: B, A, C.",
+        "syntax": "emitter.prependListener(eventName, listener)",
+        "tags": [
+          "events",
+          "prependListener",
+          "order"
+        ],
+        "title": "prependListener puts a listener at the front"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-55206c98",
+      "prompt": "What does this program print?",
+      "topic": "event-emitter",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "false true"
+        },
+        {
+          "text": "true true",
+          "rationale": "rawListeners exposes the internal once wrapper, which is a different function object from fn."
+        },
+        {
+          "text": "false false",
+          "rationale": "listeners() unwraps once handlers via the wrapper's .listener property, so it does return fn itself."
+        },
+        {
+          "text": "true false",
+          "rationale": "This reverses the two methods: listeners() is the unwrapping one, rawListeners() keeps the wrapper."
+        }
+      ],
+      "code": "const { EventEmitter } = require('node:events');\n\nconst e = new EventEmitter();\nconst fn = () => {};\ne.once('tick', fn);\n\nconsole.log(e.rawListeners('tick')[0] === fn, e.listeners('tick')[0] === fn);",
+      "query": {
+        "explanation": "once() stores an internal onceWrapper function that carries the original in a .listener property. rawListeners() returns that wrapper as-is, so the first comparison is false, while listeners() unwraps it to the original function, making the second comparison true.",
+        "syntax": "emitter.rawListeners(eventName) / emitter.listeners(eventName)",
+        "tags": [
+          "events",
+          "once",
+          "rawListeners"
+        ],
+        "title": "listeners() vs rawListeners() for once handlers"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-a222dea4",
+      "prompt": "Does this program print `0`?",
+      "topic": "event-emitter",
+      "answer": true,
+      "code": "const { EventEmitter } = require('node:events');\n\nconst e = new EventEmitter();\ne.on('newListener', () => console.log(e.listenerCount('data')));\n\ne.on('data', () => {});",
+      "query": {
+        "explanation": "An EventEmitter emits 'newListener' before the new listener is pushed onto its internal list. When the hook runs for 'data', that listener has not been added yet, so listenerCount('data') is still 0. Registering the 'newListener' handler itself emits nothing, since no such handler existed at the time.",
+        "syntax": "emitter.on('newListener', (eventName, listener) => {})",
+        "tags": [
+          "events",
+          "newListener",
+          "listenerCount"
+        ],
+        "title": "The newListener event fires before registration"
+      },
+      "rationale": "'newListener' is emitted before the listener is appended, so the count cannot already be 1 when the hook runs.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-6e09c58e",
+      "prompt": "Does this readable report object mode as enabled?",
+      "topic": "streams",
+      "answer": true,
+      "code": "const { Readable } = require('node:stream');\n\nconst r = Readable.from(['a', 'b']);\nconsole.log(r.readableObjectMode);",
+      "query": {
+        "explanation": "Readable.from() builds a stream over an iterable and sets objectMode: true unless you explicitly pass objectMode: false. So readableObjectMode is true and each array element is delivered as its own chunk without Buffer conversion.",
+        "syntax": "Readable.from(iterable[, options])",
+        "tags": [
+          "streams",
+          "readable",
+          "objectMode"
+        ],
+        "title": "Readable.from defaults to object mode"
+      },
+      "rationale": "Readable.from() sets objectMode: true by default, so readableObjectMode is true rather than false.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-ba67e075",
+      "prompt": "What does this program log?",
+      "topic": "streams",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "AB-CD"
+        },
+        {
+          "text": "ABCD",
+          "rationale": "In object mode each pushed chunk is read separately, so the iterator yields two values that the join inserts a dash between."
+        },
+        {
+          "text": "ab-cd",
+          "rationale": "The transform callback pushes the uppercased string, so the consumer never sees the original lowercase text."
+        },
+        {
+          "text": "AB",
+          "rationale": "The transform forwards every chunk it receives; both 'ab' and 'cd' pass through before the stream ends."
+        }
+      ],
+      "code": "(async () => {\n  const { Readable, Transform } = require('node:stream');\n\n  const up = new Transform({\n    objectMode: true,\n    transform(chunk, enc, cb) { cb(null, String(chunk).toUpperCase()); }\n  });\n\n  const out = [];\n  for await (const c of Readable.from(['ab', 'cd']).pipe(up)) out.push(c);\n  console.log(out.join('-'));\n})();\n",
+      "query": {
+        "explanation": "Each call to the transform callback with a value pushes exactly one chunk downstream. In object mode the async iterator reads those chunks one at a time, so the consumer collects 'AB' and 'CD' separately and joins them with a dash.",
+        "tags": [
+          "streams",
+          "transform",
+          "async-iteration"
+        ],
+        "title": "Transform callbacks push one chunk each"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-fc270cbc",
+      "prompt": "What does this program print?",
+      "topic": "streams",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true false"
+        },
+        {
+          "text": "true true",
+          "rationale": "The second chunk is buffered while the first write is still in flight, so buffered length reaches 5 bytes, above the 4-byte highWaterMark."
+        },
+        {
+          "text": "false false",
+          "rationale": "The first write happens with an empty queue, so a buffered length of 2 is still under the 4-byte threshold and write() returns true."
+        },
+        {
+          "text": "false true",
+          "rationale": "write() returns false only once the buffered length reaches highWaterMark, which happens on the second call rather than the first."
+        }
+      ],
+      "code": "const { Writable } = require('node:stream');\n\nconst w = new Writable({\n  highWaterMark: 4,\n  write(chunk, enc, cb) { /* callback never called */ }\n});\n\nconst a = w.write(Buffer.alloc(2));\nconst b = w.write(Buffer.alloc(3));\nconsole.log(a, b);",
+      "query": {
+        "explanation": "write() returns whether the internal buffered length is still below highWaterMark. The first 2-byte write goes straight to _write with length 2 (under 4), so it returns true. Because _write never calls its callback, the second write is queued, pushing the buffered length to 5, which is at or above the 4-byte threshold, so it returns false.",
+        "syntax": "writable.write(chunk[, encoding][, callback])",
+        "tags": [
+          "streams",
+          "writable",
+          "backpressure"
+        ],
+        "title": "write() return value and backpressure"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-104bed15",
+      "prompt": "Does this program print `boom true`?",
+      "topic": "streams",
+      "answer": true,
+      "code": "(async () => {\n  const { Readable, Writable } = require('node:stream');\n  const { pipeline } = require('node:stream/promises');\n\n  const src = new Readable({ read() { this.destroy(new Error('boom')); } });\n  const dst = new Writable({ write(c, e, cb) { cb(); } });\n\n  try {\n    await pipeline(src, dst);\n    console.log('ok');\n  } catch (err) {\n    console.log(err.message, dst.destroyed);\n  }\n})();\n",
+      "query": {
+        "explanation": "The promise form of pipeline rejects with the error that destroyed the source, and before settling it destroys every stream in the chain. So the catch block sees message 'boom' and dst.destroyed is already true.",
+        "syntax": "await pipeline(source, ...transforms, destination)",
+        "tags": [
+          "streams",
+          "pipeline",
+          "error-handling"
+        ],
+        "title": "pipeline rejects and cleans up"
+      },
+      "rationale": "pipeline propagates the source error as a rejection and destroys the destination during cleanup, so the catch block logs 'boom true' instead of 'ok'.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-09c953c1",
+      "prompt": "What does this program print?",
+      "topic": "streams",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "done"
+        },
+        {
+          "text": "end then done",
+          "rationale": "'end' fires only after the stream's data has been read; with no 'data' listener, pipe, or resume() the stream never flows."
+        },
+        {
+          "text": "done then end",
+          "rationale": "Nothing ever reads the stream, so 'end' is not emitted at all, even after the timer callback runs."
+        },
+        {
+          "text": "end",
+          "rationale": "'end' is never reached, while the 10 ms timer keeps the loop alive long enough to log 'done'."
+        }
+      ],
+      "code": "const { Readable } = require('node:stream');\n\nconst r = Readable.from(['x']);\nr.on('end', () => console.log('end'));\nsetTimeout(() => console.log('done'), 10);",
+      "query": {
+        "explanation": "A readable stays paused until something consumes it: a 'data' listener, pipe(), resume(), or async iteration. Listening only for 'end' never starts the flow, so 'end' is never emitted and the only output comes from the timer.",
+        "tags": [
+          "streams",
+          "readable",
+          "flowing-mode"
+        ],
+        "title": "'end' requires the data to be consumed"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-f58a58fe",
+      "prompt": "What does this program log?",
+      "topic": "streams",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "string 5"
+        },
+        {
+          "text": "object 6",
+          "rationale": "Chunks arrive as Buffers (typeof 'object') with the 6-byte UTF-8 length only when setEncoding is not used."
+        },
+        {
+          "text": "string 6",
+          "rationale": "The decoded value is a string, and String.length counts the 5 characters rather than the 6 UTF-8 bytes."
+        },
+        {
+          "text": "object 5",
+          "rationale": "A Buffer's typeof is 'object', but its length reports the 6-byte UTF-8 size instead of 5."
+        }
+      ],
+      "code": "const { Readable } = require('node:stream');\n\nconst r = new Readable({\n  read() { this.push('héllo'); this.push(null); }\n});\nr.setEncoding('utf8');\nr.on('data', (c) => console.log(typeof c, c.length));",
+      "query": {
+        "explanation": "setEncoding('utf8') makes the readable decode its internal Buffers before emitting, so the handler receives a primitive string. 'héllo' is 6 bytes in UTF-8 but 5 JavaScript characters, so typeof is 'string' and length is 5.",
+        "syntax": "readable.setEncoding(encoding)",
+        "tags": [
+          "streams",
+          "readable",
+          "setEncoding"
+        ],
+        "title": "setEncoding decodes chunks to strings"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-f6a921c4",
+      "prompt": "Does this program print `close,finish`?",
+      "topic": "streams",
+      "answer": false,
+      "code": "const { Writable } = require('node:stream');\n\nconst w = new Writable({ write(c, e, cb) { cb(); } });\nconst order = [];\nw.on('finish', () => order.push('finish'));\nw.on('close', () => { order.push('close'); console.log(order.join(',')); });\nw.end('x');",
+      "query": {
+        "explanation": "'finish' is emitted once end() has flushed all writes. Because autoDestroy defaults to true, the stream then destroys itself and emits 'close' afterwards, so the recorded order is finish,close.",
+        "tags": [
+          "streams",
+          "writable",
+          "events"
+        ],
+        "title": "'finish' fires before 'close'"
+      },
+      "rationale": "'finish' comes first when end() flushes the last write; 'close' only follows because autoDestroy destroys the stream afterwards, so the output is finish,close.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-06a0a693",
+      "prompt": "What does this program log?",
+      "topic": "streams",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "6 null"
+        },
+        {
+          "text": "2 null",
+          "rationale": "highWaterMark is an advisory threshold, not a cap: pushing past it still buffers everything, so readableLength is 6."
+        },
+        {
+          "text": "6 false",
+          "rationale": "readableFlowing is false only after pause() or a removed consumer; before anything reads the stream it is still null."
+        },
+        {
+          "text": "2 false",
+          "rationale": "This combines a clamped buffer length with flowing false; neither matches a freshly pushed, never-read stream."
+        }
+      ],
+      "code": "const { Readable } = require('node:stream');\n\nconst r = new Readable({ highWaterMark: 2, read() {} });\nr.push('abcd');\nr.push('ef');\nconsole.log(r.readableLength, r.readableFlowing);",
+      "query": {
+        "explanation": "highWaterMark only tells push() when to return false; it never truncates data, so both chunks are buffered and readableLength is 4 + 2 = 6 bytes. readableFlowing is null until a consumer attaches, and becomes true on resume or false after pause.",
+        "tags": [
+          "streams",
+          "readable",
+          "highWaterMark"
+        ],
+        "title": "highWaterMark is advisory, flowing starts as null"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-b0b17d16",
+      "prompt": "What does this program log?",
+      "topic": "streams",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2,4,end"
+        },
+        {
+          "text": "2,4",
+          "rationale": "The flush callback is given a value, and Transform pushes that value as a final chunk before emitting 'end'."
+        },
+        {
+          "text": "1,2,end",
+          "rationale": "The transform callback forwards c * 2, so the consumer sees the doubled values rather than the originals."
+        },
+        {
+          "text": "end,2,4",
+          "rationale": "flush runs only after every transform call completes, so its chunk is pushed last rather than first."
+        }
+      ],
+      "code": "(async () => {\n  const { Readable, Transform } = require('node:stream');\n\n  const t = new Transform({\n    objectMode: true,\n    transform(c, e, cb) { cb(null, c * 2); },\n    flush(cb) { cb(null, 'end'); }\n  });\n\n  const out = [];\n  for await (const v of Readable.from([1, 2]).pipe(t)) out.push(v);\n  console.log(out.join(','));\n})();\n",
+      "query": {
+        "explanation": "Each transform call doubles its input, yielding 2 and 4. The flush hook runs once after the writable side has ended, and passing a value to its callback pushes one final chunk, so 'end' is appended last.",
+        "syntax": "new Transform({ transform(chunk, enc, cb), flush(cb) })",
+        "tags": [
+          "streams",
+          "transform",
+          "flush"
+        ],
+        "title": "The flush hook appends a trailing chunk"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-9b19faf1",
+      "prompt": "Does this program print `true true`?",
+      "topic": "streams",
+      "answer": false,
+      "code": "const { Writable } = require('node:stream');\n\nconst w = new Writable({ write(c, e, cb) { setTimeout(cb, 10); } });\nw.end('x');\nconsole.log(w.writableEnded, w.writableFinished);",
+      "query": {
+        "explanation": "writableEnded becomes true the moment end() is called, because it only reports that end() happened. writableFinished stays false until all queued writes have completed and 'finish' is emitted, and here the write callback is deferred by a timer.",
+        "tags": [
+          "streams",
+          "writable",
+          "state"
+        ],
+        "title": "writableEnded versus writableFinished"
+      },
+      "rationale": "writableEnded is true right after end(), but the pending timer-delayed write callback means 'finish' has not fired yet, so writableFinished is still false.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-26877361",
+      "prompt": "What does this program log?",
+      "topic": "fs",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true 6"
+        },
+        {
+          "text": "true 5",
+          "rationale": "The Buffer length counts bytes, not characters, and 'é' takes two bytes in UTF-8, so the length is 6."
+        },
+        {
+          "text": "false 5",
+          "rationale": "readFileSync does not default to utf8; without an encoding it returns a Buffer, so Buffer.isBuffer is true."
+        },
+        {
+          "text": "false 6",
+          "rationale": "The byte count is right, but the value is a Buffer, so Buffer.isBuffer(data) reports true rather than false."
+        }
+      ],
+      "code": "const fs = require('node:fs');\nconst p = '/tmp/read-demo.txt';\nfs.writeFileSync(p, 'héllo');\nconst data = fs.readFileSync(p);\nconsole.log(`${Buffer.isBuffer(data)} ${data.length}`);",
+      "query": {
+        "explanation": "With no encoding option, fs.readFileSync resolves to a Buffer, so Buffer.isBuffer(data) is true. The Buffer holds raw bytes, and 'héllo' is 6 bytes in UTF-8 because 'é' encodes as two bytes, even though the JavaScript string has 5 characters.",
+        "syntax": "fs.readFileSync(path[, options])",
+        "tags": [
+          "fs",
+          "buffer",
+          "encoding"
+        ],
+        "title": "readFileSync without an encoding"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-61b49a03",
+      "prompt": "What does this program log?",
+      "topic": "fs",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "/tmp/mkdir-demo/a"
+        },
+        {
+          "text": "/tmp/mkdir-demo/a/b/c",
+          "rationale": "The deepest path is created, but the return value is the first directory created, not the full target path."
+        },
+        {
+          "text": "undefined",
+          "rationale": "undefined is returned only when recursive mkdir creates nothing; here three new directories are created."
+        },
+        {
+          "text": "/tmp/mkdir-demo",
+          "rationale": "That directory already existed before the recursive call, so it is not the first directory created."
+        }
+      ],
+      "code": "const fs = require('node:fs');\nconst base = '/tmp/mkdir-demo';\nfs.rmSync(base, { recursive: true, force: true });\nfs.mkdirSync(base);\nconst r = fs.mkdirSync(base + '/a/b/c', { recursive: true });\nconsole.log(r);",
+      "query": {
+        "explanation": "With { recursive: true }, mkdirSync returns the path of the first directory it had to create, or undefined if nothing was created. Here '/tmp/mkdir-demo' already exists, so the first new directory is '/tmp/mkdir-demo/a'.",
+        "syntax": "fs.mkdirSync(path, { recursive: true })",
+        "tags": [
+          "fs",
+          "mkdir",
+          "return-value"
+        ],
+        "title": "Return value of recursive mkdirSync"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-2e1ab05c",
+      "prompt": "What does this program print?",
+      "topic": "fs",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "ENOENT open"
+        },
+        {
+          "text": "ENOENT read",
+          "rationale": "The failure happens while opening the path, so the read syscall is never attempted and syscall is 'open'."
+        },
+        {
+          "text": "ENOENT stat",
+          "rationale": "readFileSync does not stat the path first; the reported syscall is the open that fails."
+        },
+        {
+          "text": "EACCES open",
+          "rationale": "EACCES means permission denied; a path that simply does not exist produces ENOENT."
+        }
+      ],
+      "code": "const fs = require('node:fs');\nconst p = '/tmp/does-not-exist-demo.txt';\nfs.rmSync(p, { force: true });\ntry {\n  fs.readFileSync(p, 'utf8');\n} catch (err) {\n  console.log(`${err.code} ${err.syscall}`);\n}",
+      "query": {
+        "explanation": "Reading a missing path throws a system error whose code is 'ENOENT'. The failing operation is the underlying open(2) call that readFileSync makes before any read, so err.syscall is 'open'.",
+        "syntax": "err.code / err.syscall on fs system errors",
+        "tags": [
+          "fs",
+          "errors",
+          "enoent"
+        ],
+        "title": "Error shape for a missing file"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-09be06c8",
+      "prompt": "Does this program print `EEXIST`?",
+      "topic": "fs",
+      "answer": true,
+      "code": "const fs = require('node:fs');\nconst p = '/tmp/wx-demo.txt';\nfs.writeFileSync(p, 'one');\ntry {\n  fs.writeFileSync(p, 'two', { flag: 'wx' });\n  console.log('wrote');\n} catch (err) {\n  console.log(err.code);\n}",
+      "query": {
+        "explanation": "The 'x' in a flag means exclusive creation: the open fails if the path already exists. Since '/tmp/wx-demo.txt' was just written, the second write throws a system error with code 'EEXIST' and the catch block logs it.",
+        "syntax": "fs.writeFileSync(path, data, { flag: 'wx' })",
+        "tags": [
+          "fs",
+          "flags",
+          "errors"
+        ],
+        "title": "The 'wx' exclusive write flag"
+      },
+      "rationale": "'wx' opens for writing only if the file does not exist; on an existing path the open fails with EEXIST instead of overwriting it.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-258470a3",
+      "prompt": "What does this program print?",
+      "topic": "fs",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "abXYef"
+        },
+        {
+          "text": "abcdefXY",
+          "rationale": "A position argument of 2 is an absolute byte offset, not an append; 'a' flag behaviour would be needed to append."
+        },
+        {
+          "text": "XYcdef",
+          "rationale": "That is the result of writing at position 0; the call passes 2, so the write starts at the third byte."
+        },
+        {
+          "text": "abXY",
+          "rationale": "A positional write overwrites only the bytes it covers and never truncates the remainder of the file."
+        }
+      ],
+      "code": "const fs = require('node:fs');\nconst p = '/tmp/fd-demo.txt';\nfs.writeFileSync(p, 'abcdef');\nconst fd = fs.openSync(p, 'r+');\nfs.writeSync(fd, 'XY', 2);\nfs.closeSync(fd);\nconsole.log(fs.readFileSync(p, 'utf8'));",
+      "query": {
+        "explanation": "fs.writeSync(fd, string, position) writes at the given byte offset and overwrites only the bytes it covers. Opening with 'r+' keeps the existing contents, so 'XY' replaces bytes 2 and 3 ('c' and 'd') and the rest of the file is untouched.",
+        "syntax": "fs.writeSync(fd, string[, position[, encoding]])",
+        "tags": [
+          "fs",
+          "file-descriptor",
+          "writeSync"
+        ],
+        "title": "fs.writeSync with a position"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-dad92037",
+      "prompt": "What does this program print?",
+      "topic": "fs",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "ab"
+        },
+        {
+          "text": "abcd",
+          "rationale": "The argument is the resulting file length, not a count of bytes to drop from the end."
+        },
+        {
+          "text": "ef",
+          "rationale": "Truncation always keeps the leading bytes of the file; it never keeps the tail."
+        },
+        {
+          "text": "abcdef",
+          "rationale": "truncateSync with a length smaller than the current size really does shrink the file on disk."
+        }
+      ],
+      "code": "const fs = require('node:fs');\nconst p = '/tmp/trunc-demo.txt';\nfs.writeFileSync(p, 'abcdef');\nfs.truncateSync(p, 2);\nconsole.log(fs.readFileSync(p, 'utf8'));",
+      "query": {
+        "explanation": "The second argument of truncateSync is the desired final length of the file in bytes, not the number of bytes to remove. Truncating 'abcdef' to length 2 leaves the first two bytes, 'ab'.",
+        "syntax": "fs.truncateSync(path[, len])",
+        "tags": [
+          "fs",
+          "truncate",
+          "file-size"
+        ],
+        "title": "fs.truncateSync length argument"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-2cf53e65",
+      "prompt": "Does this program print `dst` then `true`?",
+      "topic": "fs",
+      "answer": false,
+      "code": "const fs = require('node:fs');\nfs.writeFileSync('/tmp/r-src.txt', 'src');\nfs.writeFileSync('/tmp/r-dst.txt', 'dst');\nfs.renameSync('/tmp/r-src.txt', '/tmp/r-dst.txt');\nconsole.log(fs.readFileSync('/tmp/r-dst.txt', 'utf8'));\nconsole.log(fs.existsSync('/tmp/r-src.txt'));",
+      "query": {
+        "explanation": "renameSync silently replaces an existing destination file rather than failing with EEXIST, and the source entry disappears. So the destination now holds 'src' and existsSync on the old path reports false.",
+        "syntax": "fs.renameSync(oldPath, newPath)",
+        "tags": [
+          "fs",
+          "rename",
+          "overwrite"
+        ],
+        "title": "renameSync over an existing destination"
+      },
+      "rationale": "renameSync overwrites the existing destination and removes the source, so the program prints `src` and then `false`.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-8647153a",
+      "prompt": "What does this program print?",
+      "topic": "fs",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "a.txt,b.txt,sub"
+        },
+        {
+          "text": "a.txt,b.txt",
+          "rationale": "readdirSync lists every entry, so the nested directory 'sub' appears alongside the two files."
+        },
+        {
+          "text": ".,..,a.txt,b.txt,sub",
+          "rationale": "Node filters out the '.' and '..' entries that a raw readdir(3) loop would expose."
+        },
+        {
+          "text": "sub,a.txt,b.txt",
+          "rationale": "readdirSync returns plain name strings with no type grouping, so sorting them is purely lexicographic."
+        }
+      ],
+      "code": "const fs = require('node:fs');\nconst d = '/tmp/dir-demo';\nfs.rmSync(d, { recursive: true, force: true });\nfs.mkdirSync(d, { recursive: true });\nfs.writeFileSync(d + '/b.txt', 'b');\nfs.writeFileSync(d + '/a.txt', 'a');\nfs.mkdirSync(d + '/sub');\nconsole.log(fs.readdirSync(d).sort().join(','));",
+      "query": {
+        "explanation": "readdirSync returns the names of all entries in the directory, including subdirectories, as plain strings. The '.' and '..' pseudo-entries are excluded, and sorting the array gives 'a.txt', 'b.txt', 'sub'.",
+        "syntax": "fs.readdirSync(path[, options])",
+        "tags": [
+          "fs",
+          "readdir",
+          "directories"
+        ],
+        "title": "readdirSync entries"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-452c18b6",
+      "prompt": "Does this program print `undefined`?",
+      "topic": "fs",
+      "answer": true,
+      "code": "(async () => {\n  const fsp = require('node:fs/promises');\n  const result = await fsp.writeFile('/tmp/pw-demo.txt', 'hello');\n  console.log(typeof result);\n})();\n",
+      "query": {
+        "explanation": "fsp.writeFile resolves with no value once the data is flushed, so result is undefined and typeof result is the string 'undefined'. Byte counts come from fs.writeSync or filehandle.write, which resolves to { bytesWritten, buffer }.",
+        "syntax": "await fsp.writeFile(file, data[, options])",
+        "tags": [
+          "fs",
+          "promises",
+          "return-value"
+        ],
+        "title": "What fs/promises writeFile resolves to"
+      },
+      "rationale": "The promise from fsp.writeFile fulfils with no value, so typeof result is 'undefined' rather than 'number' or 'object'.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-b5bd8c99",
+      "prompt": "Does appendFileSync throw ENOENT here?",
+      "topic": "fs",
+      "answer": false,
+      "code": "const fs = require('node:fs');\nconst p = '/tmp/app-demo.txt';\nfs.rmSync(p, { force: true });\ntry {\n  fs.appendFileSync(p, 'x');\n  console.log(fs.readFileSync(p, 'utf8'));\n} catch (err) {\n  console.log(err.code);\n}",
+      "query": {
+        "explanation": "appendFileSync defaults to the 'a' flag, which creates the file when it does not exist. The missing path is created with the appended data, so the program prints 'x' instead of an error code.",
+        "syntax": "fs.appendFileSync(path, data[, options])",
+        "tags": [
+          "fs",
+          "append",
+          "flags"
+        ],
+        "title": "appendFileSync on a missing file"
+      },
+      "rationale": "The default 'a' flag creates the file if it is absent, so the append succeeds and the program prints the file contents `x`.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-ae98580c",
+      "prompt": "What does this program print?",
+      "topic": "path-and-url",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "/foo/baz/"
+        },
+        {
+          "text": "/foo/baz",
+          "rationale": "join preserves the trailing separator of the final segment, so the slash after 'baz' remains in the output."
+        },
+        {
+          "text": "/foo/bar/baz/",
+          "rationale": "The '..' segment is resolved during normalization and removes 'bar' from the path."
+        },
+        {
+          "text": "foo/baz/",
+          "rationale": "The first segment starts with '/', and join keeps that leading separator rather than dropping it."
+        }
+      ],
+      "code": "const path = require('node:path');\n\nconsole.log(path.join('/foo', 'bar', '..', 'baz/'));",
+      "query": {
+        "explanation": "path.join concatenates the segments with the platform separator and then normalizes the result, so 'bar' is cancelled by '..'. Normalization collapses '.' and '..' segments but preserves a trailing separator that the last segment ended with, so the result is '/foo/baz/'. The leading '/' from the first segment is kept, making the path absolute.",
+        "syntax": "path.join(...paths)",
+        "tags": [
+          "path",
+          "join",
+          "normalize"
+        ],
+        "title": "path.join normalizes but keeps the trailing separator"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-655b449e",
+      "prompt": "What does this program print?",
+      "topic": "path-and-url",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "example.com"
+        },
+        {
+          "text": "example.com:443",
+          "rationale": "443 is the default port for https, so the parser strips it and the host has no port part."
+        },
+        {
+          "text": "https://example.com",
+          "rationale": "The scheme belongs to the protocol and origin getters; host never includes 'https://'."
+        },
+        {
+          "text": "example.com:443/a/b",
+          "rationale": "The path lives in the pathname getter; host covers only hostname and port."
+        }
+      ],
+      "code": "const u = new URL('https://example.com:443/a/b');\n\nconsole.log(u.host);",
+      "query": {
+        "explanation": "The URL parser removes a port that matches the scheme's default, and 443 is the default for https, so the port component becomes the empty string. The host getter is hostname plus ':' plus port only when a port is present, so here it is just 'example.com'. A non-default port such as 8443 would appear as 'example.com:8443'.",
+        "syntax": "new URL(input).host",
+        "tags": [
+          "url",
+          "host",
+          "port"
+        ],
+        "title": "URL.host drops the default port for the scheme"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-b6c683a4",
+      "prompt": "What does this program print?",
+      "topic": "path-and-url",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "/c"
+        },
+        {
+          "text": "/../c",
+          "rationale": "Leftover '..' segments are only preserved for relative paths; an absolute path is clamped at its root, so the extra '..' is dropped."
+        },
+        {
+          "text": "c",
+          "rationale": "The result keeps its leading separator because the first segment is absolute; join does not turn an absolute path into a relative one."
+        },
+        {
+          "text": "/a/b/../../../c",
+          "rationale": "join normalizes the concatenated segments instead of returning them verbatim, so '..' parts are resolved away."
+        }
+      ],
+      "code": "const path = require('node:path');\n\nconsole.log(path.posix.join('/a/b', '../../../c'));",
+      "query": {
+        "explanation": "path.join concatenates the segments with the platform separator and then normalizes the result. Normalizing '/a/b/../../../c' resolves '..' segments left to right: '/a/b' -> '/a' -> '/' -> and the extra '..' is discarded because an absolute path cannot rise above its root. The remaining 'c' is appended, giving '/c'.",
+        "syntax": "path.posix.join(...paths)",
+        "tags": [
+          "path",
+          "join",
+          "normalize"
+        ],
+        "title": "path.posix.join normalizes and clamps at root"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-0dbed062",
+      "prompt": "What does this program print?",
+      "topic": "modules",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "{\"b\":2}"
+        },
+        {
+          "text": "{\"a\":1}",
+          "rationale": "Reassigning `exports` replaces only the module-local variable; `module.exports` is untouched, so `a` never reaches the exported object."
+        },
+        {
+          "text": "{\"a\":1,\"b\":2}",
+          "rationale": "`exports = { a: 1 }` does not merge anything into `module.exports`, so only the `b` property added through `module.exports` is exported."
+        },
+        {
+          "text": "{}",
+          "rationale": "`module.exports.b = 2` mutates the original exports object before the module finishes, so `b` is present in the result."
+        }
+      ],
+      "code": "const fs = require('node:fs');\n\nfs.writeFileSync('/tmp/mod-a.js', 'exports = { a: 1 };\\nmodule.exports.b = 2;\\n');\n\nconst m = require('/tmp/mod-a.js');\nconsole.log(JSON.stringify(m));",
+      "query": {
+        "explanation": "Inside a CommonJS module, `exports` starts out as a local variable pointing at the same object as `module.exports`. Reassigning `exports` only rebinds that local variable, so the `{ a: 1 }` object is thrown away. What require() hands back is always `module.exports`, which here is still the original object plus the `b` property added through it, so the result is {\"b\":2}.",
+        "syntax": "module.exports / exports",
+        "tags": [
+          "modules",
+          "commonjs",
+          "exports"
+        ],
+        "title": "exports vs module.exports"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-138a1389",
+      "prompt": "Does this program print `loading` twice?",
+      "topic": "modules",
+      "answer": false,
+      "code": "const fs = require('node:fs');\n\nfs.writeFileSync('/tmp/mod-b.js', 'console.log(\"loading\");\\nmodule.exports = 42;\\n');\n\nrequire('/tmp/mod-b.js');\nrequire('/tmp/mod-b.js');",
+      "query": {
+        "explanation": "require() keys its cache by the module's resolved filename. The first call compiles and runs the file, storing the finished module; the second call finds the cache entry and returns the stored exports without executing the body again. So `loading` is printed exactly once.",
+        "syntax": "require(id)",
+        "tags": [
+          "modules",
+          "require",
+          "cache"
+        ],
+        "title": "Module bodies run once"
+      },
+      "rationale": "The second require hits the module cache keyed by resolved filename and returns the stored exports, so the module body (and its log) runs only once.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-a564c7b5",
+      "prompt": "What does this program print?",
+      "topic": "modules",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "5 true"
+        },
+        {
+          "text": "0 false",
+          "rationale": "require() returns the cached exports object rather than re-evaluating the file, so the mutation is visible and the two references are identical."
+        },
+        {
+          "text": "0 true",
+          "rationale": "Since both references point at one object, assigning `a.count = 5` also changes what `b.count` reads."
+        },
+        {
+          "text": "5 false",
+          "rationale": "The second require resolves to the same filename and returns the identical object, so the comparison is true."
+        }
+      ],
+      "code": "const fs = require('node:fs');\n\nfs.writeFileSync('/tmp/mod-state.js', 'module.exports = { count: 0 };\\n');\n\nconst a = require('/tmp/mod-state.js');\na.count = 5;\nconst b = require('/tmp/mod-state.js');\nconsole.log(b.count, a === b);",
+      "query": {
+        "explanation": "Every require() of the same resolved file returns the very same exports object, not a copy. Mutating `a.count` therefore mutates the one cached object, so `b.count` reads 5 and `a === b` is true. This is why module-level objects act as process-wide singletons.",
+        "syntax": "require(id)",
+        "tags": [
+          "modules",
+          "cache",
+          "require"
+        ],
+        "title": "Cached exports are shared state"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-1e73701a",
+      "prompt": "What does this program print?",
+      "topic": "modules",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1 2"
+        },
+        {
+          "text": "1 1",
+          "rationale": "Removing the cache entry forces the module body to run again, so the second require returns an incremented counter rather than the old value."
+        },
+        {
+          "text": "2 2",
+          "rationale": "The first require captured the counter while it was 1; it only reaches 2 during the second load, after `a` was already bound."
+        },
+        {
+          "text": "1 undefined",
+          "rationale": "The reloaded module assigns `module.exports` again, so the second require returns a number instead of undefined."
+        }
+      ],
+      "code": "const fs = require('node:fs');\n\nconst p = '/tmp/mod-count.js';\nfs.writeFileSync(p, 'global.n4 = (global.n4 || 0) + 1;\\nmodule.exports = global.n4;\\n');\n\nconst a = require(p);\ndelete require.cache[require.resolve(p)];\nconst b = require(p);\nconsole.log(a, b);",
+      "query": {
+        "explanation": "require.cache maps resolved filenames to Module objects. Deleting the entry for this file makes the next require() treat it as unseen, so the body executes a second time, bumping the global counter from 1 to 2. The first result (1) was already captured, so the program prints 1 2.",
+        "syntax": "delete require.cache[require.resolve(id)]",
+        "tags": [
+          "modules",
+          "cache",
+          "require.resolve"
+        ],
+        "title": "Invalidating require.cache"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-8d8d0b1d",
+      "prompt": "What does this program print?",
+      "topic": "modules",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "x"
+        },
+        {
+          "text": "x,y",
+          "rationale": "When circ-b runs, circ-a's body has executed only up to `exports.x = 1`, so `y` is not yet on the partial exports object."
+        },
+        {
+          "text": "x,y,fromB",
+          "rationale": "`y` and `fromB` are assigned after the require of circ-b returns, so they cannot appear in the keys circ-b observed."
+        },
+        {
+          "text": "undefined",
+          "rationale": "The cycle returns circ-a's partially populated exports object rather than undefined, so `seen` holds a real key list."
+        }
+      ],
+      "code": "const fs = require('node:fs');\n\nfs.writeFileSync('/tmp/circ-a.js', 'exports.x = 1;\\nconst b = require(\"/tmp/circ-b.js\");\\nexports.y = 2;\\nexports.fromB = b.seen;\\n');\nfs.writeFileSync('/tmp/circ-b.js', 'const a = require(\"/tmp/circ-a.js\");\\nexports.seen = Object.keys(a).join(\",\");\\n');\n\nconst a = require('/tmp/circ-a.js');\nconsole.log(a.fromB);",
+      "query": {
+        "explanation": "Node puts a module into the cache before running its body. When circ-a requires circ-b, circ-b's require of circ-a hits that in-progress cache entry and gets the partially built exports object, which at that moment has only `x`. So `seen` is \"x\"; `y` and `fromB` are assigned after circ-b has already finished.",
+        "syntax": "require(id) with cycles",
+        "tags": [
+          "modules",
+          "circular",
+          "require"
+        ],
+        "title": "Circular requires see partial exports"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-3d28f1e0",
+      "prompt": "Are these two fs references the same object here?",
+      "topic": "modules",
+      "answer": true,
+      "code": "const fsA = require('node:fs');\nconst fsB = require('fs');\n\nconsole.log(fsA === fsB);",
+      "query": {
+        "explanation": "For core modules, `node:fs` and `fs` resolve to the same built-in module instance, so require() returns the identical exports object for both specifiers. The prefix is a disambiguator that can never be shadowed by a package on disk; it does not create a second copy of the module.",
+        "syntax": "require('node:fs')",
+        "tags": [
+          "modules",
+          "builtins",
+          "node-prefix"
+        ],
+        "title": "The node: prefix for builtins"
+      },
+      "rationale": "The `node:` prefix only forces built-in resolution; both specifiers load the same internal fs module, so require() hands back one shared exports object.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-129746ad",
+      "prompt": "What does this program print?",
+      "topic": "modules",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true function"
+        },
+        {
+          "text": "false function",
+          "rationale": "In a fresh module `exports` is initialized to the same object as `module.exports`, so the comparison is true until one of them is reassigned."
+        },
+        {
+          "text": "true undefined",
+          "rationale": "`require` is one of the parameters of the CommonJS wrapper function, so inside the module it is a function, not undefined."
+        },
+        {
+          "text": "false object",
+          "rationale": "`exports` and `module.exports` start out identical, and the injected `require` is a function rather than an object."
+        }
+      ],
+      "code": "const fs = require('node:fs');\n\nfs.writeFileSync('/tmp/mod-wrap.js', 'module.exports = { same: module.exports === exports, hasReq: typeof require };\\n');\n\nconst m = require('/tmp/mod-wrap.js');\nconsole.log(m.same, m.hasReq);",
+      "query": {
+        "explanation": "Node wraps each CommonJS file in a function that receives (exports, require, module, __filename, __dirname). On entry, `exports` is bound to the same object as `module.exports`, so the comparison is true while the right-hand side is being built, and `require` is a function supplied by the wrapper.",
+        "syntax": "(exports, require, module, __filename, __dirname)",
+        "tags": [
+          "modules",
+          "commonjs",
+          "wrapper"
+        ],
+        "title": "The CommonJS module wrapper"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-adb78870",
+      "prompt": "What does this program print?",
+      "topic": "modules",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "false true"
+        },
+        {
+          "text": "true true",
+          "rationale": "require.resolve only computes a filename; it does not execute the module, so nothing is cached before the real require call."
+        },
+        {
+          "text": "false false",
+          "rationale": "The plain require() does load the module and stores it in require.cache keyed by its resolved filename, so the later check is true."
+        },
+        {
+          "text": "true false",
+          "rationale": "Resolution alone leaves the cache empty, and loading adds an entry rather than removing one, so the two booleans are reversed."
+        }
+      ],
+      "code": "const fs = require('node:fs');\n\nfs.writeFileSync('/tmp/mod-res.js', 'module.exports = 1;\\n');\n\nconst p = require.resolve('/tmp/mod-res.js');\nconst before = Object.prototype.hasOwnProperty.call(require.cache, p);\nrequire('/tmp/mod-res.js');\nconst after = Object.prototype.hasOwnProperty.call(require.cache, p);\nconsole.log(before, after);",
+      "query": {
+        "explanation": "require.resolve() runs only the resolution algorithm and returns the absolute filename; it never compiles or executes the file, so no cache entry exists yet. The subsequent require() loads the module and stores it in require.cache under that same resolved filename, making the second check true.",
+        "syntax": "require.resolve(id)",
+        "tags": [
+          "modules",
+          "require.resolve",
+          "cache"
+        ],
+        "title": "require.resolve does not load"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-e408691b",
+      "prompt": "What does this program print?",
+      "topic": "modules",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "2 2"
+        },
+        {
+          "text": "2 1",
+          "rationale": "A module that throws during loading is deleted from the cache, so the second require re-runs the body and bumps the counter again."
+        },
+        {
+          "text": "1 1",
+          "rationale": "The error escapes both require calls, so the catch block runs on each iteration and `errs` ends at 2."
+        },
+        {
+          "text": "1 2",
+          "rationale": "Every failed require re-throws, so both iterations are caught and the error count matches the number of executions."
+        }
+      ],
+      "code": "const fs = require('node:fs');\n\nfs.writeFileSync('/tmp/mod-boom.js', 'global.c9 = (global.c9 || 0) + 1;\\nthrow new Error(\"boom\");\\n');\n\nlet errs = 0;\nfor (let i = 0; i < 2; i++) {\n  try { require('/tmp/mod-boom.js'); } catch (e) { errs += 1; }\n}\nconsole.log(errs, global.c9);",
+      "query": {
+        "explanation": "If a module throws while its body is running, Node removes the half-finished entry from require.cache and re-throws. Each require() therefore re-executes the file: the counter is incremented twice and both calls raise an error, so the program prints 2 2.",
+        "syntax": "require(id) with a throwing module",
+        "tags": [
+          "modules",
+          "cache",
+          "errors"
+        ],
+        "title": "Failed loads are not cached"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-9859a442",
+      "prompt": "What does this program print?",
+      "topic": "modules",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "entry"
+        },
+        {
+          "text": "index",
+          "rationale": "`index.js` is the fallback that applies only when the directory has no package.json `main` field pointing at an existing file."
+        },
+        {
+          "text": "undefined",
+          "rationale": "The resolved entry file assigns a string to `module.exports`, so the require result is that string rather than undefined."
+        },
+        {
+          "text": "MODULE_NOT_FOUND",
+          "rationale": "The directory holds a package.json whose `main` target exists, so resolution succeeds instead of failing."
+        }
+      ],
+      "code": "const fs = require('node:fs');\n\nfs.mkdirSync('/tmp/pkg-demo/lib', { recursive: true });\nfs.writeFileSync('/tmp/pkg-demo/package.json', '{\"main\": \"lib/entry.js\"}');\nfs.writeFileSync('/tmp/pkg-demo/lib/entry.js', 'module.exports = \"entry\";');\nfs.writeFileSync('/tmp/pkg-demo/index.js', 'module.exports = \"index\";');\n\nconsole.log(require('/tmp/pkg-demo'));",
+      "query": {
+        "explanation": "When a CommonJS specifier points at a directory, Node reads that directory's package.json first. A usable `main` field wins, so `lib/entry.js` is loaded and its export, \"entry\", is printed. `index.js` is only the fallback used when there is no package.json or no resolvable `main`.",
+        "syntax": "require('/path/to/dir')",
+        "tags": [
+          "modules",
+          "resolution",
+          "package.json"
+        ],
+        "title": "Directory resolution and package.json main"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-a03a67cf",
+      "prompt": "What does this program print?",
+      "topic": "error-handling",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "AssertionError ERR_ASSERTION strictEqual"
+        },
+        {
+          "text": "AssertionError ERR_ASSERTION ==",
+          "rationale": "'==' is the operator Node records for the loose assert.equal path; assert.strictEqual records the operator 'strictEqual'."
+        },
+        {
+          "text": "Error ERR_ASSERTION strictEqual",
+          "rationale": "err.name comes from Node's AssertionError class and reads 'AssertionError', not the base name 'Error'."
+        },
+        {
+          "text": "AssertionError ERR_INVALID_ARG_TYPE strictEqual",
+          "rationale": "ERR_INVALID_ARG_TYPE signals a wrongly typed argument; a failed assertion always uses the code 'ERR_ASSERTION'."
+        }
+      ],
+      "code": "const assert = require('node:assert');\n\ntry {\n  assert.strictEqual(1, 2);\n} catch (err) {\n  console.log(err.name, err.code, err.operator);\n}",
+      "query": {
+        "explanation": "A failed assert from node:assert throws an AssertionError whose name is 'AssertionError', whose code is the stable 'ERR_ASSERTION', and whose operator names the assertion method that failed — here 'strictEqual'. The object also carries actual, expected and generatedMessage.",
+        "syntax": "assert.strictEqual(actual, expected)",
+        "tags": [
+          "error-handling",
+          "assert"
+        ],
+        "title": "Node AssertionError fields"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-52778066",
+      "prompt": "Does this program print `monitored` and then `threw boom`?",
+      "topic": "error-handling",
+      "answer": true,
+      "code": "const { EventEmitter, errorMonitor } = require('node:events');\n\nconst ee = new EventEmitter();\nee.on(errorMonitor, () => console.log('monitored'));\n\ntry {\n  ee.emit('error', new Error('boom'));\n} catch (err) {\n  console.log('threw', err.message);\n}",
+      "query": {
+        "explanation": "A listener installed on the events.errorMonitor symbol is invoked before normal 'error' handling purely for observation. It does not count as an 'error' listener, so an emitted 'error' with no regular handler is still thrown, and the surrounding try/catch sees it.",
+        "syntax": "emitter.on(events.errorMonitor, listener)",
+        "tags": [
+          "error-handling",
+          "events"
+        ],
+        "title": "events.errorMonitor does not consume 'error'"
+      },
+      "rationale": "errorMonitor is observe-only: it never marks the 'error' event as handled, so emit still throws the error and the catch block runs after 'monitored' is logged.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-03e55cd9",
+      "prompt": "What does this program print?",
+      "topic": "error-handling",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "bad sink true"
+        },
+        {
+          "text": "bad sink false",
+          "rationale": "pipeline destroys all streams it manages when one of them fails, so the source readable reports destroyed as true."
+        },
+        {
+          "text": "Premature close true",
+          "rationale": "ERR_STREAM_PREMATURE_CLOSE appears when a stream closes without finishing; here the write callback supplies a real error that pipeline forwards instead."
+        },
+        {
+          "text": "ERR_STREAM_DESTROYED true",
+          "rationale": "That message comes from writing to an already-destroyed stream; the rejection carries the error handed to the write callback."
+        }
+      ],
+      "code": "(async () => {\n  const { pipeline } = require('node:stream/promises');\n  const { Readable, Writable } = require('node:stream');\n\n  const src = Readable.from(['a', 'b']);\n  const dst = new Writable({\n    write(chunk, enc, cb) { cb(new Error('bad sink')); }\n  });\n\n  try {\n    await pipeline(src, dst);\n  } catch (err) {\n    console.log(err.message, src.destroyed);\n  }\n})();\n",
+      "query": {
+        "explanation": "When a writable's write callback is given an error, that exact error destroys the writable and pipeline rejects with it. pipeline also cleans up every stream in the chain, so the source readable ends up destroyed.",
+        "syntax": "await require('node:stream/promises').pipeline(src, dst)",
+        "tags": [
+          "error-handling",
+          "streams"
+        ],
+        "title": "stream/promises pipeline error propagation"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-f377c3ad",
+      "prompt": "What does this program print?",
+      "topic": "error-handling",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "ERR_INVALID_URL true"
+        },
+        {
+          "text": "ERR_INVALID_URL false",
+          "rationale": "Node raises a TypeError for unparseable URL input, so the instanceof TypeError check is true."
+        },
+        {
+          "text": "undefined true",
+          "rationale": "Browsers throw a plain TypeError with no code, but Node attaches the code 'ERR_INVALID_URL' to it."
+        },
+        {
+          "text": "ERR_INVALID_ARG_VALUE true",
+          "rationale": "ERR_INVALID_ARG_VALUE is used for rejected argument values in other APIs; URL parsing failures report ERR_INVALID_URL."
+        }
+      ],
+      "code": "try {\n  new URL('/foo');\n} catch (err) {\n  console.log(err.code, err instanceof TypeError);\n}",
+      "query": {
+        "explanation": "Parsing a relative string with no base fails, and Node throws a TypeError carrying the stable error code 'ERR_INVALID_URL'. Node adds a code property to such built-in errors so callers can branch on it instead of matching message text.",
+        "syntax": "new URL(input[, base])",
+        "tags": [
+          "error-handling",
+          "url"
+        ],
+        "title": "Errors from the WHATWG URL parser in Node"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-69f5eb03",
+      "prompt": "Does this program print `caught: ENOENT`?",
+      "topic": "error-handling",
+      "answer": false,
+      "code": "const fs = require('node:fs');\n\ntry {\n  fs.readFile('/tmp/no-such-file-4821.txt', 'utf8', (err) => {\n    console.log('callback:', err.code);\n  });\n} catch (err) {\n  console.log('caught:', err.code);\n}",
+      "query": {
+        "explanation": "Asynchronous fs functions report failures by invoking the callback with an error on a later tick; nothing is thrown synchronously from the readFile call. A surrounding try/catch therefore never fires, and the error is seen only in the callback (or by awaiting fs.promises.readFile).",
+        "syntax": "fs.readFile(path, options, callback)",
+        "tags": [
+          "error-handling",
+          "fs"
+        ],
+        "title": "Callback-style fs errors bypass try/catch"
+      },
+      "rationale": "fs.readFile hands the ENOENT error to its callback asynchronously, so the synchronous try/catch never runs; the program prints `callback: ENOENT` instead.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-b4517ab0",
+      "prompt": "What does this program print?",
+      "topic": "async-patterns",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "OK"
+        },
+        {
+          "text": "[ 'OK', 'extra' ]",
+          "rationale": "promisify only collects multiple callback values into an array when the function supplies a util.promisify.custom variant; by default extra arguments are dropped."
+        },
+        {
+          "text": "OK extra",
+          "rationale": "Both success arguments are not forwarded; console.log receives a single resolved value, not two."
+        },
+        {
+          "text": "undefined",
+          "rationale": "The callback was invoked with null as the error and 'OK' as the value, so the promise resolves with that value rather than nothing."
+        }
+      ],
+      "code": "(async () => {\n  const util = require('node:util');\n\n  function load(key, cb) {\n    if (key === 'bad') cb(new Error('nope'));\n    else cb(null, key.toUpperCase(), 'extra');\n  }\n\n  const loadP = util.promisify(load);\n  const v = await loadP('ok');\n  console.log(v);\n})();\n",
+      "query": {
+        "explanation": "util.promisify wraps an error-first callback and resolves with the single value passed as the callback's second argument. Any additional callback arguments are discarded unless the original function defines a util.promisify.custom implementation.",
+        "syntax": "util.promisify(fn)",
+        "tags": [
+          "util",
+          "promisify",
+          "callbacks"
+        ],
+        "title": "util.promisify keeps only the first success value"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-c7eb3327",
+      "prompt": "What does this program print?",
+      "topic": "async-patterns",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true 1,2"
+        },
+        {
+          "text": "false 1",
+          "rationale": "This assumes the promise resolves with the first emitted argument directly; events.once always resolves with an array, even for a single argument."
+        },
+        {
+          "text": "true ready,1,2",
+          "rationale": "The event name is supplied by the caller and is not prepended to the resolved arguments array."
+        },
+        {
+          "text": "true 2",
+          "rationale": "The array keeps all emitted arguments in order rather than only the last one passed to emit."
+        }
+      ],
+      "code": "(async () => {\n  const { EventEmitter, once } = require('node:events');\n\n  const ee = new EventEmitter();\n  setImmediate(() => ee.emit('ready', 1, 2));\n\n  const args = await once(ee, 'ready');\n  console.log(Array.isArray(args), args.join(','));\n})();\n",
+      "query": {
+        "explanation": "events.once(emitter, name) returns a promise that resolves with an array containing every argument passed to emit, in order. The event name itself is not included, and no arguments are discarded.",
+        "syntax": "const args = await once(emitter, 'event')",
+        "tags": [
+          "events",
+          "promises",
+          "EventEmitter"
+        ],
+        "title": "events.once resolves with an array of emitted arguments"
+      },
+      "type": "mc",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-e587cb04",
+      "prompt": "Is the stored id still visible inside the timer callback here?",
+      "topic": "async-patterns",
+      "answer": true,
+      "code": "(async () => {\n  const { AsyncLocalStorage } = require('node:async_hooks');\n\n  const als = new AsyncLocalStorage();\n  const seen = await new Promise(resolve => {\n    als.run({ id: 7 }, () => {\n      setTimeout(() => resolve(als.getStore() && als.getStore().id), 1);\n    });\n  });\n  console.log(seen === 7);\n})();\n",
+      "query": {
+        "explanation": "A store entered with als.run is attached to the current async resource, and Node propagates that context to resources created inside the callback, including timers. So getStore() inside the setTimeout callback still returns { id: 7 }.",
+        "syntax": "als.run(store, callback); als.getStore()",
+        "tags": [
+          "async_hooks",
+          "AsyncLocalStorage",
+          "context"
+        ],
+        "title": "AsyncLocalStorage propagates across async boundaries"
+      },
+      "rationale": "The store is not limited to the synchronous run callback: the timer created inside it inherits the async context, so getStore() returns { id: 7 } rather than undefined.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-8d330a5f",
+      "prompt": "Does this program push the numbers in the array's original order?",
+      "topic": "async-patterns",
+      "answer": false,
+      "code": "const sleep = ms => new Promise(r => setTimeout(r, ms));\n\nconst order = [];\n[10, 1].forEach(async (n) => {\n  await sleep(n);\n  order.push(n);\n});\n\nawait sleep(50);\nconsole.log(order.join(',') === '10,1');",
+      "query": {
+        "explanation": "forEach ignores the promise returned by an async callback, so both callbacks start immediately and finish whenever their own timer fires. The 1 ms sleep resolves before the 10 ms one, so order ends up as 1,10. Use a for...of loop with await for sequential work.",
+        "syntax": "for (const n of arr) { await work(n); }",
+        "tags": [
+          "async-iteration",
+          "timers",
+          "promises"
+        ],
+        "title": "Array.prototype.forEach does not await async callbacks"
+      },
+      "rationale": "forEach starts both async callbacks without awaiting them, so the 1 ms sleep finishes first and order becomes 1,10 instead of 10,1.",
+      "type": "bool",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-nodejs-medium-7b569475",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "A B C D",
+          "rationale": "Assumes the setImmediate scheduled inside the callback jumps ahead of D, but new immediates are appended behind callbacks already queued."
+        },
+        {
+          "text": "A B D C"
+        },
+        {
+          "text": "A D B C",
+          "rationale": "Assumes the nextTick queue waits until the whole check phase finishes; it is actually drained after each individual callback returns."
+        },
+        {
+          "text": "A D C B",
+          "rationale": "Treats process.nextTick as the lowest-priority queue running after all immediates, whereas it has higher priority than any macrotask queue."
+        }
+      ],
+      "code": "setImmediate(() => {\n  console.log('A');\n  process.nextTick(() => console.log('B'));\n  setImmediate(() => console.log('C'));\n});\n\nsetImmediate(() => console.log('D'));",
+      "prompt": "What does this program print?",
+      "query": {
+        "explanation": "Both top-level setImmediate callbacks are queued for the check phase, so 'A' runs first and 'D' is already waiting behind it. Inside the first callback, process.nextTick(B) goes on the nextTick queue and the nested setImmediate(C) is appended after D. Node drains the nextTick queue after each individual callback completes, so 'B' prints before 'D' even though D was queued earlier. 'C' prints last, on the following turn of the check phase. Result: A B D C.",
+        "syntax": "setImmediate(cb); process.nextTick(cb)",
+        "tags": [
+          "event-loop",
+          "timers",
+          "setImmediate",
+          "nextTick"
+        ],
+        "title": "nextTick drains between immediate callbacks"
+      },
+      "type": "mc",
+      "topic": "event-loop-and-timers",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    }
+  ],
+  "schemaVersion": 2
+}

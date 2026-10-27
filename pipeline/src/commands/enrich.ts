@@ -8,10 +8,6 @@
 // A question with no passing oracle observation is skipped, unless `secondProvider` is set: then
 // its rationales are grounded in the answer key and explanation and must pass judges on both
 // providers (see enrichQuestion).
-//
-// Free-bank output goes under the public `pipelineDir`. Paid-bank output carries paid
-// question ids and rationale text, so it goes under `contentRoot` (the private content
-// repo), and nothing paid is ever written under `pipelineDir` or the content dir.
 import { join } from 'node:path';
 
 import type { Question } from '@syntactical/content-schema';
@@ -20,7 +16,6 @@ import type { EnrichBankResult } from '../types/EnrichBankResult.js';
 import type { ModelProvider } from '../types/ModelProvider.js';
 import type { OracleSource } from '../types/OracleSource.js';
 import type { PipelineReport } from '../types/PipelineReport.js';
-import { loadCommandManifest } from '../services/content/loadCommandManifest.js';
 import { loadValidatedManifest } from '../services/content/loadValidatedManifest.js';
 import { readBankQuestions } from '../services/content/readBankQuestions.js';
 import { buildEnrichReport } from '../services/enrich/buildEnrichReport.js';
@@ -29,8 +24,6 @@ import { enrichBank } from '../services/enrich/enrichBank.js';
 import { readJsonIfPresent } from '../services/json/readJsonIfPresent.js';
 import { readLatestReport } from '../services/classify/readLatestReport.js';
 import { readTaxonomy } from '../services/enrich/readTaxonomy.js';
-import { resolveBankFile } from '../services/resolveBankFile.js';
-import { resolveBankOutputRoot } from '../services/resolveBankOutputRoot.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
 import { validateQuestion } from '../services/validateQuestion.js';
 import { writePipelineReport } from '../services/writePipelineReport.js';
@@ -39,9 +32,6 @@ import type { QuestionValidator } from './validate.js';
 
 export interface EnrichOptions {
     contentDir: string;
-    contentRoot: string;
-    // Only free banks: paid banks are skipped and no content root is needed.
-    isFreeOnly?: boolean;
     // Only these language ids, when given; every language otherwise.
     languages?: readonly string[];
     log: (line: string) => void;
@@ -55,13 +45,11 @@ export interface EnrichOptions {
 }
 
 export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
-    const { contentDir, contentRoot, newRunId, pipelineDir, provider, secondProvider } = options;
+    const { contentDir, newRunId, pipelineDir, provider, secondProvider } = options;
     const validate = options.validate ?? validateQuestion;
     const log = (line: string): void => options.log(sanitizeLogText(line));
     const startedAt = options.now();
-    const { languages } = options.isFreeOnly
-        ? await loadValidatedManifest(contentDir)
-        : await loadCommandManifest({ contentDir, contentRoot, pipelineDir });
+    const { languages } = await loadValidatedManifest(contentDir);
     // Reports hold ids and verdicts only; every command shares one report chain in the pipeline dir.
     const reportsDir = join(pipelineDir, 'reports');
     const previous = await readLatestReport(reportsDir);
@@ -73,15 +61,13 @@ export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
             log(`skipping language ${languageId}: no approved taxonomy`);
             continue;
         }
-        for (const [difficulty, { access, path }] of Object.entries(banks)) {
-            if (options.isFreeOnly === true && access !== 'free') continue;
+        for (const [difficulty, { path }] of Object.entries(banks)) {
             const bankKey = `${languageId}/${difficulty}`;
-            const questions = await readBankQuestions(resolveBankFile(contentDir, contentRoot, { access, path }));
-            const outRoot = resolveBankOutputRoot(pipelineDir, contentRoot, { access });
-            const oracleSource = options.oracleSource ?? createOracleSource(join(outRoot, 'oracles'));
-            const staged = (await readJsonIfPresent(join(outRoot, 'generated', languageId, `${difficulty}.json`))) as
-                | { questions: Question[] }
-                | undefined;
+            const questions = await readBankQuestions(join(contentDir, path));
+            const oracleSource = options.oracleSource ?? createOracleSource(join(pipelineDir, 'oracles'));
+            const staged = (await readJsonIfPresent(
+                join(pipelineDir, 'generated', languageId, `${difficulty}.json`),
+            )) as { questions: Question[] } | undefined;
             const result = await enrichBank({
                 bankKey,
                 difficulty,
@@ -91,8 +77,7 @@ export async function enrich(options: EnrichOptions): Promise<PipelineReport> {
                     const { observed, status } = await validate(question, await oracleSource(bankKey, question.id));
                     return status === 'passed' ? observed : undefined;
                 },
-                // Free output stays in the public tree; paid output goes to the private content root.
-                outRoot,
+                outRoot: pipelineDir,
                 provider,
                 // Publish keeps the staged file, so a published question can sit in both lists.
                 questions: [

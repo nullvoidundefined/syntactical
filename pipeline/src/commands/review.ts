@@ -10,21 +10,16 @@
 // `provenance.isHumanReviewed = true`; publish consumes that file), then rewrites the
 // review file with the kept decisions pre-checked. A decision is kept only while its item
 // is unchanged. Content bank files are only read, never written.
-//
-// Free-bank output goes under `pipelineDir`. Paid-bank output carries paid question text,
-// so it goes under `contentRoot` (the private content repo), never under `pipelineDir`.
 import { join } from 'node:path';
 
 import type { Question } from '@syntactical/content-schema';
 
 import type { ReviewResult } from '../types/review/ReviewResult.js';
 import { listBankEntries } from '../services/content/listBankEntries.js';
-import { loadCommandManifest } from '../services/content/loadCommandManifest.js';
+import { loadValidatedManifest } from '../services/content/loadValidatedManifest.js';
 import { readBankQuestions } from '../services/content/readBankQuestions.js';
 import { createOracleSource } from '../services/createOracleSource.js';
 import { readLatestReport } from '../services/classify/readLatestReport.js';
-import { resolveBankFile } from '../services/resolveBankFile.js';
-import { resolveBankOutputRoot } from '../services/resolveBankOutputRoot.js';
 import { reviewBank } from '../services/review/reviewBank.js';
 import { sanitizeLogText } from '../services/sanitizeLogText.js';
 
@@ -33,7 +28,6 @@ import type { QuestionValidator } from './validate.js';
 
 export interface ReviewOptions {
     contentDir: string;
-    contentRoot: string;
     log: (line: string) => void;
     // The oracle's observed output for a question, or undefined when it has none.
     observe?: (bankKey: string, question: Question) => Promise<string | undefined>;
@@ -42,28 +36,26 @@ export interface ReviewOptions {
 }
 
 export async function review(options: ReviewOptions): Promise<ReviewResult> {
-    const { contentDir, contentRoot, pipelineDir } = options;
+    const { contentDir, pipelineDir } = options;
     const validate = options.validate ?? validateQuestion;
     const log = (line: string): void => options.log(sanitizeLogText(line));
-    const manifest = await loadCommandManifest({ contentDir, contentRoot, pipelineDir });
+    const manifest = await loadValidatedManifest(contentDir);
     const report = await readLatestReport(join(pipelineDir, 'reports'));
     if (report === null) {
         throw new Error('no pipeline report found: run `pipeline validate` first');
     }
     const result: ReviewResult = { approved: 0, items: 0, pending: 0, problems: 0, rejected: 0 };
     for (const { bankKey, difficulty, entry, languageId } of listBankEntries(manifest)) {
-        const outRoot = resolveBankOutputRoot(pipelineDir, contentRoot, entry);
-        const oracleSource = createOracleSource(join(outRoot, 'oracles'));
+        const oracleSource = createOracleSource(join(pipelineDir, 'oracles'));
         const counts = await reviewBank({
-            bank: await readBankQuestions(resolveBankFile(contentDir, contentRoot, entry)),
+            bank: await readBankQuestions(join(contentDir, entry.path)),
             difficulty,
             languageId,
             log,
             observe:
                 options.observe ??
                 (async (key, question) => (await validate(question, await oracleSource(key, question.id))).observed),
-            // Free output stays in the public tree; paid output goes to the private content root.
-            outRoot,
+            outRoot: pipelineDir,
             statuses: new Map(
                 report.questions.filter((each) => each.bankKey === bankKey).map(({ id, status }) => [id, status]),
             ),

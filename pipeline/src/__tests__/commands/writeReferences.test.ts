@@ -1,7 +1,7 @@
 // `pipeline write-references` with fake providers over a copy of the real content: one language
-// at a time, every free question gets a saved reference, a rerun pays for none of them again, and
+// at a time, every question of every bank gets a saved reference, a rerun pays for none of them again, and
 // a reference flagged as revealing the answer is not saved. No model, no network.
-import { cp, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -9,8 +9,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { writeReferences } from '../../commands/writeReferences.js';
 import type { ModelProvider } from '../../types/ModelProvider.js';
+import { copyOneTrack } from '../fixtures/copyOneTrack.js';
 
 const REPO_CONTENT = new URL('../../../../content', import.meta.url).pathname;
+const DIFFICULTIES = ['easy', 'medium', 'hard'];
 const REFERENCE = {
     docs: [{ title: 'Built-in types', url: 'https://docs.python.org/3/library/stdtypes.html' }],
     syntax: 'x = 1',
@@ -36,7 +38,7 @@ describe('writeReferences', () => {
         workDir = await mkdtemp(join(tmpdir(), 'references-'));
         contentDir = join(workDir, 'content');
         pipelineDir = join(workDir, 'pipeline');
-        await cp(REPO_CONTENT, contentDir, { recursive: true });
+        await copyOneTrack(REPO_CONTENT, contentDir, 'python');
     });
 
     afterEach(async () => {
@@ -44,10 +46,21 @@ describe('writeReferences', () => {
     });
 
     async function questionCount(): Promise<number> {
-        const bank = JSON.parse(await readFile(join(contentDir, 'python/easy.json'), 'utf8')) as {
-            questions: unknown[];
-        };
-        return bank.questions.length;
+        let total = 0;
+        for (const difficulty of DIFFICULTIES) {
+            const bank = JSON.parse(await readFile(join(contentDir, `python/${difficulty}.json`), 'utf8')) as {
+                questions: unknown[];
+            };
+            total += bank.questions.length;
+        }
+        return total;
+    }
+
+    async function readSaved(difficulty: string): Promise<Record<string, unknown>> {
+        return JSON.parse(await readFile(join(pipelineDir, `references/python/${difficulty}.json`), 'utf8')) as Record<
+            string,
+            unknown
+        >;
     }
 
     function run(first: ModelProvider, second: ModelProvider) {
@@ -61,16 +74,13 @@ describe('writeReferences', () => {
         });
     }
 
-    it('saves a reference for every free question of the chosen language and skips them on a rerun', async () => {
+    it('saves a reference for every question of the chosen language, all three banks, and skips them on a rerun', async () => {
         const total = await questionCount();
         const result = await run(provider(false), provider(false));
         expect(result).toEqual({ accepted: total, revealedAnswer: 0, skipped: 0 });
-        const saved = JSON.parse(await readFile(join(pipelineDir, 'references/python/easy.json'), 'utf8')) as Record<
-            string,
-            unknown
-        >;
-        expect(Object.keys(saved)).toHaveLength(total);
-        expect(Object.values(saved)[0]).toEqual(REFERENCE);
+        const saved = await Promise.all(DIFFICULTIES.map(readSaved));
+        expect(saved.reduce((sum, file) => sum + Object.keys(file).length, 0)).toBe(total);
+        expect(Object.values(saved[0] as Record<string, unknown>)[0]).toEqual(REFERENCE);
         const calls: string[] = [];
         expect(await run(provider(false, calls), provider(false))).toEqual({
             accepted: 0,

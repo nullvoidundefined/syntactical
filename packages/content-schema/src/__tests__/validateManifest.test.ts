@@ -13,20 +13,8 @@ function buildFreeBank(path: string): Record<string, unknown> {
     return {
         path,
         hash: VALID_HASH,
-        access: 'free',
         contentVersion: 1,
         topicCounts: { strings: 2 },
-    };
-}
-
-function buildPaidBank(path: string, productId: string): Record<string, unknown> {
-    return {
-        path,
-        hash: VALID_HASH,
-        access: 'paid',
-        productId,
-        contentVersion: 3,
-        topicCounts: { strings: 4 },
     };
 }
 
@@ -49,8 +37,8 @@ function buildLanguage(
         ],
         banks: {
             easy: buildFreeBank(`${id}/easy.json`),
-            medium: buildPaidBank(`${id}/medium.json`, `syntactical.${id}.medium`),
-            hard: buildPaidBank(`${id}/hard.json`, `syntactical.${id}.hard`),
+            medium: buildFreeBank(`${id}/medium.json`),
+            hard: buildFreeBank(`${id}/hard.json`),
         },
         ...overrides,
     };
@@ -116,7 +104,7 @@ describe('validateManifest', () => {
 
         it('accepts a language with a subset of difficulties', () => {
             const manifest = buildManifestWithBanks({
-                hard: buildPaidBank('python/hard.json', 'syntactical.python.hard'),
+                hard: buildFreeBank('python/hard.json'),
             });
             expect(validateManifest(manifest).isValid).toBe(true);
         });
@@ -263,11 +251,11 @@ describe('validateManifest', () => {
             ['a string', 'python/easy.json'],
             [
                 'missing its path',
-                { hash: VALID_HASH, access: 'free', contentVersion: 1, topicCounts: {} },
+                { hash: VALID_HASH, contentVersion: 1, topicCounts: {} },
             ],
             [
                 'missing its hash',
-                { path: 'python/easy.json', access: 'free', contentVersion: 1, topicCounts: {} },
+                { path: 'python/easy.json', contentVersion: 1, topicCounts: {} },
             ],
         ])('rejects a bank entry that is %s', (_description, bankEntry) => {
             expectRejectedAt(buildManifestWithEasyBank(bankEntry), 'languages[0].banks.easy');

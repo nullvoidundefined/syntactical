@@ -16,15 +16,8 @@ function buildEntry(id: string, overrides: Record<string, unknown> = {}): Record
     topics: [{ id: 'sql-injection', label: 'SQL injection' }],
     misconceptions: [],
     banks: {
-      easy: { path: `${id}/easy.json`, hash: VALID_HASH, access: 'free', contentVersion: 1, topicCounts: {} },
-      medium: {
-        path: `${id}/medium.json`,
-        hash: VALID_HASH,
-        access: 'paid',
-        productId: `syntactical.${id}.medium`,
-        contentVersion: 1,
-        topicCounts: {},
-      },
+      easy: { path: `${id}/easy.json`, hash: VALID_HASH, contentVersion: 1, topicCounts: {} },
+      medium: { path: `${id}/medium.json`, hash: VALID_HASH, contentVersion: 1, topicCounts: {} },
     },
     ...overrides,
   };
@@ -45,7 +38,7 @@ describe('validateManifest kind', () => {
     expect(validateManifest(input)).toEqual({ isValid: true, manifest: input });
   });
 
-  it("accepts kind 'topic' on backend-security with grammar plain and a paid product id", () => {
+  it("accepts kind 'topic' on backend-security with grammar plain", () => {
     const input = buildManifest(buildEntry('backend-security', { kind: 'topic' }));
     expect(validateManifest(input)).toEqual({ isValid: true, manifest: input });
   });

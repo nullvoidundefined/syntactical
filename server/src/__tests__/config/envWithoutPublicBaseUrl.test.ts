@@ -14,7 +14,6 @@ function onlyRequired(): NodeJS.ProcessEnv {
   return {
     DATABASE_URL: `postgres://localhost:5432/syntactical_${randomBytes(4).toString('hex')}`,
     NODE_ENV: 'test',
-    PAID_CONTENT_DIR: '/srv/syntactical-content',
   };
 }
 

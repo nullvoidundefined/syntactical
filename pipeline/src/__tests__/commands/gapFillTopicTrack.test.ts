@@ -1,7 +1,7 @@
 // gap-fill sends an entry with kind 'topic' to topic generation with its TRACK_RUNNERS, and
 // never sends a language id through it; an entry without kind stays a language. Fake provider
 // and fake runner, no Docker.
-import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -39,7 +39,6 @@ function buildEntry(id: string, extra: Record<string, unknown>): Record<string, 
 describe('gapFill topic tracks', () => {
     let root: string;
     let contentDir: string;
-    let contentRoot: string;
     let pipelineDir: string;
     let prompts: string[];
     let logs: string[];
@@ -66,7 +65,6 @@ describe('gapFill topic tracks', () => {
     function run(draft: (call: number) => Record<string, unknown> = (call) => topicDraft(call)) {
         return gapFill({
             contentDir,
-            contentRoot,
             log: (line) => logs.push(line),
             newRunId: () => 'run-1',
             now: () => '2026-10-04T00:00:00.000Z',
@@ -80,9 +78,7 @@ describe('gapFill topic tracks', () => {
         root = await mkdtemp(join(tmpdir(), 'gap-fill-topic-'));
         // Same layout as gapFill.test.ts: the content root sits outside the repo.
         contentDir = join(root, 'repo/content');
-        contentRoot = join(root, 'syntactical-content');
         pipelineDir = join(root, 'repo/pipeline');
-        await mkdir(contentRoot, { recursive: true });
         // gap-fill requires the fallback topic list file even when every entry lists its own topics.
         await writeJson(join(pipelineDir, 'topics.json'), {});
         prompts = [];

@@ -20,18 +20,6 @@ function buildFreeBank(difficulty: string): Fixture {
     return {
         path: `python/${difficulty}.json`,
         hash: VALID_HASH,
-        access: 'free',
-        contentVersion: 1,
-        topicCounts: {},
-    };
-}
-
-function buildPaidBank(difficulty: string): Fixture {
-    return {
-        path: `python/${difficulty}.json`,
-        hash: VALID_HASH,
-        access: 'paid',
-        productId: `syntactical.python.${difficulty}`,
         contentVersion: 1,
         topicCounts: {},
     };
@@ -55,8 +43,8 @@ function buildManifest(lists: { topics?: unknown[]; misconceptions?: unknown[] }
                 ],
                 banks: {
                     easy: buildFreeBank('easy'),
-                    medium: buildPaidBank('medium'),
-                    hard: buildPaidBank('hard'),
+                    medium: buildFreeBank('medium'),
+                    hard: buildFreeBank('hard'),
                 },
             },
         ],

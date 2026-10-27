@@ -1,4 +1,4 @@
-// `pipeline draft-oracles` writes oracle files for free banks only and never
+// `pipeline draft-oracles` writes oracle files for every bank, Medium included, and never
 // touches content files. The provider is a fake; no real model runs.
 import { mkdir, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -21,17 +21,17 @@ function buildQuestion(id: string): Record<string, unknown> {
 
 const MANIFEST = buildManifest(
     languageWithBanks('python', {
-        easy: buildBankEntry('python/easy.json', 'free'),
-        medium: buildBankEntry('python/medium.json', 'paid', 'syntactical.python.medium'),
+        easy: buildBankEntry('python/easy.json'),
+        medium: buildBankEntry('python/medium.json'),
     }),
-    languageWithBanks('javascript', { easy: buildBankEntry('javascript/easy.json', 'free') }),
+    languageWithBanks('javascript', { easy: buildBankEntry('javascript/easy.json') }),
 );
 
 const FILES: Record<string, unknown> = {
     'javascript/easy.json': { questions: [buildQuestion('j-1')] },
     'manifest.json': MANIFEST,
     'python/easy.json': { questions: [buildQuestion('p-1'), buildQuestion('p-2')] },
-    'python/medium.json': { questions: [buildQuestion('paid-1')] },
+    'python/medium.json': { questions: [buildQuestion('m-1')] },
 };
 
 function scripted(): ModelProvider & { prompts: string[] } {
@@ -84,25 +84,26 @@ describe('draftOracles', () => {
         await writeContent(contentDir, FILES);
     });
 
-    it('writes oracle files for free banks, maps javascript to node, and skips paid banks by name', async () => {
+    it('writes oracle files for every bank and maps javascript to node', async () => {
         await draftOracles({ contentDir, log, oraclesDir, provider: scripted() });
         const written = await snapshot(oraclesDir);
-        expect(Object.keys(written).sort()).toEqual(['javascript/easy.json', 'python/easy.json']);
+        expect(Object.keys(written).sort()).toEqual(['javascript/easy.json', 'python/easy.json', 'python/medium.json']);
         expect(JSON.parse(written['python/easy.json'] as string)).toEqual({
             'p-1': { code: 'print(1)', language: 'python' },
         });
         expect(JSON.parse(written['javascript/easy.json'] as string)).toEqual({
             'j-1': { code: 'print(1)', language: 'node' },
         });
-        expect(logs).toContain('skipping paid bank python/medium');
+        expect(JSON.parse(written['python/medium.json'] as string)).toEqual({
+            'm-1': { code: 'print(1)', language: 'python' },
+        });
         expect(logs.some((line) => line.includes('p-2') && line.includes('not executable'))).toBe(true);
     });
 
-    it('never calls the model for a paid bank and leaves content files byte-identical', async () => {
+    it('leaves content files byte-identical', async () => {
         const before = await snapshot(contentDir);
         const provider = scripted();
         await draftOracles({ contentDir, log, oraclesDir, provider });
-        expect(provider.prompts.some((prompt) => prompt.includes('paid-1'))).toBe(false);
         expect(await snapshot(contentDir)).toEqual(before);
     });
 
@@ -123,25 +124,25 @@ describe('draftOracles', () => {
                 'a difficulty key that climbs out of the oracles dir',
                 buildManifest(
                     languageWithBanks('python', {
-                        '../../.vscode/settings': buildBankEntry('python/easy.json', 'free'),
+                        '../../.vscode/settings': buildBankEntry('python/easy.json'),
                     }),
                 ),
             ],
             [
                 'a language id of ../..',
-                buildManifest(languageWithBanks('../..', { easy: buildBankEntry('python/easy.json', 'free') })),
+                buildManifest(languageWithBanks('../..', { easy: buildBankEntry('python/easy.json') })),
             ],
             [
                 'a language id of __proto__',
-                buildManifest(languageWithBanks('__proto__', { easy: buildBankEntry('python/easy.json', 'free') })),
+                buildManifest(languageWithBanks('__proto__', { easy: buildBankEntry('python/easy.json') })),
             ],
             [
                 'a bank path that climbs out of the content dir',
-                buildManifest(languageWithBanks('python', { easy: buildBankEntry('../../../outside.json', 'free') })),
+                buildManifest(languageWithBanks('python', { easy: buildBankEntry('../../../outside.json') })),
             ],
             [
                 'a bank path that reads a sibling of the content dir',
-                buildManifest(languageWithBanks('python', { easy: buildBankEntry('../outside.json', 'free') })),
+                buildManifest(languageWithBanks('python', { easy: buildBankEntry('../outside.json') })),
             ],
         ];
 
@@ -156,7 +157,7 @@ describe('draftOracles', () => {
             const forged = 'FORGED: all banks validated';
             const { run } = await runWith(
                 buildManifest(
-                    languageWithBanks('python', { [`easy\n${forged}‮`]: buildBankEntry('python/easy.json', 'free') }),
+                    languageWithBanks('python', { [`easy\n${forged}‮`]: buildBankEntry('python/easy.json') }),
                 ),
             );
             const error = await run.then(
@@ -170,7 +171,7 @@ describe('draftOracles', () => {
 
         it('skips a language id that merely names an Object.prototype member', async () => {
             const { provider, run } = await runWith(
-                buildManifest(languageWithBanks('constructor', { easy: buildBankEntry('python/easy.json', 'free') })),
+                buildManifest(languageWithBanks('constructor', { easy: buildBankEntry('python/easy.json') })),
             );
             await run;
             expect(provider.prompts).toEqual([]);
@@ -253,6 +254,7 @@ describe('draftOracles', () => {
             await draftOracles({ contentDir, log, oraclesDir, provider });
             expect(await snapshot(oraclesDir)).toEqual({
                 'javascript/easy.json': `${JSON.stringify({ 'j-1': { code: 'print(1)', language: 'node' } }, null, 2)}\n`,
+                'python/medium.json': `${JSON.stringify({ 'm-1': { code: 'print(1)', language: 'python' } }, null, 2)}\n`,
             });
             expect(logs.some((line) => line.includes('p-1') && line.includes('model output invalid'))).toBe(true);
         });

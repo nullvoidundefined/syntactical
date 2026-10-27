@@ -40,7 +40,7 @@ async function writeContentFile(relativePath: string, text: string): Promise<voi
 }
 
 async function writeManifestFor(bankHash: string, schemaVersion = 2): Promise<void> {
-  const easy = { access: 'free', contentVersion: 1, hash: bankHash, path: 'python/easy.json', topicCounts: {} };
+  const easy = { contentVersion: 1, hash: bankHash, path: 'python/easy.json', topicCounts: {} };
   const python = {
     banks: { easy },
     glyph: 'PY',

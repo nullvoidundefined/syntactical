@@ -22,14 +22,12 @@ type Manifest = { languages: { id: string; misconceptions: { description: string
 describe('buildContentManifest linked misconceptions', () => {
   let workDir: string;
   let contentDir: string;
-  let contentRoot: string;
   let taxonomyDir: string;
   let outputs: { banksPath: string; manifestPath: string };
 
   beforeEach(async () => {
     workDir = await mkdtemp(join(tmpdir(), 'content-linked-'));
     contentDir = join(workDir, 'content');
-    contentRoot = join(workDir, 'private');
     taxonomyDir = join(workDir, 'taxonomy');
     outputs = { banksPath: join(workDir, 'banks.ts'), manifestPath: join(workDir, 'manifest.ts') };
     await cp(REPOSITORY_CONTENT_DIR, contentDir, { recursive: true });
@@ -37,13 +35,6 @@ describe('buildContentManifest linked misconceptions', () => {
     await stripMisconceptionLinks(contentDir);
     await mkdir(taxonomyDir);
     await writeFile(join(taxonomyDir, 'python.json'), JSON.stringify(TAXONOMY));
-    // Paid banks live in the private repo; each stand-in here is the language's free easy bank.
-    for (const { id } of (await readManifest()).languages) {
-      await mkdir(join(contentRoot, id), { recursive: true });
-      for (const difficulty of ['medium', 'hard']) {
-        await cp(join(contentDir, id, 'easy.json'), join(contentRoot, id, `${difficulty}.json`));
-      }
-    }
   });
 
   afterEach(async () => {
@@ -89,25 +80,25 @@ describe('buildContentManifest linked misconceptions', () => {
     expect(await readPythonMisconceptions()).toEqual([ENTRY_A]);
   });
 
-  it('adds entries a paid bank in the content root references, in taxonomy order', async () => {
-    await linkFirstCard(join(contentRoot, 'python', 'medium.json'), ENTRY_B.id);
+  it('adds entries a Medium bank references, in taxonomy order', async () => {
+    await linkFirstCard(join(contentDir, 'python', 'medium.json'), ENTRY_B.id);
     await linkFirstCard(join(contentDir, 'python', 'easy.json'), ENTRY_A.id);
 
-    await buildContentManifest(contentDir, outputs, taxonomyDir, contentRoot);
+    await buildContentManifest(contentDir, outputs, taxonomyDir);
 
     expect(await readPythonMisconceptions()).toEqual([ENTRY_A, ENTRY_B]);
   });
 
-  it('without a content root keeps an entry the manifest lists and the taxonomy still has', async () => {
+  it('drops an entry the manifest lists when no card links it', async () => {
     const entryNoLongerInTaxonomy = { description: 'Removed from the taxonomy.', id: 'python.entry-gone' };
     await seedPythonMisconceptions([ENTRY_B, entryNoLongerInTaxonomy]);
 
     await buildContentManifest(contentDir, outputs, taxonomyDir);
 
-    expect(await readPythonMisconceptions()).toEqual([ENTRY_B]);
+    expect(await readPythonMisconceptions()).toEqual([]);
   });
 
-  it('rebuilds the same manifest when run twice without a content root', async () => {
+  it('rebuilds the same manifest when run twice', async () => {
     await seedPythonMisconceptions([ENTRY_B]);
     await linkFirstCard(join(contentDir, 'python', 'easy.json'), ENTRY_C.id);
 
@@ -116,6 +107,6 @@ describe('buildContentManifest linked misconceptions', () => {
     await buildContentManifest(contentDir, outputs, taxonomyDir);
 
     expect(await readFile(join(contentDir, 'manifest.json'), 'utf8')).toBe(first);
-    expect(await readPythonMisconceptions()).toEqual([ENTRY_B, ENTRY_C]);
+    expect(await readPythonMisconceptions()).toEqual([ENTRY_C]);
   });
 });

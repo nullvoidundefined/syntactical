@@ -1,5 +1,4 @@
-// What gap-filling one bank needs. `outRoot` is the public pipeline dir for a free bank and
-// the private content root for a paid one.
+// What gap-filling one bank needs. `outRoot` is the staging tree: the pipeline dir, for every bank.
 // `runners` marks a topic track; language tracks carry a single `language`.
 import type { Question } from '@syntactical/content-schema';
 

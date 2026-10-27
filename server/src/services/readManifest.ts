@@ -1,4 +1,4 @@
-// Reads and validates the content directory's manifest, shared by the answer key and paid bank loaders.
+// Reads and validates the content directory's manifest, shared by the answer key and the content labels.
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 

@@ -19,7 +19,7 @@ export async function hashTextWithNode(text: string): Promise<string> {
 export const EMPTY_BANK_CONTEXT = { topicIds: [], misconceptionIds: [] };
 
 export function buildBankEntry(path: string, hash: string): BankEntry {
-  return { path, hash, access: 'free', contentVersion: 1, topicCounts: {} };
+  return { path, hash, contentVersion: 1, topicCounts: {} };
 }
 
 export const TEST_PROVENANCE = {
@@ -61,7 +61,6 @@ export function buildAddedLanguage(easyBankHash: string) {
       easy: {
         path: 'fixture-lang/easy.json',
         hash: easyBankHash,
-        access: 'free',
         contentVersion: 1,
         topicCounts: {},
       },

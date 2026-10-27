@@ -1,6 +1,6 @@
 // Serves the web export the way the static host does: the app at the root (any path the files do
-// not hold falls back to index.html, as the 404.html copy does on GitHub Pages) and the public
-// content under /content/. Paid banks are never in the content directory.
+// not hold falls back to index.html, as the 404.html copy does on GitHub Pages) and the content,
+// every bank included, under /content/.
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import type { Server } from 'node:http';

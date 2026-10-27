@@ -1,6 +1,6 @@
 // The entrypoint's wiring against a scratch database and fixture content: it answers /health and
 // /health/ready, shuts down cleanly, fails fast on a bad environment, and refuses to start when a
-// paid bank is tampered with or missing. Every secret is generated at run time.
+// bank is tampered with. Every secret is generated at run time.
 import { createHash, randomBytes } from 'node:crypto';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -44,19 +44,12 @@ function sha256Hex(bytes: Buffer): string {
   return createHash('sha256').update(bytes).digest('hex');
 }
 
-function bankEntry(path: string, bytes: Buffer, access: 'free' | 'paid', productId?: string) {
-  return {
-    access,
-    contentVersion: 1,
-    hash: sha256Hex(bytes),
-    path,
-    topicCounts: {},
-    ...(productId ? { productId } : {}),
-  };
+function bankEntry(path: string, bytes: Buffer) {
+  return { contentVersion: 1, hash: sha256Hex(bytes), path, topicCounts: {} };
 }
 
 const FREE_BANK = serializeBank('py-easy-1');
-const PAID_BANK = serializeBank('py-medium-1');
+const MEDIUM_BANK = serializeBank('py-medium-1');
 
 async function writeUnder(root: string, relativePath: string, bytes: Buffer | string): Promise<void> {
   const file = join(root, relativePath);
@@ -64,11 +57,10 @@ async function writeUnder(root: string, relativePath: string, bytes: Buffer | st
   await writeFile(file, bytes);
 }
 
-async function writeContent(contentDir: string, paidDir: string, options: { hasPaidFile?: boolean } = {}) {
-  const { hasPaidFile = true } = options;
+async function writeContent(contentDir: string) {
   const banks = {
-    easy: bankEntry('python/easy.json', FREE_BANK, 'free'),
-    medium: bankEntry('python/medium.json', PAID_BANK, 'paid', 'syntactical.python.medium'),
+    easy: bankEntry('python/easy.json', FREE_BANK),
+    medium: bankEntry('python/medium.json', MEDIUM_BANK),
   };
   const language = {
     banks,
@@ -82,7 +74,7 @@ async function writeContent(contentDir: string, paidDir: string, options: { hasP
   };
   await writeUnder(contentDir, 'manifest.json', JSON.stringify({ languages: [language], schemaVersion: 2 }));
   await writeUnder(contentDir, 'python/easy.json', FREE_BANK);
-  if (hasPaidFile) await writeUnder(paidDir, 'python/medium.json', PAID_BANK);
+  await writeUnder(contentDir, 'python/medium.json', MEDIUM_BANK);
 }
 
 function randomSecret(): string {
@@ -92,7 +84,6 @@ function randomSecret(): string {
 describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
   let database: Awaited<ReturnType<typeof createMigratedDatabase>>;
   let contentDir: string;
-  let paidDir: string;
   let running: RunningServer | undefined;
   const logger = pino({ level: 'silent' });
 
@@ -103,7 +94,6 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
       DATABASE_URL: database.databaseUrl,
       EMAIL_FROM: 'Syntactical <sign-in@syntactical.dev>',
       NODE_ENV: 'test',
-      PAID_CONTENT_DIR: paidDir,
       PORT: '0',
       RATE_LIMIT_KEY_SECRET: randomSecret(),
       RESEND_API_KEY: randomSecret(),
@@ -121,18 +111,16 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
 
   beforeEach(async () => {
     contentDir = await mkdtemp(join(tmpdir(), 'start-server-content-'));
-    paidDir = await mkdtemp(join(tmpdir(), 'start-server-paid-'));
   });
 
   afterEach(async () => {
     await running?.close();
     running = undefined;
     await rm(contentDir, { force: true, recursive: true });
-    await rm(paidDir, { force: true, recursive: true });
   });
 
   it('answers /health and /health/ready once started', async () => {
-    await writeContent(contentDir, paidDir);
+    await writeContent(contentDir);
     running = await startServer(buildSource(), { logger });
 
     const health = await fetch(`http://127.0.0.1:${running.port}/health`);
@@ -144,16 +132,8 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
     expect(await ready.json()).toEqual({ database: 'ok', status: 'ok' });
   });
 
-  it('serves a paid bank route only behind a session', async () => {
-    await writeContent(contentDir, paidDir);
-    running = await startServer(buildSource(), { logger });
-
-    const response = await fetch(`http://127.0.0.1:${running.port}/v1/banks/python/medium`);
-    expect(response.status).toBe(401);
-  });
-
   it('wires CORS and the CSRF guard to the one allowed origin', async () => {
-    await writeContent(contentDir, paidDir);
+    await writeContent(contentDir);
     running = await startServer(buildSource(), { logger });
     const base = `http://127.0.0.1:${running.port}`;
 
@@ -187,7 +167,7 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
   // client, which asks the HIBP range API through the global fetch (stubbed here to answer an
   // empty range) for one 5-character prefix.
   it('gives sign-up the HTTP breach client when no passwordBreachClient is passed', async () => {
-    await writeContent(contentDir, paidDir);
+    await writeContent(contentDir);
     const realFetch = globalThis.fetch;
     const rangeRequests: string[] = [];
     vi.stubGlobal('fetch', (input: RequestInfo | URL, init?: RequestInit) => {
@@ -224,7 +204,7 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
   // Task 7.5: startup creates the dummy password hash and mounts password sign-in, so an unknown
   // email gets the ordinary credentials 400 rather than a 404 or a crash.
   it('mounts password sign-in with a startup dummy hash: an unknown email gets 400 AUTH_INVALID_CREDENTIALS', async () => {
-    await writeContent(contentDir, paidDir);
+    await writeContent(contentDir);
     running = await startServer(buildSource(), {
       emailClient: { sendSignInCode: () => Promise.resolve() },
       logger,
@@ -245,24 +225,18 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
   });
 
   it('stops accepting connections after close', async () => {
-    await writeContent(contentDir, paidDir);
+    await writeContent(contentDir);
     const started = await startServer(buildSource(), { logger });
     await started.close();
 
     await expect(fetch(`http://127.0.0.1:${started.port}/health`)).rejects.toThrow();
   });
 
-  it('refuses to start when a paid bank does not match its manifest hash', async () => {
-    await writeContent(contentDir, paidDir);
-    await writeUnder(paidDir, 'python/medium.json', Buffer.concat([PAID_BANK, Buffer.from(' ')]));
+  it('refuses to start when a Medium bank does not match its manifest hash', async () => {
+    await writeContent(contentDir);
+    await writeUnder(contentDir, 'python/medium.json', Buffer.concat([MEDIUM_BANK, Buffer.from(' ')]));
 
     await expect(startServer(buildSource(), { logger })).rejects.toThrow(/Bank hash mismatch/);
-  });
-
-  it('refuses to start when a paid bank file is missing', async () => {
-    await writeContent(contentDir, paidDir, { hasPaidFile: false });
-
-    await expect(startServer(buildSource(), { logger })).rejects.toThrow(/Paid bank missing/);
   });
 
   describe('with missing integrations', () => {
@@ -275,18 +249,18 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
     ];
 
     function onlyDatabase(): NodeJS.ProcessEnv {
-      const { DATABASE_URL, NODE_ENV, PAID_CONTENT_DIR, PORT, CONTENT_DIR } = buildSource();
-      return { CONTENT_DIR, DATABASE_URL, NODE_ENV, PAID_CONTENT_DIR, PORT };
+      const { DATABASE_URL, NODE_ENV, PORT, CONTENT_DIR } = buildSource();
+      return { CONTENT_DIR, DATABASE_URL, NODE_ENV, PORT };
     }
 
     it('refuses to start without the opt-in', async () => {
-      await writeContent(contentDir, paidDir);
+      await writeContent(contentDir);
 
       await expect(startServer(onlyDatabase(), { logger })).rejects.toThrow(/Invalid environment/);
     });
 
     it('starts with the opt-in, lists the stubs on /health/ready, and answers the webhook 503', async () => {
-      await writeContent(contentDir, paidDir);
+      await writeContent(contentDir);
       running = await startServer({ ...onlyDatabase(), ALLOW_STUBBED_INTEGRATIONS: 'true' }, { logger });
 
       const ready = await fetch(`http://127.0.0.1:${running.port}/health/ready`);
@@ -303,7 +277,7 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
     });
 
     it('allows no browser origin when ALLOWED_ORIGINS is stubbed', async () => {
-      await writeContent(contentDir, paidDir);
+      await writeContent(contentDir);
       running = await startServer({ ...onlyDatabase(), ALLOW_STUBBED_INTEGRATIONS: 'true' }, { logger });
 
       const response = await fetch(`http://127.0.0.1:${running.port}/health`, {
@@ -314,7 +288,7 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer', () => {
   });
 
   it('fails fast on a missing variable, naming it and never a value', async () => {
-    await writeContent(contentDir, paidDir);
+    await writeContent(contentDir);
     const source = buildSource();
     const secret = source.RESEND_API_KEY ?? '';
     delete source.REVENUECAT_WEBHOOK_AUTH;

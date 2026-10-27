@@ -1,0 +1,4128 @@
+{
+  "questions": [
+    {
+      "id": "gen-frontend-security-medium-246df013",
+      "prompt": "Which assignment to el creates a child <img> element?",
+      "topic": "dom-xss",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "el.textContent = payload",
+          "rationale": "textContent stores the string as a single text node; the angle brackets stay literal characters."
+        },
+        {
+          "text": "el.className = payload",
+          "rationale": "className only sets the class attribute string; it never parses markup."
+        },
+        {
+          "text": "el.innerHTML = payload",
+          "rationale": ""
+        },
+        {
+          "text": "el.setAttribute('title', payload)",
+          "rationale": "setAttribute stores the raw string as an attribute value, so no child element is parsed out of it."
+        }
+      ],
+      "code": "const payload = '<img src=x onerror=1>';\nconst el = document.createElement('div');\n// one of the four lines below runs",
+      "query": {
+        "explanation": "Only innerHTML (and friends like outerHTML/insertAdjacentHTML) run the HTML parser on the string, so markup in attacker input becomes live DOM nodes. textContent, setAttribute('title', ...) and className treat the value as plain text data, so no element is created.",
+        "syntax": "element.innerHTML = string",
+        "tags": [
+          "dom-xss",
+          "sinks",
+          "innerHTML"
+        ],
+        "title": "Identifying the HTML-parsing sink"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-88a0e39c",
+      "prompt": "Does the hash value of a URL include the leading '#' character?",
+      "topic": "dom-xss",
+      "answer": true,
+      "code": "const u = new URL('https://example.test/p#payload');\nu.hash",
+      "query": {
+        "explanation": "location.hash (and URL.hash) returns the fragment including the '#' prefix, which is why DOM XSS code usually writes hash.slice(1) or substring(1). Forgetting the slice leaves a stray '#' in the data, and assuming it is absent is a common source-handling bug.",
+        "syntax": "location.hash.slice(1)",
+        "tags": [
+          "dom-xss",
+          "sources",
+          "location"
+        ],
+        "title": "location.hash keeps the '#'"
+      },
+      "rationale": "The opposite is wrong because the getter is specified to return '#' plus the fragment; only slice(1)/substring(1) removes it.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-3cba8fa6",
+      "prompt": "Does this case-sensitive filter remove the script tag from the payload?",
+      "topic": "dom-xss",
+      "answer": false,
+      "code": "const sanitize = s => s.replace(/<script>/g, '');\nsanitize('<ScRiPt>alert(1)</ScRiPt>');",
+      "query": {
+        "explanation": "HTML tag names are case-insensitive, so a filter matching only the lowercase literal <script> leaves <ScRiPt> untouched and the parser still builds a script element. Blacklist sanitizers like this are why escaping or a vetted sanitizer library is required.",
+        "syntax": "s.replace(/<script>/g, '') // unsafe",
+        "tags": [
+          "dom-xss",
+          "sanitization",
+          "blacklist"
+        ],
+        "title": "Case-sensitive blacklists fail"
+      },
+      "rationale": "Answering true is wrong because the regex has no /i flag, so the mixed-case tag never matches and survives the replace intact.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-116dd903",
+      "prompt": "What is d.childElementCount after this code runs?",
+      "topic": "dom-xss",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "0",
+          "rationale": ""
+        },
+        {
+          "text": "1",
+          "rationale": "The single child is a text node; childElementCount counts only element children."
+        },
+        {
+          "text": "2",
+          "rationale": "Only one node was appended, and it is not an element at all."
+        },
+        {
+          "text": "3",
+          "rationale": "No HTML parsing happens, so no elements are produced from the string."
+        }
+      ],
+      "code": "const d = document.createElement('div');\nd.appendChild(document.createTextNode('<img src=x onerror=1>'));\nd.childElementCount",
+      "query": {
+        "explanation": "Building DOM with createTextNode/appendChild keeps the payload as data: the div gains a text child but zero element children, so no event-handler attribute can ever fire. This is the standard safe alternative to innerHTML.",
+        "syntax": "parent.appendChild(document.createTextNode(untrusted))",
+        "tags": [
+          "dom-xss",
+          "safe-sinks",
+          "dom-api"
+        ],
+        "title": "createTextNode never creates elements"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-bbe2fc9c",
+      "prompt": "What does the final expression evaluate to?",
+      "topic": "dom-xss",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "null",
+          "rationale": "The attribute was parsed and stored, so the getter returns its value rather than null."
+        },
+        {
+          "text": "onerror=alert(1)",
+          "rationale": "getAttribute returns only the value, not the name=value text."
+        },
+        {
+          "text": "alert(1)",
+          "rationale": ""
+        },
+        {
+          "text": "x",
+          "rationale": "That is the value of the src attribute, not onerror."
+        }
+      ],
+      "code": "const d = document.createElement('div');\nd.innerHTML = '<img src=x onerror=alert(1)>';\nd.firstElementChild.getAttribute('onerror')",
+      "query": {
+        "explanation": "The HTML parser accepts unquoted attribute values, so onerror=alert(1) becomes a real event-handler attribute on the injected img. In a browser the broken src fires onerror and the handler runs, which is why innerHTML with untrusted data is a DOM XSS sink even without a <script> tag.",
+        "syntax": "element.getAttribute('onerror')",
+        "tags": [
+          "dom-xss",
+          "innerHTML",
+          "event-handlers"
+        ],
+        "title": "Event-handler attributes survive innerHTML parsing"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-ab18ee36",
+      "prompt": "Does insertAdjacentHTML('beforeend', input) parse its input as HTML markup?",
+      "topic": "dom-xss",
+      "answer": true,
+      "code": "const d = document.createElement('div');\nd.insertAdjacentHTML('beforeend', '<img src=x>');\nd.querySelector('img')",
+      "query": {
+        "explanation": "insertAdjacentHTML runs the HTML fragment parser just like innerHTML, so it creates live elements from the string and is an equally dangerous DOM XSS sink. Switching from innerHTML to insertAdjacentHTML provides no security benefit.",
+        "syntax": "element.insertAdjacentHTML('beforeend', html)",
+        "tags": [
+          "dom-xss",
+          "sinks",
+          "insertAdjacentHTML"
+        ],
+        "title": "insertAdjacentHTML is also an HTML sink"
+      },
+      "rationale": "Answering false is wrong because the method is defined to parse the string as HTML; only text-based APIs such as textContent or append(string) keep it literal.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-4c1e09e9",
+      "prompt": "What does this code print?",
+      "topic": "dom-xss",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "<img src=x>"
+        },
+        {
+          "text": "%3Cimg%20src%3Dx%3E",
+          "rationale": "searchParams.get percent-decodes the value; the still-encoded form is what you see in location.search."
+        },
+        {
+          "text": "?q=%3Cimg%20src%3Dx%3E",
+          "rationale": "That is the whole query string returned by url.search, not one parameter's value."
+        },
+        {
+          "text": "null",
+          "rationale": "The q parameter is present, so get returns its decoded value instead of null."
+        }
+      ],
+      "code": "const u = new URL('https://e.test/?q=%3Cimg%20src%3Dx%3E');\nconsole.log(u.searchParams.get('q'));",
+      "query": {
+        "explanation": "Reading a parameter with URLSearchParams percent-decodes it, so %3C becomes '<'. Code that trusts a parameter because 'it looked encoded' is wrong: by the time it reaches an HTML sink the payload is raw markup again, which is a classic DOM XSS source-to-sink mistake.",
+        "syntax": "new URL(href).searchParams.get(name)",
+        "tags": [
+          "dom-xss",
+          "sources",
+          "url"
+        ],
+        "title": "URL sources are already decoded"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-5674d200",
+      "prompt": "Does setAttribute store 'javascript:alert(1)' on an href unchanged?",
+      "topic": "dom-xss",
+      "answer": true,
+      "code": "const a = document.createElement('a');\na.setAttribute('href', 'javascript:alert(1)');\nconsole.log(a.getAttribute('href'));",
+      "query": {
+        "explanation": "Attribute setters are literal: whatever string you pass to setAttribute is the attribute value. Assigning untrusted data to href, src, formaction or any on* attribute therefore creates a DOM XSS sink, so URLs must be scheme-checked against an allowlist like http:/https: before assignment.",
+        "syntax": "element.setAttribute(name, value)",
+        "tags": [
+          "dom-xss",
+          "sinks",
+          "setAttribute"
+        ],
+        "title": "setAttribute does not sanitize URLs"
+      },
+      "rationale": "setAttribute performs no URL filtering, so the javascript: value is stored verbatim; the browser does not sanitize it for you, which is why href is a DOM XSS sink.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-848ee7c4",
+      "prompt": "Which assignment inserts s into div as literal text?",
+      "topic": "dom-xss",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "div.innerHTML = s",
+          "rationale": "innerHTML parses the string as HTML, so a real img element is created."
+        },
+        {
+          "text": "div.textContent = s",
+          "rationale": ""
+        },
+        {
+          "text": "div.insertAdjacentHTML('beforeend', s)",
+          "rationale": "The name says HTML: the string is parsed as markup and appended as nodes."
+        },
+        {
+          "text": "div.outerHTML = s",
+          "rationale": "outerHTML replaces the element with nodes parsed from the markup, so an img is created."
+        }
+      ],
+      "code": "const s = '<img src=x>';\n// div is an existing empty element",
+      "query": {
+        "explanation": "textContent assigns a plain string value: angle brackets stay as characters and no elements are created. innerHTML, outerHTML and insertAdjacentHTML all run the HTML parser on their input, so they are DOM XSS sinks when fed untrusted data. Prefer textContent when you only need to show text.",
+        "syntax": "element.textContent = untrustedString",
+        "tags": [
+          "dom-xss",
+          "sinks",
+          "textContent"
+        ],
+        "title": "textContent is the safe text sink"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-3576cb8e",
+      "prompt": "What does this code print?",
+      "topic": "dom-xss",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "javascript:alert(1)"
+        },
+        {
+          "text": "javascrjavascript:ipt:alert(1)",
+          "rationale": "The payload does contain the literal 'javascript:', so replace finds a match and the string is modified."
+        },
+        {
+          "text": "ipt:alert(1)",
+          "rationale": "Only the matched substring is removed; the leading 'javascr' characters remain in the result."
+        },
+        {
+          "text": "javascr:alert(1)",
+          "rationale": "The 'ipt' characters after the removed match are kept, and they join the prefix to spell the scheme again."
+        }
+      ],
+      "code": "const strip = s => s.replace('javascript:', '');\nconsole.log(strip('javascrjavascript:ipt:alert(1)'));",
+      "query": {
+        "explanation": "String.prototype.replace with a string pattern removes only the first match, so the surrounding characters close up and can reconstruct the forbidden token: 'javascr' + 'ipt:' becomes 'javascript:'. Blacklist stripping is not a defence; validate URLs against an allowlist of schemes instead.",
+        "syntax": "str.replace(pattern, replacement)",
+        "tags": [
+          "dom-xss",
+          "filter-bypass",
+          "javascript-url"
+        ],
+        "title": "Single-pass blacklist removal is bypassable"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-f30e508d",
+      "prompt": "What does this code print?",
+      "topic": "html-sanitization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "&lt;b&gt;hi&lt;/b&gt;"
+        },
+        {
+          "text": "<b>hi</b>",
+          "rationale": "The serializer escapes the angle brackets of text nodes, so the raw markup is not returned."
+        },
+        {
+          "text": "hi",
+          "rationale": "Nothing was parsed as a tag, so the angle-bracket characters remain part of the text."
+        },
+        {
+          "text": "(empty string)",
+          "rationale": "The text node exists and is serialized, so innerHTML is not empty."
+        }
+      ],
+      "code": "const d = document.createElement('div');\nd.textContent = '<b>hi</b>';\nconsole.log(d.innerHTML);",
+      "query": {
+        "explanation": "Assigning to textContent stores the string as a single text node, so no <b> element is created. When that text node is serialized back out through innerHTML, the HTML serializer escapes &, < and > in text, producing &lt;b&gt;hi&lt;/b&gt;. This round trip is why textContent is the safe way to insert untrusted strings.",
+        "syntax": "element.textContent = string; element.innerHTML",
+        "tags": [
+          "xss",
+          "textContent",
+          "escaping"
+        ],
+        "title": "textContent assignment escapes markup on serialization"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-062b37f5",
+      "prompt": "Does the filtered string below still contain a `<script>` tag?",
+      "topic": "html-sanitization",
+      "answer": true,
+      "code": "const payload = '<scr<script>ipt>alert(1)</script>';\nconst out = payload.replace(/<script>/gi, '');",
+      "query": {
+        "explanation": "The payload hides `<scr` + `<script>` + `ipt>`. Deleting the inner `<script>` glues `<scr` to `ipt>` and yields a brand new `<script>` tag, so one replacement pass makes the string more dangerous, not less. Blacklist regex filters must be replaced with real parsing and allowlisting.",
+        "syntax": "String.prototype.replace(regexp, '')",
+        "tags": [
+          "regex-filter",
+          "blacklist",
+          "xss"
+        ],
+        "title": "Single-pass tag removal can create the tag it removed"
+      },
+      "rationale": "Removing the embedded `<script>` joins the surrounding `<scr` and `ipt>` fragments into a working `<script>` tag, so the output is not clean.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-72f86583",
+      "prompt": "Does the inline script run while DOMParser parses this string?",
+      "topic": "html-sanitization",
+      "answer": false,
+      "code": "window.hit = false;\nconst html = '<script>window.hit = true;<\\/script>';\nconst doc = new DOMParser().parseFromString(html, 'text/html');",
+      "query": {
+        "explanation": "parseFromString with 'text/html' builds a document that is not connected to a browsing context, so script elements are never executed and resource-loading attributes never fire. That makes DOMParser a good front end for a sanitizer: you can inspect and strip nodes before anything is attached to the live document.",
+        "syntax": "new DOMParser().parseFromString(html, 'text/html')",
+        "tags": [
+          "DOMParser",
+          "inert-document",
+          "xss"
+        ],
+        "title": "DOMParser produces an inert document"
+      },
+      "rationale": "A parsed document has no browsing context, so the script node is created but never evaluated and the flag stays false.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-db77bbba",
+      "prompt": "What does this code print?",
+      "topic": "html-sanitization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "<a title=\"&quot;><img src=x>\"></a>"
+        },
+        {
+          "text": "<a title=\"\"><img src=x>\"></a>",
+          "rationale": "The double quote is escaped to &quot; during serialization, so the attribute value cannot be terminated early."
+        },
+        {
+          "text": "<a title=\"&quot;&gt;&lt;img src=x&gt;\"></a>",
+          "rationale": "Angle brackets are not escaped in attribute values, only &, nbsp and the quote character are."
+        },
+        {
+          "text": "<a title=\"\"></a><img src=x>",
+          "rationale": "setAttribute never parses its value as markup, so no img element is created."
+        }
+      ],
+      "code": "const a = document.createElement('a');\na.setAttribute('title', '\"><img src=x>');\nconsole.log(a.outerHTML);",
+      "query": {
+        "explanation": "The HTML serializer escapes &, non-breaking spaces and the double quote inside attribute values, because the quote would otherwise end the value. It leaves < and > alone, since they cannot break out of a quoted attribute. So the stored value `\"><img src=x>` serializes as title=\"&quot;><img src=x>\" and stays a single harmless attribute.",
+        "syntax": "element.setAttribute(name, value); element.outerHTML",
+        "tags": [
+          "attribute-escaping",
+          "serialization",
+          "xss"
+        ],
+        "title": "Attribute serialization escapes quotes but not angle brackets"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-13a683ef",
+      "prompt": "What does this code print?",
+      "topic": "html-sanitization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "javascript:"
+        },
+        {
+          "text": "JaVaScRiPt:",
+          "rationale": "The URL parser lowercases the scheme, so the original casing is not preserved in protocol."
+        },
+        {
+          "text": "javascript",
+          "rationale": "The protocol property always includes the trailing colon."
+        },
+        {
+          "text": "(empty string)",
+          "rationale": "The value parses as a valid absolute URL with a scheme, so protocol is populated."
+        }
+      ],
+      "code": "const a = document.createElement('a');\na.setAttribute('href', 'JaVaScRiPt:alert(1)');\nconsole.log(a.protocol);",
+      "query": {
+        "explanation": "The anchor's protocol property returns the parsed scheme normalized to lowercase with a trailing colon, so mixed-case 'JaVaScRiPt:' becomes 'javascript:'. A sanitizer that compares the raw attribute string against 'javascript:' misses this payload; comparing the normalized protocol against an allowlist of 'http:', 'https:' and 'mailto:' catches it.",
+        "syntax": "anchorElement.protocol",
+        "tags": [
+          "url-scheme",
+          "javascript-uri",
+          "normalization"
+        ],
+        "title": "URL scheme checks must be case-insensitive"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-11e26440",
+      "prompt": "What value does d.textContent hold after this runs?",
+      "topic": "html-sanitization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Hi!"
+        },
+        {
+          "text": "Hi",
+          "rationale": "textContent includes the text of nested elements too, so the b element's '!' is appended."
+        },
+        {
+          "text": "<img src=x onerror=\"alert(1)\">Hi<b>!</b>",
+          "rationale": "That is innerHTML; textContent never returns markup."
+        },
+        {
+          "text": "(empty string)",
+          "rationale": "Two text nodes were parsed, so the concatenated text is not empty."
+        }
+      ],
+      "code": "const d = document.createElement('div');\nd.innerHTML = '<img src=x onerror=\"alert(1)\">Hi<b>!</b>';",
+      "query": {
+        "explanation": "innerHTML parses the string into an img element, a text node and a b element. textContent then concatenates the text of every descendant, dropping tags and attributes entirely: the img contributes nothing and the b contributes '!', giving 'Hi!'. This tag-stripping trick keeps text only, so it cannot preserve any allowed formatting.",
+        "syntax": "element.innerHTML = html; element.textContent",
+        "tags": [
+          "tag-stripping",
+          "textContent",
+          "xss"
+        ],
+        "title": "Reading textContent strips tags but keeps nested text"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-c3f0cefc",
+      "prompt": "Is `tagName` reported as `IMG` here even though the markup is lowercase?",
+      "topic": "html-sanitization",
+      "answer": true,
+      "code": "const d = document.createElement('div');\nd.innerHTML = '<img src=x>';\nconst name = d.firstElementChild.tagName;",
+      "query": {
+        "explanation": "For elements in the HTML namespace, tagName (and nodeName) returns the name uppercased, regardless of how it was written in the source. A tag allowlist that tests tagName against lowercase strings like 'img' therefore rejects everything; compare against uppercase names or use localName, which stays lowercase.",
+        "syntax": "element.tagName vs element.localName",
+        "tags": [
+          "tagName",
+          "allowlist",
+          "case-sensitivity"
+        ],
+        "title": "tagName is uppercase for HTML elements"
+      },
+      "rationale": "HTML elements always report tagName in uppercase, so lowercase source markup still yields 'IMG'; only localName stays lowercase.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-aedc5090",
+      "prompt": "What does this code print?",
+      "topic": "html-sanitization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "<a href=\"#x\" class=\"btn\">t</a>"
+        },
+        {
+          "text": "<a href=\"#x\" onclick=\"alert(1)\" class=\"btn\">t</a>",
+          "rationale": "onclick is not in the allowlist, so removeAttribute deletes it before serialization."
+        },
+        {
+          "text": "<a class=\"btn\" href=\"#x\">t</a>",
+          "rationale": "Removing an attribute does not reorder the rest; href still precedes class."
+        },
+        {
+          "text": "<a>t</a>",
+          "rationale": "href and class are in the allowlist and are kept."
+        }
+      ],
+      "code": "const d = document.createElement('div');\nd.innerHTML = '<a href=\"#x\" onclick=\"alert(1)\" class=\"btn\">t</a>';\nconst el = d.firstElementChild;\nconst allowed = new Set(['href', 'class']);\nfor (const n of el.getAttributeNames()) {\n  if (!allowed.has(n)) el.removeAttribute(n);\n}\nconsole.log(el.outerHTML);",
+      "query": {
+        "explanation": "getAttributeNames returns a static array of lowercase attribute names, so it is safe to iterate while removing attributes. Only onclick is outside the allowlist, so it is dropped and the surviving attributes keep their original document order, giving <a href=\"#x\" class=\"btn\">t</a>. Allowlisting attributes is what stops event handlers from surviving sanitization.",
+        "syntax": "element.getAttributeNames(); element.removeAttribute(name)",
+        "tags": [
+          "allowlist",
+          "attributes",
+          "event-handlers"
+        ],
+        "title": "Attribute allowlisting with getAttributeNames"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-195daa43",
+      "prompt": "What does this code print?",
+      "topic": "html-sanitization",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "\" onerror=\"alert(1)\">"
+        },
+        {
+          "text": "(empty string)",
+          "rationale": "The regex stops at the quoted > inside src, so it cannot consume the whole tag."
+        },
+        {
+          "text": "\" onerror=\"alert(1)\"",
+          "rationale": "The final > is not matched by any remaining `<...>` pattern, so it survives in the output."
+        },
+        {
+          "text": "<img src=\"x>\" onerror=\"alert(1)\">",
+          "rationale": "The pattern does match a prefix of the string, so part of it is removed."
+        }
+      ],
+      "code": "const payload = '<img src=\"x>\" onerror=\"alert(1)\">';\nconsole.log(payload.replace(/<[^>]*>/g, ''));",
+      "query": {
+        "explanation": "The regex treats the first > it meets as the end of the tag, but that > is inside the quoted src value. It removes only `<img src=\"x>` and leaves the trailing `\" onerror=\"alert(1)\">` as text. Injected into another attribute context that remainder can break out, which is why tag-stripping regexes are unreliable: a real HTML parser is needed.",
+        "syntax": "String.prototype.replace(/<[^>]*>/g, '')",
+        "tags": [
+          "regex-filter",
+          "parser-differential",
+          "xss"
+        ],
+        "title": "Regex tag stripping misparses quoted angle brackets"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-996bd663",
+      "prompt": "Do the parsed nodes land in `t.content` rather than as children of `t`?",
+      "topic": "html-sanitization",
+      "answer": true,
+      "code": "const t = document.createElement('template');\nt.innerHTML = '<img src=x onerror=\"alert(1)\">';\nconst direct = t.children.length;\nconst inside = t.content.children.length;",
+      "query": {
+        "explanation": "A template element stores its parsed markup in a separate DocumentFragment exposed as .content, which belongs to an inert template document. So t.children is empty while t.content.children holds the img. Sanitizers walk .content because nothing there loads resources or runs handlers until it is cloned into the live document.",
+        "syntax": "template.innerHTML; template.content",
+        "tags": [
+          "template",
+          "inert-document",
+          "sanitizer-design"
+        ],
+        "title": "template.innerHTML fills the inert content fragment"
+      },
+      "rationale": "Template parsing redirects children into the .content DocumentFragment, so the template itself has zero element children.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-cb5f86b1",
+      "prompt": "What does this code print?",
+      "topic": "url-handling",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "/login"
+        },
+        {
+          "text": "/app/login",
+          "rationale": "That would be the result for a path-relative reference like 'login', not for one beginning with '/'."
+        },
+        {
+          "text": "/app/page/login",
+          "rationale": "The base path is not treated as a directory prefix here; a leading slash discards it entirely."
+        },
+        {
+          "text": "/app/page",
+          "rationale": "The base path is replaced by the reference, so it does not survive in the result."
+        }
+      ],
+      "code": "const u = new URL('/login', 'https://example.com/app/page');\nconsole.log(u.pathname);",
+      "query": {
+        "explanation": "A reference that starts with a single '/' is root-relative: it replaces the whole path of the base URL, keeping only scheme and authority. So the base path '/app/page' is discarded and the result is '/login'.",
+        "syntax": "new URL(input, base)",
+        "tags": [
+          "url",
+          "parsing",
+          "resolution"
+        ],
+        "title": "Relative URL resolution with a leading slash"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-b648986d",
+      "prompt": "Does the protocol property keep the trailing colon?",
+      "topic": "url-handling",
+      "answer": true,
+      "code": "const u = new URL('https://example.test/a');\nconsole.log(u.protocol);",
+      "query": {
+        "explanation": "The protocol getter returns the scheme plus ':' (for example 'https:'), unlike comparisons people often write against a bare 'https'. Allowlist checks must compare with the colon included.",
+        "syntax": "url.protocol",
+        "tags": [
+          "url",
+          "protocol",
+          "validation"
+        ],
+        "title": "URL.protocol includes the colon"
+      },
+      "rationale": "The value is 'https:', not 'https', so claiming the colon is stripped is wrong and a check against 'https' would fail.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-9d9a077e",
+      "prompt": "What does this code print?",
+      "topic": "url-handling",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "example.com:8443"
+        },
+        {
+          "text": "example.com",
+          "rationale": "That is the value of hostname; host also carries the explicit non-default port."
+        },
+        {
+          "text": "https://example.com:8443",
+          "rationale": "host never includes the scheme; that string resembles origin instead."
+        },
+        {
+          "text": "8443",
+          "rationale": "The port alone is exposed by url.port, not by url.host."
+        }
+      ],
+      "code": "const u = new URL('https://example.com:8443/x');\nconsole.log(u.host);",
+      "query": {
+        "explanation": "host is hostname plus the port when a non-default port is present, while hostname is only the registered name. Security checks that want just the name should read hostname.",
+        "syntax": "url.host / url.hostname",
+        "tags": [
+          "url",
+          "host",
+          "port"
+        ],
+        "title": "host versus hostname"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-d12cc0e8",
+      "prompt": "What does this code print?",
+      "topic": "url-handling",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "https://evil.com"
+        },
+        {
+          "text": "https://good.com",
+          "rationale": "The base supplies only the scheme here; the '//' form overrides the host completely."
+        },
+        {
+          "text": "//evil.com",
+          "rationale": "origin is always serialized with its scheme when the scheme is http or https."
+        },
+        {
+          "text": "null",
+          "rationale": "http and https URLs have a tuple origin, so a null origin is not produced."
+        }
+      ],
+      "code": "const u = new URL('//evil.com/p', 'https://good.com/a');\nconsole.log(u.origin);",
+      "query": {
+        "explanation": "A reference starting with '//' is scheme-relative: it inherits only the scheme from the base and supplies a brand new authority. The host becomes evil.com, which is why '//' redirect targets are a classic open-redirect bug.",
+        "syntax": "new URL('//host/path', base)",
+        "tags": [
+          "url",
+          "open-redirect",
+          "origin"
+        ],
+        "title": "Protocol-relative references change the authority"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-e9c507aa",
+      "prompt": "For a repeated query key, does get return the first value?",
+      "topic": "url-handling",
+      "answer": true,
+      "code": "const u = new URL('https://example.test/?x=1&x=2');\nconsole.log(u.searchParams.get('x'));",
+      "query": {
+        "explanation": "get returns the first matching value in document order; getAll returns every value. Parameter-pollution bugs happen when a proxy and an app disagree about which duplicate wins.",
+        "syntax": "searchParams.get(name) / getAll(name)",
+        "tags": [
+          "url",
+          "query-string",
+          "parameter-pollution"
+        ],
+        "title": "searchParams.get with duplicate keys"
+      },
+      "rationale": "get yields '1', the first occurrence, so expecting the last value '2' or a joined '1,2' is wrong.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-c1594490",
+      "prompt": "What does this code print?",
+      "topic": "url-handling",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "a%26b%3Dc"
+        },
+        {
+          "text": "a&b=c",
+          "rationale": "That is the encodeURI result; encodeURIComponent does escape '&' and '='."
+        },
+        {
+          "text": "a%26b=c",
+          "rationale": "'=' is also a reserved delimiter and is encoded as %3D."
+        },
+        {
+          "text": "a&b%3Dc",
+          "rationale": "'&' is escaped too, becoming %26."
+        }
+      ],
+      "code": "console.log(encodeURIComponent('a&b=c'));",
+      "query": {
+        "explanation": "encodeURIComponent percent-encodes reserved delimiters such as '&' and '=' ('%26' and '%3D'), which is what makes it safe for a single query value. encodeURI leaves those characters intact.",
+        "syntax": "encodeURIComponent(str)",
+        "tags": [
+          "url",
+          "encoding",
+          "query-string"
+        ],
+        "title": "encodeURIComponent escapes query delimiters"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-6fa56541",
+      "prompt": "What does this code print?",
+      "topic": "url-handling",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "javascript:"
+        },
+        {
+          "text": "http:",
+          "rationale": "No scheme substitution occurs; the parser keeps the scheme that was written."
+        },
+        {
+          "text": "about:",
+          "rationale": "Nothing rewrites the input to about:; that value appears for URLs like about:blank."
+        },
+        {
+          "text": "(empty string)",
+          "rationale": "Parsing succeeds and protocol is always non-empty for a successfully parsed URL."
+        }
+      ],
+      "code": "const u = new URL('javascript:alert(1)');\nconsole.log(u.protocol);",
+      "query": {
+        "explanation": "The URL parser accepts javascript: as a valid non-special scheme, so constructing it throws nothing. Only an explicit scheme allowlist (http:/https:) blocks it before the value reaches an href or src.",
+        "syntax": "new URL(input).protocol",
+        "tags": [
+          "url",
+          "javascript-uri",
+          "xss"
+        ],
+        "title": "Dangerous schemes parse successfully"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-e4d44205",
+      "prompt": "Is url.port an empty string when the default port is written explicitly?",
+      "topic": "url-handling",
+      "answer": true,
+      "code": "const u = new URL('https://example.test:443/a');\nconsole.log(JSON.stringify(u.port));",
+      "query": {
+        "explanation": "The URL parser drops a port that equals the scheme's default, so https with :443 yields port '' and the serialized href omits it. Comparing raw strings instead of parsed components misses this normalization.",
+        "syntax": "url.port",
+        "tags": [
+          "url",
+          "normalization",
+          "port"
+        ],
+        "title": "Default ports are normalized away"
+      },
+      "rationale": "443 is the default for https and is removed during parsing, so expecting the string '443' is wrong.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-09cdc714",
+      "prompt": "What does this code print?",
+      "topic": "url-handling",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "q=a+b"
+        },
+        {
+          "text": "q=a%20b",
+          "rationale": "%20 is the encodeURIComponent style; form-urlencoded serialization uses '+' for a space."
+        },
+        {
+          "text": "q=a b",
+          "rationale": "A raw space is never emitted; serialization always encodes it."
+        },
+        {
+          "text": "q=ab",
+          "rationale": "The space is encoded, not deleted from the value."
+        }
+      ],
+      "code": "console.log(new URLSearchParams({ q: 'a b' }).toString());",
+      "query": {
+        "explanation": "URLSearchParams uses application/x-www-form-urlencoded serialization, where a space becomes '+'. encodeURIComponent would produce '%20' instead, so the two helpers are not interchangeable.",
+        "syntax": "new URLSearchParams(init).toString()",
+        "tags": [
+          "url",
+          "encoding",
+          "form-urlencoded"
+        ],
+        "title": "URLSearchParams serializes spaces as plus"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-e7a001ef",
+      "prompt": "What does this code print?",
+      "topic": "url-handling",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "/etc/passwd"
+        },
+        {
+          "text": "/files/../../etc/passwd",
+          "rationale": "The pathname getter returns the normalized path, with dot segments already resolved."
+        },
+        {
+          "text": "/../etc/passwd",
+          "rationale": "A '..' that would escape the root is dropped rather than preserved in the output."
+        },
+        {
+          "text": "/files/etc/passwd",
+          "rationale": "Both '..' segments are applied: one removes 'files' and the extra one is discarded at the root."
+        }
+      ],
+      "code": "const u = new URL('https://example.com/files/../../etc/passwd');\nconsole.log(u.pathname);",
+      "query": {
+        "explanation": "The parser removes '.' and '..' segments while building the path, and extra '..' at the root are simply discarded. So the path collapses to '/etc/passwd' — a filter that only inspects the raw string for '..' can be bypassed.",
+        "syntax": "new URL(input).pathname",
+        "tags": [
+          "url",
+          "path-traversal",
+          "normalization"
+        ],
+        "title": "Dot-segment normalization in paths"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-51b613bd",
+      "prompt": "Does a message posted with targetOrigin \"*\" reach a listener on any receiver origin?",
+      "topic": "postmessage",
+      "answer": true,
+      "query": {
+        "explanation": "targetOrigin \"*\" tells the browser to skip the origin check, so the message is delivered to whatever document currently occupies the target window. That is why \"*\" is unsafe for secrets: a navigated or hijacked frame still receives the data. Always pass the exact expected origin instead.",
+        "syntax": "otherWindow.postMessage(message, targetOrigin)",
+        "tags": [
+          "postmessage",
+          "targetorigin",
+          "origin"
+        ],
+        "title": "targetOrigin wildcard"
+      },
+      "rationale": "The wildcard imposes no origin restriction at all, so delivery is not blocked; only an explicit targetOrigin URL is compared against the receiving document's origin.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-b0e190e2",
+      "prompt": "What does event.origin hold for a message sent from https://app.example.com:8443/inbox?x=1?",
+      "topic": "postmessage",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "https://app.example.com:8443"
+        },
+        {
+          "text": "https://app.example.com:8443/inbox",
+          "rationale": "An origin never includes the path; only scheme, host, and port are serialized."
+        },
+        {
+          "text": "app.example.com:8443",
+          "rationale": "The scheme is part of the origin and is always present in event.origin."
+        },
+        {
+          "text": "https://app.example.com",
+          "rationale": "8443 is not the default port for https, so it is kept in the origin."
+        }
+      ],
+      "query": {
+        "explanation": "event.origin is the serialized origin of the sending document: scheme, host, and port only. Path, query, and fragment are never included, and a non-default port is kept. Comparing event.origin with a full URL string will therefore always fail.",
+        "syntax": "event.origin // \"scheme://host[:port]\"",
+        "tags": [
+          "postmessage",
+          "origin",
+          "messageevent"
+        ],
+        "title": "Shape of event.origin"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-bf933588",
+      "prompt": "What is event.origin for a message sent from a document loaded over file://?",
+      "topic": "postmessage",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "null"
+        },
+        {
+          "text": "file://",
+          "rationale": "The scheme alone is not the serialization; opaque origins serialize to the string \"null\"."
+        },
+        {
+          "text": "file:///",
+          "rationale": "No trailing path is produced, and file origins are opaque rather than scheme-based."
+        },
+        {
+          "text": "(the empty string)",
+          "rationale": "event.origin is never empty; an opaque origin is reported as the four-character string \"null\"."
+        }
+      ],
+      "query": {
+        "explanation": "file: URLs and sandboxed documents have an opaque origin, which serializes to the literal string \"null\". A receiver must treat \"null\" as untrusted, because every opaque-origin document reports the same value and cannot be distinguished.",
+        "syntax": "if (event.origin === 'null') return;",
+        "tags": [
+          "postmessage",
+          "origin",
+          "opaque-origin"
+        ],
+        "title": "Opaque origins in messages"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-fddf593e",
+      "prompt": "What happens when this payload is posted to another window?",
+      "topic": "postmessage",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "It throws a DataCloneError"
+        },
+        {
+          "text": "The function property is silently dropped",
+          "rationale": "Unlike JSON.stringify, structured clone does not skip functions; it fails loudly."
+        },
+        {
+          "text": "The function arrives as a string",
+          "rationale": "No source serialization happens; functions are simply unclonable."
+        },
+        {
+          "text": "The function arrives callable",
+          "rationale": "Code cannot cross a realm boundary through structured clone."
+        }
+      ],
+      "code": "const payload = { id: 7, onDone() { return 1; } };\notherWindow.postMessage(payload, '*');",
+      "query": {
+        "explanation": "postMessage copies data with the structured clone algorithm, which has no representation for functions. Encountering one aborts the whole clone with a DataCloneError DOMException, so nothing is sent at all. Send plain data and keep behaviour on the receiving side.",
+        "syntax": "structuredClone(value) // same algorithm postMessage uses",
+        "tags": [
+          "postmessage",
+          "structured-clone",
+          "dataclone"
+        ],
+        "title": "Structured clone and functions"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-dfe81133",
+      "prompt": "Does a Date inside a posted message arrive on the other side as a Date object?",
+      "topic": "postmessage",
+      "answer": true,
+      "query": {
+        "explanation": "The structured clone algorithm understands many built-ins: Date, RegExp, Map, Set, Blob, ArrayBuffer, and typed arrays all survive a postMessage round trip with their types intact. This is one of the main advantages over JSON.parse(JSON.stringify(x)).",
+        "syntax": "structuredClone({ t: new Date() })",
+        "tags": [
+          "postmessage",
+          "structured-clone",
+          "date"
+        ],
+        "title": "Clonable built-ins"
+      },
+      "rationale": "Structured clone, unlike JSON serialization, has native support for Date and reconstructs a real Date with the same time value instead of a string or number.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-b3be92f6",
+      "prompt": "What does the sender log after the receiver assigns e.data.count = 99?",
+      "topic": "postmessage",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "1"
+        },
+        {
+          "text": "99",
+          "rationale": "That would require shared references across realms, which postMessage does not create."
+        },
+        {
+          "text": "undefined",
+          "rationale": "The sender's object is untouched and still owns its count property."
+        },
+        {
+          "text": "NaN",
+          "rationale": "No arithmetic or coercion happens here; the original value is simply unchanged."
+        }
+      ],
+      "code": "const shared = { count: 1 };\nframe.contentWindow.postMessage(shared, '*');\n// receiver: window.onmessage = e => { e.data.count = 99; };\n// later, in the sender:\nconsole.log(shared.count);",
+      "query": {
+        "explanation": "postMessage transfers a deep copy of the data, so event.data is a separate object graph in the receiving realm. Mutating it cannot affect the sender's object; the two windows never share mutable state unless you use SharedArrayBuffer.",
+        "syntax": "event.data // deep copy of the posted value",
+        "tags": [
+          "postmessage",
+          "structured-clone",
+          "mutation"
+        ],
+        "title": "Messages are copies, not references"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-70d9c568",
+      "prompt": "Which check accepts https://trusted.example but not https://trusted.example.evil.com?",
+      "topic": "postmessage",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "e.origin === \"https://trusted.example\""
+        },
+        {
+          "text": "e.origin.startsWith(\"https://trusted.example\")",
+          "rationale": "https://trusted.example.evil.com also starts with that prefix, so the attacker passes."
+        },
+        {
+          "text": "e.origin.includes(\"trusted.example\")",
+          "rationale": "Any hostname containing that substring matches, including subdomains of attacker domains."
+        },
+        {
+          "text": "e.origin.indexOf(\"https://trusted.example\") > -1",
+          "rationale": "This is just a substring search, so the longer attacker origin matches too."
+        }
+      ],
+      "query": {
+        "explanation": "Origin validation must be an exact string equality test against an allow-listed origin. Prefix or substring checks match attacker-controlled hostnames such as trusted.example.evil.com, which is a different origin entirely, so they let hostile frames through.",
+        "syntax": "if (event.origin !== 'https://trusted.example') return;",
+        "tags": [
+          "postmessage",
+          "origin-validation",
+          "security"
+        ],
+        "title": "Validating event.origin"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-288cd7de",
+      "prompt": "Is the path of a targetOrigin URL ignored when the browser matches the receiver's origin?",
+      "topic": "postmessage",
+      "answer": true,
+      "query": {
+        "explanation": "The targetOrigin argument is parsed as a URL and reduced to its origin before comparison, so \"https://a.example/deep/path\" behaves exactly like \"https://a.example\". Paths give no extra protection; scope messages per-page with your own message type field instead.",
+        "syntax": "win.postMessage(msg, 'https://a.example')",
+        "tags": [
+          "postmessage",
+          "targetorigin",
+          "origin"
+        ],
+        "title": "How targetOrigin is compared"
+      },
+      "rationale": "Only the origin component of the targetOrigin argument is compared, so adding a path neither narrows nor breaks the match; it is simply discarded during serialization.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-e0a8787a",
+      "prompt": "What happens when this object is posted to another window?",
+      "topic": "postmessage",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "It clones fine and data.self === data"
+        },
+        {
+          "text": "It throws a DataCloneError",
+          "rationale": "Cycles are explicitly supported; DataCloneError is for unclonable types such as functions."
+        },
+        {
+          "text": "It throws RangeError: Maximum call stack size exceeded",
+          "rationale": "The algorithm memoizes visited objects, so it never recurses infinitely."
+        },
+        {
+          "text": "The self property is dropped",
+          "rationale": "Nothing is pruned; the cyclic reference is recreated pointing at the clone."
+        }
+      ],
+      "code": "const node = { name: 'a' };\nnode.self = node;\notherWindow.postMessage(node, '*');",
+      "query": {
+        "explanation": "Structured clone tracks already-visited objects in a memory map, so cyclic graphs are cloned faithfully and the cycle is preserved in the copy. JSON.stringify would throw on the same input, which is another reason postMessage data is not JSON.",
+        "syntax": "const c = structuredClone(node); c.self === c // true",
+        "tags": [
+          "postmessage",
+          "structured-clone",
+          "cycles"
+        ],
+        "title": "Cycles in structured clone"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-36745348",
+      "prompt": "Does a class instance sent through postMessage still pass instanceof on the receiving side?",
+      "topic": "postmessage",
+      "answer": false,
+      "query": {
+        "explanation": "Structured clone does not transfer prototypes or class identity for ordinary objects: new Token('x') arrives as a plain object with the same fields but no methods. Rehydrate it on the receiving side, for example new Token(event.data.v).",
+        "syntax": "structuredClone(new Token('x')) instanceof Token // false",
+        "tags": [
+          "postmessage",
+          "structured-clone",
+          "prototype"
+        ],
+        "title": "Prototypes are not cloned"
+      },
+      "rationale": "Structured clone copies own enumerable data properties only and gives the result the plain Object prototype, so the class identity and its methods are lost in transit.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-3102c100",
+      "prompt": "What does this code print?",
+      "topic": "prototype-pollution",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "yes"
+        },
+        {
+          "text": "undefined",
+          "rationale": "The merge did reach Object.prototype, so the inherited lookup on a fresh {} succeeds instead of returning undefined."
+        },
+        {
+          "text": "[object Object]",
+          "rationale": "The nested object is merged key by key, so 'polluted' holds the string 'yes', not the wrapper object."
+        },
+        {
+          "text": "TypeError is thrown",
+          "rationale": "Object.prototype is extensible and not frozen here, so adding a new property to it succeeds silently."
+        }
+      ],
+      "code": "function merge(t, s) {\n  for (const k in s) {\n    const v = s[k];\n    if (v && typeof v === 'object') {\n      if (!t[k]) t[k] = {};\n      merge(t[k], v);\n    } else {\n      t[k] = v;\n    }\n  }\n  return t;\n}\n\nmerge({}, JSON.parse('{\"__proto__\":{\"polluted\":\"yes\"}}'));\nconsole.log(String({}.polluted));",
+      "query": {
+        "explanation": "JSON.parse creates a real own property named __proto__, so for...in visits it. Reading t['__proto__'] returns Object.prototype, which is truthy, so the recursion continues straight into Object.prototype and writes 'polluted' there. Every later plain object inherits it, so {}.polluted is \"yes\".",
+        "syntax": "for (const k in s) { ... }",
+        "tags": [
+          "prototype-pollution",
+          "merge",
+          "json"
+        ],
+        "title": "Recursive merge with a __proto__ key"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-bec1dcfe",
+      "prompt": "Does an object made with Object.create(null) expose a property added to Object.prototype?",
+      "topic": "prototype-pollution",
+      "answer": false,
+      "query": {
+        "explanation": "Object.create(null) produces an object with no prototype chain, so inherited keys from Object.prototype are simply not visible on it. This is why prototype-less maps (or Map) are recommended for user-controlled key lookups.",
+        "syntax": "const o = Object.create(null);",
+        "tags": [
+          "prototype-pollution",
+          "mitigation",
+          "object-create"
+        ],
+        "title": "Prototype-less objects as a mitigation"
+      },
+      "rationale": "Answering True would assume the object inherits from Object.prototype, but Object.create(null) gives it an empty prototype chain, so the polluted key is never found.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-8dcffec6",
+      "prompt": "What does this code print?",
+      "topic": "prototype-pollution",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "undefined"
+        },
+        {
+          "text": "true",
+          "rationale": "The write to the frozen Object.prototype never takes effect, so no inherited 'polluted' property exists."
+        },
+        {
+          "text": "false",
+          "rationale": "A failed write leaves the property absent entirely; reading a missing property yields undefined, not false."
+        },
+        {
+          "text": "[Function: Object]",
+          "rationale": "Nothing assigns a function to that key; the lookup simply finds no property at all."
+        }
+      ],
+      "code": "Object.freeze(Object.prototype);\nconst obj = {};\ntry {\n  obj.__proto__.polluted = true;\n} catch (e) {}\nconsole.log(String({}.polluted));",
+      "query": {
+        "explanation": "Object.freeze makes Object.prototype non-extensible and its properties non-writable, so adding 'polluted' fails: silently in sloppy mode, with a TypeError in strict mode (swallowed by the catch here). Either way no new inherited property exists.",
+        "syntax": "Object.freeze(Object.prototype)",
+        "tags": [
+          "prototype-pollution",
+          "object-freeze",
+          "mitigation"
+        ],
+        "title": "Freezing Object.prototype"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-4ef2998b",
+      "prompt": "What does this code print?",
+      "topic": "prototype-pollution",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true"
+        },
+        {
+          "text": "undefined",
+          "rationale": "The guard only rejects the key '__proto__', so the constructor.prototype route still writes to Object.prototype and a fresh {} inherits admin."
+        },
+        {
+          "text": "false",
+          "rationale": "The value written is the boolean true, and the write succeeds, so the inherited value is true."
+        },
+        {
+          "text": "TypeError is thrown",
+          "rationale": "Every intermediate lookup resolves to an object (Object, then Object.prototype), so no property access fails."
+        }
+      ],
+      "code": "function setPath(obj, path, value) {\n  const keys = path.split('.');\n  let cur = obj;\n  for (let i = 0; i < keys.length - 1; i++) {\n    if (keys[i] === '__proto__') return;\n    cur = cur[keys[i]];\n  }\n  cur[keys[keys.length - 1]] = value;\n}\n\nsetPath({}, 'constructor.prototype.admin', true);\nconsole.log(String({}.admin));",
+      "query": {
+        "explanation": "Blocking only the literal key '__proto__' is not enough. Walking 'constructor' from a plain object reaches the Object function, and 'prototype' from there reaches Object.prototype, so the final assignment pollutes the shared prototype anyway.",
+        "syntax": "obj.constructor.prototype",
+        "tags": [
+          "prototype-pollution",
+          "blocklist-bypass",
+          "constructor"
+        ],
+        "title": "constructor.prototype bypasses a __proto__ blocklist"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-59a608fc",
+      "prompt": "Does Object.defineProperty with key \"__proto__\" create an own property instead of changing the prototype?",
+      "topic": "prototype-pollution",
+      "answer": true,
+      "query": {
+        "explanation": "The magic behaviour of __proto__ comes from an accessor on Object.prototype, and accessors only run for ordinary assignment. defineProperty installs a plain own data property named __proto__ and leaves the object's actual prototype untouched.",
+        "syntax": "Object.defineProperty(o, '__proto__', { value })",
+        "tags": [
+          "prototype-pollution",
+          "define-property",
+          "__proto__"
+        ],
+        "title": "defineProperty sidesteps the __proto__ setter"
+      },
+      "rationale": "Answering False would assume defineProperty triggers the inherited __proto__ setter, but property definition bypasses accessors, so the prototype stays Object.prototype and an own key appears.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-708a6846",
+      "prompt": "What does this code print?",
+      "topic": "prototype-pollution",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "admin,undefined"
+        },
+        {
+          "text": "undefined,undefined",
+          "rationale": "The plain object cache inherits from the polluted Object.prototype, so cache.role resolves to 'admin'."
+        },
+        {
+          "text": "admin,admin",
+          "rationale": "Map entries live in internal slots, not on the prototype chain, so get('role') never sees the polluted property."
+        },
+        {
+          "text": "undefined,admin",
+          "rationale": "This reverses both results: the object literal is the vulnerable one and the Map is the safe one."
+        }
+      ],
+      "code": "Object.prototype.role = 'admin';\nconst cache = {};\nconst m = new Map();\nconsole.log([String(cache.role), String(m.get('role'))].join(','));",
+      "query": {
+        "explanation": "A plain object used as a cache inherits from Object.prototype, so cache.role finds the polluted value. Map stores entries in internal slots keyed by value, so m.get('role') is unaffected and returns undefined.",
+        "syntax": "map.get(key)",
+        "tags": [
+          "prototype-pollution",
+          "map",
+          "mitigation"
+        ],
+        "title": "Map lookups ignore prototype pollution"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-e5422f38",
+      "prompt": "Does a for...in loop over {a:1} also visit a property added to Object.prototype?",
+      "topic": "prototype-pollution",
+      "answer": true,
+      "query": {
+        "explanation": "for...in enumerates enumerable string keys on the object and on its whole prototype chain. A property assigned directly to Object.prototype is enumerable, so it leaks into every for...in loop over a plain object; Object.keys or hasOwnProperty filtering avoids this.",
+        "syntax": "for (const k in obj) { ... }",
+        "tags": [
+          "prototype-pollution",
+          "for-in",
+          "enumeration"
+        ],
+        "title": "for...in walks the prototype chain"
+      },
+      "rationale": "Answering False would describe Object.keys, which lists own keys only; for...in also enumerates inherited enumerable keys, so 'hacked' appears.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-9c1bae60",
+      "prompt": "Which blocked() implementation leaves {}.pwned undefined after the payload is merged?",
+      "topic": "prototype-pollution",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "blocks only the key __proto__",
+          "rationale": "The payload uses constructor.prototype instead, so a __proto__-only check lets the recursion reach Object.prototype."
+        },
+        {
+          "text": "blocks __proto__, constructor and prototype"
+        },
+        {
+          "text": "blocks only keys that start with a dollar sign",
+          "rationale": "Neither 'constructor' nor 'prototype' starts with $, so nothing is filtered and the pollution succeeds."
+        },
+        {
+          "text": "blocks nothing because JSON.parse is trusted",
+          "rationale": "JSON.parse happily produces keys named constructor and prototype; the danger is the merge that walks them, not the parse."
+        }
+      ],
+      "code": "const payload = '{\"constructor\":{\"prototype\":{\"pwned\":1}}}';\n\nfunction merge(t, s, blocked) {\n  for (const k in s) {\n    if (blocked(k)) continue;\n    const v = s[k];\n    if (v && typeof v === 'object') {\n      if (!t[k]) t[k] = {};\n      merge(t[k], v, blocked);\n    } else {\n      t[k] = v;\n    }\n  }\n}",
+      "query": {
+        "explanation": "The payload never mentions __proto__; it walks constructor and then prototype to reach Object.prototype. A blocklist must reject __proto__, constructor and prototype (or better, only copy own keys onto a prototype-less target) to stop this class of payload.",
+        "syntax": "if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;",
+        "tags": [
+          "prototype-pollution",
+          "blocklist",
+          "merge"
+        ],
+        "title": "Choosing a complete key blocklist"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-cab065db",
+      "prompt": "What does this code print?",
+      "topic": "prototype-pollution",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "<img onmouseover=\"alert(1)\">"
+        },
+        {
+          "text": "<img>",
+          "rationale": "The truthiness check reads the inherited polluted value, so the attribute is actually set on the element."
+        },
+        {
+          "text": "<img src=\"\" onmouseover=\"alert(1)\">",
+          "rationale": "cfg.src is undefined and therefore falsy, so setAttribute is never called for src and no src attribute appears."
+        },
+        {
+          "text": "<img onmouseover=\"alert(1)\"></img>",
+          "rationale": "img is a void element, so its serialisation has no closing tag."
+        }
+      ],
+      "code": "Object.prototype.onmouseover = 'alert(1)';\nconst el = document.createElement('img');\nconst cfg = {};\n\nfor (const k of ['src', 'onmouseover']) {\n  if (cfg[k]) el.setAttribute(k, cfg[k]);\n}\nconsole.log(el.outerHTML);",
+      "query": {
+        "explanation": "cfg is an empty plain object, but cfg.onmouseover is found on the polluted Object.prototype and is truthy, so the loop writes a handler attribute the caller never supplied. cfg.src stays undefined, so no src attribute is added.",
+        "syntax": "element.setAttribute(name, value)",
+        "tags": [
+          "prototype-pollution",
+          "dom",
+          "setattribute"
+        ],
+        "title": "Pollution turns an empty config into attributes"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-ed9d8674",
+      "prompt": "What does this code print?",
+      "topic": "prototype-pollution",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "x|2"
+        },
+        {
+          "text": "undefined|2",
+          "rationale": "Array index access is ordinary property lookup, so a[2] walks the chain and finds the polluted key on Object.prototype."
+        },
+        {
+          "text": "x|3",
+          "rationale": "length tracks only own indexed elements; an inherited key never increases it."
+        },
+        {
+          "text": "undefined|3",
+          "rationale": "Both parts are wrong: the inherited key is found, and length stays 2."
+        }
+      ],
+      "code": "Object.prototype[2] = 'x';\nconst a = ['a', 'b'];\nconsole.log(String(a[2]) + '|' + a.length);",
+      "query": {
+        "explanation": "Arrays inherit from Array.prototype, which inherits from Object.prototype, so index 2 resolves to the polluted value even though the array owns only two elements. length counts own indexed elements and is unchanged at 2, which makes such bugs easy to miss.",
+        "syntax": "Object.prototype[2] = value",
+        "tags": [
+          "prototype-pollution",
+          "arrays",
+          "length"
+        ],
+        "title": "Polluted numeric keys leak into arrays"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-d264a441",
+      "prompt": "What does this code print?",
+      "topic": "open-redirect",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "https://evil.example/home"
+        },
+        {
+          "text": "https://app.example//evil.example/home",
+          "rationale": "The leading // is parsed as the start of an authority, not as path characters appended to the base path."
+        },
+        {
+          "text": "https://app.example/home",
+          "rationale": "Only the scheme is inherited from the base; the host comes from the payload, so the base host is discarded."
+        },
+        {
+          "text": "//evil.example/home",
+          "rationale": "URL.href always serializes an absolute URL, so the inherited scheme is included."
+        }
+      ],
+      "code": "const base = 'https://app.example/login';\nconst next = '//evil.example/home';\nconsole.log(new URL(next, base).href);",
+      "query": {
+        "explanation": "A target beginning with // is a protocol-relative URL: the parser treats everything after the double slash as the authority and only inherits the scheme from the base. So //evil.example/home resolves to https://evil.example/home, an off-site redirect even though the string never names a scheme.",
+        "syntax": "new URL(input, base)",
+        "tags": [
+          "open-redirect",
+          "url"
+        ],
+        "title": "protocol-relative redirect targets"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-b2952264",
+      "prompt": "does this prefix check accept the redirect target below?",
+      "topic": "open-redirect",
+      "answer": true,
+      "code": "const next = '//evil.example/pwn';\nconsole.log(next.startsWith('/'));",
+      "query": {
+        "explanation": "startsWith('/') returns true for //evil.example/pwn because the string does begin with a slash, yet the URL parser reads it as a protocol-relative absolute URL pointing at another host. A local-path check must also reject a second leading slash (and a leading backslash).",
+        "syntax": "String.prototype.startsWith(prefix)",
+        "tags": [
+          "open-redirect",
+          "validation"
+        ],
+        "title": "startsWith('/') is not a local-path check"
+      },
+      "rationale": "The check cannot be false: the payload literally begins with a slash character, which is exactly what startsWith('/') tests, so the off-site target is accepted.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-c68a5e26",
+      "prompt": "does this suffix check accept the hostname below?",
+      "topic": "open-redirect",
+      "answer": true,
+      "code": "const u = new URL('https://notexample.com/x');\nconsole.log(u.hostname.endsWith('example.com'));",
+      "query": {
+        "explanation": "'notexample.com'.endsWith('example.com') is true because the comparison ignores label boundaries. A domain allow-list must compare the full hostname, or require a dot prefix such as hostname === 'example.com' || hostname.endsWith('.example.com').",
+        "syntax": "String.prototype.endsWith(suffix)",
+        "tags": [
+          "open-redirect",
+          "validation"
+        ],
+        "title": "endsWith allows sibling domains"
+      },
+      "rationale": "It cannot be false: the final characters of notexample.com are exactly example.com, and endsWith does no DNS-label boundary check, so the attacker domain passes.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-328c1912",
+      "prompt": "Which check returns false for every entry in untrusted and true for allowed?",
+      "topic": "open-redirect",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "t.startsWith('/')",
+          "rationale": "//evil.example begins with a slash, so this check accepts the protocol-relative payload."
+        },
+        {
+          "text": "!t.startsWith('//')",
+          "rationale": "/\\evil.example does not start with //, yet the parser normalizes the backslash and resolves it to evil.example."
+        },
+        {
+          "text": "new URL(t, base).origin === new URL(base).origin"
+        },
+        {
+          "text": "t.includes('app.example')",
+          "rationale": "Both https://app.example@evil.example and https://app.example.evil.com contain that substring while pointing elsewhere."
+        }
+      ],
+      "code": "const base = 'https://app.example/login';\nconst untrusted = [\n  '//evil.example',\n  '/\\\\evil.example',\n  'https://app.example@evil.example',\n  'https://app.example.evil.com'\n];\nconst allowed = '/dashboard';",
+      "query": {
+        "explanation": "String-level checks miss at least one bypass: a leading // is still a slash, a backslash normalizes to a slash, userinfo smuggles a trusted-looking label, and a substring match hits lookalike domains. Resolving the target against the base and comparing the resulting origin handles all four while still allowing /dashboard.",
+        "syntax": "new URL(t, base).origin === new URL(base).origin",
+        "tags": [
+          "open-redirect",
+          "validation"
+        ],
+        "title": "resolve, then compare origins"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-eb41f8e3",
+      "prompt": "does the parsed target satisfy this http scheme allow list?",
+      "topic": "open-redirect",
+      "answer": false,
+      "code": "const u = new URL('javascript:alert(1)', 'https://app.example/');\nconsole.log(u.protocol === 'https:' || u.protocol === 'http:');",
+      "query": {
+        "explanation": "javascript:alert(1) is an absolute URL, so the base is ignored and u.protocol is 'javascript:'. Neither branch of the allow-list matches, so the check prints false. This is why redirect code should test the parsed protocol rather than assume a relative string.",
+        "syntax": "url.protocol",
+        "tags": [
+          "open-redirect",
+          "url"
+        ],
+        "title": "scheme allow-list on a parsed redirect target"
+      },
+      "rationale": "True would require the base scheme to win, but the target already has its own scheme, so protocol is 'javascript:' and both comparisons fail.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-a33f2b66",
+      "prompt": "What does this code print?",
+      "topic": "open-redirect",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "//evil.example/x"
+        },
+        {
+          "text": "blocked",
+          "rationale": "The check runs on the percent-encoded text, which starts with '%', so the blocking branch is never taken."
+        },
+        {
+          "text": "%2F%2Fevil.example/x",
+          "rationale": "The accepted branch calls decodeURIComponent, so the %2F sequences are turned back into slashes before printing."
+        },
+        {
+          "text": "/evil.example/x",
+          "rationale": "Both %2F escapes decode, producing two slashes rather than one."
+        }
+      ],
+      "code": "const raw = '%2F%2Fevil.example/x';\nconsole.log(!raw.startsWith('//') ? decodeURIComponent(raw) : 'blocked');",
+      "query": {
+        "explanation": "The guard inspects the still-encoded string, where %2F%2F does not look like //, so the target passes. decodeURIComponent then turns it back into //evil.example/x, the very protocol-relative value the check was meant to stop. Always decode (and resolve) first, then validate.",
+        "syntax": "decodeURIComponent(encoded)",
+        "tags": [
+          "open-redirect",
+          "encoding"
+        ],
+        "title": "validating before decoding"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-00e3439e",
+      "prompt": "What does this code print?",
+      "topic": "open-redirect",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "/dash?a=1"
+        },
+        {
+          "text": "/dash?a=1#x",
+          "rationale": "The fragment is exposed as u.hash and is never concatenated, so #x is dropped."
+        },
+        {
+          "text": "/",
+          "rationale": "The relative target inherits the base origin, so the origin comparison matches and the fallback is not used."
+        },
+        {
+          "text": "https://app.example/dash?a=1",
+          "rationale": "Only pathname and search are returned, so no scheme or host appears in the result."
+        }
+      ],
+      "code": "function safeNext(raw, base) {\n  const u = new URL(raw, base);\n  if (u.origin !== new URL(base).origin) return '/';\n  return u.pathname + u.search;\n}\nconsole.log(safeNext('/dash?a=1#x', 'https://app.example/login'));",
+      "query": {
+        "explanation": "The target resolves to https://app.example/dash?a=1#x, whose origin matches the base, so the function returns only the pathname plus search. The fragment lives in u.hash and is therefore dropped, which is the point of rebuilding the value from parsed components instead of echoing user input.",
+        "syntax": "url.pathname, url.search, url.hash",
+        "tags": [
+          "open-redirect",
+          "url"
+        ],
+        "title": "rebuilding a same-origin redirect target"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-2b9b604a",
+      "prompt": "Does this protocol-relative redirect target keep the user on the base URL's host?",
+      "topic": "open-redirect",
+      "answer": false,
+      "code": "const base = \"https://redirect.example/r\";\nconst target = \"//evil.example/pwn\";\nconst u = new URL(target, base);\nconsole.log(u.host === new URL(base).host);",
+      "query": {
+        "explanation": "A target beginning with `//` is a protocol-relative URL: resolution keeps the base scheme but replaces the authority, so `//evil.example/pwn` becomes `https://evil.example/pwn`. Validators that only reject strings starting with `http://` or `https://`, or that treat any leading `/` as \"local\", are bypassed by this form. Compare the resolved `origin` against an allow-list instead of inspecting the raw string.",
+        "syntax": "new URL(target, base).host",
+        "tags": [
+          "open-redirect",
+          "url-parsing",
+          "protocol-relative"
+        ],
+        "title": "Protocol-relative redirect targets"
+      },
+      "rationale": "Answering True is wrong because `//` starts a new authority: the resolved host is evil.example, not redirect.example, even though only the scheme was inherited.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-d6d391ce",
+      "prompt": "What does this code print?",
+      "topic": "open-redirect",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "evil.example"
+        },
+        {
+          "text": "trusted.example",
+          "rationale": "`trusted.example` sits before the `@`, so it is parsed as the userinfo (username), and is available via `u.username`, not `u.hostname`."
+        },
+        {
+          "text": "trusted.example@evil.example",
+          "rationale": "`hostname` never includes userinfo; the `@` and everything before it are stripped out of the host component during parsing."
+        },
+        {
+          "text": "\"\" (empty string)",
+          "rationale": "The URL is valid and has a real authority, so parsing succeeds and `hostname` is populated rather than empty."
+        }
+      ],
+      "code": "const u = new URL(\"https://trusted.example@evil.example/login\");\nconsole.log(u.hostname);",
+      "query": {
+        "explanation": "Everything between `//` and the first `@` is the userinfo component, not the host. So in `https://trusted.example@evil.example/login` the browser connects to evil.example and exposes `trusted.example` only as a username. Checks like `target.includes(\"trusted.example\")` or `startsWith(\"https://trusted.example\")` pass while the user lands on the attacker's site. Always read `hostname`/`origin` from a parsed URL.",
+        "syntax": "new URL(str).hostname",
+        "tags": [
+          "open-redirect",
+          "userinfo",
+          "url-parsing"
+        ],
+        "title": "Userinfo in redirect targets"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-dcd3d371",
+      "prompt": "Which target value makes safe() return true?",
+      "topic": "open-redirect",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "/dashboard?next=2"
+        },
+        {
+          "text": "http://app.example/",
+          "rationale": "Its origin is `http://app.example`, which is a different string from the allow-listed `https://app.example`, and the protocol check also fails."
+        },
+        {
+          "text": "//app.example.evil.test/",
+          "rationale": "The protocol-relative form resolves to origin `https://app.example.evil.test`, an attacker host that is not in the allow-list."
+        },
+        {
+          "text": "https://app.example.evil.test/",
+          "rationale": "`app.example` here is only a label prefix of a different registrable domain, so the origin `https://app.example.evil.test` is not allow-listed."
+        }
+      ],
+      "code": "const ALLOWED = new Set([\"https://app.example\"]);\nfunction safe(target) {\n  try {\n    const u = new URL(target, \"https://app.example/\");\n    return ALLOWED.has(u.origin) && u.protocol === \"https:\";\n  } catch {\n    return false;\n  }\n}",
+      "query": {
+        "explanation": "Resolving the target against the application base and comparing the full `origin` string is the robust pattern: the origin is scheme + host + port, so scheme downgrades, sibling domains and protocol-relative authorities all produce a value that is absent from the allow-list. A relative path such as `/dashboard?next=2` resolves to `https://app.example/dashboard?next=2`, whose origin matches, so it is the only accepted target here.",
+        "syntax": "ALLOWED.has(new URL(target, base).origin)",
+        "tags": [
+          "open-redirect",
+          "allow-list",
+          "origin"
+        ],
+        "title": "Origin allow-lists for redirects"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-a56788fb",
+      "prompt": "Which directive applies to script loading under this header?",
+      "topic": "csp",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "default-src"
+        },
+        {
+          "text": "img-src",
+          "rationale": "img-src only covers image loads; it is never consulted for script requests."
+        },
+        {
+          "text": "script-src-elem",
+          "rationale": "script-src-elem is not declared in this header, so it cannot supply a source list."
+        },
+        {
+          "text": "no directive applies, so the script loads unrestricted",
+          "rationale": "A missing script-src falls back to default-src instead of leaving scripts unrestricted."
+        }
+      ],
+      "code": "Content-Security-Policy: default-src 'self' https:; img-src 'self'",
+      "query": {
+        "explanation": "Fetch directives such as script-src, img-src and connect-src fall back to default-src when they are absent. Here no script-src (or script-src-elem) is declared, so script requests are checked against default-src's list ('self' https:). Only a few directives, like frame-ancestors and base-uri, have no default-src fallback.",
+        "syntax": "Content-Security-Policy: default-src <source-list>",
+        "tags": [
+          "csp",
+          "default-src",
+          "fallback"
+        ],
+        "title": "Directive fallback to default-src"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-3bc2e16d",
+      "prompt": "Does a plain inline script with no nonce attribute run under this policy?",
+      "topic": "csp",
+      "answer": false,
+      "code": "Content-Security-Policy: script-src 'unsafe-inline' 'nonce-abc123'",
+      "query": {
+        "explanation": "When a script-src list contains at least one nonce-source or hash-source, browsers ignore 'unsafe-inline' entirely. That makes the policy backward compatible with old browsers while modern ones require a matching nonce or hash, so a plain inline script with no nonce is blocked here.",
+        "syntax": "script-src 'nonce-<base64>' 'unsafe-inline'",
+        "tags": [
+          "csp",
+          "nonce",
+          "unsafe-inline"
+        ],
+        "title": "Nonces override 'unsafe-inline'"
+      },
+      "rationale": "'unsafe-inline' is discarded as soon as a nonce-source or hash-source appears, so the un-nonced inline script is blocked rather than allowed.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-7224a137",
+      "prompt": "Which image URL does this policy allow?",
+      "topic": "csp",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "https://example.com/logo.png",
+          "rationale": "The wildcard requires at least one subdomain label, so the bare host example.com is not matched."
+        },
+        {
+          "text": "https://cdn.example.com/logo.png"
+        },
+        {
+          "text": "https://cdn.example.com.evil.net/logo.png",
+          "rationale": "The real host here is evil.net; matching compares host labels from the right, not substrings."
+        },
+        {
+          "text": "https://evil.net/cdn.example.com/logo.png",
+          "rationale": "Only the host is matched against the source; the path is irrelevant to this source expression."
+        }
+      ],
+      "code": "Content-Security-Policy: img-src *.example.com",
+      "query": {
+        "explanation": "A wildcard host-source like *.example.com matches hosts that have at least one extra label in front of example.com, so cdn.example.com matches but the bare registrable domain example.com does not. The wildcard also never matches a host that merely contains the string, such as cdn.example.com.evil.net.",
+        "syntax": "img-src *.example.com",
+        "tags": [
+          "csp",
+          "host-source",
+          "wildcard"
+        ],
+        "title": "Wildcard host-source matching"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-b125aba7",
+      "prompt": "Which script-src source list does the browser enforce for this header?",
+      "topic": "csp",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "'self'"
+        },
+        {
+          "text": "https://cdn.example.com",
+          "rationale": "The later duplicate is dropped, not preferred; the first script-src wins."
+        },
+        {
+          "text": "'self' https://cdn.example.com",
+          "rationale": "Duplicate directives in one policy are not merged into a union of sources."
+        },
+        {
+          "text": "none, because duplicates invalidate the whole policy",
+          "rationale": "A duplicate directive is ignored with a warning; the rest of the policy stays in force."
+        }
+      ],
+      "code": "Content-Security-Policy: script-src 'self'; img-src *; script-src https://cdn.example.com",
+      "query": {
+        "explanation": "Within a single policy, a directive name may appear only once. Browsers keep the first occurrence, ignore every later duplicate, and usually log a console warning. So script-src here is just 'self' and the cdn origin is never allowed.",
+        "syntax": "Content-Security-Policy: <directive>; <directive>",
+        "tags": [
+          "csp",
+          "parsing",
+          "duplicates"
+        ],
+        "title": "Duplicate directives inside one policy"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-9eab3ffc",
+      "prompt": "Does this img-src scheme source allow the http image URL below?",
+      "topic": "csp",
+      "answer": false,
+      "code": "Content-Security-Policy: img-src https:\n\n<img src=\"http://img.example.com/a.png\">",
+      "query": {
+        "explanation": "The scheme-source https: allows any host but only over the https scheme. An http:// URL does not match, so the image is blocked. Note the reverse is asymmetric: a source of http: would also permit https URLs, because CSP treats https as a secure upgrade of http.",
+        "syntax": "img-src https:",
+        "tags": [
+          "csp",
+          "scheme-source",
+          "img-src"
+        ],
+        "title": "Scheme-source matching"
+      },
+      "rationale": "https: restricts loads to the https scheme, so the plain http image URL fails the check and is blocked.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-969272e3",
+      "prompt": "Which script origins can load when both headers are sent?",
+      "topic": "csp",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "all three origins",
+          "rationale": "Separate policies are not unioned; a load must pass every policy that is enforced."
+        },
+        {
+          "text": "https://b.example only"
+        },
+        {
+          "text": "https://a.example and https://c.example only",
+          "rationale": "These origins are each missing from one of the two policies, so each is blocked by that policy."
+        },
+        {
+          "text": "no origin, because the two headers conflict",
+          "rationale": "Two headers never cancel out; they are both applied and the effective set is their intersection."
+        }
+      ],
+      "code": "Content-Security-Policy: script-src https://a.example https://b.example\nContent-Security-Policy: script-src https://b.example https://c.example",
+      "query": {
+        "explanation": "Each Content-Security-Policy header creates a separate policy, and a resource must satisfy every one of them. The practical result is the intersection of the source lists, so only https://b.example can load scripts here. Adding a header can only tighten, never loosen, an existing policy.",
+        "syntax": "Content-Security-Policy: <policy>\\nContent-Security-Policy: <policy>",
+        "tags": [
+          "csp",
+          "multiple-policies",
+          "intersection"
+        ],
+        "title": "Multiple CSP headers are enforced independently"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-d7077820",
+      "prompt": "How many directives does this meta policy declare?",
+      "topic": "csp",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "The semicolons separate three independent directives, not one long source list."
+        },
+        {
+          "text": "2",
+          "rationale": "connect-src is a third directive alongside default-src and script-src."
+        },
+        {
+          "text": "3"
+        },
+        {
+          "text": "4",
+          "rationale": "There are only three semicolon-separated segments; https://api.example.com is a source, not a directive."
+        }
+      ],
+      "code": "<meta http-equiv=\"Content-Security-Policy\"\n      content=\"default-src 'none'; script-src 'self'; connect-src https://api.example.com\">",
+      "query": {
+        "explanation": "A policy delivered in a meta element lives in the content attribute as semicolon-separated directives, each starting with a directive name followed by its source list. Splitting on ';' and dropping empty segments counts three directives here: default-src, script-src and connect-src.",
+        "syntax": "<meta http-equiv=\"Content-Security-Policy\" content=\"...\">",
+        "tags": [
+          "csp",
+          "meta",
+          "parsing"
+        ],
+        "title": "Reading a policy from a meta element"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-2e8f61a6",
+      "prompt": "Which directive in this meta policy does the browser ignore?",
+      "topic": "csp",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "script-src",
+          "rationale": "script-src is fully supported in a meta-delivered policy and is enforced here."
+        },
+        {
+          "text": "img-src",
+          "rationale": "img-src works the same in meta as in a header, so the https: restriction applies."
+        },
+        {
+          "text": "frame-ancestors"
+        },
+        {
+          "text": "none of them, meta and header policies behave identically",
+          "rationale": "frame-ancestors, report-uri/report-to and sandbox are all ignored in meta-delivered policies."
+        }
+      ],
+      "code": "<meta http-equiv=\"Content-Security-Policy\"\n      content=\"script-src 'self'; img-src https:; frame-ancestors 'none'\">",
+      "query": {
+        "explanation": "frame-ancestors, report-uri/report-to and sandbox are ignored when the policy is delivered in a meta element, because the document has already begun loading and framing decisions are made by the response headers. To stop framing you must send frame-ancestors in the Content-Security-Policy HTTP header.",
+        "syntax": "Content-Security-Policy: frame-ancestors 'none'",
+        "tags": [
+          "csp",
+          "meta",
+          "frame-ancestors"
+        ],
+        "title": "Directives that only work in a header"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-ecc1086b",
+      "prompt": "Does 'self' allow this script URL for a page served from https://app.example.com?",
+      "topic": "csp",
+      "answer": false,
+      "code": "Content-Security-Policy: script-src 'self'\n\n<script src=\"https://cdn.example.com/x.js\"></script>",
+      "query": {
+        "explanation": "'self' matches only the document's own origin: the same scheme, host and port. A sibling subdomain like cdn.example.com is a different origin, so the script is blocked. Allowing it requires listing https://cdn.example.com (or a wildcard such as *.example.com) explicitly.",
+        "syntax": "script-src 'self' https://cdn.example.com",
+        "tags": [
+          "csp",
+          "self",
+          "same-origin"
+        ],
+        "title": "What 'self' actually matches"
+      },
+      "rationale": "'self' is an exact origin match, not a domain-suffix match, so cdn.example.com is a different origin and the load is blocked.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-77435471",
+      "prompt": "Which source in this script-src list takes effect?",
+      "topic": "csp",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "https://cdn.example.com",
+          "rationale": "'strict-dynamic' makes browsers ignore host-source and scheme-source entries like this one."
+        },
+        {
+          "text": "'nonce-r4nd0m'"
+        },
+        {
+          "text": "'unsafe-inline'",
+          "rationale": "'unsafe-inline' is dropped both by the presence of a nonce and by 'strict-dynamic'."
+        },
+        {
+          "text": "all four sources apply together",
+          "rationale": "'strict-dynamic' deliberately neutralises the allowlist and 'unsafe-inline', leaving only nonce/hash sources."
+        }
+      ],
+      "code": "Content-Security-Policy: script-src 'strict-dynamic' 'nonce-r4nd0m' https://cdn.example.com 'unsafe-inline'",
+      "query": {
+        "explanation": "When 'strict-dynamic' is present, browsers ignore every host-source and scheme-source plus 'unsafe-inline', leaving only nonce and hash sources. Scripts that pass the nonce check may then create further scripts programmatically, which is what makes the policy workable without an allowlist.",
+        "syntax": "script-src 'strict-dynamic' 'nonce-<base64>'",
+        "tags": [
+          "csp",
+          "strict-dynamic",
+          "nonce"
+        ],
+        "title": "'strict-dynamic' discards host and scheme sources"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-988dca67",
+      "prompt": "What value does the browser store for the cookie named pref?",
+      "topic": "cookies",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "a=b=c"
+        },
+        {
+          "text": "a",
+          "rationale": "Only the first segment of the value; the value is not split again at later '=' characters."
+        },
+        {
+          "text": "b=c",
+          "rationale": "This drops the leading 'a=' by splitting at the wrong '='; the split happens at the first '=' in the whole pair."
+        },
+        {
+          "text": "pref=a=b=c",
+          "rationale": "That is the full name/value pair; the stored value excludes the cookie name and the first '='."
+        }
+      ],
+      "code": "Set-Cookie: pref=a=b=c; Path=/; HttpOnly",
+      "query": {
+        "explanation": "A Set-Cookie header is split at the first semicolon to get the name/value pair, and that pair is split at the FIRST '=' only. Everything after that first '=' up to the semicolon is the value, so extra '=' characters stay in the value verbatim.",
+        "syntax": "Set-Cookie: <name>=<value>; <attributes>",
+        "tags": [
+          "cookies",
+          "set-cookie",
+          "parsing"
+        ],
+        "title": "Set-Cookie name/value split"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-e9bdee69",
+      "prompt": "Is a cookie set with Path=/app sent on a request to /application/data?",
+      "topic": "cookies",
+      "answer": false,
+      "query": {
+        "explanation": "Path matching is not plain string prefixing: the request path must equal the cookie path, or the character right after the cookie path in the request path must be '/'. '/application/data' continues with 'l', so /app does not match.",
+        "tags": [
+          "cookies",
+          "path",
+          "scope"
+        ],
+        "title": "Cookie path matching"
+      },
+      "rationale": "A 'true' answer assumes raw prefix matching, but the path-match algorithm requires a '/' boundary after the cookie path, and '/application/data' has 'l' there.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-d6183c98",
+      "prompt": "Which Set-Cookie header satisfies the __Host- prefix rules?",
+      "topic": "cookies",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "__Host-id=1; Secure; Path=/"
+        },
+        {
+          "text": "__Host-id=1; Secure; Path=/; Domain=example.com",
+          "rationale": "A Domain attribute is forbidden for __Host- cookies, so the browser rejects this header."
+        },
+        {
+          "text": "__Host-id=1; Path=/",
+          "rationale": "The Secure attribute is missing, which __Host- cookies require."
+        },
+        {
+          "text": "__Host-id=1; Secure; Path=/admin",
+          "rationale": "__Host- cookies must use Path=/ exactly; any narrower path is rejected."
+        }
+      ],
+      "query": {
+        "explanation": "A cookie whose name starts with __Host- is only accepted if it is marked Secure, has Path=/ exactly, and carries no Domain attribute. That pins the cookie to the single host that set it and blocks subdomain injection.",
+        "syntax": "Set-Cookie: __Host-<name>=<value>; Secure; Path=/",
+        "tags": [
+          "cookies",
+          "prefixes",
+          "hardening"
+        ],
+        "title": "__Host- cookie prefix"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-4defe21a",
+      "prompt": "Is a SameSite=Lax cookie sent on a cross-site top-level GET navigation?",
+      "topic": "cookies",
+      "answer": true,
+      "query": {
+        "explanation": "Lax withholds the cookie from cross-site subresource requests and unsafe methods, but allows it on top-level navigations made with a safe method such as GET. Only SameSite=Strict blocks that case too.",
+        "tags": [
+          "cookies",
+          "samesite",
+          "csrf"
+        ],
+        "title": "SameSite=Lax on navigations"
+      },
+      "rationale": "Answering false describes SameSite=Strict; Lax deliberately keeps cookies on cross-site top-level GET navigations so that following a link keeps the user logged in.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-677c192a",
+      "prompt": "Which host does a cookie with Domain=example.com NOT get sent to?",
+      "topic": "cookies",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "example.com.evil.net"
+        },
+        {
+          "text": "app.example.com",
+          "rationale": "A direct subdomain matches Domain=example.com, so it does receive the cookie."
+        },
+        {
+          "text": "example.com",
+          "rationale": "The domain itself always matches its own Domain attribute."
+        },
+        {
+          "text": "a.b.example.com",
+          "rationale": "Domain matching covers subdomains at any depth, so this host receives the cookie."
+        }
+      ],
+      "query": {
+        "explanation": "Domain matching accepts the domain itself and any host that ends with '.' plus that domain. A host that merely contains the string, like example.com.evil.net, is a different registrable domain and never receives the cookie.",
+        "tags": [
+          "cookies",
+          "domain",
+          "scope"
+        ],
+        "title": "Cookie domain matching"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-bb9bdec7",
+      "prompt": "Does document.cookie expose the Path and SameSite attributes of a stored cookie?",
+      "topic": "cookies",
+      "answer": false,
+      "code": "document.cookie = 'theme=dark; Path=/; SameSite=Lax';\nconsole.log(document.cookie);",
+      "query": {
+        "explanation": "Attributes are only meaningful when writing. Reading document.cookie returns just a list of 'name=value' pairs separated by '; ', with no Path, Domain, Secure, Expires or SameSite information.",
+        "syntax": "document.cookie // \"name=value; other=value\"",
+        "tags": [
+          "cookies",
+          "document.cookie",
+          "dom"
+        ],
+        "title": "document.cookie is write-only for attributes"
+      },
+      "rationale": "Answering true confuses the setter with the getter: attributes are parsed when assigning, but the getter only returns name=value pairs.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-f114216a",
+      "prompt": "Which attribute determines this cookie's lifetime?",
+      "topic": "cookies",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Max-Age"
+        },
+        {
+          "text": "Expires",
+          "rationale": "Expires is ignored whenever a valid Max-Age is also present."
+        },
+        {
+          "text": "Whichever appears last in the header",
+          "rationale": "Precedence is fixed by the attribute name, not by position in the header."
+        },
+        {
+          "text": "Session only",
+          "rationale": "Session lifetime applies only when neither Max-Age nor Expires is given."
+        }
+      ],
+      "code": "Set-Cookie: sid=9; Expires=Fri, 01 Jan 2027 00:00:00 GMT; Max-Age=600",
+      "query": {
+        "explanation": "When both are present, Max-Age takes precedence over Expires regardless of the order they appear in, so the cookie lives 600 seconds rather than until 2027.",
+        "syntax": "Set-Cookie: name=value; Max-Age=<seconds>",
+        "tags": [
+          "cookies",
+          "max-age",
+          "expires"
+        ],
+        "title": "Max-Age beats Expires"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-8db68abd",
+      "prompt": "What does get('session') return?",
+      "topic": "cookies",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "bad"
+        },
+        {
+          "text": "good",
+          "rationale": "That is the real session cookie, but the substring search matches the earlier 'x_session=' first and never reaches it."
+        },
+        {
+          "text": "x_session=bad",
+          "rationale": "The slice starts after the matched 'session=' text, so the name prefix is not included."
+        },
+        {
+          "text": "undefined",
+          "rationale": "A match is found (inside x_session), so the function returns a string rather than undefined."
+        }
+      ],
+      "code": "const jar = 'x_session=bad; session=good';\nfunction get(name) {\n  const i = jar.indexOf(name + '=');\n  return jar.slice(i + name.length + 1).split(';')[0];\n}\nget('session');",
+      "query": {
+        "explanation": "indexOf('session=') first matches inside 'x_session=', so the helper reads an attacker-controlled decoy cookie. Safe lookups split the jar on '; ' and compare whole names, or use a regex with a boundary.",
+        "syntax": "jar.split('; ').find(p => p.slice(0, p.indexOf('=')) === name)",
+        "tags": [
+          "cookies",
+          "parsing",
+          "pitfall"
+        ],
+        "title": "Substring cookie lookup is unsafe"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-14f39c7d",
+      "prompt": "Can a page served over http successfully set a cookie that carries the Secure attribute?",
+      "topic": "cookies",
+      "answer": false,
+      "query": {
+        "explanation": "Under the strict secure cookie rules, a non-secure origin may not create or update a cookie with the Secure attribute; the write is rejected. Secure cookies can only be written from an https page.",
+        "tags": [
+          "cookies",
+          "secure",
+          "https"
+        ],
+        "title": "Strict secure cookies"
+      },
+      "rationale": "Answering true reflects old behaviour; modern browsers reject Secure cookie writes from insecure origins so a plain http page cannot create one.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-c0d371f2",
+      "prompt": "Which of these Set-Cookie headers does the browser reject?",
+      "topic": "cookies",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "b=2; SameSite=None"
+        },
+        {
+          "text": "a=1; Secure; SameSite=None",
+          "rationale": "SameSite=None is paired with Secure here, which is exactly what the rule demands."
+        },
+        {
+          "text": "c=3; Secure; SameSite=Lax",
+          "rationale": "Lax is a valid same-site restriction and never requires Secure to be accepted."
+        },
+        {
+          "text": "d=4; SameSite=Strict",
+          "rationale": "Strict cookies are accepted without Secure; only SameSite=None forces the Secure attribute."
+        }
+      ],
+      "query": {
+        "explanation": "Cross-site cookies must opt in with SameSite=None, and that value is only honoured together with Secure. A SameSite=None cookie without Secure is dropped entirely.",
+        "syntax": "Set-Cookie: name=value; Secure; SameSite=None",
+        "tags": [
+          "cookies",
+          "samesite",
+          "secure"
+        ],
+        "title": "SameSite=None requires Secure"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-ef4c1b95",
+      "prompt": "Which of these cross-origin requests triggers a CORS preflight?",
+      "topic": "cors",
+      "answerIndex": 2,
+      "choices": [
+        {
+          "text": "GET with only an Accept header",
+          "rationale": "GET is a safelisted method and Accept is a safelisted request header, so this is a simple request."
+        },
+        {
+          "text": "POST with Content-Type: application/x-www-form-urlencoded",
+          "rationale": "That media type is one of the three safelisted Content-Type values, so no preflight is needed."
+        },
+        {
+          "text": "POST with Content-Type: application/json"
+        },
+        {
+          "text": "HEAD with no extra headers",
+          "rationale": "HEAD is safelisted and there are no non-safelisted headers, so the request goes out directly."
+        }
+      ],
+      "query": {
+        "explanation": "A request skips the preflight only if the method is GET, HEAD or POST, every header is CORS-safelisted, and any Content-Type is application/x-www-form-urlencoded, multipart/form-data or text/plain. application/json falls outside that list, so the browser first sends an OPTIONS preflight carrying Access-Control-Request-Method and Access-Control-Request-Headers.",
+        "tags": [
+          "cors",
+          "preflight",
+          "simple-request"
+        ],
+        "title": "Simple requests vs preflighted requests"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-f8c3c33d",
+      "prompt": "What Origin header value does a request from this page URL carry?",
+      "topic": "cors",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "https://shop.example.com"
+        },
+        {
+          "text": "https://shop.example.com:443",
+          "rationale": "443 is the default port for https, so origin serialization omits it."
+        },
+        {
+          "text": "https://shop.example.com/cart",
+          "rationale": "An origin is only scheme, host and port; the path is never part of it."
+        },
+        {
+          "text": "shop.example.com",
+          "rationale": "The scheme is part of the origin, so the bare host is not a valid serialization."
+        }
+      ],
+      "code": "// page URL\nhttps://shop.example.com:443/cart?id=4#items",
+      "query": {
+        "explanation": "The Origin header holds the serialized origin of the requesting document: scheme, host and, only when non-default, the port. Path, query and fragment are stripped, and a default port such as 443 for https or 80 for http is omitted. new URL(href).origin performs exactly this serialization.",
+        "syntax": "new URL(href).origin",
+        "tags": [
+          "cors",
+          "origin",
+          "url"
+        ],
+        "title": "Serializing an origin for the Origin header"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-5a0a1056",
+      "prompt": "Which response header is readable by script without Access-Control-Expose-Headers?",
+      "topic": "cors",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "X-Total-Count",
+          "rationale": "Custom headers are hidden on CORS responses until the server lists them in Access-Control-Expose-Headers."
+        },
+        {
+          "text": "Content-Language"
+        },
+        {
+          "text": "Set-Cookie",
+          "rationale": "Set-Cookie is a forbidden response header name that script can never read, even same-origin."
+        },
+        {
+          "text": "Authorization",
+          "rationale": "Authorization is not a CORS-safelisted response header, so it is not exposed by default."
+        }
+      ],
+      "query": {
+        "explanation": "The default readable set on a CORS response is Cache-Control, Content-Language, Content-Length, Content-Type, Expires, Last-Modified and Pragma. Content-Language belongs to that list, so headers.get('Content-Language') works with no extra server configuration, while anything else needs Access-Control-Expose-Headers.",
+        "tags": [
+          "cors",
+          "safelist",
+          "response-headers"
+        ],
+        "title": "CORS-safelisted response headers"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-c029453b",
+      "prompt": "Which of these headers sets the preflight cache lifetime?",
+      "topic": "cors",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Access-Control-Max-Age"
+        },
+        {
+          "text": "Cache-Control",
+          "rationale": "Cache-Control governs the HTTP cache for normal responses, not the separate CORS preflight cache."
+        },
+        {
+          "text": "Access-Control-Allow-Age",
+          "rationale": "No such header exists in the CORS specification."
+        },
+        {
+          "text": "Expires",
+          "rationale": "Expires is an HTTP caching header and is ignored when the browser stores a preflight result."
+        }
+      ],
+      "code": "// OPTIONS response headers\nAccess-Control-Allow-Origin: https://app.example.com\nAccess-Control-Allow-Methods: PUT\nAccess-Control-Max-Age: 600\nCache-Control: no-store\nExpires: 0",
+      "query": {
+        "explanation": "Access-Control-Max-Age gives the seconds a browser may reuse an OPTIONS result for the same origin, URL, method and header set, skipping further preflights. Only that header feeds the preflight cache; browsers also clamp the value to their own maximum, so a huge number does not guarantee a long-lived entry.",
+        "syntax": "Access-Control-Max-Age: 600",
+        "tags": [
+          "cors",
+          "preflight",
+          "max-age"
+        ],
+        "title": "Caching a preflight result"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-bc7e02d2",
+      "prompt": "Which header combination lets script read this credentialed cross-origin response?",
+      "topic": "cors",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Allow-Origin: https://app.example.com plus Allow-Credentials: true"
+        },
+        {
+          "text": "Allow-Origin: * plus Allow-Credentials: true",
+          "rationale": "The wildcard origin is rejected outright for credentialed requests, whatever Allow-Credentials says."
+        },
+        {
+          "text": "Allow-Origin: https://app.example.com alone",
+          "rationale": "Without Access-Control-Allow-Credentials: true the browser discards a credentialed response."
+        },
+        {
+          "text": "Allow-Origin: * alone",
+          "rationale": "This fails twice over: wildcard origin and missing Allow-Credentials."
+        }
+      ],
+      "code": "fetch('https://api.example.com/me', { credentials: 'include' });\n// page origin: https://app.example.com",
+      "query": {
+        "explanation": "For credentials: 'include' the server must echo the exact request origin in Access-Control-Allow-Origin and send Access-Control-Allow-Credentials: true. Both conditions are necessary; failing either makes the browser block the response even though the server already processed the request. Add Vary: Origin when echoing the origin so caches do not mix responses.",
+        "tags": [
+          "cors",
+          "credentials",
+          "allow-origin"
+        ],
+        "title": "Credentialed CORS requires an exact origin"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-8a08e4f2",
+      "prompt": "Which Access-Control-Allow-Methods value permits a non-credentialed PATCH request?",
+      "topic": "cors",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "GET, POST, PUT",
+          "rationale": "PATCH is absent from the list, so the preflight fails."
+        },
+        {
+          "text": "*"
+        },
+        {
+          "text": "patch",
+          "rationale": "Method matching is byte-case-sensitive, so lowercase patch does not match the PATCH request method."
+        },
+        {
+          "text": "ANY",
+          "rationale": "ANY is not a method name and has no special meaning; only the literal * acts as a wildcard."
+        }
+      ],
+      "query": {
+        "explanation": "On a non-credentialed preflight the literal * in Access-Control-Allow-Methods matches any method, so PATCH is approved. Explicit lists must spell the method exactly, uppercase included, since matching is case-sensitive. For credentialed requests the wildcard loses its special meaning and PATCH must be listed by name.",
+        "syntax": "Access-Control-Allow-Methods: PATCH",
+        "tags": [
+          "cors",
+          "preflight",
+          "allow-methods"
+        ],
+        "title": "Wildcards in Access-Control-Allow-Methods"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-e76aa1d0",
+      "prompt": "Which request header does the preflight for this fetch include?",
+      "topic": "cors",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "Access-Control-Request-Headers"
+        },
+        {
+          "text": "Access-Control-Allow-Headers",
+          "rationale": "That is the response header the server uses to approve headers; the browser never sends it."
+        },
+        {
+          "text": "Access-Control-Request-Method",
+          "rationale": "It is sent on the preflight, but it carries the method (PUT), not the header names."
+        },
+        {
+          "text": "Origin",
+          "rationale": "Origin carries the requesting page's scheme/host/port, not the list of request headers."
+        }
+      ],
+      "code": "fetch('https://api.example.net/orders/7', {\n  method: 'PUT',\n  headers: {\n    'Content-Type': 'application/json',\n    'X-Token': 'abc'\n  },\n  body: '{}'\n});",
+      "query": {
+        "explanation": "A non-simple request triggers an OPTIONS preflight. The browser announces the intended method in Access-Control-Request-Method and the comma-separated, lowercased list of non-safelisted request headers (here content-type with a JSON value plus x-token) in Access-Control-Request-Headers. Access-Control-Allow-* names are response headers the server sends back, not request headers.",
+        "syntax": "Access-Control-Request-Headers: content-type, x-token",
+        "tags": [
+          "cors",
+          "preflight",
+          "headers"
+        ],
+        "title": "Preflight request headers"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-be307ddf",
+      "prompt": "Which Access-Control-Allow-Credentials value lets script read a credentialed response?",
+      "topic": "cors",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "true"
+        },
+        {
+          "text": "True",
+          "rationale": "The comparison is case-sensitive, so a capitalised value does not match and the response stays blocked."
+        },
+        {
+          "text": "1",
+          "rationale": "The header is not boolean-ish; only the literal string true is accepted."
+        },
+        {
+          "text": "yes",
+          "rationale": "Not a recognised value; the check fails and credentials are not exposed."
+        }
+      ],
+      "query": {
+        "explanation": "Access-Control-Allow-Credentials is compared byte-for-byte against the lowercase string \"true\". Any other value, including \"True\", \"1\", or \"yes\", is treated as a failure and the browser blocks the credentialed response.",
+        "syntax": "Access-Control-Allow-Credentials: true",
+        "tags": [
+          "cors",
+          "credentials",
+          "headers"
+        ],
+        "title": "Access-Control-Allow-Credentials value"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-9ce5b8e2",
+      "prompt": "Which X-Frame-Options value blocks framing by all sites, including the page's own origin?",
+      "topic": "framing",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "DENY"
+        },
+        {
+          "text": "SAMEORIGIN",
+          "rationale": "SAMEORIGIN still permits a page on the identical origin to frame the document."
+        },
+        {
+          "text": "ALLOW-FROM https://portal.example",
+          "rationale": "Modern browsers ignore ALLOW-FROM, so the response ends up with no framing restriction at all."
+        },
+        {
+          "text": "ALLOWALL",
+          "rationale": "ALLOWALL is not a defined token; browsers treat the invalid header as absent and allow framing."
+        }
+      ],
+      "code": "// page served from https://shop.example\n// candidate response headers:\n// X-Frame-Options: DENY\n// X-Frame-Options: SAMEORIGIN\n// X-Frame-Options: ALLOW-FROM https://portal.example\n// X-Frame-Options: ALLOWALL",
+      "query": {
+        "explanation": "DENY refuses framing from any ancestor, even a same-origin one. SAMEORIGIN only refuses cross-origin ancestors. ALLOW-FROM was dropped by modern browsers and unknown tokens like ALLOWALL are invalid, so both leave the page framable.",
+        "syntax": "X-Frame-Options: DENY | SAMEORIGIN",
+        "tags": [
+          "clickjacking",
+          "headers",
+          "framing"
+        ],
+        "title": "X-Frame-Options values"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-c2d9ef54",
+      "prompt": "Does the sandbox attribute below let the framed document run scripts?",
+      "topic": "framing",
+      "answer": false,
+      "code": "<iframe sandbox=\"allow-forms allow-same-origin\" src=\"/widget.html\"></iframe>",
+      "query": {
+        "explanation": "A sandbox attribute turns every restriction on, then each listed token lifts one restriction. Without allow-scripts the framed document cannot execute script, no matter which other tokens are present.",
+        "syntax": "<iframe sandbox=\"allow-scripts allow-forms\">",
+        "tags": [
+          "sandbox",
+          "framing"
+        ],
+        "title": "iframe sandbox tokens"
+      },
+      "rationale": "Scripting stays disabled because the token list has no allow-scripts entry; allow-same-origin only restores the document's real origin.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-19381b5e",
+      "prompt": "Is the framed window's top property the same object as the embedding window here?",
+      "topic": "framing",
+      "answer": true,
+      "code": "const f = document.createElement('iframe');\ndocument.body.appendChild(f);\nconst framed = f.contentWindow;",
+      "query": {
+        "explanation": "top always references the outermost browsing context of the chain. For a one-level-deep frame inside a top-level page, the child's top is the embedding window, which is why top !== self is the classic in-a-frame test.",
+        "syntax": "window.top, window.parent, window.self",
+        "tags": [
+          "framing",
+          "browsing-context"
+        ],
+        "title": "window.top in a frame"
+      },
+      "rationale": "The embedding document is itself the top-level browsing context, so the child's top points straight back at it rather than at the child.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-8bb3d9ce",
+      "prompt": "Which embedding origin does this frame-ancestors list allow?",
+      "topic": "framing",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "https://deals.partner.example"
+        },
+        {
+          "text": "https://partner.example",
+          "rationale": "https://*.partner.example covers subdomains only; the bare registrable host does not match the wildcard."
+        },
+        {
+          "text": "http://app.example.com",
+          "rationale": "'self' includes the scheme, so the http version of the same host is a different origin and is rejected."
+        },
+        {
+          "text": "https://partner.example.evil.com",
+          "rationale": "The host ends in evil.com, so it is not a subdomain of partner.example despite the shared label."
+        }
+      ],
+      "code": "// page served from https://app.example.com\n// Content-Security-Policy: frame-ancestors 'self' https://*.partner.example",
+      "query": {
+        "explanation": "'self' matches only the page's own scheme, host and port. A wildcard host pattern matches subdomains of the suffix but not the bare suffix itself, and never a domain that merely contains the suffix as a label prefix.",
+        "syntax": "Content-Security-Policy: frame-ancestors 'self' https://*.example",
+        "tags": [
+          "csp",
+          "frame-ancestors",
+          "framing"
+        ],
+        "title": "CSP frame-ancestors matching"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-5bab4580",
+      "prompt": "Which framing policy does a modern browser enforce when both headers are sent?",
+      "topic": "framing",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "frame-ancestors 'self' from the CSP header"
+        },
+        {
+          "text": "X-Frame-Options: DENY",
+          "rationale": "The legacy header is ignored once frame-ancestors is present in the policy."
+        },
+        {
+          "text": "both, with DENY winning as the stricter rule",
+          "rationale": "Browsers do not intersect the two mechanisms; frame-ancestors simply replaces X-Frame-Options."
+        },
+        {
+          "text": "neither; the conflicting headers disable framing checks",
+          "rationale": "A conflict never disables protection; the CSP directive is still applied normally."
+        }
+      ],
+      "code": "Content-Security-Policy: frame-ancestors 'self'\nX-Frame-Options: DENY",
+      "query": {
+        "explanation": "When a CSP contains frame-ancestors, browsers enforce it and ignore X-Frame-Options entirely. The two are not combined, so a loose frame-ancestors value can effectively override a strict legacy header.",
+        "syntax": "frame-ancestors overrides X-Frame-Options",
+        "tags": [
+          "csp",
+          "headers",
+          "framing"
+        ],
+        "title": "frame-ancestors versus X-Frame-Options"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-4f823cf9",
+      "prompt": "Which sandbox value lets a frame run scripts while keeping it in an opaque origin?",
+      "topic": "framing",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "sandbox=\"allow-scripts\""
+        },
+        {
+          "text": "sandbox=\"allow-scripts allow-same-origin\"",
+          "rationale": "allow-same-origin restores the real origin, so the frame is no longer isolated and can script its way out of the sandbox."
+        },
+        {
+          "text": "sandbox=\"allow-same-origin\"",
+          "rationale": "Without allow-scripts the frame cannot run any script, and it also keeps its real origin."
+        },
+        {
+          "text": "sandbox=\"\"",
+          "rationale": "An empty sandbox applies every restriction, so scripting stays blocked."
+        }
+      ],
+      "query": {
+        "explanation": "allow-scripts re-enables scripting, while omitting allow-same-origin keeps the framed document in an opaque origin so it cannot reach the embedder's storage or DOM. Granting both tokens together lets sandboxed content remove its own sandbox.",
+        "syntax": "<iframe sandbox=\"allow-scripts\">",
+        "tags": [
+          "sandbox",
+          "origin",
+          "framing"
+        ],
+        "title": "allow-scripts without allow-same-origin"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-a6c98317",
+      "prompt": "Does the frame below block form submission from the embedded document?",
+      "topic": "framing",
+      "answer": true,
+      "code": "<iframe sandbox src=\"/widget.html\"></iframe>",
+      "query": {
+        "explanation": "sandbox with no value is the most restrictive setting: scripts, forms, popups, plugins and same-origin access are all disabled until specific tokens are added.",
+        "syntax": "<iframe sandbox>",
+        "tags": [
+          "sandbox",
+          "framing"
+        ],
+        "title": "empty sandbox attribute"
+      },
+      "rationale": "A valueless sandbox attribute parses to an empty token list, so no restriction is lifted and allow-forms is absent, which keeps form submission blocked.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-dc95f715",
+      "prompt": "How many sandbox tokens apply to this frame?",
+      "topic": "framing",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "1",
+          "rationale": "Two distinct tokens are present, allow-scripts and allow-forms."
+        },
+        {
+          "text": "2"
+        },
+        {
+          "text": "3",
+          "rationale": "Ordered-set parsing removes the duplicate allow-scripts instead of counting it twice."
+        },
+        {
+          "text": "4",
+          "rationale": "Only three whitespace-separated words appear, and one of them repeats."
+        }
+      ],
+      "code": "<iframe sandbox=\"allow-scripts allow-forms allow-scripts\" src=\"/w.html\"></iframe>",
+      "query": {
+        "explanation": "The sandbox attribute is parsed as an ordered set of space-separated tokens, which drops duplicates. Repeating allow-scripts therefore adds nothing and the list holds two tokens.",
+        "syntax": "iframe.sandbox.length",
+        "tags": [
+          "sandbox",
+          "domtokenlist",
+          "framing"
+        ],
+        "title": "sandbox token list parsing"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-4c1b65a7",
+      "prompt": "Does this SAMEORIGIN policy allow the listed embedding page to frame the document?",
+      "topic": "framing",
+      "answer": false,
+      "code": "// framed document: https://app.example/dashboard\n// X-Frame-Options: SAMEORIGIN\n// embedding page: http://app.example/portal",
+      "query": {
+        "explanation": "SAMEORIGIN requires the ancestor's origin to match the framed document's origin on scheme, host and port. Sharing only the host is not enough.",
+        "syntax": "X-Frame-Options: SAMEORIGIN",
+        "tags": [
+          "clickjacking",
+          "origin",
+          "framing"
+        ],
+        "title": "SAMEORIGIN compares full origins"
+      },
+      "rationale": "An origin comparison includes the scheme, so the http embedder is cross-origin to the https document and SAMEORIGIN rejects it.",
+      "type": "bool",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-a75b489a",
+      "prompt": "Which check tells a document that it is running inside a frame?",
+      "topic": "framing",
+      "answerIndex": 0,
+      "choices": [
+        {
+          "text": "window.top !== window.self"
+        },
+        {
+          "text": "window.parent === window",
+          "rationale": "That is true in a top-level page and false inside a frame, so it is the inverted test."
+        },
+        {
+          "text": "window.length > 0",
+          "rationale": "length counts child frames, so a top-level page that embeds a frame also passes this check."
+        },
+        {
+          "text": "document.referrer !== ''",
+          "rationale": "referrer reflects navigation history, not nesting; a framed document can have an empty referrer."
+        }
+      ],
+      "query": {
+        "explanation": "Comparing top with self is the reliable test: in a framed document top is an ancestor window, while in a top-level page top and self are the same object. The other expressions are either true in the top-level page too or unrelated to nesting.",
+        "syntax": "if (window.top !== window.self) { /* framed */ }",
+        "tags": [
+          "framing",
+          "clickjacking",
+          "browsing-context"
+        ],
+        "title": "detecting a framed document"
+      },
+      "type": "mc",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0, jsdom 26.1.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-b79afb97",
+      "answerIndex": 1,
+      "choices": [
+        {
+          "text": "application/json",
+          "rationale": "JSON is not on the CORS safelist, so it turns the request into a preflighted one."
+        },
+        {
+          "text": "text/plain"
+        },
+        {
+          "text": "application/xml",
+          "rationale": "Only form-urlencoded, multipart/form-data, and text/plain are safelisted; XML is not."
+        },
+        {
+          "text": "text/html",
+          "rationale": "text/html is not safelisted even though it is a text type, so a preflight is still sent."
+        }
+      ],
+      "code": "fetch('https://api.example.com/items', {\n  method: 'POST',\n  headers: { 'Content-Type': /* ? */ },\n  body: 'id=1'\n});",
+      "prompt": "Which Content-Type on this cross-origin POST avoids a CORS preflight?",
+      "query": {
+        "explanation": "A cross-origin POST stays a simple request only when Content-Type is one of the three safelisted values: application/x-www-form-urlencoded, multipart/form-data, or text/plain. Any other media type makes Content-Type a non-safelisted request header, so the browser sends an OPTIONS preflight first and waits for Access-Control-Allow-Headers to permit it.",
+        "syntax": "fetch(url, { method, headers, body })",
+        "tags": [
+          "cors",
+          "preflight",
+          "content-type",
+          "fetch"
+        ],
+        "title": "Safelisted Content-Type values"
+      },
+      "type": "mc",
+      "topic": "cors",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    },
+    {
+      "id": "gen-frontend-security-medium-b851472d",
+      "answer": false,
+      "code": "fetch('https://api.example.com/me', { credentials: 'include' })\n  .then(r => r.text());\n\n// Response headers:\n// Access-Control-Allow-Origin: *\n// Access-Control-Allow-Credentials: true",
+      "prompt": "Can script read a credentialed CORS response whose allow-origin header is a wildcard?",
+      "query": {
+        "explanation": "When a request carries credentials, the wildcard is not allowed: the server must echo the exact requesting origin in Access-Control-Allow-Origin (plus send Access-Control-Allow-Credentials: true). With `*`, the browser fails the CORS check and the fetch promise rejects, so script reads nothing.",
+        "syntax": "Access-Control-Allow-Origin: https://app.example.com",
+        "tags": [
+          "cors",
+          "credentials",
+          "wildcard",
+          "fetch"
+        ],
+        "title": "Wildcard origin with credentials"
+      },
+      "rationale": "A credentialed request requires the exact origin to be echoed back; `*` fails the check even when Access-Control-Allow-Credentials: true is present, so the response stays unreadable.",
+      "type": "bool",
+      "topic": "cors",
+      "grammar": "javascript",
+      "provenance": {
+        "isHumanReviewed": false,
+        "model": "claude-opus-5[1m]",
+        "promptVersion": "generate-batch-v2",
+        "source": "generated",
+        "validation": {
+          "method": "executed",
+          "status": "passed"
+        },
+        "runtimeVersion": "Node v24.21.0"
+      }
+    }
+  ],
+  "schemaVersion": 2
+}

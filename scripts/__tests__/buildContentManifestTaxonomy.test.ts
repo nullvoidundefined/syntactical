@@ -40,11 +40,14 @@ describe('buildContentManifest taxonomy', () => {
     }
 
     it('takes entries from the approved file, never the draft', async () => {
-        // The approved entry is already published, so it is kept without a content root.
-        const manifestPath = join(contentDir, 'manifest.json');
-        const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
-        manifest.languages.find(({ id }: { id: string }) => id === 'python').misconceptions = APPROVED;
-        await writeFile(manifestPath, JSON.stringify(manifest));
+        // An approved entry ships only when a card links it.
+        const bankPath = join(contentDir, 'python', 'easy.json');
+        const bank = JSON.parse(await readFile(bankPath, 'utf8'));
+        const question = bank.questions.find(({ type }: { type: string }) => type === 'mc');
+        const choice = question.choices[question.answerIndex === 0 ? 1 : 0];
+        choice.misconceptionId = APPROVED[0].id;
+        choice.rationale = 'This is the mistaken reading, and the real behavior differs for a stated reason.';
+        await writeFile(bankPath, JSON.stringify(bank, null, 2));
         await writeFile(join(taxonomyDir, 'python.json'), JSON.stringify(APPROVED));
         await writeFile(join(taxonomyDir, 'python.draft.json'), JSON.stringify(DRAFT));
 

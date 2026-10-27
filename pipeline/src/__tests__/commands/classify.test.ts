@@ -1,6 +1,6 @@
-// `pipeline classify` with a fake provider: thresholds, review-queue placement (free vs
-// paid), agreement, wtf-overuse, hostile manifest, and no content-file writes.
-import { mkdir, mkdtemp, readFile, readdir, stat, symlink, writeFile } from 'node:fs/promises';
+// `pipeline classify` with a fake provider: thresholds, review-queue placement, agreement, wtf-overuse, hostile
+// manifest, and no content-file writes.
+import { mkdir, mkdtemp, readdir, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -16,20 +16,9 @@ const TOPIC_LIST = [
     { id: 'strings', label: 'Strings' },
     { id: 'wtf', label: 'WTF' },
 ];
-const PAID_TEXT = 'PAID-SECRET-PROMPT';
-// The seeded paid bank's path under the content root (B-60: paid banks never sit under content/).
-const PAID_BANK_FILE = 'python/medium.json';
 
-function buildEntry(path: string, access: 'free' | 'paid'): Record<string, unknown> {
-    const productId = access === 'paid' ? { productId: 'syntactical.python.medium' } : {};
-    return {
-        access,
-        contentVersion: 1,
-        hash: HASH,
-        path,
-        topicCounts: {},
-        ...productId,
-    };
+function buildEntry(path: string): Record<string, unknown> {
+    return { contentVersion: 1, hash: HASH, path, topicCounts: {} };
 }
 
 function manifestWithBanks(banks: Record<string, unknown>, topics: unknown[] = TOPIC_LIST): Record<string, unknown> {
@@ -79,7 +68,6 @@ async function listFiles(dir: string): Promise<string[]> {
 describe('classify', () => {
     let root: string;
     let contentDir: string;
-    let contentRoot: string;
     let pipelineDir: string;
     const logs: string[] = [];
     const log = (line: string): void => {
@@ -87,11 +75,10 @@ describe('classify', () => {
     };
     let runNumber = 0;
 
-    function run(provider: ModelProvider, overrides: { contentRoot?: string } = {}) {
+    function run(provider: ModelProvider) {
         runNumber += 1;
         return classify({
             contentDir,
-            contentRoot: overrides.contentRoot ?? contentRoot,
             log,
             newRunId: () => `run-${runNumber}`,
             now: () => '2026-10-03T00:00:00.000Z',
@@ -103,34 +90,28 @@ describe('classify', () => {
     async function seed(banks: Record<string, unknown[]>, topics?: unknown[]): Promise<void> {
         const entries: Record<string, unknown> = {};
         const files: Record<string, unknown> = {};
-        const paidFiles: Record<string, unknown> = {};
-        for (const [name, questions] of Object.entries(banks)) {
-            const [difficulty, access] = name.split(':') as [string, 'free' | 'paid'];
-            entries[difficulty] = buildEntry(`python/${difficulty}.json`, access);
-            // Paid banks live in the private content root, never under content/ (B-60).
-            (access === 'free' ? files : paidFiles)[`python/${difficulty}.json`] = { questions };
+        for (const [difficulty, questions] of Object.entries(banks)) {
+            entries[difficulty] = buildEntry(`python/${difficulty}.json`);
+            files[`python/${difficulty}.json`] = { questions };
         }
         await writeTree(contentDir, {
             ...files,
             'manifest.json': manifestWithBanks(entries, topics),
         });
-        await writeTree(contentRoot, paidFiles);
     }
 
     beforeEach(async () => {
         logs.length = 0;
         root = await mkdtemp(join(tmpdir(), 'classify-root-'));
         contentDir = join(root, 'repo/content');
-        contentRoot = join(root, 'syntactical-content');
         pipelineDir = join(root, 'repo/pipeline');
-        await mkdir(contentRoot, { recursive: true });
         await writeTree(pipelineDir, {
             'topics.json': { python: ['strings', 'wtf'] },
         });
     });
 
     it('accepts a confident, agreeing classification and writes no review-queue file', async () => {
-        await seed({ 'easy:free': [buildQuestion('q-1', 'p1')] });
+        await seed({ easy: [buildQuestion('q-1', 'p1')] });
         const report = await run(scripted(() => ({ confidence: 0.9, topic: 'strings' })));
         expect(await readJson(join(pipelineDir, 'classifications/python/easy.json'))).toEqual({
             'q-1': { confidence: 0.9, topic: 'strings' },
@@ -140,8 +121,8 @@ describe('classify', () => {
         expect(report.stage).toBe('classify');
     });
 
-    it('routes confidence 0.6 to pipeline/review-queue for a free bank and assigns no topic', async () => {
-        await seed({ 'easy:free': [buildQuestion('q-1', 'p1')] });
+    it('routes confidence 0.6 to pipeline/review-queue and assigns no topic', async () => {
+        await seed({ easy: [buildQuestion('q-1', 'p1')] });
         await run(scripted(() => ({ confidence: 0.6, topic: 'strings' })));
         expect(await readJson(join(pipelineDir, 'review-queue/python/easy/q-1.json'))).toEqual({
             bankKey: 'python/easy',
@@ -154,73 +135,14 @@ describe('classify', () => {
     });
 
     it('accepts exactly 0.7 (the threshold is inclusive)', async () => {
-        await seed({ 'easy:free': [buildQuestion('q-1', 'p1')] });
+        await seed({ easy: [buildQuestion('q-1', 'p1')] });
         await run(scripted(() => ({ confidence: 0.7, topic: 'strings' })));
         expect(await listFiles(join(pipelineDir, 'review-queue'))).toEqual([]);
     });
 
-    it('routes a paid-bank question to the content root and never writes paid text under pipeline/', async () => {
-        await seed({ 'medium:paid': [buildQuestion('paid-1', PAID_TEXT)] });
-        await run(scripted(() => ({ confidence: 0.6, topic: 'wtf' })));
-        expect((await readJson(join(contentRoot, 'review-queue/python/medium/paid-1.json'))).id).toBe('paid-1');
-        expect(await listFiles(join(pipelineDir, 'review-queue'))).toEqual([]);
-        expect(await listFiles(join(pipelineDir, 'classifications'))).toEqual([]);
-        const written = [
-            ...(await Promise.all(
-                (await listFiles(pipelineDir)).map((name) => readFile(join(pipelineDir, name), 'utf8')),
-            )),
-            // The seeded paid bank itself lives in the content root; only what classify wrote counts.
-            ...(await Promise.all(
-                (await listFiles(contentRoot))
-                    .filter((name) => name !== PAID_BANK_FILE)
-                    .map((name) => readFile(join(contentRoot, name), 'utf8')),
-            )),
-        ];
-        expect(written.length).toBeGreaterThan(0);
-        expect(written.join('')).not.toContain(PAID_TEXT);
-    });
-
-    it('never writes a paid marker the model echoes back, in any file, the report, or the log', async () => {
-        await seed({ 'medium:paid': [buildQuestion('paid-1', PAID_TEXT), buildQuestion('paid-2', `${PAID_TEXT}-2`)] });
-        // The fake echoes the whole prompt (paid text included) as a `reason` and as an invalid-output issue.
-        const provider: ModelProvider = {
-            async generate(request) {
-                if (request.prompt.includes(`${PAID_TEXT}-2`)) {
-                    throw new ModelOutputInvalid(request.promptVersion, request.prompt);
-                }
-                return { model: 'fake', value: { confidence: 0.3, reason: request.prompt, topic: 'strings' } as never };
-            },
-        };
-        const report = await run(provider);
-        const everything = [
-            JSON.stringify(report),
-            logs.join('\n'),
-            ...(
-                await Promise.all(
-                    [pipelineDir, contentRoot].flatMap((dir) =>
-                        listFiles(dir).then((names) =>
-                            Promise.all(
-                                names
-                                    .filter((name) => dir !== contentRoot || name !== PAID_BANK_FILE)
-                                    .map((name) => readFile(join(dir, name), 'utf8')),
-                            ),
-                        ),
-                    ),
-                )
-            ).flat(),
-        ].join('\n');
-        expect(everything).not.toContain(PAID_TEXT);
-        expect((await readJson(join(contentRoot, 'review-queue/python/medium/paid-1.json'))).reason).toBe(
-            'low-confidence',
-        );
-        expect((await readJson(join(contentRoot, 'review-queue/python/medium/paid-2.json'))).reason).toBe(
-            'model-output-invalid',
-        );
-    });
-
     it('reports agreement 0.75 when two runs disagree on 1 of 4 questions, and queues the disagreement', async () => {
         const questions = ['q-1', 'q-2', 'q-3', 'q-4'].map((id) => buildQuestion(id, `prompt ${id}`));
-        await seed({ 'easy:free': questions });
+        await seed({ easy: questions });
         // Calls 0-1 are q-1, 2-3 q-2, 4-5 q-3: call 5 is q-3's second run.
         const report = await run(
             scripted((_prompt, index) => ({
@@ -240,7 +162,7 @@ describe('classify', () => {
 
     it('routes invalid model output to the review queue and leaves it out of the agreement rate', async () => {
         await seed({
-            'easy:free': [buildQuestion('q-1', 'a'), buildQuestion('q-2', 'b')],
+            easy: [buildQuestion('q-1', 'a'), buildQuestion('q-2', 'b')],
         });
         const report = await run(
             scripted((prompt) => (prompt.includes('"b"') ? 'invalid' : { confidence: 0.9, topic: 'strings' })),
@@ -254,7 +176,7 @@ describe('classify', () => {
     it('flags a bank where wtf exceeds 20% and not one at exactly 20%', async () => {
         const ids = ['q-1', 'q-2', 'q-3', 'q-4', 'q-5'];
         await seed({
-            'easy:free': ids.map((id) => buildQuestion(id, `prompt ${id}`)),
+            easy: ids.map((id) => buildQuestion(id, `prompt ${id}`)),
         });
         const atTwenty = await run(
             scripted((prompt) => ({
@@ -273,7 +195,7 @@ describe('classify', () => {
     });
 
     it('uses the manifest topics, and falls back to pipeline/topics.json when the manifest has none', async () => {
-        await seed({ 'easy:free': [buildQuestion('q-1', 'p')] }, [{ id: 'iterables', label: 'I' }]);
+        await seed({ easy: [buildQuestion('q-1', 'p')] }, [{ id: 'iterables', label: 'I' }]);
         const fromManifest = scripted(() => ({
             confidence: 0.9,
             topic: 'iterables',
@@ -281,14 +203,14 @@ describe('classify', () => {
         await run(fromManifest);
         expect(fromManifest.prompts[0]).toContain('- iterables');
         expect(fromManifest.prompts[0]).not.toContain('- wtf');
-        await seed({ 'easy:free': [buildQuestion('q-1', 'p')] }, []);
+        await seed({ easy: [buildQuestion('q-1', 'p')] }, []);
         const fromFile = scripted(() => ({ confidence: 0.9, topic: 'wtf' }));
         await run(fromFile);
         expect(fromFile.prompts[0]).toContain('- strings\n- wtf');
     });
 
     it('carries the validate verdicts and earlier agreement forward in the report', async () => {
-        await seed({ 'easy:free': [buildQuestion('q-1', 'p')] });
+        await seed({ easy: [buildQuestion('q-1', 'p')] });
         const verdict = { bankKey: 'python/easy', id: 'q-1', status: 'passed' };
         await writeTree(pipelineDir, {
             'reports/latest.json': {
@@ -306,79 +228,27 @@ describe('classify', () => {
     it('refuses a manifest with a traversal path before any model call or write', async () => {
         await writeTree(contentDir, {
             'manifest.json': manifestWithBanks({
-                easy: buildEntry('../../evil.json', 'free'),
+                easy: buildEntry('../../evil.json'),
             }),
         });
         const provider = scripted(() => ({ confidence: 0.9, topic: 'strings' }));
         await expect(run(provider)).rejects.toThrow('Manifest rejected');
         expect(provider.prompts).toEqual([]);
         expect(await listFiles(pipelineDir)).toEqual(['topics.json']);
-        expect(await listFiles(contentRoot)).toEqual([]);
     });
 
     it('skips a question whose id is not a safe file name', async () => {
-        await seed({ 'easy:free': [buildQuestion('../escape', 'p')] });
+        await seed({ easy: [buildQuestion('../escape', 'p')] });
         const provider = scripted(() => ({ confidence: 0.1, topic: 'strings' }));
         await run(provider);
         expect(provider.prompts).toEqual([]);
         expect(await listFiles(join(pipelineDir, 'review-queue'))).toEqual([]);
     });
 
-    it('refuses a content root inside the pipeline directory when a paid bank exists', async () => {
-        await seed({ 'medium:paid': [buildQuestion('paid-1', PAID_TEXT)] });
-        const provider = scripted(() => ({ confidence: 0.1, topic: 'strings' }));
-        await mkdir(join(pipelineDir, 'private'), { recursive: true });
-        await expect(run(provider, { contentRoot: join(pipelineDir, 'private') })).rejects.toThrow(
-            'content root must be outside',
-        );
-        expect(provider.prompts).toEqual([]);
-    });
-
-    it.each([
-        ['a symlink pointing into the pipeline dir', 'link'],
-        ['the repo root', 'repo'],
-        ['the content dir', 'content'],
-    ])('refuses a content root that is %s', async (_name, kind) => {
-        await seed({ 'medium:paid': [buildQuestion('paid-1', PAID_TEXT)] });
-        const inside = join(pipelineDir, 'inside');
-        await mkdir(inside, { recursive: true });
-        await symlink(inside, join(root, 'link'));
-        const target = { content: contentDir, link: join(root, 'link'), repo: join(root, 'repo') }[kind] as string;
-        const provider = scripted(() => ({ confidence: 0.9, topic: 'strings' }));
-        await expect(run(provider, { contentRoot: target })).rejects.toThrow('content root must be outside');
-        expect(provider.prompts).toEqual([]);
-    });
-
-    it('accepts a sibling directory literally named ..private (not mistaken for a parent)', async () => {
-        await seed({ 'medium:paid': [buildQuestion('paid-1', PAID_TEXT)] });
-        const odd = join(root, '..private');
-        await writeTree(odd, { [PAID_BANK_FILE]: { questions: [buildQuestion('paid-1', PAID_TEXT)] } });
-        await run(
-            scripted(() => ({ confidence: 0.3, topic: 'strings' })),
-            { contentRoot: odd },
-        );
-        expect(await listFiles(odd)).toContain('review-queue/python/medium/paid-1.json');
-    });
-
-    it('refuses a directory named ..private inside the pipeline dir', async () => {
-        await seed({ 'medium:paid': [buildQuestion('paid-1', PAID_TEXT)] });
-        const odd = join(pipelineDir, '..private');
-        await mkdir(odd, { recursive: true });
-        const provider = scripted(() => ({ confidence: 0.9, topic: 'strings' }));
-        await expect(run(provider, { contentRoot: odd })).rejects.toThrow('content root must be outside');
-    });
-
-    it('fails clearly when a paid bank exists and the content root is missing', async () => {
-        await seed({ 'medium:paid': [buildQuestion('paid-1', PAID_TEXT)] });
-        const provider = scripted(() => ({ confidence: 0.9, topic: 'strings' }));
-        await expect(run(provider, { contentRoot: join(root, 'missing') })).rejects.toThrow('content root not found');
-        expect(provider.prompts).toEqual([]);
-    });
-
     it('keys review-queue files by bank, so a shared id in two banks cannot overwrite each other', async () => {
         await seed({
-            'easy:free': [buildQuestion('q-1', 'easy prompt')],
-            'hard:free': [buildQuestion('q-1', 'hard prompt')],
+            easy: [buildQuestion('q-1', 'easy prompt')],
+            hard: [buildQuestion('q-1', 'hard prompt')],
         });
         await run(scripted((prompt) => ({ confidence: prompt.includes('easy prompt') ? 0.9 : 0.3, topic: 'strings' })));
         expect((await readJson(join(pipelineDir, 'review-queue/python/hard/q-1.json'))).reason).toBe('low-confidence');
@@ -386,7 +256,7 @@ describe('classify', () => {
     });
 
     it('refuses duplicate ids within a bank, case-insensitively', async () => {
-        await seed({ 'easy:free': [buildQuestion('Q-1', 'first'), buildQuestion('q-1', 'second')] });
+        await seed({ easy: [buildQuestion('Q-1', 'first'), buildQuestion('q-1', 'second')] });
         const provider = scripted(() => ({ confidence: 0.9, topic: 'strings' }));
         await run(provider);
         expect(provider.prompts).toHaveLength(2);

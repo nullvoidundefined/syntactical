@@ -1,8 +1,7 @@
 // `pipeline rewrite-prompts`: for each manifest bank with staged generated questions, one model
-// call rewrites the mc prompts in `generated/<language>/<difficulty>.json` in place. Free staged
-// files live under the pipeline dir, paid ones under the private content root. Banks with nothing
-// staged cost no call. Bank files are never written; publish moves the staged cards in.
-import { mkdir, mkdtemp, rm, stat } from 'node:fs/promises';
+// call rewrites the mc prompts in `generated/<language>/<difficulty>.json` in place. Staged files live
+// under the pipeline dir. Banks with nothing staged cost no call. Bank files are never written; publish moves the staged cards in.
+import { mkdtemp, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -38,37 +37,27 @@ function staged(id: string): Json {
     };
 }
 
-function bank(path: string, access: 'free' | 'paid'): Json {
-    return {
-        access,
-        contentVersion: 1,
-        hash: HASH,
-        path,
-        topicCounts: {},
-        ...(access === 'paid' ? { productId: `syntactical.${path.replace('/', '.').replace('.json', '')}` } : {}),
-    };
+function bank(path: string): Json {
+    return { contentVersion: 1, hash: HASH, path, topicCounts: {} };
 }
 
 describe('rewritePrompts command', () => {
     let root: string;
     let contentDir: string;
-    let contentRoot: string;
     let pipelineDir: string;
 
     beforeEach(async () => {
         root = await mkdtemp(join(tmpdir(), 'rewrite-prompts-'));
         contentDir = join(root, 'repo/content');
-        contentRoot = join(root, 'syntactical-content');
         pipelineDir = join(root, 'repo/pipeline');
-        await mkdir(contentRoot, { recursive: true });
         await writeJson(
             join(contentDir, 'manifest.json'),
             buildManifest(
                 buildLanguage({
                     banks: {
-                        easy: bank('python/easy.json', 'free'),
-                        hard: bank('python/hard.json', 'paid'),
-                        medium: bank('python/medium.json', 'paid'),
+                        easy: bank('python/easy.json'),
+                        hard: bank('python/hard.json'),
+                        medium: bank('python/medium.json'),
                     },
                     glyph: 'PY',
                     grammar: 'python',
@@ -83,12 +72,12 @@ describe('rewritePrompts command', () => {
         await rm(root, { force: true, recursive: true });
     });
 
-    it('rewrites staged free and paid banks with one call each and skips a bank with nothing staged', async () => {
+    it('rewrites staged banks with one call each and skips a bank with nothing staged', async () => {
         await writeJson(join(pipelineDir, 'generated/python/easy.json'), {
             questions: [staged('e1'), staged('e2')],
             schemaVersion: 2,
         });
-        await writeJson(join(contentRoot, 'generated/python/medium.json'), {
+        await writeJson(join(pipelineDir, 'generated/python/medium.json'), {
             questions: [staged('m1')],
             schemaVersion: 2,
         });
@@ -104,7 +93,7 @@ describe('rewritePrompts command', () => {
             },
         } as unknown as ModelProvider;
 
-        await rewritePrompts({ contentDir, contentRoot, log: () => undefined, pipelineDir, provider });
+        await rewritePrompts({ contentDir, log: () => undefined, pipelineDir, provider });
 
         expect(prompts).toHaveLength(2);
         const easy = await readJson<{ questions: Json[] }>(join(pipelineDir, 'generated/python/easy.json'));
@@ -113,29 +102,8 @@ describe('rewritePrompts command', () => {
             'What does e2 print?',
         ]);
         expect(easy.questions[0]).toEqual({ ...staged('e1'), prompt: 'What does e1 print?' });
-        const medium = await readJson<{ questions: Json[] }>(join(contentRoot, 'generated/python/medium.json'));
+        const medium = await readJson<{ questions: Json[] }>(join(pipelineDir, 'generated/python/medium.json'));
         expect(medium.questions.map((question) => question.prompt)).toEqual(['What does m1 print?']);
-        await expect(stat(join(contentRoot, 'generated/python/hard.json'))).rejects.toThrow();
-        await expect(stat(join(pipelineDir, 'generated/python/medium.json'))).rejects.toThrow();
-    });
-
-    it('never sends paid question text when the content root sits inside the repo', async () => {
-        const insideRoot = join(root, 'repo/private');
-        await mkdir(insideRoot, { recursive: true });
-        await writeJson(join(insideRoot, 'generated/python/medium.json'), {
-            questions: [staged('m1')],
-            schemaVersion: 2,
-        });
-        let calls = 0;
-        const provider = {
-            async generate() {
-                calls += 1;
-                return { model: 'fake-model', value: { prompts: [] } };
-            },
-        } as unknown as ModelProvider;
-        await expect(
-            rewritePrompts({ contentDir, contentRoot: insideRoot, log: () => undefined, pipelineDir, provider }),
-        ).rejects.toThrow(/content root/);
-        expect(calls).toBe(0);
+        await expect(stat(join(pipelineDir, 'generated/python/hard.json'))).rejects.toThrow();
     });
 });

@@ -174,23 +174,18 @@
         "easy": {
           "path": "python/easy.json",
           "hash": "1ac24fdba8eff40b0880b0f28d943d29a0a9b8fc60fb0ac7f185cd0a692bbba9",
-          "access": "free",
           "contentVersion": 6,
           "topicCounts": {}
         },
         "medium": {
           "path": "python/medium.json",
           "hash": "72f3bcb4c7ed1dd71a0a7a1f753719986f60ab207efdc823e3b898276664afd5",
-          "access": "paid",
-          "productId": "syntactical.python.medium",
           "contentVersion": 2,
           "topicCounts": {}
         },
         "hard": {
           "path": "python/hard.json",
           "hash": "57d8948b799ba110f6f412c313d6e3b82e786b3ab44ef9f1787bac757dc57207",
-          "access": "paid",
-          "productId": "syntactical.python.hard",
           "contentVersion": 2,
           "topicCounts": {}
         }
@@ -366,23 +361,18 @@
         "easy": {
           "path": "postgres/easy.json",
           "hash": "0a59b7856981e882a7b21cfd07b8cbdb272b7a527b45fa51b57a0d72163b9e29",
-          "access": "free",
           "contentVersion": 6,
           "topicCounts": {}
         },
         "medium": {
           "path": "postgres/medium.json",
           "hash": "d30594013efae0567f621ae690a2dae9a6d17a68823f4ed1aca519a08d31e248",
-          "access": "paid",
-          "productId": "syntactical.postgres.medium",
           "contentVersion": 2,
           "topicCounts": {}
         },
         "hard": {
           "path": "postgres/hard.json",
           "hash": "d7b15f6eee2b7fd59add76c961441872e03381f43e8d7dbbb5fd910b382bde13",
-          "access": "paid",
-          "productId": "syntactical.postgres.hard",
           "contentVersion": 2,
           "topicCounts": {}
         }
@@ -562,23 +552,18 @@
         "easy": {
           "path": "javascript/easy.json",
           "hash": "0d77a9a02faefd6e024ee50d1a121ee990ff93a1735e96d2fb11ddd7835e34cc",
-          "access": "free",
           "contentVersion": 6,
           "topicCounts": {}
         },
         "medium": {
           "path": "javascript/medium.json",
           "hash": "50b44c1b69e4177b89d6a9f3afb292d2a044e1d9b130db9d08386838559ba4f1",
-          "access": "paid",
-          "productId": "syntactical.javascript.medium",
           "contentVersion": 2,
           "topicCounts": {}
         },
         "hard": {
           "path": "javascript/hard.json",
           "hash": "54907308a7859f90a95d9eeb05eb205909abe64d6a1b2ca90543a624e07bdfda",
-          "access": "paid",
-          "productId": "syntactical.javascript.hard",
           "contentVersion": 2,
           "topicCounts": {}
         }
@@ -655,7 +640,6 @@
         "easy": {
           "path": "go/easy.json",
           "hash": "56e8e3f846e0470f0109a0feb5b77def2135419421e125f634efe47d2d5c7f48",
-          "access": "free",
           "contentVersion": 6,
           "topicCounts": {
             "operators-and-types": 10,
@@ -673,8 +657,6 @@
         "medium": {
           "path": "go/medium.json",
           "hash": "b6a226fce5611caf333ace71c9a7e26f097b050f5cb14d36c542abcc30311f32",
-          "access": "paid",
-          "productId": "syntactical.go.medium",
           "contentVersion": 3,
           "topicCounts": {
             "operators-and-types": 10,
@@ -692,8 +674,6 @@
         "hard": {
           "path": "go/hard.json",
           "hash": "0b2265c7a572d06f6d129e571e1d3120d75194cf9129a59199ca40950afa3cdc",
-          "access": "paid",
-          "productId": "syntactical.go.hard",
           "contentVersion": 3,
           "topicCounts": {
             "operators-and-types": 10,
@@ -797,7 +777,6 @@
         "easy": {
           "path": "ruby/easy.json",
           "hash": "00d2bdab0eae471fb2af362879fd34603de14118a5f5d73b69290cebd43c699e",
-          "access": "free",
           "contentVersion": 5,
           "topicCounts": {
             "operators-and-types": 7,
@@ -815,8 +794,6 @@
         "medium": {
           "path": "ruby/medium.json",
           "hash": "2e91118a881d7642c969c8d424f5e207392d043e6d2b58abaa497bda6253f1c1",
-          "access": "paid",
-          "productId": "syntactical.ruby.medium",
           "contentVersion": 3,
           "topicCounts": {
             "operators-and-types": 10,
@@ -834,8 +811,6 @@
         "hard": {
           "path": "ruby/hard.json",
           "hash": "a35bbb18e884dba27a8325d27bfa1ea8302142d0df5ac795032a6c56e3159699",
-          "access": "paid",
-          "productId": "syntactical.ruby.hard",
           "contentVersion": 3,
           "topicCounts": {
             "operators-and-types": 10,
@@ -907,7 +882,6 @@
         "easy": {
           "path": "backend-security/easy.json",
           "hash": "a5530d8303893d2c6f6ca3da7ca2f80e17a95745f21bb456ac9926511b336f12",
-          "access": "free",
           "contentVersion": 4,
           "topicCounts": {
             "sql-injection": 10,
@@ -925,8 +899,6 @@
         "medium": {
           "path": "backend-security/medium.json",
           "hash": "088ff483e1550426941e8ad3698a23cda5887af00992c8911628ec242e102ca5",
-          "access": "paid",
-          "productId": "syntactical.backend-security.medium",
           "contentVersion": 2,
           "topicCounts": {
             "sql-injection": 10,
@@ -944,8 +916,6 @@
         "hard": {
           "path": "backend-security/hard.json",
           "hash": "f27d8222b935cdfce79e2d00674f21f8fc14e95688443163aeeb95866dad083c",
-          "access": "paid",
-          "productId": "syntactical.backend-security.hard",
           "contentVersion": 2,
           "topicCounts": {
             "sql-injection": 10,
@@ -1016,7 +986,6 @@
         "easy": {
           "path": "rails/easy.json",
           "hash": "5f0cb06036f10e2afb1723de2cc84278b4c4362a5f7de482807837ba8ea31e5e",
-          "access": "free",
           "contentVersion": 7,
           "topicCounts": {
             "activerecord-queries": 10,
@@ -1034,8 +1003,6 @@
         "medium": {
           "path": "rails/medium.json",
           "hash": "dd298ba093b9e9b75d51a7626443687cd2b346abbe7b9f65f9c58d38c8ad1286",
-          "access": "paid",
-          "productId": "syntactical.rails.medium",
           "contentVersion": 4,
           "topicCounts": {
             "activerecord-queries": 10,
@@ -1053,8 +1020,6 @@
         "hard": {
           "path": "rails/hard.json",
           "hash": "53c7a9559ea6f8c17720a51658af6de7d185d80e3f844c3dd76dced5ae07ee55",
-          "access": "paid",
-          "productId": "syntactical.rails.hard",
           "contentVersion": 4,
           "topicCounts": {
             "activerecord-queries": 10,
@@ -1126,7 +1091,6 @@
         "easy": {
           "path": "frontend-security/easy.json",
           "hash": "8466ed14e1758b388fc7f6507be6ea11046e93099224d6df4a7ca83e36a2c463",
-          "access": "free",
           "contentVersion": 4,
           "topicCounts": {
             "dom-xss": 10,
@@ -1144,8 +1108,6 @@
         "medium": {
           "path": "frontend-security/medium.json",
           "hash": "52611f37102489310fac198471c304ae8dc5ed5e26edc0431b89cb5ab33dd87b",
-          "access": "paid",
-          "productId": "syntactical.frontend-security.medium",
           "contentVersion": 2,
           "topicCounts": {
             "dom-xss": 10,
@@ -1163,8 +1125,6 @@
         "hard": {
           "path": "frontend-security/hard.json",
           "hash": "8830eeba190e57ab6f2a559ec524ea470923dcc8ba73f580c1d736ecd99d1bec",
-          "access": "paid",
-          "productId": "syntactical.frontend-security.hard",
           "contentVersion": 2,
           "topicCounts": {
             "dom-xss": 10,
@@ -1235,7 +1195,6 @@
         "easy": {
           "path": "sql/easy.json",
           "hash": "5fee11bf5f7cede68b9b6a9a6010ac0edbad7bfda893d0dd86b8036dc02a6a47",
-          "access": "free",
           "contentVersion": 4,
           "topicCounts": {
             "filtering-and-nulls": 10,
@@ -1253,7 +1212,6 @@
         "medium": {
           "path": "sql/medium.json",
           "hash": "277a8b439f906f911a8faf18f9ac80c4f94d6d373412ca563acd241fa59953f5",
-          "access": "paid",
           "contentVersion": 3,
           "topicCounts": {
             "filtering-and-nulls": 10,
@@ -1266,13 +1224,11 @@
             "ctes": 10,
             "data-modification": 10,
             "constraints-and-keys": 10
-          },
-          "productId": "syntactical.sql.medium"
+          }
         },
         "hard": {
           "path": "sql/hard.json",
           "hash": "eaa0126ad9e781a9b6099e5811eb0b54b87db9be86f416c266b9eaaa5f7b04ac",
-          "access": "paid",
           "contentVersion": 3,
           "topicCounts": {
             "filtering-and-nulls": 10,
@@ -1285,8 +1241,7 @@
             "ctes": 10,
             "data-modification": 10,
             "constraints-and-keys": 10
-          },
-          "productId": "syntactical.sql.hard"
+          }
         }
       },
       "category": "database"
@@ -1344,7 +1299,6 @@
         "easy": {
           "path": "typescript/easy.json",
           "hash": "7b52af5190978bd78aeae7721446a18924e156df83e7b217afb6a73504e66c8d",
-          "access": "free",
           "contentVersion": 2,
           "topicCounts": {
             "types-and-inference": 10,
@@ -1362,7 +1316,6 @@
         "medium": {
           "path": "typescript/medium.json",
           "hash": "bf9e965afad351648f2f97179e6083ac7fca766a214c65b2972194228922f440",
-          "access": "paid",
           "contentVersion": 2,
           "topicCounts": {
             "types-and-inference": 10,
@@ -1375,13 +1328,11 @@
             "classes": 10,
             "enums-and-const": 10,
             "compile-vs-runtime": 10
-          },
-          "productId": "syntactical.typescript.medium"
+          }
         },
         "hard": {
           "path": "typescript/hard.json",
           "hash": "23833dfc249974cddda521d8ca82c27714d403b5fe00bf932a2d25505ed01175",
-          "access": "paid",
           "contentVersion": 2,
           "topicCounts": {
             "types-and-inference": 10,
@@ -1394,8 +1345,7 @@
             "classes": 10,
             "enums-and-const": 10,
             "compile-vs-runtime": 10
-          },
-          "productId": "syntactical.typescript.hard"
+          }
         }
       },
       "category": "frontend"
@@ -1453,7 +1403,6 @@
         "easy": {
           "path": "typescript-types/easy.json",
           "hash": "54cdd2e803fda0d21f00197e7e161cdc2ba91d41fdd676b0fefc84267f97fe71",
-          "access": "free",
           "contentVersion": 6,
           "topicCounts": {
             "conditional-types": 10,
@@ -1471,7 +1420,6 @@
         "medium": {
           "path": "typescript-types/medium.json",
           "hash": "26acec77110e8083b41e8f990b4c0fc99cea7dab581b6111f9f4401250fd117a",
-          "access": "paid",
           "contentVersion": 3,
           "topicCounts": {
             "infer": 10,
@@ -1484,13 +1432,11 @@
             "generic-constraints": 10,
             "recursive-and-indexed-types": 10,
             "conditional-types": 9
-          },
-          "productId": "syntactical.typescript-types.medium"
+          }
         },
         "hard": {
           "path": "typescript-types/hard.json",
           "hash": "4f78162c0bfcff627b2c877399983add018bb0cba00f98ea7ee7a0cc14e8cdfc",
-          "access": "paid",
           "contentVersion": 3,
           "topicCounts": {
             "conditional-types": 10,
@@ -1503,8 +1449,7 @@
             "discriminated-unions": 10,
             "generic-constraints": 10,
             "recursive-and-indexed-types": 10
-          },
-          "productId": "syntactical.typescript-types.hard"
+          }
         }
       },
       "category": "frontend"
@@ -1562,7 +1507,6 @@
         "easy": {
           "path": "nodejs/easy.json",
           "hash": "c58dbc9c3c78cad20acb2d43d45d38b135654c52068e8115f1ee52059e23e3b9",
-          "access": "free",
           "contentVersion": 6,
           "topicCounts": {
             "event-loop-and-timers": 10,
@@ -1580,7 +1524,6 @@
         "medium": {
           "path": "nodejs/medium.json",
           "hash": "e8c157c2e884b9ae622714d229569413952792ea2ca5f410a251f37c51cc67d8",
-          "access": "paid",
           "contentVersion": 4,
           "topicCounts": {
             "event-loop-and-timers": 10,
@@ -1593,13 +1536,11 @@
             "streams": 10,
             "fs": 10,
             "modules": 10
-          },
-          "productId": "syntactical.nodejs.medium"
+          }
         },
         "hard": {
           "path": "nodejs/hard.json",
           "hash": "c2e63c45c58ac7b2784e7791cfaee1529309d4ce5c0861119e26140269e474fc",
-          "access": "paid",
           "contentVersion": 5,
           "topicCounts": {
             "event-loop-and-timers": 10,
@@ -1612,8 +1553,7 @@
             "error-handling": 10,
             "process-and-env": 10,
             "async-patterns": 10
-          },
-          "productId": "syntactical.nodejs.hard"
+          }
         }
       },
       "category": "backend"

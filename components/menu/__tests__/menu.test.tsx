@@ -6,8 +6,26 @@ import { LanguageStep } from '../LanguageStep';
 import { SelectionCard } from '../SelectionCard';
 
 const languages: LanguageEntry[] = [
-  { banks: { easy: { access: 'free', contentVersion: 1, hash: 'a'.repeat(64), path: 'python/easy.json', topicCounts: {} } }, glyph: 'PY', grammar: 'python', id: 'python', label: 'Python', misconceptions: [], tagline: 'Sharp edges.', topics: [] },
-  { banks: { hard: { access: 'paid', contentVersion: 1, hash: 'b'.repeat(64), path: 'elixir/hard.json', productId: 'syntactical.elixir.hard', topicCounts: {} } }, glyph: 'EX', grammar: 'plain', id: 'elixir', label: 'Elixir', misconceptions: [], tagline: 'Pipes.', topics: [] },
+  {
+    banks: { easy: { contentVersion: 1, hash: 'a'.repeat(64), path: 'python/easy.json', topicCounts: {} } },
+    glyph: 'PY',
+    grammar: 'python',
+    id: 'python',
+    label: 'Python',
+    misconceptions: [],
+    tagline: 'Sharp edges.',
+    topics: [],
+  },
+  {
+    banks: { hard: { contentVersion: 1, hash: 'b'.repeat(64), path: 'elixir/hard.json', topicCounts: {} } },
+    glyph: 'EX',
+    grammar: 'plain',
+    id: 'elixir',
+    label: 'Elixir',
+    misconceptions: [],
+    tagline: 'Pipes.',
+    topics: [],
+  },
 ];
 
 describe('menu', () => {
@@ -22,7 +40,14 @@ describe('menu', () => {
   it('labels and disables a difficulty that needs a connection', async () => {
     const onSelect = jest.fn();
     await render(
-      <SelectionCard keyHint={1} title="Hard" subtitle={DIFFICULTIES[2].description} onSelect={onSelect} isDisabled statusLabel="Needs a connection to load" />,
+      <SelectionCard
+        keyHint={1}
+        title="Hard"
+        subtitle={DIFFICULTIES[2].description}
+        onSelect={onSelect}
+        isDisabled
+        statusLabel="Needs a connection to load"
+      />,
     );
     expect(screen.getByText('Needs a connection to load')).toBeTruthy();
     await fireEvent.press(screen.getByText('Hard'));

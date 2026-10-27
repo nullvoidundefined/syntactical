@@ -64,11 +64,9 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   }
   try {
     const publicDir = join(stateDir, 'public');
-    const paidDir = join(stateDir, 'paid');
     const webDir = join(stateDir, 'web');
     const codesFile = join(stateDir, 'codes.jsonl');
     await mkdir(publicDir);
-    await mkdir(paidDir);
 
     const database = await startDatabase();
     stops.push(database.stop);
@@ -86,7 +84,7 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
     runStep('running migrations', 'npm', ['run', '--silent', 'migrate:up', '-w', 'server'], {
       DATABASE_URL: databaseUrl,
     });
-    await writeFixtureContent({ contentSource: join(REPOSITORY_ROOT, 'content'), paidDir, publicDir });
+    await writeFixtureContent({ contentSource: join(REPOSITORY_ROOT, 'content'), publicDir });
 
     const apiLog = createWriteStream(join(stateDir, 'api.log'));
     const api = spawn(process.execPath, ['--import', 'tsx', join(REPOSITORY_ROOT, 'e2e/support/runApi.mts')], {
@@ -100,7 +98,6 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
         E2E_CODES_FILE: codesFile,
         EMAIL_FROM: 'Syntactical <e2e@example.test>',
         NODE_ENV: 'test',
-        PAID_CONTENT_DIR: paidDir,
         PORT: String(apiPort),
         RATE_LIMIT_KEY_SECRET: randomBytes(SECRET_BYTES).toString('hex'),
       },
@@ -135,7 +132,6 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
       codesFile,
       contentDir: publicDir,
       databaseUrl,
-      paidContentDir: paidDir,
       webUrl: `${webOrigin}${BASE_PATH}/`,
     };
     await writeFile(join(stateDir, 'state.json'), JSON.stringify(state), { mode: 0o600 });

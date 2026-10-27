@@ -1,7 +1,7 @@
 // `pipeline gap-fill` batch generation: one model call per short topic (at most 2 per run),
 // cards proven in the sandbox, staging complete enough that publish needs no enrich. Fake
 // provider, fake runner, fake judge; no Docker, no network.
-import { mkdir, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -17,7 +17,6 @@ import type { OracleRun } from '../../types/OracleRun.js';
 import { readJson, writeJson } from '../fixtures/jsonFiles.js';
 import { buildBankEntry, buildLanguage, buildManifest, HASH } from '../fixtures/manifest.js';
 
-const PAID_MARKER = 'PAID-BATCH-MARKER';
 const TARGET = 10;
 
 type RawCard = Record<string, unknown>;
@@ -37,11 +36,11 @@ function buildOracle(output: string, language?: string, setupSql?: string): Reco
     };
 }
 
-function boolCard(tag: string, extra: { answer?: boolean; language?: string; marker?: string } = {}): RawCard {
+function boolCard(tag: string, extra: { answer?: boolean; language?: string } = {}): RawCard {
     return {
         answer: extra.answer ?? true,
         oracle: buildOracle('True', extra.language),
-        prompt: `Does payload ${tag} ${extra.marker ?? ''} return every row?`,
+        prompt: `Does payload ${tag}  return every row?`,
         query: { explanation: 'e', title: 't' },
         rationale: 'The OR clause makes the WHERE condition always true.',
         type: 'bool',
@@ -64,17 +63,7 @@ function mcCard(tag: string, language?: string, setupSql?: string): RawCard {
     };
 }
 
-async function listFiles(dir: string): Promise<string[]> {
-    const names = await readdir(dir, { recursive: true }).catch(() => [] as string[]);
-    const files: string[] = [];
-    for (const name of names) {
-        if (!(await stat(join(dir, name))).isDirectory()) files.push(name);
-    }
-    return files.sort();
-}
-
 interface Seed {
-    access?: 'free' | 'paid';
     // Existing bank questions: [prompt, topic].
     bank?: [string, string][];
     kind?: Kind;
@@ -85,7 +74,6 @@ interface Seed {
 describe('gapFill batch generation', () => {
     let root: string;
     let contentDir: string;
-    let contentRoot: string;
     let pipelineDir: string;
     let logs: string[];
     let ranOracles: Oracle[];
@@ -129,7 +117,6 @@ describe('gapFill batch generation', () => {
     function run(provider: ModelProvider, withJudge = false) {
         return gapFill({
             contentDir,
-            contentRoot,
             log: (line) => logs.push(line),
             newRunId: () => 'run-1',
             now: () => '2026-10-05T00:00:00.000Z',
@@ -145,20 +132,19 @@ describe('gapFill batch generation', () => {
     }
 
     async function seed(options: Seed = {}): Promise<void> {
-        const { access = 'free', bank = [], kind = 'language', staged = [], topics = ['strings'] } = options;
+        const { bank = [], kind = 'language', staged = [], topics = ['strings'] } = options;
         id = kind === 'topic' ? 'backend-security' : 'python';
-        const productId = access === 'paid' ? `syntactical.${id}.easy` : undefined;
         const entry = buildLanguage({
-            banks: { easy: buildBankEntry(`${id}/easy.json`, access, productId) },
+            banks: { easy: buildBankEntry(`${id}/easy.json`) },
             id,
             label: id,
             topics: topics.map((topic) => ({ id: topic, label: topic })),
             ...(kind === 'topic' ? { kind: 'topic' } : {}),
         });
-        outRoot = access === 'free' ? pipelineDir : contentRoot;
+        outRoot = pipelineDir;
         const questions = bank.map(([prompt], index) => ({ answer: true, id: `bank-${index}`, prompt, type: 'bool' }));
         await writeJson(join(contentDir, 'manifest.json'), buildManifest(entry));
-        await writeJson(join(access === 'free' ? contentDir : contentRoot, `${id}/easy.json`), {
+        await writeJson(join(contentDir, `${id}/easy.json`), {
             questions,
             schemaVersion: 2,
         });
@@ -192,9 +178,7 @@ describe('gapFill batch generation', () => {
     beforeEach(async () => {
         root = await mkdtemp(join(tmpdir(), 'gap-fill-batch-'));
         contentDir = join(root, 'repo/content');
-        contentRoot = join(root, 'syntactical-content');
         pipelineDir = join(root, 'repo/pipeline');
-        await mkdir(contentRoot, { recursive: true });
         await writeJson(join(pipelineDir, 'topics.json'), {});
         logs = [];
         ranOracles = [];
@@ -316,7 +300,6 @@ describe('gapFill batch generation', () => {
             const [language] = manifest.languages;
             if (language === undefined) throw new Error('seed must create a language');
             language.banks.medium = {
-                access: 'free',
                 contentVersion: 1,
                 hash: HASH,
                 path: `${id}/medium.json`,
@@ -468,28 +451,6 @@ describe('gapFill batch generation', () => {
                 language: 'postgres',
                 setupSql: 'SELECT 1',
             });
-        });
-
-        it('keeps paid output under the content root and nothing of it under pipelineDir', async () => {
-            await seed({ access: 'paid' });
-            const provider = buildProvider(({ count }) =>
-                Array.from({ length: count }, (_unused, index) => boolCard(`p${index}`, { marker: PAID_MARKER })),
-            );
-            await run(provider);
-            expect(outRoot).toBe(contentRoot);
-            const staged = await readJson<{ questions: { id: string }[] }>(
-                join(contentRoot, `generated/${id}/easy.json`),
-            );
-            expect(staged.questions).toHaveLength(TARGET);
-            const oracles = await readJson(join(contentRoot, `oracles/${id}/easy.json`));
-            expect(Object.keys(oracles).sort()).toEqual(staged.questions.map((question) => question.id).sort());
-            for (const name of await listFiles(pipelineDir)) {
-                const text = await readFile(join(pipelineDir, name), 'utf8');
-                expect(text).not.toContain(PAID_MARKER);
-                for (const { id: questionId } of staged.questions) expect(text).not.toContain(questionId);
-            }
-            expect(await listFiles(join(pipelineDir, 'oracles'))).toEqual([]);
-            expect(await listFiles(join(pipelineDir, 'generated'))).toEqual([]);
         });
     });
 

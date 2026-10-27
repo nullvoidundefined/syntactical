@@ -1,8 +1,8 @@
 // `pipeline draft-taxonomy <language>`: drafts the language's misconception list and writes
 // `<pipelineDir>/taxonomy/<language>.draft.json`. It never writes the approved
 // `<language>.json`: the owner reviews the draft and renames it to approve it, and only the
-// approved file reaches the content manifest. The model sees questions from FREE banks only
-// (plus its own knowledge of the language), so no paid question text leaves the private repo.
+// approved file reaches the content manifest. The model sees the questions of every bank of the language
+// (plus its own knowledge of it).
 import { join } from 'node:path';
 
 import type { Question } from '@syntactical/content-schema';
@@ -33,10 +33,8 @@ export async function draftTaxonomy(options: DraftTaxonomyOptions): Promise<stri
         throw new Error(`unknown language: ${sanitizeLogText(language)}`);
     }
     const questions: Question[] = [];
-    for (const { access, path } of Object.values(entry.banks)) {
-        if (access === 'free') {
-            questions.push(...(await readBankQuestions(join(contentDir, path))));
-        }
+    for (const { path } of Object.values(entry.banks)) {
+        questions.push(...(await readBankQuestions(join(contentDir, path))));
     }
     const misconceptions = await draftTaxonomyList(language, questions, provider);
     const draftPath = join(pipelineDir, 'taxonomy', `${language}.draft.json`);

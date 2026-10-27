@@ -1,5 +1,5 @@
-// Reads the questions of one bank file. Bank files are trusted committed content (or the
-// private content root's copy), so the shape is not re-validated here; the content build
+// Reads the questions of one bank file. Bank files are trusted committed content, so the shape is
+// not re-validated here; the content build
 // and `pipeline validate` are the gates on their contents.
 import type { Question } from '@syntactical/content-schema';
 

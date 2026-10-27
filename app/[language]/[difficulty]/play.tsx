@@ -4,13 +4,14 @@
 // of round state resets. `?topic=<id>` plays one topic of the bank; a topic
 // the bank has no questions for falls back to the whole bank. `?count=20|50`
 // plays a random sample of that many from the pool, when smaller than it.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { router, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import NotFoundScreen from '../../+not-found';
 import { QuizRound } from '../../../components/quiz/QuizRound';
+import { recordBankUse } from '../../../services/content/bankStore';
 import { findDifficulty } from '../../../services/content/findDifficulty';
 import { findLanguageEntry } from '../../../services/content/findLanguageEntry';
 import { readRoundCount } from '../../../services/quiz/roundLength';
@@ -46,8 +47,11 @@ export default function RoundScreen() {
   const difficultyEntry = findDifficulty(difficulty);
 
   const { status } = bankState;
-  // A locked paid bank (no entitlement) is not playable from a deep link.
-  if (!languageEntry || !difficultyEntry || status === 'unknown' || status === 'locked') return <NotFoundScreen />;
+  // Playing a cached Medium or Hard bank counts as a use, so the cache evicts it last.
+  useEffect(() => {
+    if (status === 'ready') void recordBankUse(language, difficulty);
+  }, [difficulty, language, status]);
+  if (!languageEntry || !difficultyEntry || status === 'unknown') return <NotFoundScreen />;
   if ('retry' in bankState) {
     const { retry } = bankState;
     return <DownloadFailed onRetry={retry} />;

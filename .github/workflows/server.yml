@@ -35,11 +35,7 @@ jobs:
         with:
           node-version: 22
 
-      # With the deploy key (a pull request from this repo), the paid banks come from the private
-      # content repo, cloned outside Docker. Without it (a fork, or the secret not set yet), the
-      # fixture content stands in, so CI still proves the image builds and runs.
+      # The image bakes in this repository's content; every bank is public, so no secret is needed.
       - uses: ./.github/actions/check-api-image
         env:
           DATABASE_URL: postgres://postgres@127.0.0.1:5432/postgres
-        with:
-          content-deploy-key: ${{ secrets.CONTENT_DEPLOY_KEY }}

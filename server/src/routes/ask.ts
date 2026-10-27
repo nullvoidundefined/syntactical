@@ -1,8 +1,8 @@
 // POST /v1/ask: answers a learner's follow-up question about one quiz question, using Claude
 // with the question, its answer key, and its explanation as context. Only for a user with any
-// granted entitlement; a question from a paid bank also needs that bank's entitlement, so paid
-// content never reaches someone who has not bought it. Each user gets ASK.DAILY_LIMIT answers per
-// UTC day, counting only answers given, under a per-minute burst limit.
+// granted entitlement (area 3 replaces this gate with the Pro tier's limits); every bank is free,
+// so no bank needs its own entitlement. Each user gets ASK.DAILY_LIMIT answers per UTC day,
+// counting only answers given, under a per-minute burst limit.
 //
 // Order: session (401), burst limit (429), body (400), question lookup (404), entitlement (403),
 // model configured (503), daily limit (429 ASK_DAILY_LIMIT_REACHED), model call (503
@@ -20,7 +20,6 @@ import { createRequireSession } from '../middleware/requireSession.js';
 import { askSchemas } from '../schemas/askSchemas.js';
 import { buildAskPrompt } from '../services/buildAskPrompt.js';
 import { hasAnyEntitlement } from '../services/hasAnyEntitlement.js';
-import { hasEntitlement } from '../services/hasEntitlement.js';
 import { releaseAskUsage } from '../services/releaseAskUsage.js';
 import { reserveAskUsage } from '../services/reserveAskUsage.js';
 
@@ -37,7 +36,7 @@ function toUsageDate(now: Date): string {
 }
 
 function createAskRouter(deps: ResolvedAskDeps, logger: Logger): Router {
-  const { database, modelProvider, now, paidBanks, questions, rateLimitKeySecret } = deps;
+  const { database, modelProvider, now, questions, rateLimitKeySecret } = deps;
   const router = Router();
   const requireSession = createRequireSession({ database, now });
   const perUser = createRateLimit({
@@ -69,11 +68,7 @@ function createAskRouter(deps: ResolvedAskDeps, logger: Logger): Router {
       sendError(res, BAD_REQUEST, ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body');
       return;
     }
-    const paidBank = paidBanks.get(bankKey);
-    const isEntitled = paidBank
-      ? await hasEntitlement(database, userId, paidBank.productId)
-      : await hasAnyEntitlement(database, userId);
-    if (!isEntitled) {
+    if (!(await hasAnyEntitlement(database, userId))) {
       sendError(res, FORBIDDEN, ERROR_CODES.ENTITLEMENT.REQUIRED, 'Asking requires a purchase');
       return;
     }

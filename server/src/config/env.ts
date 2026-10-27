@@ -1,5 +1,4 @@
 import { randomBytes } from 'node:crypto';
-import { isAbsolute } from 'node:path';
 
 import { z } from 'zod';
 
@@ -32,12 +31,6 @@ const envSchema = z.object({
   // The sign-in email's sender, for example `Syntactical <sign-in@syntactical.dev>`.
   EMAIL_FROM: z.string().trim().min(1),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  // Where paid banks live, outside the public content directory.
-  PAID_CONTENT_DIR: z
-    .string()
-    .trim()
-    .min(1)
-    .refine((value) => isAbsolute(value)),
   // The cap on concurrent scrypt derivations; each holds about 128 MiB while it runs.
   PASSWORD_HASH_CONCURRENCY: hashConcurrency.default(HASH_CONCURRENCY_DEFAULT),
   RATE_LIMIT_KEY_SECRET: strongSecret,
@@ -78,7 +71,7 @@ function isMissing(value: string | undefined): boolean {
 
 // Fails closed. The error names each offending variable and never includes a value. Only a
 // missing variable is ever stubbed, and only when ALLOW_STUBBED_INTEGRATIONS is exactly `true`;
-// a present but invalid value still fails. DATABASE_URL and PAID_CONTENT_DIR are never stubbed.
+// a present but invalid value still fails. DATABASE_URL is never stubbed.
 function loadEnv(source: NodeJS.ProcessEnv): Env {
   const effective: NodeJS.ProcessEnv = { ...source };
   const stubbed: StubbedIntegration[] = [];

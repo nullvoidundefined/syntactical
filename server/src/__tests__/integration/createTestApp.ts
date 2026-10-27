@@ -16,7 +16,6 @@ import type { AskDeps } from '../../routes/askDeps.js';
 import type { StudyNoteDeps } from '../../routes/studyNoteDeps.js';
 import type { AuthDeps } from '../../routes/authDeps.js';
 import type { AnswerKey } from '../../types/AnswerKey.js';
-import type { PaidBanks } from '../../types/PaidBanks.js';
 
 const SECRET_BYTES = 32;
 const ALLOWED_ORIGIN = 'https://syntactical.dev';
@@ -34,8 +33,6 @@ interface TestAppOptions {
   // The /v1/auth routes, on the clock and the generated rate-limit key secret; `database`
   // replaces `pool` for these routes only (health still uses `pool`), e.g. to make a query fail.
   auth?: Omit<AuthDeps, 'database' | 'now' | 'rateLimitKeySecret'> & { database?: Database };
-  // The /v1 paid bank route, on `pool` and the clock.
-  banks?: { paidBanks: PaidBanks };
   // Probe routes for one test, mounted after the routers; they get the test's clock.
   extraRoutes?: (router: Router, clock: TestClock) => void;
   logger?: Logger;
@@ -65,7 +62,6 @@ export function createTestApp(options: TestAppOptions) {
     admin,
     ask,
     auth,
-    banks,
     extraRoutes,
     logger = pino({ level: 'silent' }),
     pool,
@@ -81,7 +77,6 @@ export function createTestApp(options: TestAppOptions) {
     allowedOrigins: [ALLOWED_ORIGIN],
     ...(ask ? { ask: { ...ask, database: pool, now: clock.now, rateLimitKeySecret } } : {}),
     ...(auth ? { auth: { ...auth, database: auth.database ?? pool, now: clock.now, rateLimitKeySecret } } : {}),
-    ...(banks ? { banks: { ...banks, database: pool, now: clock.now } } : {}),
     db: pool,
     extraRoutes: extraRoutes ? (router: Router) => extraRoutes(router, clock) : undefined,
     logger,

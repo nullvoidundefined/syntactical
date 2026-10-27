@@ -166,13 +166,13 @@ describe('sign-in route, password step', () => {
     expect(mockReplace).toHaveBeenCalledWith('/');
   });
 
-  it('returns to the paid bank paywall in returnTo after a password sign-in', async () => {
-    mockParams.current = { returnTo: '/python?paywall=medium' };
+  it('returns to the returnTo page after a password sign-in', async () => {
+    mockParams.current = { returnTo: '/python/medium?count=20' };
     mockCredentialSignIn.mockResolvedValue({ isOk: true });
     await render(<SignInScreen />);
     await signInWith(buildEmail(), buildPassword());
     expect(mockReplace).toHaveBeenCalledTimes(1);
-    expect(toHref(mockReplace.mock.calls[0][0])).toBe('/python?paywall=medium');
+    expect(toHref(mockReplace.mock.calls[0][0])).toBe('/python/medium?count=20');
   });
 
   it('ignores a returnTo naming another origin and goes home', async () => {
