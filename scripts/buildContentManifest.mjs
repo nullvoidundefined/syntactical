@@ -12,7 +12,7 @@ import {
   validateQuestionBank,
 } from '@syntactical/content-schema';
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, sep } from 'node:path';
 
 const UTF8_BYTE_ORDER_MARK = [0xef, 0xbb, 0xbf];
@@ -104,6 +104,19 @@ function assertSafeBankPaths(manifest) {
       }
     }
   }
+}
+
+// The web build copies content/ whole, so every .json file under a track directory must be a bank the manifest
+// lists; otherwise it would ship unhashed and unvalidated. Files at the top of content/ are not banks.
+async function assertNoUnlistedBanks(contentDir, manifest) {
+  const listed = new Set(listBankEntries(manifest).map(({ bank }) => bank.path));
+  const entries = await readdir(contentDir, { recursive: true, withFileTypes: true });
+  const unlisted = entries
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
+    .map((entry) => relative(contentDir, join(entry.parentPath, entry.name)).split(sep).join('/'))
+    .filter((bankPath) => bankPath.includes('/') && !listed.has(bankPath))
+    .sort();
+  if (unlisted.length > 0) throw new Error(`bank file not in the manifest: ${unlisted.join(', ')}`);
 }
 
 // Validates the manifest's shape before any bank is read, so a malformed entry
@@ -215,6 +228,7 @@ export async function buildContentManifest(contentDir, outputs, taxonomyDir) {
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   assertSafeBankPaths(manifest);
   assertValidManifest(withPlaceholderHashes(manifest));
+  await assertNoUnlistedBanks(contentDir, manifest);
   const bankCache = new Map();
   if (taxonomyDir) await applyApprovedTaxonomies(taxonomyDir, manifest, contentDir, bankCache);
   await hashAllBanks(contentDir, manifest, bankCache);
