@@ -3,7 +3,9 @@
 // /me does not say Pro yet says it is still processing and is re-checked twice, two seconds
 // apart, while mounted; a failed purchase says so and a cancelled one says nothing. A web purchase
 // goes to /purchase-complete for that product, where checkout's return is confirmed. The sheet
-// cannot be closed while a purchase runs. A guest sees nothing, and signing out closes it.
+// cannot be closed while a purchase runs. A guest sees nothing, and signing out closes it. onClose
+// names why: unlocked once GET /me says Pro, closed otherwise (a web checkout's return is
+// confirmed by /purchase-complete, so it closes as closed).
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { router } from 'expo-router';
@@ -18,7 +20,9 @@ const PURCHASE_PENDING = 'Your purchase is still processing. Check back shortly.
 const PENDING_RECHECK_COUNT = 2;
 const PENDING_RECHECK_DELAY_MS = 2000;
 
-type ProOfferProps = { onClose: () => void; source: ProSheetSource };
+export type ProOfferCloseReason = 'closed' | 'unlocked';
+
+type ProOfferProps = { onClose: (reason: ProOfferCloseReason) => void; source: ProSheetSource };
 
 export function ProOffer({ onClose, source }: ProOfferProps) {
   const userId = useSignedInUserId();
@@ -36,11 +40,11 @@ export function ProOffer({ onClose, source }: ProOfferProps) {
 
   // With nobody signed in there is no account to buy for.
   useEffect(() => {
-    if (userId === null) onClose();
+    if (userId === null) onClose('closed');
   }, [onClose, userId]);
 
   const close = useCallback(() => {
-    if (!isBuying) onClose();
+    if (!isBuying) onClose('closed');
   }, [isBuying, onClose]);
 
   async function recheckPending(productId: string) {
@@ -48,7 +52,7 @@ export function ProOffer({ onClose, source }: ProOfferProps) {
       await new Promise((resolve) => setTimeout(resolve, PENDING_RECHECK_DELAY_MS));
       if (!isMountedRef.current) return;
       if (await confirm(productId)) {
-        if (isMountedRef.current) onClose();
+        if (isMountedRef.current) onClose('unlocked');
         return;
       }
     }
@@ -66,7 +70,8 @@ export function ProOffer({ onClose, source }: ProOfferProps) {
         setMessage(PURCHASE_PENDING);
         void recheckPending(productId);
       }
-      if (outcome === 'redirect' || outcome === 'unlocked') onClose();
+      if (outcome === 'redirect') onClose('closed');
+      if (outcome === 'unlocked') onClose('unlocked');
     } finally {
       if (isMountedRef.current) setIsBuying(false);
     }

@@ -3,10 +3,10 @@
 // picked. Each ask stands alone; the panel shows the latest answer and "<remaining> of <limit> left
 // today", and says why when there is none. At the daily limit it branches on the tier the server
 // names, never on a number: a free learner is told the free tier's limit and the Pro limit and is
-// offered Pro (See Pro calls onSeePro when the host gives it, else opens the Pro sheet here); a Pro
-// learner is told the day's limit. The drawer keys
-// the panel by question, so nothing carries over to the next card, and a reply that lands after
-// the panel is gone is dropped.
+// offered Pro (See Pro calls onSeePro when the host gives it, else opens the Pro sheet here, and
+// an offer that closes as unlocked clears the free-limit copy); a Pro learner is told the day's
+// limit. The drawer keys the panel by question, so nothing carries over to the next card, and a
+// reply that lands after the panel is gone is dropped.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
@@ -14,7 +14,7 @@ import { ASK_MESSAGE_MAX_LENGTH } from '../../constants/appConfig';
 import { requestAskAnswer } from '../../services/ask/requestAskAnswer';
 import type { AskResult } from '../../services/ask/types/AskResult';
 import type { AskTarget } from '../../services/ask/types/AskTarget';
-import { ProOffer } from '../purchase/ProOffer';
+import { ProOffer, type ProOfferCloseReason } from '../purchase/ProOffer';
 
 const BUSY = 'Too many questions at once. Try again in a minute.';
 const UNAVAILABLE = 'No answer right now. Try again in a moment.';
@@ -49,7 +49,11 @@ export function AskPanel({ onSeePro, target }: AskPanelProps) {
   const [failure, setFailure] = useState<Failure | null>(null);
   const [isOfferOpen, setIsOfferOpen] = useState(false);
   const isMounted = useRef(true);
-  const closeOffer = useCallback(() => setIsOfferOpen(false), []);
+  // A learner who is now Pro is past the free limit: its copy and See Pro go.
+  const closeOffer = useCallback((reason: ProOfferCloseReason) => {
+    setIsOfferOpen(false);
+    if (reason === 'unlocked') setFailure(null);
+  }, []);
 
   useEffect(
     () => () => {
