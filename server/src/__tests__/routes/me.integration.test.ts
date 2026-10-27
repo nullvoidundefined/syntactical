@@ -4,6 +4,7 @@
 // (B-82): the profile carries hasPassword, true exactly when a password hash is stored, and never
 // the hash itself. Admin access (IAN-601): the profile carries isAdmin, false by default and true
 // only when users.is_admin is set directly in the database; no PATCH field sets it.
+// Pro (spec "2. Pro", Server): the profile carries pro { isActive, expiresAt, product } by the hasPro rule, lifetime winning over annual, and no entitlements key.
 import { randomBytes, randomUUID } from 'node:crypto';
 
 import { toLocalDate } from '@syntactical/progress';
@@ -36,285 +37,330 @@ const AUCKLAND = 'Pacific/Auckland';
 const PASSWORD_BYTES = 12;
 
 const answerKey: AnswerKey = new Map([
-    [
-        EASY_BANK,
-        new Map<string, AnswerKeyEntry>(QUESTION_IDS.map((id) => [id, { answerIndex: ANSWER_INDEX, choiceCount: 4 }])),
-    ],
+  [
+    EASY_BANK,
+    new Map<string, AnswerKeyEntry>(QUESTION_IDS.map((id) => [id, { answerIndex: ANSWER_INDEX, choiceCount: 4 }])),
+  ],
 ]);
 
 let database: Awaited<ReturnType<typeof createMigratedDatabase>>;
 
 interface SignedIn {
-    app: ReturnType<typeof createSyncTestApp>['app'];
-    now: () => Date;
-    sessionToken: string;
-    userId: string;
+  app: ReturnType<typeof createSyncTestApp>['app'];
+  now: () => Date;
+  sessionToken: string;
+  userId: string;
 }
 
 async function signIn(timezone: string | null): Promise<SignedIn> {
-    const { app, now } = createSyncTestApp({ answerKey, pool: database.pool });
-    const { sessionToken, userId } = await insertSession(database.pool, { createdAt: now() });
-    await database.pool.query('UPDATE users SET timezone = $2, created_at = $3 WHERE id = $1', [
-        userId,
-        timezone,
-        new Date(now().getTime() - 30 * DAY_MS),
-    ]);
-    return { app, now, sessionToken, userId };
+  const { app, now } = createSyncTestApp({ answerKey, pool: database.pool });
+  const { sessionToken, userId } = await insertSession(database.pool, { createdAt: now() });
+  await database.pool.query('UPDATE users SET timezone = $2, created_at = $3 WHERE id = $1', [
+    userId,
+    timezone,
+    new Date(now().getTime() - 30 * DAY_MS),
+  ]);
+  return { app, now, sessionToken, userId };
 }
 
 function bearer({ sessionToken }: SignedIn): string {
-    return `Bearer ${sessionToken}`;
+  return `Bearer ${sessionToken}`;
 }
 
 // Correct easy answers, 1 XP each, one distinct question per instant.
 async function uploadCorrect(signedIn: SignedIn, instants: Date[]): Promise<void> {
-    const events = instants.map((at, index) => ({
-        answeredAt: at.toISOString(),
-        bankKey: EASY_BANK,
-        choiceIndex: ANSWER_INDEX,
-        eventId: randomUUID(),
-        questionId: QUESTION_IDS[index % QUESTION_COUNT],
-        roundKind: 'bank',
-    }));
-    const response = await request(signedIn.app)
-        .post(EVENTS_ROUTE)
-        .set('Authorization', bearer(signedIn))
-        .send({ events });
-    expect(response.status).toBe(HTTP_OK);
+  const events = instants.map((at, index) => ({
+    answeredAt: at.toISOString(),
+    bankKey: EASY_BANK,
+    choiceIndex: ANSWER_INDEX,
+    eventId: randomUUID(),
+    questionId: QUESTION_IDS[index % QUESTION_COUNT],
+    roundKind: 'bank',
+  }));
+  const response = await request(signedIn.app)
+    .post(EVENTS_ROUTE)
+    .set('Authorization', bearer(signedIn))
+    .send({ events });
+  expect(response.status).toBe(HTTP_OK);
 }
 
 // `count` instants a second apart, ending one second before `end`.
 function secondsBefore(end: Date, count: number): Date[] {
-    return Array.from({ length: count }, (_unused, index) => new Date(end.getTime() - (index + 1) * SECOND_MS));
+  return Array.from({ length: count }, (_unused, index) => new Date(end.getTime() - (index + 1) * SECOND_MS));
 }
 
 function getMe(signedIn: SignedIn) {
-    return request(signedIn.app).get(ME_ROUTE).set('Authorization', bearer(signedIn));
+  return request(signedIn.app).get(ME_ROUTE).set('Authorization', bearer(signedIn));
 }
 
 function patchMe(signedIn: SignedIn, body: object) {
-    return request(signedIn.app).patch(ME_ROUTE).set('Authorization', bearer(signedIn)).send(body);
+  return request(signedIn.app).patch(ME_ROUTE).set('Authorization', bearer(signedIn)).send(body);
 }
 
 async function storedProgress(userId: string): Promise<Map<string, { isGoalMet: boolean; xp: number }>> {
-    const { rows } = await database.pool.query<{ is_goal_met: boolean; local_date: string; xp: number }>(
-        "SELECT to_char(local_date, 'YYYY-MM-DD') AS local_date, xp, is_goal_met FROM daily_progress WHERE user_id = $1",
-        [userId],
-    );
-    return new Map(rows.map((row) => [row.local_date, { isGoalMet: row.is_goal_met, xp: row.xp }]));
+  const { rows } = await database.pool.query<{ is_goal_met: boolean; local_date: string; xp: number }>(
+    "SELECT to_char(local_date, 'YYYY-MM-DD') AS local_date, xp, is_goal_met FROM daily_progress WHERE user_id = $1",
+    [userId],
+  );
+  return new Map(rows.map((row) => [row.local_date, { isGoalMet: row.is_goal_met, xp: row.xp }]));
 }
 
 describe.skipIf(SKIP_DATABASE_TESTS)('/v1/me', () => {
-    beforeAll(async () => {
-        database = await createMigratedDatabase(inject('testDatabaseUrl'));
-    }, SETUP_TIMEOUT_MS);
+  beforeAll(async () => {
+    database = await createMigratedDatabase(inject('testDatabaseUrl'));
+  }, SETUP_TIMEOUT_MS);
 
-    afterAll(async () => {
-        await database.drop();
+  afterAll(async () => {
+    await database.drop();
+  });
+
+  beforeEach(async () => {
+    await database.reset();
+  });
+
+  it('GET returns the email, timezone, goal, day streak, XP, and Pro status from stored data', async () => {
+    const signedIn = await signIn('UTC');
+    const { now, userId } = signedIn;
+    const today = toLocalDate(now().toISOString(), 'UTC');
+    const todayStart = new Date(`${today}T00:00:00Z`);
+    // 20 XP yesterday (goal met) and up to 5 XP today (not met): the streak counts through yesterday.
+    const todays = secondsBefore(new Date(Math.min(now().getTime(), todayStart.getTime() + 10 * SECOND_MS)), 5);
+    await uploadCorrect(signedIn, [
+      ...secondsBefore(new Date(todayStart.getTime() - MINUTE_MS), 20),
+      ...todays.filter((at) => at >= todayStart),
+    ]);
+    const annualExpiry = new Date(now().getTime() + 30 * DAY_MS);
+    await database.pool.query(
+      `INSERT INTO entitlements (user_id, product_id, source, status, expires_at) VALUES
+             ($1, 'syntactical.pro.annual', 'revenuecat', 'granted', $2),
+             ($1, 'syntactical.pro.lifetime', 'revenuecat', 'revoked', NULL)`,
+      [userId, annualExpiry],
+    );
+    const { rows } = await database.pool.query<{ email: string }>('SELECT email FROM users WHERE id = $1', [userId]);
+    const xpToday = (await storedProgress(userId)).get(today)?.xp ?? 0;
+
+    const response = await getMe(signedIn);
+
+    expect(response.status).toBe(HTTP_OK);
+    expect(response.body).toEqual({
+      data: {
+        dailyGoal: 20,
+        dayStreak: 1,
+        email: rows[0].email,
+        hasPassword: false,
+        isAdmin: false,
+        pro: { expiresAt: annualExpiry.toISOString(), isActive: true, product: 'annual' },
+        timezone: 'UTC',
+        xpToday,
+        xpTotal: 20 + xpToday,
+      },
     });
+  });
 
-    beforeEach(async () => {
-        await database.reset();
+  it('GET reports a null timezone, goal 20, and no progress for a new user', async () => {
+    const signedIn = await signIn(null);
+
+    const response = await getMe(signedIn);
+
+    expect(response.status).toBe(HTTP_OK);
+    expect(response.body.data).toMatchObject({
+      dailyGoal: 20,
+      dayStreak: 0,
+      hasPassword: false,
+      isAdmin: false,
+      pro: { expiresAt: null, isActive: false, product: null },
+      timezone: null,
+      xpToday: 0,
+      xpTotal: 0,
     });
+  });
 
-    it('GET returns the email, timezone, goal, day streak, XP, and granted entitlements from stored data', async () => {
-        const signedIn = await signIn('UTC');
-        const { now, userId } = signedIn;
-        const today = toLocalDate(now().toISOString(), 'UTC');
-        const todayStart = new Date(`${today}T00:00:00Z`);
-        // 20 XP yesterday (goal met) and up to 5 XP today (not met): the streak counts through yesterday.
-        const todays = secondsBefore(new Date(Math.min(now().getTime(), todayStart.getTime() + 10 * SECOND_MS)), 5);
-        await uploadCorrect(signedIn, [
-            ...secondsBefore(new Date(todayStart.getTime() - MINUTE_MS), 20),
-            ...todays.filter((at) => at >= todayStart),
-        ]);
-        await database.pool.query(
-            `INSERT INTO entitlements (user_id, product_id, source, status) VALUES
-             ($1, 'syntactical.python.medium', 'test', 'granted'),
-             ($1, 'syntactical.python.hard', 'test', 'revoked')`,
-            [userId],
-        );
-        const { rows } = await database.pool.query<{ email: string }>('SELECT email FROM users WHERE id = $1', [userId]);
-        const xpToday = (await storedProgress(userId)).get(today)?.xp ?? 0;
+  it('GET reports lifetime Pro over an active annual, with no expiry, and no entitlements key', async () => {
+    const signedIn = await signIn('UTC');
+    await database.pool.query(
+      `INSERT INTO entitlements (user_id, product_id, source, status, expires_at) VALUES
+             ($1, 'syntactical.pro.annual', 'revenuecat', 'granted', $2),
+             ($1, 'syntactical.pro.lifetime', 'revenuecat', 'granted', NULL)`,
+      [signedIn.userId, new Date(signedIn.now().getTime() + 30 * DAY_MS)],
+    );
 
-        const response = await getMe(signedIn);
+    const response = await getMe(signedIn);
 
-        expect(response.status).toBe(HTTP_OK);
-        expect(response.body).toEqual({
-            data: {
-                dailyGoal: 20,
-                dayStreak: 1,
-                email: rows[0].email,
-                entitlements: ['syntactical.python.medium'],
-                hasPassword: false,
-                isAdmin: false,
-                timezone: 'UTC',
-                xpToday,
-                xpTotal: 20 + xpToday,
-            },
-        });
-    });
+    expect(response.status).toBe(HTTP_OK);
+    expect(response.body.data.pro).toEqual({ expiresAt: null, isActive: true, product: 'lifetime' });
+    expect(response.body.data).not.toHaveProperty('entitlements');
+  });
 
-    it('GET reports a null timezone, goal 20, and no progress for a new user', async () => {
-        const signedIn = await signIn(null);
+  it('GET reports an admin grant on the lifetime product as lifetime Pro', async () => {
+    const signedIn = await signIn('UTC');
+    await database.pool.query(
+      `INSERT INTO entitlements (user_id, product_id, source, status) VALUES ($1, 'syntactical.pro.lifetime', 'admin', 'granted')`,
+      [signedIn.userId],
+    );
 
-        const response = await getMe(signedIn);
+    const response = await getMe(signedIn);
 
-        expect(response.status).toBe(HTTP_OK);
-        expect(response.body.data).toMatchObject({
-            dailyGoal: 20,
-            dayStreak: 0,
-            entitlements: [],
-            hasPassword: false,
-            isAdmin: false,
-            timezone: null,
-            xpToday: 0,
-            xpTotal: 0,
-        });
-    });
+    expect(response.body.data.pro).toEqual({ expiresAt: null, isActive: true, product: 'lifetime' });
+  });
 
-    it('GET reports isAdmin true once users.is_admin is set in the database, and false again once cleared', async () => {
-        const signedIn = await signIn('UTC');
+  it('GET reports Pro inactive for an annual row expiring exactly now, a revoked lifetime row, or another product', async () => {
+    const signedIn = await signIn('UTC');
+    await database.pool.query(
+      `INSERT INTO entitlements (user_id, product_id, source, status, expires_at) VALUES
+             ($1, 'syntactical.pro.annual', 'revenuecat', 'granted', $2),
+             ($1, 'syntactical.pro.lifetime', 'admin', 'revoked', NULL),
+             ($1, 'syntactical.python.medium', 'test', 'granted', NULL)`,
+      [signedIn.userId, signedIn.now()],
+    );
 
-        const before = await getMe(signedIn);
-        await database.pool.query('UPDATE users SET is_admin = true WHERE id = $1', [signedIn.userId]);
-        const flagged = await getMe(signedIn);
-        await database.pool.query('UPDATE users SET is_admin = false WHERE id = $1', [signedIn.userId]);
-        const cleared = await getMe(signedIn);
+    const response = await getMe(signedIn);
 
-        expect(before.status).toBe(HTTP_OK);
-        expect(before.body.data.isAdmin).toBe(false);
-        expect(flagged.status).toBe(HTTP_OK);
-        expect(flagged.body.data.isAdmin).toBe(true);
-        expect(cleared.body.data.isAdmin).toBe(false);
-    });
+    expect(response.status).toBe(HTTP_OK);
+    expect(response.body.data.pro).toEqual({ expiresAt: null, isActive: false, product: null });
+  });
 
-    it('PATCH refuses isAdmin and is_admin with 400 and leaves the flag false', async () => {
-        const signedIn = await signIn('UTC');
+  it('GET reports isAdmin true once users.is_admin is set in the database, and false again once cleared', async () => {
+    const signedIn = await signIn('UTC');
 
-        const camel = await patchMe(signedIn, { dailyGoal: 10, isAdmin: true });
-        const snake = await patchMe(signedIn, { dailyGoal: 10, is_admin: true });
-        const alone = await patchMe(signedIn, { isAdmin: true });
-        const profile = await getMe(signedIn);
-        const { rows } = await database.pool.query('SELECT is_admin FROM users WHERE id = $1', [signedIn.userId]);
+    const before = await getMe(signedIn);
+    await database.pool.query('UPDATE users SET is_admin = true WHERE id = $1', [signedIn.userId]);
+    const flagged = await getMe(signedIn);
+    await database.pool.query('UPDATE users SET is_admin = false WHERE id = $1', [signedIn.userId]);
+    const cleared = await getMe(signedIn);
 
-        for (const response of [camel, snake, alone]) {
-            expect(response.status).toBe(HTTP_BAD_REQUEST);
-            expect(response.body.error.code).toBe('INPUT_INVALID_BODY');
-        }
-        expect(profile.body.data.isAdmin).toBe(false);
-        expect(rows).toEqual([{ is_admin: false }]);
-    });
+    expect(before.status).toBe(HTTP_OK);
+    expect(before.body.data.isAdmin).toBe(false);
+    expect(flagged.status).toBe(HTTP_OK);
+    expect(flagged.body.data.isAdmin).toBe(true);
+    expect(cleared.body.data.isAdmin).toBe(false);
+  });
 
-    it('GET and PATCH report hasPassword true exactly when a hash is stored, and no body carries the hash', async () => {
-        const signedIn = await signIn('UTC');
-        const storedHash = await hashPassword(randomBytes(PASSWORD_BYTES).toString('hex'));
+  it('PATCH refuses isAdmin and is_admin with 400 and leaves the flag false', async () => {
+    const signedIn = await signIn('UTC');
 
-        const before = await getMe(signedIn);
-        await database.pool.query('UPDATE users SET password_hash = $2, password_updated_at = now() WHERE id = $1', [
-            signedIn.userId,
-            storedHash,
-        ]);
-        const after = await getMe(signedIn);
-        const patched = await patchMe(signedIn, { dailyGoal: 10 });
+    const camel = await patchMe(signedIn, { dailyGoal: 10, isAdmin: true });
+    const snake = await patchMe(signedIn, { dailyGoal: 10, is_admin: true });
+    const alone = await patchMe(signedIn, { isAdmin: true });
+    const profile = await getMe(signedIn);
+    const { rows } = await database.pool.query('SELECT is_admin FROM users WHERE id = $1', [signedIn.userId]);
 
-        expect(before.status).toBe(HTTP_OK);
-        expect(before.body.data.hasPassword).toBe(false);
-        expect(after.status).toBe(HTTP_OK);
-        expect(after.body.data.hasPassword).toBe(true);
-        expect(patched.status).toBe(HTTP_OK);
-        expect(patched.body.data.hasPassword).toBe(true);
-        for (const response of [before, after, patched]) {
-            expect(response.text).not.toContain('$scrypt$');
-            expect(response.text).not.toContain(storedHash);
-        }
-    });
+    for (const response of [camel, snake, alone]) {
+      expect(response.status).toBe(HTTP_BAD_REQUEST);
+      expect(response.body.error.code).toBe('INPUT_INVALID_BODY');
+    }
+    expect(profile.body.data.isAdmin).toBe(false);
+    expect(rows).toEqual([{ is_admin: false }]);
+  });
 
-    it('answers GET and PATCH with 401 without a session', async () => {
-        const { app } = createSyncTestApp({ answerKey, pool: database.pool });
+  it('GET and PATCH report hasPassword true exactly when a hash is stored, and no body carries the hash', async () => {
+    const signedIn = await signIn('UTC');
+    const storedHash = await hashPassword(randomBytes(PASSWORD_BYTES).toString('hex'));
 
-        expect((await request(app).get(ME_ROUTE)).status).toBe(HTTP_UNAUTHORIZED);
-        expect((await request(app).patch(ME_ROUTE).send({ dailyGoal: 10 })).status).toBe(HTTP_UNAUTHORIZED);
-    });
+    const before = await getMe(signedIn);
+    await database.pool.query('UPDATE users SET password_hash = $2, password_updated_at = now() WHERE id = $1', [
+      signedIn.userId,
+      storedHash,
+    ]);
+    const after = await getMe(signedIn);
+    const patched = await patchMe(signedIn, { dailyGoal: 10 });
 
-    it('PATCH stores a known IANA timezone and refuses anything else with 400', async () => {
-        const signedIn = await signIn('UTC');
+    expect(before.status).toBe(HTTP_OK);
+    expect(before.body.data.hasPassword).toBe(false);
+    expect(after.status).toBe(HTTP_OK);
+    expect(after.body.data.hasPassword).toBe(true);
+    expect(patched.status).toBe(HTTP_OK);
+    expect(patched.body.data.hasPassword).toBe(true);
+    for (const response of [before, after, patched]) {
+      expect(response.text).not.toContain('$scrypt$');
+      expect(response.text).not.toContain(storedHash);
+    }
+  });
 
-        const accepted = await patchMe(signedIn, { timezone: AUCKLAND });
-        expect(accepted.status).toBe(HTTP_OK);
-        expect(accepted.body.data.timezone).toBe(AUCKLAND);
+  it('answers GET and PATCH with 401 without a session', async () => {
+    const { app } = createSyncTestApp({ answerKey, pool: database.pool });
 
-        for (const timezone of ['Mars/Olympus_Mons', '', 'UTC; DROP TABLE users', 'x'.repeat(100), 42, null]) {
-            const refused = await patchMe(signedIn, { timezone });
-            expect(refused.status).toBe(HTTP_BAD_REQUEST);
-            expect(refused.body.error.code).toBe('INPUT_INVALID_BODY');
-        }
-        const { rows } = await database.pool.query<{ timezone: string }>('SELECT timezone FROM users WHERE id = $1', [
-            signedIn.userId,
-        ]);
-        expect(rows[0].timezone).toBe(AUCKLAND);
-    });
+    expect((await request(app).get(ME_ROUTE)).status).toBe(HTTP_UNAUTHORIZED);
+    expect((await request(app).patch(ME_ROUTE).send({ dailyGoal: 10 })).status).toBe(HTTP_UNAUTHORIZED);
+  });
 
-    it('PATCH accepts a daily goal of 10, 20, or 50 and refuses any other goal, field, or empty body', async () => {
-        const signedIn = await signIn('UTC');
+  it('PATCH stores a known IANA timezone and refuses anything else with 400', async () => {
+    const signedIn = await signIn('UTC');
 
-        for (const dailyGoal of [10, 20, 50]) {
-            const accepted = await patchMe(signedIn, { dailyGoal });
-            expect(accepted.status).toBe(HTTP_OK);
-            expect(accepted.body.data.dailyGoal).toBe(dailyGoal);
-        }
-        for (const body of [{ dailyGoal: 15 }, { dailyGoal: 0 }, { dailyGoal: '20' }, {}, { email: 'b@example.com' }]) {
-            expect((await patchMe(signedIn, body)).status).toBe(HTTP_BAD_REQUEST);
-        }
-        expect((await getMe(signedIn)).body.data.dailyGoal).toBe(50);
-    });
+    const accepted = await patchMe(signedIn, { timezone: AUCKLAND });
+    expect(accepted.status).toBe(HTTP_OK);
+    expect(accepted.body.data.timezone).toBe(AUCKLAND);
 
-    it('a goal change records today in the user timezone and applies from today on, not to earlier days', async () => {
-        const signedIn = await signIn(AUCKLAND);
-        const { now, userId } = signedIn;
-        const today = toLocalDate(now().toISOString(), AUCKLAND);
-        const dayAgo = new Date(now().getTime() - DAY_MS);
-        const yesterday = toLocalDate(dayAgo.toISOString(), AUCKLAND);
-        // 12 XP a day ago and 12 XP in the last seconds: under goal 20 neither day is met.
-        await uploadCorrect(signedIn, [...secondsBefore(dayAgo, 12), ...secondsBefore(now(), 12)]);
-        const before = await storedProgress(userId);
-        expect(before.get(yesterday)?.isGoalMet).toBe(false);
+    for (const timezone of ['Mars/Olympus_Mons', '', 'UTC; DROP TABLE users', 'x'.repeat(100), 42, null]) {
+      const refused = await patchMe(signedIn, { timezone });
+      expect(refused.status).toBe(HTTP_BAD_REQUEST);
+      expect(refused.body.error.code).toBe('INPUT_INVALID_BODY');
+    }
+    const { rows } = await database.pool.query<{ timezone: string }>('SELECT timezone FROM users WHERE id = $1', [
+      signedIn.userId,
+    ]);
+    expect(rows[0].timezone).toBe(AUCKLAND);
+  });
 
-        const response = await patchMe(signedIn, { dailyGoal: 10 });
+  it('PATCH accepts a daily goal of 10, 20, or 50 and refuses any other goal, field, or empty body', async () => {
+    const signedIn = await signIn('UTC');
 
-        expect(response.status).toBe(HTTP_OK);
-        const { rows } = await database.pool.query<{ from_date: string; goal: number }>(
-            "SELECT to_char(from_date, 'YYYY-MM-DD') AS from_date, goal FROM daily_goal_changes WHERE user_id = $1",
-            [userId],
-        );
-        expect(rows).toEqual([{ from_date: today, goal: 10 }]);
-        const after = await storedProgress(userId);
-        expect(after.get(yesterday)).toEqual({ isGoalMet: false, xp: before.get(yesterday)?.xp });
-        expect(after.get(today)?.isGoalMet).toBe((after.get(today)?.xp ?? 0) >= 10);
-        expect(response.body.data.dailyGoal).toBe(10);
-    });
+    for (const dailyGoal of [10, 20, 50]) {
+      const accepted = await patchMe(signedIn, { dailyGoal });
+      expect(accepted.status).toBe(HTTP_OK);
+      expect(accepted.body.data.dailyGoal).toBe(dailyGoal);
+    }
+    for (const body of [{ dailyGoal: 15 }, { dailyGoal: 0 }, { dailyGoal: '20' }, {}, { email: 'b@example.com' }]) {
+      expect((await patchMe(signedIn, body)).status).toBe(HTTP_BAD_REQUEST);
+    }
+    expect((await getMe(signedIn)).body.data.dailyGoal).toBe(50);
+  });
 
-    it('a timezone change re-buckets stored progress into the new local dates', async () => {
-        const signedIn = await signIn('UTC');
-        const { now, userId } = signedIn;
-        const instant = new Date(now().getTime() - 2 * DAY_MS);
-        await uploadCorrect(signedIn, [instant]);
+  it('a goal change records today in the user timezone and applies from today on, not to earlier days', async () => {
+    const signedIn = await signIn(AUCKLAND);
+    const { now, userId } = signedIn;
+    const today = toLocalDate(now().toISOString(), AUCKLAND);
+    const dayAgo = new Date(now().getTime() - DAY_MS);
+    const yesterday = toLocalDate(dayAgo.toISOString(), AUCKLAND);
+    // 12 XP a day ago and 12 XP in the last seconds: under goal 20 neither day is met.
+    await uploadCorrect(signedIn, [...secondsBefore(dayAgo, 12), ...secondsBefore(now(), 12)]);
+    const before = await storedProgress(userId);
+    expect(before.get(yesterday)?.isGoalMet).toBe(false);
 
-        await patchMe(signedIn, { timezone: AUCKLAND });
+    const response = await patchMe(signedIn, { dailyGoal: 10 });
 
-        const progress = await storedProgress(userId);
-        expect([...progress.keys()]).toEqual([toLocalDate(instant.toISOString(), AUCKLAND)]);
-    });
+    expect(response.status).toBe(HTTP_OK);
+    const { rows } = await database.pool.query<{ from_date: string; goal: number }>(
+      "SELECT to_char(from_date, 'YYYY-MM-DD') AS from_date, goal FROM daily_goal_changes WHERE user_id = $1",
+      [userId],
+    );
+    expect(rows).toEqual([{ from_date: today, goal: 10 }]);
+    const after = await storedProgress(userId);
+    expect(after.get(yesterday)).toEqual({ isGoalMet: false, xp: before.get(yesterday)?.xp });
+    expect(after.get(today)?.isGoalMet).toBe((after.get(today)?.xp ?? 0) >= 10);
+    expect(response.body.data.dailyGoal).toBe(10);
+  });
 
-    it('refuses a cookie PATCH without X-Requested-With through the CSRF guard', async () => {
-        const signedIn = await signIn('UTC');
+  it('a timezone change re-buckets stored progress into the new local dates', async () => {
+    const signedIn = await signIn('UTC');
+    const { now, userId } = signedIn;
+    const instant = new Date(now().getTime() - 2 * DAY_MS);
+    await uploadCorrect(signedIn, [instant]);
 
-        const response = await request(signedIn.app)
-            .patch(ME_ROUTE)
-            .set('Cookie', `syntactical_session=${signedIn.sessionToken}`)
-            .send({ dailyGoal: 10 });
+    await patchMe(signedIn, { timezone: AUCKLAND });
 
-        expect(response.status).toBe(HTTP_FORBIDDEN);
-        expect((await getMe(signedIn)).body.data.dailyGoal).toBe(20);
-    });
+    const progress = await storedProgress(userId);
+    expect([...progress.keys()]).toEqual([toLocalDate(instant.toISOString(), AUCKLAND)]);
+  });
+
+  it('refuses a cookie PATCH without X-Requested-With through the CSRF guard', async () => {
+    const signedIn = await signIn('UTC');
+
+    const response = await request(signedIn.app)
+      .patch(ME_ROUTE)
+      .set('Cookie', `syntactical_session=${signedIn.sessionToken}`)
+      .send({ dailyGoal: 10 });
+
+    expect(response.status).toBe(HTTP_FORBIDDEN);
+    expect((await getMe(signedIn)).body.data.dailyGoal).toBe(20);
+  });
 });

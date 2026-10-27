@@ -11,7 +11,6 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, inject, it } from 'vitest';
 
-import { readProfile } from '../../services/readProfile.js';
 import { createMigratedDatabase } from '../integration/createMigratedDatabase.js';
 import { createWebhookTestApp } from '../integration/createWebhookTestApp.js';
 import { SKIP_DATABASE_TESTS } from '../integration/skipDatabaseTests.js';
@@ -115,8 +114,11 @@ async function readEntitlements(): Promise<EntitlementRow[]> {
 }
 
 async function grantedProductIds(userId: string): Promise<string[]> {
-  const profile = await readProfile(database.pool, userId, new Date());
-  return profile?.entitlements ?? [];
+  const { rows } = await database.pool.query<{ product_id: string }>(
+    "SELECT product_id FROM entitlements WHERE user_id = $1 AND status = 'granted' ORDER BY product_id",
+    [userId],
+  );
+  return rows.map(({ product_id: productId }) => productId);
 }
 
 function flushLogs(): Promise<void> {
