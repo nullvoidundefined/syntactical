@@ -5,7 +5,8 @@
 import { render, screen, within } from '@testing-library/react';
 
 import { BANK_TITLES } from '../../../services/content/bankTitles.generated';
-import { BankTitles, describeBank } from '../BankTitles';
+import { BankTitles } from '../BankTitles';
+import { describeBank } from '../describeBank';
 
 type BankQuestion = {
   choices?: { rationale?: string; text: string }[];
