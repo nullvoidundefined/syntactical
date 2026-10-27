@@ -10,6 +10,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { logWarning } from '../clients/logClient';
 import { AccountControl } from '../components/auth/AccountControl';
 import { AppShell } from '../components/layout/AppShell';
+import { PageHead } from '../components/seo/PageHead';
 import { readExtraString } from '../config/readExtraString';
 import { createQueryClient } from '../config/queryClient';
 import { AdminCacheReset } from '../state/AdminCacheReset';
@@ -33,6 +34,7 @@ export default function RootLayout() {
   const [contentBaseUrl] = useState(readContentBaseUrl);
   return (
     <SafeAreaProvider>
+      <PageHead title="Syntactical" />
       <QueryClientProvider client={queryClient}>
         <ContentProvider contentBaseUrl={contentBaseUrl}>
           <AuthProvider>

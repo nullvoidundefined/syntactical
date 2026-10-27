@@ -1,5 +1,6 @@
 // Downloads each named bank that the manifest lists and the device has no local copy of (cached, bundled, or
-// downloaded this session), so due reviews from it are not skipped. Does nothing without a content base URL. A
+// downloaded this session), so due reviews from it are not skipped. Does nothing without a content base URL, or
+// before the content provider has read the on-device cache (until then a cached bank would look missing). A
 // bank whose download failed waits REVIEW_BANK_RETRY_MS before it is asked for again, so an offline device or a
 // hash mismatch does not refetch on every coarse clock tick.
 import type { Manifest } from '@syntactical/content-schema';
@@ -20,7 +21,7 @@ export function prefetchReviewBanks(
   bankKeys: readonly string[],
   now: number = Date.now(),
 ): void {
-  if (access.contentBaseUrl === null) return;
+  if (access.contentBaseUrl === null || !access.isHydrated) return;
   for (const bankKey of bankKeys) {
     const [language, difficulty] = bankKey.split('/');
     if (!language || !difficulty) continue;

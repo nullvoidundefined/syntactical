@@ -40,3 +40,6 @@ expo-env.d.ts
 
 # Content staged for the API image build (scripts/stageBuildContent.sh); never committed.
 /build/
+
+# wrangler pages dev (local preview of the static export)
+.wrangler/

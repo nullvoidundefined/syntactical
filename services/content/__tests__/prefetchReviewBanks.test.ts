@@ -51,10 +51,11 @@ function buildManifest(): Manifest {
   return { ...manifest, languages: [python] };
 }
 
-function buildAccess(manifest: Manifest, localBanks: Record<string, CachedBank>): ContentAccess {
+function buildAccess(manifest: Manifest, localBanks: Record<string, CachedBank>, isHydrated = true): ContentAccess {
   return {
     baselineManifest: manifest,
     contentBaseUrl: CONTENT_BASE_URL,
+    isHydrated,
     readLocalBank: (language, difficulty) => localBanks[`${language}/${difficulty}`] ?? null,
   };
 }
@@ -125,5 +126,17 @@ describe('prefetchReviewBanks', () => {
 
     prefetchReviewBanks(queryClient, manifest, access, ['python/medium'], failedAt + REVIEW_BANK_RETRY_MS);
     await waitFor(() => expect(countFetchesFor(MEDIUM_URL)).toBe(2));
+  });
+
+  // Before the content provider has read the cache, readLocalBank sees only the bundled banks, so a cached
+  // Medium bank would look missing and download again.
+  it('downloads nothing before the on-device cache has been read', async () => {
+    stubFetchRoutes({ [MEDIUM_URL]: async () => MEDIUM_TEXT });
+    const manifest = buildManifest();
+
+    prefetchReviewBanks(queryClient, manifest, buildAccess(manifest, {}, false), ['python/medium']);
+    await settle();
+
+    expect(listFetchedUrls()).toEqual([]);
   });
 });
