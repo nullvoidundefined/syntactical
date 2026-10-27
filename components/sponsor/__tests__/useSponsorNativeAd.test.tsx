@@ -3,13 +3,16 @@
 // then destroyed, an ad that arrives after unmount destroyed at once with no state update (Review Focus 20),
 // and no fill reported as an error. When the effects re-run with state kept (Fast Refresh; Activity hidden
 // then visible here), the destroyed ad is dropped and a fresh one requested, and an ad from the old request
-// is destroyed when it lands. The shared mock fakes only NativeAd.createForAdRequest.
+// is destroyed when it lands. The hook also owns the click listener, removed before the ad is destroyed:
+// Fast Refresh runs every cleanup and then every setup in one commit with the render's values, so a
+// listener effect in the card would reach the ad the cleanup just destroyed, and the SDK throws. The
+// shared mock fakes only NativeAd.createForAdRequest.
 import { act, render, renderHook } from '@testing-library/react-native';
 import { Activity } from 'react';
 
 import { useSponsorNativeAd, type SponsorNativeAdState } from '../useSponsorNativeAd';
 
-import { buildFakeNativeAd, deliverAd, mobileAdsControl, resetMobileAds } from './mobileAdsMock';
+import { NativeAdEventType, buildFakeNativeAd, deliverAd, mobileAdsControl, resetMobileAds } from './mobileAdsMock';
 
 const UNIT_ID = 'ca-app-pub-1234567890123456/1234567890';
 const OPTIONS = { adChoicesPlacement: 1, requestNonPersonalizedAdsOnly: true };
@@ -108,5 +111,18 @@ describe('useSponsorNativeAd', () => {
     await act(async () => deliverAd(fresh));
     expect(result.current?.nativeAd).toBe(fresh);
     expect(fresh.destroy).not.toHaveBeenCalled();
+  });
+
+  it('reports clicks through onClicked, and removes its click listener when the ad is destroyed', async () => {
+    const onClicked = jest.fn();
+    const { unmount } = await renderHook(() => useSponsorNativeAd(UNIT_ID, OPTIONS, true, onClicked));
+    const ad = buildFakeNativeAd();
+    await act(async () => deliverAd(ad));
+    expect(ad.addAdEventListener).toHaveBeenCalledTimes(1);
+    await act(async () => ad.listeners.get(NativeAdEventType.CLICKED)?.());
+    expect(onClicked).toHaveBeenCalledTimes(1);
+    await unmount();
+    expect(ad.listeners.size).toBe(0);
+    expect(ad.destroy).toHaveBeenCalledTimes(1);
   });
 });
