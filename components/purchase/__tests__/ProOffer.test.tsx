@@ -137,6 +137,7 @@ describe('ProOffer on native', () => {
     await pressInDialog(button);
     expect(nativeSdk.purchasedProductIds).toEqual([productId]);
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    expect(onClose).toHaveBeenCalledWith('unlocked');
     expect(countMeRequests()).toBeGreaterThan(meBefore);
     const purchaseAt = fakeServer.events.indexOf(`purchasePackage ${productId}`);
     expect(fakeServer.events.slice(purchaseAt + 1)).toContain('GET me');
@@ -196,6 +197,7 @@ describe('ProOffer on native', () => {
 
     expect(countMeRequests()).toBeGreaterThan(meAfterPurchase);
     expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledWith('unlocked');
   });
 
   it('closes when the user signs out while it is open, leaving no buy button', async () => {
@@ -204,7 +206,7 @@ describe('ProOffer on native', () => {
     fakeAuth.userId = null;
     await rendered.rerender(buildTree());
     await settle();
-    expect(onClose).toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalledWith('closed');
     expect(screen.queryByRole('button', { name: /^A year/, ...HIDDEN })).toBeNull();
     expect(nativeSdk.purchasedProductIds).toEqual([]);
   });
