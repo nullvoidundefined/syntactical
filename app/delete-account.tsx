@@ -31,7 +31,7 @@ export default function DeleteAccountScreen() {
           items={[
             'Your email address and your account.',
             'Your sign-in sessions.',
-            'Your answers, daily progress, and daily goal changes.',
+            'Your answers, daily progress, daily goal changes, and weekly study notes.',
             'Any unused sign-in codes sent to your email.',
           ]}
         />
