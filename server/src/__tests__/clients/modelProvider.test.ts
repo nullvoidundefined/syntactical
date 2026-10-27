@@ -26,13 +26,17 @@ describe('createAnthropicModelProvider', () => {
 
     await createAnthropicModelProvider({ apiKey: 'unused', messages, model: 'claude-haiku-5-5' }).answer(PROMPT);
 
-    expect(create).toHaveBeenCalledWith({
-      max_tokens: MODEL.MAX_TOKENS,
-      messages: [{ content: PROMPT.user, role: 'user' }],
-      model: 'claude-haiku-5-5',
-      output_config: { effort: 'low' },
-      system: PROMPT.system,
-    });
+    // The signal bounds the whole attempt: the SDK's own timeout stops once response headers arrive.
+    expect(create).toHaveBeenCalledWith(
+      {
+        max_tokens: MODEL.MAX_TOKENS,
+        messages: [{ content: PROMPT.user, role: 'user' }],
+        model: 'claude-haiku-5-5',
+        output_config: { effort: 'low' },
+        system: PROMPT.system,
+      },
+      { signal: expect.any(AbortSignal) },
+    );
   });
 
   it('joins the text blocks and skips the others', async () => {

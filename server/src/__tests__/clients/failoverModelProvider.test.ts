@@ -193,12 +193,24 @@ describe('createFailoverModelProvider', () => {
       createFailoverModelProvider({ logger, now: clock.now, providers: [primary, secondary] }).answer(PROMPT),
     ).resolves.toBe('From OpenAI.');
     expect(clock.now()).toBeLessThanOrEqual(MODEL.CALL_TIMEOUT_MS);
-    expect(MODEL.CALL_TIMEOUT_MS).toBe(2 * MODEL.ATTEMPT_TIMEOUT_MS);
+  });
+
+  it('fails over after a real timeout, which fires a little after the attempt timeout', async () => {
+    const clock = fakeClock();
+    const hung = provider('anthropic', ['transient'], { clock, latencyMs: MODEL.ATTEMPT_TIMEOUT_MS + 20 });
+    const secondary = provider('openai', ['From OpenAI.'], { clock, latencyMs: MODEL.ATTEMPT_TIMEOUT_MS });
+    const { logger } = createRecordingLogger();
+
+    await expect(
+      createFailoverModelProvider({ logger, now: clock.now, providers: [hung, secondary] }).answer(PROMPT),
+    ).resolves.toBe('From OpenAI.');
+    expect(secondary.calls).toBe(1);
+    expect(clock.now()).toBeLessThanOrEqual(MODEL.CALL_TIMEOUT_MS);
   });
 
   it('starts no attempt that could end past the call bound', async () => {
     const clock = fakeClock();
-    const slow = { clock, latencyMs: MODEL.ATTEMPT_TIMEOUT_MS + 1 };
+    const slow = { clock, latencyMs: MODEL.CALL_TIMEOUT_MS - MODEL.ATTEMPT_TIMEOUT_MS + 1 };
     const primary = provider('anthropic', ['transient'], slow);
     const secondary = provider('openai', ['From OpenAI.'], { clock });
     const only = provider('anthropic', ['transient', 'Too late.'], slow);

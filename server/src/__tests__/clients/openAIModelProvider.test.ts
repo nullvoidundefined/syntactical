@@ -43,8 +43,8 @@ function build(responses: ResponsesClient, reasoningEffort?: 'low') {
 }
 
 describe('buildOpenAIOptions', () => {
-  it('turns SDK retries off and bounds each attempt at 11 seconds', () => {
-    expect(buildOpenAIOptions('sk-test')).toEqual({ apiKey: 'sk-test', maxRetries: 0, timeout: 11_000 });
+  it('turns SDK retries off and bounds each attempt at 10 seconds', () => {
+    expect(buildOpenAIOptions('sk-test')).toEqual({ apiKey: 'sk-test', maxRetries: 0, timeout: 10_000 });
   });
 });
 
@@ -61,13 +61,16 @@ describe('createOpenAIModelProvider', () => {
 
     await build(responses).answer(PROMPT);
 
-    expect(create).toHaveBeenCalledWith({
-      input: PROMPT.user,
-      instructions: PROMPT.system,
-      max_output_tokens: MODEL.MAX_TOKENS,
-      model: 'small-model',
-      store: false,
-    });
+    expect(create).toHaveBeenCalledWith(
+      {
+        input: PROMPT.user,
+        instructions: PROMPT.system,
+        max_output_tokens: MODEL.MAX_TOKENS,
+        model: 'small-model',
+        store: false,
+      },
+      { signal: expect.any(AbortSignal) },
+    );
   });
 
   it('sends the reasoning effort only when configured', async () => {
