@@ -40,6 +40,7 @@ export default function DeleteAccountScreen() {
           items={[
             'Purchase records, kept for accounting. Your account link is removed, and they hold no email or name.',
             'PostHog usage events tied to your random user ID, never your email, kept by PostHog.',
+            "Google AdMob's records of the sponsored cards it served to your device on iPhone and Android, kept by Google. They are not tied to your account.",
             'The RevenueCat customer record, kept by RevenueCat.',
             "Resend's record of the sign-in emails it sent, kept by Resend.",
             'Purchase transactions kept by Apple and Google.',
