@@ -8,13 +8,12 @@
 // anything. No unit id, ads unavailable, or a load error (no fill) shows the direct sponsor or the house
 // card. useSponsorNativeAd owns the ad and destroys it on unmount, so an ad that arrives after the screen
 // left reports nothing (Review Focus 20). ad_shown is reported after the ad has rendered; ad_clicked on the
-// SDK's click event.
-import { useEffect, useState } from 'react';
+// SDK's click event, whose listener the hook holds.
+import { useCallback, useEffect, useState } from 'react';
 
 import { Image, Text } from 'react-native';
 import {
   NativeAdChoicesPlacement,
-  NativeAdEventType,
   NativeAdView,
   NativeAsset,
   NativeAssetType,
@@ -51,15 +50,13 @@ function resolveAdUnitId(placement: SponsorPlacement): string | null {
 
 function AdMobCard({ adUnitId, sponsor }: { adUnitId: string; sponsor: SponsorContentState }) {
   const { adsStatus } = useSponsor();
-  const { error, nativeAd } = useSponsorNativeAd(adUnitId, AD_REQUEST_OPTIONS, adsStatus === 'ready');
   const { onClicked, onShown } = sponsor;
+  const onAdClicked = useCallback(() => onClicked('admob'), [onClicked]);
+  const { error, nativeAd } = useSponsorNativeAd(adUnitId, AD_REQUEST_OPTIONS, adsStatus === 'ready', onAdClicked);
 
   useEffect(() => {
-    if (nativeAd === null) return undefined;
-    onShown('admob');
-    const subscription = nativeAd.addAdEventListener(NativeAdEventType.CLICKED, () => onClicked('admob'));
-    return () => subscription.remove();
-  }, [nativeAd, onClicked, onShown]);
+    if (nativeAd !== null) onShown('admob');
+  }, [nativeAd, onShown]);
 
   if (adsStatus === 'unavailable' || error !== null) return <SponsorContentSlot sponsor={sponsor} />;
   if (nativeAd === null) return <SponsoredSlotPlaceholder />;

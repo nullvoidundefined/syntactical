@@ -3,10 +3,12 @@
 // loaded ad kept until unmount and then destroyed; an ad that arrives after unmount destroyed at once, with
 // no state update and so no report (Review Focus 20). When Fast Refresh re-runs the effects, the destroyed
 // ad leaves state and a fresh one is requested. A failed request (no fill) is an error the card falls back
-// on.
+// on. The hook also holds the ad's click listener, removed before the ad is destroyed, so no effect ever
+// reaches a destroyed ad: Fast Refresh runs every cleanup and then every setup in one commit with the
+// render's values, and the SDK throws on a listener added to a destroyed ad.
 import { useEffect, useRef, useState } from 'react';
 
-import { NativeAd, type NativeAdRequestOptions } from 'react-native-google-mobile-ads';
+import { NativeAd, NativeAdEventType, type NativeAdRequestOptions } from 'react-native-google-mobile-ads';
 
 export type SponsorNativeAdState = { error: Error | null; nativeAd: NativeAd | null };
 
@@ -16,9 +18,13 @@ export function useSponsorNativeAd(
   adUnitId: string,
   options: NativeAdRequestOptions,
   enabled: boolean,
+  onClicked?: () => void,
 ): SponsorNativeAdState {
   const [state, setState] = useState<SponsorNativeAdState>(EMPTY);
   const heldAd = useRef<NativeAd | null>(null);
+  const clickSubscription = useRef<{ remove: () => void } | null>(null);
+  const onClickedRef = useRef(onClicked);
+  onClickedRef.current = onClicked;
   const hasRequested = useRef(false);
   // Moves on at every cleanup, so a request made before it knows its ad is stale and destroys it on arrival.
   const generation = useRef(0);
@@ -31,6 +37,8 @@ export function useSponsorNativeAd(
   useEffect(
     () => () => {
       generation.current += 1;
+      clickSubscription.current?.remove();
+      clickSubscription.current = null;
       heldAd.current?.destroy();
       heldAd.current = null;
       hasRequested.current = false;
@@ -51,6 +59,7 @@ export function useSponsorNativeAd(
           return;
         }
         heldAd.current = ad;
+        clickSubscription.current = ad.addAdEventListener(NativeAdEventType.CLICKED, () => onClickedRef.current?.());
         setState({ error: null, nativeAd: ad });
       },
       (error: unknown) => {
