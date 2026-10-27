@@ -1,6 +1,8 @@
 // B-3.2: the schema migrations, run with the server's migrate scripts against
 // a real Postgres. Each test gets an empty scratch database of its own.
 import { randomBytes, randomUUID } from 'node:crypto';
+import { readdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 import type pg from 'pg';
 import { afterEach, beforeEach, describe, expect, inject, it } from 'vitest';
@@ -17,6 +19,8 @@ const RAW_CODE_BYTES = 6;
 const SUCCESS = 0;
 // node-pg-migrate's down takes a count; 0 reverts every applied migration.
 const ALL_MIGRATIONS = '0';
+const MIGRATIONS_DIRECTORY = fileURLToPath(new URL('../../../migrations/', import.meta.url));
+const EXPIRES_AT_MIGRATION = '1790985600018_entitlements-expires-at.js';
 
 const APPLICATION_TABLES = [
   'answer_events',
@@ -525,7 +529,11 @@ describe.skipIf(SKIP_DATABASE_TESTS)('migrations', () => {
       );
       expect(inserted).toEqual([{ expires_at: null }]);
 
-      const down = runMigrations(scratch.databaseUrl, 'down', ['1']);
+      // Reverts the expires_at migration and every one after it.
+      const countFromExpiresAt = readdirSync(MIGRATIONS_DIRECTORY).filter(
+        (name) => name.endsWith('.js') && name >= EXPIRES_AT_MIGRATION,
+      ).length;
+      const down = runMigrations(scratch.databaseUrl, 'down', [String(countFromExpiresAt)]);
       expect(down.status, down.output).toBe(SUCCESS);
       const afterDown = await columnsOf(pool, 'entitlements');
       expect(afterDown).not.toHaveProperty('expires_at');

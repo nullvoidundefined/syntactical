@@ -9,6 +9,13 @@
 // product_id is normalised first (a Play id's base-plan suffix stripped); the normalised id is matched, locked on, and stored, and the payload keeps the raw value.
 // A grant without expiration_at_ms on a product that requires one (the annual, PRO_PRODUCT_RULES) is recorded but ignored by recomputeEntitlement (fail closed), and warned about once.
 // A SANDBOX event is recorded but recomputes nothing unless acceptSandbox (REVENUECAT_ACCEPT_SANDBOX), and is warned about once.
+// A Pro product event for a user a TRANSFER moved purchases away from, stamped at or before that
+// transfer (a retry, or a delivery that waited on the locks), is recorded under the user the
+// purchase went to (readTransferDestination), and both users are recomputed; one stamped later is
+// a purchase made since and stays. Lock order, shared with transferPurchaseEvents: the transfer
+// lock (shared here, exclusive there, so no transfer runs while the destination is read), then user
+// rows FOR KEY SHARE, then the (user, product) advisory locks in sorted user order.
+import type pg from 'pg';
 import type { Logger } from 'pino';
 
 import type { Database } from '../clients/database.js';
@@ -21,6 +28,8 @@ import { recomputeEntitlement } from './recomputeEntitlement.js';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const LOCK_NAMESPACE = 'revenuecat-entitlement';
+// Taken first: shared by every event for a user, exclusive by a TRANSFER.
+const TRANSFER_LOCK_KEY = 'revenuecat-transfer';
 
 // The advisory lock key that serializes events for one (user, product). transferPurchaseEvents
 // takes the same keys.
@@ -58,6 +67,50 @@ function isGrantWithoutRequiredExpiry(productId: ProProductId, event: RevenueCat
   );
 }
 
+// The user that holds, now, a purchase event for `userId` stamped `eventTimestampMs`: undefined
+// when no TRANSFER moved it (it stays with userId), null when the user it went to was deleted.
+// Each hop takes the first transfer away from the current user at or after the time the event
+// reached that user (its stamp, then each transfer's), which is where it would sit had it arrived
+// on time. A transfer is used at most once, so a chain that returns to a user ends.
+async function readTransferDestination(
+  client: pg.PoolClient,
+  userId: string,
+  eventTimestampMs: number,
+): Promise<string | null | undefined> {
+  let destination: string | null | undefined;
+  let fromUserId = userId;
+  let arrivedAtMs = eventTimestampMs;
+  const usedIds: string[] = [];
+  for (;;) {
+    const { rows } = await client.query<{ id: string; occurred_at_ms: number; to_user_id: string | null }>(
+      `SELECT id, to_user_id, (extract(epoch FROM occurred_at) * 1000)::double precision AS occurred_at_ms
+       FROM purchase_transfers
+       WHERE provider = $1 AND from_user_id = $2 AND occurred_at >= to_timestamp($3::double precision / 1000)
+         AND NOT (id = ANY($4::bigint[]))
+       ORDER BY occurred_at, id
+       LIMIT 1`,
+      [REVENUECAT_EVENTS.PROVIDER, fromUserId, arrivedAtMs, usedIds],
+    );
+    const [hop] = rows;
+    if (!hop) {
+      return destination;
+    }
+    destination = hop.to_user_id;
+    if (destination === null) {
+      return null;
+    }
+    usedIds.push(hop.id);
+    fromUserId = destination;
+    arrivedAtMs = hop.occurred_at_ms;
+  }
+}
+
+// The id when `userId` names an existing user, its row read FOR KEY SHARE; otherwise null.
+async function lockUserRow(client: pg.PoolClient, userId: string): Promise<string | null> {
+  const { rows } = await client.query<{ id: string }>('SELECT id FROM users WHERE id = $1 FOR KEY SHARE', [userId]);
+  return rows[0]?.id ?? null;
+}
+
 function buildPayload(event: Readonly<Record<string, unknown>>): Record<string, string | number | boolean> {
   const payload: Record<string, string | number | boolean> = {};
   for (const key of REVENUECAT_EVENTS.PAYLOAD_KEYS) {
@@ -85,16 +138,24 @@ async function recordPurchaseEvent(options: RecordPurchaseEventOptions): Promise
   return withTransaction<RecordResult>(
     database,
     async (client) => {
+      // appUserId's user, and the user the event is recorded under (another after a TRANSFER).
+      let ownerId: string | null = null;
       let userId: string | null = null;
       if (UUID_PATTERN.test(appUserId)) {
-        const { rows } = await client.query<{ id: string }>('SELECT id FROM users WHERE id = $1 FOR KEY SHARE', [
-          appUserId,
-        ]);
-        userId = rows[0]?.id ?? null;
+        await client.query('SELECT pg_advisory_xact_lock_shared(hashtextextended($1, 0))', [TRANSFER_LOCK_KEY]);
+        ownerId = await lockUserRow(client, appUserId);
+        userId = ownerId;
       }
-      if (userId) {
+      if (ownerId && isProProductId(productId)) {
+        const destination = await readTransferDestination(client, ownerId, eventTimestampMs);
+        if (destination !== undefined) {
+          userId = destination === null ? null : await lockUserRow(client, destination);
+        }
+      }
+      const lockedUserIds = [...new Set([ownerId, userId].filter((id): id is string => id !== null))].sort();
+      for (const lockedUserId of lockedUserIds) {
         await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [
-          entitlementLockKey(userId, productId),
+          entitlementLockKey(lockedUserId, productId),
         ]);
       }
       const { rowCount } = await client.query(
@@ -125,8 +186,10 @@ async function recordPurchaseEvent(options: RecordPurchaseEventOptions): Promise
         logger.warn({ eventType: type, reason: 'sandbox' }, 'revenuecat sandbox event not applied');
         return 'recorded';
       }
-      if (userId && canChangeEntitlement) {
-        await recomputeEntitlement(client, userId, productId, acceptSandbox);
+      if (canChangeEntitlement) {
+        for (const lockedUserId of lockedUserIds) {
+          await recomputeEntitlement(client, lockedUserId, productId, acceptSandbox);
+        }
       }
       return 'recorded';
     },
@@ -134,4 +197,4 @@ async function recordPurchaseEvent(options: RecordPurchaseEventOptions): Promise
   );
 }
 
-export { buildPayload, entitlementLockKey, recordPurchaseEvent, UUID_PATTERN };
+export { buildPayload, entitlementLockKey, recordPurchaseEvent, TRANSFER_LOCK_KEY, UUID_PATTERN };

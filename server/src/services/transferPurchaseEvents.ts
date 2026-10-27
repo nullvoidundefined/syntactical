@@ -10,6 +10,10 @@
 // user whose events all moved loses it. A SANDBOX transfer moves nothing unless acceptSandbox. A
 // deleted user's events have user_id NULL and cannot be moved. The stored payload is the scalar
 // allowlist, so neither list of ids is stored, and no id is logged.
+// Each move is recorded in purchase_transfers (old user, new user, the event timestamp), so an
+// event for an old user delivered later follows it (recordPurchaseEvent). The exclusive transfer
+// lock is taken first, before the rows and the sorted advisory locks: no event for any user is
+// between reading where it belongs and committing while a transfer runs.
 import type pg from 'pg';
 import type { Logger } from 'pino';
 
@@ -19,7 +23,7 @@ import { PRO_PRODUCT_ID_LIST } from '../constants/proProducts.js';
 import { REVENUECAT_EVENTS } from '../constants/revenueCatEvents.js';
 
 import { recomputeEntitlement } from './recomputeEntitlement.js';
-import { buildPayload, entitlementLockKey, UUID_PATTERN } from './recordPurchaseEvent.js';
+import { buildPayload, entitlementLockKey, TRANSFER_LOCK_KEY, UUID_PATTERN } from './recordPurchaseEvent.js';
 
 interface TransferEvent {
   [key: string]: unknown;
@@ -59,6 +63,7 @@ async function transferPurchaseEvents(options: TransferPurchaseEventsOptions): P
   return withTransaction<TransferResult>(
     database,
     async (client) => {
+      await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [TRANSFER_LOCK_KEY]);
       const knownToIds = await lockExistingUsers(client, toIds);
       const newUserId = toIds.map((toId) => toId.toLowerCase()).find((toId) => knownToIds.has(toId)) ?? null;
       const oldUserIds = [...(await lockExistingUsers(client, fromIds))].filter((fromId) => fromId !== newUserId);
@@ -91,6 +96,12 @@ async function transferPurchaseEvents(options: TransferPurchaseEventsOptions): P
         REVENUECAT_EVENTS.PROVIDER,
         oldUserIds,
       ]);
+      await client.query(
+        `INSERT INTO purchase_transfers (provider, provider_event_id, from_user_id, to_user_id, occurred_at)
+         SELECT $1, $2, from_user_id, $4, to_timestamp($5::double precision / 1000)
+         FROM unnest($3::uuid[]) AS from_user_id`,
+        [REVENUECAT_EVENTS.PROVIDER, id, oldUserIds, newUserId, eventTimestampMs],
+      );
       for (const userId of affectedUserIds) {
         for (const productId of PRO_PRODUCT_ID_LIST) {
           await recomputeEntitlement(client, userId, productId, acceptSandbox);

@@ -224,7 +224,7 @@ describe.skipIf(SKIP_DATABASE_TESTS)('POST /v1/webhooks/revenuecat TRANSFER', ()
     const userB = await insertUser();
     await post(testApp, purchase(userA, LIFETIME));
     await post(testApp, transfer([userA], [userB]));
-    const later = { ...purchase(userA, ANNUAL), event_timestamp_ms: T0 + 2 * HOUR_MS };
+    const later: Record<string, unknown> = { ...purchase(userA, ANNUAL), event_timestamp_ms: T0 + 2 * HOUR_MS };
 
     await post(testApp, later);
 
