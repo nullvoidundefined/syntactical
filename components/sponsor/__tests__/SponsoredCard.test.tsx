@@ -36,7 +36,9 @@ jest.mock('../../../state/usePurchases', () => ({
   usePurchases: (): PurchasesState => ({ buy: mockBuy, confirm: mockConfirm, prices: {}, restore: jest.fn() }),
 }));
 jest.mock('expo-router', () => ({
-  ...require('../../../config/buildExpoRouterMock').buildExpoRouterMock({ push: mockPush }),
+  ...require('../../../config/buildExpoRouterMock').buildExpoRouterMock({
+    push: (...args: unknown[]) => mockPush(...args),
+  }),
   usePathname: () => '/python',
 }));
 // ProSheet (area 4, Task 4.3) is replaced by a stand-in that exposes the props it is given, typed as the
