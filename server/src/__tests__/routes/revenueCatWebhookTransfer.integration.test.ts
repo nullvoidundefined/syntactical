@@ -6,6 +6,9 @@
 // without. The stored payload keeps neither list of ids. A redelivery moves nothing more, a transfer
 // to no known user moves nothing, a SANDBOX transfer moves nothing on a server that does not
 // accept sandbox, and a TRANSFER without both id lists is refused with 400 and records nothing.
+// An event for an old user that arrives after the TRANSFER (a retry, or one that waited on the
+// lock) with an event timestamp not later than the transfer follows it, along a chain of transfers,
+// to the user that holds the purchase now; one strictly newer stays with the old user.
 import { randomBytes, randomUUID } from 'node:crypto';
 
 import request from 'supertest';
@@ -70,10 +73,20 @@ function purchase(userId: string, productId: string): Record<string, unknown> {
   };
 }
 
-function transfer(fromIds: unknown, toIds: unknown): Record<string, unknown> {
+// A RENEWAL of the annual by `userId` stamped `timestampMs`, extending the period to `expiresAtMs`.
+function renewal(userId: string, timestampMs: number, expiresAtMs: number): Record<string, unknown> {
+  return {
+    ...purchase(userId, ANNUAL),
+    event_timestamp_ms: timestampMs,
+    expiration_at_ms: expiresAtMs,
+    type: 'RENEWAL',
+  };
+}
+
+function transfer(fromIds: unknown, toIds: unknown, timestampMs = T0 + HOUR_MS): Record<string, unknown> {
   return {
     environment: 'SANDBOX',
-    event_timestamp_ms: T0 + HOUR_MS,
+    event_timestamp_ms: timestampMs,
     id: randomUUID(),
     store: 'APP_STORE',
     transferred_from: fromIds,
@@ -88,6 +101,15 @@ async function rowsOf(userId: string): Promise<EntitlementRow[]> {
     [userId],
   );
   return rows;
+}
+
+async function ownerOf(eventId: unknown): Promise<string | null> {
+  const { rows } = await database.pool.query<{ user_id: string | null }>(
+    'SELECT user_id FROM purchase_events WHERE provider_event_id = $1',
+    [eventId],
+  );
+  expect(rows).toHaveLength(1);
+  return rows[0].user_id;
 }
 
 async function countPurchaseEvents(): Promise<number> {
@@ -154,13 +176,126 @@ describe.skipIf(SKIP_DATABASE_TESTS)('POST /v1/webhooks/revenuecat TRANSFER', ()
     const event = transfer([userA], [userB]);
     await post(testApp, purchase(userA, LIFETIME));
     await post(testApp, event);
-    await post(testApp, purchase(userA, ANNUAL));
+    await post(testApp, { ...purchase(userA, ANNUAL), event_timestamp_ms: T0 + 2 * HOUR_MS });
 
     const redelivered = await post(testApp, event);
 
     expect(redelivered.body).toEqual({ data: { status: 'duplicate' } });
     expect(await hasPro(database.pool, userA, NOW)).toBe(true);
     expect(await rowsOf(userB)).toEqual([{ expires_at: null, product_id: LIFETIME, status: 'granted' }]);
+  });
+
+  it('sends a RENEWAL for A delivered after a TRANSFER from A to B, stamped before it, to B', async () => {
+    const testApp = createWebhookTestApp({ pool: database.pool });
+    const userA = await insertUser();
+    const userB = await insertUser();
+    await post(testApp, purchase(userA, ANNUAL));
+    await post(testApp, transfer([userA], [userB]));
+    const late = renewal(userA, T0 + HOUR_MS / 2, T0 + 2 * YEAR_MS);
+
+    const response = await post(testApp, late);
+
+    expect(response.body).toEqual({ data: { status: 'recorded' } });
+    expect(await ownerOf(late.id)).toBe(userB);
+    expect(await rowsOf(userB)).toEqual([
+      { expires_at: new Date(T0 + 2 * YEAR_MS), product_id: ANNUAL, status: 'granted' },
+    ]);
+    expect(await hasPro(database.pool, userB, NOW)).toBe(true);
+    expect(await hasPro(database.pool, userA, NOW)).toBe(false);
+  });
+
+  it('sends an event for A stamped exactly at the TRANSFER to B', async () => {
+    const testApp = createWebhookTestApp({ pool: database.pool });
+    const userA = await insertUser();
+    const userB = await insertUser();
+    await post(testApp, purchase(userA, ANNUAL));
+    await post(testApp, transfer([userA], [userB]));
+    const late = renewal(userA, T0 + HOUR_MS, T0 + 2 * YEAR_MS);
+
+    await post(testApp, late);
+
+    expect(await ownerOf(late.id)).toBe(userB);
+    expect(await hasPro(database.pool, userA, NOW)).toBe(false);
+  });
+
+  it('keeps with A a purchase by A stamped after the TRANSFER from A to B', async () => {
+    const testApp = createWebhookTestApp({ pool: database.pool });
+    const userA = await insertUser();
+    const userB = await insertUser();
+    await post(testApp, purchase(userA, LIFETIME));
+    await post(testApp, transfer([userA], [userB]));
+    const later = { ...purchase(userA, ANNUAL), event_timestamp_ms: T0 + 2 * HOUR_MS };
+
+    await post(testApp, later);
+
+    expect(await ownerOf(later.id)).toBe(userA);
+    expect(await rowsOf(userA)).toEqual([
+      { expires_at: new Date(T0 + YEAR_MS), product_id: ANNUAL, status: 'granted' },
+      { expires_at: null, product_id: LIFETIME, status: 'revoked' },
+    ]);
+    expect(await rowsOf(userB)).toEqual([{ expires_at: null, product_id: LIFETIME, status: 'granted' }]);
+  });
+
+  it('sends a late event for A along a chain of TRANSFERs, A to B then B to C, to C', async () => {
+    const testApp = createWebhookTestApp({ pool: database.pool });
+    const userA = await insertUser();
+    const userB = await insertUser();
+    const userC = await insertUser();
+    await post(testApp, purchase(userA, ANNUAL));
+    await post(testApp, transfer([userA], [userB]));
+    await post(testApp, transfer([userB], [userC], T0 + 2 * HOUR_MS));
+    const late = renewal(userA, T0 + HOUR_MS / 2, T0 + 2 * YEAR_MS);
+
+    await post(testApp, late);
+
+    expect(await ownerOf(late.id)).toBe(userC);
+    expect(await rowsOf(userC)).toEqual([
+      { expires_at: new Date(T0 + 2 * YEAR_MS), product_id: ANNUAL, status: 'granted' },
+    ]);
+    expect(await hasPro(database.pool, userA, NOW)).toBe(false);
+    expect(await hasPro(database.pool, userB, NOW)).toBe(false);
+  });
+
+  it('stops a chain of TRANSFERs that returns to A, and follows a later one away again', async () => {
+    const testApp = createWebhookTestApp({ pool: database.pool });
+    const userA = await insertUser();
+    const userB = await insertUser();
+    await post(testApp, purchase(userA, ANNUAL));
+    await post(testApp, transfer([userA], [userB]));
+    await post(testApp, transfer([userB], [userA], T0 + HOUR_MS));
+    const late = renewal(userA, T0 + HOUR_MS / 2, T0 + 2 * YEAR_MS);
+
+    const response = await post(testApp, late);
+
+    expect(response.body).toEqual({ data: { status: 'recorded' } });
+    expect(await ownerOf(late.id)).toBe(userA);
+    expect(await hasPro(database.pool, userA, NOW)).toBe(true);
+    expect(await hasPro(database.pool, userB, NOW)).toBe(false);
+
+    await post(testApp, transfer([userA], [userB], T0 + 2 * HOUR_MS));
+    const later = renewal(userA, T0 + HOUR_MS / 2, T0 + 3 * YEAR_MS);
+    await post(testApp, later);
+
+    expect(await ownerOf(later.id)).toBe(userB);
+    expect(await hasPro(database.pool, userA, NOW)).toBe(false);
+  });
+
+  it('answers a redelivered late event duplicate and records it once, under B', async () => {
+    const testApp = createWebhookTestApp({ pool: database.pool });
+    const userA = await insertUser();
+    const userB = await insertUser();
+    await post(testApp, purchase(userA, ANNUAL));
+    await post(testApp, transfer([userA], [userB]));
+    const late = renewal(userA, T0 + HOUR_MS / 2, T0 + 2 * YEAR_MS);
+    await post(testApp, late);
+
+    const redelivered = await post(testApp, late);
+
+    expect(redelivered.body).toEqual({ data: { status: 'duplicate' } });
+    expect(await ownerOf(late.id)).toBe(userB);
+    expect(await countPurchaseEvents()).toBe(3);
+    expect(await hasPro(database.pool, userA, NOW)).toBe(false);
+    expect(await hasPro(database.pool, userB, NOW)).toBe(true);
   });
 
   it('records a TRANSFER to no known user and moves nothing', async () => {

@@ -26,6 +26,7 @@ const APPLICATION_TABLES = [
   'entitlements',
   'one_time_codes',
   'purchase_events',
+  'purchase_transfers',
   'rate_limit_counters',
   'sessions',
   'study_notes',
@@ -308,6 +309,35 @@ describe.skipIf(SKIP_DATABASE_TESTS)('migrations', () => {
         ['revenuecat', providerEventId],
       );
       expect(keptPurchases).toEqual([{ user_id: null }]);
+    },
+    MIGRATION_TIMEOUT_MS,
+  );
+
+  it(
+    'drop a purchase transfer with its from user, and keep it, to no user, without its to user',
+    async () => {
+      migrateUp();
+      const { pool } = scratch;
+      const fromUser = await insertUser(pool);
+      const toUser = await insertUser(pool);
+      const otherFromUser = await insertUser(pool);
+      const transferEventId = randomUUID();
+      await pool.query(
+        `INSERT INTO purchase_events (provider, provider_event_id, kind, payload, occurred_at)
+                 VALUES ('revenuecat', $1, 'TRANSFER', '{}'::jsonb, now())`,
+        [transferEventId],
+      );
+      await pool.query(
+        `INSERT INTO purchase_transfers (provider, provider_event_id, from_user_id, to_user_id, occurred_at)
+                 VALUES ('revenuecat', $1, $2, $4, now()), ('revenuecat', $1, $3, $4, now())`,
+        [transferEventId, fromUser, otherFromUser, toUser],
+      );
+
+      await pool.query('DELETE FROM users WHERE id = $1', [fromUser]);
+      await pool.query('DELETE FROM users WHERE id = $1', [toUser]);
+
+      const { rows } = await pool.query('SELECT from_user_id, to_user_id FROM purchase_transfers');
+      expect(rows).toEqual([{ from_user_id: otherFromUser, to_user_id: null }]);
     },
     MIGRATION_TIMEOUT_MS,
   );
