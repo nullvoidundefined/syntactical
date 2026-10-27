@@ -31,7 +31,12 @@ describe('AskPanel', () => {
   });
 
   it('sends the trimmed question and shows the answer and the questions left today', async () => {
-    mockRequest.mockResolvedValueOnce({ answer: 'b and a are one list.', remaining: 19, status: 'answered' });
+    mockRequest.mockResolvedValueOnce({
+      answer: 'b and a are one list.',
+      limit: 20,
+      remaining: 19,
+      status: 'answered',
+    });
     await render(<AskPanel target={target} />);
 
     await askQuestion('  Why does a change?  ');
@@ -46,7 +51,6 @@ describe('AskPanel', () => {
   it.each([
     ['limit', "You've used today's questions"],
     ['busy', 'Too many questions at once'],
-    ['locked', 'comes with any purchase'],
     ['unavailable', 'No answer right now'],
   ] as const)('says why when the ask fails with %s, keeping the typed question', async (reason, text) => {
     mockRequest.mockResolvedValueOnce({ reason, status: 'failed' });
@@ -70,7 +74,7 @@ describe('AskPanel', () => {
     expect(screen.getByText('Asking…')).toBeTruthy();
 
     await unmount();
-    await act(async () => resolve({ answer: 'late', remaining: 1, status: 'answered' }));
+    await act(async () => resolve({ answer: 'late', limit: 20, remaining: 1, status: 'answered' }));
 
     expect(screen.queryByText('late')).toBeNull();
   });

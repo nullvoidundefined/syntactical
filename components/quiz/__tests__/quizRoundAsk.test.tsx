@@ -56,7 +56,7 @@ describe('QuizRound ask', () => {
   it('asks about the question by its bank and the choice by its bank index', async () => {
     // With Math.random at 0 the card shows [wrong-1, wrong-2, wrong-3, right].
     jest.spyOn(Math, 'random').mockReturnValue(0);
-    mockRequest.mockResolvedValueOnce({ answer: 'ok', remaining: 1, status: 'answered' });
+    mockRequest.mockResolvedValueOnce({ answer: 'ok', limit: 20, remaining: 1, status: 'answered' });
     await answerAndOpenQuery(true);
 
     await fireEvent.changeText(screen.getByLabelText('Your question about this card'), 'Why not this one?');
