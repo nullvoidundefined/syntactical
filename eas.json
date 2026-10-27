@@ -4,13 +4,15 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "android": { "buildType": "apk" }
+      "android": { "buildType": "apk" },
+      "env": { "ADMOB_USE_TEST_IDS": "true" }
     },
     "preview": {
       "distribution": "internal",
       "environment": "preview",
       "android": { "buildType": "apk" },
       "env": {
+        "ADMOB_USE_TEST_IDS": "true",
         "API_BASE_URL": "https://staging-api.syntactical.dev/v1/"
       }
     },

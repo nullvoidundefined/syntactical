@@ -26,6 +26,15 @@ describe('SponsoredSlot', () => {
     expect(screen.getByTestId('sponsored-slot')).toHaveStyle({ height: SPONSOR_SLOT_HEIGHT });
   });
 
+  it('clips its content, so no card can draw outside the reserved height', async () => {
+    await render(
+      <SponsoredSlot placement="tracks">
+        <Text>a filled card</Text>
+      </SponsoredSlot>,
+    );
+    expect(screen.getByTestId('sponsored-slot')).toHaveStyle({ overflow: 'hidden' });
+  });
+
   it('shows only the Sponsored label in the empty frame, at least 15 points high, hidden from screen readers', async () => {
     await render(
       <SponsoredSlot placement="tracks">

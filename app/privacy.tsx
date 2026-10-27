@@ -3,10 +3,11 @@
 // code and docs/store/privacy-labels.md; it promises nothing the code does not do.
 // The "no location" statements hold only once the owner turns on PostHog "Discard client IP data"
 // (PostHog still receives the request IP otherwise). Verify that before publishing.
+// Sponsored card statements follow docs/store/privacy-labels.md and Google's Mobile Ads SDK disclosure; re-check them
+// when a feed is added or the SDK version changes.
 // OWNER TO CONFIRM before publishing: Anthropic's and OpenAI's current API data-retention terms,
 // stating any retention period here and on the account deletion page. The fallback provider sends
 // `store: false`, so OpenAI keeps no stored response; confirm what its abuse-monitoring logs keep.
-// Sponsored card statements follow docs/store/privacy-labels.md; re-check them when a feed is added or changed.
 import { LegalList, LegalPage, LegalParagraph, LegalSection } from '../components/legal/LegalPage';
 
 export default function PrivacyScreen() {
@@ -31,11 +32,14 @@ export default function PrivacyScreen() {
           ]}
         />
         <LegalParagraph>
-          We do not collect your name, phone number, address, contacts, photos, precise or approximate location, or an
-          advertising identifier. Free users see sponsored cards: a card for Syntactical Pro, a sponsor we name in the
-          card, or on the website a text card from EthicalAds, which sets no cookies. A named sponsor&apos;s card comes
-          from our own site, so the sponsor learns nothing unless you open its link. Pro removes them. The app does not
-          track you across other companies&apos; apps or websites. No crash reporting service is installed.
+          We do not collect your name, phone number, address, contacts, photos, or location. Free users see sponsored
+          cards: a card for Syntactical Pro, a sponsor we name in the card, on iPhone and Android a card from Google
+          AdMob, and on the website a text card from EthicalAds, which sets no cookies. AdMob cards are always
+          non-personalised. Google AdMob receives your IP address, from which it may infer an approximate location, and
+          device information, to serve and count sponsored cards. The app never asks to track you and does not use an
+          advertising identifier to track you. A named sponsor&apos;s card comes from our own site, so the sponsor
+          learns nothing unless you open its link. Pro removes them. The app does not track you across other
+          companies&apos; apps or websites. No crash reporting service is installed.
         </LegalParagraph>
       </LegalSection>
 
@@ -70,6 +74,7 @@ export default function PrivacyScreen() {
             'Resend: delivers the one-time sign-in email.',
             'RevenueCat: manages purchases and entitlements, together with Apple and Google.',
             'PostHog: product usage analytics.',
+            'Google AdMob: serves the non-personalised sponsored cards on iPhone and Android, and asks for consent where the law requires it.',
             'EthicalAds: serves the text sponsored cards on the website, without cookies. Your browser fetches each card from EthicalAds, which sees its IP address.',
             'Apple and Google: process payments and keep their own purchase records.',
           ]}
@@ -93,8 +98,8 @@ export default function PrivacyScreen() {
         <LegalParagraph>
           Deleting in the app does not reach our vendors. These remain with them under their own policies: PostHog usage
           events tied to your random user ID, the RevenueCat customer record, Resend&apos;s record of the emails it
-          sent, and the purchase records of Apple and Google. To ask a vendor to remove its copy, write to [CONTACT
-          EMAIL].
+          sent, Google AdMob&apos;s records of the sponsored cards it served to your device (not tied to your account),
+          and the purchase records of Apple and Google. To ask a vendor to remove its copy, write to [CONTACT EMAIL].
         </LegalParagraph>
       </LegalSection>
 

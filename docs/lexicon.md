@@ -70,6 +70,18 @@ One line per domain noun used in this codebase's names (files, functions, variab
 - admin: a user with `users.is_admin`, set only in the database; an admin grants or revokes paid banks for their own account through `PUT /v1/admin/access` (`server/src/middleware/requireAdmin.ts`, `server/src/routes/adminAccess.ts`). Purchases always win over an admin grant.
 - analytics event: one PostHog event from the fixed registry in `constants/analyticsEvents.ts` (`clients/analyticsClient.ts`). Chosen over `metric`, `log`.
 
+### Sponsored cards
+
+- sponsored card: the one card free users see after the results screen's Retry and Menu row or between the track groups, in the app's own card style with a "Sponsored" label (`components/sponsor/SponsoredCard.tsx`, `SponsoredCard.web.tsx`). Chosen over `ad`, `banner`, `promo`; `ad` appears only in vendor names and the `ad_shown`/`ad_clicked` events.
+- sponsored slot: the fixed-height box a sponsored card renders in from its first frame, showing an empty frame with the "Sponsored" label until a feed fills it (`components/sponsor/SponsoredSlot.tsx`, `SPONSOR_SLOT_HEIGHT`). Chosen over `placeholder`, `skeleton`.
+- sponsor content: what one card shows, `{ headline, body, iconUri?, callToAction, href?, source }` (`services/sponsor/types/SponsorContent.ts`). Chosen over `creative`.
+- source: which feed filled a card: `admob`, `ethicalads`, `house`, or `direct` (`SponsorSource`). Chosen over `network`, `provider`.
+- placement: where a card sits, `results` or `tracks` (`services/sponsor/types/SponsorPlacement.ts`). Chosen over `slot`, `position`.
+- house card: the card advertising Pro, shown when no other source fills a placement (`HOUSE_CARD` in `constants/sponsor.ts`). Chosen over `fallback ad`.
+- direct sponsor: a sponsor sold directly, read from `content/sponsor.json` once per app by `SponsorProvider` and shown between its start and end dates (`services/sponsor/loadDirectSponsor.ts`, `validateSponsor` in `packages/content-schema`). Chosen over `partner`.
+- sponsor cadence: the two on-device counters that decide when the results card is due, read when a round starts (`services/sponsor/sponsorCadence.ts`, `SPONSOR` in `constants/sponsor.ts`). Chosen over `frequency cap`.
+- ads consent: Google's UMP consent flow run before the first AdMob request where the law requires it (`clients/adsConsentClient.ts`, `state/SponsorProvider.tsx`). Chosen over `GDPR prompt`; distinct from App Tracking Transparency, which the app never shows.
+
 ### Content pipeline
 
 - pipeline: the `pipeline/` workspace CLI that audits and enriches content at build time (`pipeline/src/commands/`: `validate`, `classify`, `gapFill`, `enrich`, `review`, `publish`, `draftOracles`, `draftTaxonomy`, `rewritePrompts`); no app code calls a model, and the server calls one only to answer an ask or write a study note. Chosen over `generator`.
