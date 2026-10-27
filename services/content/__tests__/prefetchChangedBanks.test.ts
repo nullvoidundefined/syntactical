@@ -49,7 +49,7 @@ function buildAccess(
   contentBaseUrl: string | null = CONTENT_BASE_URL,
 ): ContentAccess {
   const cached: CachedBank = { hash: cachedHash, questions: OLD_IDS.map(buildBoolQuestion) as Question[] };
-  return { baselineManifest: manifest, contentBaseUrl, readLocalBank: () => cached };
+  return { baselineManifest: manifest, contentBaseUrl, isHydrated: true, readLocalBank: () => cached };
 }
 
 describe('prefetchChangedBanks', () => {
