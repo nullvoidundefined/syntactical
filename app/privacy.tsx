@@ -4,9 +4,8 @@
 // The "no location" statements hold only once the owner turns on PostHog "Discard client IP data"
 // (PostHog still receives the request IP otherwise). Verify that before publishing.
 // OWNER TO CONFIRM before publishing: Anthropic's and OpenAI's current API data-retention terms,
-// stating any retention period here and on the account deletion page. The OpenAI SDK documents
-// that a Responses API request stores the response for at least 30 days unless it sets `store`
-// to false, and the fallback provider does not set it today.
+// stating any retention period here and on the account deletion page. The fallback provider sends
+// `store: false`, so OpenAI keeps no stored response; confirm what its abuse-monitoring logs keep.
 import { LegalList, LegalPage, LegalParagraph, LegalSection } from '../components/legal/LegalPage';
 
 export default function PrivacyScreen() {
