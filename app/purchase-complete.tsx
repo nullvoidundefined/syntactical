@@ -1,8 +1,7 @@
-// Purchase-complete route: where Web Billing checkout returns. It polls the
-// profile through usePurchases().confirm until GET /me says Pro is active
-// or the deadline passes, and announces the outcome in a polite live region. A
-// missing or invalid product, or a guest, makes no request, and nothing is
-// decided until AuthProvider hydrates.
+// Purchase-complete route: where Web Billing checkout returns. It polls the profile through
+// usePurchases().confirm until GET /me says Pro is active or the deadline passes, and announces
+// "You're Pro" or the timeout in a polite live region; Done goes home. A missing or invalid
+// product, or a guest, makes no request, and nothing is decided until AuthProvider hydrates.
 import { useEffect, useState } from 'react';
 
 import { Link, useLocalSearchParams } from 'expo-router';
@@ -17,7 +16,7 @@ type PurchaseStatus = 'confirming' | 'unlocked' | 'timed-out';
 const STATUS_MESSAGES: Record<PurchaseStatus, string> = {
   confirming: 'Confirming your purchase',
   'timed-out': 'Still processing, check back shortly',
-  unlocked: 'Unlocked',
+  unlocked: "You're Pro",
 };
 
 // The product id from the query string, or null when absent, repeated, or malformed.
@@ -84,8 +83,8 @@ export default function PurchaseCompleteScreen() {
       <View accessibilityLiveRegion="polite" role="status" className="mt-4">
         <Text className="font-mono text-sm text-ink">{STATUS_MESSAGES[shownStatus]}</Text>
       </View>
-      <Link href="/" role="link" className="mt-4 font-mono text-sm text-signal">
-        Back to menu
+      <Link href="/" role="link" aria-label="Done" className="mt-4 font-mono text-sm text-signal">
+        Done
       </Link>
     </View>
   );
