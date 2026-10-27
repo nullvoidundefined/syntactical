@@ -72,8 +72,10 @@ export default function PurchaseCompleteScreen() {
     };
   }, [canPoll, confirm, productId]);
 
-  // Before hydration the identity is unknown, so the route waits instead of calling it a guest.
-  const isWaiting = productId !== null && !isHydrated;
+  // Before hydration the identity is unknown, so the route waits instead of calling it a guest. The static export
+  // renders this page with no query, so the wait does not depend on ?product: the build-time HTML and the first
+  // client render of the checkout return URL then match.
+  const isWaiting = !isHydrated;
   const shownStatus: PurchaseStatus = isWaiting || canPoll ? status : 'timed-out';
 
   return (

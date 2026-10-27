@@ -5,6 +5,8 @@ import LengthScreen from '../[language]/[difficulty]/length';
 import RoundScreen from '../[language]/[difficulty]/play';
 
 // The manifest on main lists no topic counts; the bank itself holds 30 questions.
+// The routes wait for ContentProvider's cache read (Task 5.2); this suite renders them without the provider.
+jest.mock('../../state/ContentProvider', () => ({ useContentContext: () => ({ isHydrated: true }) }));
 jest.mock('../../state/useCanAsk', () => ({ useCanAsk: () => false }));
 jest.mock('../../state/StatsProvider', () => ({
   useQuizStats: () => ({ eventLog: [], isHydrated: true, recordAnswer: jest.fn(), recordCompletion: jest.fn() }),

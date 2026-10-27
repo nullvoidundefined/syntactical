@@ -1,4 +1,4 @@
-// Review route: once stats hydrate, snapshots the due questions from the
+// Review route: once stats and the content cache hydrate, snapshots the due questions from the
 // on-device review queue (local banks only, so it works offline) and plays
 // them as a review round, or shows when the next review comes due. With a
 // `misconception` parameter (from the weakness report) it plays that
@@ -17,6 +17,7 @@ import { findDifficulty } from '../services/content/findDifficulty';
 import { findLanguageEntry } from '../services/content/findLanguageEntry';
 import { listMisconceptionQuestions } from '../services/review/listMisconceptionQuestions';
 import type { ReviewQuestion } from '../services/review/types/ReviewQuestion';
+import { useContentContext } from '../state/ContentProvider';
 import { useQuizStats } from '../state/StatsProvider';
 import { useCanAsk } from '../state/useCanAsk';
 import { useLanguageManifest } from '../state/useLanguageManifest';
@@ -68,8 +69,10 @@ function ReviewRound({ misconceptionId }: { misconceptionId: string | undefined 
 
 export default function ReviewScreen() {
   const { misconception } = useLocalSearchParams<{ misconception?: string }>();
-  const { isHydrated } = useQuizStats();
-  if (!isHydrated) return <ActivityIndicator className="flex-1" />;
+  const { isHydrated: isStatsHydrated } = useQuizStats();
+  const { isHydrated: isContentHydrated } = useContentContext();
+  // The round is a snapshot, so it waits for the cached Medium and Hard banks as well as the stats.
+  if (!isStatsHydrated || !isContentHydrated) return <ActivityIndicator className="flex-1" />;
   return (
     <ReviewRound
       misconceptionId={typeof misconception === 'string' && misconception !== '' ? misconception : undefined}

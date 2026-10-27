@@ -144,4 +144,26 @@ To check a deploy:
 
 ## Web app origin
 
-The web app is served from the root of `https://syntactical.dev` by GitHub Pages (`.github/workflows/deploy.yml`, `actions/deploy-pages`; the custom domain is a repository Pages setting, so the artifact needs no `CNAME` file). It must be same-site with `api.syntactical.dev` because the session cookie is `SameSite=Lax`. The API's `ALLOWED_ORIGINS` must hold exactly `https://syntactical.dev`.
+The web app is a static export served from the root of `https://syntactical.dev` by the Cloudflare Pages project `syntactical` (`.github/workflows/deploy.yml`, `cloudflare/wrangler-action`, `pages deploy dist`). The custom domain is a setting of the Pages project: the `syntactical.dev` zone is already on Cloudflare, so Pages replaces the apex records itself with a flattened CNAME to `syntactical.pages.dev`, and the export needs no `CNAME` file. Until the cutover below, GitHub Pages also receives every deploy and holds the domain. The same host serves `https://syntactical.dev/content/`, where every installed app refreshes its manifest and downloads Medium and Hard banks, and the store-required `/privacy` and `/delete-account` pages, so the domain must never be without a host. It must be same-site with `api.syntactical.dev` because the session cookie is `SameSite=Lax`. The API's `ALLOWED_ORIGINS` must hold exactly `https://syntactical.dev`; the move to Cloudflare does not change the origin, so it stays as it is.
+
+The web build's public client keys are repository variables (Settings, Secrets and variables, Actions, Variables): `POSTHOG_KEY`, `POSTHOG_HOST`, `REVENUECAT_WEB_BILLING_KEY`, and `ETHICALADS_PUBLISHER`. The build step in `deploy.yml` maps them into `npm run build`; an Actions secret of the same name is not read.
+
+Cutover from GitHub Pages to Cloudflare Pages (owner, once, in this order; the domain is added on Cloudflare before GitHub lets go of it):
+
+1. In Cloudflare, create the Pages project `syntactical` with direct upload (Workers and Pages, Create, Pages, Upload assets) and production branch `main`.
+2. Create an API token with the "Cloudflare Pages: Edit" permission for the account, and copy the account id.
+3. Add the Actions secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` to this repository.
+4. Run `.github/workflows/deploy.yml` by hand (Actions, Deploy web, Run workflow) and open the `*.syntactical.pages.dev` URL it prints.
+5. Record the current apex records in the cutover PR: `dig +short syntactical.dev A` and `dig +short syntactical.dev AAAA` (today they point at GitHub Pages), and a screenshot or export of the `syntactical.dev` DNS records in the Cloudflare dashboard.
+6. In the Pages project, add the custom domain `syntactical.dev` and wait for it to show Active. Cloudflare replaces the apex records with the Pages record, and on a proxied zone serving moves to Cloudflare at once.
+7. Verify on Cloudflare before touching GitHub: `curl -sI https://syntactical.dev | grep -i '^server'` prints `server: cloudflare`, and `/settings`, `/content/manifest.json`, and `/privacy` each answer `200` (`curl -s -o /dev/null -w '%{http_code}\n' https://syntactical.dev/<path>`).
+8. Only then, in the GitHub repository's Pages settings, remove the custom domain `syntactical.dev`. Leave GitHub Pages itself enabled for 14 days after the cutover, as the rollback target.
+9. Merge the cutover commit, which removes the GitHub Pages steps from the workflow, then repeat the step 7 checks.
+10. On an installed native build, pull to refresh or relaunch and confirm the manifest refresh succeeds (the menu loads and a Medium bank not yet on the device downloads).
+
+Rollback (owner; within the 14 days GitHub Pages stays enabled):
+
+1. In Cloudflare, remove the custom domain `syntactical.dev` from the Pages project, and restore the apex records recorded in cutover step 5.
+2. In the GitHub repository's Pages settings, add the custom domain `syntactical.dev` again and wait for its DNS check to pass.
+3. Run `git revert <cutover commit sha>` on a branch, merge it, and confirm the push to `main` (or a manual dispatch of `deploy.yml`) deploys to GitHub Pages.
+4. Confirm `curl -sI https://syntactical.dev | grep -i '^server'` no longer prints `server: cloudflare`, and that `/settings`, `/content/manifest.json`, and `/privacy` each answer `200`.
