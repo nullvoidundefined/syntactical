@@ -1,6 +1,5 @@
 // Root layout: global styles, safe area, the query client, and the
-// content, auth, stats, and sync providers, the paid bank prefetch, and the app
-// shell, around every route.
+// content, auth, stats, and sync providers and the app shell, around every route.
 import '../global.css';
 import { useState } from 'react';
 
@@ -17,7 +16,6 @@ import { AdminCacheReset } from '../state/AdminCacheReset';
 import { AuthProvider } from '../state/AuthProvider';
 import { ContentProvider } from '../state/ContentProvider';
 import { OwnedStatsProvider } from '../state/OwnedStatsProvider';
-import { PaidBankPrefetch } from '../state/PaidBankPrefetch';
 import { SyncProvider } from '../state/SyncProvider';
 
 function readContentBaseUrl(): string | null {
@@ -38,7 +36,6 @@ export default function RootLayout() {
         <ContentProvider contentBaseUrl={contentBaseUrl}>
           <AuthProvider>
             <AdminCacheReset />
-            <PaidBankPrefetch />
             <OwnedStatsProvider>
               <SyncProvider>
                 <AppShell accountControl={<AccountControl />}>
