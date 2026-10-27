@@ -6,7 +6,7 @@
 // page, because the static export already holds one page per route.
 import { execFileSync } from 'node:child_process';
 import { symlinkSync } from 'node:fs';
-import { copyFile, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -75,6 +75,32 @@ describe('writeHostFiles', () => {
       'robots.txt',
       'sitemap.xml',
     ]);
+  });
+
+  it("deletes Expo Router's _sitemap.html and every bracket route page, keeping the real track and bank pages", async () => {
+    const outputDir = await makeExport();
+    await writeFile(join(outputDir, '_sitemap.html'), '<a href="/admin">admin</a>');
+    await writeFile(join(outputDir, '[language].html'), NOT_FOUND_HTML);
+    await mkdir(join(outputDir, '[language]', '[difficulty]'), { recursive: true });
+    await writeFile(join(outputDir, '[language]', '[difficulty].html'), NOT_FOUND_HTML);
+    await writeFile(join(outputDir, '[language]', '[difficulty]', 'play.html'), NOT_FOUND_HTML);
+    await mkdir(join(outputDir, 'python', 'easy'), { recursive: true });
+    await writeFile(join(outputDir, 'python', 'index.html'), INDEX_HTML);
+    await writeFile(join(outputDir, 'python', 'easy', 'index.html'), INDEX_HTML);
+    await writeFile(join(outputDir, 'python', 'easy', 'play.html'), INDEX_HTML);
+    await writeHostFiles(outputDir);
+    const left = (await readdir(outputDir, { recursive: true })).sort();
+    expect(left).not.toContain('_sitemap.html');
+    expect(left.filter((path) => path.includes('['))).toEqual([]);
+    expect(left).toEqual(
+      expect.arrayContaining([
+        'python/index.html',
+        'python/easy/index.html',
+        'python/easy/play.html',
+        'sitemap.xml',
+        '404.html',
+      ]),
+    );
   });
 
   it('rejects an export with no not-found page, naming the missing file', async () => {
