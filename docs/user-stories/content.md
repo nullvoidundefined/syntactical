@@ -30,7 +30,7 @@ This document holds the user stories for how question content is downloaded, ver
 - [ ] A fetch that fails, is redirected, or times out leaves the current copy in use and shows no error.
 - [ ] A bank with no local copy shows a loading state while online and an error state with Retry when its fetch fails.
 
-**E2E test:** `e2e/specs/apiOutage.spec.ts` (paid banks during an outage); also covered by `services/content/__tests__/contentCache.test.ts`, `services/content/__tests__/loadLanguageManifestOffline.test.ts`, `state/__tests__/useQuestionBankEdgeCases.test.tsx`, `clients/__tests__/contentClientTransport.test.ts`
+**E2E test:** `e2e/specs/apiOutage.spec.ts` (a Medium bank cached by its first use plays during an API outage); also covered by `services/content/__tests__/contentCache.test.ts`, `services/content/__tests__/loadLanguageManifestOffline.test.ts`, `services/content/__tests__/prefetchChangedBanksFirstUse.test.ts`, `state/__tests__/useQuestionBankEdgeCases.test.tsx`, `state/__tests__/useQuestionBankMedium.test.tsx`, `components/menu/__tests__/DifficultyStepMediumOffline.test.tsx`, `services/content/__tests__/bankStore.test.ts`, `services/content/__tests__/prefetchReviewBanks.test.ts`, `clients/__tests__/contentClientTransport.test.ts`
 **Ticket:** IAN-564
 
 ## US-CONTENT-003: See when a bank is downloading

@@ -9,7 +9,7 @@ The repository is an npm workspace with five packages:
 | Directory                 | What it is                                                                                                                                                                      |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | the root                  | The Expo universal app (Expo Router, NativeWind, react-native-web) in `app/`, `components/`, `state/`, `services/`, `clients/`, `config/`, and `constants/`; iOS, Android, web. |
-| `server/`                 | The Express 5 API on Railway with Postgres on Neon: accounts, sessions, answer-event sync, paid banks, RevenueCat and PostHog hooks (`server/DEPLOY.md`).                       |
+| `server/`                 | The Express 5 API on Railway with Postgres on Neon: accounts, sessions, answer-event sync, Ask and the study note, RevenueCat and PostHog hooks (`server/DEPLOY.md`).           |
 | `pipeline/`               | The content pipeline CLI: oracle runners in Docker, model-assisted drafting and review, and publishing into `content/` (`pipeline/src/commands/`).                              |
 | `packages/content-schema` | The manifest and bank validators shared by the app, the build, the server, and the pipeline.                                                                                    |
 | `packages/progress`       | The pure progress functions (XP, daily progress, day streak, review scheduling with `ts-fsrs`) that the app and the server both run.                                            |
