@@ -1,10 +1,12 @@
 // Difficulty step route for one language; a language the manifest does not list shows the
-// not-found screen. Every bank is free: selecting a difficulty opens its topic step.
+// not-found screen. Every bank is free: selecting a difficulty opens its topic step. Below the step it carries the
+// track summary for crawlers, before and after hydration.
 import { router, useLocalSearchParams } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 
 import NotFoundScreen from '../+not-found';
 import { DifficultyStep } from '../../components/menu/DifficultyStep';
+import { TrackSummary } from '../../components/seo/TrackSummary';
 import { findLanguageEntry } from '../../services/content/findLanguageEntry';
 import { listLanguageParams, type LanguageParams } from '../../services/content/listStaticRouteParams';
 import { useLanguageManifest } from '../../state/useLanguageManifest';
@@ -27,6 +29,7 @@ export default function DifficultyScreen() {
           onSelectDifficulty={(difficulty) => router.push(`/${language}/${difficulty}`)}
           onBack={() => router.replace('/')}
         />
+        <TrackSummary language={language} />
       </View>
     </ScrollView>
   );
