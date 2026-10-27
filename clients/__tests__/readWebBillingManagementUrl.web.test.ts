@@ -1,7 +1,7 @@
 // clients/__tests__/readWebBillingManagementUrl.web.test.ts
 // Web Billing's subscription page comes from the configured instance's CustomerInfo: its
-// managementURL when RevenueCat gives one, and null when it gives none, when Web Billing is not
-// configured, or when the read fails.
+// managementURL when RevenueCat gives one, and null when it gives none or Web Billing is not
+// configured. A failed read rejects, so the caller's query can try again instead of caching null.
 import { readWebBillingManagementUrl } from '../webBillingClient/readWebBillingManagementUrl';
 import { webBillingState } from '../webBillingClient/webBillingState';
 
@@ -35,8 +35,8 @@ describe('readWebBillingManagementUrl', () => {
     await expect(readWebBillingManagementUrl()).resolves.toBeNull();
   });
 
-  it('answers null when the read fails', async () => {
+  it('rejects when the read fails', async () => {
     configure(() => Promise.reject(new Error('network')));
-    await expect(readWebBillingManagementUrl()).resolves.toBeNull();
+    await expect(readWebBillingManagementUrl()).rejects.toThrow();
   });
 });

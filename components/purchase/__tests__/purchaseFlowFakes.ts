@@ -74,7 +74,9 @@ export type NativePurchaseBehavior = 'webhook-grants' | 'no-grant' | 'cancel' | 
 // no-grant: the store restores, but the server's GET me still says free.
 export type NativeRestoreBehavior = 'webhook-grants' | 'no-grant' | 'fail';
 
+// While customerInfoError is set, getCustomerInfo rejects with it.
 export const nativeSdk: {
+  customerInfoError: Error | null;
   managementUrl: string | null;
   offeringsError: Error | null;
   purchaseBehavior: NativePurchaseBehavior;
@@ -82,6 +84,7 @@ export const nativeSdk: {
   restoreBehavior: NativeRestoreBehavior;
   restoreCount: number;
 } = {
+  customerInfoError: null,
   managementUrl: null,
   offeringsError: null,
   purchaseBehavior: 'webhook-grants',
@@ -111,6 +114,7 @@ export function resetFakes(): void {
   fakeServer.pro = FREE_PRO;
   fakeAuth.userId = null;
   fakeNavigation.calls = [];
+  nativeSdk.customerInfoError = null;
   nativeSdk.managementUrl = null;
   nativeSdk.offeringsError = null;
   nativeSdk.purchaseBehavior = 'webhook-grants';
@@ -243,7 +247,9 @@ export function buildNativePurchasesModule() {
   };
   const Purchases = {
     configure: jest.fn(),
-    getCustomerInfo: jest.fn(() => Promise.resolve(buildCustomerInfo())),
+    getCustomerInfo: jest.fn(() =>
+      nativeSdk.customerInfoError ? Promise.reject(nativeSdk.customerInfoError) : Promise.resolve(buildCustomerInfo()),
+    ),
     getOfferings: jest.fn(() =>
       nativeSdk.offeringsError
         ? Promise.reject(nativeSdk.offeringsError)

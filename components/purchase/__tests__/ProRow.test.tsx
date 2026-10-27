@@ -6,7 +6,8 @@
 // - a free user sees "Go Pro", which opens the Pro sheet with source settings; buying the annual
 //   there closes the sheet and the row then reads "Pro until <date>";
 // - an annual subscriber reads "Pro until <date>" and gets "Manage subscription", which opens the
-//   managementURL RevenueCat's CustomerInfo gives; with no managementURL there is no link;
+//   managementURL RevenueCat's CustomerInfo gives; with no managementURL there is no link, and a
+//   failed read is tried again the next time the row mounts;
 // - a lifetime owner reads "Pro, lifetime" with no "Manage subscription" when RevenueCat gives none.
 import { randomBytes } from 'node:crypto';
 
@@ -131,6 +132,26 @@ describe('ProRow on native', () => {
     expect(await screen.findByText(PRO_UNTIL)).toBeTruthy();
     await settle();
     expect(screen.queryByRole('link', { name: 'Manage subscription' })).toBeNull();
+  });
+
+  it('reads the managementURL again when the row next mounts after a failed read, then shows the link', async () => {
+    fakeServer.pro = buildActivePro(ANNUAL_PRODUCT);
+    nativeSdk.managementUrl = APP_STORE_MANAGEMENT_URL;
+    nativeSdk.customerInfoError = new Error('network');
+    const first = await render(
+      <QueryClientProvider client={queryClient}>
+        <ProRow />
+      </QueryClientProvider>,
+    );
+    await settle();
+    expect(await screen.findByText(PRO_UNTIL)).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Manage subscription' })).toBeNull();
+
+    nativeSdk.customerInfoError = null;
+    await first.unmount();
+    await renderRow();
+
+    expect(await screen.findByRole('link', { name: 'Manage subscription' })).toBeTruthy();
   });
 
   it('shows a lifetime owner "Pro, lifetime" with no Manage subscription link', async () => {
