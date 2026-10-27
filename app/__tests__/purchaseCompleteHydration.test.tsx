@@ -30,9 +30,9 @@ jest.mock('expo-secure-store', () => ({
 }));
 
 const CONFIRMING = 'Confirming your purchase';
-const UNLOCKED = 'Unlocked';
+const UNLOCKED = "You're Pro";
 const STILL_PROCESSING = 'Still processing, check back shortly';
-const PRODUCT = 'syntactical.python.medium';
+const PRODUCT = 'syntactical.pro.annual';
 const POLL_INTERVAL_MS = 2000;
 
 function AuthLayout() {
@@ -51,7 +51,10 @@ function MenuStub() {
 
 const ROUTES = { _layout: AuthLayout, index: MenuStub, 'purchase-complete': PurchaseCompleteScreen };
 
-function profileReply(entitlements: string[]): RouteReply {
+function profileReply(isPro: boolean): RouteReply {
+  const pro = isPro
+    ? { expiresAt: '2027-10-27T12:00:00.000Z', isActive: true, product: 'annual' }
+    : { expiresAt: null, isActive: false, product: null };
   return {
     status: 200,
     body: {
@@ -59,7 +62,7 @@ function profileReply(entitlements: string[]): RouteReply {
         dailyGoal: 10,
         dayStreak: 0,
         email: 'reader@example.test',
-        entitlements,
+        pro,
         timezone: null,
         xpToday: 0,
         xpTotal: 0,
@@ -132,7 +135,7 @@ describe('purchase-complete route before AuthProvider hydrates', () => {
     const userId = randomUUID();
     await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ knownUserIds: [userId], userId }));
     const hydration = holdIdentityRead();
-    const { requests } = installRoutedFetch({ 'GET me': [profileReply([]), profileReply([PRODUCT])] });
+    const { requests } = installRoutedFetch({ 'GET me': [profileReply(false), profileReply(true)] });
 
     await open();
     expect(screen.queryByText(STILL_PROCESSING)).toBeNull();
@@ -158,7 +161,7 @@ describe('purchase-complete route before AuthProvider hydrates', () => {
     const knownUserId = randomUUID();
     await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ knownUserIds: [knownUserId], userId: null }));
     const hydration = holdIdentityRead();
-    const { requests } = installRoutedFetch({ 'GET me': profileReply([PRODUCT]) });
+    const { requests } = installRoutedFetch({ 'GET me': profileReply(true) });
 
     await open();
     expect(screen.queryByText(STILL_PROCESSING)).toBeNull();

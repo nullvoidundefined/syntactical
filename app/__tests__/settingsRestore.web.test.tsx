@@ -1,6 +1,7 @@
 // Task 3.18 RED (B-43) on the web: "Restore purchases" is native only. Web
 // Billing purchases are tied to the signed-in account, so Settings on the web
 // shows no restore control. A guard: it passes before and after Task 3.18.
+// It shows a free user the Go Pro row.
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 
@@ -48,5 +49,14 @@ describe('Settings on the web', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Settings' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /restore purchases/i })).toBeNull();
     expect(screen.queryByText(/restore purchases/i)).toBeNull();
+  });
+
+  it('shows a signed-in free user "Go Pro"', async () => {
+    render(
+      <QueryClientProvider client={createQueryClient()}>
+        <SettingsScreen />
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByRole('button', { name: 'Go Pro' })).toBeTruthy();
   });
 });

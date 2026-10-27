@@ -13,8 +13,59 @@ function isHitTestable(control: Locator): Promise<boolean> {
   });
 }
 
-// Area 4 adds the Pro dialog here; the sign-out and delete-account dialogs carry the check meanwhile.
 test.describe('modal dialogs cover the whole page', () => {
+  test('the Pro sheet covers the app bar', async ({ page }) => {
+    await signIn(page, createUniqueEmail());
+    await page.goto('settings');
+    const settings = page.getByRole('link', { name: 'Settings' });
+    expect(await isHitTestable(settings)).toBe(true);
+    await page.getByRole('button', { name: 'Go Pro' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Syntactical Pro' });
+    await expect(dialog).toBeVisible();
+    // The sheet slides up from below the viewport; hit-test where it comes to rest.
+    await dialog.evaluate((element) => Promise.all(element.getAnimations().map(({ finished }) => finished)));
+    expect(await isHitTestable(settings)).toBe(false);
+    // Settings has its own Sign out beside the app bar's; neither may be reachable under the sheet.
+    expect(await isHitTestable(page.getByRole('button', { name: 'Sign out' }).first())).toBe(false);
+    expect(await isHitTestable(dialog.getByRole('button', { name: 'Not now' }))).toBe(true);
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+  });
+
+  test('the Pro sheet opened from the Ask limit holds focus and Escape closes only it', async ({ page }) => {
+    await signIn(page, createUniqueEmail());
+    // The real ask runs; its answer is replaced by the free tier's daily-limit refusal.
+    await page.route('**/v1/ask', async (route) => {
+      if (route.request().method() !== 'POST') return route.continue();
+      const response = await route.fetch();
+      const error = { code: 'ASK_DAILY_LIMIT_REACHED', limit: 5, message: 'limit', proLimit: 20, tier: 'free' };
+      return route.fulfill({ body: JSON.stringify({ error }), response, status: 429 });
+    });
+    await openRoundByKeys(page, '1');
+    await page.keyboard.press('1');
+    await page.keyboard.press('t');
+    await expect(page.getByRole('button', { exact: true, name: 'Continue' })).toBeVisible();
+    await page.keyboard.press('q');
+    await page.getByLabel('Your question about this card').fill('Why is this the answer?');
+    await page.getByRole('button', { exact: true, name: 'Ask' }).click();
+    await page.getByRole('button', { name: 'See Pro' }).focus();
+    await page.keyboard.press('Enter');
+
+    const dialog = page.getByRole('dialog', { name: 'Syntactical Pro' });
+    await expect(dialog).toBeVisible();
+    await expect(page.getByTestId('query-modal')).toHaveCount(0);
+    const isFocusInside = () => dialog.evaluate((element) => element.contains(document.activeElement));
+    expect(await isFocusInside()).toBe(true);
+    for (const key of ['Tab', 'Tab', 'Tab', 'Tab', 'Shift+Tab', 'Shift+Tab', 'Shift+Tab', 'Shift+Tab']) {
+      await page.keyboard.press(key);
+      expect(await isFocusInside()).toBe(true);
+    }
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await expect(page.getByTestId('query-modal')).toHaveCount(0);
+    await expect(page.getByRole('button', { exact: true, name: 'Continue' })).toBeVisible();
+  });
+
   test('the delete-account dialog covers the app bar', async ({ page }) => {
     await signIn(page, createUniqueEmail());
     await page.goto('settings');

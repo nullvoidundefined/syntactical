@@ -12,7 +12,7 @@ import { setExpoExtra } from '../../config/expoConstantsMock';
 // checkout returns: GET me is polled with the session cookie immediately and
 // every 2 seconds for up to 30 seconds; the page has one h1 element, the
 // status sits in a role="status" polite live region, and a keyboard-focusable
-// link leads back to the menu. A bad product or a guest makes no request.
+// Done link leads home. A bad product or a guest makes no request.
 
 setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
@@ -41,14 +41,17 @@ jest.mock('../../state/AuthProvider', () => ({
 }));
 
 const CONFIRMING = 'Confirming your purchase';
-const UNLOCKED = 'Unlocked';
+const UNLOCKED = "You're Pro";
 const STILL_PROCESSING = 'Still processing, check back shortly';
-const PRODUCT = 'syntactical.postgres.hard';
+const PRODUCT = 'syntactical.pro.lifetime';
 const POLL_INTERVAL_MS = 2000;
 const DEADLINE_MS = 30_000;
 const MAX_REQUESTS = DEADLINE_MS / POLL_INTERVAL_MS + 1;
 
-function profileReply(entitlements: string[]): RouteReply {
+function profileReply(isPro: boolean): RouteReply {
+  const pro = isPro
+    ? { expiresAt: null, isActive: true, product: 'lifetime' }
+    : { expiresAt: null, isActive: false, product: null };
   return {
     status: 200,
     body: {
@@ -56,7 +59,7 @@ function profileReply(entitlements: string[]): RouteReply {
         dailyGoal: 10,
         dayStreak: 0,
         email: 'reader@example.test',
-        entitlements,
+        pro,
         timezone: null,
         xpToday: 0,
         xpTotal: 0,
@@ -84,7 +87,7 @@ async function advance(ms: number): Promise<void> {
 
 async function open(product: string | string[] | undefined) {
   mockParams = product === undefined ? {} : { product };
-  // The route confirms through the entitlements query, so it renders under a query client.
+  // The route confirms through the Pro status query, so it renders under a query client.
   const rendered = render(
     <QueryClientProvider client={createQueryClient()}>
       <PurchaseCompleteScreen />
@@ -119,7 +122,7 @@ describe('purchase-complete route on the web', () => {
   });
 
   it('polls GET me with the session cookie immediately and every 2 seconds, announcing "Confirming your purchase"', async () => {
-    const { requests } = installRoutedFetch({ 'GET me': profileReply([]) });
+    const { requests } = installRoutedFetch({ 'GET me': profileReply(false) });
     await open(PRODUCT);
     expect(meRequestCount(requests)).toBe(1);
     expect(requests[0].credentials).toBe('include');
@@ -135,7 +138,7 @@ describe('purchase-complete route on the web', () => {
   });
 
   it('announces "Unlocked" once the entitlement appears and stops polling', async () => {
-    const { requests } = installRoutedFetch({ 'GET me': [profileReply([]), profileReply([PRODUCT])] });
+    const { requests } = installRoutedFetch({ 'GET me': [profileReply(false), profileReply(true)] });
     await open(PRODUCT);
     await advance(POLL_INTERVAL_MS);
     expect(readStatusRegion().textContent).toContain(UNLOCKED);
@@ -145,7 +148,7 @@ describe('purchase-complete route on the web', () => {
   });
 
   it('announces "Still processing, check back shortly" at 30 seconds, polling through failures and never after the deadline', async () => {
-    const { requests } = installRoutedFetch({ 'GET me': ['reject', { status: 502 }, profileReply([])] });
+    const { requests } = installRoutedFetch({ 'GET me': ['reject', { status: 502 }, profileReply(false)] });
     await open(PRODUCT);
     await advance(DEADLINE_MS - POLL_INTERVAL_MS);
     expect(readStatusRegion().textContent).toContain(CONFIRMING);
@@ -167,7 +170,7 @@ describe('purchase-complete route on the web', () => {
   ])(
     'makes no request for a %s product and announces "Still processing, check back shortly"',
     async (_label, product) => {
-      const { requests } = installRoutedFetch({ 'GET me': profileReply([PRODUCT]) });
+      const { requests } = installRoutedFetch({ 'GET me': profileReply(true) });
       await open(product);
       await advance(DEADLINE_MS + POLL_INTERVAL_MS);
       expect(requests).toHaveLength(0);
@@ -177,7 +180,7 @@ describe('purchase-complete route on the web', () => {
 
   it('makes no request for a guest', async () => {
     mockUserId = null;
-    const { requests } = installRoutedFetch({ 'GET me': profileReply([PRODUCT]) });
+    const { requests } = installRoutedFetch({ 'GET me': profileReply(true) });
     await open(PRODUCT);
     await advance(DEADLINE_MS + POLL_INTERVAL_MS);
     expect(requests).toHaveLength(0);
@@ -185,7 +188,7 @@ describe('purchase-complete route on the web', () => {
   });
 
   it('stops polling on unmount', async () => {
-    const { requests } = installRoutedFetch({ 'GET me': profileReply([]) });
+    const { requests } = installRoutedFetch({ 'GET me': profileReply(false) });
     const { unmount } = await open(PRODUCT);
     await advance(POLL_INTERVAL_MS);
     expect(meRequestCount(requests)).toBe(2);
@@ -195,12 +198,12 @@ describe('purchase-complete route on the web', () => {
   });
 
   it('renders exactly one h1 element and a keyboard-focusable link back to the menu', async () => {
-    installRoutedFetch({ 'GET me': profileReply([]) });
+    installRoutedFetch({ 'GET me': profileReply(false) });
     await open(PRODUCT);
     expect(document.querySelectorAll('h1')).toHaveLength(1);
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
 
-    const link = screen.getByRole('link', { name: /menu/i });
+    const link = screen.getByRole('link', { name: 'Done' });
     expect(link.tagName).toBe('A');
     expect(link.getAttribute('href')).toBe('/');
     expect(link.getAttribute('tabindex')).not.toBe('-1');

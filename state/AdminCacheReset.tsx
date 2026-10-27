@@ -1,5 +1,5 @@
 // Drops every cached admin query when nobody is signed in, so a sign-out (from any screen) does not
-// leave the previous admin's access list in the shared query client.
+// leave the previous admin's access entry in the shared query client.
 import { useEffect } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';

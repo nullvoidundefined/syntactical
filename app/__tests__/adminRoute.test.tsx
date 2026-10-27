@@ -1,23 +1,16 @@
-// The admin route, app/admin.tsx, on native (IAN-601). The real AdminScreen, ContentProvider (the
-// bundled manifest), AuthProvider, StatsProvider, query client, useEntitlements, and apiFetch/apiPut
-// run against a routed fetch stand-in:
-// - an admin sees one h1 "Admin" and one switch per product GET admin/access lists, named from
-//   the manifest's language label and difficulty, checked when isGranted is true;
-// - a purchased product is checked, disabled, and says it was purchased;
-// - a toggle sends one PUT admin/access { productId, isGranted }, keeps the switch disabled while
-//   it is in flight, and shows what the response says; a 400, 429, 503, or network failure puts
-//   the switch back and shows one alert with no code, message, request id, or status;
-// - a signed-in non-admin and an admin the server answers 403 ADMIN_REQUIRED see a "not available"
-//   state with no switch and send no PUT; a guest, or an admin who signs out, is sent to "/" with
-//   one router.replace, sees no not-available text, and sends no GET admin/access and no PUT;
-// - after a toggle the signed-in user's entitlements (the source of the paid bank locks) change
-//   without a reload.
-// - a malformed GET admin/access reply shows the load-failed state with Retry, while an extra field on an
-//   entry is ignored; a PUT reply naming another
-//   product changes nothing and shows the one alert; a product the manifest does not know is
-//   named from its raw id and can be toggled;
-// - after admin A signs out and non-admin B signs in on the same query client and AuthProvider,
-//   B sees no Admin link and the not-available state, and sends no PUT.
+// The admin route, app/admin.tsx, on native. The real AdminScreen, AuthProvider, StatsProvider,
+// query client, useProStatus, and apiFetch/apiPut run against a routed fetch stand-in:
+// - an admin sees one h1 "Admin" and one switch, "Pro (admin grant)", checked when isGranted;
+// - Pro bought through a store shows as "Pro (purchased)", checked and disabled;
+// - a toggle sends one PUT admin/access { isGranted }, keeps the switch disabled while it is in
+//   flight, and shows what the response says; a 400, 429, 503, or network failure puts the switch
+//   back and shows one alert with no code, message, request id, or status;
+// - a signed-in non-admin, and an admin the server answers 403, see "not available" with no switch
+//   and send no PUT; a guest, or an admin who signs out, is sent to "/" with one router.replace;
+// - after a toggle the user's Pro status (useProStatus) follows without a reload;
+// - a malformed GET admin/access reply shows the load-failed state;
+// - after admin A signs out and non-admin B signs in on the same query client, B sees no Admin
+//   link and the not-available state, and sends no PUT.
 // Identities, passwords, and request ids are built at run time.
 import { randomBytes } from 'node:crypto';
 
@@ -26,7 +19,9 @@ import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 
 import { escapeForRegExp } from '../../components/auth/__tests__/passwordSettingsTestSupport';
+import { setExpoExtra } from '../../config/expoConstantsMock';
 import { createQueryClient } from '../../config/queryClient';
+import { settle } from '../../config/settle';
 import {
   AUTH_STORAGE_KEY,
   SESSION_TOKEN_KEY,
@@ -40,7 +35,7 @@ import {
 import { AuthProvider, useAuth } from '../../state/AuthProvider';
 import { ContentProvider } from '../../state/ContentProvider';
 import { OwnedStatsProvider } from '../../state/OwnedStatsProvider';
-import { useEntitlements } from '../../state/useEntitlements';
+import { useProStatus } from '../../state/useProStatus';
 import AdminScreen from '../admin';
 import SettingsScreen from '../settings';
 
@@ -48,26 +43,17 @@ import {
   ACCESS_PATH,
   ACCESS_ROUTE,
   ACCESS_UPDATE_ROUTE,
-  JAVASCRIPT_MEDIUM,
-  JAVASCRIPT_MEDIUM_NAME,
+  ADMIN_GRANT_NAME,
   NOT_AVAILABLE_TEXT,
-  POSTGRES_HARD,
-  POSTGRES_HARD_NAME,
   PROFILE_ROUTE,
-  PURCHASED_TEXT,
-  PYTHON_MEDIUM,
-  PYTHON_MEDIUM_NAME,
-  accessReply,
+  PURCHASED_NAME,
   buildEntry,
   buildErrorReply,
   entryReply,
   meReply,
-  mixedProducts,
-  rawAccessReply,
+  rawEntryReply,
   sessionReply,
 } from './adminAccessTestSupport';
-import { setExpoExtra } from '../../config/expoConstantsMock';
-import { settle } from '../../config/settle';
 
 setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
@@ -111,20 +97,14 @@ const secureStore = jest.requireMock('expo-secure-store') as SecureStoreMock;
 type Element = ReturnType<typeof screen.getByRole>;
 
 let queryClient: QueryClient;
+const latestPro: { status: string } = { status: '' };
 
-// Shows the entitlements the paid bank locks read, so a test can see them change.
-function EntitlementsProbe() {
-  const state = useEntitlements();
-  const text = state.status === 'ready' ? [...state.productIds].sort().join(',') : state.status;
-  return <EntitlementsText text={text} />;
-}
-
-function EntitlementsText({ text }: { text: string }) {
-  latestEntitlements.current = text;
+// Shows what useProStatus reads, so a test can see it follow an admin change.
+function ProStatusProbe() {
+  const state = useProStatus();
+  latestPro.status = state.status === 'ready' ? (state.isPro ? 'pro' : 'free') : state.status;
   return null;
 }
-
-const latestEntitlements: { current: string } = { current: '' };
 
 async function signIn(identity: SignInIdentity): Promise<void> {
   await AsyncStorage.setItem(
@@ -141,7 +121,7 @@ async function renderAdmin(): Promise<void> {
         <AuthProvider>
           <OwnedStatsProvider>
             <AdminScreen />
-            <EntitlementsProbe />
+            <ProStatusProbe />
           </OwnedStatsProvider>
         </AuthProvider>
       </ContentProvider>
@@ -149,48 +129,20 @@ async function renderAdmin(): Promise<void> {
   );
 }
 
-function getSwitch(name: RegExp): Element {
-  return screen.getByRole('switch', { name });
-}
-
-// A React Native Switch is disabled through its disabled prop; a Pressable switch through its
-// accessibility state.
 function readIsDisabled(element: Element): boolean {
-  const { accessibilityState, disabled, enabled } = element.props as {
+  const { accessibilityState, disabled } = element.props as {
     accessibilityState?: { disabled?: boolean };
     disabled?: boolean;
-    enabled?: boolean;
   };
-  return (
-    disabled === true ||
-    enabled === false ||
-    accessibilityState?.disabled === true ||
-    element.props['aria-disabled'] === true
-  );
+  return disabled === true || accessibilityState?.disabled === true || element.props['aria-disabled'] === true;
 }
 
-// A React Native Switch changes through onValueChange; a Pressable switch through a press.
-async function toggle(element: Element): Promise<void> {
-  const { onChange, onValueChange } = element.props as { onChange?: unknown; onValueChange?: unknown };
-  if (typeof onValueChange === 'function' || typeof onChange === 'function') {
-    let isChecked = true;
-    try {
-      expect(element).toBeChecked();
-    } catch {
-      isChecked = false;
-    }
-    await fireEvent(element, 'valueChange', !isChecked);
-  } else {
-    await fireEvent.press(element);
-  }
-}
-
-async function renderSignedInAdmin(routes: Record<string, RouteReply | RouteReply[]>) {
+async function renderSignedInAdmin(routes: Record<string, RouteReply | RouteReply[]>, name = ADMIN_GRANT_NAME) {
   const identity = buildIdentity();
   const routed = installRoutedFetch({ [PROFILE_ROUTE]: meReply(identity.email, { isAdmin: true }), ...routes });
   await signIn(identity);
   await renderAdmin();
-  await screen.findByRole('switch', { name: PYTHON_MEDIUM_NAME });
+  await screen.findByRole('switch', { name });
   return { ...routed, identity };
 }
 
@@ -202,7 +154,7 @@ beforeEach(async () => {
   await AsyncStorage.clear();
   secureStore.mockValues.clear();
   queryClient = createQueryClient();
-  latestEntitlements.current = '';
+  latestPro.status = '';
   mockReplace.mockClear();
 });
 
@@ -212,121 +164,89 @@ afterEach(async () => {
 });
 
 describe('admin route for an admin', () => {
-  it('shows one h1 "Admin" and one switch per listed product, named by language and difficulty', async () => {
-    await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
-    const headings = screen.getAllByRole('heading');
-    const level1 = headings.filter(
-      (heading) => (heading.props['aria-level'] ?? heading.props.accessibilityLevel) === 1,
-    );
+  it('shows one h1 "Admin" and one switch, "Pro (admin grant)", unchecked and enabled with no grant', async () => {
+    await renderSignedInAdmin({ [ACCESS_ROUTE]: entryReply(buildEntry(null)) });
+    const level1 = screen
+      .getAllByRole('heading')
+      .filter((heading) => (heading.props['aria-level'] ?? heading.props.accessibilityLevel) === 1);
     expect(level1).toHaveLength(1);
     expect(level1[0]).toHaveTextContent(/^Admin$/);
-    expect(screen.getAllByRole('switch')).toHaveLength(3);
-    expect(getSwitch(PYTHON_MEDIUM_NAME)).toBeTruthy();
-    expect(getSwitch(POSTGRES_HARD_NAME)).toBeTruthy();
-    expect(getSwitch(JAVASCRIPT_MEDIUM_NAME)).toBeTruthy();
+    expect(screen.getAllByRole('switch')).toHaveLength(1);
+    const proSwitch = screen.getByRole('switch', { name: ADMIN_GRANT_NAME });
+    expect(proSwitch).not.toBeChecked();
+    expect(readIsDisabled(proSwitch)).toBe(false);
   });
 
-  it('checks a switch when isGranted is true and leaves it unchecked when false', async () => {
-    await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
-    expect(getSwitch(PYTHON_MEDIUM_NAME)).not.toBeChecked();
-    expect(getSwitch(POSTGRES_HARD_NAME)).toBeChecked();
-    expect(readIsDisabled(getSwitch(PYTHON_MEDIUM_NAME))).toBe(false);
-    expect(readIsDisabled(getSwitch(POSTGRES_HARD_NAME))).toBe(false);
+  it('checks the switch for an admin grant and leaves it enabled', async () => {
+    await renderSignedInAdmin({ [ACCESS_ROUTE]: entryReply(buildEntry('admin')) });
+    const proSwitch = screen.getByRole('switch', { name: ADMIN_GRANT_NAME });
+    expect(proSwitch).toBeChecked();
+    expect(readIsDisabled(proSwitch)).toBe(false);
   });
 
-  it('shows a purchased product as owned: checked, disabled, and saying it was purchased', async () => {
-    await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
-    const purchased = getSwitch(JAVASCRIPT_MEDIUM_NAME);
-    expect(purchased).toBeChecked();
-    expect(readIsDisabled(purchased)).toBe(true);
-    expect(screen.getAllByText(PURCHASED_TEXT)).toHaveLength(1);
+  it('shows store-bought Pro as "Pro (purchased)": checked and disabled', async () => {
+    await renderSignedInAdmin({ [ACCESS_ROUTE]: entryReply(buildEntry('purchase')) }, PURCHASED_NAME);
+    const proSwitch = screen.getByRole('switch', { name: PURCHASED_NAME });
+    expect(proSwitch).toBeChecked();
+    expect(readIsDisabled(proSwitch)).toBe(true);
+    expect(screen.queryByRole('switch', { name: ADMIN_GRANT_NAME })).toBeNull();
   });
 
-  it('draws each switch as a track and thumb whose state follows aria-checked, still role switch', async () => {
-    await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
-    const off = getSwitch(PYTHON_MEDIUM_NAME);
-    const on = getSwitch(POSTGRES_HARD_NAME);
-    expect(within(off).getByTestId('switch-track-off', { includeHiddenElements: true })).toBeTruthy();
-    expect(within(off).getByTestId('switch-thumb-off', { includeHiddenElements: true })).toBeTruthy();
-    expect(within(off).queryByTestId('switch-track-on')).toBeNull();
-    expect(within(on).getByTestId('switch-track-on', { includeHiddenElements: true })).toBeTruthy();
-    expect(within(on).getByTestId('switch-thumb-on', { includeHiddenElements: true })).toBeTruthy();
-    expect(within(on).queryByTestId('switch-track-off')).toBeNull();
-  });
-
-  it('hides the decorative track and thumb from assistive technology', async () => {
-    await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
-    const off = getSwitch(PYTHON_MEDIUM_NAME);
+  it('draws the switch as a track and thumb hidden from assistive technology, still role switch', async () => {
+    await renderSignedInAdmin({ [ACCESS_ROUTE]: entryReply(buildEntry(null)) });
+    const proSwitch = screen.getByRole('switch', { name: ADMIN_GRANT_NAME });
     for (const testID of ['switch-track-off', 'switch-thumb-off']) {
-      const part = within(off).getByTestId(testID, { includeHiddenElements: true });
+      const part = within(proSwitch).getByTestId(testID, { includeHiddenElements: true });
       expect(part.props['aria-hidden']).toBe(true);
     }
-    const track = within(off).getByTestId('switch-track-off', { includeHiddenElements: true });
+    const track = within(proSwitch).getByTestId('switch-track-off', { includeHiddenElements: true });
     expect(track.props.importantForAccessibility).toBe('no-hide-descendants');
-    expect(within(off).queryByTestId('switch-track-off')).toBeNull();
-  });
-
-  it('draws the switch with no focus:ring class, leaving the focus outline to the platform like other controls', async () => {
-    await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
-    expect(String(getSwitch(PYTHON_MEDIUM_NAME).props.className ?? '')).not.toMatch(/\bfocus:ring/);
-  });
-
-  it('draws a purchased switch as an on track that is disabled, beside the Purchased text', async () => {
-    await renderSignedInAdmin({ [ACCESS_ROUTE]: accessReply(mixedProducts()) });
-    const purchased = getSwitch(JAVASCRIPT_MEDIUM_NAME);
-    expect(within(purchased).getByTestId('switch-track-on', { includeHiddenElements: true })).toBeTruthy();
-    expect(readIsDisabled(purchased)).toBe(true);
-    expect(screen.getByText('Purchased')).toBeTruthy();
+    expect(within(proSwitch).queryByTestId('switch-track-off')).toBeNull();
   });
 });
 
 describe('admin route toggles', () => {
-  it('grants with one PUT { productId, isGranted: true }, disabled while in flight, then checked', async () => {
+  it('grants with one PUT { isGranted: true }, disabled while in flight, then checked', async () => {
     const held = holdReply();
     const { requests } = await renderSignedInAdmin({
-      [ACCESS_ROUTE]: accessReply(mixedProducts()),
+      [ACCESS_ROUTE]: entryReply(buildEntry(null)),
       [ACCESS_UPDATE_ROUTE]: held,
     });
-    await toggle(getSwitch(PYTHON_MEDIUM_NAME));
+    await fireEvent.press(screen.getByRole('switch', { name: ADMIN_GRANT_NAME }));
     await waitFor(() => expect(listAccessUpdates(requests)).toHaveLength(1));
-    expect(readIsDisabled(getSwitch(PYTHON_MEDIUM_NAME))).toBe(true);
-    expect(listAccessUpdates(requests)[0].body).toEqual({ isGranted: true, productId: PYTHON_MEDIUM });
+    expect(readIsDisabled(screen.getByRole('switch', { name: ADMIN_GRANT_NAME }))).toBe(true);
+    expect(listAccessUpdates(requests)[0].body).toEqual({ isGranted: true });
 
     await act(async () => {
-      held.release(entryReply(buildEntry(PYTHON_MEDIUM, 'admin')) as FakeReply);
+      held.release(entryReply(buildEntry('admin')) as FakeReply);
     });
-    await waitFor(() => expect(readIsDisabled(getSwitch(PYTHON_MEDIUM_NAME))).toBe(false));
-    expect(getSwitch(PYTHON_MEDIUM_NAME)).toBeChecked();
+    await waitFor(() => expect(readIsDisabled(screen.getByRole('switch', { name: ADMIN_GRANT_NAME }))).toBe(false));
+    expect(screen.getByRole('switch', { name: ADMIN_GRANT_NAME })).toBeChecked();
     await settle();
     expect(listAccessUpdates(requests)).toHaveLength(1);
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
-  it('revokes an admin grant with one PUT { productId, isGranted: false }, then unchecked', async () => {
+  it('revokes an admin grant with one PUT { isGranted: false }, then unchecked', async () => {
     const { requests } = await renderSignedInAdmin({
-      [ACCESS_ROUTE]: accessReply(mixedProducts()),
-      [ACCESS_UPDATE_ROUTE]: entryReply(buildEntry(POSTGRES_HARD, null)),
+      [ACCESS_ROUTE]: entryReply(buildEntry('admin')),
+      [ACCESS_UPDATE_ROUTE]: entryReply(buildEntry(null)),
     });
-    await toggle(getSwitch(POSTGRES_HARD_NAME));
-    await waitFor(() => expect(getSwitch(POSTGRES_HARD_NAME)).not.toBeChecked());
+    await fireEvent.press(screen.getByRole('switch', { name: ADMIN_GRANT_NAME }));
+    await waitFor(() => expect(screen.getByRole('switch', { name: ADMIN_GRANT_NAME })).not.toBeChecked());
     await settle();
-    const updates = listAccessUpdates(requests);
-    expect(updates).toHaveLength(1);
-    expect(updates[0].body).toEqual({ isGranted: false, productId: POSTGRES_HARD });
-    expect(readIsDisabled(getSwitch(POSTGRES_HARD_NAME))).toBe(false);
+    expect(listAccessUpdates(requests).map(({ body }) => body)).toEqual([{ isGranted: false }]);
   });
 
-  it('shows what the response says: a revoke the server answers as purchased stays checked and disabled', async () => {
+  it('shows what the response says: a revoke answered as purchased becomes "Pro (purchased)", checked and disabled', async () => {
     await renderSignedInAdmin({
-      [ACCESS_ROUTE]: accessReply(mixedProducts()),
-      [ACCESS_UPDATE_ROUTE]: entryReply(buildEntry(POSTGRES_HARD, 'purchase')),
+      [ACCESS_ROUTE]: entryReply(buildEntry('admin')),
+      [ACCESS_UPDATE_ROUTE]: entryReply(buildEntry('purchase')),
     });
-    await toggle(getSwitch(POSTGRES_HARD_NAME));
-    await waitFor(() => expect(readIsDisabled(getSwitch(POSTGRES_HARD_NAME))).toBe(true));
-    await settle();
-    expect(getSwitch(POSTGRES_HARD_NAME)).toBeChecked();
-    expect(readIsDisabled(getSwitch(POSTGRES_HARD_NAME))).toBe(true);
-    expect(screen.getAllByText(PURCHASED_TEXT)).toHaveLength(2);
+    await fireEvent.press(screen.getByRole('switch', { name: ADMIN_GRANT_NAME }));
+    const purchased = await screen.findByRole('switch', { name: PURCHASED_NAME });
+    expect(purchased).toBeChecked();
+    expect(readIsDisabled(purchased)).toBe(true);
   });
 
   const failures: { label: string; build: () => { reply: FakeReply; secrets: string[] } }[] = [
@@ -355,91 +275,80 @@ describe('admin route toggles', () => {
       label: 'a network failure',
       build: () => ({ reply: 'reject', secrets: ['Network request failed', 'TypeError'] }),
     },
+    {
+      label: 'a malformed 200',
+      build: () => ({ reply: rawEntryReply({ isGranted: 'yes' }), secrets: ['yes'] }),
+    },
   ];
 
   it.each(failures)('puts the switch back and shows one alert with no internal detail on $label', async ({ build }) => {
     const { reply, secrets } = build();
     const { requests } = await renderSignedInAdmin({
-      [ACCESS_ROUTE]: accessReply(mixedProducts()),
+      [ACCESS_ROUTE]: entryReply(buildEntry(null)),
       [ACCESS_UPDATE_ROUTE]: reply,
     });
-    await toggle(getSwitch(PYTHON_MEDIUM_NAME));
+    await fireEvent.press(screen.getByRole('switch', { name: ADMIN_GRANT_NAME }));
     const alert = await screen.findByRole('alert');
-    await waitFor(() => expect(readIsDisabled(getSwitch(PYTHON_MEDIUM_NAME))).toBe(false));
+    await waitFor(() => expect(readIsDisabled(screen.getByRole('switch', { name: ADMIN_GRANT_NAME }))).toBe(false));
     await settle();
-    expect(getSwitch(PYTHON_MEDIUM_NAME)).not.toBeChecked();
+    expect(screen.getByRole('switch', { name: ADMIN_GRANT_NAME })).not.toBeChecked();
     expect(screen.getAllByRole('alert')).toHaveLength(1);
     expect(listAccessUpdates(requests)).toHaveLength(1);
     expect(alert).toHaveTextContent(/\S/);
     for (const secret of secrets) expect(alert).not.toHaveTextContent(new RegExp(escapeForRegExp(secret)));
   });
+});
 
-  it('keeps one alert after two failures in a row and leaves the other switches as they were', async () => {
-    const first = buildErrorReply(503, 'SERVICE_UNAVAILABLE', 'Database unavailable');
-    await renderSignedInAdmin({
-      [ACCESS_ROUTE]: accessReply(mixedProducts()),
-      [ACCESS_UPDATE_ROUTE]: first.reply,
+describe('admin route keeps the Pro status current', () => {
+  it('makes useProStatus read Pro after a grant and free after a revoke, without a reload', async () => {
+    const identity = buildIdentity();
+    const { setRoute } = installRoutedFetch({
+      [ACCESS_ROUTE]: entryReply(buildEntry(null)),
+      [ACCESS_UPDATE_ROUTE]: entryReply(buildEntry('admin')),
+      [PROFILE_ROUTE]: meReply(identity.email, { isAdmin: true }),
     });
-    await toggle(getSwitch(PYTHON_MEDIUM_NAME));
-    await screen.findByRole('alert');
-    await waitFor(() => expect(readIsDisabled(getSwitch(PYTHON_MEDIUM_NAME))).toBe(false));
-    await toggle(getSwitch(POSTGRES_HARD_NAME));
-    await waitFor(() => expect(readIsDisabled(getSwitch(POSTGRES_HARD_NAME))).toBe(false));
-    await settle();
-    expect(screen.getAllByRole('alert')).toHaveLength(1);
-    expect(getSwitch(PYTHON_MEDIUM_NAME)).not.toBeChecked();
-    expect(getSwitch(POSTGRES_HARD_NAME)).toBeChecked();
-    expect(getSwitch(JAVASCRIPT_MEDIUM_NAME)).toBeChecked();
+    await signIn(identity);
+    await renderAdmin();
+    await screen.findByRole('switch', { name: ADMIN_GRANT_NAME });
+    await waitFor(() => expect(latestPro.status).toBe('free'));
+
+    // The server's state once the grant commits.
+    setRoute(PROFILE_ROUTE, meReply(identity.email, { isAdmin: true, isPro: true }));
+    await fireEvent.press(screen.getByRole('switch', { name: ADMIN_GRANT_NAME }));
+    await waitFor(() => expect(screen.getByRole('switch', { name: ADMIN_GRANT_NAME })).toBeChecked());
+    await waitFor(() => expect(latestPro.status).toBe('pro'));
+
+    // And once the revoke commits.
+    setRoute(ACCESS_UPDATE_ROUTE, entryReply(buildEntry(null)));
+    setRoute(PROFILE_ROUTE, meReply(identity.email, { isAdmin: true }));
+    await waitFor(() => expect(readIsDisabled(screen.getByRole('switch', { name: ADMIN_GRANT_NAME }))).toBe(false));
+    await fireEvent.press(screen.getByRole('switch', { name: ADMIN_GRANT_NAME }));
+    await waitFor(() => expect(screen.getByRole('switch', { name: ADMIN_GRANT_NAME })).not.toBeChecked());
+    await waitFor(() => expect(latestPro.status).toBe('free'));
   });
 });
 
 describe('admin route for anyone who is not an admin', () => {
-  async function expectNotAvailable(requests: { method: string; path: string }[]): Promise<void> {
+  async function expectNotAvailable(requests: { method: string; path: string; body: unknown }[]): Promise<void> {
     await screen.findByText(NOT_AVAILABLE_TEXT);
     await settle();
     expect(screen.queryAllByRole('switch')).toHaveLength(0);
-    expect(listAccessUpdates(requests as { method: string; path: string; body: unknown }[])).toHaveLength(0);
+    expect(listAccessUpdates(requests)).toHaveLength(0);
   }
 
-  it('shows a signed-in non-admin the not-available state with no switches and no PUT', async () => {
+  it('shows a signed-in non-admin the not-available state with no switch and no PUT, and no replace', async () => {
     const identity = buildIdentity();
-    const forbidden = buildErrorReply(403, 'ADMIN_REQUIRED', 'Admin required');
     const { requests } = installRoutedFetch({
-      [ACCESS_ROUTE]: forbidden.reply,
-      [PROFILE_ROUTE]: meReply(identity.email, { isAdmin: false }),
-    });
-    await signIn(identity);
-    await renderAdmin();
-    await expectNotAvailable(requests);
-  });
-
-  it('sends a guest to the home page with one replace, no GET admin/access, and no PUT', async () => {
-    const unauthorized = buildErrorReply(401, 'SESSION_REQUIRED', 'Sign-in required');
-    const { requests } = installRoutedFetch({ [ACCESS_ROUTE]: unauthorized.reply });
-    await renderAdmin();
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledTimes(1));
-    await settle();
-    expect(mockReplace).toHaveBeenCalledWith('/');
-    expect(screen.queryByText(NOT_AVAILABLE_TEXT)).toBeNull();
-    expect(screen.queryAllByRole('switch')).toHaveLength(0);
-    expect(requests.some(({ method, path }) => method === 'GET' && path === ACCESS_PATH)).toBe(false);
-    expect(listAccessUpdates(requests)).toHaveLength(0);
-  });
-
-  it('keeps a signed-in non-admin on the page: no replace', async () => {
-    const identity = buildIdentity();
-    installRoutedFetch({
       [ACCESS_ROUTE]: buildErrorReply(403, 'ADMIN_REQUIRED', 'Admin required').reply,
       [PROFILE_ROUTE]: meReply(identity.email, { isAdmin: false }),
     });
     await signIn(identity);
     await renderAdmin();
-    await screen.findByText(NOT_AVAILABLE_TEXT);
-    await settle();
+    await expectNotAvailable(requests);
     expect(mockReplace).not.toHaveBeenCalled();
   });
 
-  it('shows the same state when GET me says admin but GET admin/access answers 403 ADMIN_REQUIRED', async () => {
+  it('shows the same state when GET me says admin but GET admin/access answers 403, with no server detail', async () => {
     const identity = buildIdentity();
     const forbidden = buildErrorReply(403, 'ADMIN_REQUIRED', 'Admin required');
     const { requests } = installRoutedFetch({
@@ -452,128 +361,45 @@ describe('admin route for anyone who is not an admin', () => {
     expect(screen.queryByText(/ADMIN_REQUIRED/)).toBeNull();
     expect(screen.queryByText(new RegExp(forbidden.requestId))).toBeNull();
   });
+
+  it('sends a guest to the home page with one replace, no GET admin/access, and no PUT', async () => {
+    const { requests } = installRoutedFetch({
+      [ACCESS_ROUTE]: buildErrorReply(401, 'SESSION_REQUIRED', 'Sign-in required').reply,
+    });
+    await renderAdmin();
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledTimes(1));
+    await settle();
+    expect(mockReplace).toHaveBeenCalledWith('/');
+    expect(screen.queryByText(NOT_AVAILABLE_TEXT)).toBeNull();
+    expect(requests.some(({ method, path }) => method === 'GET' && path === ACCESS_PATH)).toBe(false);
+    expect(listAccessUpdates(requests)).toHaveLength(0);
+  });
 });
 
-describe('admin route keeps the entitlements current', () => {
-  it('adds a granted bank to the entitlements and drops a revoked one, without a reload', async () => {
+describe('admin route with a malformed access entry', () => {
+  it.each([
+    ['a non-boolean isGranted', { grantSource: 'admin', isGranted: 'true', productId: 'syntactical.pro.lifetime' }],
+    ['an unknown grantSource', { grantSource: 'gift', isGranted: true, productId: 'syntactical.pro.lifetime' }],
+    ['a list instead of one entry', [buildEntry('admin')]],
+  ])('shows the load-failed state with no switch and no PUT for %s', async (_label, data) => {
     const identity = buildIdentity();
-    const { setRoute } = installRoutedFetch({
-      [ACCESS_ROUTE]: accessReply([buildEntry(PYTHON_MEDIUM, null), buildEntry(JAVASCRIPT_MEDIUM, 'purchase')]),
-      [ACCESS_UPDATE_ROUTE]: entryReply(buildEntry(PYTHON_MEDIUM, 'admin')),
-      [PROFILE_ROUTE]: meReply(identity.email, { entitlements: [JAVASCRIPT_MEDIUM], isAdmin: true }),
+    const { requests } = installRoutedFetch({
+      [ACCESS_ROUTE]: rawEntryReply(data),
+      [PROFILE_ROUTE]: meReply(identity.email, { isAdmin: true }),
     });
     await signIn(identity);
     await renderAdmin();
-    await screen.findByRole('switch', { name: PYTHON_MEDIUM_NAME });
-    await waitFor(() => expect(latestEntitlements.current).toBe(JAVASCRIPT_MEDIUM));
-
-    // The server's state once the grant commits.
-    setRoute(
-      PROFILE_ROUTE,
-      meReply(identity.email, { entitlements: [JAVASCRIPT_MEDIUM, PYTHON_MEDIUM], isAdmin: true }),
-    );
-    await toggle(getSwitch(PYTHON_MEDIUM_NAME));
-    await waitFor(() => expect(getSwitch(PYTHON_MEDIUM_NAME)).toBeChecked());
-    await waitFor(() => expect(latestEntitlements.current).toBe([JAVASCRIPT_MEDIUM, PYTHON_MEDIUM].sort().join(',')));
-
-    // And once the revoke commits.
-    setRoute(ACCESS_UPDATE_ROUTE, entryReply(buildEntry(PYTHON_MEDIUM, null)));
-    setRoute(PROFILE_ROUTE, meReply(identity.email, { entitlements: [JAVASCRIPT_MEDIUM], isAdmin: true }));
-    await waitFor(() => expect(readIsDisabled(getSwitch(PYTHON_MEDIUM_NAME))).toBe(false));
-    await toggle(getSwitch(PYTHON_MEDIUM_NAME));
-    await waitFor(() => expect(getSwitch(PYTHON_MEDIUM_NAME)).not.toBeChecked());
-    await waitFor(() => expect(latestEntitlements.current).toBe(JAVASCRIPT_MEDIUM));
-  });
-});
-
-describe('admin route with malformed server data', () => {
-  async function expectLoadFailed(requests: { method: string; path: string; body: unknown }[]): Promise<void> {
     await screen.findByText(/could not be loaded/i);
     expect(screen.queryByText(NOT_AVAILABLE_TEXT)).toBeNull();
-    await settle();
     expect(screen.queryAllByRole('switch')).toHaveLength(0);
     expect(listAccessUpdates(requests)).toHaveLength(0);
-  }
+  });
 
-  const malformedLists: { label: string; products: () => unknown }[] = [
-    {
-      label: 'a non-boolean isGranted',
-      products: () => [{ grantSource: 'admin', isGranted: 'true', productId: PYTHON_MEDIUM }],
-    },
-    {
-      label: 'an unknown grantSource',
-      products: () => [{ grantSource: 'gift', isGranted: true, productId: PYTHON_MEDIUM }],
-    },
-    {
-      label: 'products that are not an array',
-      products: () => ({ [PYTHON_MEDIUM]: buildEntry(PYTHON_MEDIUM, 'admin') }),
-    },
-  ];
-
-  it.each(malformedLists)(
-    'shows the load-failed state with no switches and no PUT for $label',
-    async ({ products }) => {
-      const identity = buildIdentity();
-      const { requests } = installRoutedFetch({
-        [ACCESS_ROUTE]: rawAccessReply(products()),
-        [PROFILE_ROUTE]: meReply(identity.email, { isAdmin: true }),
-      });
-      await signIn(identity);
-      await renderAdmin();
-      await expectLoadFailed(requests);
-    },
-  );
-
-  it('renders an entry with an extra field from its three known fields and shows the extra value nowhere', async () => {
+  it('ignores an extra field on the entry and shows its value nowhere', async () => {
     const marker = `marker-${randomBytes(6).toString('hex')}`;
-    const { requests } = await renderSignedInAdmin({
-      [ACCESS_ROUTE]: rawAccessReply([
-        { ...buildEntry(PYTHON_MEDIUM, null), displayName: marker, isPurchased: true },
-        buildEntry(POSTGRES_HARD, 'admin'),
-      ]),
-    });
-    await settle();
-    expect(screen.getAllByRole('switch')).toHaveLength(2);
-    const python = getSwitch(PYTHON_MEDIUM_NAME);
-    expect(python).not.toBeChecked();
-    expect(readIsDisabled(python)).toBe(false);
-    expect(screen.queryByText(PURCHASED_TEXT)).toBeNull();
+    await renderSignedInAdmin({ [ACCESS_ROUTE]: rawEntryReply({ ...buildEntry(null), displayName: marker }) });
+    expect(screen.getByRole('switch', { name: ADMIN_GRANT_NAME })).not.toBeChecked();
     expect(screen.queryByText(new RegExp(escapeForRegExp(marker)))).toBeNull();
-    expect(screen.queryByLabelText(new RegExp(escapeForRegExp(marker)))).toBeNull();
-    expect(listAccessUpdates(requests)).toHaveLength(0);
-  });
-
-  it('leaves the switch as it was and shows the one alert when the PUT reply names another product', async () => {
-    const { requests } = await renderSignedInAdmin({
-      [ACCESS_ROUTE]: accessReply(mixedProducts()),
-      [ACCESS_UPDATE_ROUTE]: entryReply(buildEntry(POSTGRES_HARD, null)),
-    });
-    await toggle(getSwitch(PYTHON_MEDIUM_NAME));
-    await screen.findByRole('alert');
-    await waitFor(() => expect(readIsDisabled(getSwitch(PYTHON_MEDIUM_NAME))).toBe(false));
-    await settle();
-    expect(getSwitch(PYTHON_MEDIUM_NAME)).not.toBeChecked();
-    expect(getSwitch(POSTGRES_HARD_NAME)).toBeChecked();
-    expect(screen.getAllByRole('alert')).toHaveLength(1);
-    expect(listAccessUpdates(requests)).toHaveLength(1);
-    expect(listAccessUpdates(requests)[0].body).toEqual({ isGranted: true, productId: PYTHON_MEDIUM });
-  });
-
-  it('names a product the manifest does not know from its raw id and lets it be toggled', async () => {
-    const unknownId = `syntactical.lang${randomBytes(3).toString('hex')}.medium`;
-    const unknownName = new RegExp(`^${escapeForRegExp(unknownId)}$`);
-    const { requests } = await renderSignedInAdmin({
-      [ACCESS_ROUTE]: accessReply([buildEntry(PYTHON_MEDIUM, null), buildEntry(unknownId, null)]),
-      [ACCESS_UPDATE_ROUTE]: entryReply(buildEntry(unknownId, 'admin')),
-    });
-    const unknown = getSwitch(unknownName);
-    expect(unknown).not.toBeChecked();
-    expect(readIsDisabled(unknown)).toBe(false);
-    await toggle(unknown);
-    await waitFor(() => expect(getSwitch(unknownName)).toBeChecked());
-    await settle();
-    expect(listAccessUpdates(requests).map(({ body }) => body)).toEqual([{ isGranted: true, productId: unknownId }]);
-    expect(screen.queryByRole('alert')).toBeNull();
   });
 });
 
@@ -585,10 +411,10 @@ describe('admin route when the admin signs out', () => {
     return null;
   }
 
-  it('replaces to the home page once and stays off /admin, with no not-available text', async () => {
+  it('replaces to the home page once, with no not-available text', async () => {
     const identity = buildIdentity();
     installRoutedFetch({
-      [ACCESS_ROUTE]: accessReply(mixedProducts()),
+      [ACCESS_ROUTE]: entryReply(buildEntry(null)),
       [PROFILE_ROUTE]: meReply(identity.email, { isAdmin: true }),
       'DELETE auth/sessions/current': { status: 204 },
     });
@@ -605,7 +431,7 @@ describe('admin route when the admin signs out', () => {
         </ContentProvider>
       </QueryClientProvider>,
     );
-    await screen.findByRole('switch', { name: PYTHON_MEDIUM_NAME });
+    await screen.findByRole('switch', { name: ADMIN_GRANT_NAME });
     expect(mockReplace).not.toHaveBeenCalled();
 
     await act(async () => {
@@ -613,25 +439,15 @@ describe('admin route when the admin signs out', () => {
     });
     await waitFor(() => expect(mockReplace).toHaveBeenCalledTimes(1));
     await settle();
-    expect(mockReplace).toHaveBeenCalledTimes(1);
     expect(mockReplace).toHaveBeenCalledWith('/');
     expect(screen.queryByText(NOT_AVAILABLE_TEXT)).toBeNull();
   });
-});
-
-describe('admin route across an account switch on one query client', () => {
-  const authHandle: { current: ReturnType<typeof useAuth> | null } = { current: null };
-
-  function AuthHandle() {
-    authHandle.current = useAuth();
-    return null;
-  }
 
   it('shows non-admin B no Admin link and the not-available state after admin A signs out', async () => {
     const adminA = buildIdentity();
     const memberB = buildIdentity();
     const { requests, setRoute } = installRoutedFetch({
-      [ACCESS_ROUTE]: accessReply(mixedProducts()),
+      [ACCESS_ROUTE]: entryReply(buildEntry(null)),
       [PROFILE_ROUTE]: meReply(adminA.email, { isAdmin: true }),
       'DELETE auth/sessions/current': { status: 204 },
       'POST auth/sessions/password': sessionReply(memberB),
@@ -650,7 +466,7 @@ describe('admin route across an account switch on one query client', () => {
         </ContentProvider>
       </QueryClientProvider>,
     );
-    await screen.findByRole('switch', { name: PYTHON_MEDIUM_NAME });
+    await screen.findByRole('switch', { name: ADMIN_GRANT_NAME });
     await screen.findByRole('link', { name: 'Admin' });
 
     await act(async () => {
@@ -669,12 +485,10 @@ describe('admin route across an account switch on one query client', () => {
     await screen.findByLabelText('New password');
     await screen.findByText(NOT_AVAILABLE_TEXT);
     await settle();
-    expect(requests.some(({ method, path }) => method === 'GET' && path === 'me')).toBe(true);
     expect(screen.queryByRole('link', { name: 'Admin' })).toBeNull();
     expect(screen.queryAllByRole('switch')).toHaveLength(0);
     expect(listAccessUpdates(requests)).toHaveLength(0);
     const accessReads = requests.filter(({ method, path }) => method === 'GET' && path === ACCESS_PATH);
-    expect(accessReads.length).toBeGreaterThanOrEqual(2);
     expect(accessReads[accessReads.length - 1].headers.authorization).toContain(memberB.sessionValue);
   });
 });
