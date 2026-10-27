@@ -1,8 +1,8 @@
 # Free content, Pro, and sponsored cards
 
-Date: 2026-10-27. Status: approved in conversation (the four owner decisions below), pending spec review.
+Date: 2026-10-27. Status: approved in conversation (the five owner decisions below), pending spec review.
 
-Audit: `docs/audits/2026-10-27-monetization-marketing.md` holds the reasoning and the numbers. This document is the design; `docs/superpowers/plans/2026-10-27-free-content-pro-sponsored.md` is the slice-by-slice plan.
+Audit: `docs/audits/2026-10-27-monetization-marketing.md` holds the reasoning and the numbers. This document is the design; `docs/superpowers/plans/2026-10-27-free-content-pro-sponsored.md` is the task-by-task plan.
 
 ## Intent
 
@@ -12,8 +12,9 @@ Syntactical sells nothing today and hides two thirds of its catalogue behind 24 
 2. One Pro tier, sold as an annual subscription and a lifetime purchase, never monthly. Pro removes sponsored cards and raises the Ask limit.
 3. Sponsored cards for free users on the web and on mobile, every one rendered inside the app's own card component. Mobile cards are AdMob native ads, non-personalised; web cards are EthicalAds text ads, a direct sponsor, or the house Pro card. Never AdSense, never a network-rendered unit.
 4. The web app moves from GitHub Pages to Cloudflare Pages and the Expo export switches to static output with crawlable pages.
+5. The server's model calls fail over between Anthropic and OpenAI, and survive a model being retired or replaced (section 6).
 
-Success means: a new user can play all 36 banks without an account; a signed-in user can buy Pro on iOS, Android, and the web and see the cards disappear and the Ask limit rise; a lapsed annual returns to the free tier cleanly; the web deploys to `syntactical.dev` from Cloudflare with one HTML file per route; the privacy policy, labels, listing, and review notes describe what ships.
+Success means: a new user can play all 36 banks without an account; a signed-in user can buy Pro on iOS, Android, and the web and see the cards disappear and the Ask limit rise; a lapsed annual returns to the free tier cleanly; the web deploys to `syntactical.dev` from Cloudflare with one HTML file per route; the privacy policy, labels, listing, and review notes describe what ships; Ask and the study note keep answering when one model vendor is down or a configured model is retired.
 
 ## 1. Content: every bank free
 
@@ -132,17 +133,34 @@ A static track page per track and per difficulty with the tagline, the topic lis
 - `docs/store/in-app-purchases.md`: the two Pro products, the App Store subscription group, the Play base plan, the RevenueCat offering.
 - `docs/store/listing.md`, `app-review-notes.md`, `device-checklist.md`, `launch-placeholders.md`, `README.md`, `docs/feature-list/features.md`, `docs/user-stories/*`, `docs/lexicon.md`: rewritten in the slice that changes the behaviour they describe.
 
+## 6. Model failover and model updates
+
+Added 2026-10-27 at the owner's request. `POST /v1/ask` and `GET /v1/study-note` call one model through the `ModelProvider` interface (`server/src/clients/modelProvider.ts`), today Claude Haiku 5.5 alone, with the id hard-coded in `server/src/constants/model.ts`.
+
+- **Two providers.** Anthropic (primary by default) and OpenAI through the Responses API (fallback), behind the same interface. `MODEL_PRIMARY` chooses the order. With one key set, that provider runs alone, as today.
+- **What fails over.** A transient failure (timeout, connection, 429, 5xx) or a configuration failure (400, 401, 403, 404) on one provider moves the call to the next. A refusal or a truncated answer resolves `null` and is final: a declined learner message is never sent to the other vendor.
+- **Circuit breaker.** Per process. Three transient failures in a row skip a provider for 60 seconds. One configuration failure skips it for 15 minutes and logs an error naming the provider, the model, and the status, so a retired model or a rejected parameter is visible at once and costs one slow request. When every provider is skipped, the primary is tried anyway.
+- **Time budget.** Each attempt gets 11 seconds. With one provider the SDK keeps one retry; with two, SDK retries are off and the failover is the retry. Both fit the routes' 25-second target under the app's 30-second wait.
+- **Model ids from the environment.** `ANTHROPIC_MODEL` (default `claude-haiku-5-5`), `OPENAI_MODEL` (required with `OPENAI_API_KEY`, no default), `OPENAI_REASONING_EFFORT` (optional; sent only when set). A model change is a Railway variable change.
+- **Model updates.** A check through each vendor's Models API runs after boot and every 24 hours; a configured model that no longer exists logs an error and opens that provider's 15-minute skip before a learner's request finds out. It never blocks boot or readiness. A smoke script (`npm run model:smoke -w server`, and a manual workflow) runs the real Ask and study-note prompts through each provider before a model id is changed; `server/DEPLOY.md` gains the runbook.
+- **Logs.** One line per call with provider, model, outcome, latency, and whether the fallback answered. Never the prompt, the learner's message, the answer, or an SDK error object.
+- **Privacy.** OpenAI joins the processor list in `app/privacy.tsx`, `app/delete-account.tsx`, and `docs/store/privacy-labels.md`, as a fallback that receives the same text Anthropic would. The owner confirms OpenAI's current API data-retention terms before the policy ships.
+- **Out of scope.** The content pipeline already runs on two vendors with a run-level failure cap and is owner-run, so it is unchanged.
+
 ## Owner actions outside the repo
 
-| Item                                                                                                                       | Needed by                                                |
-| -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| RevenueCat: the two products, one offering with `$rc_annual` and `$rc_lifetime`, the webhook secret, the three client keys | Slice 3 (Pro in the app)                                 |
-| App Store Connect: subscription group "Pro" with the annual product; the lifetime non-consumable                           | Slice 3                                                  |
-| Play Console: subscription with a yearly base plan; the lifetime in-app product                                            | Slice 3                                                  |
-| Cloudflare: Pages project `syntactical`, API token with Pages edit, account id, custom domain                              | Slice 4                                                  |
-| AdMob: account, iOS and Android app ids, two native ad units per platform (results, tracks), UMP message published         | Slice 6                                                  |
-| EthicalAds: apply at 50,000 monthly pageviews; publisher id                                                                | After launch                                             |
-| PostHog key                                                                                                                | Before any of the above, so the decision gates have data |
+Every one of these is a cutover step. The code is built and tested against fixtures before any of them exist (plan, "Seams and fixtures").
+
+| Item                                                                                                                       | Needed for                                             |
+| -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| RevenueCat: the two products, one offering with `$rc_annual` and `$rc_lifetime`, the webhook secret, the three client keys | Sandbox purchase check (area 4)                        |
+| App Store Connect: subscription group "Pro" with the annual product; the lifetime non-consumable                           | Sandbox purchase check (area 4)                        |
+| Play Console: subscription with a `yearly` base plan; the lifetime in-app product                                          | Sandbox purchase check (area 4)                        |
+| Cloudflare: Pages project `syntactical`, API token with Pages edit, account id, custom domain                              | Cutover commit (area 5)                                |
+| AdMob: account, iOS and Android app ids, two native ad units per platform (results, tracks), UMP message published         | Real ads after launch (area 6)                         |
+| EthicalAds: apply at 50,000 monthly pageviews; publisher id                                                                | After launch                                           |
+| OpenAI: API key and the chosen model id                                                                                    | The fallback (area 9)                                  |
+| PostHog key                                                                                                                | Before launch, so the audit's decision gates have data |
 
 ## Resolved questions
 
@@ -151,3 +169,8 @@ A static track page per track and per difficulty with the tagline, the topic lis
 - **Drop `access` or narrow it.** Drop it, with `productId`, and bump `schemaVersion`. No installed build reads the old shape.
 - **Annual `CANCELLATION`.** Access continues to `expires_at`; only `EXPIRATION` or `REFUND` revokes. The paywall says so.
 - **Where the house card points.** `ProSheet`, with `source: 'house_card'` on `paywall_viewed`.
+- **An annual grant without an expiry.** A grant event on the annual product that carries no `expiration_at_ms` is recorded but grants nothing, and is logged. A missing expiry must never read as Pro forever.
+- **Google Play subscription ids.** RevenueCat reports a Play subscription as `syntactical.pro.annual:yearly`. The server and the client both strip the base-plan suffix before matching a Pro product id.
+- **Unhandled webhook types.** Answered 200 and not stored, as today; only the grant, revoke, and expiry-only types are recorded.
+- **Medium and Hard downloads.** A bank downloads on first use only; the background refresh updates only banks already on the device.
+- **Static pages need content.** `ContentProvider` renders the bundled manifest before storage is read, so the static HTML carries a body (plan Task 7.1).
