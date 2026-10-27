@@ -5,6 +5,12 @@ import NotFoundScreen from '../+not-found';
 import TopicScreen from '../[language]/[difficulty]/index';
 import RoundScreen from '../[language]/[difficulty]/play';
 
+// The routes wait for ContentProvider's cache read (Task 5.2); the round cases render them without the provider, and
+// the layout cases keep the real provider in the tree.
+jest.mock('../../state/ContentProvider', () => ({
+  ...jest.requireActual('../../state/ContentProvider'),
+  useContentContext: () => ({ isHydrated: true }),
+}));
 jest.mock('../../state/useCanAsk', () => ({ useCanAsk: () => false }));
 jest.mock('../../state/StatsProvider', () => ({
   ...jest.requireActual('../../state/StatsProvider'),

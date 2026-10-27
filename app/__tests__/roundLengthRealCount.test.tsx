@@ -6,6 +6,8 @@ import RoundScreen from '../[language]/[difficulty]/play';
 
 // The manifest counts drift from the loaded bank: "strings" is listed as 100 but the bank holds 15,
 // and "numbers" is listed as 15 but the bank holds 30. The screens must follow the bank.
+// The routes wait for ContentProvider's cache read (Task 5.2); this suite renders them without the provider.
+jest.mock('../../state/ContentProvider', () => ({ useContentContext: () => ({ isHydrated: true }) }));
 jest.mock('../../state/useCanAsk', () => ({ useCanAsk: () => false }));
 jest.mock('../../state/StatsProvider', () => ({
   useQuizStats: () => ({ eventLog: [], isHydrated: true, recordAnswer: jest.fn(), recordCompletion: jest.fn() }),

@@ -66,6 +66,7 @@ function prefetch(manifest: Manifest, localBanks: Record<string, CachedBank>): v
   const access: ContentAccess = {
     baselineManifest: manifest,
     contentBaseUrl: CONTENT_BASE_URL,
+    isHydrated: true,
     readLocalBank: (language, difficulty) => localBanks[`${language}/${difficulty}`] ?? null,
   };
   queryClient.setQueryData(['manifest'], manifest);

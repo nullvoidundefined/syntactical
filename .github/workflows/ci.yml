@@ -21,7 +21,7 @@ jobs:
       - run: npx tsc --noEmit
       - run: npm run typecheck:e2e
       - run: npm test
-      - run: npm run content:build && git diff --exit-code content/manifest.json services/content/bundledManifest.generated.ts services/content/bundledBanks.generated.ts
+      - run: npm run content:build && git diff --exit-code content/manifest.json services/content/bundledManifest.generated.ts services/content/bundledBanks.generated.ts services/content/bankTitles.generated.ts
       - run: npm run build
 
   workspaces:
