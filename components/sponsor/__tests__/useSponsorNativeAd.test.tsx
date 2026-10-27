@@ -1,10 +1,13 @@
 // components/sponsor/__tests__/useSponsorNativeAd.test.tsx
 // The app owns the native ad's lifecycle: one request per mount once enabled, the ad kept until unmount and
 // then destroyed, an ad that arrives after unmount destroyed at once with no state update (Review Focus 20),
-// and no fill reported as an error. The shared mock fakes only NativeAd.createForAdRequest.
-import { act, renderHook } from '@testing-library/react-native';
+// and no fill reported as an error. When the effects re-run with state kept (Fast Refresh; Activity hidden
+// then visible here), the destroyed ad is dropped and a fresh one requested, and an ad from the old request
+// is destroyed when it lands. The shared mock fakes only NativeAd.createForAdRequest.
+import { act, render, renderHook } from '@testing-library/react-native';
+import { Activity } from 'react';
 
-import { useSponsorNativeAd } from '../useSponsorNativeAd';
+import { useSponsorNativeAd, type SponsorNativeAdState } from '../useSponsorNativeAd';
 
 import { buildFakeNativeAd, deliverAd, mobileAdsControl, resetMobileAds } from './mobileAdsMock';
 
@@ -12,6 +15,26 @@ const UNIT_ID = 'ca-app-pub-1234567890123456/1234567890';
 const OPTIONS = { adChoicesPlacement: 1, requestNonPersonalizedAdsOnly: true };
 
 beforeEach(() => resetMobileAds());
+
+type ActivityMode = 'hidden' | 'visible';
+
+// Hiding an Activity runs every effect cleanup and keeps state; showing it runs the effects again.
+async function renderInActivity() {
+  const result: { current: SponsorNativeAdState | null } = { current: null };
+  function Probe() {
+    result.current = useSponsorNativeAd(UNIT_ID, OPTIONS, true);
+    return null;
+  }
+  function Host({ mode }: { mode: ActivityMode }) {
+    return (
+      <Activity mode={mode}>
+        <Probe />
+      </Activity>
+    );
+  }
+  const view = await render(<Host mode="visible" />);
+  return { result, setMode: (mode: ActivityMode) => view.rerender(<Host mode={mode} />) };
+}
 
 describe('useSponsorNativeAd', () => {
   it('requests nothing while disabled, then one ad once enabled', async () => {
@@ -53,5 +76,37 @@ describe('useSponsorNativeAd', () => {
     await act(async () => deliverAd(new Error('No fill')));
     expect(result.current.nativeAd).toBeNull();
     expect(result.current.error?.message).toBe('No fill');
+  });
+
+  it('drops the destroyed ad and requests a fresh one when its effects re-run with state kept', async () => {
+    const { result, setMode } = await renderInActivity();
+    const first = buildFakeNativeAd();
+    await act(async () => deliverAd(first));
+    expect(result.current?.nativeAd).toBe(first);
+    await setMode('hidden');
+    expect(first.destroy).toHaveBeenCalledTimes(1);
+    await setMode('visible');
+    expect(result.current).toEqual({ error: null, nativeAd: null });
+    expect(mobileAdsControl.requests).toHaveLength(2);
+    const second = buildFakeNativeAd();
+    await act(async () => deliverAd(second));
+    expect(result.current?.nativeAd).toBe(second);
+    expect(first.destroy).toHaveBeenCalledTimes(1);
+    expect(second.destroy).not.toHaveBeenCalled();
+  });
+
+  it('destroys an ad from the request before the effects re-ran, and keeps the fresh one', async () => {
+    const { result, setMode } = await renderInActivity();
+    await setMode('hidden');
+    await setMode('visible');
+    expect(mobileAdsControl.requests).toHaveLength(2);
+    const stale = buildFakeNativeAd();
+    await act(async () => deliverAd(stale));
+    expect(stale.destroy).toHaveBeenCalledTimes(1);
+    expect(result.current?.nativeAd).toBeNull();
+    const fresh = buildFakeNativeAd();
+    await act(async () => deliverAd(fresh));
+    expect(result.current?.nativeAd).toBe(fresh);
+    expect(fresh.destroy).not.toHaveBeenCalled();
   });
 });

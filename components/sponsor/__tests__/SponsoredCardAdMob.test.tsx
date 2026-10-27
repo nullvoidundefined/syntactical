@@ -7,6 +7,7 @@
 // Focus 12).
 import { QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen } from '@testing-library/react-native';
+import { Activity } from 'react';
 
 import { setExpoExtra } from '../../../config/expoConstantsMock';
 import { createQueryClient } from '../../../config/queryClient';
@@ -225,6 +226,34 @@ describe('SponsoredCard with AdMob on native', () => {
     expect(mockTrackEvent).not.toHaveBeenCalled();
     expect(consoleError).not.toHaveBeenCalled();
     consoleError.mockRestore();
+  });
+
+  it('shows a fresh ad, with clicks reported, after its effects re-run with state kept (Fast Refresh)', async () => {
+    const view = await render(
+      <Activity mode="visible">
+        <Card />
+      </Activity>,
+    );
+    const first = buildFakeNativeAd();
+    await act(async () => deliverAd(first));
+    await view.rerender(
+      <Activity mode="hidden">
+        <Card />
+      </Activity>,
+    );
+    expect(first.destroy).toHaveBeenCalledTimes(1);
+    await view.rerender(
+      <Activity mode="visible">
+        <Card />
+      </Activity>,
+    );
+    expect(mobileAdsControl.requests).toHaveLength(2);
+    expect(readPlaceholder()).not.toBeNull();
+    const second = buildFakeNativeAd();
+    await act(async () => deliverAd(second));
+    expect(screen.getByTestId('native-ad-view')).toBeTruthy();
+    await act(async () => second.listeners.get(NativeAdEventType.CLICKED)?.());
+    expect(mockTrackEvent).toHaveBeenLastCalledWith('ad_clicked', { placement: 'results', source: 'admob' });
   });
 
   it('destroys a shown ad when the card unmounts', async () => {

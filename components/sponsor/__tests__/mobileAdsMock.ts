@@ -61,16 +61,21 @@ export function resetMobileAds(): void {
   });
 }
 
+// Like the SDK's NativeAd, a destroyed fake refuses a new listener.
 export function buildFakeNativeAd(overrides: Partial<FakeNativeAd> = {}): FakeNativeAd {
   const listeners = new Map<string, () => void>();
+  let isDestroyed = false;
   return {
     addAdEventListener: jest.fn((type: string, listener: () => void) => {
+      if (isDestroyed) throw new Error('NativeAd.addAdEventListener(*) ad has been destroyed.');
       listeners.set(type, listener);
       return { remove: () => listeners.delete(type) };
     }),
     body: 'Ship Postgres branches with every pull request.',
     callToAction: 'Install',
-    destroy: jest.fn(),
+    destroy: jest.fn(() => {
+      isDestroyed = true;
+    }),
     headline: 'Test Ad: Branching Postgres',
     icon: { url: 'https://example.test/icon.png' },
     listeners,
