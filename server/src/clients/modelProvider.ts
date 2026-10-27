@@ -40,13 +40,17 @@ function createAnthropicModelProvider({ messages, model, ...credentials }: Model
     async answer({ system, user }) {
       let response: Anthropic.Message;
       try {
-        response = await client.create({
-          max_tokens: MAX_TOKENS,
-          messages: [{ content: user, role: 'user' }],
-          model,
-          output_config: { effort: EFFORT },
-          system,
-        });
+        // The SDK's own timeout stops once response headers arrive, so the signal bounds the body too.
+        response = await client.create(
+          {
+            max_tokens: MAX_TOKENS,
+            messages: [{ content: user, role: 'user' }],
+            model,
+            output_config: { effort: EFFORT },
+            system,
+          },
+          { signal: AbortSignal.timeout(MODEL.ATTEMPT_TIMEOUT_MS) },
+        );
       } catch (error) {
         const status = error instanceof Anthropic.APIError ? (error.status ?? null) : null;
         const outcome = classifyModelFailure(status, null);

@@ -81,7 +81,7 @@ describe('createOpenAIModelProvider', () => {
 
     await build(responses, 'low').answer(PROMPT);
 
-    expect(create).toHaveBeenCalledWith(expect.objectContaining({ reasoning: { effort: 'low' } }));
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ reasoning: { effort: 'low' } }), expect.anything());
   });
 
   it('joins the message text and skips other output items', async () => {

@@ -96,7 +96,7 @@ describe('createAnthropicModelProvider model and failures', () => {
 
     await provider.answer(PROMPT);
 
-    expect(create).toHaveBeenCalledWith(expect.objectContaining({ model: 'claude-x-1' }));
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ model: 'claude-x-1' }), expect.anything());
     expect(provider).toMatchObject({ id: 'anthropic', model: 'claude-x-1' });
   });
 

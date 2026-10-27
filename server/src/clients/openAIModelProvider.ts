@@ -49,14 +49,19 @@ function createOpenAIModelProvider({ apiKey, model, reasoningEffort, responses }
     async answer({ system, user }) {
       let response: OpenAI.Responses.Response;
       try {
-        response = await client.create({
-          input: user,
-          instructions: system,
-          max_output_tokens: MODEL.MAX_TOKENS,
-          model,
-          store: false,
-          ...(reasoningEffort ? { reasoning: { effort: reasoningEffort } } : {}),
-        });
+        response = await client.create(
+          {
+            input: user,
+            instructions: system,
+            max_output_tokens: MODEL.MAX_TOKENS,
+            model,
+            store: false,
+            ...(reasoningEffort ? { reasoning: { effort: reasoningEffort } } : {}),
+          },
+          {
+            signal: AbortSignal.timeout(MODEL.ATTEMPT_TIMEOUT_MS),
+          },
+        );
       } catch (error) {
         const isApiError = error instanceof OpenAI.APIError;
         const status = isApiError ? (error.status ?? null) : null;
