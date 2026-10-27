@@ -3,7 +3,8 @@
 // fixed-height SponsoredSlot. With an EthicalAds publisher id the card holds one manual text placement
 // inside the frame, injects the client script if the page has none yet (loadEthicalAdsClient), and runs
 // ethicalads.load() once the client is there. The client's answer decides the fill: when load() returns a
-// promise, a non-empty list of placements is a fill and an empty one is no fill.
+// promise, a list holding at least one placement (not null) is a fill if the placement element has content
+// too; an empty list, or one of nulls, is no fill.
 // ETHICAL_ADS_FILL_CEILING_MS, counted from mount, is only a ceiling: a card still undecided then (a
 // script that has not loaded, a slow answer, or a client that returns none) counts a placement with a
 // child element as a fill. No fill, a script that fails to load, or no publisher id shows the direct
@@ -63,7 +64,8 @@ function EthicalAdsPlacement({ onEmpty, publisher, sponsor }: EthicalAdsPlacemen
       const answer = client.load();
       if (isThenable(answer)) {
         void answer.then(
-          (placements) => decide(Array.isArray(placements) ? placements.length > 0 : hasFill(placementRef.current)),
+          (placements) =>
+            decide((!Array.isArray(placements) || placements.some(Boolean)) && hasFill(placementRef.current)),
           () => decide(false),
         );
       }
