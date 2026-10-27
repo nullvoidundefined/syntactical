@@ -4,6 +4,7 @@
 // worklets mock reanimated 4 needs under Jest. expo-crypto's native
 // randomUUID is absent under Jest, so Node's own UUID v4 stands in for it.
 import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
+import { TextDecoder as NodeTextDecoder, TextEncoder as NodeTextEncoder } from 'node:util';
 
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
 
@@ -48,3 +49,34 @@ jest.mock('posthog-react-native', () => ({
   __esModule: true,
   default: jest.fn(),
 }));
+
+// react-dom/server, which the static-render suites import, needs TextEncoder, TextDecoder, and MessageChannel;
+// Jest's jsdom environment lacks them. Node's own stand in, only where the environment has none.
+if (typeof globalThis.TextEncoder === 'undefined') {
+  globalThis.TextEncoder = NodeTextEncoder as unknown as typeof globalThis.TextEncoder;
+}
+if (typeof globalThis.TextDecoder === 'undefined') {
+  globalThis.TextDecoder = NodeTextDecoder as unknown as typeof globalThis.TextDecoder;
+}
+// Node's own MessageChannel would hold an open handle once react-dom/server listens on it, so a single-suite run
+// never exits. renderToString never posts to it; this stand-in delivers a posted message on a timer.
+if (typeof globalThis.MessageChannel === 'undefined') {
+  class TestMessagePort {
+    onmessage: ((event: { data: unknown }) => void) | null = null;
+    peer: TestMessagePort | null = null;
+    close() {}
+    postMessage(data: unknown) {
+      setTimeout(() => this.peer?.onmessage?.({ data }), 0);
+    }
+    start() {}
+  }
+  class TestMessageChannel {
+    port1 = new TestMessagePort();
+    port2 = new TestMessagePort();
+    constructor() {
+      this.port1.peer = this.port2;
+      this.port2.peer = this.port1;
+    }
+  }
+  globalThis.MessageChannel = TestMessageChannel as unknown as typeof globalThis.MessageChannel;
+}
