@@ -2,7 +2,7 @@
 
 Scope: whether Syntactical should drop the per-bank purchases (Medium and Hard banks at $4.99 each) in favour of free content for everyone, with ads for free users and one ad-free purchase. This is the marketing and unit-economics read, written before any plan. The engineering scope of the change is a separate document.
 
-Checked against `main` at `6f12b7c`. External figures carry their source in the "Sources" section; where a number is my own calculation or a planning assumption, the text says so.
+Checked against `main` at `6f12b7c`. Revised the same day after the owner chose annual plus lifetime Pro pricing over the first draft's one-time purchase; the earlier shape is kept under "Alternatives considered". External figures carry their source in the "Sources" section; where a number is my own calculation or a planning assumption, the text says so.
 
 ## Verdict
 
@@ -10,10 +10,10 @@ Checked against `main` at `6f12b7c`. External figures carry their source in the 
 
 1. **Making every bank free is the right call, and it is close to a no-regret move.** Today two thirds of the product is invisible to a free user, nothing is purchasable (no RevenueCat keys, no store products, no DNS), and the catalogue has grown to 24 paid SKUs at $4.99 each with no bundle. "Every bank is free" is a launch headline; "Easy is free, the rest is $4.99 per bank" is a reason to leave.
 2. **Ads will not be meaningful revenue at any scale Syntactical can reach in the next year.** On mobile, a US user who plays eight rounds a month is worth roughly $0.06 to $0.20 a month in ads (my calculation, assumptions below). On the web, developer ad blocking (about 72% in the two surveys that measure it) and the SPA on GitHub Pages make web ads close to zero. Ads earn their place only as the thing that gives the ad-free purchase a reason to exist.
-3. **The revenue line is the ad-free purchase, not the ads.** One "Pro" purchase at $9.99 to $14.99 nets more than one to three years of ad revenue from the same retained user. Treat the ad as a light, between-rounds nudge toward Pro, not as the business.
+3. **The revenue line is the ad-free tier, not the ads.** A Pro year at $19.99, or a lifetime at $39.99, nets more than the ads from the same user would return in many years. Treat the ad as a light, between-rounds nudge toward Pro, not as the business. Pro is sold as annual or lifetime, never monthly (the owner's choice on 2026-10-27; see "Alternatives considered").
 4. **Keep the privacy posture.** Run non-personalised ads only, mobile only, no App Tracking Transparency prompt, no ads on the web. That keeps the "no tracking, no advertising identifier" story that the privacy policy, labels, and review notes are built on, at the cost of lower eCPMs that were small anyway.
 
-If the owner wants a one-line version: free all content, sell one Pro SKU, show one non-personalised interstitial between rounds on mobile, nothing on the web, and measure before adding anything else.
+If the owner wants a one-line version: free all content, sell Pro as an annual or a lifetime purchase, show one non-personalised interstitial between rounds on mobile, nothing on the web, and measure before adding anything else.
 
 ## What exists today
 
@@ -60,41 +60,44 @@ All of this is my calculation from the vendor figures in "Sources" and from plan
 
 ### Assumptions
 
-| Assumption                                   | Value                                  | Why                                                                                                                       |
-| -------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Rounds per active mobile user per month      | 8                                      | Two short sessions a week; a planning guess                                                                               |
-| Interstitials shown                          | 1 per completed round, never mid-round | Placement rule from the brand section                                                                                     |
-| Banner impressions per active user per month | 40                                     | Menu and results screens only                                                                                             |
-| US iOS interstitial eCPM, non-personalised   | $3 to $10                              | Vendor ranges, discounted for non-personalised                                                                            |
-| US iOS banner eCPM                           | $0.50 to $2                            | Vendor ranges                                                                                                             |
-| Web pageviews per active web user per month  | 40                                     | Planning guess                                                                                                            |
-| Developer web network CPM                    | $2.50                                  | EthicalAds published estimate                                                                                             |
-| Web ad-block share                           | 72%                                    | Stack Overflow 2018, Ghostery 2024                                                                                        |
-| Pro price and net                            | $9.99 list, about $8.50 net            | Apple Small Business Program and Play's 15% tier                                                                          |
-| Pro conversion among monthly active users    | 1% to 3%                               | Duolingo runs about 8% paid out of monthly actives at scale with a decade of brand; a new app should plan well below that |
+| Assumption                                   | Value                                                            | Why                                                                                                                                                                                      |
+| -------------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rounds per active mobile user per month      | 8                                                                | Two short sessions a week; a planning guess                                                                                                                                              |
+| Interstitials shown                          | 1 per completed round, never mid-round                           | Placement rule from the brand section                                                                                                                                                    |
+| Banner impressions per active user per month | 40                                                               | Menu and results screens only                                                                                                                                                            |
+| US iOS interstitial eCPM, non-personalised   | $3 to $10                                                        | Vendor ranges, discounted for non-personalised                                                                                                                                           |
+| US iOS banner eCPM                           | $0.50 to $2                                                      | Vendor ranges                                                                                                                                                                            |
+| Web pageviews per active web user per month  | 40                                                               | Planning guess                                                                                                                                                                           |
+| Developer web network CPM                    | $2.50                                                            | EthicalAds published estimate                                                                                                                                                            |
+| Web ad-block share                           | 72%                                                              | Stack Overflow 2018, Ghostery 2024                                                                                                                                                       |
+| Pro prices and net                           | $19.99 a year (about $17 net) or $39.99 lifetime (about $34 net) | Apple Small Business Program and Play's 15% tier; lifetime at about two annuals, the usual ratio                                                                                         |
+| Lifetime spread over                         | 24 months                                                        | A planning convention so the two Pro products compare per month                                                                                                                          |
+| Mix of Pro buyers                            | 60% annual, 40% lifetime                                         | Planning guess; developers skew toward lifetime where it is offered                                                                                                                      |
+| Pro conversion among monthly active users    | 1% to 3%                                                         | Duolingo runs about 8% paid out of monthly actives at scale with a decade of brand; a new app should plan well below that, and a $19.99 entry price sits toward the low end of the range |
 
 ### Per active user per month
 
-| Source                                                    | Low    | High   |
-| --------------------------------------------------------- | ------ | ------ |
-| Mobile interstitials (8 at $3 to $10 CPM)                 | $0.024 | $0.080 |
-| Mobile banners (40 at $0.50 to $2 CPM)                    | $0.020 | $0.080 |
-| Mobile ads, US iOS total                                  | $0.04  | $0.16  |
-| Web ads before ad blocking (40 pageviews at $2.50)        | $0.10  | $0.10  |
-| Web ads after 72% blocking                                | $0.03  | $0.03  |
-| One Pro purchase, net, spread over 12 months of retention | $0.71  | $0.71  |
+| Source                                             | Low    | High   |
+| -------------------------------------------------- | ------ | ------ |
+| Mobile interstitials (8 at $3 to $10 CPM)          | $0.024 | $0.080 |
+| Mobile banners (40 at $0.50 to $2 CPM)             | $0.020 | $0.080 |
+| Mobile ads, US iOS total                           | $0.04  | $0.16  |
+| Web ads before ad blocking (40 pageviews at $2.50) | $0.10  | $0.10  |
+| Web ads after 72% blocking                         | $0.03  | $0.03  |
+| Pro annual, net, per month of a paid year          | $1.42  | $1.42  |
+| Pro lifetime, net, spread over 24 months           | $1.42  | $1.42  |
 
 Android and non-US traffic sit below the mobile row by roughly two to five times.
 
 ### At plausible scales
 
-| Monthly active users (mobile, US-weighted) | Ads per month    | Pro at 2% conversion, one-time, per month of new users |
-| ------------------------------------------ | ---------------- | ------------------------------------------------------ |
-| 1,000                                      | $40 to $160      | $170                                                   |
-| 10,000                                     | $400 to $1,600   | $1,700                                                 |
-| 50,000                                     | $2,000 to $8,000 | $8,500                                                 |
+| Monthly active users (mobile, US-weighted) | Ads per month    | Pro at 2% conversion, net at purchase, per month of new users |
+| ------------------------------------------ | ---------------- | ------------------------------------------------------------- |
+| 1,000                                      | $40 to $160      | $480                                                          |
+| 10,000                                     | $400 to $1,600   | $4,800                                                        |
+| 50,000                                     | $2,000 to $8,000 | $24,000                                                       |
 
-The Pro column counts new converting users each month; retained Pro users add nothing further under a one-time price. Even so, Pro outearns ads at every row, and ads only approach it at the high end of eCPM. The conclusion holds across any reasonable choice of the assumptions: the ad-free purchase is the revenue, ads are the nudge.
+The Pro column uses the blended net of about $24 per buyer (60% at $17, 40% at $34) and counts new buyers each month. Annual subscribers who renew add a second year the table does not show; a renewal rate is the first number to measure once there is one. Pro outearns ads by an order of magnitude at every row. The conclusion holds across any reasonable choice of the assumptions: the ad-free tier is the revenue, ads are the nudge.
 
 ### The hidden cost that turns out to be small
 
@@ -130,23 +133,33 @@ The privacy policy draft in `app/privacy.tsx` gains one vendor (Google AdMob) an
 ## Recommended shape
 
 1. **All 36 banks free.** Serve them the same way the free banks are served now (static host with hash verification), which also removes the private-repo deploy coupling and the `PAID_CONTENT_DIR` machinery.
-2. **One Pro product, non-consumable, $9.99 to $14.99.** Removes ads, raises the Ask daily limit, and is the natural home for future perks. One-time fits the audience, the brand, and the non-consumable code already written; an annual price can be added later if Pro perks grow recurring costs.
+2. **Pro as two products: an annual subscription at about $19.99 and a lifetime non-consumable at about $39.99, no monthly.** Both remove ads, raise the Ask daily limit, and are the home for future perks, including any expansion packs. Annual gives the recurring revenue that funds new tracks; lifetime keeps the subscription-averse developer, and pricing it at about two annuals is the usual ratio. The lifetime product reuses the non-consumable path already written; the annual needs the server to grant on `INITIAL_PURCHASE` and `RENEWAL` and revoke on `EXPIRATION`, which `server/src/constants/revenueCatEvents.ts` does not list today (it grants only on `NON_RENEWING_PURCHASE`). When an annual lapses the user returns to the free tier with ads; say so plainly on the paywall.
 3. **Ads: one non-personalised interstitial after a completed round, mobile only.** Never mid-round, never on the question card, never on the web. Frequency-cap it (for example, not more than one per three rounds, and none in the first session) so the first impression of the app is the product, not the ad.
 4. **Ask free for everyone at a lower daily cap, Pro at the current cap.** Costs cents, converts better than "remove ads" alone, and lets guests see the feature. Keep the study note sign-in-only as it is.
 5. **Web: no third-party ads.** A house Pro card in the slot, or nothing.
 6. **Privacy posture: unchanged in spirit.** No ATT, no personalised ads, UMP consent in the EEA and UK, labels and policy updated to match.
 
-What I would not do: run AdMob on the web through a web view, run rewarded video to unlock content (it recreates the gate the switch removes), sell a subscription as the only Pro option, or put a banner on the question card.
+What I would not do: run AdMob on the web through a web view, run rewarded video to unlock content (it recreates the gate the switch removes), sell a monthly plan, or put a banner on the question card.
+
+## Alternatives considered
+
+Three shapes were weighed against the recommendation above. The owner chose annual plus lifetime on 2026-10-27.
+
+**Keep the paid Medium and Hard banks, add ads to the free tier, and sell further banks as expansion packs.** Rejected. A free user would get the degraded experience (ads) and the withheld product (two thirds of the banks) at once, which compounds the discoverability problem the switch exists to fix, and a developer audience reads "ads plus paid unlocks" in one app as greedy. Expansion packs are sound only when they are additive and distinct, a new track or a themed bundle rather than the Hard tier of a track the user already started, and only once the free base is complete. If packs come later, sell them as whole-track bundles, include them in Pro, and keep every difficulty of every core track free.
+
+**Pro as a monthly subscription.** Rejected. At $2.99 a month (about $2.54 net) a subscriber passes a $9.99 one-time purchase at roughly three and a half months of retention, and quiz usage is bursty, so that retention is unproven. The stronger objection is the audience: developers are the most subscription-averse segment for small tools, "pay monthly to remove ads" is the version they mock, and ads reappearing on lapse each month feels punitive. Some monthly revenue would come from people who forget to cancel, which this audience notices and reviews. Annual keeps the recurring revenue without the monthly optics.
+
+**Pro as a single one-time purchase at $9.99 to $14.99.** This was the first draft's recommendation and remains defensible: it fits the brand, reuses the non-consumable code, and is the simplest store setup. It was set aside because it caps lifetime value at one payment while content, hosting, and the Ask model are ongoing costs, and because adding an annual tier later with lifetime buyers grandfathered is easy, whereas moving from a subscription back to one-time is not. The lifetime product in the chosen shape preserves this option for the buyer.
 
 ## Decision gates and what to measure
 
 Ads are the reversible part of this decision and the part that depends on scale. The sequence that de-risks it:
 
 1. **Before anything else, turn on PostHog** (the key is the only missing piece) so the next decisions have data. Add two events: `ad_shown` and `pro_purchased`, and keep `round_completed` as the denominator.
-2. **Ship free-all-content and Pro first, ads second.** The free-content change and the Pro SKU are good under either outcome. Adding the ad SDK is a separate PR that can wait for the first four to eight weeks of data.
+2. **Ship free-all-content and Pro first, ads second.** The free-content change and the two Pro products are good under either outcome. Adding the ad SDK is a separate PR that can wait for the first four to eight weeks of data.
 3. **Gates for turning ads on:** at least 1,000 monthly active mobile users, a median of 4 or more completed rounds per active user per month, and the UMP, label, and policy updates done. Below that, ads cost more in brand and review risk than they return.
 4. **Gates for revisiting web ads:** 50,000 monthly pageviews and crawlable text pages. Not expected within the horizon of this plan.
-5. **Watch for:** rating drops in the two weeks after ads ship, `ad_shown` to `round_started` ratio (a user who stops after the first ad is the signal to loosen the frequency cap), and Pro conversion from the ad-free prompt versus from the Ask limit prompt.
+5. **Watch for:** rating drops in the two weeks after ads ship, `ad_shown` to `round_started` ratio (a user who stops after the first ad is the signal to loosen the frequency cap), Pro conversion from the ad-free prompt versus from the Ask limit prompt, the annual-to-lifetime split among buyers, and, from month 13, the annual renewal rate.
 
 ## Sources
 
