@@ -34,6 +34,8 @@ import { useSponsorNativeAd } from './useSponsorNativeAd';
 export type SponsoredCardProps = { onShown?: () => void; placement: SponsorPlacement };
 
 const FALLBACK_CALL_TO_ACTION = 'Open';
+// The native ad view takes the whole slot, so the frame's h-full resolves against the slot's fixed height.
+const AD_VIEW_STYLE = { height: '100%', width: '100%' } as const;
 // One options object for every request: non-personalised, AdChoices top right (the frame keeps that corner
 // clear).
 const AD_REQUEST_OPTIONS = {
@@ -70,7 +72,7 @@ function AdMobCard({ adUnitId, sponsor }: { adUnitId: string; sponsor: SponsorCo
     </NativeAsset>
   ) : undefined;
   return (
-    <NativeAdView nativeAd={nativeAd}>
+    <NativeAdView nativeAd={nativeAd} style={AD_VIEW_STYLE}>
       <SponsoredCardFrame headline={headline} icon={iconAsset}>
         <NativeAsset assetType={NativeAssetType.HEADLINE}>
           <Text className={SPONSOR_CLASSES.headline}>{headline}</Text>
