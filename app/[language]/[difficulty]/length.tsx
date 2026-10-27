@@ -9,11 +9,17 @@ import NotFoundScreen from '../../+not-found';
 import { LengthStep } from '../../../components/menu/LengthStep';
 import { findBankInLanguage } from '../../../services/content/findBankInLanguage';
 import { findLanguageEntry } from '../../../services/content/findLanguageEntry';
+import { listBankParams, type BankParams } from '../../../services/content/listStaticRouteParams';
 import { buildPlayHref } from '../../../services/quiz/buildPlayHref';
 import { isLengthChoiceOffered, readPoolSize, reconcilePoolSize } from '../../../services/quiz/roundLength';
 import { useContentContext } from '../../../state/ContentProvider';
 import { useLanguageManifest } from '../../../state/useLanguageManifest';
 import { useQuestionBank } from '../../../state/useQuestionBank';
+
+// One static page per track and difficulty pair in the bundled manifest.
+export function generateStaticParams(): BankParams[] {
+  return listBankParams();
+}
 
 export default function LengthScreen() {
   const {

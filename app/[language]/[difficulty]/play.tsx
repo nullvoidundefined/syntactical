@@ -15,12 +15,18 @@ import { QuizRound } from '../../../components/quiz/QuizRound';
 import { recordBankUse } from '../../../services/content/bankStore';
 import { findDifficulty } from '../../../services/content/findDifficulty';
 import { findLanguageEntry } from '../../../services/content/findLanguageEntry';
+import { listBankParams, type BankParams } from '../../../services/content/listStaticRouteParams';
 import { readRoundCount } from '../../../services/quiz/roundLength';
 import { useContentContext } from '../../../state/ContentProvider';
 import { useQuizStats } from '../../../state/StatsProvider';
 import { useCanAsk } from '../../../state/useCanAsk';
 import { useLanguageManifest } from '../../../state/useLanguageManifest';
 import { useQuestionBank } from '../../../state/useQuestionBank';
+
+// One static page per track and difficulty pair in the bundled manifest; ?count and ?topic resolve after the cache read.
+export function generateStaticParams(): BankParams[] {
+  return listBankParams();
+}
 
 function DownloadFailed({ onRetry }: { onRetry: () => void }) {
   return (

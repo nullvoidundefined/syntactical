@@ -8,10 +8,16 @@ import NotFoundScreen from '../../+not-found';
 import { TopicStep } from '../../../components/menu/TopicStep';
 import { findBankInLanguage } from '../../../services/content/findBankInLanguage';
 import { findLanguageEntry } from '../../../services/content/findLanguageEntry';
+import { listBankParams, type BankParams } from '../../../services/content/listStaticRouteParams';
 import { buildPlayHref } from '../../../services/quiz/buildPlayHref';
 import { isLengthChoiceOffered, readPoolSize, reconcilePoolSize } from '../../../services/quiz/roundLength';
 import { useLanguageManifest } from '../../../state/useLanguageManifest';
 import { useQuestionBank } from '../../../state/useQuestionBank';
+
+// One static page per track and difficulty pair in the bundled manifest.
+export function generateStaticParams(): BankParams[] {
+  return listBankParams();
+}
 
 export default function TopicScreen() {
   const { difficulty, language } = useLocalSearchParams<{ difficulty: string; language: string }>();
