@@ -85,8 +85,6 @@ async function writeValidContentDir(): Promise<void> {
   await writeManifest([
     buildLanguage('python', 'python', {
       easy: buildBankEntry('python/easy.json', sha256Hex(PYTHON_EASY)),
-      // Listed but absent from this checkout: skipped, not a start-up failure.
-      medium: buildBankEntry('python/medium.json', sha256Hex('absent')),
     }),
     buildLanguage('postgres', 'sql', {
       easy: buildBankEntry('postgres/easy.json', sha256Hex(POSTGRES_EASY)),
@@ -124,13 +122,16 @@ describe('readServerManifest', () => {
     expect(pythonEasy?.get('py-bool-false')).toEqual({ answerIndex: 1, choiceCount: 2 });
   });
 
-  it('skips a manifest bank whose file is missing instead of failing', async () => {
-    await writeValidContentDir();
+  it('refuses a manifest bank whose file is missing, naming its path', async () => {
+    await writeContentFile('python/easy.json', PYTHON_EASY);
+    await writeManifest([
+      buildLanguage('python', 'python', {
+        easy: buildBankEntry('python/easy.json', sha256Hex(PYTHON_EASY)),
+        medium: buildBankEntry('python/medium.json', sha256Hex('absent')),
+      }),
+    ]);
 
-    const answerKey = await readServerManifest(contentDir);
-
-    expect(answerKey.has('python/medium')).toBe(false);
-    expect(answerKey.get('python/easy')?.size).toBe(4);
+    await expect(readServerManifest(contentDir)).rejects.toThrow('Bank missing: python/medium.json');
   });
 
   it('leaves out a question that validateQuestionBank drops', async () => {

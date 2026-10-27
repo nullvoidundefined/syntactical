@@ -137,4 +137,15 @@ describe.skipIf(SKIP_DATABASE_TESTS)('startServer from public content only', () 
 
     await expect(startServer(buildSource(), { logger })).rejects.toThrow(/Bank hash mismatch: python\/medium\.json/);
   });
+
+  it('refuses to start when a listed Medium bank file is missing', async () => {
+    await writePublicContent(contentDir);
+    await rm(join(contentDir, 'python/medium.json'));
+
+    const starting = startServer(buildSource(), { logger }).then((server) => {
+      running = server;
+      return server;
+    });
+    await expect(starting).rejects.toThrow(/Bank missing: python\/medium\.json/);
+  });
 });
