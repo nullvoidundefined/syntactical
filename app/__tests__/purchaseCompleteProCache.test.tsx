@@ -35,7 +35,7 @@ jest.mock('../../clients/analyticsClient', () => ({
 const PRODUCT = 'syntactical.pro.lifetime';
 const POLL_INTERVAL_MS = 2000;
 const DEADLINE_MS = 30_000;
-const UNLOCKED = 'Unlocked';
+const UNLOCKED = "You're Pro";
 let queryClient: ReturnType<typeof createQueryClient>;
 let userId: string;
 

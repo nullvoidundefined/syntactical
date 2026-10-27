@@ -12,9 +12,9 @@ import { setExpoExtra } from '../../config/expoConstantsMock';
 // The purchase-complete route (B-38, Task 3.16): after Web Billing checkout,
 // /purchase-complete?product=<productId> polls GET me immediately and then
 // every 2 seconds for up to 30 seconds. It shows "Confirming your purchase"
-// while polling, "Unlocked" once data.pro.isActive is true (polling
+// while polling, "You're Pro" once data.pro.isActive is true (polling
 // stops), and "Still processing, check back shortly" after the deadline. A
-// missing or invalid product, or a guest, makes no request at all.
+// missing or invalid product, or a guest, makes no request at all. A Done link goes home.
 
 setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
@@ -41,7 +41,7 @@ jest.mock('../../state/AuthProvider', () => ({
 }));
 
 const CONFIRMING = 'Confirming your purchase';
-const UNLOCKED = 'Unlocked';
+const UNLOCKED = "You're Pro";
 const STILL_PROCESSING = 'Still processing, check back shortly';
 const PRODUCT = 'syntactical.pro.annual';
 const POLL_INTERVAL_MS = 2000;
@@ -294,10 +294,11 @@ describe('purchase-complete route', () => {
     expect(findPoliteRegion(UNLOCKED)).not.toBeNull();
   });
 
-  it('offers a link back to the menu that navigates home', async () => {
+  it('offers a Done link that navigates home', async () => {
     installRoutedFetch({ 'GET me': profileReply(true) });
     const rendered = await open(PRODUCT);
-    const link = screen.getByRole('link', { name: /menu/i });
+    expect(screen.queryByRole('link', { name: /menu/i })).toBeNull();
+    const link = screen.getByRole('link', { name: 'Done' });
     await fireEvent.press(link);
     await flush();
     expect(rendered.getPathname()).toBe('/');

@@ -40,7 +40,7 @@ jest.mock('../../clients/analyticsClient', () => ({
   trackEvent: (...args: unknown[]) => mockTrackEvent(...args),
 }));
 
-const UNLOCKED = 'Unlocked';
+const UNLOCKED = "You're Pro";
 const STILL_PROCESSING = 'Still processing, check back shortly';
 const PRODUCT = 'syntactical.pro.annual';
 const POLL_INTERVAL_MS = 2000;

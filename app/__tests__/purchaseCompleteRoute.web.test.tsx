@@ -12,7 +12,7 @@ import { setExpoExtra } from '../../config/expoConstantsMock';
 // checkout returns: GET me is polled with the session cookie immediately and
 // every 2 seconds for up to 30 seconds; the page has one h1 element, the
 // status sits in a role="status" polite live region, and a keyboard-focusable
-// link leads back to the menu. A bad product or a guest makes no request.
+// Done link leads home. A bad product or a guest makes no request.
 
 setExpoExtra({ apiBaseUrl: 'https://api.syntactical.dev/v1/' });
 
@@ -41,7 +41,7 @@ jest.mock('../../state/AuthProvider', () => ({
 }));
 
 const CONFIRMING = 'Confirming your purchase';
-const UNLOCKED = 'Unlocked';
+const UNLOCKED = "You're Pro";
 const STILL_PROCESSING = 'Still processing, check back shortly';
 const PRODUCT = 'syntactical.pro.lifetime';
 const POLL_INTERVAL_MS = 2000;
@@ -203,7 +203,7 @@ describe('purchase-complete route on the web', () => {
     expect(document.querySelectorAll('h1')).toHaveLength(1);
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
 
-    const link = screen.getByRole('link', { name: /menu/i });
+    const link = screen.getByRole('link', { name: 'Done' });
     expect(link.tagName).toBe('A');
     expect(link.getAttribute('href')).toBe('/');
     expect(link.getAttribute('tabindex')).not.toBe('-1');
