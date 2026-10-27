@@ -5,7 +5,6 @@ import type { Database } from '../clients/database.js';
 interface AdminDeps {
   database: Database;
   now?: () => Date;
-  paidProductIds: ReadonlySet<string>;
   rateLimitKeySecret: string;
 }
 

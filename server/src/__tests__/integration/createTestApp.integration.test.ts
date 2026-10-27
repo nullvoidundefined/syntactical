@@ -16,7 +16,6 @@ const HTTP_UNAUTHORIZED = 401;
 const SETUP_TIMEOUT_MS = 120_000;
 const DAY_MS = 86_400_000;
 const ALLOWED_ORIGIN = 'https://syntactical.dev';
-const PRODUCT_ID = 'syntactical.python.medium';
 const ME_ROUTE = '/v1/me';
 
 let database: Awaited<ReturnType<typeof createMigratedDatabase>>;
@@ -31,9 +30,8 @@ describe.skipIf(SKIP_DATABASE_TESTS)('createTestApp clock', () => {
   });
 
   it('expires a session on every mounted session-guarded router once the clock advances', async () => {
-    const paidProductIds: ReadonlySet<string> = new Set([PRODUCT_ID]);
     const { app, clock } = createTestApp({
-      admin: { paidProductIds },
+      admin: true,
       pool: database.pool,
       sync: { answerKey: new Map() },
     });

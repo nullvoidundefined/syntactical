@@ -1,7 +1,9 @@
-// GET and PUT /v1/admin/access (IAN-601): an admin lists the paid products with where their access
-// comes from, and grants or revokes their own 'admin' access to one. Order: session (401), admin
-// flag read fresh (403 ADMIN_REQUIRED), then for PUT the per-user rate limit (429) and the strict
-// body (400). Only the session user's rows are ever read or written. Every response is no-store.
+// GET and PUT /v1/admin/access: an admin reads the Pro toggle (the lifetime product, whether they
+// have Pro, and whether it comes from a purchase or their own grant) and grants or revokes their own
+// 'admin' access to it. Order: session (401), admin flag read fresh (403 ADMIN_REQUIRED), then for
+// PUT the per-user rate limit (429) and the strict { isGranted } body (400). Only the session user's
+// rows are ever read, and only their lifetime row written. Every response is no-store. Both answer
+// { data: AdminProductEntry }, one entry, by the clock in deps.
 import { Router } from 'express';
 
 import { ADMIN } from '../constants/admin.js';
@@ -11,7 +13,7 @@ import { createRateLimit } from '../middleware/rateLimit.js';
 import { keyOfUser } from '../middleware/rateLimitKeys.js';
 import { createRequireAdmin } from '../middleware/requireAdmin.js';
 import { createRequireSession } from '../middleware/requireSession.js';
-import { createAdminSchemas } from '../schemas/adminSchemas.js';
+import { adminSchemas } from '../schemas/adminSchemas.js';
 import { listAdminAccess } from '../services/listAdminAccess.js';
 import { setAdminAccess } from '../services/setAdminAccess.js';
 
@@ -22,9 +24,8 @@ const {
 } = HTTP;
 
 function createAdminAccessRouter(deps: ResolvedAdminDeps): Router {
-  const { database, now, paidProductIds, rateLimitKeySecret } = deps;
+  const { database, now, rateLimitKeySecret } = deps;
   const router = Router();
-  const schemas = createAdminSchemas(paidProductIds);
   const requireSession = createRequireSession({ database, now });
   const requireAdmin = createRequireAdmin(database);
   const perUser = createRateLimit({
@@ -44,18 +45,18 @@ function createAdminAccessRouter(deps: ResolvedAdminDeps): Router {
 
   router.get('/admin/access', requireSession, requireAdmin, async (_req, res) => {
     const { session } = res.locals as { session: { userId: string } };
-    const products = await listAdminAccess(database, session.userId, paidProductIds);
-    res.status(OK).json({ data: { products } });
+    const entry = await listAdminAccess(database, session.userId, now());
+    res.status(OK).json({ data: entry });
   });
 
   router.put('/admin/access', requireSession, requireAdmin, perUser, async (req, res) => {
     const { session } = res.locals as { session: { userId: string } };
-    const { data, success } = schemas.updateAccess.safeParse(req.body);
+    const { data, success } = adminSchemas.updateAccess.safeParse(req.body);
     if (!success) {
       sendError(res, BAD_REQUEST, ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body');
       return;
     }
-    const entry = await setAdminAccess(database, session.userId, data.productId, data.isGranted);
+    const entry = await setAdminAccess(database, session.userId, data.isGranted, now());
     if (!entry) {
       sendError(res, UNAUTHORIZED, ERROR_CODES.AUTH.SESSION_REQUIRED, 'Sign-in required');
       return;

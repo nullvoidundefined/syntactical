@@ -1,7 +1,10 @@
 // PUT /v1/admin/access's write: in one transaction, under the user's row lock, grants or revokes
-// the session user's 'admin'-source entitlement for a product. A granted 'revenuecat' row is never
-// changed (the purchase stays in force); a revoked one (a refunded purchase) may be re-granted
-// as 'admin'. Revoking touches only an 'admin' row. Undefined when the user is gone.
+// the session user's 'admin'-source entitlement on the lifetime Pro product, with expires_at NULL.
+// A granted 'revenuecat' row is never changed (the purchase stays in force); a revoked one (a
+// refunded purchase) may be re-granted as 'admin'. Revoking touches only an 'admin' row. An annual
+// row is never written here. The answer is listAdminAccess read inside the transaction, so a PUT
+// reports exactly what a GET would, an active annual purchase included. Undefined when the user is
+// gone.
 //
 // Serialization with the RevenueCat webhook: lockUserRow takes FOR UPDATE on the users row, which
 // conflicts with the FOR KEY SHARE that recordPurchaseEvent takes on the same row
@@ -14,16 +17,19 @@
 // fails closed and is intended.
 import type { Database } from '../clients/database.js';
 import { withTransaction } from '../clients/withTransaction.js';
+import { PRO_PRODUCT_IDS } from '../constants/proProducts.js';
 import type { AdminProductEntry } from '../types/AdminProductEntry.js';
 
+import { listAdminAccess } from './listAdminAccess.js';
 import { lockUserRow } from './lockUserRow.js';
-import { toAdminProductEntry } from './toAdminProductEntry.js';
+
+const PRODUCT_ID = PRO_PRODUCT_IDS.LIFETIME;
 
 async function setAdminAccess(
   database: Database,
   userId: string,
-  productId: string,
   isGranted: boolean,
+  now: Date,
 ): Promise<AdminProductEntry | undefined> {
   return withTransaction(
     database,
@@ -33,37 +39,26 @@ async function setAdminAccess(
       }
       const { rows } = await client.query<{ source: string; status: string }>(
         'SELECT source, status FROM entitlements WHERE user_id = $1 AND product_id = $2',
-        [userId, productId],
+        [userId, PRODUCT_ID],
       );
       const [row] = rows;
-      if (row?.status === 'granted' && row.source !== 'admin') {
-        return toAdminProductEntry(productId, row.source);
-      }
-      if (isGranted) {
-        const { rows: upserted } = await client.query<{ source: string }>(
-          `INSERT INTO entitlements (user_id, product_id, source, status) VALUES ($1, $2, 'admin', 'granted')
-           ON CONFLICT (user_id, product_id) DO UPDATE SET source = 'admin', status = 'granted'
-           WHERE entitlements.source = 'admin' OR entitlements.status = 'revoked'
-           RETURNING source`,
-          [userId, productId],
+      const isPurchaseInForce = row?.status === 'granted' && row.source !== 'admin';
+      if (isGranted && !isPurchaseInForce) {
+        await client.query(
+          `INSERT INTO entitlements (user_id, product_id, source, status, expires_at)
+           VALUES ($1, $2, 'admin', 'granted', NULL)
+           ON CONFLICT (user_id, product_id) DO UPDATE SET source = 'admin', status = 'granted', expires_at = NULL
+           WHERE entitlements.source = 'admin' OR entitlements.status = 'revoked'`,
+          [userId, PRODUCT_ID],
         );
-        if (upserted.length > 0) {
-          return toAdminProductEntry(productId, 'admin');
-        }
-        // The WHERE refused the update: a granted store row is in force. Report its real source.
-        const { rows: existing } = await client.query<{ source: string }>(
-          "SELECT source FROM entitlements WHERE user_id = $1 AND product_id = $2 AND status = 'granted'",
-          [userId, productId],
-        );
-        return toAdminProductEntry(productId, existing[0]?.source);
       }
-      if (row?.source === 'admin' && row.status === 'granted') {
+      if (!isGranted && row?.source === 'admin' && row.status === 'granted') {
         await client.query(
           "UPDATE entitlements SET status = 'revoked' WHERE user_id = $1 AND product_id = $2 AND source = 'admin'",
-          [userId, productId],
+          [userId, PRODUCT_ID],
         );
       }
-      return toAdminProductEntry(productId, undefined);
+      return listAdminAccess(client, userId, now);
     },
     { hasTimeouts: true },
   );

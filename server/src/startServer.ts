@@ -20,7 +20,6 @@ import { createStubEmailClient } from './clients/stubEmailClient.js';
 import { loadEnv } from './config/env.js';
 import { isCookieSecure } from './config/isCookieSecure.js';
 import { AUTH } from './constants/auth.js';
-import { PRO_PRODUCT_IDS } from './constants/proProducts.js';
 import { createDummyPasswordHash } from './services/passwordHash.js';
 import { createPasswordHashSlots } from './services/passwordHashSlots.js';
 import { readManifest } from './services/readManifest.js';
@@ -117,11 +116,7 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
   const dummyPasswordHash = await createDummyPasswordHash();
   const pool = createDatabasePool(DATABASE_URL, NODE_ENV, logger);
   const app = createApp({
-    admin: {
-      database: pool,
-      paidProductIds: new Set<string>([PRO_PRODUCT_IDS.LIFETIME]),
-      rateLimitKeySecret: env.RATE_LIMIT_KEY_SECRET,
-    },
+    admin: { database: pool, rateLimitKeySecret: env.RATE_LIMIT_KEY_SECRET },
     allowedOrigins: ALLOWED_ORIGINS.split(',')
       .map((origin) => origin.trim())
       .filter(Boolean),
