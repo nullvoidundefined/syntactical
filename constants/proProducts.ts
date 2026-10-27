@@ -12,3 +12,7 @@ export function readProPlan(productId: string): ProPlan | null {
   if (productId === PRO_PRODUCT_IDS.LIFETIME) return 'lifetime';
   return null;
 }
+
+// Answers a day with Pro, as the Pro sheet names it. Must equal ASK.DAILY_LIMIT.PRO in
+// server/src/constants/ask.ts; constants/__tests__/proAskLimitContract.test.ts fails otherwise.
+export const PRO_DAILY_ASK_LIMIT = 20;
