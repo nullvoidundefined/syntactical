@@ -46,9 +46,9 @@ const SLOT_HEIGHT = '160px';
 const SCRIPT_SELECTOR = 'script[src="https://media.ethicalads.io/media/client/ethicalads.min.js"]';
 
 type FakeClient = { load: jest.Mock };
-// What the fake load() returns: nothing, a promise that answers with the filled placements, or one that
-// never settles.
-type LoadAnswer = 'none' | 'filled' | 'empty' | 'pending';
+// What the fake load() returns: nothing, a promise that answers with the filled placements, an empty list,
+// a list holding null for the placement it did not fill, or a promise that never settles.
+type LoadAnswer = 'none' | 'filled' | 'empty' | 'unfilled' | 'pending';
 
 // Fills the placement the way the EthicalAds client does when isFilling is true, and answers as told.
 function installClient(isFilling: boolean, answer: LoadAnswer): FakeClient {
@@ -62,6 +62,7 @@ function installClient(isFilling: boolean, answer: LoadAnswer): FakeClient {
     }
     if (answer === 'none') return undefined;
     if (answer === 'pending') return new Promise(() => undefined);
+    if (answer === 'unfilled') return Promise.resolve([null]);
     return Promise.resolve(answer === 'filled' ? [placement] : []);
   });
   (window as unknown as { ethicalads?: FakeClient }).ethicalads = { load };
@@ -175,6 +176,24 @@ describe('SponsoredCard on the web with EthicalAds', () => {
     expect(mockTrackEvent.mock.calls).toEqual([['ad_shown', { placement: 'results', source: 'house' }]]);
     jest.useRealTimers();
     expect(await axe(container, AXE_OPTIONS)).toHaveNoViolations();
+  });
+
+  it('falls back to the house card when the answer lists the placement as null', async () => {
+    installClient(false, 'unfilled');
+    render(<Card />);
+    await flushClientAnswer();
+    await settle();
+    expect(screen.getByText('Syntactical Pro')).toBeTruthy();
+    expect(mockTrackEvent.mock.calls).toEqual([['ad_shown', { placement: 'results', source: 'house' }]]);
+  });
+
+  it('falls back to the house card when the answer names the placement but nothing rendered in it', async () => {
+    installClient(false, 'filled');
+    render(<Card />);
+    await flushClientAnswer();
+    await settle();
+    expect(screen.getByText('Syntactical Pro')).toBeTruthy();
+    expect(mockTrackEvent.mock.calls).toEqual([['ad_shown', { placement: 'results', source: 'house' }]]);
   });
 
   it('keeps waiting for a slow answer until the ceiling, then counts an ad that rendered as a fill', () => {
