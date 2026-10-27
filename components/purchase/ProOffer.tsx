@@ -1,0 +1,86 @@
+// The Pro sheet wired to the stores: it loads the store's prices and runs a purchase from the
+// sheet. A native purchase closes the sheet once GET /me says Pro; one the store finished while
+// /me does not say Pro yet says it is still processing and is re-checked twice, two seconds
+// apart, while mounted; a failed purchase says so and a cancelled one says nothing. A web purchase
+// goes to /purchase-complete for that product, where checkout's return is confirmed. The sheet
+// cannot be closed while a purchase runs. A guest sees nothing, and signing out closes it.
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import { router } from 'expo-router';
+
+import { useSignedInUserId } from '../../state/AuthProvider';
+import { usePurchases } from '../../state/usePurchases';
+
+import { ProSheet, type ProSheetSource } from './ProSheet';
+
+const PURCHASE_FAILED = 'The purchase did not go through. Try again.';
+const PURCHASE_PENDING = 'Your purchase is still processing. Check back shortly.';
+const PENDING_RECHECK_COUNT = 2;
+const PENDING_RECHECK_DELAY_MS = 2000;
+
+type ProOfferProps = { onClose: () => void; source: ProSheetSource };
+
+export function ProOffer({ onClose, source }: ProOfferProps) {
+  const userId = useSignedInUserId();
+  const { buy, confirm, prices } = usePurchases({ shouldLoadPrices: true });
+  const [isBuying, setIsBuying] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // With nobody signed in there is no account to buy for.
+  useEffect(() => {
+    if (userId === null) onClose();
+  }, [onClose, userId]);
+
+  const close = useCallback(() => {
+    if (!isBuying) onClose();
+  }, [isBuying, onClose]);
+
+  async function recheckPending(productId: string) {
+    for (let attempt = 0; attempt < PENDING_RECHECK_COUNT; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, PENDING_RECHECK_DELAY_MS));
+      if (!isMountedRef.current) return;
+      if (await confirm(productId)) {
+        if (isMountedRef.current) onClose();
+        return;
+      }
+    }
+  }
+
+  async function buyProduct(productId: string) {
+    setIsBuying(true);
+    setMessage(null);
+    try {
+      const outcome = await buy(productId);
+      if (!isMountedRef.current) return;
+      if (outcome === 'redirect') router.push({ params: { product: productId }, pathname: '/purchase-complete' });
+      if (outcome === 'unavailable') setMessage(PURCHASE_FAILED);
+      if (outcome === 'pending') {
+        setMessage(PURCHASE_PENDING);
+        void recheckPending(productId);
+      }
+      if (outcome === 'redirect' || outcome === 'unlocked') onClose();
+    } finally {
+      if (isMountedRef.current) setIsBuying(false);
+    }
+  }
+
+  if (userId === null) return null;
+  return (
+    <ProSheet
+      isBuying={isBuying}
+      message={message}
+      onBuy={(productId) => void buyProduct(productId)}
+      onClose={close}
+      prices={prices}
+      source={source}
+    />
+  );
+}
