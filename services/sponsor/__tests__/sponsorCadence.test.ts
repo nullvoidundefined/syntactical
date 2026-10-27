@@ -100,6 +100,7 @@ describe('recording rounds and cards', () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
     jest.spyOn(AsyncStorage, 'getItem').mockRejectedValueOnce(new Error('storage unavailable'));
     const setItem = jest.spyOn(AsyncStorage, 'setItem');
+    setItem.mockClear();
     expect(await recordRoundCompleted()).toBeNull();
     expect(setItem).not.toHaveBeenCalled();
     warn.mockRestore();
