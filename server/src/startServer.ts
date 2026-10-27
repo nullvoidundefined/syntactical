@@ -118,7 +118,11 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
     options.modelProvider ??
     (ANTHROPIC_API_KEY === undefined
       ? undefined
-      : createAnthropicModelProvider({ apiKey: ANTHROPIC_API_KEY, workspaceId: ANTHROPIC_WORKSPACE_ID }));
+      : createAnthropicModelProvider({
+          apiKey: ANTHROPIC_API_KEY,
+          model: env.ANTHROPIC_MODEL,
+          workspaceId: ANTHROPIC_WORKSPACE_ID,
+        }));
 
   const dummyPasswordHash = await createDummyPasswordHash();
   const pool = createDatabasePool(DATABASE_URL, NODE_ENV, logger);

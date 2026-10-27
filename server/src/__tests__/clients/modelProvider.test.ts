@@ -77,7 +77,7 @@ function rejecting(error: unknown) {
   return { create: vi.fn().mockRejectedValue(error) } as unknown as MessagesClient;
 }
 
-function apiError(status: number): Anthropic.APIError {
+function apiError(status: number): InstanceType<typeof Anthropic.APIError> {
   return Anthropic.APIError.generate(status, { error: { message: 'x', type: 'error' } }, 'x', new Headers());
 }
 

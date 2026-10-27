@@ -25,6 +25,8 @@ function createFakeModelProvider({ answer = 'A short answer.', failure }: FakeOp
           return Promise.resolve(answer);
       }
     },
+    id: 'anthropic',
+    model: 'fake',
     prompts,
   };
 }

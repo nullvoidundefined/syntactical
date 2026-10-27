@@ -1,7 +1,8 @@
-// The Anthropic client's options for the server: the API key, the per-attempt timeout, with SDK
-// retries off (the failover wrapper retries), and, when a workspace id is configured, the anthropic-workspace-id header. An organization-level API
-// key is refused without that header, because it does not say which workspace a request bills to;
-// a workspace-scoped key needs none.
+// The Anthropic client's options for the server's calls to the configured model: the API key, the
+// per-attempt timeout, with SDK retries off (the failover wrapper retries), and, when a workspace
+// id is configured, the anthropic-workspace-id header. An organization-level API key is refused
+// without that header, because it does not say which workspace a request bills to; a
+// workspace-scoped key needs none.
 import type { ClientOptions } from '@anthropic-ai/sdk';
 
 import { MODEL } from '../constants/model.js';
