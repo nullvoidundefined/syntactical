@@ -13,8 +13,25 @@ function isHitTestable(control: Locator): Promise<boolean> {
   });
 }
 
-// Area 4 adds the Pro dialog here; the sign-out and delete-account dialogs carry the check meanwhile.
 test.describe('modal dialogs cover the whole page', () => {
+  test('the Pro sheet covers the app bar', async ({ page }) => {
+    await signIn(page, createUniqueEmail());
+    await page.goto('settings');
+    const settings = page.getByRole('link', { name: 'Settings' });
+    expect(await isHitTestable(settings)).toBe(true);
+    await page.getByRole('button', { name: 'Go Pro' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Syntactical Pro' });
+    await expect(dialog).toBeVisible();
+    // The sheet slides up from below the viewport; hit-test where it comes to rest.
+    await dialog.evaluate((element) => Promise.all(element.getAnimations().map(({ finished }) => finished)));
+    expect(await isHitTestable(settings)).toBe(false);
+    // Settings has its own Sign out beside the app bar's; neither may be reachable under the sheet.
+    expect(await isHitTestable(page.getByRole('button', { name: 'Sign out' }).first())).toBe(false);
+    expect(await isHitTestable(dialog.getByRole('button', { name: 'Not now' }))).toBe(true);
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+  });
+
   test('the delete-account dialog covers the app bar', async ({ page }) => {
     await signIn(page, createUniqueEmail());
     await page.goto('settings');
