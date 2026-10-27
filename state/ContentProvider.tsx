@@ -7,6 +7,7 @@ import type { CachedBank, Manifest } from '@syntactical/content-schema';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { QueryClient } from '@tanstack/react-query';
 
 import { logWarning } from '../clients/logClient';
 import { removeRetiredBankKeys } from '../services/content/bankStore';
@@ -18,6 +19,7 @@ import { findLanguageEntry } from '../services/content/findLanguageEntry';
 import { prefetchChangedBanks } from '../services/content/prefetchChangedBanks';
 import { readCachedBank } from '../services/content/readCachedBank';
 import { readCachedManifest } from '../services/content/readCachedManifest';
+import { readDownloadedBank } from '../services/content/readDownloadedBank';
 import type { ContentAccess } from '../services/content/types/ContentAccess';
 
 type HydratedContent = { banks: Map<string, CachedBank>; manifest: Manifest };
@@ -68,13 +70,21 @@ async function hydrateContent(): Promise<HydratedContent> {
   return { banks: await readAllCachedBanks(manifest), manifest };
 }
 
-function buildContentAccess(hydrated: HydratedContent, contentBaseUrl: string | null): ContentAccess {
+// A bank downloaded this session wins over the startup snapshot, so reviews and the prefetch see it without a
+// restart; the snapshot wins over the bundle.
+function buildContentAccess(
+  hydrated: HydratedContent,
+  contentBaseUrl: string | null,
+  queryClient: QueryClient,
+): ContentAccess {
   const { banks, manifest } = hydrated;
   return {
     baselineManifest: manifest,
     contentBaseUrl,
     readLocalBank: (language, difficulty) =>
-      banks.get(buildBankId(language, difficulty)) ?? readBundledBank(language, difficulty),
+      readDownloadedBank(queryClient, language, difficulty) ??
+      banks.get(buildBankId(language, difficulty)) ??
+      readBundledBank(language, difficulty),
   };
 }
 
@@ -92,8 +102,8 @@ export function ContentProvider({ contentBaseUrl, children }: { contentBaseUrl: 
   }, []);
 
   const access = useMemo(
-    () => (hydrated ? buildContentAccess(hydrated, contentBaseUrl) : null),
-    [hydrated, contentBaseUrl],
+    () => (hydrated ? buildContentAccess(hydrated, contentBaseUrl, queryClient) : null),
+    [hydrated, contentBaseUrl, queryClient],
   );
 
   const { data: fetchedManifest } = useQuery(buildManifestQuery(contentBaseUrl, access !== null));
