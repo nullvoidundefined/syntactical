@@ -1,6 +1,8 @@
 // B-3.2: the schema migrations, run with the server's migrate scripts against
 // a real Postgres. Each test gets an empty scratch database of its own.
 import { randomBytes, randomUUID } from 'node:crypto';
+import { readdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 import type pg from 'pg';
 import { afterEach, beforeEach, describe, expect, inject, it } from 'vitest';
@@ -17,6 +19,8 @@ const RAW_CODE_BYTES = 6;
 const SUCCESS = 0;
 // node-pg-migrate's down takes a count; 0 reverts every applied migration.
 const ALL_MIGRATIONS = '0';
+const MIGRATIONS_DIRECTORY = fileURLToPath(new URL('../../../migrations/', import.meta.url));
+const EXPIRES_AT_MIGRATION = '1790985600018_entitlements-expires-at.js';
 
 const APPLICATION_TABLES = [
   'answer_events',
@@ -26,6 +30,7 @@ const APPLICATION_TABLES = [
   'entitlements',
   'one_time_codes',
   'purchase_events',
+  'purchase_transfers',
   'rate_limit_counters',
   'sessions',
   'study_notes',
@@ -313,6 +318,35 @@ describe.skipIf(SKIP_DATABASE_TESTS)('migrations', () => {
   );
 
   it(
+    'drop a purchase transfer with its from user, and keep it, to no user, without its to user',
+    async () => {
+      migrateUp();
+      const { pool } = scratch;
+      const fromUser = await insertUser(pool);
+      const toUser = await insertUser(pool);
+      const otherFromUser = await insertUser(pool);
+      const transferEventId = randomUUID();
+      await pool.query(
+        `INSERT INTO purchase_events (provider, provider_event_id, kind, payload, occurred_at)
+                 VALUES ('revenuecat', $1, 'TRANSFER', '{}'::jsonb, now())`,
+        [transferEventId],
+      );
+      await pool.query(
+        `INSERT INTO purchase_transfers (provider, provider_event_id, from_user_id, to_user_id, occurred_at)
+                 VALUES ('revenuecat', $1, $2, $4, now()), ('revenuecat', $1, $3, $4, now())`,
+        [transferEventId, fromUser, otherFromUser, toUser],
+      );
+
+      await pool.query('DELETE FROM users WHERE id = $1', [fromUser]);
+      await pool.query('DELETE FROM users WHERE id = $1', [toUser]);
+
+      const { rows } = await pool.query('SELECT from_user_id, to_user_id FROM purchase_transfers');
+      expect(rows).toEqual([{ from_user_id: otherFromUser, to_user_id: null }]);
+    },
+    MIGRATION_TIMEOUT_MS,
+  );
+
+  it(
     'store session tokens and one-time codes only as SHA-256 hashes',
     async () => {
       migrateUp();
@@ -495,7 +529,11 @@ describe.skipIf(SKIP_DATABASE_TESTS)('migrations', () => {
       );
       expect(inserted).toEqual([{ expires_at: null }]);
 
-      const down = runMigrations(scratch.databaseUrl, 'down', ['1']);
+      // Reverts the expires_at migration and every one after it.
+      const countFromExpiresAt = readdirSync(MIGRATIONS_DIRECTORY).filter(
+        (name) => name.endsWith('.js') && name >= EXPIRES_AT_MIGRATION,
+      ).length;
+      const down = runMigrations(scratch.databaseUrl, 'down', [String(countFromExpiresAt)]);
       expect(down.status, down.output).toBe(SUCCESS);
       const afterDown = await columnsOf(pool, 'entitlements');
       expect(afterDown).not.toHaveProperty('expires_at');
