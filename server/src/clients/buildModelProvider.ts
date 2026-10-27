@@ -1,8 +1,8 @@
 // The model providers behind POST /v1/ask and GET /v1/study-note, built from the environment: each
 // provider whose key is set, MODEL_PRIMARY first, behind the failover (so its one retry, its time
 // bound, its breaker, and its log line apply with one provider too). No key means no provider, and
-// both routes answer 503. listConfiguredModels holds the rule once for the server and the smoke
-// script.
+// both routes answer 503. listConfiguredModels and buildConfiguredProvider hold the rules once for
+// the server and the smoke script.
 import type { Logger } from 'pino';
 
 import type { Env } from '../config/env.js';
@@ -49,7 +49,12 @@ function listConfiguredModels(env: ModelEnv): ConfiguredModel[] {
   );
 }
 
-function buildProvider({ id, model }: ConfiguredModel, env: ModelEnv, factories: ProviderFactories): ModelProvider {
+// One provider for one configured model, without the failover; the smoke script calls each alone.
+function buildConfiguredProvider(
+  { id, model }: ConfiguredModel,
+  env: ModelEnv,
+  factories: ProviderFactories = DEFAULT_FACTORIES,
+): ModelProvider {
   if (id === 'anthropic') {
     return factories.createAnthropicModelProvider({
       apiKey: env.ANTHROPIC_API_KEY ?? '',
@@ -77,9 +82,9 @@ function buildModelProvider(
     );
     return undefined;
   }
-  const providers = configured.map((entry) => buildProvider(entry, env, factories));
+  const providers = configured.map((entry) => buildConfiguredProvider(entry, env, factories));
   return createFailoverModelProvider({ logger, providers });
 }
 
-export { buildModelProvider, listConfiguredModels };
+export { buildConfiguredProvider, buildModelProvider, listConfiguredModels };
 export type { ConfiguredModel, ModelEnv, ProviderFactories };
