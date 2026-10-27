@@ -1,6 +1,7 @@
 // Indexes the questions of every bank the answer events name, read only from local copies (downloaded this
 // session, cached, or bundled), so the index works offline. A bank with no local copy contributes nothing until
-// ReviewBankPrefetch downloads it, and its questions are skipped by every review built on this index meanwhile.
+// ReviewBankPrefetch downloads it and the index is next rebuilt (the coarse clock tick or the next answer, up to
+// 30 seconds later); reviews built on this index skip its questions meanwhile.
 import type { AnswerEvent } from '@syntactical/progress';
 
 import type { ContentAccess } from '../content/types/ContentAccess';

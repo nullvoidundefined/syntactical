@@ -1,4 +1,4 @@
-// The Syntactical API: auth, answer event sync, entitlements, account deletion, and paid banks.
+// The Syntactical API: auth, answer event sync, entitlements, account deletion, and question banks for Ask.
 import { pathToFileURL } from 'node:url';
 
 import { createLogger } from './clients/logger.js';
