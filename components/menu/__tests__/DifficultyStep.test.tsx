@@ -9,7 +9,16 @@ const mockRetry = jest.fn();
 
 jest.mock('../../../state/useLanguageManifest', () => ({
   useLanguageManifest: () => ({
-    languages: [{ banks: { hard: { hash: 'b'.repeat(64), path: 'elixir/hard.json' } }, glyph: 'EX', grammar: 'plain', id: 'elixir', label: 'Elixir', tagline: 'Pipes.' }],
+    languages: [
+      {
+        banks: { hard: { hash: 'b'.repeat(64), path: 'elixir/hard.json' } },
+        glyph: 'EX',
+        grammar: 'plain',
+        id: 'elixir',
+        label: 'Elixir',
+        tagline: 'Pipes.',
+      },
+    ],
     schemaVersion: 2,
   }),
 }));
@@ -47,6 +56,4 @@ describe('DifficultyStep', () => {
     await fireEvent.press(screen.getByRole('button', { name: /Hard/ }));
     expect(mockRetry).toHaveBeenCalledTimes(1);
   });
-
-  // A locked paid bank opens the paywall (Task 3.18); see app/__tests__/difficultyPaywall.test.tsx.
 });

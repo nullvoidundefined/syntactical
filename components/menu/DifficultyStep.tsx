@@ -1,7 +1,7 @@
 // Step 2 of the launch flow: the difficulties the chosen language's
 // manifest entry names, labeled from the app's registry, each showing
-// whether its bank is ready, downloading, failed, locked (a paid bank without
-// its entitlement), or needs a connection (no local copy while offline).
+// whether its bank is ready, downloading, failed, or needs a connection
+// (no local copy while offline).
 import { DIFFICULTIES } from '@syntactical/content-schema';
 import { Pressable, Text, View } from 'react-native';
 
@@ -20,22 +20,15 @@ type DifficultyOptionProps = {
   keyHint: number | undefined;
   language: string;
   onSelect: () => void;
-  onSelectLocked: () => void;
-  price: string | undefined;
 };
 type DifficultyStepProps = {
   language: string;
   onBack: () => void;
   onSelectDifficulty: (difficultyId: string) => void;
-  // Called when a locked paid bank is selected; without it a locked bank stays inert.
-  onSelectLockedDifficulty?: (difficultyId: string) => void;
-  // Localized store prices by product id.
-  prices?: Readonly<Record<string, string>>;
 };
 
 function describeBankStatus(bankState: QuestionBankState, isOnline: boolean): string | undefined {
   if (bankState.status === 'ready') return undefined;
-  if (bankState.status === 'locked') return 'Locked';
   if (!isOnline) return 'Needs a connection to load';
   if (bankState.status === 'error') return 'Download failed. Tap to retry';
   return 'Downloading';
@@ -50,34 +43,14 @@ function readDifficultyCopy(difficultyId: string) {
   );
 }
 
-function pickSelectHandler(bankState: QuestionBankState, onSelect: () => void, onSelectLocked: () => void): () => void {
-  if (bankState.status === 'locked') return onSelectLocked;
-  return 'retry' in bankState ? bankState.retry : onSelect;
-}
-
-// "<Label>, locked, <price>"; no price when the store has not given one.
-function describeLockedBank(label: string, price: string | undefined): string {
-  return price === undefined ? `${label}, locked` : `${label}, locked, ${price}`;
-}
-
-function readPrice(
-  languageEntry: { banks: Record<string, { productId?: string } | undefined> } | undefined,
-  difficultyId: string,
-  prices: Readonly<Record<string, string>>,
-): string | undefined {
-  const productId = languageEntry?.banks[difficultyId]?.productId;
-  return productId === undefined ? undefined : prices[productId];
-}
-
-function DifficultyOption({ difficultyId, keyHint, language, onSelect, onSelectLocked, price }: DifficultyOptionProps) {
+function DifficultyOption({ difficultyId, keyHint, language, onSelect }: DifficultyOptionProps) {
   const bankState = useQuestionBank(language, difficultyId);
   const isOnline = useIsOnline();
   const { description, label } = readDifficultyCopy(difficultyId);
   const { status } = bankState;
   const isRetryable = status === 'error' && isOnline;
-  const isLocked = status === 'locked';
-  const isDisabled = status !== 'ready' && !isRetryable && !isLocked;
-  const handleSelect = pickSelectHandler(bankState, onSelect, onSelectLocked);
+  const isDisabled = status !== 'ready' && !isRetryable;
+  const handleSelect = 'retry' in bankState ? bankState.retry : onSelect;
   useKeyboardNav({
     onSelectChoice: (index) => {
       if (keyHint !== undefined && index === keyHint - 1 && !isDisabled) handleSelect();
@@ -89,20 +62,13 @@ function DifficultyOption({ difficultyId, keyHint, language, onSelect, onSelectL
       title={label}
       subtitle={description}
       onSelect={handleSelect}
-      ariaLabel={isLocked ? describeLockedBank(label, price) : undefined}
       isDisabled={isDisabled}
       statusLabel={describeBankStatus(bankState, isOnline)}
     />
   );
 }
 
-export function DifficultyStep({
-  language,
-  onBack,
-  onSelectDifficulty,
-  onSelectLockedDifficulty,
-  prices = {},
-}: DifficultyStepProps) {
+export function DifficultyStep({ language, onBack, onSelectDifficulty }: DifficultyStepProps) {
   const { languages } = useLanguageManifest();
   const languageEntry = findLanguageEntry(languages, language);
   const difficultyIds = DIFFICULTIES.map(({ id }) => id).filter(
@@ -127,8 +93,6 @@ export function DifficultyStep({
             keyHint={pickKeyHint(index + 1)}
             language={language}
             onSelect={() => onSelectDifficulty(difficultyId)}
-            onSelectLocked={() => onSelectLockedDifficulty?.(difficultyId)}
-            price={readPrice(languageEntry, difficultyId, prices)}
           />
         ))}
       </View>

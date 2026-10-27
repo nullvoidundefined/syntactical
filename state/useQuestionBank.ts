@@ -15,11 +15,9 @@ import { findBankEntry } from '../services/content/findBankEntry';
 import { useContentContext } from './ContentProvider';
 import { useLanguageManifest } from './useLanguageManifest';
 
-// `locked` is never returned; it stays in the type only while DifficultyStep and the round route name it.
 export type QuestionBankState =
   | { bank: CachedBank; status: 'ready' }
   | { status: 'loading' }
-  | { status: 'locked' }
   | { retry: () => void; status: 'error' }
   | { status: 'unknown' };
 
