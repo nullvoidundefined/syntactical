@@ -1,7 +1,7 @@
 // Jest setup: AsyncStorage's in-memory mock, a fetch that never resolves
 // unless a test replaces it (so no test reaches the network), and an
-// expo-constants stand-in (config/expoConstantsMock.ts) that supplies the content base URL, and the
-// worklets mock reanimated 4 needs under Jest. expo-crypto's native
+// expo-constants stand-in (config/expoConstantsMock.ts) that supplies the content base URL, the
+// Google Mobile Ads SDK fake, and the worklets mock reanimated 4 needs under Jest. expo-crypto's native
 // randomUUID is absent under Jest, so Node's own UUID v4 stands in for it.
 import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
 import { TextDecoder as NodeTextDecoder, TextEncoder as NodeTextEncoder } from 'node:util';
@@ -42,6 +42,13 @@ jest.mock('@revenuecat/purchases-js', () => ({
   Purchases: { configure: jest.fn(), getSharedInstance: jest.fn(), isConfigured: jest.fn(() => false) },
   PurchasesError: class PurchasesError extends Error {},
 }));
+
+// The Google Mobile Ads SDK is native-only; the shared fake in components/sponsor/__tests__/mobileAdsMock.ts
+// stands in for every suite, and the AdMob suites drive it through mobileAdsControl.
+jest.mock(
+  'react-native-google-mobile-ads',
+  () => require('./components/sponsor/__tests__/mobileAdsMock').mobileAdsModule,
+);
 
 // PostHog stays inert under Jest; no analytics key is configured, so the client
 // never constructs it. Suites that exercise the client install their own mock.
