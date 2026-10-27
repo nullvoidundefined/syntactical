@@ -3,12 +3,12 @@
 // for a year: the app fetches banks with cache: 'no-cache' (clients/fetchContentText.ts) and checks every download
 // against the manifest hash, and Pages purges its edge cache on each deploy. The manifest, the sponsor file, and the
 // sponsor icons revalidate on every request. 404.html is the exported not-found page, which Pages serves with status
-// 404 for any path the export does not hold.
+// 404 for any path the export does not hold. It also writes sitemap.xml and robots.txt for https://syntactical.dev.
 import { promises, realpathSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const { access, copyFile, writeFile } = promises;
+const { access, copyFile, readFile, readdir, writeFile } = promises;
 
 const NOT_FOUND_PAGE = '+not-found.html';
 const YEAR = '  Cache-Control: public, max-age=31536000, immutable';
@@ -41,6 +41,71 @@ export const HOST_HEADERS = [
   ...BANK_FILES.flatMap((file) => [`/content/:track/${file}`, YEAR, '']),
 ].join('\n');
 
+const SITE_ORIGIN = 'https://syntactical.dev';
+// Pages with nothing for a search engine: the admin console and the purchase return page.
+const UNLISTED_PAGES = ['admin', 'purchase-complete'];
+const ROUTE_FILE = /\.(tsx|ts|jsx|js)$/;
+const NON_ROUTE_NAMES = new Set(['_layout', '+not-found', '+html', '__tests__']);
+
+function isDynamicSegment(name) {
+  return name.startsWith('[');
+}
+
+// Static page paths from the app/ tree, slash-separated, '' for the home page. Dynamic segments
+// come from the manifest instead.
+async function listStaticPagePaths(dir, prefix = '') {
+  const paths = [];
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const base = entry.name.replace(ROUTE_FILE, '');
+    if (NON_ROUTE_NAMES.has(base) || isDynamicSegment(base)) continue;
+    if (entry.isDirectory()) {
+      paths.push(...(await listStaticPagePaths(join(dir, entry.name), `${prefix}${entry.name}/`)));
+    } else if (ROUTE_FILE.test(entry.name)) {
+      paths.push(base === 'index' ? prefix.replace(/\/$/, '') : `${prefix}${base}`);
+    }
+  }
+  return paths;
+}
+
+// One page per track and one per bank, each a directory page (<path>/index.html) that Pages serves at a trailing
+// slash, the form the area 5 verification recorded and the pages' canonical URLs use. The length and play steps
+// take query parameters and are not listed.
+function listTrackPagePaths(manifest) {
+  return manifest.languages.flatMap((language) => [
+    `${language.id}/`,
+    ...Object.keys(language.banks)
+      .sort()
+      .map((difficulty) => `${language.id}/${difficulty}/`),
+  ]);
+}
+
+function toLoc(path) {
+  return `${SITE_ORIGIN}/${path}`;
+}
+
+export async function buildSitemap({ appDir = 'app', manifestPath = 'content/manifest.json' } = {}) {
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  const staticPaths = (await listStaticPagePaths(appDir)).filter((path) => !UNLISTED_PAGES.includes(path)).sort();
+  const urls = [...staticPaths, ...listTrackPagePaths(manifest)].map(
+    (path) => `  <url><loc>${toLoc(path)}</loc></url>`,
+  );
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.join('\n')}
+</urlset>
+`;
+}
+
+export function buildRobots() {
+  const disallowed = UNLISTED_PAGES.map((page) => `Disallow: /${page}`);
+  return ['User-agent: *', ...disallowed, `Sitemap: ${SITE_ORIGIN}/sitemap.xml`, ''].join('\n');
+}
+
+export async function writeSitemapFiles(outputDir, options = {}) {
+  await writeFile(join(outputDir, 'sitemap.xml'), await buildSitemap(options));
+  await writeFile(join(outputDir, 'robots.txt'), buildRobots());
+}
+
 export async function writeHostFiles(outputDir) {
   const notFoundPage = join(outputDir, NOT_FOUND_PAGE);
   try {
@@ -50,6 +115,7 @@ export async function writeHostFiles(outputDir) {
   }
   await copyFile(notFoundPage, join(outputDir, '404.html'));
   await writeFile(join(outputDir, '_headers'), HOST_HEADERS);
+  await writeSitemapFiles(outputDir);
 }
 
 // Compare as file URLs: a plain string compare breaks on a path with a space, and a symlink needs its real path.
