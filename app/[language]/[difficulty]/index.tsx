@@ -1,11 +1,13 @@
 // Step 3 route for one bank: a round length for the whole bank (20, 50, or every question) or one
 // topic of it, which goes on to the length step when its pool offers a fixed length. A language or
-// difficulty the manifest does not list shows the not-found screen.
+// difficulty the manifest does not list shows the not-found screen. Below the step it lists the bank's question
+// titles for crawlers, before and after hydration.
 import { router, useLocalSearchParams } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 
 import NotFoundScreen from '../../+not-found';
 import { TopicStep } from '../../../components/menu/TopicStep';
+import { BankTitles } from '../../../components/seo/BankTitles';
 import { findBankInLanguage } from '../../../services/content/findBankInLanguage';
 import { findLanguageEntry } from '../../../services/content/findLanguageEntry';
 import { listBankParams, type BankParams } from '../../../services/content/listStaticRouteParams';
@@ -42,6 +44,7 @@ export default function TopicScreen() {
             router.push(buildPlayHref({ difficulty, language, screen, topic }));
           }}
         />
+        <BankTitles difficulty={difficulty} language={language} />
       </View>
     </ScrollView>
   );
