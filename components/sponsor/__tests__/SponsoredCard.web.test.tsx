@@ -178,6 +178,25 @@ describe('SponsoredCard on the web with EthicalAds', () => {
     expect(await axe(container, AXE_OPTIONS)).toHaveNoViolations();
   });
 
+  it('reports ad_clicked only for a press on the ad link, not on the placement around it', async () => {
+    installClient(true, 'filled');
+    render(<Card />);
+    await flushClientAnswer();
+    const placement = document.querySelector('[data-ea-publisher]') as HTMLElement;
+    fireEvent.click(placement);
+    fireEvent.click(placement.querySelector('.ea-content') as HTMLElement);
+    expect(mockTrackEvent.mock.calls).toEqual([['ad_shown', { placement: 'results', source: 'ethicalads' }]]);
+    fireEvent.click(screen.getByText('A text ad'));
+    expect(mockTrackEvent).toHaveBeenLastCalledWith('ad_clicked', { placement: 'results', source: 'ethicalads' });
+  });
+
+  it('reports no ad_clicked for a press before the fill is decided', () => {
+    installClient(true, 'pending');
+    render(<Card />);
+    fireEvent.click(screen.getByText('A text ad'));
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+  });
+
   it('falls back to the house card when the answer lists the placement as null', async () => {
     installClient(false, 'unfilled');
     render(<Card />);
