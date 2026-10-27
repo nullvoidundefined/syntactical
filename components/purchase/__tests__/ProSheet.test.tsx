@@ -3,20 +3,25 @@
 // a button per product carrying the store's localized price ("A year" and "Forever" with no
 // prices), the renewal note, and "Not now"; each button buys its own product id; every button is
 // disabled while a purchase runs; a message shows as an alert; and paywall_viewed is recorded once
-// per opening with the source it was opened from.
+// per opening with the source it was opened from. Under the purchase buttons, "Privacy policy" closes
+// the sheet and opens /privacy, and "Terms of use" opens Apple's standard EULA in the browser.
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
+import { router } from 'expo-router';
+import { Linking } from 'react-native';
 
 import '../../auth/__tests__/preloadNativeModal';
 import { trackEvent } from '../../../clients/analyticsClient';
 import { ProSheet, type ProSheetSource } from '../ProSheet';
 
 jest.mock('../../../clients/analyticsClient', () => ({ trackEvent: jest.fn() }));
+jest.mock('expo-router', () => require('../../../config/buildExpoRouterMock').buildExpoRouterMock({ push: jest.fn() }));
 
 const ANNUAL = 'syntactical.pro.annual';
 const LIFETIME = 'syntactical.pro.lifetime';
 // Localized and deliberately not the US list prices, so a hard-coded price cannot pass.
 const PRICES = { [ANNUAL]: '€21,99', [LIFETIME]: '€43,99' };
 const RENEWAL_NOTE = 'A year renews until you cancel; forever is one payment.';
+const APPLE_STANDARD_EULA = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
 
 type SheetProps = {
   isBuying: boolean;
@@ -110,5 +115,17 @@ describe('ProSheet on native', () => {
     const { rerender } = await render(<ProSheet {...buildProps({ source: 'ask_limit' })} />);
     await rerender(<ProSheet {...buildProps({ isBuying: true, message: 'x', source: 'ask_limit' })} />);
     expect(listPaywallViews()).toEqual([['paywall_viewed', { source: 'ask_limit' }]]);
+  });
+
+  it('links to the privacy policy and to the terms of use', async () => {
+    const props = buildProps();
+    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    await render(<ProSheet {...props} />);
+    await fireEvent.press(screen.getByRole('link', { name: 'Terms of use' }));
+    expect(openURL).toHaveBeenCalledWith(APPLE_STANDARD_EULA);
+    expect(props.onClose).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole('link', { name: 'Privacy policy' }));
+    expect(props.onClose).toHaveBeenCalledTimes(1);
+    expect(router.push).toHaveBeenCalledWith('/privacy');
   });
 });
