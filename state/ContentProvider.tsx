@@ -9,6 +9,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { logWarning } from '../clients/logClient';
+import { removeRetiredBankKeys } from '../services/content/bankStore';
 import { buildManifestQuery } from '../services/content/buildManifestQuery';
 import { BUNDLED_BANKS } from '../services/content/bundledBanks.generated';
 import { BUNDLED_MANIFEST } from '../services/content/bundledManifest.generated';
@@ -62,6 +63,7 @@ async function readAllCachedBanks(manifest: Manifest): Promise<Map<string, Cache
 }
 
 async function hydrateContent(): Promise<HydratedContent> {
+  await removeRetiredBankKeys();
   const manifest = (await readCachedManifest()) ?? BUNDLED;
   return { banks: await readAllCachedBanks(manifest), manifest };
 }
