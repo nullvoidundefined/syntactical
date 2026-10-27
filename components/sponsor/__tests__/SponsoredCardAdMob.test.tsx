@@ -117,6 +117,15 @@ describe('SponsoredCard with AdMob on native', () => {
     expect(screen.getByTestId('sponsored-slot')).toHaveStyle({ height: SPONSOR_SLOT_HEIGHT });
   });
 
+  it('sizes the ad view to the slot, and the slot clips, so a long headline cannot draw outside it', async () => {
+    await render(<Card />);
+    await act(async () =>
+      deliverAd(buildFakeNativeAd({ headline: 'A sponsor headline long enough to wrap onto two lines' })),
+    );
+    expect(screen.getByTestId('native-ad-view')).toHaveStyle({ height: '100%', width: '100%' });
+    expect(screen.getByTestId('sponsored-slot')).toHaveStyle({ height: SPONSOR_SLOT_HEIGHT, overflow: 'hidden' });
+  });
+
   it('wraps each asset, and only that view, in the matching NativeAsset', async () => {
     await render(<Card />);
     const ad = buildFakeNativeAd();

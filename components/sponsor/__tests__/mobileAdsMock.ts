@@ -5,7 +5,7 @@
 // no destroy on unmount), so the app's useSponsorNativeAd is what the Review Focus 20 test exercises.
 // NativeAdView and NativeAsset render plain views with test ids, so a suite can check what each asset wraps.
 import { createElement, type ReactNode } from 'react';
-import { View } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 
 type Step = 'resolve' | 'reject';
 
@@ -108,8 +108,8 @@ const NativeAd = {
   }),
 };
 
-function NativeAdView({ children }: { children: ReactNode; nativeAd: unknown }) {
-  return createElement(View, { testID: 'native-ad-view' }, children);
+function NativeAdView({ children, style }: { children: ReactNode; nativeAd: unknown; style?: StyleProp<ViewStyle> }) {
+  return createElement(View, { style, testID: 'native-ad-view' }, children);
 }
 
 function NativeAsset({ assetType, children }: { assetType: string; children: ReactNode }) {
