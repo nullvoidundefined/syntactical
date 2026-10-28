@@ -1,12 +1,39 @@
 // The home screen's study note: the note when ready, the answers still needed while gathering,
-// and nothing for a guest, while loading, or when unavailable.
-import { render, screen } from '@testing-library/react-native';
+// and nothing for a guest, while loading, or when unavailable. A ready note whose week named
+// misconceptions with questions on the device offers "Practice these", a review round of them.
+import type { Question } from '@syntactical/content-schema';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import type { StudyNoteState } from '../../../services/studyNote/types/StudyNoteState';
 import { useStudyNote } from '../../../state/useStudyNote';
 import { StudyNote } from '../StudyNote';
 
+const mockPush = jest.fn();
+jest.mock('expo-router', () =>
+  require('../../../config/buildExpoRouterMock').buildExpoRouterMock({
+    push: (...args: unknown[]) => mockPush(...args),
+  }),
+);
 jest.mock('../../../state/useStudyNote', () => ({ useStudyNote: jest.fn() }));
+
+function bool(id: string, misconceptionId: string): Question {
+  return {
+    answer: true,
+    id,
+    misconceptionId,
+    prompt: 'p',
+    provenance: { isHumanReviewed: false, source: 'original', validation: { method: 'judged', status: 'pending' } },
+    query: { explanation: 'e', title: 't' },
+    type: 'bool',
+  };
+}
+
+const mockQuestionIndex = new Map(
+  [bool('q-1', 'python.list-alias'), bool('q-2', 'python.truthy')].map(
+    (question) => [question.id, { difficulty: 'easy', language: 'python', question }] as const,
+  ),
+);
+jest.mock('../../../state/useReviewQueue', () => ({ useReviewQueue: () => ({ questionIndex: mockQuestionIndex }) }));
 
 const mockUseStudyNote = jest.mocked(useStudyNote);
 
@@ -14,6 +41,10 @@ function renderWith(state: StudyNoteState) {
   mockUseStudyNote.mockReturnValue(state);
   return render(<StudyNote />);
 }
+
+afterEach(() => {
+  mockPush.mockReset();
+});
 
 describe('StudyNote', () => {
   it('shows the note in a labelled region', async () => {
@@ -23,15 +54,42 @@ describe('StudyNote', () => {
     expect(screen.getByText('You tightened up on list aliasing.')).toBeTruthy();
   });
 
-  it('says how many answers the note still needs', async () => {
+  it("opens a review round of the note's misconceptions that have questions on the device", async () => {
+    await renderWith({
+      misconceptionIds: ['python.truthy', 'python.not-downloaded', 'python.list-alias'],
+      note: 'A note.',
+      status: 'ready',
+    });
+
+    await fireEvent.press(screen.getByRole('link', { name: 'Practice these' }));
+
+    expect(mockPush).toHaveBeenCalledWith({
+      params: { misconceptions: 'python.truthy,python.list-alias' },
+      pathname: '/review',
+    });
+  });
+
+  it.each([
+    ['names no misconception', []],
+    ['names only misconceptions with no questions on the device', ['python.not-downloaded']],
+  ])('offers no practice when the note %s', async (_name, misconceptionIds) => {
+    await renderWith({ misconceptionIds, note: 'A note.', status: 'ready' });
+
+    expect(screen.getByText('A note.')).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Practice these' })).toBeNull();
+  });
+
+  it('says how many answers the note still needs, with no practice', async () => {
     await renderWith({ remaining: 1, status: 'gathering' });
 
     expect(screen.getByText('Answer 1 more question this week for your study note.')).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Practice these' })).toBeNull();
   });
 
   it('renders nothing when hidden', async () => {
     await renderWith({ status: 'hidden' });
 
     expect(screen.queryByLabelText("This week's study note")).toBeNull();
+    expect(screen.queryByRole('link')).toBeNull();
   });
 });
