@@ -19,6 +19,7 @@ Last updated: the date area 4 merges (Pro in the app: `docs/superpowers/plans/20
 | Review rounds                   | Complete | `app/review.tsx` builds a round from due questions (`services/review/buildReviewQueue.ts`, `@syntactical/progress` with `ts-fsrs`); only missed questions are scheduled.                                                                                                                                                 |
 | Weakness report                 | Complete | `components/stats/WeaknessReport.tsx`, `services/progress/buildWeaknessReport.ts`: the most-missed misconceptions.                                                                                                                                                                                                       |
 | Weekly study note               | Complete | `components/stats/StudyNote.tsx` on the home screen for a signed-in user; `GET /v1/study-note` (`server/src/routes/studyNote.ts`) writes one note per local week with Claude Haiku once 20 answers sync.                                                                                                                 |
+| Practice the study note         | Complete | `components/stats/StudyNote.tsx` shows "Practice these" when the note's misconceptions (`misconceptionIds`, stored with the note) have local questions; `app/review.tsx?misconceptions=` plays up to 10 of them, interleaved.                                                                                            |
 
 ## Progress
 
