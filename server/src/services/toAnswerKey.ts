@@ -30,4 +30,4 @@ function toAnswerKey(questions: QuestionIndex): AnswerKey {
   );
 }
 
-export { toAnswerKey };
+export { toAnswerKey, toAnswerKeyEntry };
