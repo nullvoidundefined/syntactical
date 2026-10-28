@@ -8,10 +8,11 @@
 // limit. After a wrong answer (canExplainMistake) it first offers "Explain my mistake": one tap,
 // no typing, asks the server to explain the learner's choice; the explanation shows where an
 // answer does, costs one ask, fails and meets the limit exactly as an ask does, and the button goes
-// once it has answered. The drawer keys the panel by question, so nothing carries over to the next
+// once it has answered, moving focus on the web to the explanation so it does not drop to the
+// document. The drawer keys the panel by question, so nothing carries over to the next
 // card, and a reply that lands after the panel is gone is dropped.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, Text, TextInput, View } from 'react-native';
 
 import { ASK_MESSAGE_MAX_LENGTH } from '../../constants/appConfig';
 import { requestAskAnswer, requestMistakeExplanation } from '../../services/ask/requestAskAnswer';
@@ -55,6 +56,7 @@ export function AskPanel({ canExplainMistake = false, onSeePro, target }: AskPan
   const [failure, setFailure] = useState<Failure | null>(null);
   const [isOfferOpen, setIsOfferOpen] = useState(false);
   const isMounted = useRef(true);
+  const answerRef = useRef<View>(null);
   // A learner who is now Pro is past the free limit: its copy and See Pro go.
   const closeOffer = useCallback((reason: ProOfferCloseReason) => {
     setIsOfferOpen(false);
@@ -67,6 +69,11 @@ export function AskPanel({ canExplainMistake = false, onSeePro, target }: AskPan
     },
     [],
   );
+
+  // The Explain my mistake button has gone; on the web, focus moves to the explanation it wrote.
+  useEffect(() => {
+    if (hasExplained && Platform.OS === 'web') (answerRef.current as unknown as HTMLElement | null)?.focus();
+  }, [hasExplained]);
 
   const isBusy = busy !== null;
   const trimmed = message.trim();
@@ -142,7 +149,7 @@ export function AskPanel({ canExplainMistake = false, onSeePro, target }: AskPan
       <View aria-live="polite">
         {failure ? <Text className="mt-3 text-sm text-amber">{describeFailure(failure)}</Text> : null}
         {answered ? (
-          <View className="mt-4">
+          <View ref={answerRef} tabIndex={-1} className="mt-4">
             <Text className="mb-2 font-mono text-xs text-muted">{answered.asked}</Text>
             <Text className="text-sm leading-relaxed text-ink">{answered.answer}</Text>
             <Text className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted">
