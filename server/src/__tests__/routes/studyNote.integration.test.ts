@@ -246,13 +246,17 @@ describe.skipIf(SKIP_DATABASE_TESTS)('GET /v1/study-note', () => {
       },
     };
     const signed = await signIn(model);
-    await insertAnswers(signed.userId, STUDY_NOTE.MIN_ANSWERS, signed.clock.now());
+    await insertAnswers(signed.userId, STUDY_NOTE.MIN_ANSWERS, signed.clock.now(), 4);
 
     const [left, right] = await Promise.all([getNote(signed), getNote(signed)]);
 
     expect(left.body.data.note).toBe(right.body.data.note);
-    const { rows } = await database.pool.query('SELECT note FROM study_notes WHERE user_id = $1', [signed.userId]);
-    expect(rows).toEqual([{ note: left.body.data.note }]);
+    expect(left.body.data.misconceptionIds).toEqual([MISCONCEPTION]);
+    expect(right.body.data.misconceptionIds).toEqual(left.body.data.misconceptionIds);
+    const { rows } = await database.pool.query('SELECT note, misconception_ids FROM study_notes WHERE user_id = $1', [
+      signed.userId,
+    ]);
+    expect(rows).toEqual([{ misconception_ids: left.body.data.misconceptionIds, note: left.body.data.note }]);
   });
 
   describe('with a fallback provider', () => {
