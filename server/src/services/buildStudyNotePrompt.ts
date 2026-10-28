@@ -1,6 +1,7 @@
 // The prompt for one weekly study note. The system prompt is fixed; the week's summary goes in
 // the user turn as JSON inside tags. The summary holds only counts, labels, and misconception
-// descriptions from the public manifest, never question text or anything the learner typed.
+// descriptions from the public manifest, never question text or anything the learner typed. The
+// misconception ids stay out of it: the note names misconceptions by description.
 import type { ModelPrompt } from '../clients/modelProvider.js';
 import type { StudySummary } from '../types/StudySummary.js';
 
@@ -15,7 +16,12 @@ const SYSTEM = [
 ].join(' ');
 
 function buildStudyNotePrompt(summary: StudySummary): ModelPrompt {
-  const user = ['<week_summary>', JSON.stringify(summary, null, 2), '</week_summary>'].join('\n');
+  const missedMisconceptions = summary.missedMisconceptions.map(({ description, misses }) => ({ description, misses }));
+  const user = [
+    '<week_summary>',
+    JSON.stringify({ ...summary, missedMisconceptions }, null, 2),
+    '</week_summary>',
+  ].join('\n');
   return { system: SYSTEM, user };
 }
 

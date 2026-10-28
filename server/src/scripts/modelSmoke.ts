@@ -43,8 +43,16 @@ const STUDY_SUMMARY: StudySummary = {
   ],
   correct: 16,
   missedMisconceptions: [
-    { description: 'Thinks slicing a list copies the nested lists inside it too.', misses: 3 },
-    { description: 'Expects await inside forEach to wait before the next item runs.', misses: 2 },
+    {
+      description: 'Thinks slicing a list copies the nested lists inside it too.',
+      id: 'python.slice-copies-nested',
+      misses: 3,
+    },
+    {
+      description: 'Expects await inside forEach to wait before the next item runs.',
+      id: 'javascript.await-in-foreach',
+      misses: 2,
+    },
   ],
   reviewAnswers: 5,
 };

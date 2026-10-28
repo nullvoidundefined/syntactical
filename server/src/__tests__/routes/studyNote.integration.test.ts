@@ -153,6 +153,48 @@ describe.skipIf(SKIP_DATABASE_TESTS)('GET /v1/study-note', () => {
     expect(rows).toHaveLength(1);
   });
 
+  it('returns the ids of the misconceptions the summary named, and the same ids all week', async () => {
+    const signed = await signIn();
+    await insertAnswers(signed.userId, STUDY_NOTE.MIN_ANSWERS, signed.clock.now(), 4);
+
+    const first = await getNote(signed);
+    // The stored note's ids are served again later in the week, after another miss.
+    await insertAnswers(signed.userId, 1, signed.clock.now(), 1);
+    const again = await getNote(signed);
+
+    expect(first.body.data.misconceptionIds).toEqual([MISCONCEPTION]);
+    expect(again.body.data.misconceptionIds).toEqual([MISCONCEPTION]);
+  });
+
+  it('returns no ids when the week revealed no misconception', async () => {
+    const signed = await signIn();
+    await insertAnswers(signed.userId, STUDY_NOTE.MIN_ANSWERS, signed.clock.now());
+
+    const response = await getNote(signed);
+
+    expect(response.body.data.misconceptionIds).toEqual([]);
+  });
+
+  it('still serves a note stored before notes kept their ids, with no ids', async () => {
+    const model = createFakeModelProvider();
+    const signed = await signIn(model);
+    await insertAnswers(signed.userId, STUDY_NOTE.MIN_ANSWERS, signed.clock.now(), 4);
+    const written = await getNote(signed);
+    const { weekStart } = written.body.data;
+    await database.pool.query('DELETE FROM study_notes WHERE user_id = $1', [signed.userId]);
+    await database.pool.query('INSERT INTO study_notes (user_id, week_start, note) VALUES ($1, $2, $3)', [
+      signed.userId,
+      weekStart,
+      'An older note.',
+    ]);
+
+    const response = await getNote(signed);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toEqual({ misconceptionIds: [], note: 'An older note.', status: 'ready', weekStart });
+    expect(model.prompts).toHaveLength(1);
+  });
+
   it("keys the week by the user's timezone", async () => {
     const signed = await signIn();
     await database.pool.query("UPDATE users SET timezone = 'Pacific/Kiritimati' WHERE id = $1", [signed.userId]);
@@ -204,13 +246,17 @@ describe.skipIf(SKIP_DATABASE_TESTS)('GET /v1/study-note', () => {
       },
     };
     const signed = await signIn(model);
-    await insertAnswers(signed.userId, STUDY_NOTE.MIN_ANSWERS, signed.clock.now());
+    await insertAnswers(signed.userId, STUDY_NOTE.MIN_ANSWERS, signed.clock.now(), 4);
 
     const [left, right] = await Promise.all([getNote(signed), getNote(signed)]);
 
     expect(left.body.data.note).toBe(right.body.data.note);
-    const { rows } = await database.pool.query('SELECT note FROM study_notes WHERE user_id = $1', [signed.userId]);
-    expect(rows).toEqual([{ note: left.body.data.note }]);
+    expect(left.body.data.misconceptionIds).toEqual([MISCONCEPTION]);
+    expect(right.body.data.misconceptionIds).toEqual(left.body.data.misconceptionIds);
+    const { rows } = await database.pool.query('SELECT note, misconception_ids FROM study_notes WHERE user_id = $1', [
+      signed.userId,
+    ]);
+    expect(rows).toEqual([{ misconception_ids: left.body.data.misconceptionIds, note: left.body.data.note }]);
   });
 
   describe('with a fallback provider', () => {

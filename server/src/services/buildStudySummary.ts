@@ -50,7 +50,7 @@ function buildStudySummary(
   const missedMisconceptions = [...misses]
     .sort(([leftId, left], [rightId, right]) => right - left || (leftId < rightId ? -1 : 1))
     .slice(0, STUDY_NOTE.TOP_MISCONCEPTIONS)
-    .map(([id, count]) => ({ description: labels.misconceptions.get(id) ?? id, misses: count }));
+    .map(([id, count]) => ({ description: labels.misconceptions.get(id) ?? id, id, misses: count }));
   return {
     answers: events.length,
     banks: [...banks]

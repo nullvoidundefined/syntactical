@@ -1,5 +1,5 @@
 // The study note's summary: totals and per-bank counts, review answers, and the misconceptions
-// wrong choices revealed most, with their manifest descriptions.
+// wrong choices revealed most, with their ids and manifest descriptions.
 import type { Question } from '@syntactical/content-schema';
 import { describe, expect, it } from 'vitest';
 
@@ -66,9 +66,9 @@ describe('buildStudySummary', () => {
       ],
       correct: 1,
       missedMisconceptions: [
-        { description: 'A', misses: 2 },
-        { description: 'B', misses: 1 },
-        { description: 'C', misses: 1 },
+        { description: 'A', id: 'python.a', misses: 2 },
+        { description: 'B', id: 'python.b', misses: 1 },
+        { description: 'C', id: 'python.c', misses: 1 },
       ],
       reviewAnswers: 1,
     });
