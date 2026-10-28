@@ -4,9 +4,12 @@
 // holds STUDY_NOTE.MIN_ANSWERS answers, then served from study_notes for the rest of the week.
 //
 // Answers { data: { status: 'gathering', remaining } } while answers are missing (nothing is
-// stored, so the note is written later that week), { data: { status: 'ready', note, weekStart } }
-// once written, 503 STUDY_NOTE_UNAVAILABLE when no model is configured or the call fails or
-// declines (nothing is stored), 401 without a session, and 429 past the per-user rate limit.
+// stored, so the note is written later that week), { data: { status: 'ready', note, weekStart,
+// misconceptionIds } } once written (the ids of the misconceptions the week's summary named, most
+// missed first, at most STUDY_NOTE.TOP_MISCONCEPTIONS, stored with the note so the week serves the
+// same ids; empty for a note stored before ids were kept), 503 STUDY_NOTE_UNAVAILABLE when no
+// model is configured or the call fails or declines (nothing is stored), 401 without a session,
+// and 429 past the per-user rate limit.
 // Responses are Cache-Control: private, no-store.
 import { toLocalDate } from '@syntactical/progress';
 import { Router } from 'express';
@@ -69,7 +72,7 @@ function createStudyNoteRouter(deps: ResolvedStudyNoteDeps, logger: Logger): Rou
       const weekStart = toWeekStart(toLocalDate(current.toISOString(), user.timezone ?? PROGRESS_DEFAULTS.TIMEZONE));
       const stored = await readStudyNote(database, userId, weekStart);
       if (stored !== null) {
-        res.status(OK).json({ data: { note: stored, status: 'ready', weekStart } });
+        res.status(OK).json({ data: { ...stored, status: 'ready', weekStart } });
         return;
       }
       const since = new Date(current.getTime() - STUDY_NOTE.WINDOW_MS);
@@ -82,9 +85,10 @@ function createStudyNoteRouter(deps: ResolvedStudyNoteDeps, logger: Logger): Rou
         sendError(res, SERVICE_UNAVAILABLE, ERROR_CODES.STUDY_NOTE.UNAVAILABLE, 'Study notes are unavailable');
         return;
       }
+      const summary = buildStudySummary(events, questions, labels);
       let note: string | null = null;
       try {
-        note = await modelProvider.answer(buildStudyNotePrompt(buildStudySummary(events, questions, labels)));
+        note = await modelProvider.answer(buildStudyNotePrompt(summary));
       } catch {
         // No error object: an SDK error can carry the request.
         logger.warn('study note model request failed');
@@ -93,8 +97,9 @@ function createStudyNoteRouter(deps: ResolvedStudyNoteDeps, logger: Logger): Rou
         sendError(res, SERVICE_UNAVAILABLE, ERROR_CODES.STUDY_NOTE.UNAVAILABLE, 'No study note is available right now');
         return;
       }
-      const kept = await storeStudyNote(database, userId, weekStart, note);
-      res.status(OK).json({ data: { note: kept, status: 'ready', weekStart } });
+      const misconceptionIds = summary.missedMisconceptions.map(({ id }) => id);
+      const kept = await storeStudyNote(database, userId, weekStart, { misconceptionIds, note });
+      res.status(OK).json({ data: { ...kept, status: 'ready', weekStart } });
     },
   );
 
