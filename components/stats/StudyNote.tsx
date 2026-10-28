@@ -25,9 +25,9 @@ function PracticeLink({ misconceptionIds }: { misconceptionIds: string[] }) {
   return (
     <Pressable
       role="link"
-      aria-label="Practice these"
+      aria-label="Practice this week's study note misconceptions"
       onPress={() => router.push({ params: { misconceptions: misconceptionIds.join(',') }, pathname: '/review' })}
-      className="mt-3 self-start rounded border border-line px-3 py-2"
+      className="mt-3 min-h-[44px] justify-center self-start rounded border border-line px-3 py-2"
     >
       <Text className="font-mono text-xs uppercase tracking-widest text-ink">Practice these</Text>
     </Pressable>
