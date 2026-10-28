@@ -1,11 +1,12 @@
 // POST ask: the answer, the day's limit, and the answers left on 200; the daily limit (with the
 // tier, its limit, and the Pro limit the server names) or the burst limit on 429; unavailable for
 // anything else, never a throw. Asking needs only a session, so a 403 is no longer a purchase
-// refusal of its own.
+// refusal of its own. An "Explain my mistake" request posts the target with { mode: 'explain' } in
+// place of a message and reads the reply the same way.
 import { apiFetch } from '../../../clients/apiClient';
 import { ApiUnavailable } from '../../../clients/ApiUnavailable';
 import { ASK_FETCH_TIMEOUT_MS } from '../../../constants/appConfig';
-import { requestAskAnswer } from '../requestAskAnswer';
+import { requestAskAnswer, requestMistakeExplanation } from '../requestAskAnswer';
 
 jest.mock('../../../clients/apiClient', () => ({ apiFetch: jest.fn() }));
 
@@ -109,5 +110,45 @@ describe('requestAskAnswer', () => {
     mockApiFetch.mockRejectedValueOnce(new ApiUnavailable('API request timed out'));
 
     await expect(requestAskAnswer(target, 'Why?')).resolves.toEqual({ reason: 'unavailable', status: 'failed' });
+  });
+});
+
+describe('requestMistakeExplanation', () => {
+  it('posts the target with the explain mode and no message, with the longer ask timeout', async () => {
+    reply(200, { data: { answer: 'Because.', limit: 5, proLimit: 20, remaining: 4, tier: 'free' } });
+
+    await expect(requestMistakeExplanation(target)).resolves.toEqual({
+      answer: 'Because.',
+      limit: 5,
+      remaining: 4,
+      status: 'answered',
+    });
+    expect(mockApiFetch).toHaveBeenCalledWith('ask', {
+      body: { ...target, mode: 'explain' },
+      method: 'POST',
+      timeoutMs: ASK_FETCH_TIMEOUT_MS,
+    });
+  });
+
+  it('maps the daily limit to limit with its tier and both limits, as an ask does', async () => {
+    reply(429, { error: { code: 'ASK_DAILY_LIMIT_REACHED', limit: 5, proLimit: 20, requestId: 'r', tier: 'free' } });
+
+    await expect(requestMistakeExplanation(target)).resolves.toEqual({
+      limit: 5,
+      proLimit: 20,
+      reason: 'limit',
+      status: 'failed',
+      tier: 'free',
+    });
+  });
+
+  it('maps the burst limit to busy and anything else to unavailable, never throwing', async () => {
+    reply(429, { error: { code: 'RATE_LIMIT_EXCEEDED' } });
+    reply(503, { error: { code: 'ASK_UNAVAILABLE' } });
+    mockApiFetch.mockRejectedValueOnce(new ApiUnavailable('API request timed out'));
+
+    await expect(requestMistakeExplanation(target)).resolves.toEqual({ reason: 'busy', status: 'failed' });
+    await expect(requestMistakeExplanation(target)).resolves.toEqual({ reason: 'unavailable', status: 'failed' });
+    await expect(requestMistakeExplanation(target)).resolves.toEqual({ reason: 'unavailable', status: 'failed' });
   });
 });

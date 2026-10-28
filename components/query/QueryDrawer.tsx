@@ -3,7 +3,8 @@
 // not give the answer away: on an easy card the syntax teaches the very rule being tested. After
 // they answer it is the full explanation: a wrong choice's rationale first, then the title, the
 // syntax, the explanation, the tags, and, for judged cards, the first evidence source; then, when
-// the round passes an ask target (any signed-in learner), the "Ask about this card" box. Slides in unless reduced motion
+// the round passes an ask target (any signed-in learner), the "Ask about this card" box, which
+// after a wrong answer (isMistake) also offers "Explain my mistake". Slides in unless reduced motion
 // is requested. The panel pads by the device's safe-area insets, since an Android modal draws
 // under the status bar and gesture bar. On the web, See Pro at the Ask limit closes the drawer and
 // opens the Pro sheet from here once the drawer has gone: react-native-web's Modal traps focus and
@@ -31,13 +32,15 @@ type QueryDrawerProps = {
   evidenceSource?: EvidenceSource;
   grammar: Grammar;
   isAnswered: boolean;
+  // The learner's answer was wrong; with an ask target the box offers "Explain my mistake".
+  isMistake?: boolean;
   isOpen: boolean;
   onClose: () => void;
   query: Query;
 };
 
 export function QueryDrawer(props: QueryDrawerProps) {
-  const { askTarget, chosenRationale, evidenceSource, grammar, isAnswered, isOpen, onClose, query } = props;
+  const { askTarget, chosenRationale, evidenceSource, grammar, isAnswered, isMistake, isOpen, onClose, query } = props;
   const isReducedMotion = useIsReducedMotion();
   const insets = useContext(SafeAreaInsetsContext);
   const { docs, explanation, syntax, tags, title } = query;
@@ -122,7 +125,12 @@ export function QueryDrawer(props: QueryDrawerProps) {
               {docs?.length ? <DocLinks docs={docs} /> : null}
               {isAnswered && evidenceSource ? <SourceLink source={evidenceSource} /> : null}
               {isAnswered && askTarget ? (
-                <AskPanel key={`${askTarget.bankKey}/${askTarget.questionId}`} onSeePro={seePro} target={askTarget} />
+                <AskPanel
+                  key={`${askTarget.bankKey}/${askTarget.questionId}`}
+                  canExplainMistake={isMistake}
+                  onSeePro={seePro}
+                  target={askTarget}
+                />
               ) : null}
             </ScrollView>
           </View>

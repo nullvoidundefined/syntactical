@@ -16,7 +16,7 @@ describe('account deletion page facts checked against the code', () => {
 
     expect(
       screen.getByText(
-        /^Questions you asked about a card and the weekly summaries behind your study notes, kept by Anthropic, and by OpenAI when a request was sent to it, under their API data-retention terms\./,
+        /^Questions you asked about a card, the choices you sent with Explain my mistake, and the weekly summaries behind your study notes, kept by Anthropic, and by OpenAI when a request was sent to it, under their API data-retention terms\./,
       ),
     ).toBeTruthy();
   });

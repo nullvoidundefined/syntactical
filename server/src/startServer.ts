@@ -126,6 +126,7 @@ async function startServer(source: NodeJS.ProcessEnv, options: StartOptions = {}
       .filter(Boolean),
     ask: {
       database: pool,
+      misconceptions: labels.misconceptions,
       ...(modelProvider ? { modelProvider } : {}),
       questions,
       rateLimitKeySecret: env.RATE_LIMIT_KEY_SECRET,

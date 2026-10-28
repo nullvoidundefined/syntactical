@@ -1,9 +1,10 @@
-// Sends one learner question about a quiz question to POST ask and reads the reply. Never throws:
-// an unreachable server, a timeout, or an unexpected reply is 'unavailable'. A 200 carries the
-// answer with the day's limit and the answers left of it; a 429 is the daily limit (with the tier,
-// its limit, and the Pro limit the server names) or the per-minute burst limit. Asking needs only a
-// session, so there is no purchase refusal to map. The limits are the server's: the app keeps no
-// copy of them.
+// Sends one learner question about a quiz question to POST ask and reads the reply, or, for
+// "Explain my mistake", the question and the learner's wrong choice with { mode: 'explain' } in
+// place of a message (the server writes that instruction). Never throws: an unreachable server, a
+// timeout, or an unexpected reply is 'unavailable'. A 200 carries the answer with the day's limit
+// and the answers left of it; a 429 is the daily limit (with the tier, its limit, and the Pro limit
+// the server names) or the per-minute burst limit. Asking needs only a session, so there is no
+// purchase refusal to map. The limits are the server's: the app keeps no copy of them.
 import { apiFetch } from '../../clients/apiClient';
 import { readErrorCode } from '../../clients/readErrorCode';
 import { ASK_FETCH_TIMEOUT_MS, HTTP_STATUS_OK, HTTP_STATUS_TOO_MANY_REQUESTS } from '../../constants/appConfig';
@@ -46,11 +47,14 @@ function readDailyLimit(body: unknown): Extract<AskResult, { reason: 'limit' }> 
   };
 }
 
-export async function requestAskAnswer(target: AskTarget, message: string): Promise<AskResult> {
+// An ask carries the learner's message; an explanation carries the explain mode instead.
+type AskRequest = AskTarget & ({ message: string } | { mode: 'explain' });
+
+async function postAsk(request: AskRequest): Promise<AskResult> {
   let response: Awaited<ReturnType<typeof apiFetch>>;
   try {
     response = await apiFetch('ask', {
-      body: { ...target, message },
+      body: request,
       method: 'POST',
       timeoutMs: ASK_FETCH_TIMEOUT_MS,
     });
@@ -66,4 +70,12 @@ export async function requestAskAnswer(target: AskTarget, message: string): Prom
     return readErrorCode(body) === DAILY_LIMIT_CODE ? readDailyLimit(body) : { reason: 'busy', status: 'failed' };
   }
   return { reason: 'unavailable', status: 'failed' };
+}
+
+export function requestAskAnswer(target: AskTarget, message: string): Promise<AskResult> {
+  return postAsk({ ...target, message });
+}
+
+export function requestMistakeExplanation(target: AskTarget): Promise<AskResult> {
+  return postAsk({ ...target, mode: 'explain' });
 }

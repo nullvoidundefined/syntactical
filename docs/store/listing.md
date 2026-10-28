@@ -8,7 +8,7 @@ Drafts for the App Store and Google Play listings. Every claim below matches wha
 - Each track has three difficulties, Easy, Medium, and Hard: 36 question banks. Every bank is free and needs no account.
 - Questions are multiple choice, true/false, or A/B. After a wrong answer, Explain opens the query behind the question (syntax, explanation, tags).
 - Signed-in users can ask about a card after answering it: 5 asks a day free, 20 with Pro. Signed-in users also get a weekly study note on the home screen.
-- Ask and the study note send the card and the learner's question, or the week's summary, to Anthropic to write the answer, or to OpenAI when Anthropic is unavailable.
+- Ask and the study note send the card and the learner's question (with Explain my mistake, their choice on a card they got wrong), or the week's summary, to Anthropic to write the answer, or to OpenAI when Anthropic is unavailable.
 - Streak, XP, and a daily goal of 10, 20, or 50 XP.
 - Review rounds replay missed questions on a spaced schedule, built on the device, so they work offline.
 - Easy banks ship with the app and work offline from the first launch; Medium and Hard download once and then work offline.
@@ -56,7 +56,7 @@ Syntactical Pro
 Sponsored cards
 Free users see a sponsored card on the results screen from the third round, then every third round, and one in the track list, in the app's own style and labelled Sponsored. Never on a question, never during a round, never in review rounds. The ads are non-personalised: the app does not track you and shows no tracking prompt. Google AdMob receives your device's IP address, from which it may infer an approximate location, to serve and count them.
 
-Your answers and progress stay on your device until you sign in. Usage analytics are anonymous until you sign in, and are never tied to your email. When you ask about a card or get your study note, the card and your question or your week's summary go to Anthropic to write the answer, or to OpenAI when Anthropic is unavailable.
+Your answers and progress stay on your device until you sign in. Usage analytics are anonymous until you sign in, and are never tied to your email. When you ask about a card, use Explain my mistake, or get your study note, the card and your question, your choice on a card you got wrong, or your week's summary go to Anthropic to write the answer, or to OpenAI when Anthropic is unavailable.
 
 Privacy policy: https://syntactical.dev/privacy
 Terms of use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
