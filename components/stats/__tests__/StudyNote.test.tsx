@@ -17,7 +17,7 @@ function renderWith(state: StudyNoteState) {
 
 describe('StudyNote', () => {
   it('shows the note in a labelled region', async () => {
-    await renderWith({ note: 'You tightened up on list aliasing.', status: 'ready' });
+    await renderWith({ misconceptionIds: [], note: 'You tightened up on list aliasing.', status: 'ready' });
 
     expect(screen.getByLabelText("This week's study note")).toBeTruthy();
     expect(screen.getByText('You tightened up on list aliasing.')).toBeTruthy();

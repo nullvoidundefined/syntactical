@@ -45,11 +45,11 @@ describe('useStudyNote', () => {
 
   it('returns the fetched note for a signed-in user', async () => {
     mockUserId.mockReturnValue('user-1');
-    mockFetch.mockResolvedValueOnce({ note: 'Good week.', status: 'ready' });
+    mockFetch.mockResolvedValueOnce({ misconceptionIds: [], note: 'Good week.', status: 'ready' });
 
     await renderProbe();
 
-    await waitFor(() => expect(latest.state).toEqual({ note: 'Good week.', status: 'ready' }));
+    await waitFor(() => expect(latest.state).toEqual({ misconceptionIds: [], note: 'Good week.', status: 'ready' }));
   });
 
   it('stays hidden when the fetch fails', async () => {
