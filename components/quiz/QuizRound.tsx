@@ -273,6 +273,7 @@ export function QuizRound(props: QuizRoundProps) {
         evidenceSource={readEvidenceSource(currentQuestion)}
         chosenRationale={explainRationale}
         isAnswered={isAnswered}
+        isMistake={isAnswered && !wasCorrect}
         isOpen={isQueryOpen}
         query={query}
         grammar={questionGrammar}

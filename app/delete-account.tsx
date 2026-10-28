@@ -45,7 +45,7 @@ export default function DeleteAccountScreen() {
             "Google AdMob's records of the sponsored cards it served to your device on iPhone and Android, kept by Google. They are not tied to your account.",
             'The RevenueCat customer record, kept by RevenueCat.',
             "Resend's record of the sign-in emails it sent, kept by Resend.",
-            'Questions you asked about a card and the weekly summaries behind your study notes, kept by Anthropic, and by OpenAI when a request was sent to it, under their API data-retention terms. They carry no email or user ID.',
+            'Questions you asked about a card, the choices you sent with Explain my mistake, and the weekly summaries behind your study notes, kept by Anthropic, and by OpenAI when a request was sent to it, under their API data-retention terms. They carry no email or user ID.',
             'Purchase transactions kept by Apple and Google.',
           ]}
         />

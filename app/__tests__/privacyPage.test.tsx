@@ -56,10 +56,24 @@ describe('privacy page facts checked against the code', () => {
     expect(screen.queryByText(/question banks you (own|bought)/)).toBeNull();
   });
 
-  it('lists the questions asked in Ask and the weekly study note among what is collected', async () => {
+  it('lists the questions asked in Ask, the choice sent with Explain my mistake, and the weekly study note among what is collected', async () => {
     const screen = await render(<PrivacyScreen />);
 
-    expect(screen.getByText(/the questions you type about a card in Ask, and your weekly study note\./)).toBeTruthy();
+    expect(
+      screen.getByText(
+        /the questions you type about a card in Ask, your choice on a card you got wrong when you use Explain my mistake, and your weekly study note\. A question or that choice is sent with the card to Anthropic/,
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(
+        'To answer the questions you ask about a card, to explain a mistake you ask about, and to write your weekly study note.',
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(
+        /^Anthropic: answers a question you ask about a card, explains your choice on a card you got wrong when you use Explain my mistake, and writes your weekly study note\./,
+      ),
+    ).toBeTruthy();
     expect(
       screen.getByText(/Your study note is stored with your account until a newer note replaces it\./),
     ).toBeTruthy();
@@ -78,7 +92,7 @@ describe('privacy page facts checked against the code', () => {
     expect(screen.getByText(/goal changes, study notes, and unused sign-in codes/)).toBeTruthy();
     expect(
       screen.getByText(
-        /the questions you asked about a card and the weekly summaries behind your study notes, kept by Anthropic, and by OpenAI when a request was sent to it, under their API data-retention terms/,
+        /the questions you asked about a card, the choices you sent with Explain my mistake, and the weekly summaries behind your study notes, kept by Anthropic, and by OpenAI when a request was sent to it, under their API data-retention terms/,
       ),
     ).toBeTruthy();
   });

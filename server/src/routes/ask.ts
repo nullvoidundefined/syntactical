@@ -1,14 +1,18 @@
 // POST /v1/ask: answers a learner's follow-up question about one quiz question, using Claude
 // with the question, its answer key, and its explanation as context. Any signed-in user may ask
-// about any bank's question. Each user gets ASK.DAILY_LIMIT.FREE answers per UTC day, or
+// about any bank's question. In explain mode ("Explain my mistake": { mode: 'explain' } and a wrong
+// choice, no message) the server writes the instruction itself: why that choice is wrong and the
+// answer right, from the card, the choice's rationale, and its misconception; it costs one answer
+// like any other ask. Each user gets ASK.DAILY_LIMIT.FREE answers per UTC day, or
 // ASK.DAILY_LIMIT.PRO with Pro (hasPro, read on every ask, so Pro applies the same day), counting
 // only answers given, under a per-minute burst limit.
 //
-// Order: session (401), burst limit (429), body (400), question lookup (404), model configured
-// (503), daily limit for the user's tier (429 ASK_DAILY_LIMIT_REACHED, carrying tier, limit, and
-// proLimit), model call (503 ASK_UNAVAILABLE on failure or decline, with the answer handed back).
-// Answers { data: { answer, limit, proLimit, remaining, tier } }, so the app words its upsell from
-// the tier and the server's numbers. The learner's message is never logged.
+// Order: session (401), burst limit (429), body (400), question lookup (404), choice in range and,
+// to explain, wrong (400), model configured (503), daily limit for the user's tier (429
+// ASK_DAILY_LIMIT_REACHED, carrying tier, limit, and proLimit), model call (503 ASK_UNAVAILABLE on
+// failure or decline, with the answer handed back). Answers { data: { answer, limit, proLimit,
+// remaining, tier } }, so the app words its upsell from the tier and the server's numbers. The
+// learner's message is never logged.
 import { Router } from 'express';
 import type { Logger } from 'pino';
 
@@ -19,18 +23,17 @@ import { createRateLimit } from '../middleware/rateLimit.js';
 import { keyOfUser } from '../middleware/rateLimitKeys.js';
 import { createRequireSession } from '../middleware/requireSession.js';
 import { askSchemas } from '../schemas/askSchemas.js';
-import { buildAskPrompt } from '../services/buildAskPrompt.js';
+import { buildAskPrompt, buildExplainPrompt } from '../services/buildAskPrompt.js';
 import { hasPro } from '../services/hasPro.js';
 import { releaseAskUsage } from '../services/releaseAskUsage.js';
 import { reserveAskUsage } from '../services/reserveAskUsage.js';
+import { toAnswerKeyEntry } from '../services/toAnswerKey.js';
 
 import type { ResolvedAskDeps } from './askDeps.js';
 
 const {
   STATUS: { BAD_REQUEST, NOT_FOUND, OK, SERVICE_UNAVAILABLE, TOO_MANY_REQUESTS },
 } = HTTP;
-
-const BOOL_CHOICE_COUNT = 2;
 
 // The user's Ask tier, read on every ask; the app branches its copy on it.
 type AskTier = 'free' | 'pro';
@@ -40,7 +43,7 @@ function toUsageDate(now: Date): string {
 }
 
 function createAskRouter(deps: ResolvedAskDeps, logger: Logger): Router {
-  const { database, modelProvider, now, questions, rateLimitKeySecret } = deps;
+  const { database, misconceptions, modelProvider, now, questions, rateLimitKeySecret } = deps;
   const router = Router();
   const requireSession = createRequireSession({ database, now });
   const perUser = createRateLimit({
@@ -61,14 +64,16 @@ function createAskRouter(deps: ResolvedAskDeps, logger: Logger): Router {
       sendError(res, BAD_REQUEST, ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body');
       return;
     }
-    const { bankKey, choiceIndex, message, questionId } = data;
+    const { bankKey, choiceIndex, questionId } = data;
     const question = questions.get(bankKey)?.get(questionId);
     if (!question) {
       sendError(res, NOT_FOUND, ERROR_CODES.ROUTING.NOT_FOUND, 'Not found');
       return;
     }
-    const choiceCount = question.type === 'bool' ? BOOL_CHOICE_COUNT : question.choices.length;
-    if (choiceIndex !== undefined && choiceIndex >= choiceCount) {
+    const { answerIndex, choiceCount } = toAnswerKeyEntry(question);
+    const isOutOfRange = choiceIndex !== undefined && choiceIndex >= choiceCount;
+    // Explaining a mistake needs a wrong choice.
+    if (isOutOfRange || ('mode' in data && choiceIndex === answerIndex)) {
       sendError(res, BAD_REQUEST, ERROR_CODES.INPUT.INVALID_BODY, 'Invalid request body');
       return;
     }
@@ -95,7 +100,11 @@ function createAskRouter(deps: ResolvedAskDeps, logger: Logger): Router {
     }
     let answer: string | null = null;
     try {
-      answer = await modelProvider.answer(buildAskPrompt({ choiceIndex, message, question }));
+      answer = await modelProvider.answer(
+        'mode' in data
+          ? buildExplainPrompt({ choiceIndex: data.choiceIndex, misconceptions, question })
+          : buildAskPrompt({ choiceIndex, message: data.message, question }),
+      );
     } catch {
       // No error object: an SDK error can carry the request, which holds the learner's message.
       logger.warn('ask model request failed');
