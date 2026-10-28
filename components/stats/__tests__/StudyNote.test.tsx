@@ -15,6 +15,8 @@ jest.mock('expo-router', () =>
   }),
 );
 jest.mock('../../../state/useStudyNote', () => ({ useStudyNote: jest.fn() }));
+const mockContent = { isHydrated: true };
+jest.mock('../../../state/ContentProvider', () => ({ useContentContext: () => mockContent }));
 
 function bool(id: string, misconceptionId: string): Question {
   return {
@@ -44,6 +46,7 @@ function renderWith(state: StudyNoteState) {
 
 afterEach(() => {
   mockPush.mockReset();
+  mockContent.isHydrated = true;
 });
 
 describe('StudyNote', () => {
@@ -54,7 +57,7 @@ describe('StudyNote', () => {
     expect(screen.getByText('You tightened up on list aliasing.')).toBeTruthy();
   });
 
-  it("opens a review round of the note's misconceptions that have questions on the device", async () => {
+  it("opens a review round of all the note's misconceptions when one has questions on the device", async () => {
     await renderWith({
       misconceptionIds: ['python.truthy', 'python.not-downloaded', 'python.list-alias'],
       note: 'A note.',
@@ -64,9 +67,17 @@ describe('StudyNote', () => {
     await fireEvent.press(screen.getByRole('link', { name: 'Practice these' }));
 
     expect(mockPush).toHaveBeenCalledWith({
-      params: { misconceptions: 'python.truthy,python.list-alias' },
+      params: { misconceptions: 'python.truthy,python.not-downloaded,python.list-alias' },
       pathname: '/review',
     });
+  });
+
+  it('offers no practice until the content cache hydrates', async () => {
+    mockContent.isHydrated = false;
+    await renderWith({ misconceptionIds: ['python.truthy'], note: 'A note.', status: 'ready' });
+
+    expect(screen.getByText('A note.')).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Practice these' })).toBeNull();
   });
 
   it.each([
