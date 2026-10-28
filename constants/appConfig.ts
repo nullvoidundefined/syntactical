@@ -66,6 +66,9 @@ export const CHOICE_KEYS_PER_ROW = KEY_BINDINGS.choice.length / 2;
 // The fixed round lengths offered besides the whole pool; one is offered only when the pool is larger.
 export const ROUND_LENGTHS = [20, 50] as const;
 
+// The most questions a review round over several misconceptions (the study note's "Practice these") plays.
+export const PRACTICE_ROUND_MAX_QUESTIONS = 10;
+
 // The most events one answer-events upload carries (the server limit).
 export const SYNC_BATCH_SIZE = 200;
 
