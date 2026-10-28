@@ -69,6 +69,10 @@ export const ROUND_LENGTHS = [20, 50] as const;
 // The most questions a review round over several misconceptions (the study note's "Practice these") plays.
 export const PRACTICE_ROUND_MAX_QUESTIONS = 10;
 
+// The most misconceptions a study note names (the server's STUDY_NOTE.TOP_MISCONCEPTIONS): the
+// note keeps and the review route reads at most this many ids.
+export const STUDY_NOTE_MAX_MISCONCEPTIONS = 3;
+
 // The most events one answer-events upload carries (the server limit).
 export const SYNC_BATCH_SIZE = 200;
 

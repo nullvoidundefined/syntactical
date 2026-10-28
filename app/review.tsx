@@ -4,8 +4,9 @@
 // `misconception` parameter (from the weakness report) it plays that
 // misconception's questions instead, labelled "Weak spot"; with a
 // comma-separated `misconceptions` parameter (the study note's "Practice
-// these") it plays up to 10 of their questions, taken in turn, labelled
-// "Weak spots" when more than one of them has a question in the round.
+// these") it reads the first STUDY_NOTE_MAX_MISCONCEPTIONS distinct ids and
+// plays up to 10 of their questions, taken in turn, labelled "Weak spots"
+// when more than one of them has a question in the round.
 // Retry remounts the round over the same snapshot.
 import { useState } from 'react';
 
@@ -16,6 +17,7 @@ import type { Manifest } from '@syntactical/content-schema';
 
 import { QuizRound, type QuestionSource } from '../components/quiz/QuizRound';
 import { NothingDue } from '../components/review/NothingDue';
+import { STUDY_NOTE_MAX_MISCONCEPTIONS } from '../constants/appConfig';
 import { findDifficulty } from '../services/content/findDifficulty';
 import { findLanguageEntry } from '../services/content/findLanguageEntry';
 import { listMisconceptionQuestions } from '../services/review/listMisconceptionQuestions';
@@ -46,11 +48,12 @@ function readFocus(
   misconception: string | string[] | undefined,
   misconceptions: string | string[] | undefined,
 ): RoundFocus {
-  const ids = [misconceptions ?? []]
+  const listed = [misconceptions ?? []]
     .flat()
     .flatMap((value) => value.split(','))
     .map((id) => id.trim())
     .filter((id) => id !== '');
+  const ids = [...new Set(listed)].slice(0, STUDY_NOTE_MAX_MISCONCEPTIONS);
   if (ids.length > 0) return { ids, kind: 'misconceptions' };
   if (typeof misconception === 'string' && misconception !== '') return { id: misconception, kind: 'misconception' };
   return { kind: 'due' };
