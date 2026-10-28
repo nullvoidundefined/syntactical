@@ -39,6 +39,8 @@ jest.mock('../../../state/useReviewQueue', () => ({ useReviewQueue: () => ({ que
 
 const mockUseStudyNote = jest.mocked(useStudyNote);
 
+const PRACTICE_LABEL = "Practice this week's study note misconceptions";
+
 function renderWith(state: StudyNoteState) {
   mockUseStudyNote.mockReturnValue(state);
   return render(<StudyNote />);
@@ -64,7 +66,7 @@ describe('StudyNote', () => {
       status: 'ready',
     });
 
-    await fireEvent.press(screen.getByRole('link', { name: 'Practice these' }));
+    await fireEvent.press(screen.getByRole('link', { name: PRACTICE_LABEL }));
 
     expect(mockPush).toHaveBeenCalledWith({
       params: { misconceptions: 'python.truthy,python.not-downloaded,python.list-alias' },
@@ -72,12 +74,20 @@ describe('StudyNote', () => {
     });
   });
 
+  it('names the practice link for a screen reader and gives it a 44px touch target', async () => {
+    await renderWith({ misconceptionIds: ['python.truthy'], note: 'A note.', status: 'ready' });
+
+    const link = screen.getByRole('link', { name: PRACTICE_LABEL });
+    expect(link).toHaveTextContent('Practice these');
+    expect(link.props.className).toContain('min-h-[44px]');
+  });
+
   it('offers no practice until the content cache hydrates', async () => {
     mockContent.isHydrated = false;
     await renderWith({ misconceptionIds: ['python.truthy'], note: 'A note.', status: 'ready' });
 
     expect(screen.getByText('A note.')).toBeTruthy();
-    expect(screen.queryByRole('link', { name: 'Practice these' })).toBeNull();
+    expect(screen.queryByRole('link', { name: PRACTICE_LABEL })).toBeNull();
   });
 
   it.each([
@@ -87,14 +97,14 @@ describe('StudyNote', () => {
     await renderWith({ misconceptionIds, note: 'A note.', status: 'ready' });
 
     expect(screen.getByText('A note.')).toBeTruthy();
-    expect(screen.queryByRole('link', { name: 'Practice these' })).toBeNull();
+    expect(screen.queryByRole('link', { name: PRACTICE_LABEL })).toBeNull();
   });
 
   it('says how many answers the note still needs, with no practice', async () => {
     await renderWith({ remaining: 1, status: 'gathering' });
 
     expect(screen.getByText('Answer 1 more question this week for your study note.')).toBeTruthy();
-    expect(screen.queryByRole('link', { name: 'Practice these' })).toBeNull();
+    expect(screen.queryByRole('link', { name: PRACTICE_LABEL })).toBeNull();
   });
 
   it('renders nothing when hidden', async () => {
