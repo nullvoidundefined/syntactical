@@ -85,6 +85,24 @@ describe('review route for several misconceptions', () => {
     await waitFor(() => expect(screen.queryByText('Nothing due')).not.toBeNull());
   });
 
+  it("reads at most the study note's 3 misconceptions from the link", async () => {
+    await renderRouter(
+      { review: ReviewScreen },
+      { initialUrl: '/review?misconceptions=python.unknown,python.gone,python.lost,python.none' },
+    );
+
+    await waitFor(() => expect(screen.queryByText('Nothing due')).not.toBeNull());
+  });
+
+  it('counts a repeated misconception once toward the 3', async () => {
+    await renderRouter(
+      { review: ReviewScreen },
+      { initialUrl: '/review?misconceptions=python.unknown,python.unknown,python.unknown,python.none' },
+    );
+
+    await waitFor(() => expect(screen.queryByText('Q1 / 1')).not.toBeNull());
+  });
+
   it('keeps playing every question of a single misconception, uncapped, as a weak spot', async () => {
     await renderRouter({ review: ReviewScreen }, { initialUrl: '/review?misconception=python.many' });
 
