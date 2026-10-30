@@ -72,7 +72,7 @@ export default function PrivacyScreen() {
             'Railway: hosts the server.',
             'Anthropic: answers a question you ask about a card, explains your choice on a card you got wrong when you use Explain my mistake, and writes your weekly study note. It receives the card, its answer and explanation, your choice, and your question if you typed one, or a summary of your week (counts by bank and the mistakes you made), never your email or user ID.',
             'OpenAI: does the same when Anthropic cannot answer, and receives the same text whenever a request is sent to it.',
-            'GitHub Pages: hosts the website.',
+            'Cloudflare: hosts the website.',
             'Resend: delivers the one-time sign-in email.',
             'RevenueCat: manages purchases and entitlements, together with Apple and Google.',
             'PostHog: product usage analytics.',

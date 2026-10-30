@@ -173,11 +173,11 @@ provider; setting `MODEL_PRIMARY=openai` needs a privacy policy update first.
 
 ## Web app origin
 
-The web app is a static export served from the root of `https://syntactical.dev` by the Cloudflare Pages project `syntactical` (`.github/workflows/deploy.yml`, `cloudflare/wrangler-action`, `pages deploy dist`). The custom domain is a setting of the Pages project: the `syntactical.dev` zone is already on Cloudflare, so Pages replaces the apex records itself with a flattened CNAME to `syntactical.pages.dev`, and the export needs no `CNAME` file. Until the cutover below, GitHub Pages also receives every deploy and holds the domain. The same host serves `https://syntactical.dev/content/`, where every installed app refreshes its manifest and downloads Medium and Hard banks, and the store-required `/privacy` and `/delete-account` pages, so the domain must never be without a host. It must be same-site with `api.syntactical.dev` because the session cookie is `SameSite=Lax`. The API's `ALLOWED_ORIGINS` must hold exactly `https://syntactical.dev`; the move to Cloudflare does not change the origin, so it stays as it is.
+The web app is a static export served from the root of `https://syntactical.dev` by the Cloudflare Pages project `syntactical` (`.github/workflows/deploy.yml`, `cloudflare/wrangler-action`, `pages deploy dist`). The custom domain is a setting of the Pages project: the `syntactical.dev` zone is already on Cloudflare, so Pages replaces the apex records itself with a flattened CNAME to `syntactical.pages.dev`, and the export needs no `CNAME` file. The cutover below happened on 2026-10-30; GitHub Pages stays enabled, without the custom domain, as the rollback target until 2026-11-13. The same host serves `https://syntactical.dev/content/`, where every installed app refreshes its manifest and downloads Medium and Hard banks, and the store-required `/privacy` and `/delete-account` pages, so the domain must never be without a host. It must be same-site with `api.syntactical.dev` because the session cookie is `SameSite=Lax`. The API's `ALLOWED_ORIGINS` must hold exactly `https://syntactical.dev`; the move to Cloudflare does not change the origin, so it stays as it is.
 
 The web build's public client keys are repository variables (Settings, Secrets and variables, Actions, Variables): `POSTHOG_KEY`, `POSTHOG_HOST`, `REVENUECAT_WEB_BILLING_KEY`, and `ETHICALADS_PUBLISHER`. The build step in `deploy.yml` maps them into `npm run build`; an Actions secret of the same name is not read.
 
-Cutover from GitHub Pages to Cloudflare Pages (owner, once, in this order; the domain is added on Cloudflare before GitHub lets go of it):
+Cutover from GitHub Pages to Cloudflare Pages (done 2026-10-30 in this order, kept for the record and the rollback; the domain was added on Cloudflare before GitHub let go of it):
 
 1. In Cloudflare, create the Pages project `syntactical` with direct upload (Workers and Pages, Create, Pages, Upload assets) and production branch `main`.
 2. Create an API token with the "Cloudflare Pages: Edit" permission for the account, and copy the account id.
@@ -190,7 +190,7 @@ Cutover from GitHub Pages to Cloudflare Pages (owner, once, in this order; the d
 9. Merge the cutover commit, which removes the GitHub Pages steps from the workflow, then repeat the step 7 checks.
 10. On an installed native build, pull to refresh or relaunch and confirm the manifest refresh succeeds (the menu loads and a Medium bank not yet on the device downloads).
 
-Rollback (owner; within the 14 days GitHub Pages stays enabled):
+Rollback (owner; GitHub Pages stays enabled until 2026-11-13):
 
 1. In Cloudflare, remove the custom domain `syntactical.dev` from the Pages project, and restore the apex records recorded in cutover step 5.
 2. In the GitHub repository's Pages settings, add the custom domain `syntactical.dev` again and wait for its DNS check to pass.
