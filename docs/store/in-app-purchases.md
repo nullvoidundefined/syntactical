@@ -2,10 +2,12 @@
 
 One Pro tier, sold two ways: a yearly auto-renewing subscription and a one-time lifetime purchase. There is no monthly product. Pro removes sponsored cards and raises "Ask about this card" from 5 to 20 answers a day. Every question bank is free; nothing else is sold. The ids below must match exactly in App Store Connect, Play Console, RevenueCat, and `constants/proProducts.ts` (both match `PRODUCT_ID_PATTERN` in `constants/appConfig.ts`).
 
-| Product id                 | Plan in the app | Store type                                                                                            | US price | Reference name | Display name (localized)   | Description (localized)                                                   |
-| -------------------------- | --------------- | ----------------------------------------------------------------------------------------------------- | -------- | -------------- | -------------------------- | ------------------------------------------------------------------------- |
-| `syntactical.pro.annual`   | A year          | Apple: auto-renewable subscription, 1 year, group "Pro". Play: subscription with one yearly base plan | $19.99   | Pro annual     | Syntactical Pro (1 year)   | No sponsored cards and 20 asks a day. Renews every year until you cancel. |
-| `syntactical.pro.lifetime` | Forever         | Apple: non-consumable. Play: one-time in-app product                                                  | $39.99   | Pro lifetime   | Syntactical Pro (lifetime) | No sponsored cards and 20 asks a day, for good. One payment.              |
+| Product id                 | Plan in the app | Store type                                                                                            | US price | Reference name | Display name (localized)   | Description (localized)                              |
+| -------------------------- | --------------- | ----------------------------------------------------------------------------------------------------- | -------- | -------------- | -------------------------- | ---------------------------------------------------- |
+| `syntactical.pro.annual`   | A year          | Apple: auto-renewable subscription, 1 year, group "Pro". Play: subscription with one yearly base plan | $19.99   | Pro annual     | Syntactical Pro (1 year)   | No sponsored cards and 20 asks a day. Renews yearly. |
+| `syntactical.pro.lifetime` | Forever         | Apple: non-consumable. Play: one-time in-app product                                                  | $39.99   | Pro lifetime   | Syntactical Pro (lifetime) | No sponsored cards and 20 asks a day. One payment.   |
+
+App Store Connect caps the localized description at 55 characters and the display name at 35; both descriptions above are the text entered on 2026-11-22.
 
 The owner sets the other regions' prices from each store's own equivalence. The app never shows a hard-coded price: the Pro sheet's buttons read "A year for {price}" and "Forever for {price}" from the store's localized strings, and "A year" and "Forever" when no price has loaded.
 
