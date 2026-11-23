@@ -1,16 +1,16 @@
 # Session handoff
 
-Updated 2026-10-27, after the free content, Pro, and sponsored cards, and model failover work (areas 1 to 9). On that date areas 1, 2, 5 (without the cutover), and 7 are on `main` (#201, #203, #205); areas 3, 4, 6, and 9 are built and in review as the stacked PRs #202, #206, #207, #208, and #204, and area 8 (these docs) sits on top of them. Confirm with `git log -1 origin/main` that nothing newer has replaced this file.
+Updated 2026-11-22, through #217. The free content, Pro, sponsored cards, and model failover work (areas 1 to 9) is all on `main`, and no PR is open. What is left is owner work outside the repository, tracked in `docs/launch-placeholders.md`. Confirm with `git log -1 origin/main` that nothing newer has replaced this file.
 
 ## Where things stand
 
 - Model: every bank is free. One Pro tier, sold as `syntactical.pro.annual` (yearly) or `syntactical.pro.lifetime`, removes the sponsored cards and raises the Ask limit from 5 to 20 a day. Free users see one sponsored card on the results screen (from the third round, then every third round) and one in the track list: AdMob native and non-personalised on iOS and Android; EthicalAds, a direct sponsor from `content/sponsor.json`, or the house Pro card on the web. Spec: `docs/superpowers/specs/2026-10-27-free-content-pro-sponsored-design.md`. Plan: `docs/superpowers/plans/2026-10-27-free-content-pro-sponsored.md`. Reasoning: `docs/audits/2026-10-27-monetization-marketing.md`.
 - Web: https://syntactical.dev/ is served by the Cloudflare Pages project `syntactical` since the 2026-10-30 cutover (`server/DEPLOY.md`, "Web app origin"); `.github/workflows/deploy.yml` deploys every push to `main` to it, with the web build's public keys from repository variables. The export is static, one HTML file per route; track and bank pages carry their text for crawlers, and `scripts/writeHostFiles.mjs` writes `_headers`, `404.html`, `sitemap.xml`, and `robots.txt`.
 - API: Railway `staging` and `production`, Postgres on Neon (`server/DEPLOY.md`, "Live environments"). Ask and the study note call Anthropic first and fail over to OpenAI (`server/DEPLOY.md`, "Changing or losing a model"). Stubbed integrations and owner keys are tracked in `docs/launch-placeholders.md`.
-- **The API hostnames do not resolve.** `dig +short api.syntactical.dev` and `dig +short staging-api.syntactical.dev` return nothing (last checked 2026-10-13; not re-checked on 2026-10-27, because that session had no DNS access), while `app.config.ts` (`DEFAULT_API_BASE_URL`) and `eas.json` compile `https://api.syntactical.dev/v1/` and `https://staging-api.syntactical.dev/v1/` into production and preview builds. The owner must add the CNAMEs per `server/DEPLOY.md` "DNS". The web build needs the custom domain, not the Railway hostname: the session cookie is `SameSite=Lax` (`server/src/config/sessionCookieOptions.ts`), so the API must be same-site with `syntactical.dev` (`server/DEPLOY.md`, "Web app origin"). Only a native build, which sends the token in an `Authorization: Bearer` header, could be retargeted at the Railway hostname in `eas.json` as a stopgap. Until then a production web build or an EAS build cannot sign in, which is what the two device-checklist runs in `docs/device-checklist.md` recorded as "blocked".
+- DNS: `api.syntactical.dev` and `staging-api.syntactical.dev` resolve to their Railway custom-domain targets (checked with `dig +short` on 2026-11-22). The web build must keep using these hostnames, not the Railway ones: the session cookie is `SameSite=Lax` (`server/src/config/sessionCookieOptions.ts`), so the API must be same-site with `syntactical.dev` (`server/DEPLOY.md`, "Web app origin"). The two device-checklist runs in `docs/device-checklist.md` that recorded sign-in as "blocked" predate the DNS records and have not been rerun.
 - Content: 12 tracks and 36 banks, all free, under `content/<track>/<difficulty>.json`. Easy banks are bundled; Medium and Hard download on first use and are cached. No build reads the private `syntactical-content` repo.
 
-## What shipped since the last handoff (#113)
+## What shipped since the handoff through #113
 
 `git log --oneline 526c067..origin/main` is the full list.
 
@@ -43,15 +43,25 @@ The audit and its cleanup, merged 2026-10-13 and 2026-10-14:
 - Audit cleanup slices: one server test-app factory (#186), deduped app helpers (#188), one modal dialog shell (#189), shared pipeline fixtures (#190, #192), shared `expo-router` and `expo-constants` mocks (#191), shared password-test skip import (#194), `settle()` in place of real sleeps (#193), analytics mocks no longer virtual (#180), manifest taxonomy test fixtures (#195).
 - Docs: the monetization and marketing audit (#199); the spec and plan for free content, Pro, sponsored cards, and model failover (#200).
 
+#202 to #217 (2026-10-27 to 2026-11-22):
+
+- Pro: annual and lifetime from the RevenueCat webhook (#202); Pro in the app with truthful restore (#206); the Pro sheet links the privacy policy and terms of use, with one source for the Pro Ask limit (#210); a late RevenueCat event after a `TRANSFER` follows the purchase to its new account (#212).
+- Sponsored cards: the web card with the house Pro card and a direct sponsor (#207); AdMob native cards on iOS and Android, with consent (#208).
+- Server: Anthropic and OpenAI failover for Ask and the study note (#204).
+- App: Explain my mistake, a one-tap AI explanation of a missed card (#213); Practice these, a review round from the study note's misconceptions (#214).
+- Web: Expo's route-list and bracket pages dropped from the export, shorter bank descriptions (#211); Cloudflare Pages is the only web host after the 2026-10-30 cutover (#216).
+- Docs: store listing, review notes, privacy labels, and legal pages (#209); the 2026-10-30 launch setup rows marked done (#215); Pro product descriptions within App Store Connect's 55-character limit (#217).
+
 ## Open
 
-The engineering-audit cleanup slices from `docs/audits/2026-10-13-engineering.md`, "Ranked cleanup opportunities", are merged (above).
+No PR is open, and the engineering-audit cleanup slices from `docs/audits/2026-10-13-engineering.md` are merged (above). Everything below waits on the owner.
 
-1. **Owner decisions** from `docs/audits/2026-10-13-engineering.md`, "Decisions for the owner": the DNS records (above), the 60% coverage rule (enforced nowhere), lint and Prettier as gates (323 files fail `prettier --check`), and workspace pruning (worktrees and merged branches).
-2. **Open PRs**, built and in review, not merged (`gh api repos/nullvoidundefined/syntactical/pulls`): #202 (Pro from the RevenueCat webhook), #204 (Anthropic and OpenAI failover), #206 (Pro in the app), #207 (the web sponsored card), #208 (AdMob native sponsored cards with consent).
-3. **Owner, outside the repo** (`docs/launch-placeholders.md`): RevenueCat products, keys, and the webhook secret; the PostHog project and key; the Resend key; the Apple Developer account for iOS builds; then remove `ALLOW_STUBBED_INTEGRATIONS`. The free content, Pro, and sponsored cards plan is built in the repository (areas 3, 4, 6, and 9 still in review); its owner actions remain in `docs/launch-placeholders.md` and in the owner checklist at the end of the plan's area 8.
-4. **Drafts awaiting the owner:** `app/privacy.tsx` and `app/delete-account.tsx` carry owner placeholders (see each file's header comment).
-5. **Topic tracks:** `docs/superpowers/plans/2026-10-04-topic-tracks.md` is the live plan; the 2026-10-02 v2 plan and spec were executed and are deleted.
+1. **Launch setup, in order** (`docs/launch-placeholders.md`, "Current state"): the OpenAI key and model for the fallback (`OPENAI_API_KEY`, `OPENAI_MODEL`, also an Actions secret for "Model smoke"); the AdMob app ids, four native ad units, and consent message; the EAS project, its environment variables, and the Apple Developer and Play Console records; the "two area 7 decisions" the placeholders page names but does not list (the nearest match is "Open questions (area 7)" in `docs/superpowers/plans/2026-10-27-free-content-pro-sponsored.md`); then removing `ALLOW_STUBBED_INTEGRATIONS`.
+2. **Waiting on prerequisites:** the App Store and Play Pro products, then `REVENUECAT_WEB_BILLING_KEY`; the Google Search Console property and sitemap; the EthicalAds publisher id (about 50,000 monthly pageviews first).
+3. **Small owner checks:** click "Send test event" on both RevenueCat webhooks and expect 200; confirm Apple's standard EULA or supply a custom one (`components/purchase/ProSheet.tsx`); confirm the Anthropic and OpenAI data-retention terms for `app/privacy.tsx` and `app/delete-account.tsx` (each file's header comment lists its placeholders).
+4. **Owner decisions** from `docs/audits/2026-10-13-engineering.md`, "Decisions for the owner": the 60% coverage rule (enforced nowhere), lint and Prettier as gates (323 files failed `prettier --check` on 2026-10-13), and workspace pruning (worktrees and merged branches). The DNS records from that list are done.
+5. **Device checklist:** rerun `docs/device-checklist.md` once an EAS build exists; the earlier runs were blocked on DNS.
+6. **Topic tracks:** `docs/superpowers/plans/2026-10-04-topic-tracks.md` is the live plan.
 
 ## Working rules and gotchas
 
